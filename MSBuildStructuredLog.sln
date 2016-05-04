@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.24720.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StructuredLogger", "src\StructuredLogger\StructuredLogger.csproj", "{A939886E-A191-4A46-A84B-21AD670081B9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StructuredLogViewer", "src\StructuredLogViewer\StructuredLogViewer.csproj", "{FAEE07FD-7384-40D4-B52B-4756D1011BA6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Mixed Platforms = Debug|Mixed Platforms
+		Release|Mixed Platforms = Release|Mixed Platforms
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A939886E-A191-4A46-A84B-21AD670081B9}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{A939886E-A191-4A46-A84B-21AD670081B9}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{A939886E-A191-4A46-A84B-21AD670081B9}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{A939886E-A191-4A46-A84B-21AD670081B9}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{FAEE07FD-7384-40D4-B52B-4756D1011BA6}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{FAEE07FD-7384-40D4-B52B-4756D1011BA6}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{FAEE07FD-7384-40D4-B52B-4756D1011BA6}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{FAEE07FD-7384-40D4-B52B-4756D1011BA6}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
