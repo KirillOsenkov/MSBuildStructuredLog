@@ -9,7 +9,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
     /// hierarchical way. (e.g. if the parameter is defined and identical in the parent, it is not
     /// stored in this instance). 
     /// </summary>
-    internal class PropertyBag
+    public class PropertyBag
     {
         /// <summary>
         /// The parent instance.

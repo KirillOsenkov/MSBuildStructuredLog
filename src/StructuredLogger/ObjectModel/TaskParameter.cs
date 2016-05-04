@@ -7,7 +7,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
     /// <summary>
     /// Abstract base class for task input / output parameters (can be ItemGroups)
     /// </summary>
-    internal abstract class TaskParameter : ILogNode
+    public abstract class TaskParameter : ILogNode
     {
         protected bool collapseSingleItem;
         protected string itemAttributeName;

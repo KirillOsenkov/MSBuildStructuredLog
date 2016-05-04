@@ -5,7 +5,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
     /// <summary>
     /// Interface class for an execution MSBuild log node to be represented in XML
     /// </summary>
-    internal interface ILogNode
+    public interface ILogNode
     {
         /// <summary>
         /// Writes the node to XML XElement representation.

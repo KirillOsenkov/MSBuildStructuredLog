@@ -3,7 +3,7 @@
     /// <summary>
     /// Class representation of a logged item group entry.
     /// </summary>
-    internal class ItemGroup : TaskParameter
+    public class ItemGroup : TaskParameter
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ItemGroup"/> class.

@@ -9,7 +9,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
     /// Base class to represent a log node (e.g. Project, or Target) that can contain child node sub nodes 
     /// and properties defined at that scope. Properties defined will be inherited from the parent if possible.
     /// </summary>
-    internal abstract class LogProcessNode : ILogNode
+    public abstract class LogProcessNode : ILogNode
     {
         /// <summary>
         /// The child nodes bucketed by their type. This is for performance iterating through the list by

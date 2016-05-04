@@ -7,7 +7,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
     /// <summary>
     /// Class representation of an item/property with associated metadata (if any).
     /// </summary>
-    internal class Item
+    public class Item
     {
         /// <summary>
         /// The metadata associated with this Item
