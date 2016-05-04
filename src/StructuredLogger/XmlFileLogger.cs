@@ -17,6 +17,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public const string ItemGroupIncludeMessagePrefix = @"Added Item(s): ";
         public const string ItemGroupRemoveMessagePrefix = @"Removed Item(s): ";
 
+        public bool SaveToXmlWhenFinished { get; set; } = true;
+
         /// <summary>
         /// The path to the log file specified by the user
         /// </summary>
@@ -28,7 +30,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private Build _build;
 
         private int _errors;
-        private int _warings;
+        private int _warnings;
 
         /// <summary>
         /// Initializes the logger and subscribes to the relevant events.
@@ -39,7 +41,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             ProcessParameters();
             
             eventSource.BuildStarted    += (s, args) => _build = new Build(args);
-            eventSource.BuildFinished   += (o, args) => _build.CompleteBuild(args, _logFile, _errors, _warings);
+            eventSource.BuildFinished   += (o, args) => _build.CompleteBuild(args, _logFile, _errors, _warnings, SaveToXmlWhenFinished);
 
             eventSource.ProjectStarted  += (o, args) => TryProcessEvent(() => _build.AddProject(args));
             eventSource.ProjectFinished += (o, args) => TryProcessEvent(() => _build.CompleteProject(args));
@@ -59,7 +61,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             };
             eventSource.WarningRaised += (o, args) =>
             {
-                _warings++;
+                _warnings++;
                 _build.AddMessage(args, string.Format("Warning {0}: {1}", args.Code, args.Message));
             };
         }

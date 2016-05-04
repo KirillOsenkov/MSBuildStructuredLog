@@ -35,12 +35,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         /// <param name="buildFinishedEventArgs">The <see cref="BuildFinishedEventArgs"/> instance containing the event data.</param>
         /// <param name="logFile">The XML log file.</param>
-        public void CompleteBuild(BuildFinishedEventArgs buildFinishedEventArgs, string logFile, int errorCount, int warningCount)
+        public void CompleteBuild(BuildFinishedEventArgs buildFinishedEventArgs, string logFile, int errorCount, int warningCount, bool saveToXmlWhenFinished = true)
         {
             EndTime = buildFinishedEventArgs.Timestamp;
+
+            if (saveToXmlWhenFinished)
+            {
+                SaveToXml(logFile, buildFinishedEventArgs.Succeeded, errorCount, warningCount);
+            }
+        }
+
+        private void SaveToXml(string logFile, bool succeeded, int errorCount, int warningCount)
+        {
             var document = new XDocument();
             var root = new XElement("Build",
-                new XAttribute("BuildSucceeded", buildFinishedEventArgs.Succeeded),
+                new XAttribute("BuildSucceeded", succeeded),
                 new XAttribute("StartTime", StartTime),
                 new XAttribute("EndTime", EndTime),
                 new XAttribute("Errors", errorCount),
