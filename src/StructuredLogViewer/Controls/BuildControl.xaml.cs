@@ -1,4 +1,5 @@
-﻿using System.Windows.Controls;
+﻿using System;
+using System.Windows.Controls;
 using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogViewer.Controls
@@ -13,5 +14,21 @@ namespace StructuredLogViewer.Controls
         }
 
         public Build Build { get; set; }
+
+        private void searchTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            var searchText = searchTextBox.Text;
+            if (string.IsNullOrWhiteSpace(searchText))
+            {
+                return;
+            }
+
+            Search(searchText);
+        }
+
+        private void Search(string searchText)
+        {
+            var tree = treeView;
+        }
     }
 }

@@ -197,7 +197,31 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var project = GetOrAddProject(taskStartedEventArgs.BuildEventContext.ProjectContextId);
             var target = project.GetTargetById(taskStartedEventArgs.BuildEventContext.TargetId);
 
-            target.AddChildTask(new Task(taskStartedEventArgs.TaskName, taskStartedEventArgs, GetTaskAssembly((taskStartedEventArgs.TaskName))));
+            target.AddChildTask(CreateTask(taskStartedEventArgs));
+        }
+
+        private Task CreateTask(TaskStartedEventArgs taskStartedEventArgs)
+        {
+            var taskName = taskStartedEventArgs.TaskName;
+            var assembly = GetTaskAssembly(taskStartedEventArgs.TaskName);
+            var taskId = taskStartedEventArgs.BuildEventContext.TaskId;
+            var startTime = taskStartedEventArgs.Timestamp;
+
+            Task result;
+            if (taskName == "Copy")
+            {
+                result = new CopyTask()
+                {
+                    Name = taskName,
+                    Id = taskId,
+                    StartTime = startTime,
+                    FromAssembly = assembly
+                };
+                return result;
+            }
+
+            var task = new Task(taskName, taskId, startTime, assembly);
+            return task;
         }
 
         public void AddProject(Project project)
@@ -336,6 +360,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 list.Add(project);
             }
+        }
+
+        public IEnumerable<T> EnumerateAllChildren<T>(Predicate<T> predicate)
+        {
+            var list = new List<T>();
+            AddAllChildren(predicate, list);
+            return list;
         }
     }
 }

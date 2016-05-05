@@ -8,18 +8,18 @@
              d:DesignHeight="300" d:DesignWidth="300">
   <DockPanel>
     <Grid DockPanel.Dock="Top">
-      <TextBox x:Name="searchTextBox" />
+      <TextBox x:Name="searchTextBox" TextChanged="searchTextBox_TextChanged" />
       <Path Data="{DynamicResource SearchGeometry}" 
             Fill="#717171" 
             HorizontalAlignment="Right"
             VerticalAlignment="Center"
             Margin="3"/>
     </Grid>
-    
-    <TreeView 
-      VirtualizingPanel.IsVirtualizing="True" 
-      VirtualizingPanel.VirtualizationMode="Recycling"
-      ItemsSource="{Binding Children}">
+
+    <TreeView x:Name="treeView"
+              VirtualizingPanel.IsVirtualizing="True" 
+              VirtualizingPanel.VirtualizationMode="Recycling"
+              ItemsSource="{Binding Children}">
 
     </TreeView>
   </DockPanel>

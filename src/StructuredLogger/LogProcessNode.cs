@@ -41,7 +41,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <value>
         /// The identifier.
         /// </value>
-        public int Id { get; protected set; }
+        public int Id { get; set; }
 
         /// <summary>
         /// Gets or sets the time at which MSBuild indicated the node started execution.
@@ -137,7 +137,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return new MessageList[] { new MessageList { Messages = kvp.Value.OfType<Message>() } };
             }
 
-
             return kvp.Value;
         }
 
@@ -186,6 +185,23 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 var node = subNodeFactory();
                 WriteChildren<T>(node);
                 parentElement.Add(node);
+            }
+        }
+
+        public void AddAllChildren<T>(Predicate<T> predicate, List<T> list)
+        {
+            foreach (var child in Children)
+            {
+                if (child is T && predicate((T)(object)child))
+                {
+                    list.Add((T)(object)child);
+                }
+
+                var node = child as LogProcessNode;
+                if (node != null)
+                {
+                    node.AddAllChildren(predicate, list);
+                }
             }
         }
     }

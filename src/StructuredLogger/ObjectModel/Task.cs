@@ -1,4 +1,5 @@
-﻿using System.Xml.Linq;
+﻿using System;
+using System.Xml.Linq;
 using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -17,17 +18,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Task"/> class.
-        /// </summary>
-        /// <param name="name">The name of the task.</param>
-        /// <param name="taskStartedEvent">The <see cref="TaskStartedEventArgs"/> instance containing the event data.</param>
-        /// <param name="assembly">The assembly from which the task originated.</param>
-        public Task(string name, TaskStartedEventArgs taskStartedEvent, string assembly)
+        public Task(string name, int id, DateTime startTime, string assembly)
         {
             Name = name;
-            Id = taskStartedEvent.BuildEventContext.TaskId;
-            StartTime = taskStartedEvent.Timestamp;
+            Id = id;
+            StartTime = startTime;
             FromAssembly = assembly;
         }
 
