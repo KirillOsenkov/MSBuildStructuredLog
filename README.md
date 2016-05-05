@@ -4,5 +4,5 @@ A logger for MSBuild that records a structured representation of executed target
 ## Usage: 
 
 ```
-msbuild solution.sln /v:diag /noconlog /logger:XmlFileLogger,C:\MSBuildStructuredLog\bin\Debug\StructuredLogger.dll;buildlog1.xml
+msbuild solution.sln /noconlog /logger:StructuredLogger,C:\MSBuildStructuredLog\bin\Debug\StructuredLogger.dll;buildlog1.xml
 ```
