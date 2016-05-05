@@ -126,7 +126,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         private IEnumerable children;
-        public IEnumerable Children => children ?? (children = _childNodes.SelectMany(kvp => GetGroupingObject(kvp)).ToArray());
+        public IEnumerable Children => children ?? (children = 
+            new[] { Properties }.Concat(
+                _childNodes.SelectMany(kvp => GetGroupingObject(kvp)).ToArray()));
 
         private static IEnumerable<object> GetGroupingObject(KeyValuePair<Type, List<ILogNode>> kvp)
         {
@@ -134,6 +136,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 return new MessageList[] { new MessageList { Messages = kvp.Value.OfType<Message>() } };
             }
+
 
             return kvp.Value;
         }

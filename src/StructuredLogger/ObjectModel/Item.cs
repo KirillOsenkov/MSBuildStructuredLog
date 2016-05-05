@@ -31,6 +31,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </value>
         public string Text { get; private set; }
 
+        private IEnumerable<Property> metadataView;
+        public IEnumerable<Property> MetadataView => metadataView ?? (metadataView = _metadata.Select(kvp => new Property { Name = kvp.Key, Value = kvp.Value }).ToArray());
+
         /// <summary>
         /// Gets the (non null/empty) metadata.
         /// </summary>

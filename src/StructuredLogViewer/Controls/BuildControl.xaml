@@ -7,11 +7,20 @@
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
   <DockPanel>
+    <Grid DockPanel.Dock="Top">
+      <TextBox x:Name="searchTextBox" />
+      <Path Data="{DynamicResource SearchGeometry}" 
+            Fill="#717171" 
+            HorizontalAlignment="Right"
+            VerticalAlignment="Center"
+            Margin="3"/>
+    </Grid>
+    
     <TreeView 
       VirtualizingPanel.IsVirtualizing="True" 
       VirtualizingPanel.VirtualizationMode="Recycling"
       ItemsSource="{Binding Children}">
-      
+
     </TreeView>
   </DockPanel>
 </UserControl>

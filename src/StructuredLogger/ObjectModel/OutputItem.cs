@@ -3,7 +3,7 @@
     /// <summary>
     /// Class representation of a task output item group.
     /// </summary>
-    internal class OutputItem : TaskParameter
+    public class OutputItem : TaskParameter
     {
         public OutputItem()
         {

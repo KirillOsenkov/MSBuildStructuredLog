@@ -91,5 +91,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     throw new UnknownTaskParameterPrefixException(prefix);
             }
         }
+
+        public IEnumerable<Item> Items => items;
     }
 }

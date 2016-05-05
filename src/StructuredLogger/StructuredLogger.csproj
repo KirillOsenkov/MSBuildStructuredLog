@@ -40,6 +40,7 @@
     <Compile Include="ObjectModel\Target.cs" />
     <Compile Include="ObjectModel\Task.cs" />
     <Compile Include="ObjectModel\TaskParameter.cs" />
+    <Compile Include="Property.cs" />
     <Compile Include="PropertyBag.cs" />
     <Compile Include="UnknownTaskParameterPrefixException.cs" />
     <Compile Include="StructuredLogger.cs" />

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -40,6 +41,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             _parent = parent;
         }
+
+        private IEnumerable<Property> propertiesView;
+        public IEnumerable<Property> PropertiesView => propertiesView ?? (propertiesView = _properties.Select(kvp => new Property { Name = kvp.Key, Value = kvp.Value }).ToArray());
 
         /// <summary>
         /// Gets the properties associated with this instance (without parent properties).

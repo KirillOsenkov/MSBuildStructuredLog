@@ -3,7 +3,7 @@
     /// <summary>
     /// Class representation of a task output property.
     /// </summary>
-    internal class OutputProperty : TaskParameter
+    public class OutputProperty : TaskParameter
     {
         public OutputProperty()
         {

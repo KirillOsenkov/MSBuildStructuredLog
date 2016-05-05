@@ -3,7 +3,7 @@
     /// <summary>
     /// Class representation of a task input parameter.
     /// </summary>
-    internal class InputParameter : TaskParameter
+    public class InputParameter : TaskParameter
     {
         public InputParameter()
         {

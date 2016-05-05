@@ -3,6 +3,8 @@
                     xmlns:l="clr-namespace:Microsoft.Build.Logging.StructuredLogger;assembly=StructuredLogger"
                     xmlns:local="clr-namespace:StructuredLogViewer.themes">
 
+  <Geometry x:Key="SearchGeometry">F1 M 8.5,7.0 C 7.12,7.00 6.0,5.88 6.0,4.5 C 6.0,3.12 7.12,2.0 8.5,2.0 C 9.88,2.0 11.0,3.12 11.0,4.5 C 11.0,5.88 9.88,7.0 8.5,7.0 Z M 8.5,0.0 C 6.02,0.0 4.0,2.02 4.0,4.500 C 4.0,5.23 4.19,5.9 4.49,6.5 L 0.0,11.0 L 2.0,13.0 L 6.49,8.51 C 7.1,8.81 7.77,9.0 8.5,9.0 C 11.0,9.0 13.0,7.0 13.0,4.5 C 13.0,2.02 11.0,0.0 8.5,0.0 Z</Geometry>
+
   <DataTemplate DataType="{x:Type l:Build}">
     <TextBlock Text="{Binding StartTime}" />
   </DataTemplate>
@@ -10,7 +12,15 @@
   <HierarchicalDataTemplate DataType="{x:Type l:Project}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
+      <TextBlock Text="Project: " Foreground="Blue" />
       <TextBlock Text="{Binding Name}" />
+    </StackPanel>
+  </HierarchicalDataTemplate>
+
+  <HierarchicalDataTemplate DataType="{x:Type l:PropertyBag}"
+                            ItemsSource="{Binding PropertiesView}">
+    <StackPanel Orientation="Horizontal">
+      <TextBlock Text="Properties" />
     </StackPanel>
   </HierarchicalDataTemplate>
 
@@ -24,5 +34,61 @@
   <DataTemplate DataType="{x:Type l:Message}">
     <TextBlock Text="{Binding Text}" />
   </DataTemplate>
-  
+
+  <HierarchicalDataTemplate DataType="{x:Type l:Target}"
+                            ItemsSource="{Binding Children}">
+    <StackPanel Orientation="Horizontal">
+      <TextBlock Text="Target: " Foreground="Purple" />
+      <TextBlock Text="{Binding Name}" />
+    </StackPanel>
+  </HierarchicalDataTemplate>
+
+  <HierarchicalDataTemplate DataType="{x:Type l:Task}"
+                            ItemsSource="{Binding Children}">
+    <StackPanel Orientation="Horizontal">
+      <TextBlock Text="Task: " Foreground="DarkGreen" />
+      <TextBlock Text="{Binding Name}" />
+    </StackPanel>
+  </HierarchicalDataTemplate>
+
+  <HierarchicalDataTemplate DataType="{x:Type l:InputParameter}"
+                            ItemsSource="{Binding Items}">
+    <StackPanel Orientation="Horizontal">
+      <TextBlock Text="Input parameter: " Foreground="DarkCyan" />
+      <TextBlock Text="{Binding Name}" />
+    </StackPanel>
+  </HierarchicalDataTemplate>
+
+  <HierarchicalDataTemplate DataType="{x:Type l:ItemGroup}"
+                            ItemsSource="{Binding Items}">
+    <StackPanel Orientation="Horizontal">
+      <TextBlock Text="Item group: " Foreground="DarkCyan" />
+      <TextBlock Text="{Binding Name}" />
+    </StackPanel>
+  </HierarchicalDataTemplate>
+
+  <HierarchicalDataTemplate DataType="{x:Type l:OutputItem}"
+                            ItemsSource="{Binding Items}">
+    <StackPanel Orientation="Horizontal">
+      <TextBlock Text="Output item: " Foreground="DarkCyan" />
+      <TextBlock Text="{Binding Name}" />
+    </StackPanel>
+  </HierarchicalDataTemplate>
+
+  <HierarchicalDataTemplate DataType="{x:Type l:OutputProperty}"
+                            ItemsSource="{Binding Items}">
+    <StackPanel Orientation="Horizontal">
+      <TextBlock Text="Output property: " Foreground="DarkCyan" />
+      <TextBlock Text="{Binding Name}" />
+    </StackPanel>
+  </HierarchicalDataTemplate>
+
+  <HierarchicalDataTemplate DataType="{x:Type l:Item}"
+                            ItemsSource="{Binding MetadataView}">
+    <StackPanel Orientation="Horizontal">
+      <TextBlock Text="Item: " Foreground="DarkOrange" />
+      <TextBlock Text="{Binding Text}" />
+    </StackPanel>
+  </HierarchicalDataTemplate>
+
 </ResourceDictionary>
