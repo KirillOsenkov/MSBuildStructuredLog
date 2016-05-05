@@ -33,6 +33,7 @@
     <Compile Include="ObjectModel\Item.cs" />
     <Compile Include="ObjectModel\ItemGroup.cs" />
     <Compile Include="ObjectModel\Message.cs" />
+    <Compile Include="ObjectModel\Messages.cs" />
     <Compile Include="ObjectModel\OutputItem.cs" />
     <Compile Include="ObjectModel\OutputProperty.cs" />
     <Compile Include="ObjectModel\Project.cs" />

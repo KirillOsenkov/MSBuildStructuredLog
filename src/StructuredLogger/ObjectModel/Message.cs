@@ -22,6 +22,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             _timestamp = timestamp;
         }
 
+        public string Text => _message;
+
         /// <summary>
         /// Writes the message to XML XElement representation.
         /// </summary>

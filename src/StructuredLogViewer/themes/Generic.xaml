@@ -6,5 +6,23 @@
   <DataTemplate DataType="{x:Type l:Build}">
     <TextBlock Text="{Binding StartTime}" />
   </DataTemplate>
+
+  <HierarchicalDataTemplate DataType="{x:Type l:Project}"
+                            ItemsSource="{Binding Children}">
+    <StackPanel Orientation="Horizontal">
+      <TextBlock Text="{Binding Name}" />
+    </StackPanel>
+  </HierarchicalDataTemplate>
+
+  <HierarchicalDataTemplate DataType="{x:Type l:MessageList}"
+                            ItemsSource="{Binding Messages}">
+    <StackPanel Orientation="Horizontal">
+      <TextBlock Text="Messages" />
+    </StackPanel>
+  </HierarchicalDataTemplate>
+
+  <DataTemplate DataType="{x:Type l:Message}">
+    <TextBlock Text="{Binding Text}" />
+  </DataTemplate>
   
 </ResourceDictionary>

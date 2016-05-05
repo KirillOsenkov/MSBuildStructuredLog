@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
@@ -307,6 +308,34 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             string assembly;
             return _taskToAssemblyMap.TryGetValue(taskName, out assembly) ? assembly : string.Empty;
+        }
+
+        private IEnumerable<Project> projectsSortedTopologically;
+        public IEnumerable<Project> ProjectsSortedTopologically => projectsSortedTopologically ?? (projectsSortedTopologically = GetProjectsSortedTopologically());
+
+        public IEnumerable<Project> GetProjectsSortedTopologically()
+        {
+            var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var list = new List<Project>();
+            foreach (var project in this.GetChildrenOfType<Project>())
+            {
+                Visit(project, list, visited);
+            }
+
+            return list;
+        }
+
+        private void Visit(Project project, List<Project> list, HashSet<string> visited)
+        {
+            if (visited.Add(project.ProjectFile))
+            {
+                foreach (var childProject in project.GetChildrenOfType<Project>())
+                {
+                    Visit(childProject, list, visited);
+                }
+
+                list.Add(project);
+            }
         }
     }
 }

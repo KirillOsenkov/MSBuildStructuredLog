@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -118,10 +119,23 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <remarks>Must be exactly of type T, not inherited</remarks>
         /// <typeparam name="T">Generic ILogNode type</typeparam>
         /// <returns></returns>
-        protected IEnumerable<T> GetChildrenOfType<T>() where T : ILogNode
+        public IEnumerable<T> GetChildrenOfType<T>() where T : ILogNode
         {
             var t = typeof(T);
-            return _childNodes.ContainsKey(t) ? _childNodes[t].Cast<T>() : new List<T>();
+            return _childNodes.ContainsKey(t) ? _childNodes[t].Cast<T>() : Enumerable.Empty<T>();
+        }
+
+        private IEnumerable children;
+        public IEnumerable Children => children ?? (children = _childNodes.SelectMany(kvp => GetGroupingObject(kvp)).ToArray());
+
+        private static IEnumerable<object> GetGroupingObject(KeyValuePair<Type, List<ILogNode>> kvp)
+        {
+            if (kvp.Key == typeof(Message))
+            {
+                return new MessageList[] { new MessageList { Messages = kvp.Value.OfType<Message>() } };
+            }
+
+            return kvp.Value;
         }
 
         /// <summary>

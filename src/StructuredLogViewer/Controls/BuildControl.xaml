@@ -6,8 +6,12 @@
              xmlns:local="clr-namespace:StructuredLogViewer.Controls"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
-  <StackPanel>
-    <TextBlock Text="{Binding StartTime}" />
-    <TextBlock Text="{Binding EndTime}" />
-  </StackPanel>
+  <DockPanel>
+    <TreeView 
+      VirtualizingPanel.IsVirtualizing="True" 
+      VirtualizingPanel.VirtualizationMode="Recycling"
+      ItemsSource="{Binding Children}">
+      
+    </TreeView>
+  </DockPanel>
 </UserControl>
