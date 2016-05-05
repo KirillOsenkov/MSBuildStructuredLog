@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StructuredLogger", "src\Str
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StructuredLogViewer", "src\StructuredLogViewer\StructuredLogViewer.csproj", "{FAEE07FD-7384-40D4-B52B-4756D1011BA6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StructuredLogger.Tests", "src\StructuredLogger.Tests\StructuredLogger.Tests.csproj", "{8A327073-0811-49D6-B1AA-1FB0157E750A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Mixed Platforms = Debug|Mixed Platforms
@@ -20,5 +22,9 @@ Global
 		{FAEE07FD-7384-40D4-B52B-4756D1011BA6}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
 		{FAEE07FD-7384-40D4-B52B-4756D1011BA6}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{FAEE07FD-7384-40D4-B52B-4756D1011BA6}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{8A327073-0811-49D6-B1AA-1FB0157E750A}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{8A327073-0811-49D6-B1AA-1FB0157E750A}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{8A327073-0811-49D6-B1AA-1FB0157E750A}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{8A327073-0811-49D6-B1AA-1FB0157E750A}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
