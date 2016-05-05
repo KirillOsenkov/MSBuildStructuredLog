@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
+using Newtonsoft.Json;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -20,6 +22,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         private readonly ConcurrentDictionary<string, string> _taskToAssemblyMap = new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
+        public bool Succeeded { get; set; }
+
+        public Build()
+        {
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="Build"/> class.
         /// </summary>
@@ -35,25 +43,30 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         /// <param name="buildFinishedEventArgs">The <see cref="BuildFinishedEventArgs"/> instance containing the event data.</param>
         /// <param name="logFile">The XML log file.</param>
-        public void CompleteBuild(BuildFinishedEventArgs buildFinishedEventArgs, string logFile, int errorCount, int warningCount, bool saveToXmlWhenFinished = true)
+        public void CompleteBuild(BuildFinishedEventArgs buildFinishedEventArgs, string logFile, int errorCount, int warningCount, bool saveWhenFinished = true)
         {
             EndTime = buildFinishedEventArgs.Timestamp;
+            Succeeded = buildFinishedEventArgs.Succeeded;
+            ErrorCount = errorCount;
+            WarningCount = warningCount;
 
-            if (saveToXmlWhenFinished)
+            if (saveWhenFinished)
             {
-                SaveToXml(logFile, buildFinishedEventArgs.Succeeded, errorCount, warningCount);
+                //SaveToXml(logFile);
+                SaveToJson(logFile);
             }
         }
 
-        private void SaveToXml(string logFile, bool succeeded, int errorCount, int warningCount)
+        private void SaveToJson(string logFile)
+        {
+            var text = JsonConvert.SerializeObject(this, Formatting.Indented);
+            File.WriteAllText(logFile, text);
+        }
+
+        private void SaveToXml(string logFile)
         {
             var document = new XDocument();
-            var root = new XElement("Build",
-                new XAttribute("BuildSucceeded", succeeded),
-                new XAttribute("StartTime", StartTime),
-                new XAttribute("EndTime", EndTime),
-                new XAttribute("Errors", errorCount),
-                new XAttribute("Warnings", warningCount));
+            var root = new XElement("Build");
 
             document.Add(root);
             SaveToElement(root);
@@ -67,6 +80,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <param name="parentElement">The parent element.</param>
         public override void SaveToElement(XElement parentElement)
         {
+            parentElement.Add(new XAttribute("BuildSucceeded", Succeeded));
+            parentElement.Add(new XAttribute("StartTime", StartTime));
+            parentElement.Add(new XAttribute("EndTime", EndTime));
+            parentElement.Add(new XAttribute("Errors", ErrorCount));
+            parentElement.Add(new XAttribute("Warnings", WarningCount));
+
             WriteChildren<Message>(parentElement, () => new XElement("BuildMessageEvents"));
             WriteProperties(parentElement);
             WriteChildren<Project>(parentElement);
@@ -138,7 +157,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var project = GetOrAddProject(buildMessageEventArgs.BuildEventContext.ProjectContextId);
             var target = project.GetTargetById(buildMessageEventArgs.BuildEventContext.TargetId);
 
-            target.AddItemGroup((ItemGroup)TaskParameter.Create(buildMessageEventArgs.Message, prefix));
+            target.AddTaskParameter((ItemGroup)TaskParameter.Create(buildMessageEventArgs.Message, prefix));
         }
 
         /// <summary>

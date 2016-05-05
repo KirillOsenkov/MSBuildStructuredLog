@@ -5,6 +5,10 @@
     /// </summary>
     internal class InputParameter : TaskParameter
     {
+        public InputParameter()
+        {
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="InputParameter"/> class.
         /// </summary>

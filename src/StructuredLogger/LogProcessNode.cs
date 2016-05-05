@@ -48,7 +48,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <value>
         /// The start time.
         /// </value>
-        public DateTime StartTime { get; protected set; }
+        public DateTime StartTime { get; set; }
 
         /// <summary>
         /// Gets or sets the time at which MSBuild indicated the node completed execution.
@@ -58,13 +58,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </value>
         public DateTime EndTime { get; set; }
 
+        public int ErrorCount { get; set; }
+        public int WarningCount { get; set; }
+
         /// <summary>
         /// Gets or sets the properties collection for this node.
         /// </summary>
         /// <value>
         /// The properties.
         /// </value>
-        public PropertyBag Properties { get; protected set; }
+        public PropertyBag Properties { get; set; }
 
         /// <summary>
         /// Writes the node to XML XElement representation.
@@ -79,6 +82,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public void AddMessage(Message message)
         {
             AddChildNode(message);
+        }
+
+        /// <summary>
+        /// Add a discovered ItemGroup list to the node.
+        /// </summary>
+        /// <param name="taskParameter">The item group to add.</param>
+        public void AddTaskParameter(TaskParameter taskParameter)
+        {
+            AddChildNode(taskParameter);
         }
 
         /// <summary>

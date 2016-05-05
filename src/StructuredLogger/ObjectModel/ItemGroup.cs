@@ -5,6 +5,10 @@
     /// </summary>
     public class ItemGroup : TaskParameter
     {
+        public ItemGroup()
+        {
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ItemGroup"/> class.
         /// </summary>
@@ -12,7 +16,7 @@
         /// <param name="prefix">The prefix string (e.g. 'Added item(s): ').</param>
         /// <param name="itemAttributeName">Name of the item attribute ('Include' or 'Remove').</param>
         public ItemGroup(string message, string prefix, string itemAttributeName) :
-            base(message, prefix, false, itemAttributeName)
+            base(message, prefix, collapseSingleItem: false, itemAttributeName: itemAttributeName)
         {
         }
     }

@@ -21,6 +21,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             TryUpdate(targetStartedEvent);
         }
 
+        public Target()
+        {
+        }
+
         /// <summary>
         /// Writes the project and its children to XML XElement representation.
         /// </summary>
@@ -78,15 +82,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public void AddProperty(string key, string value)
         {
             Properties.AddProperty(key, value);
-        }
-
-        /// <summary>
-        /// Add a discovered ItemGroup list to the node.
-        /// </summary>
-        /// <param name="itemGroup">The item group to add.</param>
-        public void AddItemGroup(ItemGroup itemGroup)
-        {
-            AddChildNode(itemGroup);
         }
 
         /// <summary>

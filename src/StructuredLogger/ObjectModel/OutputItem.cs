@@ -5,6 +5,10 @@
     /// </summary>
     internal class OutputItem : TaskParameter
     {
+        public OutputItem()
+        {
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="OutputItem"/> class.
         /// </summary>

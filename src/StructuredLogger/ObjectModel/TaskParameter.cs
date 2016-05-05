@@ -12,7 +12,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
         protected bool collapseSingleItem;
         protected string itemAttributeName;
         protected readonly List<Item> items = new List<Item>();
-        protected readonly string name;
+        public string Name { get; set; }
+
+        protected TaskParameter()
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TaskParameter"/> class.
@@ -26,10 +30,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
             this.collapseSingleItem = collapseSingleItem;
             this.itemAttributeName = itemAttributeName;
 
+            string name;
             foreach (var item in ItemGroupParser.ParseItemList(message, prefix, out name))
             {
-                items.Add(item);
+                AddItem(item);
             }
+
+            Name = name;
+        }
+
+        public void AddItem(Item item)
+        {
+            items.Add(item);
         }
 
         /// <summary>
@@ -38,7 +50,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <param name="parentElement">The parent element.</param>
         public void SaveToElement(XElement parentElement)
         {
-            XElement element = new XElement(name);
+            XElement element = new XElement(Name);
             parentElement.Add(element);
 
             if (collapseSingleItem && items.Count == 1 && !items[0].Metadata.Any())
@@ -64,15 +76,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             switch (prefix)
             {
-                case XmlFileLogger.OutputItemsMessagePrefix:
+                case StructuredLogger.OutputItemsMessagePrefix:
                     return new OutputItem(message, prefix);
-                case XmlFileLogger.TaskParameterMessagePrefix:
+                case StructuredLogger.TaskParameterMessagePrefix:
                     return new InputParameter(message, prefix);
-                case XmlFileLogger.OutputPropertyMessagePrefix:
+                case StructuredLogger.OutputPropertyMessagePrefix:
                     return new OutputProperty(message, prefix);
-                case XmlFileLogger.ItemGroupIncludeMessagePrefix:
+                case StructuredLogger.ItemGroupIncludeMessagePrefix:
                     return new ItemGroup(message, prefix, "Include");
-                case XmlFileLogger.ItemGroupRemoveMessagePrefix:
+                case StructuredLogger.ItemGroupRemoveMessagePrefix:
                     return new ItemGroup(message, prefix, "Remove");
                 default:
                     throw new UnknownTaskParameterPrefixException(prefix);

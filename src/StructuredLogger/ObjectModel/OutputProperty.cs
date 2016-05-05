@@ -5,6 +5,10 @@
     /// </summary>
     internal class OutputProperty : TaskParameter
     {
+        public OutputProperty()
+        {
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="OutputProperty"/> class.
         /// </summary>

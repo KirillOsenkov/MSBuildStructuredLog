@@ -15,7 +15,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <summary>
         /// The full path to the MSBuild project file for this project.
         /// </summary>
-        private string _projectFile;
+        public string ProjectFile { get; set; }
 
         /// <summary>
         /// A lookup table mapping of target names to targets. 
@@ -35,6 +35,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Id = projectId;
 
             TryUpdate(e);
+        }
+
+        public Project()
+        {
         }
 
         /// <summary>
@@ -63,6 +67,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 AddChildNode(target);
             }
+        }
+
+        public void AddTarget(Target target)
+        {
+            AddChildNode(target);
         }
 
         /// <summary>
@@ -94,7 +103,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 new XAttribute("Name", Name.Replace("\"", string.Empty)),
                 new XAttribute("StartTime", StartTime),
                 new XAttribute("EndTime", EndTime),
-                new XAttribute("ProjectFile", _projectFile));
+                new XAttribute("ProjectFile", ProjectFile));
 
             parentElement.Add(element);
 
@@ -116,7 +125,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 StartTime = projectStartedEventArgs.Timestamp;
                 Name = projectStartedEventArgs.Message;
-                _projectFile = projectStartedEventArgs.ProjectFile;
+                ProjectFile = projectStartedEventArgs.ProjectFile;
 
                 if (projectStartedEventArgs.GlobalProperties != null)
                 {

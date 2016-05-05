@@ -6,9 +6,9 @@ using Microsoft.Build.Utilities;
 namespace Microsoft.Build.Logging.StructuredLogger
 {
     /// <summary>
-    /// XML File Logger class to handle, parse, and route messages from the MSBuild logging system.
+    /// Logger class to handle, parse, and route messages from the MSBuild logging system.
     /// </summary>
-    public class XmlFileLogger : Logger
+    public class StructuredLogger : Logger
     {
         public const string OutputItemsMessagePrefix = @"Output Item(s): ";
         public const string OutputPropertyMessagePrefix = @"Output Property: ";
@@ -17,7 +17,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public const string ItemGroupIncludeMessagePrefix = @"Added Item(s): ";
         public const string ItemGroupRemoveMessagePrefix = @"Removed Item(s): ";
 
-        public bool SaveToXmlWhenFinished { get; set; } = true;
+        public bool SaveWhenFinished { get; set; } = true;
 
         /// <summary>
         /// The path to the log file specified by the user
@@ -41,7 +41,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             ProcessParameters();
             
             eventSource.BuildStarted    += (s, args) => _build = new Build(args);
-            eventSource.BuildFinished   += (o, args) => _build.CompleteBuild(args, _logFile, _errors, _warnings, SaveToXmlWhenFinished);
+            eventSource.BuildFinished   += (o, args) => _build.CompleteBuild(args, _logFile, _errors, _warnings, SaveWhenFinished);
 
             eventSource.ProjectStarted  += (o, args) => TryProcessEvent(() => _build.AddProject(args));
             eventSource.ProjectFinished += (o, args) => TryProcessEvent(() => _build.CompleteProject(args));

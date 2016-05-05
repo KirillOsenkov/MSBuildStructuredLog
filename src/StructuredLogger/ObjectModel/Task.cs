@@ -11,7 +11,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <summary>
         /// The assembly from which the task originated.
         /// </summary>
-        private readonly string _fromAssembly;
+        public string FromAssembly { get; set; }
+
+        public Task()
+        {
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Task"/> class.
@@ -24,7 +28,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Name = name;
             Id = taskStartedEvent.BuildEventContext.TaskId;
             StartTime = taskStartedEvent.Timestamp;
-            _fromAssembly = assembly;
+            FromAssembly = assembly;
         }
 
         /// <summary>
@@ -43,7 +47,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             var task = new XElement("Task",
                 new XAttribute("Name", Name),
-                new XAttribute("FromAssembly", _fromAssembly),
+                new XAttribute("FromAssembly", FromAssembly),
                 new XAttribute("StartTime", StartTime),
                 new XAttribute("EndTime", EndTime));
             element.Add(task);
