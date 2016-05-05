@@ -2,6 +2,7 @@
 using System.Windows;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Win32;
+using StructuredLogViewer.Controls;
 
 namespace StructuredLogViewer
 {
@@ -36,7 +37,7 @@ namespace StructuredLogViewer
         private void OpenFile(string filePath)
         {
             var build = LogReader.ReadLog(filePath);
-            mainContent.Content = build;
+            mainContent.Content = new BuildControl(build);
         }
 
         private void Exit_Click(object sender, RoutedEventArgs e)
