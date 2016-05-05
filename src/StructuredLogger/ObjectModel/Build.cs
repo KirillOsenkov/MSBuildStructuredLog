@@ -57,13 +57,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private void SaveToJson(string logFile)
+        public void SaveToJson(string logFile)
         {
             var text = JsonConvert.SerializeObject(this, Formatting.Indented);
             File.WriteAllText(logFile, text);
         }
 
-        private void SaveToXml(string logFile)
+        public void SaveToXml(string logFile)
         {
             var document = new XDocument();
             var root = new XElement("Build");
@@ -197,6 +197,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var target = project.GetTargetById(taskStartedEventArgs.BuildEventContext.TargetId);
 
             target.AddChildTask(new Task(taskStartedEventArgs.TaskName, taskStartedEventArgs, GetTaskAssembly((taskStartedEventArgs.TaskName))));
+        }
+
+        public void AddProject(Project project)
+        {
+            AddChildNode(project);
         }
 
         /// <summary>

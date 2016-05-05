@@ -9,13 +9,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
     /// </summary>
     public abstract class TaskParameter : ILogNode
     {
-        protected bool collapseSingleItem;
-        protected string itemAttributeName;
+        protected bool collapseSingleItem = true;
+        public string ItemAttributeName { get; set; }
         protected readonly List<Item> items = new List<Item>();
         public string Name { get; set; }
 
         protected TaskParameter()
         {
+            ItemAttributeName = "Include";
         }
 
         /// <summary>
@@ -28,7 +29,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         protected TaskParameter(string message, string prefix, bool collapseSingleItem = true, string itemAttributeName = "Include")
         {
             this.collapseSingleItem = collapseSingleItem;
-            this.itemAttributeName = itemAttributeName;
+            this.ItemAttributeName = itemAttributeName ?? "Include";
 
             string name;
             foreach (var item in ItemGroupParser.ParseItemList(message, prefix, out name))
@@ -61,7 +62,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 foreach (var item in items)
                 {
-                    item.SaveToElement(element, itemAttributeName, collapseSingleItem);
+                    item.SaveToElement(element, ItemAttributeName, collapseSingleItem);
                 }
             }
         }

@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 using Microsoft.Build.Logging.StructuredLogger;
 
@@ -12,7 +8,7 @@ namespace StructuredLogger
     {
         public static Build ReadLog(string xmlFilePath)
         {
-            var doc = XDocument.Load(xmlFilePath);
+            var doc = XDocument.Load(xmlFilePath, LoadOptions.PreserveWhitespace);
             var root = doc.Root;
 
             var build = new Build();
@@ -44,6 +40,7 @@ namespace StructuredLogger
             else if (name == "Project")
             {
                 var project = ReadProject(element);
+                build.AddProject(project);
             }
         }
 
@@ -109,6 +106,10 @@ namespace StructuredLogger
             {
                 ReadMessages(element, target);
             }
+            else if (name == "Properties")
+            {
+                target.Properties = ReadProperties(element);
+            }
             else if (name == "ItemGroups")
             {
                 ReadTaskParameters<ItemGroup>(element, target);
@@ -138,21 +139,35 @@ namespace StructuredLogger
         {
             var taskParameter = new T();
             taskParameter.Name = element.Name.LocalName;
+            if (!element.HasElements && element.Value != null)
+            {
+                taskParameter.AddItem(new Item(element.Value));
+                return taskParameter;
+            }
 
             foreach (var itemElement in element.Elements())
             {
-                Item item = ReadItem(itemElement);
+                Item item = ReadItem(itemElement, taskParameter);
                 taskParameter.AddItem(item);
             }
 
             return taskParameter;
         }
 
-        private static Item ReadItem(XElement itemElement)
+        private static Item ReadItem(XElement itemElement, TaskParameter taskParameter)
         {
             var include = GetString(itemElement, "Include");
-            var exclude = GetString(itemElement, "Remove");
-            var itemText = include ?? exclude ?? itemElement.Value;
+            var remove = GetString(itemElement, "Remove");
+            if (remove != null)
+            {
+                taskParameter.ItemAttributeName = "Remove";
+            }
+            else
+            {
+                taskParameter.ItemAttributeName = "Include";
+            }
+
+            var itemText = include ?? remove ?? itemElement.Value;
             var result = new Item(itemText);
 
             ReadItemMetadata(itemElement, result);
@@ -213,7 +228,8 @@ namespace StructuredLogger
 
         private static void ReadCommandLineArguments(XElement element, Microsoft.Build.Logging.StructuredLogger.Task task)
         {
-            throw new NotImplementedException();
+            var value = element.Value;
+            task.CommandLineArguments = value;
         }
 
         private static PropertyBag ReadProperties(XElement element)
@@ -272,7 +288,7 @@ namespace StructuredLogger
 
         private static string GetString(XElement element, string attributeName)
         {
-            return element.Attribute(attributeName).Value;
+            return element.Attribute(attributeName)?.Value;
         }
     }
 }

@@ -7,6 +7,7 @@
     {
         public ItemGroup()
         {
+            collapseSingleItem = false;
         }
 
         /// <summary>
