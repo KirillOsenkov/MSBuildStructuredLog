@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Xml.Linq;
-using Microsoft.Build.Logging.StructuredLogger;
 
-namespace StructuredLogger
+namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class LogReader
     {

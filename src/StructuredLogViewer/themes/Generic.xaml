@@ -1,0 +1,10 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:l="clr-namespace:Microsoft.Build.Logging.StructuredLogger;assembly=StructuredLogger"
+                    xmlns:local="clr-namespace:StructuredLogViewer.themes">
+
+  <DataTemplate DataType="{x:Type l:Build}">
+    <TextBlock Text="{Binding StartTime}" />
+  </DataTemplate>
+  
+</ResourceDictionary>

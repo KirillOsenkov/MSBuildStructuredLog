@@ -1,16 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+using Microsoft.Build.Logging.StructuredLogger;
+using Microsoft.Win32;
 
 namespace StructuredLogViewer
 {
@@ -22,6 +13,35 @@ namespace StructuredLogViewer
         public MainWindow()
         {
             InitializeComponent();
+            var uri = new Uri("StructuredLogViewer;component/themes/Generic.xaml", UriKind.Relative);
+            var generic = (ResourceDictionary)Application.LoadComponent(uri);
+            Application.Current.Resources.MergedDictionaries.Add(generic);
+        }
+
+        private void Open_Click(object sender, RoutedEventArgs e)
+        {
+            var openFileDialog = new OpenFileDialog();
+            openFileDialog.DefaultExt = ".xml";
+            openFileDialog.Title = "Open .xml structured log file...";
+            var result = openFileDialog.ShowDialog(this);
+            if (result != true)
+            {
+                return;
+            }
+
+            var filePath = openFileDialog.FileName;
+            OpenFile(filePath);
+        }
+
+        private void OpenFile(string filePath)
+        {
+            var build = LogReader.ReadLog(filePath);
+            mainContent.Content = build;
+        }
+
+        private void Exit_Click(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Shutdown();
         }
     }
 }
