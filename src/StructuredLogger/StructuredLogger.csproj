@@ -42,6 +42,7 @@
     <Compile Include="ObjectModel\TaskParameter.cs" />
     <Compile Include="ObjectModel\Tasks\CopyTask.cs" />
     <Compile Include="ObjectModel\Tasks\FileCopyOperation.cs" />
+    <Compile Include="ObjectModel\TreeNode.cs" />
     <Compile Include="Property.cs" />
     <Compile Include="PropertyBag.cs" />
     <Compile Include="UnknownTaskParameterPrefixException.cs" />
