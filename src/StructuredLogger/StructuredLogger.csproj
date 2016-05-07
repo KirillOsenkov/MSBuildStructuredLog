@@ -30,6 +30,7 @@
     <Compile Include="ObjectModel\AddItemGroup.cs" />
     <Compile Include="ObjectModel\Error.cs" />
     <Compile Include="ObjectModel\Folder.cs" />
+    <Compile Include="ObjectModel\Metadata.cs" />
     <Compile Include="ObjectModel\RemoveItemGroup.cs" />
     <Compile Include="ObjectModel\Warning.cs" />
     <Compile Include="Serialization\JsonLogWriter.cs" />
@@ -37,7 +38,7 @@
     <Compile Include="Construction\MessageProcessor.cs" />
     <None Include="Serialization\XmlLogReader.cs" />
     <Compile Include="ObjectModel\Build.cs" />
-    <Compile Include="ObjectModel\InputParameter.cs" />
+    <Compile Include="ObjectModel\Parameter.cs" />
     <Compile Include="ObjectModel\Item.cs" />
     <Compile Include="ObjectModel\Message.cs" />
     <Compile Include="ObjectModel\Project.cs" />
@@ -47,7 +48,6 @@
     <Compile Include="ObjectModel\Tasks\FileCopyOperation.cs" />
     <Compile Include="ObjectModel\TreeNode.cs" />
     <Compile Include="ObjectModel\Property.cs" />
-    <Compile Include="ObjectModel\PropertyList.cs" />
     <Compile Include="StructuredLogger.cs" />
     <Compile Include="Serialization\XmlLogWriter.cs" />
   </ItemGroup>

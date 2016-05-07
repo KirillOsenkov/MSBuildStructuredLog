@@ -3,7 +3,7 @@
     /// <summary>
     /// Class representation of a task input parameter.
     /// </summary>
-    public class InputParameter : LogProcessNode
+    public class Parameter : LogProcessNode
     {
     }
 }

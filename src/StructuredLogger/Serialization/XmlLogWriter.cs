@@ -25,6 +25,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return result;
             }
 
+            var metadata = node as Metadata;
+            if (metadata != null)
+            {
+                result.Add(new XAttribute("Name", metadata.Name));
+                result.Value = metadata.Value;
+                return result;
+            }
+
             var message = node as Message;
             if (message != null)
             {
@@ -106,13 +114,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 element.Add(new XAttribute("Value", item.Text));
             }
+
+            var parameter = node as Parameter;
+            if (parameter != null)
+            {
+                element.Add(new XAttribute("Name", parameter.Name));
+            }
         }
 
         private string GetName(LogProcessNode node)
         {
-            if ((node is Folder ||
-                node is Item ||
-                node is InputParameter) && node.Name != null)
+            if ((node is Folder) && node.Name != null)
             {
                 return node.Name;
             }

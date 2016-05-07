@@ -32,7 +32,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 // we have a weird case of multi-line value
                 var nameValue = ParseNameValue(lines[0].Substring(prefix.Length));
 
-                result = new InputParameter { Name = nameValue.Key };
+                result = new Parameter { Name = nameValue.Key };
 
                 result.AddChild(new Item { Text = nameValue.Value.Replace("\r", "") });
                 for (int i = 1; i < lines.Length; i++)
@@ -43,7 +43,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return result;
             }
 
-            result = new InputParameter();
+            result = new Parameter();
 
             Item currentItem = null;
             foreach (var line in lines)
@@ -64,7 +64,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         if (currentItem != null)
                         {
                             var nameValue = ParseNameValue(line.Substring(16));
-                            var metadata = new Property(nameValue);
+                            var metadata = new Metadata { Name = nameValue.Key, Value = nameValue.Value };
                             currentItem.AddChild(metadata);
                         }
                         break;

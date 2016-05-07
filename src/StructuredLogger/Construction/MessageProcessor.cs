@@ -152,8 +152,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 node = construction.Build;
             }
 
-            var messages = node.GetOrCreateNodeWithName<Folder>("Messages");
-            messages.AddChild(new Message { Text = message, Timestamp = buildMessageEventArgs.Timestamp });
+            node.AddChild(new Message { Text = message, Timestamp = buildMessageEventArgs.Timestamp });
         }
 
         /// <summary>

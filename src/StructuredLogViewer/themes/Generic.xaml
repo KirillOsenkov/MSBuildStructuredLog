@@ -37,14 +37,6 @@
     </StackPanel>
   </HierarchicalDataTemplate>
 
-  <HierarchicalDataTemplate DataType="{x:Type l:InputParameter}"
-                            ItemsSource="{Binding Items}">
-    <StackPanel Orientation="Horizontal">
-      <TextBlock Text="Input parameter: " Foreground="DarkCyan" />
-      <TextBlock Text="{Binding Name}" />
-    </StackPanel>
-  </HierarchicalDataTemplate>
-
   <HierarchicalDataTemplate DataType="{x:Type l:Item}"
                             ItemsSource="{Binding MetadataView}">
     <StackPanel Orientation="Horizontal">

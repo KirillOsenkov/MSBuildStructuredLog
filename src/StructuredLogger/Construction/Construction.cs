@@ -34,7 +34,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 Build = new Build();
                 Build.StartTime = args.Timestamp;
-                var properties = Build.GetOrCreateNodeWithName<Folder>("Properties");
+                var properties = Build.GetOrCreateNodeWithName<Folder>("Environment");
                 AddProperties(properties, args.BuildEnvironment);
 
             }
@@ -290,27 +290,51 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// was created (e.g. as a parent) before we saw the started event.
         /// <remarks>Does nothing if the data has already been set or the new data is null.</remarks>
         /// </summary>
-        /// <param name="projectStartedEventArgs">The <see cref="ProjectStartedEventArgs"/> instance containing the event data.</param>
-        public static void UpdateProject(Project project, ProjectStartedEventArgs projectStartedEventArgs)
+        /// <param name="args">The <see cref="ProjectStartedEventArgs"/> instance containing the event data.</param>
+        public static void UpdateProject(Project project, ProjectStartedEventArgs args)
         {
-            if (project.Name == null && projectStartedEventArgs != null)
+            if (project.Name == null && args != null)
             {
-                project.StartTime = projectStartedEventArgs.Timestamp;
-                project.Name = projectStartedEventArgs.Message;
-                project.ProjectFile = projectStartedEventArgs.ProjectFile;
+                project.StartTime = args.Timestamp;
+                project.Name = args.Message;
+                project.ProjectFile = args.ProjectFile;
 
-                if (projectStartedEventArgs.GlobalProperties != null)
+                if (args.GlobalProperties != null)
                 {
-                    AddGlobalProperties(project, projectStartedEventArgs.GlobalProperties);
+                    AddGlobalProperties(project, args.GlobalProperties);
                 }
 
-                if (projectStartedEventArgs.Properties != null)
+                if (args.Properties != null)
                 {
                     var properties = project.GetOrCreateNodeWithName<Folder>("Properties");
-                    AddProperties(properties, projectStartedEventArgs
+                    AddProperties(properties, args
                         .Properties
                         .Cast<DictionaryEntry>()
                         .Select(d => new KeyValuePair<string, string>(Convert.ToString(d.Key), Convert.ToString(d.Value))));
+                }
+
+                if (args.Items != null)
+                {
+                    var items = project.GetOrCreateNodeWithName<Folder>("Items");
+                    foreach (DictionaryEntry kvp in args.Items)
+                    {
+                        var itemName = Convert.ToString(kvp.Key);
+                        var itemGroup = items.GetOrCreateNodeWithName<Folder>(itemName);
+
+                        var item = new Item();
+
+                        var taskItem = kvp.Value as ITaskItem2;
+                        if (taskItem != null)
+                        {
+                            item.Text = taskItem.ItemSpec;
+                            foreach (DictionaryEntry metadataName in taskItem.CloneCustomMetadata())
+                            {
+                                item.AddChild(new Metadata { Name = Convert.ToString(metadataName.Key), Value = Convert.ToString(metadataName.Value) });
+                            }
+
+                            itemGroup.AddChild(item);
+                        }
+                    }
                 }
             }
         }
