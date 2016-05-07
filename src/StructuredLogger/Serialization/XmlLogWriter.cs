@@ -17,10 +17,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             var result = new XElement(GetName(node));
 
+            WriteAttributes(node, result);
+
             var property = node as Property;
             if (property != null)
             {
-                result.Add(new XAttribute("Name", property.Name));
                 result.Value = property.Value;
                 return result;
             }
@@ -28,7 +29,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var metadata = node as Metadata;
             if (metadata != null)
             {
-                result.Add(new XAttribute("Name", metadata.Name));
                 result.Value = metadata.Value;
                 return result;
             }
@@ -40,8 +40,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 result.Value = message.Text;
                 return result;
             }
-
-            WriteAttributes(node, result);
 
             if (node.HasChildren)
             {
@@ -61,12 +59,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void WriteAttributes(LogProcessNode node, XElement element)
         {
+            if (node is Parameter || node is Property || node is Metadata)
+            {
+                element.Add(new XAttribute("Name", node.Name));
+                return;
+            }
+
             var build = node as Build;
             if (build != null)
             {
                 element.Add(new XAttribute("BuildSucceeded", build.Succeeded));
-                element.Add(new XAttribute("StartTime", build.StartTime));
-                element.Add(new XAttribute("EndTime", build.EndTime));
+                AddStartAndEndTime(element, build);
                 return;
             }
 
@@ -74,8 +77,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (project != null)
             {
                 element.Add(new XAttribute("Name", project.Name.Replace("\"", "")));
-                element.Add(new XAttribute("StartTime", project.StartTime));
-                element.Add(new XAttribute("EndTime", project.EndTime));
+                AddStartAndEndTime(element, project);
                 element.Add(new XAttribute("ProjectFile", project.ProjectFile));
                 return;
             }
@@ -84,8 +86,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (target != null)
             {
                 element.Add(new XAttribute("Name", target.Name));
-                element.Add(new XAttribute("StartTime", target.StartTime));
-                element.Add(new XAttribute("EndTime", target.EndTime));
+                AddStartAndEndTime(element, target);
                 return;
             }
 
@@ -94,8 +95,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 element.Add(new XAttribute("Name", task.Name));
                 element.Add(new XAttribute("FromAssembly", task.FromAssembly));
-                element.Add(new XAttribute("StartTime", task.StartTime));
-                element.Add(new XAttribute("EndTime", task.EndTime));
+                AddStartAndEndTime(element, task);
                 if (task.CommandLineArguments != null)
                 {
                     element.Add(new XElement("CommandLineArguments", task.CommandLineArguments));
@@ -112,19 +112,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     element.Add(new XAttribute("Name", item.Name));
                 }
 
-                element.Add(new XAttribute("Value", item.Text));
+                element.Add(new XAttribute("ItemSpec", item.ItemSpec));
+                return;
             }
+        }
 
-            var parameter = node as Parameter;
-            if (parameter != null)
-            {
-                element.Add(new XAttribute("Name", parameter.Name));
-            }
+        private static void AddStartAndEndTime(XElement element, LogProcessNode node)
+        {
+            element.Add(new XAttribute("StartTime", node.StartTime));
+            element.Add(new XAttribute("EndTime", node.EndTime));
         }
 
         private string GetName(LogProcessNode node)
         {
-            if ((node is Folder) && node.Name != null)
+            if (node is Folder && node.Name != null)
             {
                 return node.Name;
             }

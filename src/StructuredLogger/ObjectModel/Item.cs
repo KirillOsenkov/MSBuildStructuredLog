@@ -5,6 +5,6 @@
     /// </summary>
     public class Item : LogProcessNode
     {
-        public string Text { get; set; }
+        public string ItemSpec { get; set; }
     }
 }

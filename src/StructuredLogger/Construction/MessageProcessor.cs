@@ -122,7 +122,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var property = itemGroup as Property;
             if (property != null)
             {
-                itemGroup = new Item { Name = property.Name, Text = property.Value };
+                itemGroup = new Item { Name = property.Name, ItemSpec = property.Value };
             }
 
             containerNode.AddChild(itemGroup);

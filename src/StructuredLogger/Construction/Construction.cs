@@ -326,7 +326,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         var taskItem = kvp.Value as ITaskItem2;
                         if (taskItem != null)
                         {
-                            item.Text = taskItem.ItemSpec;
+                            item.ItemSpec = taskItem.ItemSpec;
                             foreach (DictionaryEntry metadataName in taskItem.CloneCustomMetadata())
                             {
                                 item.AddChild(new Metadata { Name = Convert.ToString(metadataName.Key), Value = Convert.ToString(metadataName.Value) });

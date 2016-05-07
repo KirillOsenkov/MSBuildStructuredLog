@@ -34,10 +34,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 result = new Parameter { Name = nameValue.Key };
 
-                result.AddChild(new Item { Text = nameValue.Value.Replace("\r", "") });
+                result.AddChild(new Item { ItemSpec = nameValue.Value.Replace("\r", "") });
                 for (int i = 1; i < lines.Length; i++)
                 {
-                    result.AddChild(new Item { Text = lines[i].Replace("\r", "") });
+                    result.AddChild(new Item { ItemSpec = lines[i].Replace("\r", "") });
                 }
 
                 return result;
@@ -57,7 +57,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         }
                         break;
                     case 8:
-                        currentItem = new Item { Text = line.Substring(8) };
+                        currentItem = new Item { ItemSpec = line.Substring(8) };
                         result.AddChild(currentItem);
                         break;
                     case 16:
