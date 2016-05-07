@@ -4,16 +4,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class XmlLogWriter
     {
-        public static void SaveToXml(Build build, string logFile)
+        public static void WriteToXml(Build build, string logFile)
         {
             var document = new XDocument();
             var writer = new XmlLogWriter();
-            var root = writer.SaveNode(build);
+            var root = writer.WriteNode(build);
             document.Add(root);
             document.Save(logFile);
         }
 
-        public XElement SaveNode(LogProcessNode node)
+        public XElement WriteNode(LogProcessNode node)
         {
             var result = new XElement(GetName(node));
 
@@ -48,7 +48,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     var childNode = child as LogProcessNode;
                     if (childNode != null)
                     {
-                        var childElement = SaveNode(childNode);
+                        var childElement = WriteNode(childNode);
                         result.Add(childElement);
                     }
                 }
@@ -68,7 +68,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var build = node as Build;
             if (build != null)
             {
-                element.Add(new XAttribute("BuildSucceeded", build.Succeeded));
+                element.Add(new XAttribute("Succeeded", build.Succeeded));
                 AddStartAndEndTime(element, build);
                 return;
             }
@@ -98,7 +98,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 AddStartAndEndTime(element, task);
                 if (task.CommandLineArguments != null)
                 {
-                    element.Add(new XElement("CommandLineArguments", task.CommandLineArguments));
+                    element.Add(new XAttribute("CommandLineArguments", task.CommandLineArguments));
                 }
 
                 return;

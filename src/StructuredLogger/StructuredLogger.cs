@@ -41,7 +41,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void Construction_Completed()
         {
-            XmlLogWriter.SaveToXml(construction.Build, _logFile);
+            XmlLogWriter.WriteToXml(construction.Build, _logFile);
         }
 
         /// <summary>

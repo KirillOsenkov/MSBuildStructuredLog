@@ -36,7 +36,7 @@
     <Compile Include="Serialization\JsonLogWriter.cs" />
     <Compile Include="ObjectModel\LogProcessNode.cs" />
     <Compile Include="Construction\MessageProcessor.cs" />
-    <None Include="Serialization\XmlLogReader.cs" />
+    <Compile Include="Serialization\XmlLogReader.cs" />
     <Compile Include="ObjectModel\Build.cs" />
     <Compile Include="ObjectModel\Parameter.cs" />
     <Compile Include="ObjectModel\Item.cs" />
