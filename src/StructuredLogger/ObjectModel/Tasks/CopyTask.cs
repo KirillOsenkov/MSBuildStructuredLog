@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -11,7 +12,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             List<FileCopyOperation> list = new List<FileCopyOperation>();
 
-            foreach (var message in this.GetChildrenOfType<Message>())
+            foreach (var message in this.Children.OfType<Message>())
             {
                 var text = message.Text;
                 if (text.StartsWith(copyingFileFrom))

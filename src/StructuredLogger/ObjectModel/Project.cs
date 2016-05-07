@@ -23,55 +23,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         private readonly ConcurrentDictionary<string, Target> _targetNameToTargetMap = new ConcurrentDictionary<string, Target>(StringComparer.OrdinalIgnoreCase);
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Project"/> class.
-        /// </summary>
-        /// <param name="projectId">The project identifier.</param>
-        /// <param name="e">The <see cref="ProjectStartedEventArgs"/> instance containing the event data.</param>
-        /// <param name="parentPropertyBag">The parent property bag (to check for inherited properties).</param>
-        public Project(int projectId, ProjectStartedEventArgs e, PropertyBag parentPropertyBag)
+        public void Freeze()
         {
-            Properties = new PropertyBag(parentPropertyBag);
-            Id = projectId;
-
-            TryUpdate(e);
-        }
-
-        public Project()
-        {
-        }
-
-        /// <summary>
-        /// Add the given project as a child to this node.
-        /// </summary>
-        /// <param name="childProject">The child project to add.</param>
-        public void AddChildProject(Project childProject)
-        {
-            AddChildNode(childProject);
-        }
-
-        /// <summary>
-        /// Adds a new target node to the project.
-        /// </summary>
-        /// <param name="targetStartedEventArgs">The <see cref="TargetStartedEventArgs"/> instance containing the event data.</param>
-        public void AddTarget(TargetStartedEventArgs targetStartedEventArgs)
-        {
-            var target = GetOrAddTargetByName(targetStartedEventArgs.TargetName, targetStartedEventArgs);
-
-            if (!string.IsNullOrEmpty(targetStartedEventArgs.ParentTarget))
+            // We could be in a situation where we never saw a "Parent" Target. So it's now
+            // in our scope but not rooted. This can happen when targets fail to run.
+            // Let's just add them back.
+            foreach (var orphan in _targetNameToTargetMap.Values.Where(t => t.Id < 0))
             {
-                var parentTarget = GetOrAddTargetByName(targetStartedEventArgs.ParentTarget);
-                parentTarget.AddChildTarget(target);
+                AddChild(orphan);
             }
-            else
-            {
-                AddChildNode(target);
-            }
-        }
-
-        public void AddTarget(Target target)
-        {
-            AddChildNode(target);
         }
 
         /// <summary>
@@ -85,86 +45,25 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return _targetNameToTargetMap.Values.First(t => t.Id == id);
         }
 
-        /// <summary>
-        /// Writes the project and its children to XML XElement representation.
-        /// </summary>
-        /// <param name="parentElement">The parent element.</param>
-        public override void SaveToElement(XElement parentElement)
-        {
-            // We could be in a situation where we never saw a "Parent" Target. So it's now
-            // in our scope but not rooted. This can happen when targets fail to run.
-            // Let's just add them back.
-            foreach (var orphan in _targetNameToTargetMap.Values.Where(t => t.Id < 0))
-            {
-                AddChildNode(orphan);
-            }
-
-            var element = new XElement("Project",
-                new XAttribute("Name", Name.Replace("\"", string.Empty)),
-                new XAttribute("StartTime", StartTime),
-                new XAttribute("EndTime", EndTime),
-                new XAttribute("ProjectFile", ProjectFile));
-
-            parentElement.Add(element);
-
-            WriteProperties(element);
-            WriteChildren<Message>(element, () => new XElement("ProjectMessageEvents"));
-            WriteChildren<Project>(element);
-            WriteChildren<Target>(element);
-        }
-
-        /// <summary>
-        /// Try to update the project data given a project started event. This is useful if the project
-        /// was created (e.g. as a parent) before we saw the started event.
-        /// <remarks>Does nothing if the data has already been set or the new data is null.</remarks>
-        /// </summary>
-        /// <param name="projectStartedEventArgs">The <see cref="ProjectStartedEventArgs"/> instance containing the event data.</param>
-        public void TryUpdate(ProjectStartedEventArgs projectStartedEventArgs)
-        {
-            if (Name == null && projectStartedEventArgs != null)
-            {
-                StartTime = projectStartedEventArgs.Timestamp;
-                Name = projectStartedEventArgs.Message;
-                ProjectFile = projectStartedEventArgs.ProjectFile;
-
-                if (projectStartedEventArgs.GlobalProperties != null)
-                {
-                    Properties.AddProperties(projectStartedEventArgs.GlobalProperties);
-                }
-                if (projectStartedEventArgs.Properties != null)
-                {
-                    Properties.AddProperties(projectStartedEventArgs.Properties.Cast<DictionaryEntry>());
-                }
-            }
-        }
-
-        /// <summary>
-        /// Returns a <see cref="System.String" /> that represents this instance.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="System.String" /> that represents this instance.
-        /// </returns>
         public override string ToString()
         {
-            return string.Format("{0} - {1}", Id, Name);
+            return $"Project Id={Id} Name={Name}";
         }
 
-        /// <summary>
-        /// Gets a child target by name. If the target doesn't exist a stub will be created.
-        /// </summary>
-        /// <param name="targetName">Name of the target.</param>
-        /// <param name="e">The <see cref="TargetStartedEventArgs"/> instance containing the event data, if any.</param>
-        /// <returns>Target node</returns>
-        private Target GetOrAddTargetByName(string targetName, TargetStartedEventArgs e = null)
+        public Target GetOrAddTargetByName(string targetName)
         {
-            Target result = _targetNameToTargetMap.GetOrAdd(targetName, key=> new Target(key, e));
+            Target result = _targetNameToTargetMap.GetOrAdd(targetName, key => new Target() { Name = key });
+            return result;
+        }
 
-            if (e != null)
+        public Target GetTarget(string targetName, int targetId)
+        {
+            if (string.IsNullOrEmpty(targetName))
             {
-                result.TryUpdate(e);
+                return _targetNameToTargetMap.Values.First(t => t.Id == targetId);
             }
 
-            return result;
+            return _targetNameToTargetMap[targetName];
         }
     }
 }

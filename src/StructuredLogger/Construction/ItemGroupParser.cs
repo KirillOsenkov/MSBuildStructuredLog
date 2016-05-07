@@ -12,11 +12,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <param name="prefix">The prefix parsed out (e.g. 'Output Item(s): '.).</param>
         /// <param name="name">Out: The name of the list.</param>
         /// <returns>List of items within the list and all metadata.</returns>
-        public static IList<Item> ParseItemList(string message, string prefix, out string name)
+        public static LogProcessNode ParsePropertyOrItemList(string message, string prefix)
         {
-            name = null;
+            LogProcessNode result;
 
-            var items = new List<Item>();
             var lines = message.Split('\n');
 
             if (lines.Length == 1)
@@ -24,25 +23,27 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 var line = lines[0];
                 line = line.Substring(prefix.Length);
                 var nameValue = ParseNameValue(line);
-                name = nameValue.Key;
-                items.Add(new Item(nameValue.Value));
-                return items;
+                result = new Property { Name = nameValue.Key, Value = nameValue.Value };
+                return result;
             }
 
             if (lines[0].Length > prefix.Length)
             {
                 // we have a weird case of multi-line value
                 var nameValue = ParseNameValue(lines[0].Substring(prefix.Length));
-                name = nameValue.Key;
 
-                items.Add(new Item(nameValue.Value.Replace("\r", "")));
+                result = new InputParameter { Name = nameValue.Key };
+
+                result.AddChild(new Item { Text = nameValue.Value.Replace("\r", "") });
                 for (int i = 1; i < lines.Length; i++)
                 {
-                    items.Add(new Item(lines[i].Replace("\r", "")));
+                    result.AddChild(new Item { Text = lines[i].Replace("\r", "") });
                 }
 
-                return items;
+                return result;
             }
+
+            result = new InputParameter();
 
             Item currentItem = null;
             foreach (var line in lines)
@@ -52,31 +53,27 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     case 4:
                         if (line.EndsWith("=", StringComparison.Ordinal))
                         {
-                            name = line.Substring(4, line.Length - 5);
+                            result.Name = line.Substring(4, line.Length - 5);
                         }
                         break;
                     case 8:
-                        currentItem = new Item(line.Substring(8));
-                        items.Add(currentItem);
+                        currentItem = new Item { Text = line.Substring(8) };
+                        result.AddChild(currentItem);
                         break;
                     case 16:
                         if (currentItem != null)
                         {
                             var nameValue = ParseNameValue(line.Substring(16));
-                            currentItem.AddMetadata(nameValue.Key, nameValue.Value);
+                            var metadata = new Property(nameValue);
+                            currentItem.AddChild(metadata);
                         }
                         break;
                 }
             }
 
-            return items;
+            return result;
         }
 
-        /// <summary>
-        /// Parse a string for a name value pair (name=value).
-        /// </summary>
-        /// <param name="nameEqualsValue">The (name = value) string to parse.</param>
-        /// <returns>KeyValuePair name and value</returns>
         private static KeyValuePair<string, string> ParseNameValue(string nameEqualsValue)
         {
             var equals = nameEqualsValue.IndexOf('=');
@@ -85,11 +82,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return new KeyValuePair<string, string>(name, value);
         }
 
-        /// <summary>
-        /// Gets the number of leading spaces from a string
-        /// </summary>
-        /// <param name="line">The string.</param>
-        /// <returns>Number of spaces in the beginning of the string.</returns>
         private static int GetNumberOfLeadingSpaces(string line)
         {
             int result = 0;

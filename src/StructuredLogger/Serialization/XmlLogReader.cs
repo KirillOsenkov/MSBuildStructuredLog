@@ -3,7 +3,7 @@ using System.Xml.Linq;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class LogReader
+    public class XmlLogReader
     {
         public static Build ReadLog(string xmlFilePath)
         {
@@ -14,8 +14,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             build.Succeeded = GetBoolean(root, "BuildSucceeded");
             build.StartTime = GetDateTime(root, "StartTime");
             build.EndTime = GetDateTime(root, "EndTime");
-            build.ErrorCount = GetInteger(root, "Errors");
-            build.WarningCount = GetInteger(root, "Warnings");
 
             foreach (var element in root.Elements())
             {
@@ -39,7 +37,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             else if (name == "Project")
             {
                 var project = ReadProject(element);
-                build.AddProject(project);
+                build.AddChild(project);
             }
         }
 
@@ -73,12 +71,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             else if (name == "Project")
             {
                 var subproject = ReadProject(element);
-                project.AddChildProject(subproject);
+                project.AddChild(subproject);
             }
             else if (name == "Target")
             {
                 var target = ReadTarget(element);
-                project.AddTarget(target);
+                project.AddChild(target);
             }
         }
 
@@ -116,12 +114,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             else if (name == "Target")
             {
                 var childTarget = ReadTarget(element);
-                target.AddChildTarget(childTarget);
+                target.AddChild(childTarget);
             }
             else if (name == "Task")
             {
                 var task = ReadTask(element);
-                target.AddChildTask(task);
+                target.AddChild(task);
             }
         }
 
@@ -130,7 +128,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             foreach (var subelement in element.Elements())
             {
                 var taskParameter = ReadTaskParameter<T>(subelement);
-                node.AddTaskParameter(taskParameter);
+                node.AddChild(taskParameter);
             }
         }
 
@@ -140,14 +138,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             taskParameter.Name = element.Name.LocalName;
             if (!element.HasElements && element.Value != null)
             {
-                taskParameter.AddItem(new Item(element.Value));
+                taskParameter.AddChild(new Item(element.Value));
                 return taskParameter;
             }
 
             foreach (var itemElement in element.Elements())
             {
                 Item item = ReadItem(itemElement, taskParameter);
-                taskParameter.AddItem(item);
+                taskParameter.AddChild(item);
             }
 
             return taskParameter;
@@ -231,14 +229,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             task.CommandLineArguments = value;
         }
 
-        private static PropertyBag ReadProperties(XElement element)
+        private static PropertyList ReadProperties(XElement element)
         {
-            var propertyBag = new PropertyBag();
+            var propertyBag = new PropertyList();
             foreach (var propertyElement in element.Elements())
             {
                 var value = propertyElement.Value;
                 var name = GetString(propertyElement, "Name");
-                propertyBag.AddProperty(name, value);
+                propertyBag.AddChild(name, value);
             }
 
             return propertyBag;

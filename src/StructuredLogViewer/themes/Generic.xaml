@@ -17,20 +17,6 @@
     </StackPanel>
   </HierarchicalDataTemplate>
 
-  <HierarchicalDataTemplate DataType="{x:Type l:PropertyBag}"
-                            ItemsSource="{Binding PropertiesView}">
-    <StackPanel Orientation="Horizontal">
-      <TextBlock Text="Properties" />
-    </StackPanel>
-  </HierarchicalDataTemplate>
-
-  <HierarchicalDataTemplate DataType="{x:Type l:MessageList}"
-                            ItemsSource="{Binding Messages}">
-    <StackPanel Orientation="Horizontal">
-      <TextBlock Text="Messages" />
-    </StackPanel>
-  </HierarchicalDataTemplate>
-
   <DataTemplate DataType="{x:Type l:Message}">
     <TextBlock Text="{Binding Text}" />
   </DataTemplate>
@@ -55,30 +41,6 @@
                             ItemsSource="{Binding Items}">
     <StackPanel Orientation="Horizontal">
       <TextBlock Text="Input parameter: " Foreground="DarkCyan" />
-      <TextBlock Text="{Binding Name}" />
-    </StackPanel>
-  </HierarchicalDataTemplate>
-
-  <HierarchicalDataTemplate DataType="{x:Type l:ItemGroup}"
-                            ItemsSource="{Binding Items}">
-    <StackPanel Orientation="Horizontal">
-      <TextBlock Text="Item group: " Foreground="DarkCyan" />
-      <TextBlock Text="{Binding Name}" />
-    </StackPanel>
-  </HierarchicalDataTemplate>
-
-  <HierarchicalDataTemplate DataType="{x:Type l:OutputItem}"
-                            ItemsSource="{Binding Items}">
-    <StackPanel Orientation="Horizontal">
-      <TextBlock Text="Output item: " Foreground="DarkCyan" />
-      <TextBlock Text="{Binding Name}" />
-    </StackPanel>
-  </HierarchicalDataTemplate>
-
-  <HierarchicalDataTemplate DataType="{x:Type l:OutputProperty}"
-                            ItemsSource="{Binding Items}">
-    <StackPanel Orientation="Horizontal">
-      <TextBlock Text="Output property: " Foreground="DarkCyan" />
       <TextBlock Text="{Binding Name}" />
     </StackPanel>
   </HierarchicalDataTemplate>
