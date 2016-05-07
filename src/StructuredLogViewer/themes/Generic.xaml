@@ -5,9 +5,24 @@
 
   <Geometry x:Key="SearchGeometry">F1 M 8.5,7.0 C 7.12,7.00 6.0,5.88 6.0,4.5 C 6.0,3.12 7.12,2.0 8.5,2.0 C 9.88,2.0 11.0,3.12 11.0,4.5 C 11.0,5.88 9.88,7.0 8.5,7.0 Z M 8.5,0.0 C 6.02,0.0 4.0,2.02 4.0,4.500 C 4.0,5.23 4.19,5.9 4.49,6.5 L 0.0,11.0 L 2.0,13.0 L 6.49,8.51 C 7.1,8.81 7.77,9.0 8.5,9.0 C 11.0,9.0 13.0,7.0 13.0,4.5 C 13.0,2.02 11.0,0.0 8.5,0.0 Z</Geometry>
 
-  <DataTemplate DataType="{x:Type l:Build}">
-    <TextBlock Text="{Binding StartTime}" />
-  </DataTemplate>
+  <HierarchicalDataTemplate DataType="{x:Type l:Folder}"
+                            ItemsSource="{Binding Children}">
+    <StackPanel Orientation="Horizontal">
+      <TextBlock Text="{Binding Name}" Foreground="DarkGoldenrod" />
+    </StackPanel>
+  </HierarchicalDataTemplate>
+
+  <HierarchicalDataTemplate DataType="{x:Type l:Build}"
+                            ItemsSource="{Binding Children}">
+    <TextBlock>
+      <Run Text="Start: " />
+      <Run Text="{Binding StartTime}" />
+      <Run Text="Finish: " />
+      <Run Text="{Binding EndTime}" />
+      <Run Text="Succeeded: " />
+      <Run Text="{Binding Succeeded}" />
+    </TextBlock>
+  </HierarchicalDataTemplate>
 
   <HierarchicalDataTemplate DataType="{x:Type l:Project}"
                             ItemsSource="{Binding Children}">
@@ -16,10 +31,6 @@
       <TextBlock Text="{Binding Name}" />
     </StackPanel>
   </HierarchicalDataTemplate>
-
-  <DataTemplate DataType="{x:Type l:Message}">
-    <TextBlock Text="{Binding Text}" />
-  </DataTemplate>
 
   <HierarchicalDataTemplate DataType="{x:Type l:Target}"
                             ItemsSource="{Binding Children}">
@@ -37,12 +48,229 @@
     </StackPanel>
   </HierarchicalDataTemplate>
 
+  <HierarchicalDataTemplate DataType="{x:Type l:AddItem}"
+                            ItemsSource="{Binding Children}">
+    <StackPanel Orientation="Horizontal">
+      <TextBlock Text="Add Item: " Foreground="DarkOrange" />
+      <TextBlock Text="{Binding Text}" />
+    </StackPanel>
+  </HierarchicalDataTemplate>
+
+  <HierarchicalDataTemplate DataType="{x:Type l:RemoveItem}"
+                            ItemsSource="{Binding Children}">
+    <StackPanel Orientation="Horizontal">
+      <TextBlock Text="Remove Item: " Foreground="DarkOrange" />
+      <TextBlock Text="{Binding Text}" />
+    </StackPanel>
+  </HierarchicalDataTemplate>
+
   <HierarchicalDataTemplate DataType="{x:Type l:Item}"
-                            ItemsSource="{Binding MetadataView}">
+                            ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
       <TextBlock Text="Item: " Foreground="DarkOrange" />
       <TextBlock Text="{Binding Text}" />
     </StackPanel>
   </HierarchicalDataTemplate>
+
+  <HierarchicalDataTemplate DataType="{x:Type l:Parameter}"
+                            ItemsSource="{Binding Children}">
+    <StackPanel Orientation="Horizontal">
+      <TextBlock Text="Item: " Foreground="DarkOrange" />
+      <TextBlock Text="{Binding Text}" />
+    </StackPanel>
+  </HierarchicalDataTemplate>
+
+  <DataTemplate DataType="{x:Type l:Message}">
+    <TextBlock Text="{Binding Text}" />
+  </DataTemplate>
+
+  <DataTemplate DataType="{x:Type l:Error}">
+    <TextBlock Text="{Binding Message}" />
+  </DataTemplate>
+
+  <DataTemplate DataType="{x:Type l:Warning}">
+    <TextBlock Text="{Binding Message}" />
+  </DataTemplate>
+
+  <DataTemplate DataType="{x:Type l:Property}">
+    <TextBlock>
+      <Run Text="{Binding Name}" Foreground="DarkGoldenrod"/>
+      <Run Text=" = " Foreground="DarkGoldenrod"/>
+      <Run Text="{Binding Value}" />
+    </TextBlock>
+  </DataTemplate>
+
+  <DataTemplate DataType="{x:Type l:Metadata}">
+    <TextBlock Text="{Binding Name}" />
+  </DataTemplate>
+
+  <!--=================================================================
+        TreeViewItem
+    ==================================================================-->
+
+  <SolidColorBrush x:Key="&#465;" Color="#FF818181"/>
+  <SolidColorBrush x:Key="&#466;" Color="#FFFFFFFF"/>
+  <SolidColorBrush x:Key="&#467;" Color="#FF27C7F7"/>
+  <SolidColorBrush x:Key="&#468;" Color="#FFCCEEFB"/>
+  <SolidColorBrush x:Key="&#469;" Color="#FF262626"/>
+  <SolidColorBrush x:Key="&#470;" Color="#FF595959"/>
+  <SolidColorBrush x:Key="&#471;" Color="#FF1CC4F7"/>
+  <SolidColorBrush x:Key="&#472;" Color="#FF82DFFB"/>
+
+  <PathGeometry x:Key="&#473;">
+    <PathGeometry.Figures>
+      <PathFigureCollection>
+        <PathFigure IsFilled="True" StartPoint="0 0" IsClosed="True">
+          <PathFigure.Segments>
+            <PathSegmentCollection>
+              <LineSegment Point="0 6"/>
+              <LineSegment Point="6 0"/>
+            </PathSegmentCollection>
+          </PathFigure.Segments>
+        </PathFigure>
+      </PathFigureCollection>
+    </PathGeometry.Figures>
+  </PathGeometry>
+  <Style x:Key="&#474;" TargetType="{x:Type ToggleButton}">
+    <Setter Property="Focusable" Value="False"/>
+    <Setter Property="Width" Value="16"/>
+    <Setter Property="Height" Value="16"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type ToggleButton}">
+          <Border Width="16"
+                  Height="16"
+                  Background="Transparent"
+                  Padding="5,5,5,5">
+            <Path x:Name="ExpandPath"
+                  Fill="{StaticResource &#466;}"
+                  Stroke="{StaticResource &#465;}"
+                  Data="{StaticResource &#473;}">
+              <Path.RenderTransform>
+                <RotateTransform Angle="135" CenterX="3" CenterY="3"/>
+              </Path.RenderTransform>
+            </Path>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsChecked" Value="True">
+              <Setter TargetName="ExpandPath" Property="RenderTransform">
+                <Setter.Value>
+                  <RotateTransform Angle="180" CenterX="3" CenterY="3"/>
+                </Setter.Value>
+              </Setter>
+              <Setter TargetName="ExpandPath" Property="Fill" Value="{StaticResource &#470;}"/>
+              <Setter TargetName="ExpandPath" Property="Stroke" Value="{StaticResource &#469;}"/>
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="ExpandPath" Property="Stroke" Value="{StaticResource &#467;}"/>
+              <Setter TargetName="ExpandPath" Property="Fill" Value="{StaticResource &#468;}"/>
+            </Trigger>
+            <MultiTrigger>
+              <MultiTrigger.Conditions>
+                <Condition Property="IsMouseOver" Value="True"/>
+                <Condition Property="IsChecked" Value="True"/>
+              </MultiTrigger.Conditions>
+              <Setter TargetName="ExpandPath" Property="Stroke" Value="{StaticResource &#471;}"/>
+              <Setter TargetName="ExpandPath" Property="Fill" Value="{StaticResource &#472;}"/>
+            </MultiTrigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style x:Key="&#475;">
+    <Setter Property="Control.Template">
+      <Setter.Value>
+        <ControlTemplate>
+          <Rectangle />
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+  <Style x:Key="{x:Type TreeViewItem}"
+         TargetType="{x:Type TreeViewItem}">
+    <Setter Property="Background"
+            Value="Transparent"/>
+    <Setter Property="HorizontalContentAlignment"
+            Value="{Binding Path=HorizontalContentAlignment,RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"/>
+    <Setter Property="VerticalContentAlignment"
+            Value="{Binding Path=VerticalContentAlignment,RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}"/>
+    <Setter Property="Padding"
+            Value="1,0,0,0"/>
+    <Setter Property="Foreground"
+            Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
+    <Setter Property="FocusVisualStyle"
+            Value="{StaticResource &#475;}"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type TreeViewItem}">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition MinWidth="19" Width="Auto"/>
+              <ColumnDefinition Width="Auto"/>
+              <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition/>
+            </Grid.RowDefinitions>
+            <ToggleButton x:Name="Expander"
+                          Style="{StaticResource &#474;}"
+                          IsChecked="{Binding Path=IsExpanded,RelativeSource={RelativeSource TemplatedParent}}"
+                          ClickMode="Press"/>
+            <Border Name="Bd"
+                    Grid.Column="1"
+                    Grid.ColumnSpan="2"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    Padding="{TemplateBinding Padding}"
+                    SnapsToDevicePixels="true">
+              <ContentPresenter x:Name="PART_Header"
+                                ContentSource="Header"
+                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+            </Border>
+            <ItemsPresenter x:Name="ItemsHost" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"/>
+          </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsExpanded" Value="false">
+              <Setter TargetName="ItemsHost" Property="Visibility" Value="Collapsed"/>
+            </Trigger>
+            <Trigger Property="HasItems" Value="false">
+              <Setter TargetName="Expander" Property="Visibility" Value="Hidden"/>
+            </Trigger>
+            <Trigger Property="IsSelected" Value="true">
+              <Setter TargetName="Bd" Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
+              <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
+            </Trigger>
+            <MultiTrigger>
+              <MultiTrigger.Conditions>
+                <Condition Property="IsSelected" Value="true"/>
+                <Condition Property="IsSelectionActive" Value="false"/>
+              </MultiTrigger.Conditions>
+              <Setter TargetName="Bd" Property="Background" Value="{DynamicResource {x:Static SystemColors.InactiveSelectionHighlightBrushKey}}"/>
+              <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}}"/>
+            </MultiTrigger>
+            <Trigger Property="IsEnabled" Value="false">
+              <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+    <Style.Triggers>
+      <Trigger Property="VirtualizingPanel.IsVirtualizing" Value="true">
+        <Setter Property="ItemsPanel">
+          <Setter.Value>
+            <ItemsPanelTemplate>
+              <VirtualizingStackPanel/>
+            </ItemsPanelTemplate>
+          </Setter.Value>
+        </Setter>
+      </Trigger>
+    </Style.Triggers>
+  </Style>
 
 </ResourceDictionary>

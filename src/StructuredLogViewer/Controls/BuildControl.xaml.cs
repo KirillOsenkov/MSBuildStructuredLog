@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Build.Logging.StructuredLogger;
 
@@ -29,6 +30,12 @@ namespace StructuredLogViewer.Controls
         private void Search(string searchText)
         {
             var tree = treeView;
+        }
+
+        private void TreeViewItem_RequestBringIntoView(object sender, RequestBringIntoViewEventArgs args)
+        {
+            // prevent the annoying horizontal scrolling
+            args.Handled = true;
         }
     }
 }
