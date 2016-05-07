@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Windows;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Win32;
@@ -6,9 +7,6 @@ using StructuredLogViewer.Controls;
 
 namespace StructuredLogViewer
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
         public MainWindow()
@@ -17,6 +15,16 @@ namespace StructuredLogViewer
             var uri = new Uri("StructuredLogViewer;component/themes/Generic.xaml", UriKind.Relative);
             var generic = (ResourceDictionary)Application.LoadComponent(uri);
             Application.Current.Resources.MergedDictionaries.Add(generic);
+            Loaded += MainWindow_Loaded;
+        }
+
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            var file = @"D:\1.xml";
+            if (File.Exists(file))
+            {
+                OpenFile(file);
+            }
         }
 
         private void Open_Click(object sender, RoutedEventArgs e)
@@ -36,7 +44,8 @@ namespace StructuredLogViewer
 
         private void OpenFile(string filePath)
         {
-            var build = LogReader.ReadLog(filePath);
+            Title = "Structured Log Viewer - " + filePath;
+            var build = XmlLogReader.ReadFromXml(filePath);
             mainContent.Content = new BuildControl(build);
         }
 
