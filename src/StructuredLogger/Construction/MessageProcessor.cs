@@ -51,11 +51,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
             else if (args.Message.StartsWith(ItemGroupIncludeMessagePrefix))
             {
-                AddItemGroup(args, ItemGroupIncludeMessagePrefix, new AddItemGroup());
+                AddItemGroup(args, ItemGroupIncludeMessagePrefix, new AddItem());
             }
             else if (args.Message.StartsWith(ItemGroupRemoveMessagePrefix))
             {
-                AddItemGroup(args, ItemGroupRemoveMessagePrefix, new RemoveItemGroup());
+                AddItemGroup(args, ItemGroupRemoveMessagePrefix, new RemoveItem());
             }
             else
             {
@@ -119,6 +119,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var project = construction.GetOrAddProject(buildMessageEventArgs.BuildEventContext.ProjectContextId);
             var target = project.GetTargetById(buildMessageEventArgs.BuildEventContext.TargetId);
             var itemGroup = ItemGroupParser.ParsePropertyOrItemList(buildMessageEventArgs.Message, prefix);
+            var property = itemGroup as Property;
+            if (property != null)
+            {
+                itemGroup = new Item { Name = property.Name, Text = property.Value };
+            }
+
             containerNode.AddChild(itemGroup);
             target.AddChild(containerNode);
         }

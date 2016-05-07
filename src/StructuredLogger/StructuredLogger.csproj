@@ -27,11 +27,11 @@
     <Compile Include="Construction\Construction.cs" />
     <Compile Include="Construction\ItemGroupParser.cs" />
     <Compile Include="ObjectModel\AbstractDiagnostic.cs" />
-    <Compile Include="ObjectModel\AddItemGroup.cs" />
+    <Compile Include="ObjectModel\AddItem.cs" />
     <Compile Include="ObjectModel\Error.cs" />
     <Compile Include="ObjectModel\Folder.cs" />
     <Compile Include="ObjectModel\Metadata.cs" />
-    <Compile Include="ObjectModel\RemoveItemGroup.cs" />
+    <Compile Include="ObjectModel\RemoveItem.cs" />
     <Compile Include="ObjectModel\Warning.cs" />
     <Compile Include="Serialization\JsonLogWriter.cs" />
     <Compile Include="ObjectModel\LogProcessNode.cs" />

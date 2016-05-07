@@ -1,6 +1,6 @@
 ﻿namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class AddItemGroup : LogProcessNode
+    public class AddItem : LogProcessNode
     {
     }
 }

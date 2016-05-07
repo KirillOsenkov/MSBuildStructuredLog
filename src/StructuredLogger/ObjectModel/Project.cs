@@ -1,15 +1,9 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Linq;
-using System.Xml.Linq;
-using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    /// <summary>
-    /// Class representation of an MSBuild project execution.
-    /// </summary>
     public class Project : LogProcessNode
     {
         /// <summary>

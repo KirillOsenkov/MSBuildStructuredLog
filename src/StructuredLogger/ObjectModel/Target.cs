@@ -2,9 +2,6 @@
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    /// <summary>
-    /// Class representation of an MSBuild target execution.
-    /// </summary>
     public class Target : LogProcessNode
     {
         public bool Succeeded { get; internal set; }

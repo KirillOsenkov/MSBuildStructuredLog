@@ -1,6 +1,6 @@
 ﻿namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class Parameter : LogProcessNode
+    public class RemoveItem : LogProcessNode
     {
     }
 }
