@@ -51,31 +51,30 @@
   <HierarchicalDataTemplate DataType="{x:Type l:AddItem}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
-      <TextBlock Text="Add Item: " Foreground="DarkOrange" />
-      <TextBlock Text="{Binding Text}" />
+      <TextBlock Text="Add Item" Foreground="DarkOrange" />
     </StackPanel>
   </HierarchicalDataTemplate>
 
   <HierarchicalDataTemplate DataType="{x:Type l:RemoveItem}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
-      <TextBlock Text="Remove Item: " Foreground="DarkOrange" />
-      <TextBlock Text="{Binding Text}" />
+      <TextBlock Text="Remove Item" Foreground="DarkOrange" />
     </StackPanel>
   </HierarchicalDataTemplate>
 
   <HierarchicalDataTemplate DataType="{x:Type l:Item}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
-      <TextBlock Text="Item: " Foreground="DarkOrange" />
-      <TextBlock Text="{Binding Text}" />
+      <TextBlock Text="{Binding Name}" Foreground="DarkOrange" />
+      <TextBlock Text="{Binding EqualsIfNamePresent}" />
+      <TextBlock Text="{Binding ItemSpec}" />
     </StackPanel>
   </HierarchicalDataTemplate>
 
   <HierarchicalDataTemplate DataType="{x:Type l:Parameter}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
-      <TextBlock Text="Item: " Foreground="DarkOrange" />
+      <TextBlock Text="{Binding Name}" Foreground="DarkOrange" />
       <TextBlock Text="{Binding Text}" />
     </StackPanel>
   </HierarchicalDataTemplate>
@@ -101,7 +100,11 @@
   </DataTemplate>
 
   <DataTemplate DataType="{x:Type l:Metadata}">
-    <TextBlock Text="{Binding Name}" />
+    <TextBlock>
+      <Run Text="{Binding Name}" Foreground="DarkGoldenrod"/>
+      <Run Text=" = " Foreground="DarkGoldenrod"/>
+      <Run Text="{Binding Value}" />
+    </TextBlock>
   </DataTemplate>
 
   <!--=================================================================

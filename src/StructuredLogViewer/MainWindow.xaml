@@ -11,14 +11,16 @@
         UseLayoutRounding="True"
         TextOptions.TextFormattingMode="Display"
         TextOptions.TextRenderingMode="ClearType"
+        KeyUp="Window_KeyUp"
         SnapsToDevicePixels="True"
         Height="800" Width="600">
   <DockPanel>
     <Menu DockPanel.Dock="Top">
       <MenuItem Header="_File">
-        <MenuItem Header="_Open log file..." Click="Open_Click" />
+        <MenuItem Header="_Open log file..." Click="Open_Click" InputGestureText="Ctrl+O" />
+        <MenuItem Header="_Reload" Click="Reload_Click" InputGestureText="F5" />
         <Separator />
-        <MenuItem Header="E_xit" Click="Exit_Click" />
+        <MenuItem Header="E_xit" Click="Exit_Click" InputGestureText="Alt+F4" />
       </MenuItem>
     </Menu>
     <ContentPresenter x:Name="mainContent" />

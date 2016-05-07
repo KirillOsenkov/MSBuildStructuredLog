@@ -6,5 +6,6 @@
     public class Item : LogProcessNode
     {
         public string ItemSpec { get; set; }
+        public string EqualsIfNamePresent => string.IsNullOrWhiteSpace(Name) ? "" : " = ";
     }
 }
