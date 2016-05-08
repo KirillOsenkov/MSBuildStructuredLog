@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -11,6 +12,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// The full path to the MSBuild project file for this project.
         /// </summary>
         public string ProjectFile { get; set; }
+
+        public string ProjectFileExtension => Path.GetExtension(ProjectFile).ToLowerInvariant();
 
         /// <summary>
         /// A lookup table mapping of target names to targets. 

@@ -5,14 +5,70 @@
 
   <Geometry x:Key="SearchGeometry">F1 M 8.5,7.0 C 7.12,7.00 6.0,5.88 6.0,4.5 C 6.0,3.12 7.12,2.0 8.5,2.0 C 9.88,2.0 11.0,3.12 11.0,4.5 C 11.0,5.88 9.88,7.0 8.5,7.0 Z M 8.5,0.0 C 6.02,0.0 4.0,2.02 4.0,4.500 C 4.0,5.23 4.19,5.9 4.49,6.5 L 0.0,11.0 L 2.0,13.0 L 6.49,8.51 C 7.1,8.81 7.77,9.0 8.5,9.0 C 11.0,9.0 13.0,7.0 13.0,4.5 C 13.0,2.02 11.0,0.0 8.5,0.0 Z</Geometry>
 
+  <LinearGradientBrush x:Key="ClosedFolderBrush" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#FBD397" Offset="0" />
+    <GradientStop Color="#DBB377" Offset="1" />
+  </LinearGradientBrush>
+
+  <LinearGradientBrush x:Key="OpenFolderBrush" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="#F5F5F5" Offset="0" />
+    <GradientStop Color="#EFC099" Offset="1" />
+  </LinearGradientBrush>
+
+  <LinearGradientBrush x:Key="TargetBrush" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="Lavender" Offset="0" />
+    <GradientStop Color="Magenta" Offset="1" />
+  </LinearGradientBrush>
+
+  <LinearGradientBrush x:Key="TaskBrush" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="Cyan" Offset="0" />
+    <GradientStop Color="DeepSkyBlue" Offset="1" />
+  </LinearGradientBrush>
+
+  <DrawingBrush x:Key="SlnIcon">
+    <DrawingBrush.Drawing>
+      <DrawingGroup>
+        <DrawingGroup.Children>
+          <GeometryDrawing Brush="#00FFFFFF" Geometry="F1M16,16L0,16 0,0 16,0z" />
+          <GeometryDrawing Brush="#FFF6F6F6" Geometry="F1M0,-0.000199999999999534L0,8.5858 0,13.4148 0,13.9998 0.586,13.9998 2,15.4138 3.414,13.9998 4.585,13.9998 6.586,15.9998 7.236,15.9998 10,14.6188 10,13.9998 16,13.9998 16,-0.000199999999999534z" />
+          <GeometryDrawing Brush="#FF414141" Geometry="F1M15,1L15,13 10,13 10,12 14,12 14,4 2,4 2,6.586 1,7.586 1,1z" />
+          <GeometryDrawing Brush="#FF672079" Geometry="F1M5,11L7,9 7,13z M2,12L2,10 3,11z M7,7L4,10 2,8 1,9 1,13 2,14 4,12 7,15 9,14 9,8z" />
+          <GeometryDrawing Brush="#FFF0EFF1" Geometry="F1M1.9998,12.0004L2.9998,10.9994 1.9998,9.9994z" />
+          <GeometryDrawing Brush="#FFF0EFF1" Geometry="F1M7,13L7,9 5,11z" />
+          <GeometryDrawing Brush="#FFF0EFF1" Geometry="F1M2,4L2,6.586 4,8.586 6.803,5.783 10,7.382 10,12 14,12 14,4z" />
+        </DrawingGroup.Children>
+      </DrawingGroup>
+    </DrawingBrush.Drawing>
+  </DrawingBrush>
+
+  <DrawingBrush x:Key="CSProjIcon">
+    <DrawingBrush.Drawing>
+      <DrawingGroup>
+        <DrawingGroup.Children>
+          <GeometryDrawing Brush="#00FFFFFF" Geometry="F1M16,16L0,16 0,0 16,0z" />
+          <GeometryDrawing Brush="#FFF6F6F6" Geometry="F1M0,15L16,15 16,1 0,1z" />
+          <GeometryDrawing Brush="#FF414141" Geometry="F1M10,7L11,7 11,8 10,8z M9,10L10,10 10,9 11,9 11,10 12,10 12,9 13,9 13,8 12,8 12,7 13,7 13,6 12,6 12,5 11,5 11,6 10,6 10,5 9,5 9,6 8,6 8,7 9,7 9,8 8,8 8,9 9,9z" />
+          <GeometryDrawing Brush="#FF414141" Geometry="F1M5.8496,11C6.5296,11,7.0786,10.898,7.4996,10.692L7.4996,9.499C7.0786,9.747 6.6156,9.871 6.1076,9.871 5.5766,9.871 5.1546,9.705 4.8396,9.372 4.5256,9.039 4.3696,8.592 4.3696,8.031 4.3696,7.445 4.5356,6.981 4.8686,6.639 5.2016,6.297 5.6386,6.125 6.1796,6.125 6.6736,6.125 7.1146,6.241 7.4996,6.473L7.4996,5.215C7.1146,5.072 6.6386,5 6.0766,5 5.1656,5 4.4256,5.289 3.8556,5.866 3.2856,6.443 2.9996,7.195 2.9996,8.124 2.9996,8.995 3.2536,9.692 3.7616,10.216 4.2676,10.739 4.9646,11 5.8496,11" />
+          <GeometryDrawing Brush="#FFF0EFF1" Geometry="F1M10,8L11,8 11,7 10,7z" />
+          <GeometryDrawing Brush="#FFF0EFF1" Geometry="F1M13,7L12,7 12,8 13,8 13,9 12,9 12,10 11,10 11,9 10,9 10,10 9,10 9,9 8,9 8,8 9,8 9,7 8,7 8,6 9,6 9,5 10,5 10,6 11,6 11,5 12,5 12,6 13,6z M7.5,6.473C7.114,6.241 6.674,6.125 6.18,6.125 5.639,6.125 5.201,6.297 4.868,6.639 4.535,6.981 4.369,7.445 4.369,8.031 4.369,8.592 4.525,9.039 4.84,9.372 5.154,9.705 5.576,9.871 6.107,9.871 6.615,9.871 7.079,9.747 7.5,9.499L7.5,10.692C7.079,10.898 6.529,11 5.85,11 4.965,11 4.268,10.739 3.762,10.216 3.254,9.692 3,8.995 3,8.124 3,7.195 3.285,6.443 3.855,5.866 4.426,5.289 5.166,5 6.076,5 6.639,5 7.114,5.072 7.5,5.215z M2,13L14,13 14,3 2,3z" />
+          <GeometryDrawing Brush="#FF378A33" Geometry="F1M14,13L2,13 2,3 14,3z M1,14L15,14 15,2 1,2z" />
+        </DrawingGroup.Children>
+      </DrawingGroup>
+    </DrawingBrush.Drawing>
+  </DrawingBrush>
+
   <HierarchicalDataTemplate DataType="{x:Type l:Folder}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
+      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="#DBB377" Margin="2,0,6,0" Fill="{StaticResource ClosedFolderBrush}" />
       <TextBlock x:Name="nameText" Text="{Binding Name}" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
       <DataTrigger Binding="{Binding IsSelected}" Value="False">
         <Setter TargetName="nameText" Property="Foreground" Value="DarkGoldenrod" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding IsExpanded}" Value="True">
+        <Setter TargetName="icon" Property="Fill" Value="{StaticResource OpenFolderBrush}" />
       </DataTrigger>
     </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
@@ -20,12 +76,16 @@
   <HierarchicalDataTemplate DataType="{x:Type l:Project}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
-      <TextBlock x:Name="label" Text="Project: " />
+      <Rectangle x:Name="icon" Width="16" Height="16" Margin="1,0,6,0" Fill="{StaticResource CSProjIcon}" />
+      <!--<TextBlock x:Name="label" Text="Project: " />-->
       <TextBlock Text="{Binding Name}" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
-      <DataTrigger Binding="{Binding IsSelected}" Value="False">
+      <!--<DataTrigger Binding="{Binding IsSelected}" Value="False">
         <Setter TargetName="label" Property="Foreground" Value="Blue" />
+      </DataTrigger>-->
+      <DataTrigger Binding="{Binding ProjectFileExtension}" Value=".sln">
+        <Setter TargetName="icon" Property="Fill" Value="{StaticResource SlnIcon}" />
       </DataTrigger>
     </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
@@ -33,7 +93,8 @@
   <HierarchicalDataTemplate DataType="{x:Type l:Target}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal" x:Name="targetRoot">
-      <TextBlock x:Name="label" Text="Target: " />
+      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="Magenta" Margin="2,0,6,0" Fill="{StaticResource TargetBrush}" />
+      <TextBlock x:Name="label" Text="Target " />
       <TextBlock Text="{Binding Name}" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
@@ -41,7 +102,7 @@
         <Setter TargetName="targetRoot" Property="Opacity" Value="0.25" />
       </DataTrigger>
       <DataTrigger Binding="{Binding IsSelected}" Value="False">
-        <Setter TargetName="label" Property="Foreground" Value="Purple" />
+        <Setter TargetName="label" Property="Foreground" Value="Magenta" />
       </DataTrigger>
     </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
@@ -49,9 +110,15 @@
   <HierarchicalDataTemplate DataType="{x:Type l:Task}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
-      <TextBlock Text="Task: " Foreground="DarkGreen" />
+      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="DeepSkyBlue" Margin="2,0,6,0" Fill="{StaticResource TaskBrush}" />
+      <TextBlock x:Name="label" Text="Task " />
       <TextBlock Text="{Binding Name}" />
     </StackPanel>
+    <HierarchicalDataTemplate.Triggers>
+      <DataTrigger Binding="{Binding IsSelected}" Value="False">
+        <Setter TargetName="label" Property="Foreground" Value="DeepSkyBlue" />
+      </DataTrigger>
+    </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
 
   <HierarchicalDataTemplate DataType="{x:Type l:AddItem}"
