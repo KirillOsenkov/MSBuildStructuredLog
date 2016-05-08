@@ -35,6 +35,7 @@ namespace StructuredLogViewer
             this.filePath = filePath;
             Title = "Structured Log Viewer - " + filePath;
             var build = XmlLogReader.ReadFromXml(filePath);
+            BuildAnalyzer.AnalyzeBuild(build);
             mainContent.Content = new BuildControl(build);
         }
 

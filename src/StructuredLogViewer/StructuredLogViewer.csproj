@@ -41,6 +41,7 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BuildAnalyzer.cs" />
     <Compile Include="Controls\BuildControl.xaml.cs">
       <DependentUpon>BuildControl.xaml</DependentUpon>
     </Compile>

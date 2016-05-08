@@ -34,10 +34,15 @@
 
   <HierarchicalDataTemplate DataType="{x:Type l:Target}"
                             ItemsSource="{Binding Children}">
-    <StackPanel Orientation="Horizontal">
+    <StackPanel Orientation="Horizontal" x:Name="targetRoot">
       <TextBlock Text="Target: " Foreground="Purple" />
       <TextBlock Text="{Binding Name}" />
     </StackPanel>
+    <HierarchicalDataTemplate.Triggers>
+      <DataTrigger Binding="{Binding IsLowRelevance}" Value="True">
+        <Setter TargetName="targetRoot" Property="Opacity" Value="0.25" />
+      </DataTrigger>
+    </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
 
   <HierarchicalDataTemplate DataType="{x:Type l:Task}"
@@ -80,7 +85,12 @@
   </HierarchicalDataTemplate>
 
   <DataTemplate DataType="{x:Type l:Message}">
-    <TextBlock Text="{Binding Text}" />
+    <TextBlock x:Name="messageText" Text="{Binding Text}" />
+    <DataTemplate.Triggers>
+      <DataTrigger Binding="{Binding IsLowRelevance}" Value="True">
+        <Setter TargetName="messageText" Property="Opacity" Value="0.25" />
+      </DataTrigger>
+    </DataTemplate.Triggers>
   </DataTemplate>
 
   <DataTemplate DataType="{x:Type l:Error}">
