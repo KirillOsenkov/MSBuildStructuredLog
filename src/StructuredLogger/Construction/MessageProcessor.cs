@@ -124,6 +124,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (property != null)
             {
                 itemGroup = new Item { Name = property.Name, ItemSpec = property.Value };
+                containerNode.Name = property.Name;
             }
 
             containerNode.AddChild(itemGroup);
@@ -166,6 +167,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     if (targetName != null)
                     {
                         node = project.GetOrAddTargetByName(targetName);
+                        messageNode.IsLowRelevance = true;
                     }
                 }
             }

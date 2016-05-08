@@ -59,6 +59,8 @@
     <GradientStop Color="DeepSkyBlue" Offset="1" />
   </LinearGradientBrush>
 
+  <SolidColorBrush x:Key="TaskStroke" Color="DodgerBlue" />
+
   <DrawingBrush x:Key="SlnIcon">
     <DrawingBrush.Drawing>
       <DrawingGroup>
@@ -156,13 +158,13 @@
   <HierarchicalDataTemplate DataType="{x:Type l:Task}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
-      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="DeepSkyBlue" Margin="2,2,6,0" Fill="{StaticResource TaskBrush}" VerticalAlignment="Top" />
+      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="{StaticResource TaskStroke}" Margin="2,2,6,0" Fill="{StaticResource TaskBrush}" VerticalAlignment="Top" />
       <TextBlock x:Name="label" Text="Task " />
       <TextBlock Text="{Binding Name}" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
       <DataTrigger Binding="{Binding IsSelected}" Value="False">
-        <Setter TargetName="label" Property="Foreground" Value="DeepSkyBlue" />
+        <Setter TargetName="label" Property="Foreground" Value="{StaticResource TaskStroke}" />
       </DataTrigger>
     </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
@@ -172,6 +174,7 @@
     <StackPanel Orientation="Horizontal">
       <Rectangle x:Name="icon" Width="14" Height="11" Stroke="MediumAquamarine" Margin="2,2,6,0" Fill="{StaticResource ItemBrush}" VerticalAlignment="Top" />
       <TextBlock x:Name="label" Text="Add Item" />
+      <TextBlock Text="{Binding Name}" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
       <DataTrigger Binding="{Binding IsSelected}" Value="False">
@@ -185,6 +188,7 @@
     <StackPanel Orientation="Horizontal">
       <Rectangle x:Name="icon" Width="14" Height="11" Stroke="MediumAquamarine" Margin="2,2,6,0" Fill="{StaticResource ItemBrush}" VerticalAlignment="Top" />
       <TextBlock x:Name="label" Text="Remove Item" />
+      <TextBlock Text="{Binding Name}" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
       <DataTrigger Binding="{Binding IsSelected}" Value="False">
