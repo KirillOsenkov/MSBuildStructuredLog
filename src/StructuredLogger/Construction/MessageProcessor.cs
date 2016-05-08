@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -82,25 +83,25 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private Task GetTask(BuildMessageEventArgs buildMessageEventArgs)
+        private Task GetTask(BuildMessageEventArgs args)
         {
-            var project = construction.GetOrAddProject(buildMessageEventArgs.BuildEventContext.ProjectContextId);
-            var target = project.GetTargetById(buildMessageEventArgs.BuildEventContext.TargetId);
-            var task = target.GetTaskById(buildMessageEventArgs.BuildEventContext.TaskId);
+            var project = construction.GetOrAddProject(args.BuildEventContext.ProjectContextId);
+            var target = project.GetTargetById(args.BuildEventContext.TargetId);
+            var task = target.GetTaskById(args.BuildEventContext.TaskId);
             return task;
         }
 
         /// <summary>
         /// Handles BuildMessage event when a property discovery/evaluation is logged.
         /// </summary>
-        /// <param name="buildMessageEventArgs">The <see cref="BuildMessageEventArgs"/> instance containing the event data.</param>
+        /// <param name="args">The <see cref="BuildMessageEventArgs"/> instance containing the event data.</param>
         /// <param name="prefix">The prefix string.</param>
-        public void AddPropertyGroup(BuildMessageEventArgs buildMessageEventArgs, string prefix)
+        public void AddPropertyGroup(BuildMessageEventArgs args, string prefix)
         {
-            string message = buildMessageEventArgs.Message.Substring(prefix.Length);
+            string message = args.Message.Substring(prefix.Length);
 
-            var project = construction.GetOrAddProject(buildMessageEventArgs.BuildEventContext.ProjectContextId);
-            var target = project.GetTargetById(buildMessageEventArgs.BuildEventContext.TargetId);
+            var project = construction.GetOrAddProject(args.BuildEventContext.ProjectContextId);
+            var target = project.GetTargetById(args.BuildEventContext.TargetId);
 
             var equals = message.IndexOf('=');
             var name = message.Substring(0, equals);
@@ -112,13 +113,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <summary>
         /// Handles BuildMessage event when an ItemGroup discovery/evaluation is logged.
         /// </summary>
-        /// <param name="buildMessageEventArgs">The <see cref="BuildMessageEventArgs"/> instance containing the event data.</param>
+        /// <param name="args">The <see cref="BuildMessageEventArgs"/> instance containing the event data.</param>
         /// <param name="prefix">The prefix string.</param>
-        public void AddItemGroup(BuildMessageEventArgs buildMessageEventArgs, string prefix, LogProcessNode containerNode)
+        public void AddItemGroup(BuildMessageEventArgs args, string prefix, LogProcessNode containerNode)
         {
-            var project = construction.GetOrAddProject(buildMessageEventArgs.BuildEventContext.ProjectContextId);
-            var target = project.GetTargetById(buildMessageEventArgs.BuildEventContext.TargetId);
-            var itemGroup = ItemGroupParser.ParsePropertyOrItemList(buildMessageEventArgs.Message, prefix);
+            var project = construction.GetOrAddProject(args.BuildEventContext.ProjectContextId);
+            var target = project.GetTargetById(args.BuildEventContext.TargetId);
+            var itemGroup = ItemGroupParser.ParsePropertyOrItemList(args.Message, prefix);
             var property = itemGroup as Property;
             if (property != null)
             {
@@ -132,25 +133,35 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <summary>
         /// Handles a generic BuildMessage event and assigns it to the appropriate logging node.
         /// </summary>
-        /// <param name="buildMessageEventArgs">The <see cref="BuildMessageEventArgs"/> instance containing the event data.</param>
-        public void AddMessage(LazyFormattedBuildEventArgs buildMessageEventArgs, string message)
+        /// <param name="args">The <see cref="BuildMessageEventArgs"/> instance containing the event data.</param>
+        public void AddMessage(LazyFormattedBuildEventArgs args, string message)
         {
             LogProcessNode node = null;
 
-            if (buildMessageEventArgs.BuildEventContext.TaskId > 0)
+            if (args.BuildEventContext.TaskId > 0)
             {
-                node = construction.GetOrAddProject(buildMessageEventArgs.BuildEventContext.ProjectContextId)
-                    .GetTargetById(buildMessageEventArgs.BuildEventContext.TargetId)
-                    .GetTaskById(buildMessageEventArgs.BuildEventContext.TaskId);
+                node = construction.GetOrAddProject(args.BuildEventContext.ProjectContextId)
+                    .GetTargetById(args.BuildEventContext.TargetId)
+                    .GetTaskById(args.BuildEventContext.TaskId);
             }
-            else if (buildMessageEventArgs.BuildEventContext.TargetId > 0)
+            else if (args.BuildEventContext.TargetId > 0)
             {
-                node = construction.GetOrAddProject(buildMessageEventArgs.BuildEventContext.ProjectContextId)
-                    .GetTargetById(buildMessageEventArgs.BuildEventContext.TargetId);
+                node = construction.GetOrAddProject(args.BuildEventContext.ProjectContextId)
+                    .GetTargetById(args.BuildEventContext.TargetId);
             }
-            else if (buildMessageEventArgs.BuildEventContext.ProjectContextId > 0)
+            else if (args.BuildEventContext.ProjectContextId > 0)
             {
-                node = construction.GetOrAddProject(buildMessageEventArgs.BuildEventContext.ProjectContextId);
+                var project = construction.GetOrAddProject(args.BuildEventContext.ProjectContextId);
+                node = project;
+
+                if (message.StartsWith("Target") && message.Contains("skipped"))
+                {
+                    var targetName = ParseTargetName(message);
+                    if (targetName != null)
+                    {
+                        node = project.GetOrAddTargetByName(targetName);
+                    }
+                }
             }
 
             if (node == null)
@@ -158,20 +169,42 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 node = construction.Build;
             }
 
-            node.AddChild(new Message { Text = message, Timestamp = buildMessageEventArgs.Timestamp });
+            node.AddChild(new Message { Text = message, Timestamp = args.Timestamp });
+        }
+
+        private string ParseTargetName(string message)
+        {
+            int firstQuote = message.IndexOf('"');
+            if (firstQuote == -1)
+            {
+                return null;
+            }
+
+            int secondQuote = message.IndexOf('"', firstQuote + 1);
+            if (secondQuote == -1)
+            {
+                return null;
+            }
+
+            if (secondQuote - firstQuote < 2)
+            {
+                return null;
+            }
+
+            return message.Substring(firstQuote + 1, secondQuote - firstQuote - 1);
         }
 
         /// <summary>
         /// Handler for a TaskCommandLine log event. Sets the command line arguments on the appropriate task. 
         /// </summary>
-        /// <param name="taskCommandLineEventArgs">The <see cref="TaskCommandLineEventArgs"/> instance containing the event data.</param>
-        public void AddCommandLine(TaskCommandLineEventArgs taskCommandLineEventArgs)
+        /// <param name="args">The <see cref="TaskCommandLineEventArgs"/> instance containing the event data.</param>
+        public void AddCommandLine(TaskCommandLineEventArgs args)
         {
-            var project = construction.GetOrAddProject(taskCommandLineEventArgs.BuildEventContext.ProjectContextId);
-            var target = project.GetTargetById(taskCommandLineEventArgs.BuildEventContext.TargetId);
-            var task = target.GetTaskById(taskCommandLineEventArgs.BuildEventContext.TaskId);
+            var project = construction.GetOrAddProject(args.BuildEventContext.ProjectContextId);
+            var target = project.GetTargetById(args.BuildEventContext.TargetId);
+            var task = target.GetTaskById(args.BuildEventContext.TaskId);
 
-            task.CommandLineArguments = taskCommandLineEventArgs.CommandLine;
+            task.CommandLineArguments = args.CommandLine;
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -17,15 +18,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         private readonly ConcurrentDictionary<string, Target> _targetNameToTargetMap = new ConcurrentDictionary<string, Target>(StringComparer.OrdinalIgnoreCase);
 
-        public void Freeze()
+        public IEnumerable<Target> GetUnparentedTargets()
         {
-            // We could be in a situation where we never saw a "Parent" Target. So it's now
-            // in our scope but not rooted. This can happen when targets fail to run.
-            // Let's just add them back.
-            foreach (var orphan in _targetNameToTargetMap.Values.Where(t => t.Id < 0))
-            {
-                AddChild(orphan);
-            }
+            return _targetNameToTargetMap.Values.Where(t => t.Parent == null);
         }
 
         /// <summary>
@@ -57,7 +52,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return _targetNameToTargetMap.Values.First(t => t.Id == targetId);
             }
 
-            return _targetNameToTargetMap[targetName];
+            Target result;
+            _targetNameToTargetMap.TryGetValue(targetName, out result);
+            return result;
         }
     }
 }

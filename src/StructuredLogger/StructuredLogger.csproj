@@ -26,6 +26,7 @@
   <ItemGroup>
     <Compile Include="Construction\Construction.cs" />
     <Compile Include="Construction\ItemGroupParser.cs" />
+    <Compile Include="Construction\TargetGraph.cs" />
     <Compile Include="ObjectModel\AbstractDiagnostic.cs" />
     <Compile Include="ObjectModel\AddItem.cs" />
     <Compile Include="ObjectModel\Error.cs" />

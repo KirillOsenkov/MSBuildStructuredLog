@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -18,6 +20,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private readonly ConcurrentDictionary<string, string> _taskToAssemblyMap =
             new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        private readonly ConcurrentDictionary<Project, ProjectInstance> _projectToProjectInstanceMap =
+            new ConcurrentDictionary<Project, ProjectInstance>();
 
         private readonly object syncLock = new object();
 
@@ -51,13 +56,51 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 Build.EndTime = args.Timestamp;
                 Build.Succeeded = args.Succeeded;
 
-                Build.VisitAllChildren<Project>(p => p.Freeze());
+                Build.VisitAllChildren<Project>(p => CalculateTargetGraph(p));
 
                 Completed?.Invoke();
             }
             catch (Exception ex)
             {
                 HandleException(ex);
+            }
+        }
+
+        private void CalculateTargetGraph(Project project)
+        {
+            ProjectInstance projectInstance;
+            if (!_projectToProjectInstanceMap.TryGetValue(project, out projectInstance))
+            {
+                // if for some reason we weren't able to fish out the project instance from MSBuild,
+                // just add all orphans directly to the project
+                var unparented = project.GetUnparentedTargets();
+                foreach (var orphan in unparented)
+                {
+                    project.AddChild(orphan);
+                }
+
+                return;
+            }
+
+            var targetGraph = new TargetGraph(projectInstance);
+
+            var unparentedTargets = project.GetUnparentedTargets();
+            foreach (var unparentedTarget in unparentedTargets)
+            {
+                var parent = targetGraph.GetDependent(unparentedTarget.Name);
+                if (parent != null)
+                {
+                    var parentNode = project.GetOrAddTargetByName(parent);
+                    if (parentNode != null)
+                    {
+                        parentNode.AddChild(unparentedTarget);
+                    }
+                }
+
+                if (unparentedTarget.Parent == null)
+                {
+                    project.AddChild(unparentedTarget);
+                }
             }
         }
 
@@ -151,9 +194,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     if (args.TargetOutputs != null)
                     {
-                        foreach (var targetOutput in args.TargetOutputs)
+                        var targetOutputsFolder = target.GetOrCreateNodeWithName<Folder>("TargetOutputs");
+
+                        foreach (ITaskItem targetOutput in args.TargetOutputs)
                         {
-                            // TODO
+                            var item = new Item();
+                            item.ItemSpec = targetOutput.ItemSpec;
+                            foreach (DictionaryEntry metadata in targetOutput.CloneCustomMetadata())
+                            {
+                                var metadataNode = new Metadata();
+                                metadataNode.Name = Convert.ToString(metadata.Key);
+                                metadataNode.Value = Convert.ToString(metadata.Value);
+                                item.AddChild(metadataNode);
+                            }
+
+                            targetOutputsFolder.AddChild(item);
                         }
                     }
                 }
@@ -269,17 +324,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         /// <remarks>If the ProjectStartedEventArgs is not known at this time (null), a stub project is created.</remarks>
         /// <param name="projectId">The project identifier.</param>
-        /// <param name="projectStartedEventArgs">The <see cref="ProjectStartedEventArgs"/> instance containing the event data.</param>
+        /// <param name="args">The <see cref="ProjectStartedEventArgs"/> instance containing the event data.</param>
         /// <param name="parentProject">The parent project, if any.</param>
         /// <returns>Project object</returns>
-        public Project GetOrAddProject(int projectId, ProjectStartedEventArgs projectStartedEventArgs = null, Project parentProject = null)
+        public Project GetOrAddProject(int projectId, ProjectStartedEventArgs args = null, Project parentProject = null)
         {
             Project result = _projectIdToProjectMap.GetOrAdd(projectId,
                 id => CreateProject(id));
 
-            if (projectStartedEventArgs != null)
+            if (args != null)
             {
-                UpdateProject(result, projectStartedEventArgs);
+                UpdateProject(result, args);
             }
 
             return result;
@@ -291,7 +346,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <remarks>Does nothing if the data has already been set or the new data is null.</remarks>
         /// </summary>
         /// <param name="args">The <see cref="ProjectStartedEventArgs"/> instance containing the event data.</param>
-        public static void UpdateProject(Project project, ProjectStartedEventArgs args)
+        public void UpdateProject(Project project, ProjectStartedEventArgs args)
         {
             if (project.Name == null && args != null)
             {
@@ -315,6 +370,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 if (args.Items != null)
                 {
+                    RetrieveProjectInstance(project, args);
+
                     var items = project.GetOrCreateNodeWithName<Folder>("Items");
                     foreach (DictionaryEntry kvp in args.Items)
                     {
@@ -337,6 +394,62 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                 }
             }
+        }
+
+        // normally MSBuild internal data structures aren't available to loggers, but we really want access
+        // to get at the target graph.
+        private void RetrieveProjectInstance(Project project, ProjectStartedEventArgs args)
+        {
+            if (_projectToProjectInstanceMap.ContainsKey(project))
+            {
+                return;
+            }
+
+            var projectItemInstanceEnumeratorProxy = args?.Items;
+            if (projectItemInstanceEnumeratorProxy == null)
+            {
+                return;
+            }
+
+            var _backingItems = GetField(projectItemInstanceEnumeratorProxy, "_backingItems");
+            if (_backingItems == null)
+            {
+                return;
+            }
+
+            var _backingEnumerable = GetField(_backingItems, "_backingEnumerable");
+            if (_backingEnumerable == null)
+            {
+                return;
+            }
+
+            var _nodes = GetField(_backingEnumerable, "_nodes") as IDictionary;
+            if (_nodes == null || _nodes.Count == 0)
+            {
+                return;
+            }
+
+            var projectItemInstance = _nodes.Keys.OfType<object>().FirstOrDefault() as ProjectItemInstance;
+            if (projectItemInstance == null)
+            {
+                return;
+            }
+
+            var projectInstance = projectItemInstance.Project;
+            if (projectInstance == null)
+            {
+                return;
+            }
+
+            _projectToProjectInstanceMap[project] = projectInstance;
+        }
+
+        private static object GetField(object instance, string fieldName)
+        {
+            return instance?
+                .GetType()
+                .GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)?
+                .GetValue(instance);
         }
 
         private Task CreateTask(TaskStartedEventArgs taskStartedEventArgs)

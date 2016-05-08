@@ -1,4 +1,5 @@
-﻿using Microsoft.Build.Framework;
+﻿using System;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -21,6 +22,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <param name="eventSource">The available events that processEvent logger can subscribe to.</param>
         public override void Initialize(IEventSource eventSource)
         {
+            Environment.SetEnvironmentVariable("MSBUILDTARGETOUTPUTLOGGING", "true");
+
             ProcessParameters();
 
             construction = new Construction();
