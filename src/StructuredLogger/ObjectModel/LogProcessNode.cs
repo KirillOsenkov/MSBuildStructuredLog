@@ -64,7 +64,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             get
             {
-                return isLowRelevance;
+                return isLowRelevance && !IsSelected;
             }
 
             set

@@ -137,6 +137,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public void AddMessage(LazyFormattedBuildEventArgs args, string message)
         {
             LogProcessNode node = null;
+            var messageNode = new Message { Text = message, Timestamp = args.Timestamp };
 
             if (args.BuildEventContext.TaskId > 0)
             {
@@ -148,6 +149,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 node = construction.GetOrAddProject(args.BuildEventContext.ProjectContextId)
                     .GetTargetById(args.BuildEventContext.TargetId);
+
+                if (message.StartsWith("Task") && message.Contains("skipped"))
+                {
+                    messageNode.IsLowRelevance = true;
+                }
             }
             else if (args.BuildEventContext.ProjectContextId > 0)
             {
@@ -167,9 +173,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (node == null)
             {
                 node = construction.Build;
+
+                if (message.StartsWith("Overriding target"))
+                {
+                    node = construction.Build.GetOrCreateNodeWithName<Folder>("TargetOverrides");
+                    node.IsLowRelevance = true;
+                    messageNode.IsLowRelevance = true;
+                }
+                else if (message.StartsWith("The target") && message.Contains("does not exist in the project, and will be ignored"))
+                {
+                    node = construction.Build.GetOrCreateNodeWithName<Folder>("MissingTargets");
+                    node.IsLowRelevance = true;
+                    messageNode.IsLowRelevance = true;
+                }
             }
 
-            node.AddChild(new Message { Text = message, Timestamp = args.Timestamp });
+            node.AddChild(messageNode);
         }
 
         private string ParseTargetName(string message)

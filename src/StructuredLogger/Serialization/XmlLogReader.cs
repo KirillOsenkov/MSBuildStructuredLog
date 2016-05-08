@@ -76,6 +76,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void ReadAttributes(LogProcessNode node, XElement element)
         {
+            node.IsLowRelevance = GetBoolean(element, "IsLowRelevance");
+
             var name = GetString(element, "Name");
             if (node is Parameter || node is Property || node is Metadata)
             {
@@ -137,6 +139,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private static bool GetBoolean(XElement element, string attributeName)
         {
             var text = GetString(element, attributeName);
+            if (text == null)
+            {
+                return false;
+            }
+
             bool result;
             bool.TryParse(text, out result);
             return result;

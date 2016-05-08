@@ -8,39 +8,40 @@
   <HierarchicalDataTemplate DataType="{x:Type l:Folder}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
-      <TextBlock Text="{Binding Name}" Foreground="DarkGoldenrod" />
+      <TextBlock x:Name="nameText" Text="{Binding Name}" />
     </StackPanel>
-  </HierarchicalDataTemplate>
-
-  <HierarchicalDataTemplate DataType="{x:Type l:Build}"
-                            ItemsSource="{Binding Children}">
-    <TextBlock>
-      <Run Text="Start: " />
-      <Run Text="{Binding StartTime}" />
-      <Run Text="Finish: " />
-      <Run Text="{Binding EndTime}" />
-      <Run Text="Succeeded: " />
-      <Run Text="{Binding Succeeded}" />
-    </TextBlock>
+    <HierarchicalDataTemplate.Triggers>
+      <DataTrigger Binding="{Binding IsSelected}" Value="False">
+        <Setter TargetName="nameText" Property="Foreground" Value="DarkGoldenrod" />
+      </DataTrigger>
+    </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
 
   <HierarchicalDataTemplate DataType="{x:Type l:Project}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
-      <TextBlock Text="Project: " Foreground="Blue" />
+      <TextBlock x:Name="label" Text="Project: " />
       <TextBlock Text="{Binding Name}" />
     </StackPanel>
+    <HierarchicalDataTemplate.Triggers>
+      <DataTrigger Binding="{Binding IsSelected}" Value="False">
+        <Setter TargetName="label" Property="Foreground" Value="Blue" />
+      </DataTrigger>
+    </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
 
   <HierarchicalDataTemplate DataType="{x:Type l:Target}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal" x:Name="targetRoot">
-      <TextBlock Text="Target: " Foreground="Purple" />
+      <TextBlock x:Name="label" Text="Target: " />
       <TextBlock Text="{Binding Name}" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
       <DataTrigger Binding="{Binding IsLowRelevance}" Value="True">
         <Setter TargetName="targetRoot" Property="Opacity" Value="0.25" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding IsSelected}" Value="False">
+        <Setter TargetName="label" Property="Foreground" Value="Purple" />
       </DataTrigger>
     </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>

@@ -59,6 +59,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void WriteAttributes(LogProcessNode node, XElement element)
         {
+            if (node.IsLowRelevance)
+            {
+                element.Add(new XAttribute("IsLowRelevance", "true"));
+            }
+
             if (node is Parameter || node is Property || node is Metadata)
             {
                 element.Add(new XAttribute("Name", node.Name));

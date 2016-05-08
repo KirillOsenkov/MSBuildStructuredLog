@@ -40,6 +40,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             eventSource.MessageRaised += construction.MessageRaised;
             eventSource.WarningRaised += construction.WarningRaised;
             eventSource.ErrorRaised += construction.ErrorRaised;
+            eventSource.CustomEventRaised += construction.CustomEventRaised;
         }
 
         private void Construction_Completed()

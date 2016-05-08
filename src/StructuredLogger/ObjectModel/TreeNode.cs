@@ -32,6 +32,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 isSelected = value;
                 RaisePropertyChanged();
+                RaisePropertyChanged("IsLowRelevance");
             }
         }
 

@@ -264,6 +264,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             messageProcessor.Process(args);
         }
 
+        public void CustomEventRaised(object sender, CustomBuildEventArgs args)
+        {
+            messageProcessor.Process(new BuildMessageEventArgs(args.Message, args.HelpKeyword, args.SenderName, MessageImportance.Low));
+        }
+
         public void WarningRaised(object sender, BuildWarningEventArgs args)
         {
             var warnings = Build.GetOrCreateNodeWithName<Folder>("Warnings");

@@ -20,11 +20,6 @@
               VirtualizingPanel.IsVirtualizing="True" 
               VirtualizingPanel.VirtualizationMode="Recycling"
               ItemsSource="{Binding Children}">
-      <TreeView.ItemContainerStyle>
-        <Style TargetType="TreeViewItem">
-          <EventSetter Event="RequestBringIntoView" Handler="TreeViewItem_RequestBringIntoView"/>
-        </Style>
-      </TreeView.ItemContainerStyle>
     </TreeView>
   </DockPanel>
 </UserControl>
