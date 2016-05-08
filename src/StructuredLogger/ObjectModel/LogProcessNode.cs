@@ -78,5 +78,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 RaisePropertyChanged();
             }
         }
+
+        public IEnumerable<LogProcessNode> GetParentChain()
+        {
+            List<LogProcessNode> chain = new List<LogProcessNode>();
+            LogProcessNode current = this;
+            while (current.Parent != null)
+            {
+                current = current.Parent as LogProcessNode;
+                chain.Add(current);
+            }
+
+            chain.Reverse();
+            return chain;
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -26,6 +27,24 @@ namespace StructuredLogViewer.Controls
 
             treeView.ItemContainerStyle = treeViewItemStyle;
             treeView.KeyDown += TreeView_KeyDown;
+
+            resultsList.SelectionChanged += ResultsList_SelectionChanged;
+        }
+
+        private void ResultsList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var item = resultsList.SelectedItem as LogProcessNode;
+            if (item != null)
+            {
+                SelectItem(item);
+            }
+        }
+
+        private void SelectItem(LogProcessNode item)
+        {
+            // skip the actual Build object and add the item itself
+            var parentChain = item.GetParentChain().Skip(1).Concat(new[] { item });
+            treeView.SelectContainerFromItem(parentChain);
         }
 
         private void TreeView_KeyDown(object sender, KeyEventArgs args)
@@ -95,6 +114,7 @@ namespace StructuredLogViewer.Controls
             var searchText = searchTextBox.Text;
             if (string.IsNullOrWhiteSpace(searchText))
             {
+                resultsList.ItemsSource = null;
                 return;
             }
 
@@ -104,12 +124,15 @@ namespace StructuredLogViewer.Controls
         private void Search(string searchText)
         {
             var tree = treeView;
+            var search = new Search(Build);
+            var results = search.FindNodes(searchText);
+            resultsList.ItemsSource = results;
         }
 
         private void TreeViewItem_RequestBringIntoView(object sender, RequestBringIntoViewEventArgs args)
         {
             // prevent the annoying horizontal scrolling
-            args.Handled = true;
+            //args.Handled = true;
         }
     }
 }

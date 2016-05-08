@@ -6,20 +6,27 @@
              xmlns:local="clr-namespace:StructuredLogViewer.Controls"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
-  <DockPanel>
-    <Grid DockPanel.Dock="Top">
-      <TextBox x:Name="searchTextBox" TextChanged="searchTextBox_TextChanged" />
-      <Path Data="{DynamicResource SearchGeometry}" 
-            Fill="#717171" 
-            HorizontalAlignment="Right"
-            VerticalAlignment="Center"
-            Margin="3"/>
-    </Grid>
+  <local:SplitterPanel>
+    <local:SplitterPanel.FirstChild>
+      <DockPanel>
+        <Grid DockPanel.Dock="Top">
+          <TextBox x:Name="searchTextBox" TextChanged="searchTextBox_TextChanged" />
+          <Path Data="{DynamicResource SearchGeometry}" 
+                Fill="#717171" 
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                Margin="3"/>
+        </Grid>
 
-    <TreeView x:Name="treeView"
-              VirtualizingPanel.IsVirtualizing="True" 
-              VirtualizingPanel.VirtualizationMode="Recycling"
-              ItemsSource="{Binding Children}">
-    </TreeView>
-  </DockPanel>
+        <ListBox x:Name="resultsList"></ListBox>
+      </DockPanel>
+    </local:SplitterPanel.FirstChild>
+    <local:SplitterPanel.SecondChild>
+      <TreeView x:Name="treeView"
+                VirtualizingPanel.IsVirtualizing="True" 
+                VirtualizingPanel.VirtualizationMode="Recycling"
+                ItemsSource="{Binding Children}">
+      </TreeView>
+    </local:SplitterPanel.SecondChild>
+  </local:SplitterPanel>
 </UserControl>

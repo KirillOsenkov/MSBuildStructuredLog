@@ -7,13 +7,14 @@
         mc:Ignorable="d"
         Title="MainWindow" 
         WindowStartupLocation="CenterScreen"
+        WindowState="Maximized"
         Background="#EEEEF2"
         UseLayoutRounding="True"
         TextOptions.TextFormattingMode="Display"
         TextOptions.TextRenderingMode="ClearType"
         KeyUp="Window_KeyUp"
         SnapsToDevicePixels="True"
-        Height="800" Width="600">
+        Height="800" Width="1000">
   <DockPanel>
     <Menu DockPanel.Dock="Top">
       <MenuItem Header="_File">
@@ -23,6 +24,6 @@
         <MenuItem Header="E_xit" Click="Exit_Click" InputGestureText="Alt+F4" />
       </MenuItem>
     </Menu>
-    <ContentPresenter x:Name="mainContent" />
+    <ContentPresenter x:Name="mainContent" Margin="7"/>
   </DockPanel>
 </Window>
