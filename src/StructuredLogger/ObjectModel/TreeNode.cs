@@ -15,6 +15,26 @@ namespace Microsoft.Build.Logging.StructuredLogger
         protected void RaisePropertyChanged([CallerMemberName] string propertyName = null)
             => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
+        private bool isVisible = true;
+        public bool IsVisible
+        {
+            get
+            {
+                return isVisible;
+            }
+
+            set
+            {
+                if (isVisible == value)
+                {
+                    return;
+                }
+
+                isVisible = value;
+                RaisePropertyChanged();
+            }
+        }
+
         private bool isSelected = false;
         public bool IsSelected
         {

@@ -19,22 +19,73 @@ namespace StructuredLogViewer.Controls
             var treeViewItemStyle = new Style(typeof(TreeViewItem), existingTreeViewItemStyle);
             treeViewItemStyle.Setters.Add(new Setter(TreeViewItem.IsExpandedProperty, new Binding("IsExpanded") { Mode = BindingMode.TwoWay }));
             treeViewItemStyle.Setters.Add(new Setter(TreeViewItem.IsSelectedProperty, new Binding("IsSelected") { Mode = BindingMode.TwoWay }));
+            treeViewItemStyle.Setters.Add(new Setter(TreeViewItem.VisibilityProperty, new Binding("IsVisible") { Mode = BindingMode.TwoWay, Converter = new BooleanToVisibilityConverter() }));
             treeViewItemStyle.Setters.Add(new EventSetter(MouseDoubleClickEvent, (MouseButtonEventHandler)OnItemDoubleClick));
             treeViewItemStyle.Setters.Add(new EventSetter(RequestBringIntoViewEvent, (RequestBringIntoViewEventHandler)TreeViewItem_RequestBringIntoView));
             //treeViewItemStyle.Setters.Add(new Setter(FrameworkElement.ContextMenuProperty, contextMenu));
 
             treeView.ItemContainerStyle = treeViewItemStyle;
+            treeView.KeyDown += TreeView_KeyDown;
+        }
+
+        private void TreeView_KeyDown(object sender, KeyEventArgs args)
+        {
+            if (args.Key == Key.Delete)
+            {
+                var node = treeView.SelectedItem as TreeNode;
+                if (node != null)
+                {
+                    MoveSelectionOut(node);
+                    node.IsVisible = false;
+                    args.Handled = true;
+                }
+            }
+        }
+
+        private void MoveSelectionOut(TreeNode node)
+        {
+            var parent = node.Parent;
+            if (parent == null)
+            {
+                return;
+            }
+
+            var next = node.FindNext<TreeNode>();
+            if (next != null)
+            {
+                node.IsSelected = false;
+                next.IsSelected = true;
+                return;
+            }
+
+            var previous = node.FindPrevious<TreeNode>();
+            if (previous != null)
+            {
+                node.IsSelected = false;
+                previous.IsSelected = true;
+            }
+            else
+            {
+                node.IsSelected = false;
+                parent.IsSelected = true;
+            }
         }
 
         private void OnItemDoubleClick(object sender, MouseButtonEventArgs args)
         {
-            var treeViewItem = args.Source as TreeViewItem;
-            var treeNode = treeViewItem?.DataContext as TreeNode;
+            TreeNode treeNode = GetNode(args);
             if (treeNode != null)
             {
                 // TODO: handle double-click on node
                 args.Handled = true;
             }
+        }
+
+        private static TreeNode GetNode(RoutedEventArgs args)
+        {
+            var treeViewItem = args.Source as TreeViewItem;
+            var treeNode = treeViewItem?.DataContext as TreeNode;
+            return treeNode;
         }
 
         public Build Build { get; set; }
