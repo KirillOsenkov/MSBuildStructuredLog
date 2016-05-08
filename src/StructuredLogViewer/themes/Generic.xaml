@@ -6,18 +6,52 @@
   <Geometry x:Key="SearchGeometry">F1 M 8.5,7.0 C 7.12,7.00 6.0,5.88 6.0,4.5 C 6.0,3.12 7.12,2.0 8.5,2.0 C 9.88,2.0 11.0,3.12 11.0,4.5 C 11.0,5.88 9.88,7.0 8.5,7.0 Z M 8.5,0.0 C 6.02,0.0 4.0,2.02 4.0,4.500 C 4.0,5.23 4.19,5.9 4.49,6.5 L 0.0,11.0 L 2.0,13.0 L 6.49,8.51 C 7.1,8.81 7.77,9.0 8.5,9.0 C 11.0,9.0 13.0,7.0 13.0,4.5 C 13.0,2.02 11.0,0.0 8.5,0.0 Z</Geometry>
 
   <LinearGradientBrush x:Key="ClosedFolderBrush" StartPoint="0,0" EndPoint="1,1">
-    <GradientStop Color="#FBD397" Offset="0" />
-    <GradientStop Color="#DBB377" Offset="1" />
+    <GradientStop Color="FloralWhite" Offset="0" />
+    <GradientStop Color="NavajoWhite" Offset="1" />
   </LinearGradientBrush>
 
   <LinearGradientBrush x:Key="OpenFolderBrush" StartPoint="0,0" EndPoint="1,1">
-    <GradientStop Color="#F5F5F5" Offset="0" />
-    <GradientStop Color="#EFC099" Offset="1" />
+    <GradientStop Color="Ivory" Offset="0" />
+    <GradientStop Color="PapayaWhip" Offset="1" />
   </LinearGradientBrush>
 
   <LinearGradientBrush x:Key="TargetBrush" StartPoint="0,0" EndPoint="1,1">
-    <GradientStop Color="Lavender" Offset="0" />
-    <GradientStop Color="Magenta" Offset="1" />
+    <GradientStop Color="LavenderBlush" Offset="0" />
+    <GradientStop Color="Thistle" Offset="1" />
+  </LinearGradientBrush>
+
+  <LinearGradientBrush x:Key="ItemBrush" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="Honeydew" Offset="0" />
+    <GradientStop Color="LightGreen" Offset="1" />
+  </LinearGradientBrush>
+
+  <LinearGradientBrush x:Key="ParameterBrush" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="AliceBlue" Offset="0" />
+    <GradientStop Color="LightSkyBlue" Offset="1" />
+  </LinearGradientBrush>
+
+  <SolidColorBrush x:Key="ParameterStroke" Color="DodgerBlue" />
+
+  <LinearGradientBrush x:Key="PropertyBrush" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="AliceBlue" Offset="0" />
+    <GradientStop Color="LightSkyBlue" Offset="1" />
+  </LinearGradientBrush>
+
+  <SolidColorBrush x:Key="PropertyStroke" Color="DodgerBlue" />
+
+  <LinearGradientBrush x:Key="MessageBrush" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="White" Offset="0" />
+    <GradientStop Color="LightGray" Offset="1" />
+  </LinearGradientBrush>
+
+  <LinearGradientBrush x:Key="ErrorBrush" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="MistyRose" Offset="0" />
+    <GradientStop Color="LightCoral" Offset="1" />
+  </LinearGradientBrush>
+
+  <LinearGradientBrush x:Key="WarningBrush" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="LightYellow" Offset="0" />
+    <GradientStop Color="Yellow" Offset="1" />
   </LinearGradientBrush>
 
   <LinearGradientBrush x:Key="TaskBrush" StartPoint="0,0" EndPoint="1,1">
@@ -57,18 +91,31 @@
     </DrawingBrush.Drawing>
   </DrawingBrush>
 
+  <DrawingBrush x:Key="GenericProjectIcon">
+    <DrawingBrush.Drawing>
+      <DrawingGroup>
+        <DrawingGroup.Children>
+          <GeometryDrawing Brush="#FFF6F6F6" Geometry="F1M13.5469,0L7.9999,0C7.0309,0,5.9999,0.701,5.9999,2L1.9999,2C1.0309,2,-9.99999999997669E-05,2.701,-9.99999999997669E-05,4L-9.99999999997669E-05,12C-9.99999999997669E-05,13.299,1.0309,14,1.9999,14L3.9999,14C3.9999,15.299,5.0309,16,5.9999,16L11.9999,16C13.2989,16,13.9999,14.97,13.9999,14L13.9999,12C15.2989,12,15.9999,10.97,15.9999,10L15.9999,2.062z" />
+          <GeometryDrawing Brush="#FF414141" Geometry="F1M12,9L12,10 12,14 6,14 6,6 10,6 10,8 12,8z M10.625,5L5.965,5C5.965,5,5,5,5,6L5,14C5,15,5.965,15,5.965,15L11.965,15C12.965,15,13,14,13,14L13,7.137z" />
+          <GeometryDrawing Brush="#FF414141" Geometry="F1M4,12L2,12 2,4 6,4 7.736,4 6.625,3 1.965,3C1.965,3,1,3,1,4L1,12C1,13,1.965,13,1.965,13L4,13z" />
+          <GeometryDrawing Brush="#FF414141" Geometry="F1M12.625,1L7.965,1C7.965,1,7,1,7,2L7.547,2 8,2.381 8,2 12,2 12,4 14,4 14,5 14,6 14,6.062 14,10 14,10.995C14.962,10.97,15,10,15,10L15,3.137z" />
+          <GeometryDrawing Brush="#FFF0EFF1" Geometry="F1M6,6L10,6 10,7.96 12,7.996 12,14 6,14z" />
+          <GeometryDrawing Brush="#FFF0EFF1" Geometry="F1M4,6C4,4.701,5.031,4,6,4L2,4 2,12 4,12z" />
+          <GeometryDrawing Brush="#FFF0EFF1" Geometry="F1M12,3.96L12,2 8,2 8,2.381 9.927,4 11.547,4 14,6.062 14,3.996z" />
+        </DrawingGroup.Children>
+      </DrawingGroup>
+    </DrawingBrush.Drawing>
+  </DrawingBrush>
+
   <HierarchicalDataTemplate DataType="{x:Type l:Folder}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
-      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="#DBB377" Margin="2,0,6,0" Fill="{StaticResource ClosedFolderBrush}" />
+      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="Goldenrod" Margin="2,2,6,0" Fill="{StaticResource ClosedFolderBrush}" />
       <TextBlock x:Name="nameText" Text="{Binding Name}" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
       <DataTrigger Binding="{Binding IsSelected}" Value="False">
         <Setter TargetName="nameText" Property="Foreground" Value="DarkGoldenrod" />
-      </DataTrigger>
-      <DataTrigger Binding="{Binding IsExpanded}" Value="True">
-        <Setter TargetName="icon" Property="Fill" Value="{StaticResource OpenFolderBrush}" />
       </DataTrigger>
     </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
@@ -76,16 +123,15 @@
   <HierarchicalDataTemplate DataType="{x:Type l:Project}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
-      <Rectangle x:Name="icon" Width="16" Height="16" Margin="1,0,6,0" Fill="{StaticResource CSProjIcon}" />
-      <!--<TextBlock x:Name="label" Text="Project: " />-->
+      <Rectangle x:Name="icon" Width="16" Height="16" Margin="2,2,6,0" Fill="{StaticResource GenericProjectIcon}" VerticalAlignment="Top" />
       <TextBlock Text="{Binding Name}" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
-      <!--<DataTrigger Binding="{Binding IsSelected}" Value="False">
-        <Setter TargetName="label" Property="Foreground" Value="Blue" />
-      </DataTrigger>-->
       <DataTrigger Binding="{Binding ProjectFileExtension}" Value=".sln">
         <Setter TargetName="icon" Property="Fill" Value="{StaticResource SlnIcon}" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding ProjectFileExtension}" Value=".csproj">
+        <Setter TargetName="icon" Property="Fill" Value="{StaticResource CSProjIcon}" />
       </DataTrigger>
     </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
@@ -93,7 +139,7 @@
   <HierarchicalDataTemplate DataType="{x:Type l:Target}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal" x:Name="targetRoot">
-      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="Magenta" Margin="2,0,6,0" Fill="{StaticResource TargetBrush}" />
+      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="MediumPurple" Margin="2,2,6,0" Fill="{StaticResource TargetBrush}" VerticalAlignment="Top" />
       <TextBlock x:Name="label" Text="Target " />
       <TextBlock Text="{Binding Name}" />
     </StackPanel>
@@ -102,7 +148,7 @@
         <Setter TargetName="targetRoot" Property="Opacity" Value="0.25" />
       </DataTrigger>
       <DataTrigger Binding="{Binding IsSelected}" Value="False">
-        <Setter TargetName="label" Property="Foreground" Value="Magenta" />
+        <Setter TargetName="label" Property="Foreground" Value="MediumPurple" />
       </DataTrigger>
     </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
@@ -110,7 +156,7 @@
   <HierarchicalDataTemplate DataType="{x:Type l:Task}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
-      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="DeepSkyBlue" Margin="2,0,6,0" Fill="{StaticResource TaskBrush}" />
+      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="DeepSkyBlue" Margin="2,2,6,0" Fill="{StaticResource TaskBrush}" VerticalAlignment="Top" />
       <TextBlock x:Name="label" Text="Task " />
       <TextBlock Text="{Binding Name}" />
     </StackPanel>
@@ -124,36 +170,74 @@
   <HierarchicalDataTemplate DataType="{x:Type l:AddItem}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
-      <TextBlock Text="Add Item" Foreground="DarkOrange" />
+      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="MediumAquamarine" Margin="2,2,6,0" Fill="{StaticResource ItemBrush}" VerticalAlignment="Top" />
+      <TextBlock x:Name="label" Text="Add Item" />
     </StackPanel>
+    <HierarchicalDataTemplate.Triggers>
+      <DataTrigger Binding="{Binding IsSelected}" Value="False">
+        <Setter TargetName="label" Property="Foreground" Value="Teal" />
+      </DataTrigger>
+    </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
 
   <HierarchicalDataTemplate DataType="{x:Type l:RemoveItem}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
-      <TextBlock Text="Remove Item" Foreground="DarkOrange" />
+      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="MediumAquamarine" Margin="2,2,6,0" Fill="{StaticResource ItemBrush}" VerticalAlignment="Top" />
+      <TextBlock x:Name="label" Text="Remove Item" />
     </StackPanel>
+    <HierarchicalDataTemplate.Triggers>
+      <DataTrigger Binding="{Binding IsSelected}" Value="False">
+        <Setter TargetName="label" Property="Foreground" Value="Teal" />
+      </DataTrigger>
+    </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
 
   <HierarchicalDataTemplate DataType="{x:Type l:Item}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
-      <TextBlock Text="{Binding Name}" Foreground="DarkOrange" />
-      <TextBlock Text="{Binding EqualsIfNamePresent}" />
+      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="MediumAquamarine" Margin="2,2,6,0" Fill="{StaticResource ItemBrush}" VerticalAlignment="Top" />
+      <TextBlock x:Name="nameAndEquals" Text="{Binding NameAndEquals}" />
       <TextBlock Text="{Binding ItemSpec}" />
     </StackPanel>
+    <HierarchicalDataTemplate.Triggers>
+      <DataTrigger Binding="{Binding IsSelected}" Value="False">
+        <Setter TargetName="nameAndEquals" Property="Foreground" Value="Green" />
+      </DataTrigger>
+    </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
+
+  <DataTemplate DataType="{x:Type l:Metadata}">
+    <StackPanel Orientation="Horizontal">
+      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="MediumAquamarine" Margin="2,2,6,0" Fill="{StaticResource ItemBrush}" VerticalAlignment="Top" />
+      <TextBlock><Run x:Name="label" Text="{Binding NameAndEquals, Mode=OneTime}" /><Run Text="{Binding Value}" /></TextBlock>
+    </StackPanel>
+    <DataTemplate.Triggers>
+      <DataTrigger Binding="{Binding IsSelected}" Value="False">
+        <Setter TargetName="label" Property="Foreground" Value="LightSeaGreen" />
+      </DataTrigger>
+    </DataTemplate.Triggers>
+  </DataTemplate>
 
   <HierarchicalDataTemplate DataType="{x:Type l:Parameter}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
-      <TextBlock Text="{Binding Name}" Foreground="DarkOrange" />
+      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="{StaticResource ParameterStroke}" Margin="2,2,6,0" Fill="{StaticResource ParameterBrush}" VerticalAlignment="Top" />
+      <TextBlock x:Name="name" Text="{Binding Name}" />
       <TextBlock Text="{Binding Text}" />
     </StackPanel>
+    <HierarchicalDataTemplate.Triggers>
+      <DataTrigger Binding="{Binding IsSelected}" Value="False">
+        <Setter TargetName="name" Property="Foreground" Value="{StaticResource ParameterStroke}" />
+      </DataTrigger>
+    </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
 
   <DataTemplate DataType="{x:Type l:Message}">
-    <TextBlock x:Name="messageText" Text="{Binding Text}" />
+    <StackPanel Orientation="Horizontal">
+      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="LightGray" Margin="2,2,6,0" Fill="{StaticResource MessageBrush}" VerticalAlignment="Top" />
+      <TextBlock x:Name="messageText" Text="{Binding Text}" />
+    </StackPanel>
     <DataTemplate.Triggers>
       <DataTrigger Binding="{Binding IsLowRelevance}" Value="True">
         <Setter TargetName="messageText" Property="Opacity" Value="0.25" />
@@ -162,27 +246,29 @@
   </DataTemplate>
 
   <DataTemplate DataType="{x:Type l:Error}">
-    <TextBlock Text="{Binding Message}" />
+    <StackPanel Orientation="Horizontal">
+      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="Red" Margin="2,2,6,0" Fill="{StaticResource ErrorBrush}" VerticalAlignment="Top" />
+      <TextBlock Text="{Binding Message}" />
+    </StackPanel>
   </DataTemplate>
 
   <DataTemplate DataType="{x:Type l:Warning}">
-    <TextBlock Text="{Binding Message}" />
+    <StackPanel Orientation="Horizontal">
+      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="Gold" Margin="2,2,6,0" Fill="{StaticResource WarningBrush}" VerticalAlignment="Top" />
+      <TextBlock Text="{Binding Message}" />
+    </StackPanel>
   </DataTemplate>
 
   <DataTemplate DataType="{x:Type l:Property}">
-    <TextBlock>
-      <Run Text="{Binding Name}" Foreground="DarkGoldenrod"/>
-      <Run Text=" = " Foreground="DarkGoldenrod"/>
-      <Run Text="{Binding Value}" />
-    </TextBlock>
-  </DataTemplate>
-
-  <DataTemplate DataType="{x:Type l:Metadata}">
-    <TextBlock>
-      <Run Text="{Binding Name}" Foreground="DarkGoldenrod"/>
-      <Run Text=" = " Foreground="DarkGoldenrod"/>
-      <Run Text="{Binding Value}" />
-    </TextBlock>
+    <StackPanel Orientation="Horizontal">
+      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="{StaticResource PropertyStroke}" Margin="2,2,6,0" Fill="{StaticResource PropertyBrush}" VerticalAlignment="Top" />
+      <TextBlock><Run x:Name="label" Text="{Binding NameAndEquals, Mode=OneTime}" /><Run Text="{Binding Value}" /></TextBlock>
+    </StackPanel>
+    <DataTemplate.Triggers>
+      <DataTrigger Binding="{Binding IsSelected}" Value="False">
+        <Setter TargetName="label" Property="Foreground" Value="{StaticResource PropertyStroke}" />
+      </DataTrigger>
+    </DataTemplate.Triggers>
   </DataTemplate>
 
   <!--=================================================================
