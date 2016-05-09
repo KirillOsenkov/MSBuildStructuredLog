@@ -29,6 +29,13 @@ namespace StructuredLogViewer.Controls
             treeView.KeyDown += TreeView_KeyDown;
 
             resultsList.SelectionChanged += ResultsList_SelectionChanged;
+
+            Loaded += BuildControl_Loaded;
+        }
+
+        private void BuildControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            searchTextBox.Focus();
         }
 
         private void ResultsList_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -115,6 +122,7 @@ namespace StructuredLogViewer.Controls
             if (string.IsNullOrWhiteSpace(searchText))
             {
                 resultsList.ItemsSource = null;
+                watermark.Visibility = Visibility.Visible;
                 return;
             }
 
@@ -127,12 +135,24 @@ namespace StructuredLogViewer.Controls
             var search = new Search(Build);
             var results = search.FindNodes(searchText);
             resultsList.ItemsSource = results;
+            watermark.Visibility = Visibility.Collapsed;
         }
 
-        private void TreeViewItem_RequestBringIntoView(object sender, RequestBringIntoViewEventArgs args)
+        private void TreeViewItem_RequestBringIntoView(object sender, RequestBringIntoViewEventArgs e)
         {
-            // prevent the annoying horizontal scrolling
-            //args.Handled = true;
+            var treeViewItem = (TreeViewItem)sender;
+            var scrollViewer = treeView.Template.FindName("_tv_scrollviewer_", treeView) as ScrollViewer;
+
+            Point topLeftInTreeViewCoordinates = treeViewItem.TransformToAncestor(treeView).Transform(new Point(0, 0));
+            var treeViewItemTop = topLeftInTreeViewCoordinates.Y;
+            if (treeViewItemTop < 0 || treeViewItemTop > scrollViewer.ViewportHeight || treeViewItem.ActualHeight > scrollViewer.ViewportHeight)
+            {
+                // if the item is not visible, don't do anything; let them scroll it into view
+                return;
+            }
+
+            // if the item is already within the viewport vertically, disallow horizontal scrolling
+            e.Handled = true;
         }
     }
 }
