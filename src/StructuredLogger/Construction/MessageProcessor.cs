@@ -145,6 +145,30 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 node = construction.GetOrAddProject(args.BuildEventContext.ProjectContextId)
                     .GetTargetById(args.BuildEventContext.TargetId)
                     .GetTaskById(args.BuildEventContext.TaskId);
+                var task = node as Task;
+                if (task != null && task.Name == "ResolveAssemblyReference")
+                {
+                    node = task.GetOrCreateNodeWithName<Folder>("Inputs");
+                    if (message.StartsWith("    "))
+                    {
+                        var parameter = node.FindLastChild<Parameter>();
+                        if (parameter != null)
+                        {
+                            message = message.Substring(4);
+                            if (!string.IsNullOrWhiteSpace(message))
+                            {
+                                parameter.AddChild(new Item() { Text = message });
+                            }
+
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        node = node.GetOrCreateNodeWithName<Parameter>(message.TrimEnd(':'));
+                        return;
+                    }
+                }
             }
             else if (args.BuildEventContext.TargetId > 0)
             {
