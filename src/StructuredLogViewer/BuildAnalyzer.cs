@@ -23,6 +23,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void Analyze()
         {
+            build.VisitAllChildren<Task>(t => AnalyzeTask(t));
+
             build.VisitAllChildren<Target>(t => AnalyzeTarget(t));
             if (!build.Succeeded)
             {
@@ -31,6 +33,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             build.VisitAllChildren<CopyTask>(c => AnalyzeFileCopies(c));
             AnalyzeDoubleWrites();
+        }
+
+        private void AnalyzeTask(Task task)
+        {
+            if (!string.IsNullOrEmpty(task.CommandLineArguments))
+            {
+                task.AddChildAtBeginning(new Property { Name = "CommandLineArguments", Value = task.CommandLineArguments });
+            }
+
+            if (!string.IsNullOrEmpty(task.FromAssembly))
+            {
+                task.AddChildAtBeginning(new Property { Name = "Assembly", Value = task.FromAssembly });
+            }
         }
 
         private void AnalyzeDoubleWrites()
