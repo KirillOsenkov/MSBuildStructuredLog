@@ -145,13 +145,15 @@ namespace StructuredLogViewer.Controls
 
             Point topLeftInTreeViewCoordinates = treeViewItem.TransformToAncestor(treeView).Transform(new Point(0, 0));
             var treeViewItemTop = topLeftInTreeViewCoordinates.Y;
-            if (treeViewItemTop < 0 || treeViewItemTop > scrollViewer.ViewportHeight || treeViewItem.ActualHeight > scrollViewer.ViewportHeight)
+            if (treeViewItemTop < 0
+                || treeViewItemTop > scrollViewer.ViewportHeight
+                || treeViewItem.ActualHeight > scrollViewer.ViewportHeight)
             {
-                // if the item is not visible, don't do anything; let them scroll it into view
+                // if the item is not visible or too "tall", don't do anything; let them scroll it into view
                 return;
             }
 
-            // if the item is already within the viewport vertically, disallow horizontal scrolling
+            // if the item is already fully within the viewport vertically, disallow horizontal scrolling
             e.Handled = true;
         }
     }
