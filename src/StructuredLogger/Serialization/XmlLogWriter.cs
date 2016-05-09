@@ -115,6 +115,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 element.Add(new XAttribute(nameof(diagnostic.ColumnNumber), diagnostic.ColumnNumber));
                 element.Add(new XAttribute(nameof(diagnostic.EndLineNumber), diagnostic.EndLineNumber));
                 element.Add(new XAttribute(nameof(diagnostic.EndColumnNumber), diagnostic.EndColumnNumber));
+                element.Add(new XAttribute(nameof(diagnostic.ProjectFile), diagnostic.ProjectFile));
             }
         }
 

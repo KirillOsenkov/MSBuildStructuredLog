@@ -13,5 +13,28 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public int LineNumber { get; set; }
         public string ProjectFile { get; set; }
         public string Subcategory { get; set; }
+
+        public override string ToString()
+        {
+            string position = "";
+            if (LineNumber != 0 || ColumnNumber != 0)
+            {
+                position = $"({LineNumber},{ColumnNumber}):";
+            }
+
+            string projectFile = "";
+            if (!string.IsNullOrWhiteSpace(ProjectFile))
+            {
+                projectFile = $" [{ProjectFile}]";
+            }
+
+            string code = "";
+            if (!string.IsNullOrWhiteSpace(Code))
+            {
+                code = $" {this.GetType().Name.ToLowerInvariant()} {Code}: ";
+            }
+
+            return $"{File}{position}{code}{Text}{projectFile}";
+        }
     }
 }

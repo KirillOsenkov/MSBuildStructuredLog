@@ -212,6 +212,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     node.IsLowRelevance = true;
                     messageNode.IsLowRelevance = true;
                 }
+                else if (args.BuildEventContext.NodeId == 0 &&
+                         args.BuildEventContext.ProjectContextId == 0 &&
+                         args.BuildEventContext.ProjectInstanceId == 0 &&
+                         args.BuildEventContext.TargetId == 0 &&
+                         args.BuildEventContext.TaskId == 0)
+                {
+                    // must be Detailed Build Summary
+                    // https://github.com/Microsoft/msbuild/blob/master/src/XMakeBuildEngine/BackEnd/Components/Scheduler/Scheduler.cs#L509
+                    node = construction.Build.GetOrCreateNodeWithName<Folder>("DetailedSummary");
+                }
             }
 
             node.AddChild(messageNode);

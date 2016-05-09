@@ -251,14 +251,19 @@
   <DataTemplate DataType="{x:Type l:Error}">
     <StackPanel Orientation="Horizontal">
       <Rectangle x:Name="icon" Width="14" Height="11" Stroke="Red" Margin="2,2,6,0" Fill="{StaticResource ErrorBrush}" VerticalAlignment="Top" />
-      <TextBlock Text="{Binding Text}" />
+      <TextBlock x:Name="text" Text="{Binding}" />
     </StackPanel>
+    <DataTemplate.Triggers>
+      <DataTrigger Binding="{Binding IsSelected}" Value="False">
+        <Setter TargetName="text" Property="Foreground" Value="Red" />
+      </DataTrigger>
+    </DataTemplate.Triggers>
   </DataTemplate>
 
   <DataTemplate DataType="{x:Type l:Warning}">
     <StackPanel Orientation="Horizontal">
       <Rectangle x:Name="icon" Width="14" Height="11" Stroke="Gold" Margin="2,2,6,0" Fill="{StaticResource WarningBrush}" VerticalAlignment="Top" />
-      <TextBlock Text="{Binding Text}" />
+      <TextBlock Text="{Binding}" />
     </StackPanel>
   </DataTemplate>
 

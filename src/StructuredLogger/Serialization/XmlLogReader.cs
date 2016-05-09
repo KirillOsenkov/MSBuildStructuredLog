@@ -127,6 +127,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 diagnostic.ColumnNumber = GetInteger(element, nameof(diagnostic.ColumnNumber));
                 diagnostic.EndLineNumber = GetInteger(element, nameof(diagnostic.EndLineNumber));
                 diagnostic.EndColumnNumber = GetInteger(element, nameof(diagnostic.EndColumnNumber));
+                diagnostic.ProjectFile = GetString(element, nameof(diagnostic.ProjectFile));
             }
         }
 

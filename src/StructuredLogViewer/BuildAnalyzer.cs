@@ -20,6 +20,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private void Analyze()
         {
             build.VisitAllChildren<Target>(t => MarkAsLowRelevanceIfNeeded(t));
+            if (!build.Succeeded)
+            {
+                build.AddChild(new Error { Text = "Build failed." });
+            }
         }
 
         private void MarkAsLowRelevanceIfNeeded(Target target)
