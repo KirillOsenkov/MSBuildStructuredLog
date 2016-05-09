@@ -228,7 +228,6 @@
     <StackPanel Orientation="Horizontal">
       <Rectangle x:Name="icon" Width="14" Height="11" Stroke="{StaticResource ParameterStroke}" Margin="2,2,6,0" Fill="{StaticResource ParameterBrush}" VerticalAlignment="Top" />
       <TextBlock x:Name="name" Text="{Binding Name}" />
-      <TextBlock Text="{Binding Text}" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
       <DataTrigger Binding="{Binding IsSelected}" Value="False">

@@ -146,7 +146,7 @@ namespace StructuredLogViewer.Controls
             Point topLeftInTreeViewCoordinates = treeViewItem.TransformToAncestor(treeView).Transform(new Point(0, 0));
             var treeViewItemTop = topLeftInTreeViewCoordinates.Y;
             if (treeViewItemTop < 0
-                || treeViewItemTop > scrollViewer.ViewportHeight
+                || treeViewItemTop + treeViewItem.ActualHeight > scrollViewer.ViewportHeight
                 || treeViewItem.ActualHeight > scrollViewer.ViewportHeight)
             {
                 // if the item is not visible or too "tall", don't do anything; let them scroll it into view

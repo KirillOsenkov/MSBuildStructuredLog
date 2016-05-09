@@ -22,7 +22,7 @@ namespace StructuredLogViewer.Controls
             where T : class
         {
             // Use a default compare method with the '==' operator
-            treeView.SelectContainerFromItem<T>(items, (x, y) => x.Equals(y));
+            treeView.SelectContainerFromItem(items, (x, y) => x.Equals(y));
         }
 
         /// <summary>
@@ -38,7 +38,7 @@ namespace StructuredLogViewer.Controls
             IEnumerable<T> items,
             Func<T, T, bool> compareMethod)
         {
-            SelectContainerFromItem<T>(treeView,
+            SelectContainerFromItem(treeView,
                 new SelectInfo<T>()
                 {
                     Items = items,
@@ -49,7 +49,7 @@ namespace StructuredLogViewer.Controls
 
                         //treeItem.Focus();
                         treeItem.IsSelected = true;
-                        treeItem.IsExpanded = true;
+                        //treeItem.IsExpanded = true;
                         treeItem.BringIntoView();
                     },
                     NeedMoreItems = delegate (ItemsControl container, SelectInfo<T> info)
@@ -99,18 +99,7 @@ namespace StructuredLogViewer.Controls
             // in the chain.
             foreach (object item in container.Items)
             {
-                var convertedItem = default(T);
-
-                // Convert the item if a conversion method exists. Otherwise
-                // just cast the item to the desired type.
-                if (selectInfo.ConvertMethod != null)
-                {
-                    convertedItem = selectInfo.ConvertMethod(item);
-                }
-                else
-                {
-                    convertedItem = (T)item;
-                }
+                var convertedItem = (T)item;
 
                 // Compare the converted item with the item in the chain
                 if ((selectInfo.CompareMethod != null) && selectInfo.CompareMethod(convertedItem, currentItem))
@@ -155,7 +144,7 @@ namespace StructuredLogViewer.Controls
                         if (selectInfo.NeedMoreItems != null)
                         {
                             selectInfo.NeedMoreItems(containerParent, selectInfo);
-                            SelectContainerFromItem<T>(containerParent, selectInfo);
+                            SelectContainerFromItem(containerParent, selectInfo);
                         }
                     }
 
@@ -206,11 +195,6 @@ namespace StructuredLogViewer.Controls
         /// Gets or sets the method used to compare items in the control with items in the chain
         /// </summary>
         public Func<T, T, bool> CompareMethod { get; set; }
-
-        /// <summary>
-        /// Gets or sets the method used to convert items in the control to be compare with items in the chain
-        /// </summary>
-        public Func<object, T> ConvertMethod { get; set; }
 
         /// <summary>
         /// Gets or sets the method used to select the final item in the chain
