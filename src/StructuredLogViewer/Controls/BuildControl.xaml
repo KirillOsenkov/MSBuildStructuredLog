@@ -25,7 +25,7 @@
                      TextWrapping="Wrap"
                      HorizontalAlignment="Center"
                      Foreground="Gray"
-                     VerticalAlignment="Center">Search for projects, targets, tasks, properties and items. Results will display here.</TextBlock>
+                     VerticalAlignment="Center">Search for projects, targets, tasks, properties and items. Search for multiple words separated by space. Results will display here.</TextBlock>
         </Grid>
       </DockPanel>
     </local:SplitterPanel.FirstChild>

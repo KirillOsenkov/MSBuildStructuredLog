@@ -30,6 +30,9 @@ namespace StructuredLogViewer
             return resultSet;
         }
 
+        // avoid allocating this for every node
+        private readonly List<string> searchFields = new List<string>(3);
+
         private void Visit(TreeNode node)
         {
             if (resultSet.Count > MaxResults)
@@ -37,22 +40,49 @@ namespace StructuredLogViewer
                 return;
             }
 
+            searchFields.Clear();
+
             var named = node as NamedNode;
             if (named != null && named.Name != null)
             {
-                if (IsMatch(named.Name))
-                {
-                    resultSet.Add(node);
-                    return;
-                }
+                searchFields.Add(named.Name);
+            }
+
+            var textNode = node as TextNode;
+            if (textNode != null && textNode.Text != null)
+            {
+                searchFields.Add(textNode.Text);
+            }
+
+            // in case they want to narrow down the search such as "Build target" or "Copy task"
+            var typeName = node.GetType().Name;
+            searchFields.Add(typeName);
+
+            if (IsMatch(searchFields))
+            {
+                resultSet.Add(node);
             }
         }
 
-        private bool IsMatch(string text)
+        /// <summary>
+        ///  Each of the query words must be found in at least one field ∀w ∃f
+        /// </summary>
+        private bool IsMatch(List<string> fields)
         {
             for (int i = 0; i < words.Length; i++)
             {
-                if (text.IndexOf(words[i], StringComparison.OrdinalIgnoreCase) == -1)
+                bool anyFieldMatched = false;
+                var word = words[i];
+                for (int j = 0; j < fields.Count; j++)
+                {
+                    if (fields[j].IndexOf(word, StringComparison.OrdinalIgnoreCase) != -1)
+                    {
+                        anyFieldMatched = true;
+                        break;
+                    }
+                }
+
+                if (!anyFieldMatched)
                 {
                     return false;
                 }
