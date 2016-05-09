@@ -27,10 +27,36 @@ namespace StructuredLogViewer.Controls
 
             treeView.ItemContainerStyle = treeViewItemStyle;
             treeView.KeyDown += TreeView_KeyDown;
+            treeView.SelectedItemChanged += TreeView_SelectedItemChanged;
 
             resultsList.SelectionChanged += ResultsList_SelectionChanged;
 
+            breadCrumb.SelectionChanged += BreadCrumb_SelectionChanged;
+
             Loaded += BuildControl_Loaded;
+        }
+
+        private void BreadCrumb_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var node = breadCrumb.SelectedItem as TreeNode;
+            if (node != null)
+            {
+                SelectItem(node);
+            }
+        }
+
+        private void TreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            var item = treeView.SelectedItem as TreeNode;
+            if (item != null)
+            {
+                UpdateBreadcrumb(item);
+            }
+        }
+
+        private void UpdateBreadcrumb(TreeNode item)
+        {
+            breadCrumb.ItemsSource = item.GetParentChain().Skip(1).Concat(new[] { item });
         }
 
         private void BuildControl_Loaded(object sender, RoutedEventArgs e)

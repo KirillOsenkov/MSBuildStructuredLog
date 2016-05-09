@@ -30,11 +30,26 @@
       </DockPanel>
     </local:SplitterPanel.FirstChild>
     <local:SplitterPanel.SecondChild>
-      <TreeView x:Name="treeView"
-                VirtualizingPanel.IsVirtualizing="True" 
-                VirtualizingPanel.VirtualizationMode="Recycling"
-                ItemsSource="{Binding Children}">
-      </TreeView>
+      <DockPanel>
+        <ListBox x:Name="breadCrumb" 
+                 DockPanel.Dock="Top" 
+                 Margin="0,0,0,5"
+                 BorderThickness="1"
+                 BorderBrush="LightGray"
+                 Background="White"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+          <ListBox.ItemsPanel>
+            <ItemsPanelTemplate>
+              <WrapPanel IsItemsHost="True" />
+            </ItemsPanelTemplate>
+          </ListBox.ItemsPanel>
+        </ListBox>
+        <TreeView x:Name="treeView"
+                  VirtualizingPanel.IsVirtualizing="True" 
+                  VirtualizingPanel.VirtualizationMode="Recycling"
+                  ItemsSource="{Binding Children}">
+        </TreeView>
+      </DockPanel>
     </local:SplitterPanel.SecondChild>
   </local:SplitterPanel>
 </UserControl>
