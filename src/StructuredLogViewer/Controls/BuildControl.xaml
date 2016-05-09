@@ -19,7 +19,7 @@
         </Grid>
 
         <Grid>
-          <ListBox x:Name="resultsList"></ListBox>
+          <ListBox x:Name="resultsList" Background="#F5F5F5"></ListBox>
           <TextBlock x:Name="watermark" 
                      Margin="40" 
                      TextWrapping="Wrap"
