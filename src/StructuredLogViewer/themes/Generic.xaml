@@ -173,7 +173,7 @@
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
       <Rectangle x:Name="icon" Width="14" Height="11" Stroke="MediumAquamarine" Margin="2,2,6,0" Fill="{StaticResource ItemBrush}" VerticalAlignment="Top" />
-      <TextBlock x:Name="label" Text="Add Item" />
+      <TextBlock x:Name="label" Text="Add Item " />
       <TextBlock Text="{Binding Name}" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
@@ -187,7 +187,7 @@
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
       <Rectangle x:Name="icon" Width="14" Height="11" Stroke="MediumAquamarine" Margin="2,2,6,0" Fill="{StaticResource ItemBrush}" VerticalAlignment="Top" />
-      <TextBlock x:Name="label" Text="Remove Item" />
+      <TextBlock x:Name="label" Text="Remove Item " />
       <TextBlock Text="{Binding Name}" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
