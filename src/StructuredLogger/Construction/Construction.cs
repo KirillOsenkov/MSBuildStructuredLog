@@ -271,7 +271,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public void WarningRaised(object sender, BuildWarningEventArgs args)
         {
-            var warnings = Build.GetOrCreateNodeWithName<Folder>("Warnings");
+            TreeNode parent = GetOrAddProject(args.BuildEventContext.ProjectContextId);
+            if (parent == null)
+            {
+                parent = Build;
+            }
+
+            var warnings = parent.GetOrCreateNodeWithName<Folder>("Warnings");
             var warning = new Warning();
             Populate(warning, args);
             warnings.AddChild(warning);
@@ -279,7 +285,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public void ErrorRaised(object sender, BuildErrorEventArgs args)
         {
-            var errors = Build.GetOrCreateNodeWithName<Folder>("Errors");
+            TreeNode parent = GetOrAddProject(args.BuildEventContext.ProjectContextId);
+            if (parent == null)
+            {
+                parent = Build;
+            }
+
+            var errors = parent.GetOrCreateNodeWithName<Folder>("Errors");
             var error = new Error();
             Populate(error, args);
             errors.AddChild(error);
