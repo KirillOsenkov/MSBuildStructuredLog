@@ -138,7 +138,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public NamedNode GetOrCreateNodeWithName<T>(string name) where T : NamedNode, new()
         {
-            var existing = FindFirst<T>(n => n.Name == name);
+            var existing = FindChild<T>(n => n.Name == name);
             if (existing == null)
             {
                 existing = new T() { Name = name };
@@ -158,7 +158,23 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        public virtual T FindFirst<T>(Predicate<T> predicate = null)
+        public virtual T FindChild<T>(Predicate<T> predicate = null)
+        {
+            if (HasChildren)
+            {
+                foreach (var child in Children.OfType<T>())
+                {
+                    if (predicate == null || predicate(child))
+                    {
+                        return child;
+                    }
+                }
+            }
+
+            return default(T);
+        }
+
+        public virtual T FindFirstInSubtree<T>(Predicate<T> predicate = null)
         {
             if (this is T && (predicate == null || predicate((T)(object)this)))
             {
@@ -174,7 +190,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 foreach (var child in Children.OfType<TreeNode>())
                 {
-                    var found = child.FindFirst<T>(predicate);
+                    var found = child.FindFirstInSubtree<T>(predicate);
                     if (found != null)
                     {
                         return found;
@@ -185,7 +201,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return default(T);
         }
 
-        public virtual T FindLast<T>(Predicate<T> predicate = null)
+        public virtual T FindLastInSubtree<T>(Predicate<T> predicate = null)
         {
             var child = FindLastChild<T>(predicate);
             if (child != null)
@@ -207,7 +223,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 foreach (var child in Children.OfType<TreeNode>().Reverse())
                 {
-                    var found = child.FindLast<T>(predicate);
+                    var found = child.FindLastInSubtree<T>(predicate);
                     if (found != null)
                     {
                         return found;
@@ -295,7 +311,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             while (current != null)
             {
-                var last = current.FindLast<T>(predicate);
+                var last = current.FindLastInSubtree<T>(predicate);
                 if (last != null)
                 {
                     return last;
@@ -330,7 +346,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             while (current != null)
             {
-                var first = current.FindFirst<T>(predicate);
+                var first = current.FindFirstInSubtree<T>(predicate);
                 if (first != null)
                 {
                     return first;
