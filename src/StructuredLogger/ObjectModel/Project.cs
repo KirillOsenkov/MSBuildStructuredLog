@@ -13,7 +13,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         public string ProjectFile { get; set; }
 
-        public string ProjectFileExtension => Path.GetExtension(ProjectFile).ToLowerInvariant();
+        public string ProjectFileExtension => ProjectFile != null ? Path.GetExtension(ProjectFile).ToLowerInvariant() : "";
 
         /// <summary>
         /// A lookup table mapping of target names to targets. 

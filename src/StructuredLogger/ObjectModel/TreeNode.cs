@@ -105,12 +105,27 @@ namespace Microsoft.Build.Logging.StructuredLogger
             TreeNode current = this;
             while (current.Parent != null)
             {
-                current = current.Parent as TreeNode;
+                current = current.Parent;
                 chain.Add(current);
             }
 
             chain.Reverse();
             return chain;
+        }
+
+        public T GetNearestParent<T>() where T : TreeNode
+        {
+            TreeNode current = this;
+            while (current.Parent != null)
+            {
+                current = current.Parent;
+                if (current is T)
+                {
+                    return (T)current;
+                }
+            }
+
+            return null;
         }
 
         private ObservableCollection<object> children;
@@ -129,6 +144,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         public bool HasChildren { get; private set; } = false;
+
+        public void AddChildAtBeginning(TreeNode child)
+        {
+            Children.Insert(0, child);
+            child.Parent = this;
+        }
 
         public virtual void AddChild(TreeNode child)
         {

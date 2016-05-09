@@ -102,6 +102,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     project.AddChild(unparentedTarget);
                 }
             }
+
+            project.VisitAllChildren<Target>(t =>
+            {
+                if (t.Project == project)
+                {
+                    t.DependsOnTargets = string.Join(",", targetGraph.GetDependencies(t.Name));
+                }
+            });
         }
 
         public void ProjectStarted(object sender, ProjectStartedEventArgs args)

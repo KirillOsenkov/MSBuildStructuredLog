@@ -54,25 +54,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             if (node.IsLowRelevance)
             {
-                element.Add(new XAttribute(nameof(node.IsLowRelevance), "true"));
+                SetString(element, nameof(node.IsLowRelevance), "true");
             }
 
             if (node is NamedNode)
             {
                 var named = node as NamedNode;
-                if (!string.IsNullOrEmpty(named.Name))
-                {
-                    element.Add(new XAttribute(nameof(named.Name), named.Name.Replace("\"", "")));
-                }
+                SetString(element, nameof(named.Name), named.Name?.Replace("\"", ""));
             }
 
             if (node is TextNode)
             {
                 var textNode = node as TextNode;
-                if (!string.IsNullOrEmpty(textNode.Text))
-                {
-                    element.Add(new XAttribute(nameof(textNode.Text), textNode.Text));
-                }
+                SetString(element, nameof(textNode.Text), textNode.Text);
             }
 
             if (node is TimedNode)
@@ -83,24 +77,31 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var build = node as Build;
             if (build != null)
             {
-                element.Add(new XAttribute(nameof(build.Succeeded), build.Succeeded));
+                SetString(element, nameof(build.Succeeded), build.Succeeded.ToString());
                 return;
             }
 
             var project = node as Project;
             if (project != null)
             {
-                element.Add(new XAttribute(nameof(project.ProjectFile), project.ProjectFile));
+                SetString(element, nameof(project.ProjectFile), project.ProjectFile);
+                return;
+            }
+
+            var target = node as Target;
+            if (target != null)
+            {
+                SetString(element, nameof(target.DependsOnTargets), target.DependsOnTargets);
                 return;
             }
 
             var task = node as Task;
             if (task != null)
             {
-                element.Add(new XAttribute(nameof(task.FromAssembly), task.FromAssembly));
+                SetString(element, nameof(task.FromAssembly), task.FromAssembly);
                 if (task.CommandLineArguments != null)
                 {
-                    element.Add(new XAttribute(nameof(task.CommandLineArguments), task.CommandLineArguments));
+                    SetString(element, nameof(task.CommandLineArguments), task.CommandLineArguments);
                 }
 
                 return;
@@ -109,20 +110,28 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var diagnostic = node as AbstractDiagnostic;
             if (diagnostic != null)
             {
-                element.Add(new XAttribute(nameof(diagnostic.Code), diagnostic.Code));
-                element.Add(new XAttribute(nameof(diagnostic.File), diagnostic.File));
-                element.Add(new XAttribute(nameof(diagnostic.LineNumber), diagnostic.LineNumber));
-                element.Add(new XAttribute(nameof(diagnostic.ColumnNumber), diagnostic.ColumnNumber));
-                element.Add(new XAttribute(nameof(diagnostic.EndLineNumber), diagnostic.EndLineNumber));
-                element.Add(new XAttribute(nameof(diagnostic.EndColumnNumber), diagnostic.EndColumnNumber));
-                element.Add(new XAttribute(nameof(diagnostic.ProjectFile), diagnostic.ProjectFile));
+                SetString(element, nameof(diagnostic.Code), diagnostic.Code);
+                SetString(element, nameof(diagnostic.File), diagnostic.File);
+                SetString(element, nameof(diagnostic.LineNumber), diagnostic.LineNumber.ToString());
+                SetString(element, nameof(diagnostic.ColumnNumber), diagnostic.ColumnNumber.ToString());
+                SetString(element, nameof(diagnostic.EndLineNumber), diagnostic.EndLineNumber.ToString());
+                SetString(element, nameof(diagnostic.EndColumnNumber), diagnostic.EndColumnNumber.ToString());
+                SetString(element, nameof(diagnostic.ProjectFile), diagnostic.ProjectFile);
             }
         }
 
-        private static void AddStartAndEndTime(XElement element, TimedNode node)
+        private void SetString(XElement element, string name, string value)
         {
-            element.Add(new XAttribute(nameof(TimedNode.StartTime), node.StartTime));
-            element.Add(new XAttribute(nameof(TimedNode.EndTime), node.EndTime));
+            if (!string.IsNullOrEmpty(value))
+            {
+                element.Add(new XAttribute(name, value));
+            }
+        }
+
+        private void AddStartAndEndTime(XElement element, TimedNode node)
+        {
+            SetString(element, nameof(TimedNode.StartTime), node.StartTime.ToString());
+            SetString(element, nameof(TimedNode.EndTime), node.EndTime.ToString());
         }
 
         private string GetName(TreeNode node)

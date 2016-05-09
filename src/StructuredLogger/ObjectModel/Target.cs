@@ -5,6 +5,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
     public class Target : TimedNode
     {
         public bool Succeeded { get; internal set; }
+        public string DependsOnTargets { get; set; }
+        public Project Project => GetNearestParent<Project>();
 
         public Target()
         {

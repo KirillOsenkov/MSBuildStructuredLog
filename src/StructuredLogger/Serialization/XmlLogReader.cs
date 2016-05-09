@@ -110,6 +110,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
+            var target = node as Target;
+            if (target != null)
+            {
+                target.DependsOnTargets = GetString(element, nameof(Target.DependsOnTargets));
+            }
+
             var task = node as Task;
             if (task != null)
             {

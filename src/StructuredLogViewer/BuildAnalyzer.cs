@@ -23,7 +23,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void Analyze()
         {
-            build.VisitAllChildren<Target>(t => MarkAsLowRelevanceIfNeeded(t));
+            build.VisitAllChildren<Target>(t => AnalyzeTarget(t));
             if (!build.Succeeded)
             {
                 build.AddChild(new Error { Text = "Build failed." });
@@ -92,6 +92,26 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             bucket.Add(source);
+        }
+
+        private void AnalyzeTarget(Target target)
+        {
+            MarkAsLowRelevanceIfNeeded(target);
+            AddDependsOnTargets(target);
+        }
+
+        private static void AddDependsOnTargets(Target target)
+        {
+            if (!string.IsNullOrEmpty(target.DependsOnTargets))
+            {
+                var dependsOnTargets = new Parameter() { Name = "DependsOnTargets" };
+                target.AddChildAtBeginning(dependsOnTargets);
+
+                foreach (var dependsOnTarget in target.DependsOnTargets.Split(','))
+                {
+                    dependsOnTargets.AddChild(new Item { Text = dependsOnTarget });
+                }
+            }
         }
 
         private void MarkAsLowRelevanceIfNeeded(Target target)
