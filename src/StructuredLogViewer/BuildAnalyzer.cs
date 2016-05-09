@@ -27,7 +27,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (target.Children.All(c => c is Message))
             {
                 target.IsLowRelevance = true;
-                foreach (var child in target.Children.OfType<LogProcessNode>())
+                foreach (var child in target.Children.OfType<TreeNode>())
                 {
                     child.IsLowRelevance = true;
                 }

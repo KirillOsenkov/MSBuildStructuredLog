@@ -7,7 +7,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
     /// <summary>
     /// Class representation of an MSBuild overall build execution.
     /// </summary>
-    public class Build : LogProcessNode
+    public class Build : TimedNode
     {
         public bool Succeeded { get; set; }
 
@@ -37,13 +37,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 list.Add(project);
             }
-        }
-
-        public IEnumerable<T> EnumerateAllChildren<T>(Predicate<T> predicate)
-        {
-            var list = new List<T>();
-            AddAllChildren(predicate, list);
-            return list;
         }
     }
 }

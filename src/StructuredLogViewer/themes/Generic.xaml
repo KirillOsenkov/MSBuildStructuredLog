@@ -202,7 +202,7 @@
     <StackPanel Orientation="Horizontal">
       <Rectangle x:Name="icon" Width="14" Height="11" Stroke="MediumAquamarine" Margin="2,2,6,0" Fill="{StaticResource ItemBrush}" VerticalAlignment="Top" />
       <TextBlock x:Name="nameAndEquals" Text="{Binding NameAndEquals}" />
-      <TextBlock Text="{Binding ItemSpec}" />
+      <TextBlock Text="{Binding Text}" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
       <DataTrigger Binding="{Binding IsSelected}" Value="False">
@@ -252,14 +252,14 @@
   <DataTemplate DataType="{x:Type l:Error}">
     <StackPanel Orientation="Horizontal">
       <Rectangle x:Name="icon" Width="14" Height="11" Stroke="Red" Margin="2,2,6,0" Fill="{StaticResource ErrorBrush}" VerticalAlignment="Top" />
-      <TextBlock Text="{Binding Message}" />
+      <TextBlock Text="{Binding Text}" />
     </StackPanel>
   </DataTemplate>
 
   <DataTemplate DataType="{x:Type l:Warning}">
     <StackPanel Orientation="Horizontal">
       <Rectangle x:Name="icon" Width="14" Height="11" Stroke="Gold" Margin="2,2,6,0" Fill="{StaticResource WarningBrush}" VerticalAlignment="Top" />
-      <TextBlock Text="{Binding Message}" />
+      <TextBlock Text="{Binding Text}" />
     </StackPanel>
   </DataTemplate>
 

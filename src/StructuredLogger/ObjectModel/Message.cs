@@ -2,9 +2,8 @@
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class Message : LogProcessNode
+    public class Message : TextNode
     {
-        public string Text { get; set; }
         public DateTime Timestamp { get; set; }
     }
 }

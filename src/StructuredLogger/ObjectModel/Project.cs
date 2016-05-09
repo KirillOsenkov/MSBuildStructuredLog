@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class Project : LogProcessNode
+    public class Project : TimedNode
     {
         /// <summary>
         /// The full path to the MSBuild project file for this project.

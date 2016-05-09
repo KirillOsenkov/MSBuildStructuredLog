@@ -12,9 +12,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <param name="prefix">The prefix parsed out (e.g. 'Output Item(s): '.).</param>
         /// <param name="name">Out: The name of the list.</param>
         /// <returns>List of items within the list and all metadata.</returns>
-        public static LogProcessNode ParsePropertyOrItemList(string message, string prefix)
+        public static TreeNode ParsePropertyOrItemList(string message, string prefix)
         {
-            LogProcessNode result;
+            TreeNode result;
 
             var lines = message.Split('\n');
 
@@ -34,10 +34,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 result = new Parameter { Name = nameValue.Key };
 
-                result.AddChild(new Item { ItemSpec = nameValue.Value.Replace("\r", "") });
+                result.AddChild(new Item { Text = nameValue.Value.Replace("\r", "") });
                 for (int i = 1; i < lines.Length; i++)
                 {
-                    result.AddChild(new Item { ItemSpec = lines[i].Replace("\r", "") });
+                    result.AddChild(new Item { Text = lines[i].Replace("\r", "") });
                 }
 
                 return result;
@@ -53,11 +53,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     case 4:
                         if (line.EndsWith("=", StringComparison.Ordinal))
                         {
-                            result.Name = line.Substring(4, line.Length - 5);
+                            ((Parameter)result).Name = line.Substring(4, line.Length - 5);
                         }
                         break;
                     case 8:
-                        currentItem = new Item { ItemSpec = line.Substring(8) };
+                        currentItem = new Item { Text = line.Substring(8) };
                         result.AddChild(currentItem);
                         break;
                     case 16:

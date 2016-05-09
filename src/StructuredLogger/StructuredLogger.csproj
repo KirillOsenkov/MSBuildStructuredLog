@@ -33,9 +33,11 @@
     <Compile Include="ObjectModel\Folder.cs" />
     <Compile Include="ObjectModel\Metadata.cs" />
     <Compile Include="ObjectModel\RemoveItem.cs" />
+    <Compile Include="ObjectModel\TextNode.cs" />
+    <Compile Include="ObjectModel\TimedNode.cs" />
     <Compile Include="ObjectModel\Warning.cs" />
     <Compile Include="Serialization\JsonLogWriter.cs" />
-    <Compile Include="ObjectModel\LogProcessNode.cs" />
+    <Compile Include="ObjectModel\NamedNode.cs" />
     <Compile Include="Construction\MessageProcessor.cs" />
     <Compile Include="Serialization\XmlLogReader.cs" />
     <Compile Include="ObjectModel\Build.cs" />

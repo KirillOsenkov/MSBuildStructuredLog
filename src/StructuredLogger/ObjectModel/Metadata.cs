@@ -1,6 +1,6 @@
 ﻿namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class Metadata : LogProcessNode
+    public class Metadata : NamedNode
     {
         public string Value { get; set; }
 

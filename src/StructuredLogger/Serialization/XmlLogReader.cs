@@ -19,13 +19,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         private static readonly Dictionary<string, Type> objectModelTypes =
-            typeof(LogProcessNode)
+            typeof(TreeNode)
                 .Assembly
                 .GetTypes()
-                .Where(t => typeof(LogProcessNode).IsAssignableFrom(t))
+                .Where(t => typeof(TreeNode).IsAssignableFrom(t))
                 .ToDictionary(t => t.Name);
 
-        private LogProcessNode ReadNode(XElement element)
+        private TreeNode ReadNode(XElement element)
         {
             var name = element.Name.LocalName;
             Type type = null;
@@ -34,11 +34,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 type = typeof(Folder);
             }
 
-            var node = (LogProcessNode)Activator.CreateInstance(type);
+            var node = (TreeNode)Activator.CreateInstance(type);
 
-            if (node is Folder)
+            var folder = node as Folder;
+            if (folder != null)
             {
-                node.Name = name;
+                folder.Name = name;
             }
 
             ReadAttributes(node, element);
@@ -74,14 +75,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return node;
         }
 
-        private void ReadAttributes(LogProcessNode node, XElement element)
+        private void ReadAttributes(TreeNode node, XElement element)
         {
             node.IsLowRelevance = GetBoolean(element, "IsLowRelevance");
 
             var name = GetString(element, "Name");
             if (node is Parameter || node is Property || node is Metadata)
             {
-                node.Name = name;
+                var named = node as NamedNode;
+                named.Name = name;
                 return;
             }
 
@@ -125,12 +127,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (item != null)
             {
                 item.Name = name;
-                item.ItemSpec = GetString(element, "ItemSpec");
+                item.Text = GetString(element, "ItemSpec");
                 return;
             }
         }
 
-        private void AddStartAndEndTime(XElement element, LogProcessNode node)
+        private void AddStartAndEndTime(XElement element, TimedNode node)
         {
             node.StartTime = GetDateTime(element, "StartTime");
             node.EndTime = GetDateTime(element, "EndTime");

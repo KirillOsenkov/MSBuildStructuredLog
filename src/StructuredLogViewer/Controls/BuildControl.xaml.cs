@@ -40,14 +40,14 @@ namespace StructuredLogViewer.Controls
 
         private void ResultsList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            var item = resultsList.SelectedItem as LogProcessNode;
+            var item = resultsList.SelectedItem as TreeNode;
             if (item != null)
             {
                 SelectItem(item);
             }
         }
 
-        private void SelectItem(LogProcessNode item)
+        private void SelectItem(TreeNode item)
         {
             // skip the actual Build object and add the item itself
             var parentChain = item.GetParentChain().Skip(1).Concat(new[] { item });

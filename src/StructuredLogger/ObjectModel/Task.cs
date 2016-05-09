@@ -1,6 +1,6 @@
 ﻿namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class Task : LogProcessNode
+    public class Task : TimedNode
     {
         public string FromAssembly { get; set; }
         public string CommandLineArguments { get; set; }

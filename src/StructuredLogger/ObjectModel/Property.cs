@@ -2,7 +2,7 @@
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class Property : LogProcessNode
+    public class Property : NamedNode
     {
         public Property()
         {

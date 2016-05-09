@@ -2,9 +2,8 @@
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class AbstractDiagnostic : LogProcessNode
+    public class AbstractDiagnostic : TextNode
     {
-        public string Message { get; set; }
         public DateTime Timestamp { get; set; }
         public string Code { get; set; }
         public int ColumnNumber { get; set; }

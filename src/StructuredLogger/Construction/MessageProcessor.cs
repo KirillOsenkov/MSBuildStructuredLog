@@ -115,7 +115,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         /// <param name="args">The <see cref="BuildMessageEventArgs"/> instance containing the event data.</param>
         /// <param name="prefix">The prefix string.</param>
-        public void AddItemGroup(BuildMessageEventArgs args, string prefix, LogProcessNode containerNode)
+        public void AddItemGroup(BuildMessageEventArgs args, string prefix, NamedNode containerNode)
         {
             var project = construction.GetOrAddProject(args.BuildEventContext.ProjectContextId);
             var target = project.GetTargetById(args.BuildEventContext.TargetId);
@@ -123,7 +123,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var property = itemGroup as Property;
             if (property != null)
             {
-                itemGroup = new Item { Name = property.Name, ItemSpec = property.Value };
+                itemGroup = new Item { Name = property.Name, Text = property.Value };
                 containerNode.Name = property.Name;
             }
 
@@ -137,7 +137,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <param name="args">The <see cref="BuildMessageEventArgs"/> instance containing the event data.</param>
         public void AddMessage(LazyFormattedBuildEventArgs args, string message)
         {
-            LogProcessNode node = null;
+            TreeNode node = null;
             var messageNode = new Message { Text = message, Timestamp = args.Timestamp };
 
             if (args.BuildEventContext.TaskId > 0)

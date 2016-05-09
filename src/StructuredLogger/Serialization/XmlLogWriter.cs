@@ -13,7 +13,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             document.Save(logFile);
         }
 
-        public XElement WriteNode(LogProcessNode node)
+        public XElement WriteNode(TreeNode node)
         {
             var result = new XElement(GetName(node));
 
@@ -45,7 +45,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 foreach (var child in node.Children)
                 {
-                    var childNode = child as LogProcessNode;
+                    var childNode = child as TreeNode;
                     if (childNode != null)
                     {
                         var childElement = WriteNode(childNode);
@@ -57,7 +57,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return result;
         }
 
-        private void WriteAttributes(LogProcessNode node, XElement element)
+        private void WriteAttributes(TreeNode node, XElement element)
         {
             if (node.IsLowRelevance)
             {
@@ -66,7 +66,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (node is Parameter || node is Property || node is Metadata)
             {
-                element.Add(new XAttribute("Name", node.Name));
+                var named = node as NamedNode;
+                element.Add(new XAttribute("Name", named.Name));
                 return;
             }
 
@@ -117,22 +118,23 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     element.Add(new XAttribute("Name", item.Name));
                 }
 
-                element.Add(new XAttribute("ItemSpec", item.ItemSpec));
+                element.Add(new XAttribute("ItemSpec", item.Text));
                 return;
             }
         }
 
-        private static void AddStartAndEndTime(XElement element, LogProcessNode node)
+        private static void AddStartAndEndTime(XElement element, TimedNode node)
         {
             element.Add(new XAttribute("StartTime", node.StartTime));
             element.Add(new XAttribute("EndTime", node.EndTime));
         }
 
-        private string GetName(LogProcessNode node)
+        private string GetName(TreeNode node)
         {
-            if (node is Folder && node.Name != null)
+            var folder = node as Folder;
+            if (folder != null && folder.Name != null)
             {
-                return node.Name;
+                return folder.Name;
             }
 
             return node.GetType().Name;

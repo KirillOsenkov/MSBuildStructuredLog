@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogViewer
@@ -10,32 +11,54 @@ namespace StructuredLogViewer
 
         private Build build;
         private string query;
-        private List<LogProcessNode> resultSet;
+        private List<TreeNode> resultSet;
 
         public Search(Build build)
         {
             this.build = build;
         }
 
-        public IEnumerable<LogProcessNode> FindNodes(string query)
+        private static readonly char[] space = { ' ' };
+        private string[] words;
+
+        public IEnumerable<TreeNode> FindNodes(string query)
         {
             this.query = query;
-            resultSet = new List<LogProcessNode>();
-            build.VisitAllChildren<LogProcessNode>(Visit);
+            this.words = query.Split(space, StringSplitOptions.RemoveEmptyEntries);
+            resultSet = new List<TreeNode>();
+            build.VisitAllChildren<TreeNode>(Visit);
             return resultSet;
         }
 
-        private void Visit(LogProcessNode node)
+        private void Visit(TreeNode node)
         {
             if (resultSet.Count > MaxResults)
             {
                 return;
             }
 
-            if (node.Name != null && node.Name.IndexOf(query, StringComparison.OrdinalIgnoreCase) != -1)
+            var named = node as NamedNode;
+            if (named != null && named.Name != null)
             {
-                resultSet.Add(node);
+                if (IsMatch(named.Name))
+                {
+                    resultSet.Add(node);
+                    return;
+                }
             }
+        }
+
+        private bool IsMatch(string text)
+        {
+            for (int i = 0; i < words.Length; i++)
+            {
+                if (text.IndexOf(words[i], StringComparison.OrdinalIgnoreCase) == -1)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

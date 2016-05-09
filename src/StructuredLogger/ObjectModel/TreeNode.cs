@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -76,7 +77,41 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        private bool isLowRelevance = false;
+        public bool IsLowRelevance
+        {
+            get
+            {
+                return isLowRelevance && !IsSelected;
+            }
+
+            set
+            {
+                if (isLowRelevance == value)
+                {
+                    return;
+                }
+
+                isLowRelevance = value;
+                RaisePropertyChanged();
+            }
+        }
+
         public TreeNode Parent { get; set; }
+
+        public IEnumerable<TreeNode> GetParentChain()
+        {
+            var chain = new List<TreeNode>();
+            TreeNode current = this;
+            while (current.Parent != null)
+            {
+                current = current.Parent as TreeNode;
+                chain.Add(current);
+            }
+
+            chain.Reverse();
+            return chain;
+        }
 
         private ObservableCollection<object> children;
         public ObservableCollection<object> Children
@@ -99,6 +134,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             Children.Add(child);
             child.Parent = this;
+        }
+
+        public NamedNode GetOrCreateNodeWithName<T>(string name) where T : NamedNode, new()
+        {
+            var existing = FindFirst<T>(n => n.Name == name);
+            if (existing == null)
+            {
+                existing = new T() { Name = name };
+                this.AddChild(existing);
+            }
+
+            return existing;
         }
 
         private void Children_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -305,6 +352,26 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             return default(T);
+        }
+
+        public void VisitAllChildren<T>(Action<T> processor)
+        {
+            if (this is T)
+            {
+                processor((T)(object)this);
+            }
+
+            if (HasChildren)
+            {
+                foreach (var child in Children)
+                {
+                    var node = child as TreeNode;
+                    if (node != null)
+                    {
+                        node.VisitAllChildren<T>(processor);
+                    }
+                }
+            }
         }
 
         public virtual int TotalItemsInSubtree()

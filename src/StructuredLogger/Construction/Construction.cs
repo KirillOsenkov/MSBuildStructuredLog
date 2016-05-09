@@ -199,7 +199,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         foreach (ITaskItem targetOutput in args.TargetOutputs)
                         {
                             var item = new Item();
-                            item.ItemSpec = targetOutput.ItemSpec;
+                            item.Text = targetOutput.ItemSpec;
                             foreach (DictionaryEntry metadata in targetOutput.CloneCustomMetadata())
                             {
                                 var metadataNode = new Metadata();
@@ -287,7 +287,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void Populate(AbstractDiagnostic message, BuildWarningEventArgs args)
         {
-            message.Message = args.Message;
+            message.Text = args.Message;
             message.Timestamp = args.Timestamp;
             message.Code = args.Code;
             message.ColumnNumber = args.ColumnNumber;
@@ -301,7 +301,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void Populate(AbstractDiagnostic message, BuildErrorEventArgs args)
         {
-            message.Message = args.Message;
+            message.Text = args.Message;
             message.Timestamp = args.Timestamp;
             message.Code = args.Code;
             message.ColumnNumber = args.ColumnNumber;
@@ -388,7 +388,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         var taskItem = kvp.Value as ITaskItem2;
                         if (taskItem != null)
                         {
-                            item.ItemSpec = taskItem.ItemSpec;
+                            item.Text = taskItem.ItemSpec;
                             foreach (DictionaryEntry metadataName in taskItem.CloneCustomMetadata())
                             {
                                 item.AddChild(new Metadata { Name = Convert.ToString(metadataName.Key), Value = Convert.ToString(metadataName.Value) });
@@ -519,7 +519,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private static void AddProperties(LogProcessNode parent, IEnumerable<KeyValuePair<string, string>> properties)
+        private static void AddProperties(TreeNode parent, IEnumerable<KeyValuePair<string, string>> properties)
         {
             foreach (var kvp in properties)
             {

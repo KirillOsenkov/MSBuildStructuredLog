@@ -2,7 +2,7 @@
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class Target : LogProcessNode
+    public class Target : TimedNode
     {
         public bool Succeeded { get; internal set; }
 
