@@ -17,27 +17,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             var result = new XElement(GetName(node));
 
-            WriteAttributes(node, result);
-
-            var property = node as Property;
-            if (property != null)
-            {
-                result.Value = property.Value;
-                return result;
-            }
-
-            var metadata = node as Metadata;
-            if (metadata != null)
-            {
-                result.Value = metadata.Value;
-                return result;
-            }
-
             var message = node as Message;
             if (message != null)
             {
-                result.Add(new XAttribute("Timestamp", message.Timestamp));
+                result.Add(new XAttribute(nameof(Message.Timestamp), message.Timestamp));
                 result.Value = message.Text;
+                return result;
+            }
+
+            WriteAttributes(node, result);
+
+            var nameValueNode = node as NameValueNode;
+            if (nameValueNode != null)
+            {
+                result.Value = nameValueNode.Value;
                 return result;
             }
 
@@ -61,72 +54,74 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             if (node.IsLowRelevance)
             {
-                element.Add(new XAttribute("IsLowRelevance", "true"));
+                element.Add(new XAttribute(nameof(node.IsLowRelevance), "true"));
             }
 
-            if (node is Parameter || node is Property || node is Metadata)
+            if (node is NamedNode)
             {
                 var named = node as NamedNode;
-                element.Add(new XAttribute("Name", named.Name));
-                return;
+                if (!string.IsNullOrEmpty(named.Name))
+                {
+                    element.Add(new XAttribute(nameof(named.Name), named.Name.Replace("\"", "")));
+                }
+            }
+
+            if (node is TextNode)
+            {
+                var textNode = node as TextNode;
+                if (!string.IsNullOrEmpty(textNode.Text))
+                {
+                    element.Add(new XAttribute(nameof(textNode.Text), textNode.Text));
+                }
+            }
+
+            if (node is TimedNode)
+            {
+                AddStartAndEndTime(element, (TimedNode)node);
             }
 
             var build = node as Build;
             if (build != null)
             {
-                element.Add(new XAttribute("Succeeded", build.Succeeded));
-                AddStartAndEndTime(element, build);
+                element.Add(new XAttribute(nameof(build.Succeeded), build.Succeeded));
                 return;
             }
 
             var project = node as Project;
             if (project != null)
             {
-                element.Add(new XAttribute("Name", project.Name.Replace("\"", "")));
-                AddStartAndEndTime(element, project);
-                element.Add(new XAttribute("ProjectFile", project.ProjectFile));
-                return;
-            }
-
-            var target = node as Target;
-            if (target != null)
-            {
-                element.Add(new XAttribute("Name", target.Name));
-                AddStartAndEndTime(element, target);
+                element.Add(new XAttribute(nameof(project.ProjectFile), project.ProjectFile));
                 return;
             }
 
             var task = node as Task;
             if (task != null)
             {
-                element.Add(new XAttribute("Name", task.Name));
-                element.Add(new XAttribute("FromAssembly", task.FromAssembly));
-                AddStartAndEndTime(element, task);
+                element.Add(new XAttribute(nameof(task.FromAssembly), task.FromAssembly));
                 if (task.CommandLineArguments != null)
                 {
-                    element.Add(new XAttribute("CommandLineArguments", task.CommandLineArguments));
+                    element.Add(new XAttribute(nameof(task.CommandLineArguments), task.CommandLineArguments));
                 }
 
                 return;
             }
 
-            var item = node as Item;
-            if (item != null)
+            var diagnostic = node as AbstractDiagnostic;
+            if (diagnostic != null)
             {
-                if (!string.IsNullOrEmpty(item.Name))
-                {
-                    element.Add(new XAttribute("Name", item.Name));
-                }
-
-                element.Add(new XAttribute("ItemSpec", item.Text));
-                return;
+                element.Add(new XAttribute(nameof(diagnostic.Code), diagnostic.Code));
+                element.Add(new XAttribute(nameof(diagnostic.File), diagnostic.File));
+                element.Add(new XAttribute(nameof(diagnostic.LineNumber), diagnostic.LineNumber));
+                element.Add(new XAttribute(nameof(diagnostic.ColumnNumber), diagnostic.ColumnNumber));
+                element.Add(new XAttribute(nameof(diagnostic.EndLineNumber), diagnostic.EndLineNumber));
+                element.Add(new XAttribute(nameof(diagnostic.EndColumnNumber), diagnostic.EndColumnNumber));
             }
         }
 
         private static void AddStartAndEndTime(XElement element, TimedNode node)
         {
-            element.Add(new XAttribute("StartTime", node.StartTime));
-            element.Add(new XAttribute("EndTime", node.EndTime));
+            element.Add(new XAttribute(nameof(TimedNode.StartTime), node.StartTime));
+            element.Add(new XAttribute(nameof(TimedNode.EndTime), node.EndTime));
         }
 
         private string GetName(TreeNode node)
