@@ -31,7 +31,7 @@ namespace StructuredLogViewer
         }
 
         // avoid allocating this for every node
-        private readonly List<string> searchFields = new List<string>(3);
+        private readonly List<string> searchFields = new List<string>(4);
 
         private void Visit(TreeNode node)
         {
@@ -52,6 +52,12 @@ namespace StructuredLogViewer
             if (textNode != null && textNode.Text != null)
             {
                 searchFields.Add(textNode.Text);
+            }
+
+            var nameValueNode = node as NameValueNode;
+            if (nameValueNode != null)
+            {
+                searchFields.Add(nameValueNode.Value);
             }
 
             // in case they want to narrow down the search such as "Build target" or "Copy task"

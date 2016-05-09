@@ -2,7 +2,7 @@
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class Property : NamedNode
+    public class Property : NameValueNode
     {
         public Property()
         {
@@ -13,10 +13,5 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Name = kvp.Key;
             Value = kvp.Value;
         }
-
-        public string Value { get; set; }
-        public string NameAndEquals => Name + " = ";
-
-        public override string ToString() => Name + " = " + Value;
     }
 }
