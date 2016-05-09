@@ -40,6 +40,7 @@
     <Compile Include="Serialization\JsonLogWriter.cs" />
     <Compile Include="ObjectModel\NamedNode.cs" />
     <Compile Include="Construction\MessageProcessor.cs" />
+    <Compile Include="Serialization\StringWriter.cs" />
     <Compile Include="Serialization\XmlLogReader.cs" />
     <Compile Include="ObjectModel\Build.cs" />
     <Compile Include="ObjectModel\Parameter.cs" />

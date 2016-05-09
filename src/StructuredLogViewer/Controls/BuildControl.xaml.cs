@@ -66,6 +66,28 @@ namespace StructuredLogViewer.Controls
                     args.Handled = true;
                 }
             }
+            else if (args.Key == Key.C && args.KeyboardDevice.Modifiers == ModifierKeys.Control)
+            {
+                CopyToClipboard(treeView.SelectedItem as TreeNode);
+            }
+        }
+
+        private void CopyToClipboard(TreeNode treeNode)
+        {
+            if (treeNode == null)
+            {
+                return;
+            }
+
+            var text = StringWriter.GetString(treeNode);
+            try
+            {
+                Clipboard.SetText(text);
+            }
+            catch (Exception)
+            {
+                // clipboard API is notoriously flaky
+            }
         }
 
         private void MoveSelectionOut(TreeNode node)

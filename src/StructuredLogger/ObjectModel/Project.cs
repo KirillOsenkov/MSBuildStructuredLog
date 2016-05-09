@@ -39,7 +39,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public override string ToString()
         {
-            return $"Project Id={Id} Name={Name}";
+            return $"Project Id={Id} Name={Name} File={ProjectFile}";
         }
 
         public Target GetOrAddTargetByName(string targetName)

@@ -20,7 +20,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public override string ToString()
         {
-            return $"Target Id={Id} Name={Name}";
+            return $"Target Id={Id} Name={Name} Project={Project?.Name}";
         }
     }
 }

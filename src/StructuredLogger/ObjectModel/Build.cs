@@ -38,5 +38,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 list.Add(project);
             }
         }
+
+        public override string ToString() => "Build " + (Succeeded ? "succeeded" : "failed");
     }
 }
