@@ -28,8 +28,16 @@ namespace StructuredLogViewer
             {
                 try
                 {
-                    var result = MSBuildApp.Execute(commandLine);
-                    return StructuredLogger.CurrentBuild;
+                    var exitType = MSBuildApp.Execute(commandLine);
+                    var result = StructuredLogger.CurrentBuild;
+                    if (result == null)
+                    {
+                        result = new Build();
+                        result.Succeeded = false;
+                        result.AddChild(new Message() { Text = "Build failed with exitType = " + exitType.ToString() });
+                    }
+
+                    return result;
                 }
                 catch (Exception ex)
                 {

@@ -25,7 +25,7 @@ namespace StructuredLogViewer
             var generic = (ResourceDictionary)Application.LoadComponent(uri);
             Application.Current.Resources.MergedDictionaries.Add(generic);
             var welcomeScreen = new WelcomeScreen();
-            mainContent.Content = welcomeScreen;
+            SetContent(welcomeScreen);
             welcomeScreen.RecentLogSelected += log => OpenLogFile(log);
             welcomeScreen.RecentProjectSelected += project => BuildProject(project);
             welcomeScreen.OpenProjectRequested += () => OpenProjectOrSolution();
@@ -56,6 +56,30 @@ namespace StructuredLogViewer
             }
         }
 
+        private void SetContent(object content)
+        {
+            mainContent.Content = content;
+            if (content == null)
+            {
+                xmlLogFilePath = null;
+                projectFilePath = null;
+                currentBuild = null;
+            }
+
+            if (content is BuildControl)
+            {
+                ReloadMenu.Visibility = xmlLogFilePath != null ? Visibility.Visible : Visibility.Collapsed;
+                SaveAsMenu.Visibility = Visibility.Visible;
+                EditMenu.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                ReloadMenu.Visibility = Visibility.Collapsed;
+                SaveAsMenu.Visibility = Visibility.Collapsed;
+                EditMenu.Visibility = Visibility.Collapsed;
+            }
+        }
+
         private void RecentProjectClick(object sender, RoutedEventArgs e)
         {
             var menuItem = sender as MenuItem;
@@ -75,13 +99,13 @@ namespace StructuredLogViewer
                 return;
             }
 
+            DisplayBuild(null);
             this.xmlLogFilePath = filePath;
             SettingsService.AddRecentLogFile(filePath);
-            DisplayBuild(null);
             Title = DefaultTitle + " - " + filePath;
             var progress = new BuildProgress();
             progress.ProgressText = "Opening " + filePath + "...";
-            mainContent.Content = progress;
+            SetContent(progress);
             Build build = await System.Threading.Tasks.Task.Run(() => XmlLogReader.ReadFromXml(filePath));
             progress.ProgressText = "Analyzing " + filePath + "...";
             await System.Threading.Tasks.Task.Run(() => BuildAnalyzer.AnalyzeBuild(build));
@@ -95,13 +119,13 @@ namespace StructuredLogViewer
                 return;
             }
 
+            DisplayBuild(null);
             this.projectFilePath = filePath;
             SettingsService.AddRecentProject(projectFilePath);
-            DisplayBuild(null);
             Title = DefaultTitle + " - " + projectFilePath;
             var progress = new BuildProgress();
             progress.ProgressText = $"Building {projectFilePath}...";
-            mainContent.Content = progress;
+            SetContent(progress);
             var buildHost = new HostedBuild(projectFilePath);
             Build result = await buildHost.BuildAndGetResult(progress);
             progress.ProgressText = "Analyzing build...";
@@ -152,7 +176,7 @@ namespace StructuredLogViewer
         private void DisplayBuild(Build build)
         {
             currentBuild = build != null ? new BuildControl(build) : null;
-            mainContent.Content = currentBuild;
+            SetContent(currentBuild);
         }
 
         private void Reload()
