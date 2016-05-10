@@ -31,8 +31,15 @@ namespace StructuredLogViewer
             welcomeScreen.OpenProjectRequested += () => OpenProjectOrSolution();
             welcomeScreen.OpenLogFileRequested += () => OpenLogFile();
 
+            UpdateRecentItemsMenu();
+        }
+
+        private void UpdateRecentItemsMenu(WelcomeScreen welcomeScreen = null)
+        {
+            welcomeScreen = welcomeScreen ?? new WelcomeScreen();
             if (welcomeScreen.ShowRecentProjects)
             {
+                RecentProjectsMenu.Items.Clear();
                 RecentProjectsMenu.Visibility = Visibility.Visible;
                 RecentItemsSeparator.Visibility = Visibility.Visible;
                 foreach (var recentProjectFile in welcomeScreen.RecentProjects)
@@ -45,6 +52,7 @@ namespace StructuredLogViewer
 
             if (welcomeScreen.ShowRecentLogs)
             {
+                RecentLogsMenu.Items.Clear();
                 RecentLogsMenu.Visibility = Visibility.Visible;
                 RecentItemsSeparator.Visibility = Visibility.Visible;
                 foreach (var recentLog in welcomeScreen.RecentLogs)
@@ -102,6 +110,7 @@ namespace StructuredLogViewer
             DisplayBuild(null);
             this.xmlLogFilePath = filePath;
             SettingsService.AddRecentLogFile(filePath);
+            UpdateRecentItemsMenu();
             Title = DefaultTitle + " - " + filePath;
             var progress = new BuildProgress();
             progress.ProgressText = "Opening " + filePath + "...";
@@ -122,6 +131,7 @@ namespace StructuredLogViewer
             DisplayBuild(null);
             this.projectFilePath = filePath;
             SettingsService.AddRecentProject(projectFilePath);
+            UpdateRecentItemsMenu();
             Title = DefaultTitle + " - " + projectFilePath;
             var progress = new BuildProgress();
             progress.ProgressText = $"Building {projectFilePath}...";
