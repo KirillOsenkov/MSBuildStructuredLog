@@ -16,6 +16,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public override string ToString()
         {
+            File = File ?? "";
+
             string position = "";
             if (LineNumber != 0 || ColumnNumber != 0)
             {

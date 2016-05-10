@@ -9,11 +9,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
     {
         public static Build ReadFromXml(string xmlFilePath)
         {
-            var doc = XDocument.Load(xmlFilePath, LoadOptions.PreserveWhitespace);
-            var root = doc.Root;
+            Build build = null;
 
-            var reader = new XmlLogReader();
-            var build = (Build)reader.ReadNode(root);
+            try
+            {
+                var doc = XDocument.Load(xmlFilePath, LoadOptions.PreserveWhitespace);
+                var root = doc.Root;
+
+                var reader = new XmlLogReader();
+                build = (Build)reader.ReadNode(root);
+            }
+            catch (Exception ex)
+            {
+                build = new Build() { Succeeded = false };
+                build.AddChild(new Error() { Text = "Error when opening file: " + xmlFilePath });
+                build.AddChild(new Error() { Text = ex.ToString() });
+            }
 
             return build;
         }
