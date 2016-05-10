@@ -6,6 +6,10 @@
              xmlns:local="clr-namespace:StructuredLogViewer.Controls"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
+  <UserControl.Resources>
+    <BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter" />
+  </UserControl.Resources>
+
   <local:SplitterPanel>
     <local:SplitterPanel.FirstChild>
       <DockPanel>
@@ -35,6 +39,7 @@
                  DockPanel.Dock="Bottom" 
                  Margin="0,7,0,0"
                  BorderThickness="1"
+                 Visibility="{Binding RelativeSource={RelativeSource Self}, Path=HasItems, Converter={StaticResource booleanToVisibilityConverter}}"
                  BorderBrush="Gray"
                  Background="LightYellow"
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
