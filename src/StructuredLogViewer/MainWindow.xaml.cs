@@ -211,7 +211,10 @@ namespace StructuredLogViewer
                 }
 
                 xmlLogFilePath = saveFileDialog.FileName;
-                XmlLogWriter.WriteToXml(currentBuild.Build, xmlLogFilePath);
+                System.Threading.Tasks.Task.Run(() =>
+                {
+                    XmlLogWriter.WriteToXml(currentBuild.Build, xmlLogFilePath);
+                });
             }
         }
 
