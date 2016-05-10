@@ -7,14 +7,24 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class XmlLogReader
     {
-        public static Build ReadFromXml(string xmlFilePath)
+        public static Build ReadFromXml(string xmlFilePath, Action<string> statusUpdate = null)
         {
             Build build = null;
 
             try
             {
+                if (statusUpdate != null)
+                {
+                    statusUpdate("Loading " + xmlFilePath);
+                }
+
                 var doc = XDocument.Load(xmlFilePath, LoadOptions.PreserveWhitespace);
                 var root = doc.Root;
+
+                if (statusUpdate != null)
+                {
+                    statusUpdate("Populating tree");
+                }
 
                 var reader = new XmlLogReader();
                 build = (Build)reader.ReadNode(root);

@@ -120,6 +120,10 @@
       <DataTrigger Binding="{Binding IsSelected}" Value="False">
         <Setter TargetName="nameText" Property="Foreground" Value="DarkGoldenrod" />
       </DataTrigger>
+      <DataTrigger Binding="{Binding Name}" Value="DoubleWrites">
+        <Setter TargetName="nameText" Property="Foreground" Value="Red" />
+        <Setter TargetName="icon" Property="Fill" Value="{StaticResource ErrorBrush}" />
+      </DataTrigger>
     </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
 
