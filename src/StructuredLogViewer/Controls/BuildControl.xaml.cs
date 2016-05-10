@@ -57,7 +57,7 @@ namespace StructuredLogViewer.Controls
             }
         }
 
-        private void UpdateBreadcrumb(TreeNode item)
+        public void UpdateBreadcrumb(TreeNode item)
         {
             breadCrumb.ItemsSource = item.GetParentChain().Skip(1).Concat(new[] { item });
             breadCrumb.SelectedIndex = -1;

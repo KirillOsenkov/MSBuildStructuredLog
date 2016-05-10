@@ -214,6 +214,10 @@ namespace StructuredLogViewer
                 System.Threading.Tasks.Task.Run(() =>
                 {
                     XmlLogWriter.WriteToXml(currentBuild.Build, xmlLogFilePath);
+                    Dispatcher.InvokeAsync(() =>
+                    {
+                        currentBuild.UpdateBreadcrumb(new Message { Text = $"Saved {xmlLogFilePath}" });
+                    });
                 });
             }
         }
