@@ -64,6 +64,7 @@
     </Compile>
     <Compile Include="Search.cs" />
     <Compile Include="SettingsService.cs" />
+    <Compile Include="TypingConcurrentOperation.cs" />
     <Compile Include="WelcomeScreen.cs" />
   </ItemGroup>
   <ItemGroup>

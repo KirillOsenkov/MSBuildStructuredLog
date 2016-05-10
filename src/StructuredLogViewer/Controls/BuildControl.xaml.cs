@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -34,6 +35,7 @@ namespace StructuredLogViewer.Controls
             breadCrumb.SelectionChanged += BreadCrumb_SelectionChanged;
 
             Loaded += BuildControl_Loaded;
+            typingConcurrentOperation.DisplayResults += results => DisplaySearchResults(results);
         }
 
         private void BreadCrumb_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -182,26 +184,38 @@ namespace StructuredLogViewer.Controls
 
         public Build Build { get; set; }
 
+        private TypingConcurrentOperation typingConcurrentOperation = new TypingConcurrentOperation();
+
         private void searchTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             var searchText = searchTextBox.Text;
             if (string.IsNullOrWhiteSpace(searchText))
             {
-                resultsList.ItemsSource = null;
-                watermark.Visibility = Visibility.Visible;
+                typingConcurrentOperation.Reset();
+                DisplaySearchResults(null);
                 return;
             }
 
-            Search(searchText);
+            typingConcurrentOperation.Build = Build;
+            typingConcurrentOperation.TextChanged(searchText);
         }
 
-        private void Search(string searchText)
+        private void DisplaySearchResults(IEnumerable<TreeNode> results)
         {
-            var tree = treeView;
-            var search = new Search(Build);
-            var results = search.FindNodes(searchText);
+            if (results == null)
+            {
+                watermark.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                watermark.Visibility = Visibility.Collapsed;
+                if (!results.Any())
+                {
+                    results = new TreeNode[] { new Message { Text = "No results found." } };
+                }
+            }
+
             resultsList.ItemsSource = results;
-            watermark.Visibility = Visibility.Collapsed;
         }
 
         private void TreeViewItem_RequestBringIntoView(object sender, RequestBringIntoViewEventArgs e)
