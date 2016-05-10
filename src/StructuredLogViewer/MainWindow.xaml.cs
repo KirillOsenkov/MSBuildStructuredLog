@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Win32;
@@ -29,6 +30,42 @@ namespace StructuredLogViewer
             welcomeScreen.RecentProjectSelected += project => BuildProject(project);
             welcomeScreen.OpenProjectRequested += () => OpenProjectOrSolution();
             welcomeScreen.OpenLogFileRequested += () => OpenLogFile();
+
+            if (welcomeScreen.ShowRecentProjects)
+            {
+                RecentProjectsMenu.Visibility = Visibility.Visible;
+                RecentItemsSeparator.Visibility = Visibility.Visible;
+                foreach (var recentProjectFile in welcomeScreen.RecentProjects)
+                {
+                    var menuItem = new MenuItem { Header = recentProjectFile };
+                    menuItem.Click += RecentProjectClick;
+                    RecentProjectsMenu.Items.Add(menuItem);
+                }
+            }
+
+            if (welcomeScreen.ShowRecentLogs)
+            {
+                RecentLogsMenu.Visibility = Visibility.Visible;
+                RecentItemsSeparator.Visibility = Visibility.Visible;
+                foreach (var recentLog in welcomeScreen.RecentLogs)
+                {
+                    var menuItem = new MenuItem { Header = recentLog };
+                    menuItem.Click += RecentLogFileClick;
+                    RecentLogsMenu.Items.Add(menuItem);
+                }
+            }
+        }
+
+        private void RecentProjectClick(object sender, RoutedEventArgs e)
+        {
+            var menuItem = sender as MenuItem;
+            BuildProject(Convert.ToString(menuItem.Header));
+        }
+
+        private void RecentLogFileClick(object sender, RoutedEventArgs e)
+        {
+            var menuItem = sender as MenuItem;
+            OpenLogFile(Convert.ToString(menuItem.Header));
         }
 
         private async void OpenLogFile(string filePath)
