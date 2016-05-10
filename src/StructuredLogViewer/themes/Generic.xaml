@@ -300,6 +300,7 @@
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto" />
         <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
       </Grid.RowDefinitions>
       <TextBlock x:Name="text"
                  Text="{Binding ProgressText}"
@@ -311,6 +312,17 @@
                    Width="200" 
                    Height="23" 
                    Margin="10" />
+      <StackPanel Grid.Row="2"
+                  Margin="40">
+        <TextBlock Text="Using command line (press Ctrl+C to copy):" Margin="0,0,0,7"/>
+        <TextBox Text="{Binding MSBuildCommandLine}" 
+                 IsReadOnly="True" 
+                 TextWrapping="Wrap"
+                 AcceptsReturn="True"
+                 Background="#E0E0E0"
+                 MinHeight="23"
+                 IsReadOnlyCaretVisible="True" />
+      </StackPanel>
     </Grid>
   </DataTemplate>
 

@@ -22,19 +22,25 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 position = $"({LineNumber},{ColumnNumber}):";
             }
 
+            string code = "";
+            if (!string.IsNullOrWhiteSpace(Code))
+            {
+                code = $" {this.GetType().Name.ToLowerInvariant()} {Code}:";
+            }
+
+            string text = Text;
+            if (File.Length + position.Length + code.Length > 0)
+            {
+                text = " " + text;
+            }
+
             string projectFile = "";
             if (!string.IsNullOrWhiteSpace(ProjectFile))
             {
                 projectFile = $" [{ProjectFile}]";
             }
 
-            string code = "";
-            if (!string.IsNullOrWhiteSpace(Code))
-            {
-                code = $" {this.GetType().Name.ToLowerInvariant()} {Code}: ";
-            }
-
-            return $"{File}{position}{code}{Text}{projectFile}";
+            return $"{File}{position}{code}{text}{projectFile}";
         }
     }
 }

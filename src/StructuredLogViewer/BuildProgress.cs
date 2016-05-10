@@ -20,6 +20,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        private string msbuildCommandLine;
+        public string MSBuildCommandLine
+        {
+            get
+            {
+                return msbuildCommandLine;
+            }
+
+            set
+            {
+                msbuildCommandLine = value;
+                RaisePropertyChanged();
+            }
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected void RaisePropertyChanged([CallerMemberName] string propertyName = null)

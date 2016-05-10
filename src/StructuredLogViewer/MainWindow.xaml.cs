@@ -90,6 +90,14 @@ namespace StructuredLogViewer
             {
                 OpenFile();
             }
+            else if (e.Key == Key.C && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
+            {
+                var content = mainContent.Content as BuildProgress;
+                if (content != null)
+                {
+                    Clipboard.SetText(content.MSBuildCommandLine);
+                }
+            }
         }
 
         private void HelpLink_Click(object sender, RoutedEventArgs e)
@@ -142,7 +150,7 @@ namespace StructuredLogViewer
             progress.ProgressText = $"Building {projectFilePath}...";
             mainContent.Content = progress;
             var buildHost = new HostedBuild(projectFilePath);
-            Build result = await buildHost.BuildAndGetResult();
+            Build result = await buildHost.BuildAndGetResult(progress);
             progress.ProgressText = "Analyzing build...";
             await System.Threading.Tasks.Task.Run(() => { BuildAnalyzer.AnalyzeBuild(result); });
             OpenBuild(result);

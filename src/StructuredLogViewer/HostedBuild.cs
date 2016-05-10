@@ -15,11 +15,12 @@ namespace StructuredLogViewer
             this.projectFilePath = projectFilePath;
         }
 
-        public Task<Build> BuildAndGetResult()
+        public Task<Build> BuildAndGetResult(BuildProgress progress)
         {
             var msbuildExe = typeof(MSBuildApp).Assembly.Location;
             var loggerDll = typeof(StructuredLogger).Assembly.Location;
-            var commandLine = $@"""{msbuildExe}"" ""{projectFilePath}"" /t:Rebuild /noconlog /logger:{nameof(StructuredLogger)},""{loggerDll}"";StructuredBuildLog.xml";
+            var commandLine = $@"""{msbuildExe}"" ""{projectFilePath}"" /t:Rebuild /noconlog /logger:{nameof(StructuredLogger)},""{loggerDll}"";BuildLog.xml";
+            progress.MSBuildCommandLine = commandLine;
             StructuredLogger.SaveLogToDisk = false;
 
             return System.Threading.Tasks.Task.Run(() =>
