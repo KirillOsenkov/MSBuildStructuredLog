@@ -20,7 +20,7 @@ namespace StructuredLogViewer
         {
             var msbuildExe = ToolLocationHelper.GetPathToBuildToolsFile("msbuild.exe", ToolLocationHelper.CurrentToolsVersion);
             var loggerDll = typeof(StructuredLogger).Assembly.Location;
-            var commandLine = $@"""{msbuildExe}"" ""{projectFilePath}"" /t:Rebuild /noconlog /logger:{nameof(StructuredLogger)},""{loggerDll}"";BuildLog.xml";
+            var commandLine = $@"""{msbuildExe}"" ""{projectFilePath}"" /t:Rebuild /v:diag /noconlog /logger:{nameof(StructuredLogger)},""{loggerDll}"";BuildLog.xml";
             progress.MSBuildCommandLine = commandLine;
             StructuredLogger.SaveLogToDisk = false;
 
