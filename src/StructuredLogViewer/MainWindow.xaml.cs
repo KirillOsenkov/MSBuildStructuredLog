@@ -11,8 +11,11 @@ namespace StructuredLogViewer
 {
     public partial class MainWindow : Window
     {
-        private string filePath;
+        private string xmlLogFilePath;
+        private string projectFilePath;
         private BuildControl currentBuild;
+
+        public const string DefaultTitle = "MSBuild Structured Log Viewer";
 
         public MainWindow()
         {
@@ -20,20 +23,21 @@ namespace StructuredLogViewer
             var uri = new Uri("StructuredLogViewer;component/themes/Generic.xaml", UriKind.Relative);
             var generic = (ResourceDictionary)Application.LoadComponent(uri);
             Application.Current.Resources.MergedDictionaries.Add(generic);
-            Loaded += MainWindow_Loaded;
+            mainContent.Content = new WelcomeScreen();
         }
 
-        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        private void OpenLogFile(string filePath)
         {
-        }
-
-        private void OpenFile(string filePath)
-        {
-            this.filePath = filePath;
-            Title = "Structured Log Viewer - " + filePath;
+            this.xmlLogFilePath = filePath;
+            Title = DefaultTitle + " - " + filePath;
             var build = XmlLogReader.ReadFromXml(filePath);
             BuildAnalyzer.AnalyzeBuild(build);
-            currentBuild = new BuildControl(build);
+            OpenBuild(build);
+        }
+
+        private void OpenBuild(Build build)
+        {
+            currentBuild = build != null ? new BuildControl(build) : null;
             mainContent.Content = currentBuild;
         }
 
@@ -46,15 +50,16 @@ namespace StructuredLogViewer
         {
             var openFileDialog = new OpenFileDialog();
             openFileDialog.DefaultExt = ".xml";
-            openFileDialog.Title = "Open .xml structured log file...";
+            openFileDialog.Title = "Open .xml structured log file";
+            openFileDialog.CheckFileExists = true;
             var result = openFileDialog.ShowDialog(this);
             if (result != true)
             {
                 return;
             }
 
-            filePath = openFileDialog.FileName;
-            OpenFile(filePath);
+            xmlLogFilePath = openFileDialog.FileName;
+            OpenLogFile(xmlLogFilePath);
         }
 
         private void Exit_Click(object sender, RoutedEventArgs e)
@@ -69,9 +74,9 @@ namespace StructuredLogViewer
 
         private void Reload()
         {
-            if (File.Exists(filePath))
+            if (File.Exists(xmlLogFilePath))
             {
-                OpenFile(filePath);
+                OpenLogFile(xmlLogFilePath);
             }
         }
 
@@ -106,6 +111,41 @@ namespace StructuredLogViewer
             {
                 currentBuild.Delete();
             }
+        }
+
+        private void Build_Click(object sender, RoutedEventArgs e)
+        {
+            OpenProjectOrSolution();
+        }
+
+        private void OpenProjectOrSolution()
+        {
+            var openFileDialog = new OpenFileDialog();
+            openFileDialog.DefaultExt = "*.sln;*.*proj";
+            openFileDialog.Title = "Open a solution or project";
+            openFileDialog.CheckFileExists = true;
+            var result = openFileDialog.ShowDialog(this);
+            if (result != true)
+            {
+                return;
+            }
+
+            projectFilePath = openFileDialog.FileName;
+            BuildProject();
+        }
+
+        private async void BuildProject()
+        {
+            OpenBuild(null);
+            Title = DefaultTitle + " - " + projectFilePath;
+            var progress = new BuildProgress();
+            progress.ProgressText = $"Building {projectFilePath}...";
+            mainContent.Content = progress;
+            var buildHost = new HostedBuild(projectFilePath);
+            Build result = await buildHost.BuildAndGetResult();
+            progress.ProgressText = "Analyzing build...";
+            await System.Threading.Tasks.Task.Run(() => { BuildAnalyzer.AnalyzeBuild(result); });
+            OpenBuild(result);
         }
     }
 }

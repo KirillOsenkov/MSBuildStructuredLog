@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
@@ -15,6 +16,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// The path to the log file specified by the user
         /// </summary>
         private string _logFile;
+
+        public static Build CurrentBuild { get; set; }
+        public static bool SaveLogToDisk { get; set; } = true;
 
         /// <summary>
         /// Initializes the logger and subscribes to the relevant events.
@@ -45,7 +49,25 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void Construction_Completed()
         {
-            XmlLogWriter.WriteToXml(construction.Build, _logFile);
+            if (SaveLogToDisk)
+            {
+                try
+                {
+                    if (Path.IsPathRooted(_logFile))
+                    {
+                        var parentDirectory = Path.GetDirectoryName(_logFile);
+                        if (!Directory.Exists(parentDirectory))
+                        {
+                            Directory.CreateDirectory(parentDirectory);
+                        }
+                    }
+
+                    XmlLogWriter.WriteToXml(construction.Build, _logFile);
+                }
+                catch (Exception)
+                {
+                }
+            }
         }
 
         /// <summary>
@@ -69,7 +91,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 throw new LoggerException(invalidParamSpecificationMessage);
             }
 
-            _logFile = parameters[0];
+            _logFile = parameters[0].TrimStart('"').TrimEnd('"');
         }
     }
 }

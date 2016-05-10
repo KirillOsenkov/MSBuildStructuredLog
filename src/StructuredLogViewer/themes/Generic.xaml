@@ -1,7 +1,7 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:l="clr-namespace:Microsoft.Build.Logging.StructuredLogger;assembly=StructuredLogger"
-                    xmlns:local="clr-namespace:StructuredLogViewer.themes">
+                    xmlns:local="clr-namespace:Microsoft.Build.Logging.StructuredLogger">
 
   <Geometry x:Key="SearchGeometry">F1 M 8.5,7.0 C 7.12,7.00 6.0,5.88 6.0,4.5 C 6.0,3.12 7.12,2.0 8.5,2.0 C 9.88,2.0 11.0,3.12 11.0,4.5 C 11.0,5.88 9.88,7.0 8.5,7.0 Z M 8.5,0.0 C 6.02,0.0 4.0,2.02 4.0,4.500 C 4.0,5.23 4.19,5.9 4.49,6.5 L 0.0,11.0 L 2.0,13.0 L 6.49,8.51 C 7.1,8.81 7.77,9.0 8.5,9.0 C 11.0,9.0 13.0,7.0 13.0,4.5 C 13.0,2.02 11.0,0.0 8.5,0.0 Z</Geometry>
 
@@ -279,6 +279,39 @@
         <Setter TargetName="label" Property="Foreground" Value="{StaticResource PropertyStroke}" />
       </DataTrigger>
     </DataTemplate.Triggers>
+  </DataTemplate>
+
+  <DataTemplate DataType="{x:Type local:WelcomeScreen}">
+    <Grid x:Name="welcomeScreen">
+      <TextBlock x:Name="watermark"
+                 HorizontalAlignment="Center"
+                 VerticalAlignment="Center"
+                 Margin="40"
+                 TextWrapping="Wrap"
+                 Foreground="Gray">Use the File menu to open a structured MSBuild log file (*.xml) or to build a solution or project within this app.</TextBlock>
+    </Grid>
+  </DataTemplate>
+
+  <DataTemplate DataType="{x:Type local:BuildProgress}">
+    <Grid x:Name="buildProgress" 
+          HorizontalAlignment="Center"
+          VerticalAlignment="Center"
+          Margin="40">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+      </Grid.RowDefinitions>
+      <TextBlock x:Name="text"
+                 Text="{Binding ProgressText}"
+                 HorizontalAlignment="Center"
+                 TextWrapping="Wrap" />
+      <ProgressBar Grid.Row="1" 
+                   IsIndeterminate="True" 
+                   HorizontalAlignment="Center"
+                   Width="200" 
+                   Height="23" 
+                   Margin="10" />
+    </Grid>
   </DataTemplate>
 
   <!--=================================================================

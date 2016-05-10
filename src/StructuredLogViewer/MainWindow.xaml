@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:StructuredLogViewer"
         mc:Ignorable="d"
-        Title="MainWindow" 
+        Title="{x:Static local:MainWindow.DefaultTitle}" 
         WindowStartupLocation="CenterScreen"
         WindowState="Maximized"
         Background="#EEEEF2"
@@ -18,7 +18,10 @@
   <DockPanel>
     <Menu DockPanel.Dock="Top">
       <MenuItem Header="_File">
+        <MenuItem Header="_Build a solution or project..." Click="Build_Click" InputGestureText="F6" />
+        <Separator />
         <MenuItem Header="_Open log file..." Click="Open_Click" InputGestureText="Ctrl+O" />
+        <Separator />
         <MenuItem Header="_Reload" Click="Reload_Click" InputGestureText="F5" />
         <Separator />
         <MenuItem Header="E_xit" Click="Exit_Click" InputGestureText="Alt+F4" />
@@ -32,15 +35,6 @@
       </MenuItem>
     </Menu>
     <Grid>
-      <Grid x:Name="welcomeScreen">
-        <TextBlock x:Name="watermark"
-                   HorizontalAlignment="Center"
-                   VerticalAlignment="Center"
-                   Margin="40"
-                   TextWrapping="Wrap"
-                   Foreground="Gray">Use the File menu to open a structured MSBuild log file (*.xml) or to build a solution or project within this app.</TextBlock>
-      </Grid>
-
       <ContentPresenter x:Name="mainContent" Margin="7"/>
     </Grid>
   </DockPanel>
