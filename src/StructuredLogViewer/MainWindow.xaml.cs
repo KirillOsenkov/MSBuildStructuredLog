@@ -53,7 +53,7 @@ namespace StructuredLogViewer
         private void OpenFile()
         {
             var openFileDialog = new OpenFileDialog();
-            openFileDialog.DefaultExt = ".xml";
+            openFileDialog.Filter = "Structured XML Log Files (*.xml)|*.xml";
             openFileDialog.Title = "Open .xml structured log file";
             openFileDialog.CheckFileExists = true;
             var result = openFileDialog.ShowDialog(this);
@@ -133,7 +133,7 @@ namespace StructuredLogViewer
         private void OpenProjectOrSolution()
         {
             var openFileDialog = new OpenFileDialog();
-            openFileDialog.DefaultExt = "*.sln;*.*proj";
+            openFileDialog.Filter = "MSBuild projects and solutions (*.sln;*.*proj)|*.sln;*.*proj";
             openFileDialog.Title = "Open a solution or project";
             openFileDialog.CheckFileExists = true;
             var result = openFileDialog.ShowDialog(this);
@@ -158,6 +158,28 @@ namespace StructuredLogViewer
             progress.ProgressText = "Analyzing build...";
             await System.Threading.Tasks.Task.Run(() => { BuildAnalyzer.AnalyzeBuild(result); });
             OpenBuild(result);
+        }
+
+        private void SaveAs_Click(object sender, RoutedEventArgs e)
+        {
+            if (currentBuild != null)
+            {
+                var saveFileDialog = new SaveFileDialog();
+                saveFileDialog.Filter = "Structured XML Log Files (*.xml)|*.xml";
+                saveFileDialog.Title = "Save log file as";
+                saveFileDialog.CheckFileExists = false;
+                saveFileDialog.OverwritePrompt = true;
+                saveFileDialog.ValidateNames = true;
+                var result = saveFileDialog.ShowDialog(this);
+                if (result != true)
+                {
+                    return;
+                }
+
+                xmlLogFilePath = saveFileDialog.FileName;
+
+                XmlLogWriter.WriteToXml(currentBuild.Build, xmlLogFilePath);
+            }
         }
     }
 }
