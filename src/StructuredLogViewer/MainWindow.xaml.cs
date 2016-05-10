@@ -25,11 +25,6 @@ namespace StructuredLogViewer
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            var file = @"D:\1.xml";
-            if (File.Exists(file))
-            {
-                OpenFile(file);
-            }
         }
 
         private void OpenFile(string filePath)

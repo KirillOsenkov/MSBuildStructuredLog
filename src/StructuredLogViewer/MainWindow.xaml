@@ -31,6 +31,17 @@
         <MenuItem Header="https://github.com/KirillOsenkov/MSBuildStructuredLog" Click="HelpLink_Click" />
       </MenuItem>
     </Menu>
-    <ContentPresenter x:Name="mainContent" Margin="7"/>
+    <Grid>
+      <Grid x:Name="welcomeScreen">
+        <TextBlock x:Name="watermark"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   Margin="40"
+                   TextWrapping="Wrap"
+                   Foreground="Gray">Use the File menu to open a structured MSBuild log file (*.xml) or to build a solution or project within this app.</TextBlock>
+      </Grid>
+
+      <ContentPresenter x:Name="mainContent" Margin="7"/>
+    </Grid>
   </DockPanel>
 </Window>
