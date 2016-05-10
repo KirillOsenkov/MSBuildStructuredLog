@@ -23,34 +23,64 @@ namespace StructuredLogViewer
             var uri = new Uri("StructuredLogViewer;component/themes/Generic.xaml", UriKind.Relative);
             var generic = (ResourceDictionary)Application.LoadComponent(uri);
             Application.Current.Resources.MergedDictionaries.Add(generic);
-            mainContent.Content = new WelcomeScreen();
+            var welcomeScreen = new WelcomeScreen();
+            mainContent.Content = welcomeScreen;
+            welcomeScreen.RecentLogSelected += log => OpenLogFile(log);
+            welcomeScreen.RecentProjectSelected += project => BuildProject(project);
         }
 
         private async void OpenLogFile(string filePath)
         {
-            var progress = new BuildProgress();
-            mainContent.Content = progress;
+            if (!File.Exists(filePath))
+            {
+                return;
+            }
+
             this.xmlLogFilePath = filePath;
+            SettingsService.AddRecentLogFile(filePath);
+            DisplayBuild(null);
             Title = DefaultTitle + " - " + filePath;
+            var progress = new BuildProgress();
             progress.ProgressText = "Opening " + filePath + "...";
+            mainContent.Content = progress;
             Build build = await System.Threading.Tasks.Task.Run(() => XmlLogReader.ReadFromXml(filePath));
             progress.ProgressText = "Analyzing " + filePath + "...";
             await System.Threading.Tasks.Task.Run(() => BuildAnalyzer.AnalyzeBuild(build));
-            OpenBuild(build);
+            DisplayBuild(build);
         }
 
-        private void OpenBuild(Build build)
+        private async void BuildProject(string filePath)
         {
-            currentBuild = build != null ? new BuildControl(build) : null;
-            mainContent.Content = currentBuild;
+            if (!File.Exists(filePath))
+            {
+                return;
+            }
+
+            this.projectFilePath = filePath;
+            SettingsService.AddRecentProject(projectFilePath);
+            DisplayBuild(null);
+            Title = DefaultTitle + " - " + projectFilePath;
+            var progress = new BuildProgress();
+            progress.ProgressText = $"Building {projectFilePath}...";
+            mainContent.Content = progress;
+            var buildHost = new HostedBuild(projectFilePath);
+            Build result = await buildHost.BuildAndGetResult(progress);
+            progress.ProgressText = "Analyzing build...";
+            await System.Threading.Tasks.Task.Run(() => BuildAnalyzer.AnalyzeBuild(result));
+            DisplayBuild(result);
         }
 
         private void Open_Click(object sender, RoutedEventArgs e)
         {
-            OpenFile();
+            OpenLogFile();
         }
 
-        private void OpenFile()
+        private void Build_Click(object sender, RoutedEventArgs e)
+        {
+            OpenProjectOrSolution();
+        }
+
+        private void OpenLogFile()
         {
             var openFileDialog = new OpenFileDialog();
             openFileDialog.Filter = "Structured XML Log Files (*.xml)|*.xml";
@@ -62,25 +92,53 @@ namespace StructuredLogViewer
                 return;
             }
 
-            xmlLogFilePath = openFileDialog.FileName;
-            OpenLogFile(xmlLogFilePath);
+            OpenLogFile(openFileDialog.FileName);
         }
 
-        private void Exit_Click(object sender, RoutedEventArgs e)
+        private void OpenProjectOrSolution()
         {
-            Application.Current.Shutdown();
+            var openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "MSBuild projects and solutions (*.sln;*.*proj)|*.sln;*.*proj";
+            openFileDialog.Title = "Open a solution or project";
+            openFileDialog.CheckFileExists = true;
+            var result = openFileDialog.ShowDialog(this);
+            if (result != true)
+            {
+                return;
+            }
+
+            BuildProject(openFileDialog.FileName);
         }
 
-        private void Reload_Click(object sender, RoutedEventArgs e)
+        private void DisplayBuild(Build build)
         {
-            Reload();
+            currentBuild = build != null ? new BuildControl(build) : null;
+            mainContent.Content = currentBuild;
         }
 
         private void Reload()
         {
-            if (File.Exists(xmlLogFilePath))
+            OpenLogFile(xmlLogFilePath);
+        }
+
+        private void SaveAs()
+        {
+            if (currentBuild != null)
             {
-                OpenLogFile(xmlLogFilePath);
+                var saveFileDialog = new SaveFileDialog();
+                saveFileDialog.Filter = "Structured XML Log Files (*.xml)|*.xml";
+                saveFileDialog.Title = "Save log file as";
+                saveFileDialog.CheckFileExists = false;
+                saveFileDialog.OverwritePrompt = true;
+                saveFileDialog.ValidateNames = true;
+                var result = saveFileDialog.ShowDialog(this);
+                if (result != true)
+                {
+                    return;
+                }
+
+                xmlLogFilePath = saveFileDialog.FileName;
+                XmlLogWriter.WriteToXml(currentBuild.Build, xmlLogFilePath);
             }
         }
 
@@ -90,9 +148,13 @@ namespace StructuredLogViewer
             {
                 Reload();
             }
+            else if (e.Key == Key.F6)
+            {
+                OpenProjectOrSolution();
+            }
             else if (e.Key == Key.O && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
             {
-                OpenFile();
+                OpenLogFile();
             }
             else if (e.Key == Key.C && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
             {
@@ -102,11 +164,15 @@ namespace StructuredLogViewer
                     Clipboard.SetText(content.MSBuildCommandLine);
                 }
             }
+            else if (e.Key == Key.S && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
+            {
+                SaveAs();
+            }
         }
 
-        private void HelpLink_Click(object sender, RoutedEventArgs e)
+        private void Reload_Click(object sender, RoutedEventArgs e)
         {
-            Process.Start("https://github.com/KirillOsenkov/MSBuildStructuredLog");
+            Reload();
         }
 
         private void Copy_Click(object sender, RoutedEventArgs e)
@@ -125,61 +191,19 @@ namespace StructuredLogViewer
             }
         }
 
-        private void Build_Click(object sender, RoutedEventArgs e)
-        {
-            OpenProjectOrSolution();
-        }
-
-        private void OpenProjectOrSolution()
-        {
-            var openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = "MSBuild projects and solutions (*.sln;*.*proj)|*.sln;*.*proj";
-            openFileDialog.Title = "Open a solution or project";
-            openFileDialog.CheckFileExists = true;
-            var result = openFileDialog.ShowDialog(this);
-            if (result != true)
-            {
-                return;
-            }
-
-            projectFilePath = openFileDialog.FileName;
-            BuildProject();
-        }
-
-        private async void BuildProject()
-        {
-            OpenBuild(null);
-            Title = DefaultTitle + " - " + projectFilePath;
-            var progress = new BuildProgress();
-            progress.ProgressText = $"Building {projectFilePath}...";
-            mainContent.Content = progress;
-            var buildHost = new HostedBuild(projectFilePath);
-            Build result = await buildHost.BuildAndGetResult(progress);
-            progress.ProgressText = "Analyzing build...";
-            await System.Threading.Tasks.Task.Run(() => { BuildAnalyzer.AnalyzeBuild(result); });
-            OpenBuild(result);
-        }
-
         private void SaveAs_Click(object sender, RoutedEventArgs e)
         {
-            if (currentBuild != null)
-            {
-                var saveFileDialog = new SaveFileDialog();
-                saveFileDialog.Filter = "Structured XML Log Files (*.xml)|*.xml";
-                saveFileDialog.Title = "Save log file as";
-                saveFileDialog.CheckFileExists = false;
-                saveFileDialog.OverwritePrompt = true;
-                saveFileDialog.ValidateNames = true;
-                var result = saveFileDialog.ShowDialog(this);
-                if (result != true)
-                {
-                    return;
-                }
+            SaveAs();
+        }
 
-                xmlLogFilePath = saveFileDialog.FileName;
+        private void HelpLink_Click(object sender, RoutedEventArgs e)
+        {
+            Process.Start("https://github.com/KirillOsenkov/MSBuildStructuredLog");
+        }
 
-                XmlLogWriter.WriteToXml(currentBuild.Build, xmlLogFilePath);
-            }
+        private void Exit_Click(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Shutdown();
         }
     }
 }

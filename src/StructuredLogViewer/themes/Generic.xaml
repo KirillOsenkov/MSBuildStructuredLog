@@ -283,13 +283,46 @@
   </DataTemplate>
 
   <DataTemplate DataType="{x:Type local:WelcomeScreen}">
-    <Grid x:Name="welcomeScreen">
+    <Grid x:Name="welcomeScreen"
+          HorizontalAlignment="Center"
+          VerticalAlignment="Center">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+      </Grid.RowDefinitions>
       <TextBlock x:Name="watermark"
                  HorizontalAlignment="Center"
                  VerticalAlignment="Center"
-                 Margin="40"
+                 Margin="40,40,40,0"
                  TextWrapping="Wrap"
                  Foreground="Gray">Use the File menu to open a structured MSBuild log file (*.xml) or to build a solution or project within this app.</TextBlock>
+      <Grid x:Name="recentLogs"
+            Grid.Row="1"
+            Visibility="{Binding ShowRecentLogs, Converter={StaticResource booleanToVisibilityConverter}}">
+        <GroupBox Header="Recent logs"
+                  Margin="10">
+          <ListBox ItemsSource="{Binding RecentLogs}" 
+                   Margin="10"
+                   SelectedItem="{Binding SelectedLog, Mode=OneWayToSource}"
+                   Background="Transparent"
+                   BorderBrush="Transparent"
+                   BorderThickness="0"/>
+        </GroupBox>
+      </Grid>
+      <Grid x:Name="recentProjects" 
+            Grid.Row="2"
+            Visibility="{Binding ShowRecentProjects, Converter={StaticResource booleanToVisibilityConverter}}">
+        <GroupBox Header="Recent projects and solutions"
+                  Margin="10">
+          <ListBox ItemsSource="{Binding RecentProjects}"
+                   Margin="10"
+                   SelectedItem="{Binding SelectedProject, Mode=OneWayToSource}"
+                   Background="Transparent"
+                   BorderBrush="Transparent"
+                   BorderThickness="0"/>
+        </GroupBox>
+      </Grid>
     </Grid>
   </DataTemplate>
 
