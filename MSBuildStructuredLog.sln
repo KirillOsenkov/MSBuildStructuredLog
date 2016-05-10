@@ -2,9 +2,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StructuredLogger", "src\StructuredLogger\StructuredLogger.csproj", "{A939886E-A191-4A46-A84B-21AD670081B9}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StructuredLogViewer", "src\StructuredLogViewer\StructuredLogViewer.csproj", "{FAEE07FD-7384-40D4-B52B-4756D1011BA6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StructuredLogger", "src\StructuredLogger\StructuredLogger.csproj", "{A939886E-A191-4A46-A84B-21AD670081B9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StructuredLogger.Tests", "src\StructuredLogger.Tests\StructuredLogger.Tests.csproj", "{8A327073-0811-49D6-B1AA-1FB0157E750A}"
 EndProject
