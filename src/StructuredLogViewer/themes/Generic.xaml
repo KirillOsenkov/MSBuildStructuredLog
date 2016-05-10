@@ -325,7 +325,16 @@
                   Command="{Binding OpenLogFileCommand}"
                   Grid.Column="1">
             <StackPanel>
-              <Rectangle Width="100" Height="100" Margin="20" Fill="{StaticResource GenericProjectIcon}" />
+              <Canvas Width="100" Height="100" Margin="20">
+                <Rectangle Width="35" Height="35" Canvas.Left="0" Canvas.Top="0" Stroke="{StaticResource TargetStroke}" Fill="{StaticResource TargetBrush}" />
+                <Rectangle Width="35" Height="35" Canvas.Left="25" Canvas.Top="35" Stroke="{StaticResource ParameterStroke}" Fill="{StaticResource ParameterBrush}" />
+                <Rectangle Width="35" Height="35" Canvas.Left="25" Canvas.Top="70" Stroke="{StaticResource TaskStroke}" Fill="{StaticResource TaskBrush}" />
+                <Rectangle Width="35" Height="35" Canvas.Left="60" Canvas.Top="35" Stroke="{StaticResource ItemStroke}" Fill="{StaticResource ItemBrush}" />
+                <Rectangle Width="35" Height="35" Canvas.Left="60" Canvas.Top="70" Stroke="{StaticResource FolderStroke}" Fill="{StaticResource ClosedFolderBrush}" />
+                <Line X1="16" Y1="35" X2="16" Y2="87" Stroke="Black" />
+                <Line X1="16" Y1="87" X2="25" Y2="87" Stroke="Black" />
+                <Line X1="16" Y1="53" X2="25" Y2="53" Stroke="Black" />
+              </Canvas>
               <TextBlock Text="Open Log File"
                          FontSize="16"
                          Margin="10"
