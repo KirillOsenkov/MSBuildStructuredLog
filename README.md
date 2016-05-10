@@ -1,6 +1,8 @@
 # MSBuildStructuredLog
 A logger for MSBuild that records a structured representation of executed targets, tasks, property and item values.
 
+![Screenshot1](/docs/Screenshot1.png)
+
 ## Requirements:
  * .NET Framework 4.6
  * MSBuild 14.0
