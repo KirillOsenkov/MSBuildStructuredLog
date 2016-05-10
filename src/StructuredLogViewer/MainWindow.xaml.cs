@@ -26,12 +26,16 @@ namespace StructuredLogViewer
             mainContent.Content = new WelcomeScreen();
         }
 
-        private void OpenLogFile(string filePath)
+        private async void OpenLogFile(string filePath)
         {
+            var progress = new BuildProgress();
+            mainContent.Content = progress;
             this.xmlLogFilePath = filePath;
             Title = DefaultTitle + " - " + filePath;
-            var build = XmlLogReader.ReadFromXml(filePath);
-            BuildAnalyzer.AnalyzeBuild(build);
+            progress.ProgressText = "Opening " + filePath + "...";
+            Build build = await System.Threading.Tasks.Task.Run(() => XmlLogReader.ReadFromXml(filePath));
+            progress.ProgressText = "Analyzing " + filePath + "...";
+            await System.Threading.Tasks.Task.Run(() => BuildAnalyzer.AnalyzeBuild(build));
             OpenBuild(build);
         }
 

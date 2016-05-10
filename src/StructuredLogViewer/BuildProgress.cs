@@ -32,8 +32,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 msbuildCommandLine = value;
                 RaisePropertyChanged();
+                RaisePropertyChanged(nameof(ShowCommandLine));
             }
         }
+
+        public bool ShowCommandLine => !string.IsNullOrEmpty(MSBuildCommandLine);
 
         public event PropertyChangedEventHandler PropertyChanged;
 
