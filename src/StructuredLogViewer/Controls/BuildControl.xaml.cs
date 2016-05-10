@@ -42,6 +42,7 @@ namespace StructuredLogViewer.Controls
             if (node != null)
             {
                 SelectItem(node);
+                treeView.Focus();
             }
         }
 
@@ -57,6 +58,7 @@ namespace StructuredLogViewer.Controls
         private void UpdateBreadcrumb(TreeNode item)
         {
             breadCrumb.ItemsSource = item.GetParentChain().Skip(1).Concat(new[] { item });
+            breadCrumb.SelectedIndex = -1;
         }
 
         private void BuildControl_Loaded(object sender, RoutedEventArgs e)

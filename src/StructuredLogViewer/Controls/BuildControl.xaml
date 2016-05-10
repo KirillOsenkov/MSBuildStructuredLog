@@ -32,11 +32,11 @@
     <local:SplitterPanel.SecondChild>
       <DockPanel>
         <ListBox x:Name="breadCrumb" 
-                 DockPanel.Dock="Top" 
-                 Margin="0,0,0,5"
+                 DockPanel.Dock="Bottom" 
+                 Margin="0,7,0,0"
                  BorderThickness="1"
-                 BorderBrush="LightGray"
-                 Background="White"
+                 BorderBrush="Gray"
+                 Background="LightYellow"
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled">
           <ListBox.ItemsPanel>
             <ItemsPanelTemplate>
