@@ -64,6 +64,15 @@ namespace StructuredLogViewer.Controls
         private void BuildControl_Loaded(object sender, RoutedEventArgs e)
         {
             searchTextBox.Focus();
+            if (!Build.Succeeded)
+            {
+                var firstError = Build.FindFirstInSubtree<Error>();
+                if (firstError != null)
+                {
+                    SelectItem(firstError);
+                    treeView.Focus();
+                }
+            }
         }
 
         private void ResultsList_SelectionChanged(object sender, SelectionChangedEventArgs e)

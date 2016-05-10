@@ -19,15 +19,24 @@ namespace StructuredLogViewer
         {
             var msbuildExe = typeof(MSBuildApp).Assembly.Location;
             var loggerDll = typeof(StructuredLogger).Assembly.Location;
-            var logXml = Path.Combine(Path.GetTempPath(), "StructuredLogger");
-            logXml = Path.Combine(logXml, Environment.TickCount.ToString());
-            var commandLine = $@"""{msbuildExe}"" ""{projectFilePath}"" /t:Rebuild /noconlog /logger:{nameof(StructuredLogger)},""{loggerDll}"";""{logXml}""";
+            var commandLine = $@"""{msbuildExe}"" ""{projectFilePath}"" /t:Rebuild /noconlog /logger:{nameof(StructuredLogger)},""{loggerDll}"";StructuredBuildLog.xml";
             StructuredLogger.SaveLogToDisk = false;
 
             return System.Threading.Tasks.Task.Run(() =>
             {
-                var result = MSBuildApp.Execute(commandLine);
-                return StructuredLogger.CurrentBuild;
+                try
+                {
+                    var result = MSBuildApp.Execute(commandLine);
+                    return StructuredLogger.CurrentBuild;
+                }
+                catch (Exception ex)
+                {
+                    var build = new Build();
+                    build.Succeeded = false;
+                    build.AddChild(new Message() { Text = "Exception occurred during build:" });
+                    build.AddChild(new Error() { Text = ex.ToString() });
+                    return build;
+                }
             });
         }
     }
