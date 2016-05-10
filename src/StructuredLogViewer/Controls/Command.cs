@@ -12,7 +12,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             this.execute = execute;
         }
 
-        public event EventHandler CanExecuteChanged;
+        public event EventHandler CanExecuteChanged { add { } remove { } }
         public bool CanExecute(object parameter) => true;
         public void Execute(object parameter) => execute();
     }

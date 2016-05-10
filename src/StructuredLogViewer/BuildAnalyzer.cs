@@ -170,5 +170,30 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return ByteArrayToHexString(result);
             }
         }
+
+        public IEnumerable<Project> GetProjectsSortedTopologically(Build build)
+        {
+            var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var list = new List<Project>();
+            foreach (var project in build.Children.OfType<Project>())
+            {
+                Visit(project, list, visited);
+            }
+
+            return list;
+        }
+
+        private void Visit(Project project, List<Project> list, HashSet<string> visited)
+        {
+            if (visited.Add(project.ProjectFile))
+            {
+                foreach (var childProject in project.Children.OfType<Project>())
+                {
+                    Visit(childProject, list, visited);
+                }
+
+                list.Add(project);
+            }
+        }
     }
 }

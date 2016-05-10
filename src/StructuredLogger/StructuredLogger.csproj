@@ -14,10 +14,6 @@
     <Reference Include="Microsoft.Build.Tasks.Core, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.Build.Utilities.Core, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Newtonsoft.Json.8.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml" />
@@ -37,7 +33,6 @@
     <Compile Include="ObjectModel\TextNode.cs" />
     <Compile Include="ObjectModel\TimedNode.cs" />
     <Compile Include="ObjectModel\Warning.cs" />
-    <Compile Include="Serialization\JsonLogWriter.cs" />
     <Compile Include="ObjectModel\NamedNode.cs" />
     <Compile Include="Construction\MessageProcessor.cs" />
     <Compile Include="Serialization\StringWriter.cs" />
@@ -55,9 +50,6 @@
     <Compile Include="ObjectModel\Property.cs" />
     <Compile Include="StructuredLogger.cs" />
     <Compile Include="Serialization\XmlLogWriter.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SrcRoot)\Common.targets" />
