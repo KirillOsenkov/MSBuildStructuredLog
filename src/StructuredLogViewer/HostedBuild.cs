@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Build.CommandLine;
 using Microsoft.Build.Logging.StructuredLogger;
+using Microsoft.Build.Utilities;
 
 namespace StructuredLogViewer
 {
@@ -17,7 +18,7 @@ namespace StructuredLogViewer
 
         public Task<Build> BuildAndGetResult(BuildProgress progress)
         {
-            var msbuildExe = typeof(MSBuildApp).Assembly.Location;
+            var msbuildExe = ToolLocationHelper.GetPathToBuildToolsFile("msbuild.exe", ToolLocationHelper.CurrentToolsVersion);
             var loggerDll = typeof(StructuredLogger).Assembly.Location;
             var commandLine = $@"""{msbuildExe}"" ""{projectFilePath}"" /t:Rebuild /noconlog /logger:{nameof(StructuredLogger)},""{loggerDll}"";BuildLog.xml";
             progress.MSBuildCommandLine = commandLine;

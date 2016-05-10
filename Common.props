@@ -44,7 +44,7 @@
     <ErrorReport>prompt</ErrorReport>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <WarningLevel>4</WarningLevel>
-    <Prefer32Bit Condition="$(Prefer32Bit)==''">false</Prefer32Bit>
+    <Prefer32Bit Condition="$(Prefer32Bit)==''">true</Prefer32Bit>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Platform)' == 'Any CPU' OR '$(Platform)' == 'AnyCPU' OR '$(Platform)' == 'Mixed Platforms'">
