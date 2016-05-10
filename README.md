@@ -10,8 +10,12 @@ A logger for MSBuild that records a structured representation of executed target
 
 ## Usage:
 
-First build your solution and pass the logger:
+You can either build your solution yourself and pass the logger:
 
 ```
 msbuild solution.sln /t:Rebuild /v:diag /noconlog /logger:StructuredLogger,C:\MSBuildStructuredLog\bin\Debug\StructuredLogger.dll;buildlog1.xml
 ```
+
+or you can build the solution or open an existing .xml log file through the viewer app:
+
+![Screenshot2](/docs/Screenshot2.png)
