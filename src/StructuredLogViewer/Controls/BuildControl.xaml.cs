@@ -65,6 +65,8 @@ namespace StructuredLogViewer.Controls
 
         private void BuildControl_Loaded(object sender, RoutedEventArgs e)
         {
+            scrollViewer = treeView.Template.FindName("_tv_scrollviewer_", treeView) as ScrollViewer;
+
             searchTextBox.Focus();
             if (!Build.Succeeded)
             {
@@ -185,6 +187,7 @@ namespace StructuredLogViewer.Controls
         public Build Build { get; set; }
 
         private TypingConcurrentOperation typingConcurrentOperation = new TypingConcurrentOperation();
+        private ScrollViewer scrollViewer;
 
         private void searchTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
@@ -221,7 +224,12 @@ namespace StructuredLogViewer.Controls
         private void TreeViewItem_RequestBringIntoView(object sender, RequestBringIntoViewEventArgs e)
         {
             var treeViewItem = (TreeViewItem)sender;
-            var scrollViewer = treeView.Template.FindName("_tv_scrollviewer_", treeView) as ScrollViewer;
+
+            if (PresentationSource.FromDependencyObject(treeViewItem) == null)
+            {
+                // the item might have disconnected by the time we run this
+                return;
+            }
 
             Point topLeftInTreeViewCoordinates = treeViewItem.TransformToAncestor(treeView).Transform(new Point(0, 0));
             var treeViewItemTop = topLeftInTreeViewCoordinates.Y;

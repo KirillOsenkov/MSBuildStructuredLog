@@ -35,18 +35,15 @@ namespace StructuredLogViewer
 
         private void StartOperation(string searchText)
         {
-            TPLTask.Run(() =>
+            var search = new Search(Build);
+            var results = search.FindNodes(searchText);
+            if (latestSearch == searchText)
             {
-                var search = new Search(Build);
-                var results = search.FindNodes(searchText);
-                if (latestSearch == searchText)
+                Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    Application.Current.Dispatcher.InvokeAsync(() =>
-                    {
-                        DisplayResults?.Invoke(results);
-                    });
-                }
-            });
+                    DisplayResults?.Invoke(results);
+                });
+            }
         }
     }
 }
