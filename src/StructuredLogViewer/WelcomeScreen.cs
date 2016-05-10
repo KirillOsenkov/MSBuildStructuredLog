@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows;
+using System.Windows.Input;
 using StructuredLogViewer;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -20,6 +21,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public event Action<string> RecentLogSelected;
         public event Action<string> RecentProjectSelected;
+        public event Action OpenProjectRequested;
+        public event Action OpenLogFileRequested;
 
         public string SelectedLog
         {
@@ -58,5 +61,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 RecentProjectSelected?.Invoke(value);
             }
         }
+
+        private ICommand openProjectCommand;
+        public ICommand OpenProjectCommand => openProjectCommand ?? (openProjectCommand = new Command(OpenProject));
+        private void OpenProject() => OpenProjectRequested?.Invoke();
+
+        private ICommand openLogFileCommand;
+        public ICommand OpenLogFileCommand => openLogFileCommand ?? (openLogFileCommand = new Command(OpenLogFile));
+        private void OpenLogFile() => OpenLogFileRequested?.Invoke();
     }
 }

@@ -27,6 +27,8 @@ namespace StructuredLogViewer
             mainContent.Content = welcomeScreen;
             welcomeScreen.RecentLogSelected += log => OpenLogFile(log);
             welcomeScreen.RecentProjectSelected += project => BuildProject(project);
+            welcomeScreen.OpenProjectRequested += () => OpenProjectOrSolution();
+            welcomeScreen.OpenLogFileRequested += () => OpenLogFile();
         }
 
         private async void OpenLogFile(string filePath)

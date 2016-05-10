@@ -286,42 +286,79 @@
     <Grid x:Name="welcomeScreen"
           HorizontalAlignment="Center"
           VerticalAlignment="Center">
-      <Grid.RowDefinitions>
-        <RowDefinition Height="Auto" />
-        <RowDefinition Height="Auto" />
-        <RowDefinition Height="Auto" />
-      </Grid.RowDefinitions>
-      <TextBlock x:Name="watermark"
-                 HorizontalAlignment="Center"
-                 VerticalAlignment="Center"
-                 Margin="40,40,40,0"
-                 TextWrapping="Wrap"
-                 Foreground="Gray">Use the File menu to open a structured MSBuild log file (*.xml) or to build a solution or project within this app.</TextBlock>
-      <Grid x:Name="recentLogs"
+      <Rectangle Fill="Black">
+        <Rectangle.Effect>
+          <DropShadowEffect BlurRadius="40" 
+                            Color="LightGray" 
+                            Direction="-45" 
+                            Opacity="1.0" 
+                            RenderingBias="Performance" 
+                            ShadowDepth="40" />
+        </Rectangle.Effect>
+      </Rectangle>
+      <Grid Background="White">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid x:Name="openLogOrProjectCompartment">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <Button Margin="20"
+                  MinWidth="200"
+                  MinHeight="200"
+                  Command="{Binding OpenProjectCommand}">
+            <StackPanel>
+              <Rectangle Width="100" Height="100" Margin="20" Fill="{StaticResource SlnIcon}" />
+              <TextBlock Text="Open Project/Solution" 
+                         FontSize="16" 
+                         Margin="10"
+                         HorizontalAlignment="Center"/>
+            </StackPanel>
+          </Button>
+          <Button Margin="0,20,20,20"
+                  MinWidth="200"
+                  MinHeight="200"
+                  Command="{Binding OpenLogFileCommand}"
+                  Grid.Column="1">
+            <StackPanel>
+              <Rectangle Width="100" Height="100" Margin="20" Fill="{StaticResource GenericProjectIcon}" />
+              <TextBlock Text="Open Log File"
+                         FontSize="16"
+                         Margin="10"
+                         HorizontalAlignment="Center" />
+            </StackPanel>
+          </Button>
+        </Grid>
+        <Grid x:Name="recentProjects" 
             Grid.Row="1"
-            Visibility="{Binding ShowRecentLogs, Converter={StaticResource booleanToVisibilityConverter}}">
-        <GroupBox Header="Recent logs"
-                  Margin="10">
-          <ListBox ItemsSource="{Binding RecentLogs}" 
-                   Margin="10"
-                   SelectedItem="{Binding SelectedLog, Mode=OneWayToSource}"
-                   Background="Transparent"
-                   BorderBrush="Transparent"
-                   BorderThickness="0"/>
-        </GroupBox>
-      </Grid>
-      <Grid x:Name="recentProjects" 
-            Grid.Row="2"
             Visibility="{Binding ShowRecentProjects, Converter={StaticResource booleanToVisibilityConverter}}">
-        <GroupBox Header="Recent projects and solutions"
+          <GroupBox Header="Recent projects and solutions"
                   Margin="10">
-          <ListBox ItemsSource="{Binding RecentProjects}"
+            <ListBox ItemsSource="{Binding RecentProjects}"
                    Margin="10"
                    SelectedItem="{Binding SelectedProject, Mode=OneWayToSource}"
                    Background="Transparent"
                    BorderBrush="Transparent"
                    BorderThickness="0"/>
-        </GroupBox>
+          </GroupBox>
+        </Grid>
+        <Grid x:Name="recentLogs"
+            Grid.Row="2"
+            Visibility="{Binding ShowRecentLogs, Converter={StaticResource booleanToVisibilityConverter}}">
+          <GroupBox Header="Recent logs"
+                  Margin="10">
+            <ListBox ItemsSource="{Binding RecentLogs}" 
+                   Margin="10"
+                   SelectedItem="{Binding SelectedLog, Mode=OneWayToSource}"
+                   Background="Transparent"
+                   BorderBrush="Transparent"
+                   BorderThickness="0"/>
+          </GroupBox>
+        </Grid>
       </Grid>
     </Grid>
   </DataTemplate>
