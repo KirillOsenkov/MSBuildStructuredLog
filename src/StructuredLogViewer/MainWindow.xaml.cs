@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Input;
@@ -11,6 +12,7 @@ namespace StructuredLogViewer
     public partial class MainWindow : Window
     {
         private string filePath;
+        private BuildControl currentBuild;
 
         public MainWindow()
         {
@@ -36,7 +38,8 @@ namespace StructuredLogViewer
             Title = "Structured Log Viewer - " + filePath;
             var build = XmlLogReader.ReadFromXml(filePath);
             BuildAnalyzer.AnalyzeBuild(build);
-            mainContent.Content = new BuildControl(build);
+            currentBuild = new BuildControl(build);
+            mainContent.Content = currentBuild;
         }
 
         private void Open_Click(object sender, RoutedEventArgs e)
@@ -86,6 +89,27 @@ namespace StructuredLogViewer
             else if (e.Key == Key.O && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
             {
                 OpenFile();
+            }
+        }
+
+        private void HelpLink_Click(object sender, RoutedEventArgs e)
+        {
+            Process.Start("https://github.com/KirillOsenkov/MSBuildStructuredLog");
+        }
+
+        private void Copy_Click(object sender, RoutedEventArgs e)
+        {
+            if (currentBuild != null)
+            {
+                currentBuild.Copy();
+            }
+        }
+
+        private void Delete_Click(object sender, RoutedEventArgs e)
+        {
+            if (currentBuild != null)
+            {
+                currentBuild.Delete();
             }
         }
     }

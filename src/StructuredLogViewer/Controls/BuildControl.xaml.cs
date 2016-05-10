@@ -86,22 +86,29 @@ namespace StructuredLogViewer.Controls
         {
             if (args.Key == Key.Delete)
             {
-                var node = treeView.SelectedItem as TreeNode;
-                if (node != null)
-                {
-                    MoveSelectionOut(node);
-                    node.IsVisible = false;
-                    args.Handled = true;
-                }
+                Delete();
+                args.Handled = true;
             }
             else if (args.Key == Key.C && args.KeyboardDevice.Modifiers == ModifierKeys.Control)
             {
-                CopyToClipboard(treeView.SelectedItem as TreeNode);
+                Copy();
+                args.Handled = true;
             }
         }
 
-        private void CopyToClipboard(TreeNode treeNode)
+        public void Delete()
         {
+            var node = treeView.SelectedItem as TreeNode;
+            if (node != null)
+            {
+                MoveSelectionOut(node);
+                node.IsVisible = false;
+            }
+        }
+
+        public void Copy()
+        {
+            var treeNode = treeView.SelectedItem as TreeNode;
             if (treeNode == null)
             {
                 return;
