@@ -13,9 +13,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected void RaisePropertyChanged([CallerMemberName] string propertyName = null)
-            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-
         private bool isVisible = true;
         public bool IsVisible
         {
@@ -78,6 +75,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         public TreeNode Parent { get; set; }
+        private ObservableCollection<object> children;
 
         public IEnumerable<TreeNode> GetParentChain()
         {
@@ -108,7 +106,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return null;
         }
 
-        private ObservableCollection<object> children;
         public ObservableCollection<object> Children
         {
             get
@@ -420,5 +417,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
         }
+
+        protected void RaisePropertyChanged([CallerMemberName] string propertyName = null)
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }
