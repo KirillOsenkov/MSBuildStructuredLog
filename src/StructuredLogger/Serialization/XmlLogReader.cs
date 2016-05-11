@@ -74,9 +74,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 .Where(t => typeof(TreeNode).IsAssignableFrom(t))
                 .ToDictionary(t => t.Name);
 
-        private TreeNode ReadNode(XElement element)
+        private object ReadNode(XElement element)
         {
             var name = element.Name.LocalName;
+
+            if (name == "Metadata")
+            {
+                var metadata = new Metadata()
+                {
+                    Name = GetString(element, AttributeNames.Name),
+                    Value = stringTable.Intern(element.Value)
+                };
+
+                return metadata;
+            }
+
             Type type = null;
             if (!objectModelTypes.TryGetValue(name, out type))
             {
@@ -107,14 +119,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void ReadAttributes(TreeNode node, XElement element)
         {
-            // first, early out for the most common types
-            var metadata = node as Metadata;
-            if (metadata != null)
-            {
-                metadata.Name = GetString(element, AttributeNames.Name);
-                return;
-            }
-
             var item = node as Item;
             if (item != null)
             {

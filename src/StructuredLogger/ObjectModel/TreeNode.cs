@@ -1,18 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public abstract class TreeNode : INotifyPropertyChanged
+    public abstract class TreeNode : BaseNode
     {
-        public event PropertyChangedEventHandler PropertyChanged;
-
         private bool isVisible = true;
         public bool IsVisible
         {
@@ -30,27 +24,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 isVisible = value;
                 RaisePropertyChanged();
-            }
-        }
-
-        private bool isSelected = false;
-        public bool IsSelected
-        {
-            get
-            {
-                return isSelected;
-            }
-
-            set
-            {
-                if (isSelected == value)
-                {
-                    return;
-                }
-
-                isSelected = value;
-                RaisePropertyChanged();
-                RaisePropertyChanged("IsLowRelevance");
             }
         }
 
@@ -75,7 +48,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         public TreeNode Parent { get; set; }
-        private ObservableCollection<object> children;
+        private IList<object> children;
+        public bool HasChildren => children != null && children.Count > 0;
 
         public IEnumerable<TreeNode> GetParentChain()
         {
@@ -106,32 +80,61 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return null;
         }
 
-        public ObservableCollection<object> Children
+        public IList<object> Children
         {
             get
             {
                 if (children == null)
                 {
-                    children = new ObservableCollection<object>();
-                    children.CollectionChanged += Children_CollectionChanged;
+                    children = new List<object>(1);
                 }
 
                 return children;
             }
         }
 
-        public bool HasChildren { get; private set; } = false;
+        public void Seal()
+        {
+            if (children != null)
+            {
+                children = children.ToArray();
+            }
+        }
 
         public void AddChildAtBeginning(TreeNode child)
         {
-            Children.Insert(0, child);
+            if (children == null)
+            {
+                children = new List<object>(1);
+            }
+
+            children.Insert(0, child);
             child.Parent = this;
+
+            if (children.Count == 1)
+            {
+                RaisePropertyChanged(nameof(HasChildren));
+            }
         }
 
-        public virtual void AddChild(TreeNode child)
+        public virtual void AddChild(object child)
         {
-            Children.Add(child);
-            child.Parent = this;
+            if (children == null)
+            {
+                children = new List<object>(1);
+            }
+
+            children.Add(child);
+            var treeNode = child as TreeNode;
+            if (treeNode != null)
+            {
+                treeNode.Parent = this;
+            }
+
+            if (children.Count == 1)
+            {
+                RaisePropertyChanged(nameof(HasChildren));
+            }
         }
 
         public T GetOrCreateNodeWithName<T>(string name) where T : NamedNode, new()
@@ -144,16 +147,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             return existing;
-        }
-
-        private void Children_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            bool oldHasChildren = HasChildren;
-            HasChildren = children != null && children.Count > 0;
-            if (HasChildren != oldHasChildren)
-            {
-                RaisePropertyChanged(nameof(HasChildren));
-            }
         }
 
         public virtual T FindChild<T>(Predicate<T> predicate = null)
@@ -417,8 +410,5 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
         }
-
-        protected void RaisePropertyChanged([CallerMemberName] string propertyName = null)
-            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }

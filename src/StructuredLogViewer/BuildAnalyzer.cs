@@ -33,6 +33,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             build.VisitAllChildren<CopyTask>(c => AnalyzeFileCopies(c));
             AnalyzeDoubleWrites();
+
+            build.VisitAllChildren<TreeNode>(t => t.Seal());
         }
 
         private void AnalyzeTask(Task task)

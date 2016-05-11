@@ -13,9 +13,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
             document.Save(logFile);
         }
 
-        public XElement WriteNode(TreeNode node)
+        public XElement WriteNode(object node)
         {
             var result = new XElement(GetName(node));
+
+            var metadata = node as Metadata;
+            if (metadata != null)
+            {
+                SetString(result, nameof(Metadata.Name), metadata.Name);
+                SetString(result, nameof(Metadata.Value), metadata.Value);
+                return result;
+            }
 
             var message = node as Message;
             if (message != null)
@@ -30,7 +38,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return result;
             }
 
-            WriteAttributes(node, result);
+            var treeNode = node as TreeNode;
+
+            WriteAttributes(treeNode, result);
 
             var nameValueNode = node as NameValueNode;
             if (nameValueNode != null)
@@ -39,9 +49,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return result;
             }
 
-            if (node.HasChildren)
+            if (treeNode.HasChildren)
             {
-                foreach (var child in node.Children)
+                foreach (var child in treeNode.Children)
                 {
                     var childNode = child as TreeNode;
                     if (childNode != null)
@@ -151,7 +161,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             SetString(element, nameof(TimedNode.EndTime), node.EndTime.ToString());
         }
 
-        private string GetName(TreeNode node)
+        private string GetName(object node)
         {
             var folder = node as Folder;
             if (folder != null && folder.Name != null)
