@@ -21,7 +21,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (metadata != null)
             {
                 SetString(result, nameof(Metadata.Name), metadata.Name);
-                SetString(result, nameof(Metadata.Value), metadata.Value);
+                result.Value = metadata.Value;
                 return result;
             }
 
@@ -53,12 +53,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 foreach (var child in treeNode.Children)
                 {
-                    var childNode = child as TreeNode;
-                    if (childNode != null)
-                    {
-                        var childElement = WriteNode(childNode);
-                        result.Add(childElement);
-                    }
+                    var childElement = WriteNode(child);
+                    result.Add(childElement);
                 }
             }
 
