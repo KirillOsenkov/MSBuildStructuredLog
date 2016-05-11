@@ -88,6 +88,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 return metadata;
             }
+            else if (name == "Property")
+            {
+                var property = new Property()
+                {
+                    Name = GetString(element, AttributeNames.Name),
+                    Value = stringTable.Intern(element.Value)
+                };
+
+                return property;
+            }
 
             Type type = null;
             if (!objectModelTypes.TryGetValue(name, out type))
@@ -106,12 +116,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     var childNode = ReadNode(childElement);
                     node.AddChild(childNode);
                 }
-            }
-
-            var nameValueNode = node as NameValueNode;
-            if (nameValueNode != null)
-            {
-                nameValueNode.Value = stringTable.Intern(element.Value);
             }
 
             return node;

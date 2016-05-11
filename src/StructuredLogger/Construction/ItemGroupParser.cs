@@ -12,10 +12,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <param name="prefix">The prefix parsed out (e.g. 'Output Item(s): '.).</param>
         /// <param name="name">Out: The name of the list.</param>
         /// <returns>List of items within the list and all metadata.</returns>
-        public static TreeNode ParsePropertyOrItemList(string message, string prefix, StringTable stringTable)
+        public static object ParsePropertyOrItemList(string message, string prefix, StringTable stringTable)
         {
-            TreeNode result;
-
             var lines = message.Split('\n');
 
             if (lines.Length == 1)
@@ -23,41 +21,38 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 var line = lines[0];
                 line = line.Substring(prefix.Length);
                 var nameValue = ParseNameValue(line);
-                result = new Property
+                var property = new Property
                 {
                     Name = stringTable.Intern(nameValue.Key),
                     Value = stringTable.Intern(nameValue.Value)
                 };
-                return result;
+                return property;
             }
+
+            var parameter = new Parameter();
 
             if (lines[0].Length > prefix.Length)
             {
                 // we have a weird case of multi-line value
                 var nameValue = ParseNameValue(lines[0].Substring(prefix.Length));
 
-                result = new Parameter
-                {
-                    Name = stringTable.Intern(nameValue.Key)
-                };
+                parameter.Name = stringTable.Intern(nameValue.Key);
 
-                result.AddChild(new Item
+                parameter.AddChild(new Item
                 {
                     Text = stringTable.Intern(nameValue.Value.Replace("\r", ""))
                 });
 
                 for (int i = 1; i < lines.Length; i++)
                 {
-                    result.AddChild(new Item
+                    parameter.AddChild(new Item
                     {
                         Text = stringTable.Intern(lines[i].Replace("\r", ""))
                     });
                 }
 
-                return result;
+                return parameter;
             }
-
-            result = new Parameter();
 
             Item currentItem = null;
             foreach (var line in lines)
@@ -67,7 +62,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     case 4:
                         if (line.EndsWith("=", StringComparison.Ordinal))
                         {
-                            ((Parameter)result).Name = stringTable.Intern(line.Substring(4, line.Length - 5));
+                            parameter.Name = stringTable.Intern(line.Substring(4, line.Length - 5));
                         }
                         break;
                     case 8:
@@ -75,7 +70,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         {
                             Text = stringTable.Intern(line.Substring(8))
                         };
-                        result.AddChild(currentItem);
+                        parameter.AddChild(currentItem);
                         break;
                     case 16:
                         if (currentItem != null)
@@ -92,7 +87,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
-            return result;
+            return parameter;
         }
 
         private static KeyValuePair<string, string> ParseNameValue(string nameEqualsValue)

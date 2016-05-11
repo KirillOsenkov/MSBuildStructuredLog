@@ -11,7 +11,7 @@ namespace StructuredLogViewer
 
         private Build build;
         private string query;
-        private List<TreeNode> resultSet;
+        private List<object> resultSet;
 
         public Search(Build build)
         {
@@ -21,19 +21,19 @@ namespace StructuredLogViewer
         private static readonly char[] space = { ' ' };
         private string[] words;
 
-        public IEnumerable<TreeNode> FindNodes(string query)
+        public IEnumerable<object> FindNodes(string query)
         {
             this.query = query;
             this.words = query.Split(space, StringSplitOptions.RemoveEmptyEntries);
-            resultSet = new List<TreeNode>();
-            build.VisitAllChildren<TreeNode>(Visit);
+            resultSet = new List<object>();
+            build.VisitAllChildren<object>(Visit);
             return resultSet;
         }
 
         // avoid allocating this for every node
         private readonly List<string> searchFields = new List<string>(4);
 
-        private void Visit(TreeNode node)
+        private void Visit(object node)
         {
             if (resultSet.Count > MaxResults)
             {

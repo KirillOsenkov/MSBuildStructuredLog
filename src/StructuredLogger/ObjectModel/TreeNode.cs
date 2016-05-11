@@ -101,7 +101,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        public void AddChildAtBeginning(TreeNode child)
+        public void AddChildAtBeginning(object child)
         {
             if (children == null)
             {
@@ -109,7 +109,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             children.Insert(0, child);
-            child.Parent = this;
+
+            var treeNode = child as TreeNode;
+            if (treeNode != null)
+            {
+                treeNode.Parent = this;
+            }
 
             if (children.Count == 1)
             {
@@ -125,6 +130,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             children.Add(child);
+
             var treeNode = child as TreeNode;
             if (treeNode != null)
             {

@@ -25,6 +25,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return result;
             }
 
+            var property = node as Property;
+            if (property != null)
+            {
+                SetString(result, nameof(Property.Name), property.Name);
+                result.Value = property.Value;
+                return result;
+            }
+
             var message = node as Message;
             if (message != null)
             {

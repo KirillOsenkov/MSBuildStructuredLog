@@ -202,7 +202,7 @@ namespace StructuredLogViewer.Controls
             typingConcurrentOperation.TextChanged(searchText);
         }
 
-        private void DisplaySearchResults(IEnumerable<TreeNode> results)
+        private void DisplaySearchResults(IEnumerable<object> results)
         {
             if (results == null)
             {
@@ -213,7 +213,7 @@ namespace StructuredLogViewer.Controls
                 watermark.Visibility = Visibility.Collapsed;
                 if (!results.Any())
                 {
-                    results = new TreeNode[] { new Message { Text = "No results found." } };
+                    results = new object[] { new Message { Text = "No results found." } };
                 }
             }
 

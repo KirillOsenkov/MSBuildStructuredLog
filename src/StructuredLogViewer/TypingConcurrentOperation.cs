@@ -12,7 +12,7 @@ namespace StructuredLogViewer
     {
         public Build Build { get; internal set; }
 
-        public event Action<IEnumerable<TreeNode>> DisplayResults;
+        public event Action<IEnumerable<object>> DisplayResults;
 
         public const int ThrottlingDelayMilliseconds = 200;
 
