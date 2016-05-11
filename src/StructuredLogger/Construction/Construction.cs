@@ -26,11 +26,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private readonly object syncLock = new object();
 
+        private MessageProcessor messageProcessor;
+        private readonly StringTable stringTable;
+
         public event Action Completed;
 
         public Construction()
         {
-            this.messageProcessor = new MessageProcessor(this);
+            this.stringTable = new StringTable();
+            this.messageProcessor = new MessageProcessor(this, stringTable);
         }
 
         public void BuildStarted(object sender, BuildStartedEventArgs args)
@@ -108,7 +112,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 if (t.Project == project)
                 {
-                    t.DependsOnTargets = string.Join(",", targetGraph.GetDependencies(t.Name));
+                    t.DependsOnTargets = stringTable.Intern(string.Join(",", targetGraph.GetDependencies(t.Name)));
                 }
             });
         }
@@ -169,10 +173,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 lock (syncLock)
                 {
                     var project = GetOrAddProject(args.BuildEventContext.ProjectContextId);
-                    var target = project.GetOrAddTargetByName(args.TargetName);
+                    var target = project.GetOrAddTargetByName(stringTable.Intern(args.TargetName));
                     if (!string.IsNullOrEmpty(args.ParentTarget))
                     {
-                        var parentTarget = project.GetOrAddTargetByName(args.ParentTarget);
+                        var parentTarget = project.GetOrAddTargetByName(stringTable.Intern(args.ParentTarget));
                         parentTarget.AddChild(target);
                     }
                     else
@@ -196,7 +200,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 lock (syncLock)
                 {
                     var project = GetOrAddProject(args.BuildEventContext.ProjectContextId);
-                    var target = project.GetTarget(args.TargetName, args.BuildEventContext.TargetId);
+                    var target = project.GetTarget(stringTable.Intern(args.TargetName), args.BuildEventContext.TargetId);
 
                     target.EndTime = args.Timestamp;
                     target.Succeeded = args.Succeeded;
@@ -208,12 +212,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         foreach (ITaskItem targetOutput in args.TargetOutputs)
                         {
                             var item = new Item();
-                            item.Text = targetOutput.ItemSpec;
+                            item.Text = stringTable.Intern(targetOutput.ItemSpec);
                             foreach (DictionaryEntry metadata in targetOutput.CloneCustomMetadata())
                             {
                                 var metadataNode = new Metadata();
-                                metadataNode.Name = Convert.ToString(metadata.Key);
-                                metadataNode.Value = Convert.ToString(metadata.Value);
+                                metadataNode.Name = stringTable.Intern(Convert.ToString(metadata.Key));
+                                metadataNode.Value = stringTable.Intern(Convert.ToString(metadata.Value));
                                 item.AddChild(metadataNode);
                             }
 
@@ -266,8 +270,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private MessageProcessor messageProcessor;
-
         public void MessageRaised(object sender, BuildMessageEventArgs args)
         {
             messageProcessor.Process(args);
@@ -275,7 +277,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public void CustomEventRaised(object sender, CustomBuildEventArgs args)
         {
-            messageProcessor.Process(new BuildMessageEventArgs(args.Message, args.HelpKeyword, args.SenderName, MessageImportance.Low));
+            messageProcessor.Process(new BuildMessageEventArgs(
+                stringTable.Intern(args.Message),
+                stringTable.Intern(args.HelpKeyword),
+                stringTable.Intern(args.SenderName),
+                MessageImportance.Low));
         }
 
         public void WarningRaised(object sender, BuildWarningEventArgs args)
@@ -308,30 +314,30 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void Populate(AbstractDiagnostic message, BuildWarningEventArgs args)
         {
-            message.Text = args.Message;
+            message.Text = stringTable.Intern(args.Message);
             message.Timestamp = args.Timestamp;
-            message.Code = args.Code;
+            message.Code = stringTable.Intern(args.Code);
             message.ColumnNumber = args.ColumnNumber;
             message.EndColumnNumber = args.EndColumnNumber;
             message.EndLineNumber = args.EndLineNumber;
-            message.File = args.File;
             message.LineNumber = args.LineNumber;
-            message.ProjectFile = args.ProjectFile;
-            message.Subcategory = args.Subcategory;
+            message.File = stringTable.Intern(args.File);
+            message.ProjectFile = stringTable.Intern(args.ProjectFile);
+            message.Subcategory = stringTable.Intern(args.Subcategory);
         }
 
         private void Populate(AbstractDiagnostic message, BuildErrorEventArgs args)
         {
-            message.Text = args.Message;
+            message.Text = stringTable.Intern(args.Message);
             message.Timestamp = args.Timestamp;
-            message.Code = args.Code;
+            message.Code = stringTable.Intern(args.Code);
             message.ColumnNumber = args.ColumnNumber;
             message.EndColumnNumber = args.EndColumnNumber;
             message.EndLineNumber = args.EndLineNumber;
-            message.File = args.File;
             message.LineNumber = args.LineNumber;
-            message.ProjectFile = args.ProjectFile;
-            message.Subcategory = args.Subcategory;
+            message.File = stringTable.Intern(args.File);
+            message.ProjectFile = stringTable.Intern(args.ProjectFile);
+            message.Subcategory = stringTable.Intern(args.Subcategory);
         }
 
         private void HandleException(Exception ex)
@@ -377,8 +383,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (project.Name == null && args != null)
             {
                 project.StartTime = args.Timestamp;
-                project.Name = args.Message;
-                project.ProjectFile = args.ProjectFile;
+                project.Name = stringTable.Intern(args.Message);
+                project.ProjectFile = stringTable.Intern(args.ProjectFile);
 
                 if (args.GlobalProperties != null)
                 {
@@ -391,7 +397,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     AddProperties(properties, args
                         .Properties
                         .Cast<DictionaryEntry>()
-                        .Select(d => new KeyValuePair<string, string>(Convert.ToString(d.Key), Convert.ToString(d.Value))));
+                        .Select(d => new KeyValuePair<string, string>(
+                            stringTable.Intern(Convert.ToString(d.Key)),
+                            stringTable.Intern(Convert.ToString(d.Value)))));
                 }
 
                 if (args.Items != null)
@@ -401,7 +409,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     var items = project.GetOrCreateNodeWithName<Folder>("Items");
                     foreach (DictionaryEntry kvp in args.Items)
                     {
-                        var itemName = Convert.ToString(kvp.Key);
+                        var itemName = stringTable.Intern(Convert.ToString(kvp.Key));
                         var itemGroup = items.GetOrCreateNodeWithName<Folder>(itemName);
 
                         var item = new Item();
@@ -409,10 +417,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         var taskItem = kvp.Value as ITaskItem2;
                         if (taskItem != null)
                         {
-                            item.Text = taskItem.ItemSpec;
+                            item.Text = stringTable.Intern(taskItem.ItemSpec);
                             foreach (DictionaryEntry metadataName in taskItem.CloneCustomMetadata())
                             {
-                                item.AddChild(new Metadata { Name = Convert.ToString(metadataName.Key), Value = Convert.ToString(metadataName.Value) });
+                                item.AddChild(new Metadata
+                                {
+                                    Name = stringTable.Intern(Convert.ToString(metadataName.Key)),
+                                    Value = stringTable.Intern(Convert.ToString(metadataName.Value))
+                                });
                             }
 
                             itemGroup.AddChild(item);
@@ -480,8 +492,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private Task CreateTask(TaskStartedEventArgs taskStartedEventArgs)
         {
-            var taskName = taskStartedEventArgs.TaskName;
-            var assembly = GetTaskAssembly(taskStartedEventArgs.TaskName);
+            var taskName = stringTable.Intern(taskStartedEventArgs.TaskName);
+            var assembly = stringTable.Intern(GetTaskAssembly(taskStartedEventArgs.TaskName));
             var taskId = taskStartedEventArgs.BuildEventContext.TaskId;
             var startTime = taskStartedEventArgs.Timestamp;
 
@@ -530,7 +542,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             _taskToAssemblyMap.GetOrAdd(taskName, t => assembly);
         }
 
-        private static void AddGlobalProperties(Project project, IEnumerable<KeyValuePair<string, string>> properties)
+        private void AddGlobalProperties(Project project, IEnumerable<KeyValuePair<string, string>> properties)
         {
             var propertiesNode = project.GetOrCreateNodeWithName<Folder>("Properties");
             if (properties != null && properties.Any())
@@ -540,11 +552,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private static void AddProperties(TreeNode parent, IEnumerable<KeyValuePair<string, string>> properties)
+        private void AddProperties(TreeNode parent, IEnumerable<KeyValuePair<string, string>> properties)
         {
             foreach (var kvp in properties)
             {
-                var property = new Property(kvp);
+                var property = new Property
+                {
+                    Name = stringTable.Intern(kvp.Key),
+                    Value = stringTable.Intern(kvp.Value)
+                };
                 parent.AddChild(property);
             }
         }

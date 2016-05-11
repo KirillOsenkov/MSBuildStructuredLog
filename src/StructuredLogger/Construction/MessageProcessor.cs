@@ -14,10 +14,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public const string ItemGroupRemoveMessagePrefix = @"Removed Item(s): ";
 
         private readonly Construction construction;
+        private readonly StringTable stringTable;
 
-        public MessageProcessor(Construction construction)
+        public MessageProcessor(Construction construction, StringTable stringTable)
         {
             this.construction = construction;
+            this.stringTable = stringTable;
         }
 
         public void Process(BuildMessageEventArgs args)
@@ -27,21 +29,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 var task = GetTask(args);
                 var folder = task.GetOrCreateNodeWithName<Folder>("Parameters");
-                var parameter = ItemGroupParser.ParsePropertyOrItemList(args.Message, TaskParameterMessagePrefix);
+                var parameter = ItemGroupParser.ParsePropertyOrItemList(args.Message, TaskParameterMessagePrefix, stringTable);
                 folder.AddChild(parameter);
             }
             else if (args.Message.StartsWith(OutputItemsMessagePrefix))
             {
                 var task = GetTask(args);
                 var folder = task.GetOrCreateNodeWithName<Folder>("OutputItems");
-                var parameter = ItemGroupParser.ParsePropertyOrItemList(args.Message, OutputItemsMessagePrefix);
+                var parameter = ItemGroupParser.ParsePropertyOrItemList(args.Message, OutputItemsMessagePrefix, stringTable);
                 folder.AddChild(parameter);
             }
             else if (args.Message.StartsWith(OutputPropertyMessagePrefix))
             {
                 var task = GetTask(args);
                 var folder = task.GetOrCreateNodeWithName<Folder>("OutputProperties");
-                var parameter = ItemGroupParser.ParsePropertyOrItemList(args.Message, OutputPropertyMessagePrefix);
+                var parameter = ItemGroupParser.ParsePropertyOrItemList(args.Message, OutputPropertyMessagePrefix, stringTable);
                 folder.AddChild(parameter);
             }
 
@@ -73,7 +75,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 var match = Regex.Match(args.Message, taskAssemblyPattern);
                 if (match.Success)
                 {
-                    construction.SetTaskAssembly(match.Groups["task"].Value, match.Groups["assembly"].Value);
+                    construction.SetTaskAssembly(
+                        stringTable.Intern(match.Groups["task"].Value),
+                        stringTable.Intern(match.Groups["assembly"].Value));
                 }
                 else
                 {
@@ -107,7 +111,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var name = message.Substring(0, equals);
             var value = message.Substring(equals + 1);
 
-            target.AddChild(new Property { Name = name, Value = value });
+            target.AddChild(new Property
+            {
+                Name = stringTable.Intern(name),
+                Value = stringTable.Intern(value)
+            });
         }
 
         /// <summary>
@@ -119,12 +127,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             var project = construction.GetOrAddProject(args.BuildEventContext.ProjectContextId);
             var target = project.GetTargetById(args.BuildEventContext.TargetId);
-            var itemGroup = ItemGroupParser.ParsePropertyOrItemList(args.Message, prefix);
+            var itemGroup = ItemGroupParser.ParsePropertyOrItemList(args.Message, prefix, stringTable);
             var property = itemGroup as Property;
             if (property != null)
             {
-                itemGroup = new Item { Name = property.Name, Text = property.Value };
-                containerNode.Name = property.Name;
+                itemGroup = new Item
+                {
+                    Name = property.Name,
+                    Text = property.Value
+                };
+                containerNode.Name = stringTable.Intern(property.Name);
             }
 
             containerNode.AddChild(itemGroup);
@@ -138,7 +150,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public void AddMessage(LazyFormattedBuildEventArgs args, string message)
         {
             TreeNode node = null;
-            var messageNode = new Message { Text = message, Timestamp = args.Timestamp };
+            var messageNode = new Message
+            {
+                Text = stringTable.Intern(message),
+                Timestamp = args.Timestamp
+            };
 
             if (args.BuildEventContext.TaskId > 0)
             {
@@ -157,7 +173,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             message = message.Substring(4);
                             if (!string.IsNullOrWhiteSpace(message))
                             {
-                                parameter.AddChild(new Item() { Text = message });
+                                parameter.AddChild(new Item()
+                                {
+                                    Text = stringTable.Intern(message)
+                                });
                             }
 
                             return;
@@ -187,7 +206,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 if (message.StartsWith("Target") && message.Contains("skipped"))
                 {
-                    var targetName = ParseTargetName(message);
+                    var targetName = stringTable.Intern(ParseTargetName(message));
                     if (targetName != null)
                     {
                         node = project.GetOrAddTargetByName(targetName);
@@ -261,7 +280,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var target = project.GetTargetById(args.BuildEventContext.TargetId);
             var task = target.GetTaskById(args.BuildEventContext.TaskId);
 
-            task.CommandLineArguments = args.CommandLine;
+            task.CommandLineArguments = stringTable.Intern(args.CommandLine);
         }
     }
 }

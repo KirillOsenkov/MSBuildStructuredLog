@@ -8,6 +8,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public string Intern(string text)
         {
+            if (text == null)
+            {
+                return null;
+            }
+
             string existing;
             if (deduplicationMap.TryGetValue(text, out existing))
             {
