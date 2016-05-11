@@ -1,10 +1,22 @@
-﻿namespace Microsoft.Build.Logging.StructuredLogger
+﻿using System.Collections.Generic;
+
+namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class StringTable
     {
-        public string Intern(string value)
+        private Dictionary<string, string> deduplicationMap = new Dictionary<string, string>();
+
+        public string Intern(string text)
         {
-            return value;
+            string existing;
+            if (deduplicationMap.TryGetValue(text, out existing))
+            {
+                return existing;
+            }
+
+            deduplicationMap[text] = text;
+
+            return text;
         }
     }
 }
