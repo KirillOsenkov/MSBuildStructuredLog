@@ -125,7 +125,7 @@ namespace StructuredLogViewer.Controls
 
         public void Copy()
         {
-            var treeNode = treeView.SelectedItem as TreeNode;
+            var treeNode = treeView.SelectedItem;
             if (treeNode == null)
             {
                 return;

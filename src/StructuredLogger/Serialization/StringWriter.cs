@@ -1,11 +1,10 @@
-﻿using System.Linq;
-using System.Text;
+﻿using System.Text;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class StringWriter
     {
-        public static string GetString(TreeNode rootNode)
+        public static string GetString(object rootNode)
         {
             var sb = new StringBuilder();
 
@@ -14,16 +13,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return sb.ToString();
         }
 
-        private static void WriteNode(TreeNode rootNode, StringBuilder sb, int indent = 0)
+        private static void WriteNode(object rootNode, StringBuilder sb, int indent = 0)
         {
             Indent(sb, indent);
             sb.AppendLine(rootNode.ToString());
 
-            if (rootNode.HasChildren)
+            var treeNode = rootNode as TreeNode;
+            if (treeNode != null && treeNode.HasChildren)
             {
-                foreach (var child in rootNode.Children.OfType<TreeNode>())
+                if (treeNode.HasChildren)
                 {
-                    WriteNode(child, sb, indent + 1);
+                    foreach (var child in treeNode.Children)
+                    {
+                        WriteNode(child, sb, indent + 1);
+                    }
                 }
             }
         }

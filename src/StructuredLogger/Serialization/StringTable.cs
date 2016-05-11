@@ -19,6 +19,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return existing;
             }
 
+            // if it has line breaks, save some more space
+            text = text.Replace("\r\n", "\n");
+
             deduplicationMap[text] = text;
 
             return text;

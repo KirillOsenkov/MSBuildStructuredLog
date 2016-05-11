@@ -220,11 +220,24 @@
     <StackPanel Orientation="Horizontal">
       <Rectangle x:Name="icon" Width="14" Height="11" Stroke="{StaticResource MetadataStroke}" Margin="3,3,6,3" Fill="{StaticResource ItemBrush}" VerticalAlignment="Top" />
       <TextBlock x:Name="label" Text="{Binding NameAndEquals, Mode=OneTime}" />
-      <TextBlock Text="{Binding Value}" />
+      <TextBlock Text="{Binding ShortenedValue}" />
     </StackPanel>
     <DataTemplate.Triggers>
       <DataTrigger Binding="{Binding IsSelected}" Value="False">
         <Setter TargetName="label" Property="Foreground" Value="LightSeaGreen" />
+      </DataTrigger>
+    </DataTemplate.Triggers>
+  </DataTemplate>
+
+  <DataTemplate DataType="{x:Type l:Property}">
+    <StackPanel Orientation="Horizontal">
+      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="{StaticResource PropertyStroke}" Margin="3,3,6,3" Fill="{StaticResource PropertyBrush}" VerticalAlignment="Top" />
+      <TextBlock x:Name="label" Text="{Binding NameAndEquals, Mode=OneTime}" />
+      <TextBlock Text="{Binding ShortenedValue}" />
+    </StackPanel>
+    <DataTemplate.Triggers>
+      <DataTrigger Binding="{Binding IsSelected}" Value="False">
+        <Setter TargetName="label" Property="Foreground" Value="{StaticResource PropertyStroke}" />
       </DataTrigger>
     </DataTemplate.Triggers>
   </DataTemplate>
@@ -271,19 +284,6 @@
       <Rectangle x:Name="icon" Width="14" Height="11" Stroke="{StaticResource WarningStroke}" Margin="3,3,6,3" Fill="{StaticResource WarningBrush}" VerticalAlignment="Top" />
       <TextBlock Text="{Binding}" />
     </StackPanel>
-  </DataTemplate>
-
-  <DataTemplate DataType="{x:Type l:Property}">
-    <StackPanel Orientation="Horizontal">
-      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="{StaticResource PropertyStroke}" Margin="3,3,6,3" Fill="{StaticResource PropertyBrush}" VerticalAlignment="Top" />
-      <TextBlock x:Name="label" Text="{Binding NameAndEquals, Mode=OneTime}" />
-      <TextBlock Text="{Binding Value}" />
-    </StackPanel>
-    <DataTemplate.Triggers>
-      <DataTrigger Binding="{Binding IsSelected}" Value="False">
-        <Setter TargetName="label" Property="Foreground" Value="{StaticResource PropertyStroke}" />
-      </DataTrigger>
-    </DataTemplate.Triggers>
   </DataTemplate>
 
   <DataTemplate DataType="{x:Type local:WelcomeScreen}">
