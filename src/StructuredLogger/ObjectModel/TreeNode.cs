@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public abstract class TreeNode : BaseNode
+    public abstract class TreeNode : ParentedNode
     {
         private bool isVisible = true;
         public bool IsVisible
@@ -47,38 +46,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        public TreeNode Parent { get; set; }
         private IList<object> children;
         public bool HasChildren => children != null && children.Count > 0;
-
-        public IEnumerable<TreeNode> GetParentChain()
-        {
-            var chain = new List<TreeNode>();
-            TreeNode current = this;
-            while (current.Parent != null)
-            {
-                current = current.Parent;
-                chain.Add(current);
-            }
-
-            chain.Reverse();
-            return chain;
-        }
-
-        public T GetNearestParent<T>() where T : TreeNode
-        {
-            TreeNode current = this;
-            while (current.Parent != null)
-            {
-                current = current.Parent;
-                if (current is T)
-                {
-                    return (T)current;
-                }
-            }
-
-            return null;
-        }
 
         public IList<object> Children
         {
@@ -110,7 +79,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             children.Insert(0, child);
 
-            var treeNode = child as TreeNode;
+            var treeNode = child as ParentedNode;
             if (treeNode != null)
             {
                 treeNode.Parent = this;
@@ -131,7 +100,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             children.Add(child);
 
-            var treeNode = child as TreeNode;
+            var treeNode = child as ParentedNode;
             if (treeNode != null)
             {
                 treeNode.Parent = this;
@@ -406,19 +375,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             return sum;
-        }
-
-        public virtual void WriteTo(StringBuilder sb, int indent = 0)
-        {
-            sb.Append(new string(' ', indent * 4));
-            sb.AppendLine(this.ToString());
-            if (HasChildren)
-            {
-                foreach (var child in Children.OfType<TreeNode>())
-                {
-                    child.WriteTo(sb, indent + 1);
-                }
-            }
         }
     }
 }

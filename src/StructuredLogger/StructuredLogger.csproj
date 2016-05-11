@@ -30,6 +30,7 @@
     <Compile Include="ObjectModel\Folder.cs" />
     <Compile Include="ObjectModel\Metadata.cs" />
     <Compile Include="ObjectModel\NameValueNode.cs" />
+    <Compile Include="ObjectModel\ParentedNode.cs" />
     <Compile Include="ObjectModel\RemoveItem.cs" />
     <Compile Include="ObjectModel\TextNode.cs" />
     <Compile Include="ObjectModel\TimedNode.cs" />

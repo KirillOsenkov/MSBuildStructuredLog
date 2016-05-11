@@ -4,7 +4,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class Message : TextNode
     {
-        public DateTime Timestamp { get; set; }
+        /// <summary>
+        /// Let's see if we even need timestamp, it's just eating memory for now
+        /// </summary>
+        public DateTime Timestamp { get { return DateTime.MinValue; } set { } }
 
         private bool isLowRelevance = false;
         public bool IsLowRelevance

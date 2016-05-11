@@ -66,30 +66,8 @@ namespace StructuredLogViewer.Controls
 
         public void UpdateBreadcrumb(object item)
         {
-            var treeNode = item as TreeNode;
-            if (treeNode == null && SelectedTreeViewItem != null)
-            {
-                // attempt to find out the parent of lightweight leaf nodes
-                var parent = VisualTreeHelper.GetParent(SelectedTreeViewItem);
-                parent = VisualTreeHelper.GetParent(parent);
-                parent = VisualTreeHelper.GetParent(parent);
-                parent = VisualTreeHelper.GetParent(parent);
-                var parentTreeViewItem = parent as TreeViewItem;
-                if (parentTreeViewItem != null)
-                {
-                    treeNode = parentTreeViewItem.DataContext as TreeNode;
-                }
-
-                if (treeNode != null)
-                {
-                    breadCrumb.ItemsSource = treeNode.GetParentChain().Skip(1).Concat(new[] { treeNode, item });
-                    breadCrumb.SelectedIndex = -1;
-                }
-
-                return;
-            }
-
-            breadCrumb.ItemsSource = treeNode.GetParentChain().Skip(1).Concat(new[] { item });
+            var parentedNode = item as ParentedNode;
+            breadCrumb.ItemsSource = parentedNode.GetParentChain().Skip(1).Concat(new[] { item });
             breadCrumb.SelectedIndex = -1;
         }
 
@@ -111,18 +89,18 @@ namespace StructuredLogViewer.Controls
 
         private void ResultsList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            var item = resultsList.SelectedItem as TreeNode;
+            var item = resultsList.SelectedItem as ParentedNode;
             if (item != null)
             {
                 SelectItem(item);
             }
         }
 
-        private void SelectItem(TreeNode item)
+        private void SelectItem(ParentedNode item)
         {
             // skip the actual Build object and add the item itself
             var parentChain = item.GetParentChain().Skip(1).Concat(new[] { item });
-            treeView.SelectContainerFromItem(parentChain);
+            treeView.SelectContainerFromItem<object>(parentChain);
         }
 
         private void TreeView_KeyDown(object sender, KeyEventArgs args)
