@@ -237,11 +237,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public int FindIndex(TreeNode child)
         {
-            for (int i = 0; i < Children.Count; i++)
+            if (HasChildren)
             {
-                if (Children[i] == child)
+                for (int i = 0; i < Children.Count; i++)
                 {
-                    return i;
+                    if (Children[i] == child)
+                    {
+                        return i;
+                    }
                 }
             }
 

@@ -131,12 +131,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void MarkAsLowRelevanceIfNeeded(Target target)
         {
-            if (target.Children.All(c => c is Message))
+            if (!target.HasChildren || target.Children.All(c => c is Message))
             {
                 target.IsLowRelevance = true;
-                foreach (var child in target.Children.OfType<Message>())
+                if (target.HasChildren)
                 {
-                    child.IsLowRelevance = true;
+                    foreach (var child in target.Children.OfType<Message>())
+                    {
+                        child.IsLowRelevance = true;
+                    }
                 }
             }
         }
@@ -175,9 +178,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var list = new List<Project>();
-            foreach (var project in build.Children.OfType<Project>())
+
+            if (build.HasChildren)
             {
-                Visit(project, list, visited);
+                foreach (var project in build.Children.OfType<Project>())
+                {
+                    Visit(project, list, visited);
+                }
             }
 
             return list;
@@ -187,9 +194,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             if (visited.Add(project.ProjectFile))
             {
-                foreach (var childProject in project.Children.OfType<Project>())
+                if (project.HasChildren)
                 {
-                    Visit(childProject, list, visited);
+                    foreach (var childProject in project.Children.OfType<Project>())
+                    {
+                        Visit(childProject, list, visited);
+                    }
                 }
 
                 list.Add(project);

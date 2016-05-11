@@ -10,6 +10,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private IEnumerable<FileCopyOperation> GetFileCopyOperations()
         {
+            if (!HasChildren)
+            {
+                return Enumerable.Empty<FileCopyOperation>();
+            }
+
             List<FileCopyOperation> list = new List<FileCopyOperation>();
 
             foreach (var message in this.Children.OfType<Message>())
