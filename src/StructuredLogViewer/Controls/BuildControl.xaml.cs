@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Media;
 using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogViewer.Controls
@@ -12,6 +13,8 @@ namespace StructuredLogViewer.Controls
     public partial class BuildControl : UserControl
     {
         public Build Build { get; set; }
+        public TreeViewItem SelectedTreeViewItem { get; private set; }
+
         private TypingConcurrentOperation typingConcurrentOperation = new TypingConcurrentOperation();
         private ScrollViewer scrollViewer;
 
@@ -54,16 +57,39 @@ namespace StructuredLogViewer.Controls
 
         private void TreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            var item = treeView.SelectedItem as TreeNode;
+            var item = treeView.SelectedItem;
             if (item != null)
             {
                 UpdateBreadcrumb(item);
             }
         }
 
-        public void UpdateBreadcrumb(TreeNode item)
+        public void UpdateBreadcrumb(object item)
         {
-            breadCrumb.ItemsSource = item.GetParentChain().Skip(1).Concat(new[] { item });
+            var treeNode = item as TreeNode;
+            if (treeNode == null && SelectedTreeViewItem != null)
+            {
+                // attempt to find out the parent of lightweight leaf nodes
+                var parent = VisualTreeHelper.GetParent(SelectedTreeViewItem);
+                parent = VisualTreeHelper.GetParent(parent);
+                parent = VisualTreeHelper.GetParent(parent);
+                parent = VisualTreeHelper.GetParent(parent);
+                var parentTreeViewItem = parent as TreeViewItem;
+                if (parentTreeViewItem != null)
+                {
+                    treeNode = parentTreeViewItem.DataContext as TreeNode;
+                }
+
+                if (treeNode != null)
+                {
+                    breadCrumb.ItemsSource = treeNode.GetParentChain().Skip(1).Concat(new[] { treeNode, item });
+                    breadCrumb.SelectedIndex = -1;
+                }
+
+                return;
+            }
+
+            breadCrumb.ItemsSource = treeNode.GetParentChain().Skip(1).Concat(new[] { item });
             breadCrumb.SelectedIndex = -1;
         }
 
@@ -242,6 +268,11 @@ namespace StructuredLogViewer.Controls
 
             // if the item is already fully within the viewport vertically, disallow horizontal scrolling
             e.Handled = true;
+        }
+
+        private void TreeViewItem_Selected(object sender, RoutedEventArgs e)
+        {
+            SelectedTreeViewItem = e.OriginalSource as TreeViewItem;
         }
     }
 }
