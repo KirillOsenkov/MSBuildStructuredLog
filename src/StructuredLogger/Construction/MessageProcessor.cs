@@ -202,14 +202,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 if (message.StartsWith("Overriding target"))
                 {
-                    node = construction.Build.GetOrCreateNodeWithName<Folder>("TargetOverrides");
-                    node.IsLowRelevance = true;
+                    var folder = construction.Build.GetOrCreateNodeWithName<Folder>("TargetOverrides");
+                    folder.IsLowRelevance = true;
+                    node = folder;
                     messageNode.IsLowRelevance = true;
                 }
                 else if (message.StartsWith("The target") && message.Contains("does not exist in the project, and will be ignored"))
                 {
-                    node = construction.Build.GetOrCreateNodeWithName<Folder>("MissingTargets");
-                    node.IsLowRelevance = true;
+                    var folder = construction.Build.GetOrCreateNodeWithName<Folder>("MissingTargets");
+                    folder.IsLowRelevance = true;
+                    node = folder;
                     messageNode.IsLowRelevance = true;
                 }
                 else if (args.BuildEventContext.NodeId == 0 &&

@@ -11,6 +11,10 @@ namespace StructuredLogViewer.Controls
 {
     public partial class BuildControl : UserControl
     {
+        public Build Build { get; set; }
+        private TypingConcurrentOperation typingConcurrentOperation = new TypingConcurrentOperation();
+        private ScrollViewer scrollViewer;
+
         public BuildControl(Build build)
         {
             InitializeComponent();
@@ -183,11 +187,6 @@ namespace StructuredLogViewer.Controls
             var treeNode = treeViewItem?.DataContext as TreeNode;
             return treeNode;
         }
-
-        public Build Build { get; set; }
-
-        private TypingConcurrentOperation typingConcurrentOperation = new TypingConcurrentOperation();
-        private ScrollViewer scrollViewer;
 
         private void searchTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {

@@ -190,6 +190,8 @@ namespace StructuredLogViewer
         {
             currentBuild = build != null ? new BuildControl(build) : null;
             SetContent(currentBuild);
+
+            GC.Collect();
         }
 
         private void Reload()

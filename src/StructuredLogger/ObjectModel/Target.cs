@@ -22,5 +22,25 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             return $"Target Id={Id} Name={Name} Project={Project?.Name}";
         }
+
+        private bool isLowRelevance = false;
+        public bool IsLowRelevance
+        {
+            get
+            {
+                return isLowRelevance && !IsSelected;
+            }
+
+            set
+            {
+                if (isLowRelevance == value)
+                {
+                    return;
+                }
+
+                isLowRelevance = value;
+                RaisePropertyChanged();
+            }
+        }
     }
 }

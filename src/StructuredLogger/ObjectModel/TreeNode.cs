@@ -77,26 +77,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private bool isLowRelevance = false;
-        public bool IsLowRelevance
-        {
-            get
-            {
-                return isLowRelevance && !IsSelected;
-            }
-
-            set
-            {
-                if (isLowRelevance == value)
-                {
-                    return;
-                }
-
-                isLowRelevance = value;
-                RaisePropertyChanged();
-            }
-        }
-
         public TreeNode Parent { get; set; }
 
         public IEnumerable<TreeNode> GetParentChain()
@@ -157,7 +137,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             child.Parent = this;
         }
 
-        public NamedNode GetOrCreateNodeWithName<T>(string name) where T : NamedNode, new()
+        public T GetOrCreateNodeWithName<T>(string name) where T : NamedNode, new()
         {
             var existing = FindChild<T>(n => n.Name == name);
             if (existing == null)

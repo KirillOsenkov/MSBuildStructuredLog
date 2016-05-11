@@ -20,6 +20,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var message = node as Message;
             if (message != null)
             {
+                if (message.IsLowRelevance)
+                {
+                    SetString(result, nameof(message.IsLowRelevance), "true");
+                }
+
                 result.Add(new XAttribute(nameof(Message.Timestamp), message.Timestamp));
                 result.Value = message.Text;
                 return result;
@@ -52,47 +57,32 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void WriteAttributes(TreeNode node, XElement element)
         {
-            if (node.IsLowRelevance)
+            var namedNode = node as NamedNode;
+            if (namedNode != null)
             {
-                SetString(element, nameof(node.IsLowRelevance), "true");
+                SetString(element, nameof(NamedNode.Name), namedNode.Name?.Replace("\"", ""));
             }
 
-            if (node is NamedNode)
+            var folder = node as Folder;
+            if (folder != null)
             {
-                var named = node as NamedNode;
-                SetString(element, nameof(named.Name), named.Name?.Replace("\"", ""));
+                if (folder.IsLowRelevance)
+                {
+                    SetString(element, nameof(folder.IsLowRelevance), "true");
+                }
+
+                return;
             }
 
-            if (node is TextNode)
+            var textNode = node as TextNode;
+            if (textNode != null)
             {
-                var textNode = node as TextNode;
-                SetString(element, nameof(textNode.Text), textNode.Text);
+                SetString(element, nameof(TextNode.Text), textNode.Text);
             }
 
             if (node is TimedNode)
             {
                 AddStartAndEndTime(element, (TimedNode)node);
-            }
-
-            var build = node as Build;
-            if (build != null)
-            {
-                SetString(element, nameof(build.Succeeded), build.Succeeded.ToString());
-                return;
-            }
-
-            var project = node as Project;
-            if (project != null)
-            {
-                SetString(element, nameof(project.ProjectFile), project.ProjectFile);
-                return;
-            }
-
-            var target = node as Target;
-            if (target != null)
-            {
-                SetString(element, nameof(target.DependsOnTargets), target.DependsOnTargets);
-                return;
             }
 
             var task = node as Task;
@@ -102,6 +92,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (task.CommandLineArguments != null)
                 {
                     SetString(element, nameof(task.CommandLineArguments), task.CommandLineArguments);
+                }
+
+                return;
+            }
+
+            var target = node as Target;
+            if (target != null)
+            {
+                SetString(element, nameof(target.DependsOnTargets), target.DependsOnTargets);
+                if (target.IsLowRelevance)
+                {
+                    SetString(element, nameof(target.IsLowRelevance), "true");
                 }
 
                 return;
@@ -117,6 +119,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 SetString(element, nameof(diagnostic.EndLineNumber), diagnostic.EndLineNumber.ToString());
                 SetString(element, nameof(diagnostic.EndColumnNumber), diagnostic.EndColumnNumber.ToString());
                 SetString(element, nameof(diagnostic.ProjectFile), diagnostic.ProjectFile);
+                return;
+            }
+
+            var project = node as Project;
+            if (project != null)
+            {
+                SetString(element, nameof(project.ProjectFile), project.ProjectFile);
+                return;
+            }
+
+            var build = node as Build;
+            if (build != null)
+            {
+                SetString(element, nameof(build.Succeeded), build.Succeeded.ToString());
+                return;
             }
         }
 

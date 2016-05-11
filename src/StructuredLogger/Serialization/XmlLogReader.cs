@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Xml.Linq;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -39,6 +40,33 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return build;
         }
 
+        private readonly StringTable stringTable = new StringTable();
+
+        private enum AttributeNames
+        {
+            Name,
+            IsLowRelevance,
+            Text,
+            ProjectFile,
+            DependsOnTargets,
+            FromAssembly,
+            CommandLineArguments,
+            Code,
+            File,
+            LineNumber,
+            ColumnNumber,
+            EndLineNumber,
+            EndColumnNumber,
+            StartTime,
+            EndTime,
+            Succeeded,
+            Timestamp
+        }
+
+        private static readonly XName[] attributeNames = typeof(AttributeNames)
+            .GetFields(BindingFlags.Public | BindingFlags.Static)
+            .Select(f => XNamespace.None.GetName(f.Name)).ToArray();
+
         private static readonly Dictionary<string, Type> objectModelTypes =
             typeof(TreeNode)
                 .Assembly
@@ -57,12 +85,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             var node = (TreeNode)Activator.CreateInstance(type);
 
-            var folder = node as Folder;
-            if (folder != null)
-            {
-                folder.Name = name;
-            }
-
             ReadAttributes(node, element);
 
             if (element.HasElements)
@@ -77,14 +99,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var nameValueNode = node as NameValueNode;
             if (nameValueNode != null)
             {
-                nameValueNode.Value = element.Value;
-            }
-
-            var message = node as Message;
-            if (message != null)
-            {
-                message.Timestamp = GetDateTime(element, nameof(Message.Timestamp));
-                message.Text = element.Value;
+                nameValueNode.Value = stringTable.Intern(element.Value);
             }
 
             return node;
@@ -92,23 +107,50 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void ReadAttributes(TreeNode node, XElement element)
         {
-            node.IsLowRelevance = GetBoolean(element, nameof(node.IsLowRelevance));
-
-            var name = GetString(element, nameof(NamedNode.Name));
-            if (node is NamedNode && name != null)
+            // first, early out for the most common types
+            var metadata = node as Metadata;
+            if (metadata != null)
             {
-                var named = node as NamedNode;
-                named.Name = name;
+                metadata.Name = GetString(element, AttributeNames.Name);
+                return;
+            }
+
+            var item = node as Item;
+            if (item != null)
+            {
+                item.Name = GetString(element, AttributeNames.Name);
+                item.Text = GetString(element, AttributeNames.Text);
+                return;
+            }
+
+            var message = node as Message;
+            if (message != null)
+            {
+                message.IsLowRelevance = GetBoolean(element, AttributeNames.IsLowRelevance);
+                message.Timestamp = GetDateTime(element, AttributeNames.Timestamp);
+                message.Text = stringTable.Intern(element.Value);
+                return;
+            }
+
+            var folder = node as Folder;
+            if (folder != null)
+            {
+                folder.IsLowRelevance = GetBoolean(element, AttributeNames.IsLowRelevance);
+                folder.Name = GetString(element, AttributeNames.Name);
+                return;
+            }
+
+            // then, shared "fall-through" tests that are common to many types of nodes
+            var namedNode = node as NamedNode;
+            if (namedNode != null)
+            {
+                namedNode.Name = GetString(element, AttributeNames.Name);
             }
 
             var textNode = node as TextNode;
             if (textNode != null)
             {
-                var text = GetString(element, nameof(textNode.Text));
-                if (text != null)
-                {
-                    textNode.Text = text;
-                }
+                textNode.Text = GetString(element, AttributeNames.Text);
             }
 
             var timedNode = node as TimedNode;
@@ -117,56 +159,60 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 AddStartAndEndTime(element, timedNode);
             }
 
-            var build = node as Build;
-            if (build != null)
+            // finally, concrete tests with early exit, sorted by commonality
+            var diagnostic = node as AbstractDiagnostic;
+            if (diagnostic != null)
             {
-                build.Succeeded = GetBoolean(element, nameof(Build.Succeeded));
+                diagnostic.Code = GetString(element, AttributeNames.Code);
+                diagnostic.File = GetString(element, AttributeNames.File);
+                diagnostic.LineNumber = GetInteger(element, AttributeNames.LineNumber);
+                diagnostic.ColumnNumber = GetInteger(element, AttributeNames.ColumnNumber);
+                diagnostic.EndLineNumber = GetInteger(element, AttributeNames.EndLineNumber);
+                diagnostic.EndColumnNumber = GetInteger(element, AttributeNames.EndColumnNumber);
+                diagnostic.ProjectFile = GetString(element, AttributeNames.ProjectFile);
                 return;
             }
 
-            var project = node as Project;
-            if (project != null)
+            var task = node as Task;
+            if (task != null)
             {
-                project.ProjectFile = GetString(element, nameof(Project.ProjectFile));
+                task.FromAssembly = GetString(element, AttributeNames.FromAssembly);
+                task.CommandLineArguments = GetString(element, AttributeNames.CommandLineArguments);
                 return;
             }
 
             var target = node as Target;
             if (target != null)
             {
-                target.DependsOnTargets = GetString(element, nameof(Target.DependsOnTargets));
-            }
-
-            var task = node as Task;
-            if (task != null)
-            {
-                task.FromAssembly = GetString(element, nameof(Task.FromAssembly));
-                task.CommandLineArguments = GetString(element, nameof(Task.CommandLineArguments));
+                target.IsLowRelevance = GetBoolean(element, AttributeNames.IsLowRelevance);
+                target.DependsOnTargets = GetString(element, AttributeNames.DependsOnTargets);
                 return;
             }
 
-            var diagnostic = node as AbstractDiagnostic;
-            if (diagnostic != null)
+            var project = node as Project;
+            if (project != null)
             {
-                diagnostic.Code = GetString(element, nameof(diagnostic.Code));
-                diagnostic.File = GetString(element, nameof(diagnostic.File));
-                diagnostic.LineNumber = GetInteger(element, nameof(diagnostic.LineNumber));
-                diagnostic.ColumnNumber = GetInteger(element, nameof(diagnostic.ColumnNumber));
-                diagnostic.EndLineNumber = GetInteger(element, nameof(diagnostic.EndLineNumber));
-                diagnostic.EndColumnNumber = GetInteger(element, nameof(diagnostic.EndColumnNumber));
-                diagnostic.ProjectFile = GetString(element, nameof(diagnostic.ProjectFile));
+                project.ProjectFile = GetString(element, AttributeNames.ProjectFile);
+                return;
+            }
+
+            var build = node as Build;
+            if (build != null)
+            {
+                build.Succeeded = GetBoolean(element, AttributeNames.Succeeded);
+                return;
             }
         }
 
         private void AddStartAndEndTime(XElement element, TimedNode node)
         {
-            node.StartTime = GetDateTime(element, nameof(TimedNode.StartTime));
-            node.EndTime = GetDateTime(element, nameof(TimedNode.EndTime));
+            node.StartTime = GetDateTime(element, AttributeNames.StartTime);
+            node.EndTime = GetDateTime(element, AttributeNames.EndTime);
         }
 
-        private static bool GetBoolean(XElement element, string attributeName)
+        private bool GetBoolean(XElement element, AttributeNames attributeIndex)
         {
-            var text = GetString(element, attributeName);
+            var text = GetString(element, attributeIndex);
             if (text == null)
             {
                 return false;
@@ -177,9 +223,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return result;
         }
 
-        private static DateTime GetDateTime(XElement element, string attributeName)
+        private DateTime GetDateTime(XElement element, AttributeNames attributeIndex)
         {
-            var text = GetString(element, attributeName);
+            var text = GetString(element, attributeIndex);
             if (text == null)
             {
                 return default(DateTime);
@@ -190,9 +236,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return result;
         }
 
-        private static int GetInteger(XElement element, string attributeName)
+        private int GetInteger(XElement element, AttributeNames attributeIndex)
         {
-            var text = GetString(element, attributeName);
+            var text = GetString(element, attributeIndex);
             if (text == null)
             {
                 return 0;
@@ -203,9 +249,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return result;
         }
 
-        private static string GetString(XElement element, string attributeName)
+        private string GetString(XElement element, AttributeNames attributeIndex)
         {
-            return element.Attribute(attributeName)?.Value;
+            var attributeName = attributeNames[(int)attributeIndex];
+            var attribute = element.Attribute(attributeName);
+            if (attribute != null)
+            {
+                return stringTable.Intern(attribute.Value);
+            }
+
+            return null;
         }
     }
 }
