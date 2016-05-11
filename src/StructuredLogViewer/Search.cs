@@ -57,6 +57,7 @@ namespace StructuredLogViewer
             var nameValueNode = node as NameValueNode;
             if (nameValueNode != null)
             {
+                searchFields.Add(nameValueNode.Name);
                 searchFields.Add(nameValueNode.Value);
             }
 

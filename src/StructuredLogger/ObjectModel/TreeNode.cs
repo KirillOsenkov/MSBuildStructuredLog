@@ -386,6 +386,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     {
                         node.VisitAllChildren<T>(processor);
                     }
+                    else if (child is T)
+                    {
+                        processor((T)child);
+                    }
                 }
             }
         }
