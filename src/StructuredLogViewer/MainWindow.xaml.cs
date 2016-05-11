@@ -223,6 +223,7 @@ namespace StructuredLogViewer
                     {
                         currentBuild.UpdateBreadcrumb(new Message { Text = $"Saved {xmlLogFilePath}" });
                     });
+                    SettingsService.AddRecentLogFile(xmlLogFilePath);
                 });
             }
         }
