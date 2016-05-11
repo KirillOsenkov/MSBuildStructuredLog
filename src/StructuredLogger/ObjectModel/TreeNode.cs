@@ -140,7 +140,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return default(T);
         }
 
-        public virtual T FindFirstInSubtree<T>(Predicate<T> predicate = null)
+        public virtual T FindFirstInSubtreeIncludingSelf<T>(Predicate<T> predicate = null)
         {
             if (this is T && (predicate == null || predicate((T)(object)this)))
             {
@@ -154,12 +154,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             if (HasChildren)
             {
-                foreach (var child in Children.OfType<TreeNode>())
+                foreach (var child in Children)
                 {
-                    var found = child.FindFirstInSubtree<T>(predicate);
-                    if (found != null)
+                    var treeNode = child as TreeNode;
+                    if (treeNode != null)
                     {
-                        return found;
+                        var found = treeNode.FindFirstInSubtreeIncludingSelf<T>(predicate);
+                        if (found != null)
+                        {
+                            return found;
+                        }
+                    }
+                    else if (child is T && (predicate == null || predicate((T)child)))
+                    {
+                        return (T)child;
                     }
                 }
             }
@@ -167,7 +175,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return default(T);
         }
 
-        public virtual T FindLastInSubtree<T>(Predicate<T> predicate = null)
+        public virtual T FindLastInSubtreeIncludingSelf<T>(Predicate<T> predicate = null)
         {
             var child = FindLastChild<T>(predicate);
             if (child != null)
@@ -187,12 +195,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             if (HasChildren)
             {
-                foreach (var child in Children.OfType<TreeNode>().Reverse())
+                foreach (var child in Children.Reverse())
                 {
-                    var found = child.FindLastInSubtree<T>(predicate);
-                    if (found != null)
+                    var treeNode = child as TreeNode;
+                    if (treeNode != null)
                     {
-                        return found;
+                        var found = treeNode.FindLastInSubtreeIncludingSelf(predicate);
+                        if (found != null)
+                        {
+                            return found;
+                        }
+                    }
+                    else if (child is T && (predicate == null || predicate((T)child)))
+                    {
+                        return (T)child;
                     }
                 }
             }
@@ -200,7 +216,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return default(T);
         }
 
-        public int FindIndex(TreeNode child)
+        public int FindChildIndex(object child)
         {
             if (HasChildren)
             {
@@ -216,9 +232,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return -1;
         }
 
-        public T FindPrevious<T>(TreeNode child, Predicate<T> predicate = null)
+        public T FindPreviousChild<T>(object currentChild, Predicate<T> predicate = null)
         {
-            var i = FindIndex(child);
+            var i = FindChildIndex(currentChild);
             if (i == -1)
             {
                 return default(T);
@@ -235,9 +251,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return default(T);
         }
 
-        public T FindNext<T>(TreeNode child, Predicate<T> predicate = null)
+        public T FindNextChild<T>(object currentChild, Predicate<T> predicate = null)
         {
-            var i = FindIndex(child);
+            var i = FindChildIndex(currentChild);
             if (i == -1)
             {
                 return default(T);
@@ -254,33 +270,25 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return default(T);
         }
 
-        public T FindPrevious<T>(Predicate<T> predicate = null)
-        {
-            if (Parent == null)
-            {
-                return default(T);
-            }
-
-            return Parent.FindPrevious<T>(this, predicate);
-        }
-
-        public T FindNext<T>(Predicate<T> predicate = null)
-        {
-            if (Parent == null)
-            {
-                return default(T);
-            }
-
-            return Parent.FindNext<T>(this, predicate);
-        }
-
         public T FindPreviousInTraversalOrder<T>(Predicate<T> predicate = null)
         {
-            var current = FindPrevious<TreeNode>() as TreeNode;
+            if (Parent == null)
+            {
+                return default(T);
+            }
+
+            var current = Parent.FindPreviousChild<T>(this);
 
             while (current != null)
             {
-                var last = current.FindLastInSubtree<T>(predicate);
+                T last = current;
+
+                var treeNode = current as TreeNode;
+                if (treeNode != null)
+                {
+                    last = treeNode.FindLastInSubtreeIncludingSelf<T>(predicate);
+                }
+
                 if (last != null)
                 {
                     return last;
@@ -288,34 +296,42 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 if (Parent != null)
                 {
-                    current = Parent.FindPrevious<TreeNode>(current) as TreeNode;
+                    current = Parent.FindPreviousChild<T>(current);
                 }
                 else
                 {
+                    // no parent and no previous; we must be at the top
                     return default(T);
                 }
             }
 
-            if (Parent != null)
+            if (Parent is T && (predicate == null || predicate((T)(object)Parent)))
             {
-                if (Parent is T && (predicate == null || predicate((T)(object)Parent)))
-                {
-                    return (T)(object)Parent;
-                }
-
-                return Parent.FindPreviousInTraversalOrder<T>(predicate);
+                return (T)(object)Parent;
             }
 
-            return default(T);
+            return Parent.FindPreviousInTraversalOrder<T>(predicate);
         }
 
         public T FindNextInTraversalOrder<T>(Predicate<T> predicate = null)
         {
-            var current = FindNext<TreeNode>() as TreeNode;
+            if (Parent == null)
+            {
+                return default(T);
+            }
+
+            var current = Parent.FindNextChild<T>(this);
 
             while (current != null)
             {
-                var first = current.FindFirstInSubtree<T>(predicate);
+                T first = current;
+
+                var treeNode = current as TreeNode;
+                if (treeNode != null)
+                {
+                    first = treeNode.FindFirstInSubtreeIncludingSelf<T>(predicate);
+                }
+
                 if (first != null)
                 {
                     return first;
@@ -323,7 +339,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 if (Parent != null)
                 {
-                    current = Parent.FindNext<TreeNode>(current) as TreeNode;
+                    current = Parent.FindNextChild<T>(current);
                 }
                 else
                 {
@@ -361,20 +377,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                 }
             }
-        }
-
-        public virtual int TotalItemsInSubtree()
-        {
-            int sum = 1;
-            if (HasChildren)
-            {
-                foreach (var child in Children.OfType<TreeNode>())
-                {
-                    sum += child.TotalItemsInSubtree();
-                }
-            }
-
-            return sum;
         }
     }
 }

@@ -40,7 +40,7 @@ namespace StructuredLogViewer
             var search = new Search(Build);
             Stopwatch sw = Stopwatch.StartNew();
             var results = search.FindNodes(searchText);
-            results = new TreeNode[] { new Message { Text = "Search took " + sw.Elapsed.ToString() } }.Concat(results);
+            results = new object[] { new Message { Text = "Search took " + sw.Elapsed.ToString() } }.Concat(results);
             if (latestSearch == searchText)
             {
                 Application.Current.Dispatcher.InvokeAsync(() =>

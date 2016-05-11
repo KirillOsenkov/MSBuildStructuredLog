@@ -78,7 +78,7 @@ namespace StructuredLogViewer.Controls
             searchTextBox.Focus();
             if (!Build.Succeeded)
             {
-                var firstError = Build.FindFirstInSubtree<Error>();
+                var firstError = Build.FindFirstInSubtreeIncludingSelf<Error>();
                 if (firstError != null)
                 {
                     SelectItem(firstError);
@@ -146,7 +146,7 @@ namespace StructuredLogViewer.Controls
             }
         }
 
-        private void MoveSelectionOut(TreeNode node)
+        private void MoveSelectionOut(ParentedNode node)
         {
             var parent = node.Parent;
             if (parent == null)
@@ -154,7 +154,7 @@ namespace StructuredLogViewer.Controls
                 return;
             }
 
-            var next = node.FindNext<TreeNode>();
+            var next = parent.FindNextChild<BaseNode>(node);
             if (next != null)
             {
                 node.IsSelected = false;
@@ -162,7 +162,7 @@ namespace StructuredLogViewer.Controls
                 return;
             }
 
-            var previous = node.FindPrevious<TreeNode>();
+            var previous = parent.FindPreviousChild<BaseNode>(node);
             if (previous != null)
             {
                 node.IsSelected = false;
