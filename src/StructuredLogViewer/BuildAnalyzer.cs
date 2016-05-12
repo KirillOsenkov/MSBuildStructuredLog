@@ -17,6 +17,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static void AnalyzeBuild(Build build)
         {
+            build.VisitAllChildren<TreeNode>(t => t.Seal());
+
             if (build.IsAnalyzed)
             {
                 return;
@@ -39,8 +41,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             build.VisitAllChildren<CopyTask>(c => AnalyzeFileCopies(c));
             AnalyzeDoubleWrites();
-
-            build.VisitAllChildren<TreeNode>(t => t.Seal());
         }
 
         private void AnalyzeTask(Task task)
