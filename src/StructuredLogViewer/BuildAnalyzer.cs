@@ -17,16 +17,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static void AnalyzeBuild(Build build)
         {
-            build.VisitAllChildren<TreeNode>(t => t.Seal());
-
             if (build.IsAnalyzed)
             {
+                Seal(build);
                 return;
             }
 
             var analyzer = new BuildAnalyzer(build);
             analyzer.Analyze();
             build.IsAnalyzed = true;
+
+            Seal(build);
+        }
+
+        private static void Seal(Build build)
+        {
+            build.VisitAllChildren<TreeNode>(t => t.Seal());
         }
 
         private void Analyze()
