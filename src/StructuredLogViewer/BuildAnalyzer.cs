@@ -17,8 +17,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static void AnalyzeBuild(Build build)
         {
+            if (build.IsAnalyzed)
+            {
+                return;
+            }
+
             var analyzer = new BuildAnalyzer(build);
             analyzer.Analyze();
+            build.IsAnalyzed = true;
         }
 
         private void Analyze()

@@ -147,6 +147,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (build != null)
             {
                 SetString(element, nameof(build.Succeeded), build.Succeeded.ToString());
+                SetString(element, nameof(Build.IsAnalyzed), build.IsAnalyzed.ToString());
                 return;
             }
         }

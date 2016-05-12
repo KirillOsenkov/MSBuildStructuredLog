@@ -60,7 +60,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             StartTime,
             EndTime,
             Succeeded,
-            Timestamp
+            Timestamp,
+            IsAnalyzed
         }
 
         private static readonly XName[] attributeNames = typeof(AttributeNames)
@@ -208,6 +209,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (build != null)
             {
                 build.Succeeded = GetBoolean(element, AttributeNames.Succeeded);
+                build.IsAnalyzed = GetBoolean(element, AttributeNames.IsAnalyzed);
                 return;
             }
         }
