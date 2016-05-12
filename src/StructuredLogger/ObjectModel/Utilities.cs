@@ -2,10 +2,10 @@
 {
     public class Utilities
     {
-        private const int MaxDisplayedValueLength = 260;
+        public const int MaxDisplayedValueLength = 260;
         private const string TrimPrompt = "... (Ctrl+C to copy full text)";
 
-        public static string ShortenValue(string text)
+        public static string ShortenValue(string text, string trimPrompt = TrimPrompt)
         {
             if (text == null)
             {

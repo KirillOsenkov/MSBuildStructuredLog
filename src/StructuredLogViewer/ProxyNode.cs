@@ -28,8 +28,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Highlights = new List<object>();
 
             Highlights.Add(result.Before);
-            Highlights.Add(new HighlightedText { Text = result.Highlighted });
-            Highlights.Add(result.After);
+
+            if (result.Highlighted != null)
+            {
+                Highlights.Add(new HighlightedText { Text = result.Highlighted });
+            }
+
+            if (result.After != null)
+            {
+                Highlights.Add(result.After);
+            }
         }
 
         public string OriginalType => Original.GetType().Name;
