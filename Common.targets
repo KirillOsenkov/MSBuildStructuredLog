@@ -12,9 +12,9 @@
     </NuGetInput>
   </ItemDefinitionGroup>
 
-  <ItemGroup>
-    <NuGetInput Condition="'NuspecFileName' != '' AND Exists('$(MSBuildProjectDirectory)\$(NuspecFileName).nuspec')" Include="$(MSBuildProjectDirectory)\$(NuspecFileName).nuspec" />
-    <NuGetInput Include="$(MSBuildThisFile)" />
+  <ItemGroup Condition="'$(NuspecFileName)' != ''">
+    <NuGetInput Condition="Exists('$(MSBuildProjectDirectory)\$(NuspecFileName).nuspec')" Include="$(MSBuildProjectDirectory)\$(NuspecFileName).nuspec" />
+    <NuGetInput Include="$(MSBuildThisFileFullPath)" />
   </ItemGroup>
 
   <Target Name="BuildNuGet"
