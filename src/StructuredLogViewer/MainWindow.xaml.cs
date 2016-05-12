@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Win32;
+using Squirrel;
 using StructuredLogViewer.Controls;
 
 namespace StructuredLogViewer
@@ -24,14 +25,38 @@ namespace StructuredLogViewer
             var uri = new Uri("StructuredLogViewer;component/themes/Generic.xaml", UriKind.Relative);
             var generic = (ResourceDictionary)Application.LoadComponent(uri);
             Application.Current.Resources.MergedDictionaries.Add(generic);
+            Loaded += MainWindow_Loaded;
+
+            DisplayWelcomeScreen();
+        }
+
+        private void DisplayWelcomeScreen()
+        {
+            this.projectFilePath = null;
+            this.xmlLogFilePath = null;
+            this.currentBuild = null;
+            Title = DefaultTitle;
             var welcomeScreen = new WelcomeScreen();
             SetContent(welcomeScreen);
             welcomeScreen.RecentLogSelected += log => OpenLogFile(log);
             welcomeScreen.RecentProjectSelected += project => BuildProject(project);
             welcomeScreen.OpenProjectRequested += () => OpenProjectOrSolution();
             welcomeScreen.OpenLogFileRequested += () => OpenLogFile();
-
             UpdateRecentItemsMenu();
+        }
+
+        private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                //using (var updateManager = new UpdateManager(""))
+                //{
+                //    await updateManager.UpdateApp();
+                //}
+            }
+            catch (Exception ex)
+            {
+            }
         }
 
         private void UpdateRecentItemsMenu(WelcomeScreen welcomeScreen = null)
@@ -112,6 +137,7 @@ namespace StructuredLogViewer
             SettingsService.AddRecentLogFile(filePath);
             UpdateRecentItemsMenu();
             Title = DefaultTitle + " - " + filePath;
+
             var progress = new BuildProgress();
             progress.ProgressText = "Opening " + filePath + "...";
             SetContent(progress);
@@ -124,7 +150,7 @@ namespace StructuredLogViewer
             DisplayBuild(build);
         }
 
-        private async void BuildProject(string filePath)
+        private void BuildProject(string filePath)
         {
             if (!File.Exists(filePath))
             {
@@ -136,10 +162,28 @@ namespace StructuredLogViewer
             SettingsService.AddRecentProject(projectFilePath);
             UpdateRecentItemsMenu();
             Title = DefaultTitle + " - " + projectFilePath;
+
+            var parametersScreen = new BuildParametersScreen();
+            parametersScreen.PrefixArguments = HostedBuild.GetPrefixArguments(filePath);
+            parametersScreen.MSBuildArguments = "/t:Rebuild";
+            parametersScreen.PostfixArguments = HostedBuild.GetPostfixArguments();
+            parametersScreen.BuildRequested += () =>
+            {
+                BuildCore(projectFilePath, parametersScreen.MSBuildArguments);
+            };
+            parametersScreen.CancelRequested += () =>
+            {
+                DisplayWelcomeScreen();
+            };
+            SetContent(parametersScreen);
+        }
+
+        private async void BuildCore(string projectFilePath, string customArguments)
+        {
             var progress = new BuildProgress();
             progress.ProgressText = $"Building {projectFilePath}...";
             SetContent(progress);
-            var buildHost = new HostedBuild(projectFilePath);
+            var buildHost = new HostedBuild(projectFilePath, customArguments);
             Build result = await buildHost.BuildAndGetResult(progress);
             progress.ProgressText = "Analyzing build...";
             await System.Threading.Tasks.Task.Run(() => BuildAnalyzer.AnalyzeBuild(result));

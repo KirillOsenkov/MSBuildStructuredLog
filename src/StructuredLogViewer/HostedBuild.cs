@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Build.CommandLine;
 using Microsoft.Build.Logging.StructuredLogger;
@@ -9,18 +8,33 @@ namespace StructuredLogViewer
 {
     public class HostedBuild
     {
-        private string projectFilePath;
+        private readonly string customArguments;
+        private readonly string projectFilePath;
 
-        public HostedBuild(string projectFilePath)
+        public HostedBuild(string projectFilePath, string customArguments)
         {
             this.projectFilePath = projectFilePath;
+            this.customArguments = customArguments ?? "";
+        }
+
+        public static string GetPrefixArguments(string projectFilePath)
+        {
+            var msbuildExe = ToolLocationHelper.GetPathToBuildToolsFile("msbuild.exe", ToolLocationHelper.CurrentToolsVersion);
+            return $@"""{msbuildExe}"" ""{projectFilePath}""";
+        }
+
+        public static string GetPostfixArguments()
+        {
+            var loggerDll = typeof(StructuredLogger).Assembly.Location;
+            return $@"/v:diag /noconlog /logger:{nameof(StructuredLogger)},""{loggerDll}"";BuildLog.xml";
         }
 
         public Task<Build> BuildAndGetResult(BuildProgress progress)
         {
-            var msbuildExe = ToolLocationHelper.GetPathToBuildToolsFile("msbuild.exe", ToolLocationHelper.CurrentToolsVersion);
-            var loggerDll = typeof(StructuredLogger).Assembly.Location;
-            var commandLine = $@"""{msbuildExe}"" ""{projectFilePath}"" /t:Rebuild /v:diag /noconlog /logger:{nameof(StructuredLogger)},""{loggerDll}"";BuildLog.xml";
+            var prefixArguments = GetPrefixArguments(projectFilePath);
+            var postfixArguments = GetPostfixArguments();
+            var commandLine = $@"{prefixArguments} {customArguments} {postfixArguments}";
+
             progress.MSBuildCommandLine = commandLine;
             StructuredLogger.SaveLogToDisk = false;
 

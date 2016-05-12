@@ -467,6 +467,38 @@
     </Grid>
   </DataTemplate>
 
+  <DataTemplate DataType="{x:Type local:BuildParametersScreen}">
+    <Grid x:Name="buildParameters" 
+          HorizontalAlignment="Center"
+          VerticalAlignment="Center"
+          Margin="40">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+      </Grid.RowDefinitions>
+      <StackPanel Grid.Row="0"
+                  Margin="40,40,40,10">
+        <TextBlock Text="Specify custom MSBuild command line arguments:" 
+                   Margin="0,0,0,7"/>
+        <WrapPanel Orientation="Horizontal">
+          <TextBlock Text="{Binding PrefixArguments}" />
+          <TextBox x:Name="argumentsText"
+                   Margin="4,0,4,0"
+                   Text="{Binding MSBuildArguments}" 
+                   MinWidth="300" />
+          <TextBlock Text="{Binding PostfixArguments}" />
+        </WrapPanel>
+      </StackPanel>
+      <StackPanel Grid.Row="1"
+                  HorizontalAlignment="Center"
+                  Margin="40,10,40,40"
+                  Orientation="Horizontal">
+        <Button Content="Build" Command="{Binding BuildCommand}" Width="75" Height="23" Margin="7" />
+        <Button Content="Cancel" Command="{Binding CancelCommand}" Width="75" Height="23" Margin="0,7,0,7" />
+      </StackPanel>
+    </Grid>
+  </DataTemplate>
+
   <DataTemplate DataType="{x:Type local:BuildProgress}">
     <Grid x:Name="buildProgress" 
           HorizontalAlignment="Center"

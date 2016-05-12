@@ -98,6 +98,7 @@
       <Link>AssemblyVersion.cs</Link>
     </Compile>
     <Compile Include="BuildAnalyzer.cs" />
+    <Compile Include="BuildParametersScreen.cs" />
     <Compile Include="BuildProgress.cs" />
     <Compile Include="Controls\BuildControl.xaml.cs">
       <DependentUpon>BuildControl.xaml</DependentUpon>
