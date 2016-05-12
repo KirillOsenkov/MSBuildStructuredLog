@@ -290,13 +290,91 @@
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
       <Rectangle x:Name="icon" Width="14" Height="11" Stroke="{StaticResource ParameterStroke}" Margin="3,3,6,3" Fill="{StaticResource ParameterBrush}" VerticalAlignment="Top" />
-      <TextBlock x:Name="name" Text="{Binding}" />
+      <TextBlock x:Name="name" Text="{Binding Name}" Margin="0,0,6,0" />
+      <ItemsControl ItemsSource="{Binding Highlights}">
+        <ItemsControl.Resources>
+          <DataTemplate DataType="{x:Type local:HighlightedText}">
+            <TextBlock Foreground="Black" Background="Yellow" Text="{Binding Text}" />
+          </DataTemplate>
+        </ItemsControl.Resources>
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <StackPanel Orientation="Horizontal" IsItemsHost="True" />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+      </ItemsControl>
     </StackPanel>
-    <!--<HierarchicalDataTemplate.Triggers>
-      <DataTrigger Binding="{Binding IsSelected}" Value="False">
-        <Setter TargetName="name" Property="Foreground" Value="{StaticResource ParameterStroke}" />
+    <HierarchicalDataTemplate.Triggers>
+      <DataTrigger Binding="{Binding OriginalType}" Value="Folder">
+        <Setter TargetName="icon" Property="Stroke" Value="{StaticResource FolderStroke}" />
+        <Setter TargetName="icon" Property="Fill" Value="{StaticResource ClosedFolderBrush}" />
       </DataTrigger>
-    </HierarchicalDataTemplate.Triggers>-->
+      <DataTrigger Binding="{Binding OriginalType}" Value="Target">
+        <Setter TargetName="icon" Property="Stroke" Value="{StaticResource TargetStroke}" />
+        <Setter TargetName="icon" Property="Fill" Value="{StaticResource TargetBrush}" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding OriginalType}" Value="Task">
+        <Setter TargetName="icon" Property="Stroke" Value="{StaticResource TaskStroke}" />
+        <Setter TargetName="icon" Property="Fill" Value="{StaticResource TaskBrush}" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding OriginalType}" Value="AddItem">
+        <Setter TargetName="icon" Property="Stroke" Value="{StaticResource ItemStroke}" />
+        <Setter TargetName="icon" Property="Fill" Value="{StaticResource ItemBrush}" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding OriginalType}" Value="RemoveItem">
+        <Setter TargetName="icon" Property="Stroke" Value="{StaticResource ItemStroke}" />
+        <Setter TargetName="icon" Property="Fill" Value="{StaticResource ItemBrush}" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding OriginalType}" Value="Item">
+        <Setter TargetName="icon" Property="Stroke" Value="{StaticResource ItemStroke}" />
+        <Setter TargetName="icon" Property="Fill" Value="{StaticResource ItemBrush}" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding OriginalType}" Value="Metadata">
+        <Setter TargetName="icon" Property="Stroke" Value="{StaticResource MetadataStroke}" />
+        <Setter TargetName="icon" Property="Fill" Value="{StaticResource ItemBrush}" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding OriginalType}" Value="Property">
+        <Setter TargetName="icon" Property="Stroke" Value="{StaticResource PropertyStroke}" />
+        <Setter TargetName="icon" Property="Fill" Value="{StaticResource PropertyBrush}" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding OriginalType}" Value="Parameter">
+        <Setter TargetName="icon" Property="Stroke" Value="{StaticResource ParameterStroke}" />
+        <Setter TargetName="icon" Property="Fill" Value="{StaticResource ParameterBrush}" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding OriginalType}" Value="Message">
+        <Setter TargetName="icon" Property="Stroke" Value="{StaticResource MessageStroke}" />
+        <Setter TargetName="icon" Property="Fill" Value="{StaticResource MessageBrush}" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding OriginalType}" Value="Error">
+        <Setter TargetName="icon" Property="Stroke" Value="{StaticResource ErrorStroke}" />
+        <Setter TargetName="icon" Property="Fill" Value="{StaticResource ErrorBrush}" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding OriginalType}" Value="Warning">
+        <Setter TargetName="icon" Property="Stroke" Value="{StaticResource WarningStroke}" />
+        <Setter TargetName="icon" Property="Fill" Value="{StaticResource WarningBrush}" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding ProjectExtension}" Value=".sln">
+        <Setter TargetName="icon" Property="Fill" Value="{StaticResource SlnIcon}" />
+        <Setter TargetName="icon" Property="Height" Value="16" />
+        <Setter TargetName="icon" Property="Width" Value="16" />
+        <Setter TargetName="icon" Property="Stroke" Value="Transparent" />
+        <Setter TargetName="icon" Property="Margin" Value="2,2,6,2" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding ProjectExtension}" Value=".csproj">
+        <Setter TargetName="icon" Property="Fill" Value="{StaticResource CSProjIcon}" />
+        <Setter TargetName="icon" Property="Height" Value="16" />
+        <Setter TargetName="icon" Property="Width" Value="16" />
+        <Setter TargetName="icon" Property="Stroke" Value="Transparent" />
+        <Setter TargetName="icon" Property="Margin" Value="2,2,6,2" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding ProjectExtension}" Value="other">
+        <Setter TargetName="icon" Property="Fill" Value="{StaticResource GenericProjectIcon}" />
+        <Setter TargetName="icon" Property="Height" Value="16" />
+        <Setter TargetName="icon" Property="Width" Value="16" />
+        <Setter TargetName="icon" Property="Stroke" Value="Transparent" />
+        <Setter TargetName="icon" Property="Margin" Value="2,2,6,2" />
+      </DataTrigger>
+    </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
 
   <DataTemplate DataType="{x:Type local:WelcomeScreen}">

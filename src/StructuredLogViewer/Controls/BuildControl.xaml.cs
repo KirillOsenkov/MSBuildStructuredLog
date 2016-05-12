@@ -239,7 +239,7 @@ namespace StructuredLogViewer.Controls
             typingConcurrentOperation.TextChanged(searchText);
         }
 
-        private void DisplaySearchResults(IEnumerable<object> results)
+        private void DisplaySearchResults(IEnumerable<SearchResult> results)
         {
             if (results == null)
             {
@@ -250,14 +250,14 @@ namespace StructuredLogViewer.Controls
                 watermark.Visibility = Visibility.Collapsed;
                 if (!results.Any())
                 {
-                    results = new object[] { new Message { Text = "No results found." } };
+                    results = new SearchResult[] { new SearchResult { Node = new Message { Text = "No results found." } } };
                 }
             }
 
             resultsList.ItemsSource = BuildResultTree(results);
         }
 
-        private IEnumerable BuildResultTree(IEnumerable<object> results)
+        private IEnumerable BuildResultTree(IEnumerable<SearchResult> results)
         {
             if (results == null)
             {
@@ -270,7 +270,7 @@ namespace StructuredLogViewer.Controls
             {
                 TreeNode parent = root;
 
-                var parentedNode = result as ParentedNode;
+                var parentedNode = result.Node as ParentedNode;
                 if (parentedNode != null)
                 {
                     var chain = parentedNode.GetParentChain();
@@ -279,12 +279,15 @@ namespace StructuredLogViewer.Controls
                     {
                         var projectProxy = root.GetOrCreateNodeWithName<ProxyNode>(project.Name);
                         projectProxy.Original = project;
+                        projectProxy.Name = project.Name;
                         parent = projectProxy;
                         parent.IsExpanded = true;
                     }
                 }
 
-                var proxy = new ProxyNode(result);
+                var proxy = new ProxyNode();
+                proxy.Original = result.Node;
+                proxy.Populate(result);
                 parent.Children.Add(proxy);
             }
 

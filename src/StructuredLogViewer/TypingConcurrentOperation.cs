@@ -12,7 +12,7 @@ namespace StructuredLogViewer
     {
         public Build Build { get; internal set; }
 
-        public event Action<IEnumerable<object>> DisplayResults;
+        public event Action<IEnumerable<SearchResult>> DisplayResults;
 
         public const int ThrottlingDelayMilliseconds = 200;
 
@@ -40,7 +40,6 @@ namespace StructuredLogViewer
             var search = new Search(Build);
             Stopwatch sw = Stopwatch.StartNew();
             var results = search.FindNodes(searchText);
-            results = new object[] { new Message { Text = "Search took " + sw.Elapsed.ToString() } }.Concat(results);
             if (latestSearch == searchText)
             {
                 Application.Current.Dispatcher.InvokeAsync(() =>

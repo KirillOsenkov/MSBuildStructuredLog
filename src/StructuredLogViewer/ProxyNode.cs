@@ -1,22 +1,49 @@
-﻿namespace Microsoft.Build.Logging.StructuredLogger
+﻿using System.Collections.Generic;
+using StructuredLogViewer;
+
+namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class ProxyNode : TextNode
     {
-        public object Original { get; set; }
-
-        public ProxyNode()
+        private object original;
+        public object Original
         {
+            get
+            {
+                return original;
+            }
+
+            set
+            {
+                original = value;
+                Name = OriginalType;
+                Text = Original.ToString();
+            }
         }
 
-        public ProxyNode(object original)
+        public List<object> Highlights { get; set; }
+
+        public void Populate(SearchResult result)
         {
-            Original = original;
-            this.Text = original.ToString();
+            Highlights = new List<object>();
+
+            Highlights.Add(result.Before);
+            Highlights.Add(new HighlightedText { Text = result.Highlighted });
+            Highlights.Add(result.After);
         }
 
-        public override string ToString()
+        public string OriginalType => Original.GetType().Name;
+        public string ProjectExtension => Original is Project ? GetProjectFileExtension() : null;
+
+        private string GetProjectFileExtension()
         {
-            return Name ?? Original.ToString();
+            var result = ((Project)Original).ProjectFileExtension;
+            if (result != ".sln" && result != ".csproj")
+            {
+                result = "other";
+            }
+
+            return result;
         }
     }
 }

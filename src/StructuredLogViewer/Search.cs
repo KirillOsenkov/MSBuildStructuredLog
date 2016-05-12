@@ -7,11 +7,11 @@ namespace StructuredLogViewer
 {
     public class Search
     {
-        public const int MaxResults = 5000;
+        public const int MaxResults = 500;
 
         private Build build;
         private string query;
-        private List<object> resultSet;
+        private List<SearchResult> resultSet;
 
         public Search(Build build)
         {
@@ -21,11 +21,11 @@ namespace StructuredLogViewer
         private static readonly char[] space = { ' ' };
         private string[] words;
 
-        public IEnumerable<object> FindNodes(string query)
+        public IEnumerable<SearchResult> FindNodes(string query)
         {
             this.query = query;
             this.words = query.Split(space, StringSplitOptions.RemoveEmptyEntries);
-            resultSet = new List<object>();
+            resultSet = new List<SearchResult>();
             build.VisitAllChildren<object>(Visit);
             return resultSet;
         }
@@ -42,48 +42,65 @@ namespace StructuredLogViewer
 
             searchFields.Clear();
 
+            PopulateSearchFields(node, searchFields.Add);
+
+            var result = IsMatch(searchFields);
+            if (result != null)
+            {
+                result.Node = node;
+                resultSet.Add(result);
+            }
+        }
+
+        public static void PopulateSearchFields(object node, Action<string> searchFields)
+        {
             var named = node as NamedNode;
             if (named != null && named.Name != null)
             {
-                searchFields.Add(named.Name);
+                searchFields(named.Name);
             }
 
             var textNode = node as TextNode;
             if (textNode != null && textNode.Text != null)
             {
-                searchFields.Add(textNode.Text);
+                searchFields(textNode.Text);
             }
 
             var nameValueNode = node as NameValueNode;
             if (nameValueNode != null)
             {
-                searchFields.Add(nameValueNode.Name);
-                searchFields.Add(nameValueNode.Value);
+                searchFields(nameValueNode.Name);
+                searchFields(nameValueNode.Value);
             }
 
             // in case they want to narrow down the search such as "Build target" or "Copy task"
             var typeName = node.GetType().Name;
-            searchFields.Add(typeName);
-
-            if (IsMatch(searchFields))
-            {
-                resultSet.Add(node);
-            }
+            searchFields(typeName);
         }
 
         /// <summary>
         ///  Each of the query words must be found in at least one field ∀w ∃f
         /// </summary>
-        private bool IsMatch(List<string> fields)
+        private SearchResult IsMatch(List<string> fields)
         {
+            SearchResult result = null;
+
             for (int i = 0; i < words.Length; i++)
             {
                 bool anyFieldMatched = false;
                 var word = words[i];
                 for (int j = 0; j < fields.Count; j++)
                 {
-                    if (fields[j].IndexOf(word, StringComparison.OrdinalIgnoreCase) != -1)
+                    var field = fields[j];
+                    var index = field.IndexOf(word, StringComparison.OrdinalIgnoreCase);
+                    if (index != -1)
                     {
+                        if (result == null)
+                        {
+                            result = new SearchResult();
+                        }
+
+                        result.AddMatch(field, word, index);
                         anyFieldMatched = true;
                         break;
                     }
@@ -91,11 +108,11 @@ namespace StructuredLogViewer
 
                 if (!anyFieldMatched)
                 {
-                    return false;
+                    return null;
                 }
             }
 
-            return true;
+            return result;
         }
     }
 }
