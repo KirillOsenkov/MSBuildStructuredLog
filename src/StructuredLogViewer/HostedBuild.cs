@@ -42,6 +42,7 @@ namespace StructuredLogViewer
             {
                 try
                 {
+                    StructuredLogger.CurrentBuild = null;
                     var exitType = MSBuildApp.Execute(commandLine);
                     var result = StructuredLogger.CurrentBuild;
                     if (result == null)

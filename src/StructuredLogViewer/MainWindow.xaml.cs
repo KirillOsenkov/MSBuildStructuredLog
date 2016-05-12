@@ -163,13 +163,15 @@ namespace StructuredLogViewer
             UpdateRecentItemsMenu();
             Title = DefaultTitle + " - " + projectFilePath;
 
+            string customArguments = SettingsService.GetCustomArguments(filePath);
             var parametersScreen = new BuildParametersScreen();
             parametersScreen.PrefixArguments = HostedBuild.GetPrefixArguments(filePath);
-            parametersScreen.MSBuildArguments = "/t:Rebuild";
+            parametersScreen.MSBuildArguments = customArguments;
             parametersScreen.PostfixArguments = HostedBuild.GetPostfixArguments();
             parametersScreen.BuildRequested += () =>
             {
                 BuildCore(projectFilePath, parametersScreen.MSBuildArguments);
+                SettingsService.SaveCustomArguments(filePath, parametersScreen.MSBuildArguments);
             };
             parametersScreen.CancelRequested += () =>
             {
