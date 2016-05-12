@@ -1,5 +1,10 @@
 ﻿using System;
+using System.Reflection;
 using System.Windows;
+
+[assembly: AssemblyCompany("Microsoft")]
+[assembly: AssemblyProduct("MSBuild Structured Log")]
+[assembly: AssemblyTitle("MSBuild Structured Log Viewer")]
 
 namespace StructuredLogViewer
 {
