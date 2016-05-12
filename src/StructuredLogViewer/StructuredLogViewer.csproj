@@ -9,7 +9,7 @@
     <OutputType>WinExe</OutputType>
     <Prefer32Bit Condition="$(Prefer32Bit)==''">true</Prefer32Bit>
     <ApplicationIcon>StructuredLogger.ico</ApplicationIcon>
-    <NuspecFileName>MSBuildStructuredLog.Viewer</NuspecFileName>
+    <NuspecFileName>MSBuildStructuredLogViewer</NuspecFileName>
   </PropertyGroup>
   <Import Project="$(SrcRoot)\Common.props" />
   <ItemGroup>
@@ -123,7 +123,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="MSBuildStructuredLog.Viewer.nuspec" />
+    <None Include="MSBuildStructuredLogViewer.nuspec" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
