@@ -3,9 +3,7 @@
   <metadata>
     <id>MSBuildStructuredLogViewer</id>
     <summary>Structured logger and viewer to investigate MSBuild builds</summary>
-    <description>
-      An MSBuild logger that can be passed to MSBuild to record a detailed .xml log file and a WPF viewer app to view .xml log files in a tree form.
-    </description>
+    <description>MSBuild Structured Log Viewer</description>
     <dependencies>
     </dependencies>
 
