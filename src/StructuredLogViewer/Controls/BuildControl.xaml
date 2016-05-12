@@ -23,7 +23,10 @@
         </Grid>
 
         <Grid>
-          <ListBox x:Name="resultsList" Background="#F5F5F5"></ListBox>
+          <TreeView x:Name="resultsList" 
+                    VirtualizingPanel.IsVirtualizing="True" 
+                    VirtualizingPanel.VirtualizationMode="Recycling"
+                    Background="#F5F5F5"></TreeView>
           <TextBlock x:Name="watermark" 
                      Margin="40" 
                      TextWrapping="Wrap"

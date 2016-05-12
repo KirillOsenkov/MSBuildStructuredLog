@@ -31,7 +31,7 @@ namespace StructuredLogViewer
         }
 
         // avoid allocating this for every node
-        private readonly List<string> searchFields = new List<string>(4);
+        private readonly List<string> searchFields = new List<string>(5);
 
         private void Visit(object node)
         {

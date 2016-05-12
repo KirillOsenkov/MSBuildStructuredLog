@@ -12,8 +12,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             ParentedNode current = this;
             while (current.Parent != null)
             {
-                current = current.Parent;
                 chain.Add(current);
+                current = current.Parent;
             }
 
             chain.Reverse();

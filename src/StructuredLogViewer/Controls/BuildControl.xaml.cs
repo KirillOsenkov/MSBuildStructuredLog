@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -37,7 +39,8 @@ namespace StructuredLogViewer.Controls
             treeView.KeyDown += TreeView_KeyDown;
             treeView.SelectedItemChanged += TreeView_SelectedItemChanged;
 
-            resultsList.SelectionChanged += ResultsList_SelectionChanged;
+            resultsList.ItemContainerStyle = treeViewItemStyle;
+            resultsList.SelectedItemChanged += ResultsList_SelectionChanged;
 
             breadCrumb.SelectionChanged += BreadCrumb_SelectionChanged;
 
@@ -64,10 +67,25 @@ namespace StructuredLogViewer.Controls
             }
         }
 
+        private void ResultsList_SelectionChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            var item = resultsList.SelectedItem as ParentedNode;
+            if (item != null)
+            {
+                var proxy = item as ProxyNode;
+                if (proxy != null)
+                {
+                    item = proxy.Original as ParentedNode;
+                }
+
+                SelectItem(item);
+            }
+        }
+
         public void UpdateBreadcrumb(object item)
         {
             var parentedNode = item as ParentedNode;
-            var chain = parentedNode.GetParentChain().Skip(1).Concat(new[] { item });
+            IEnumerable<object> chain = parentedNode.GetParentChain();
             chain = IntersperseWithSeparators(chain).ToArray();
             breadCrumb.ItemsSource = chain;
             breadCrumb.SelectedIndex = -1;
@@ -107,19 +125,14 @@ namespace StructuredLogViewer.Controls
             }
         }
 
-        private void ResultsList_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            var item = resultsList.SelectedItem as ParentedNode;
-            if (item != null)
-            {
-                SelectItem(item);
-            }
-        }
-
         private void SelectItem(ParentedNode item)
         {
-            // skip the actual Build object and add the item itself
-            var parentChain = item.GetParentChain().Skip(1).Concat(new[] { item });
+            var parentChain = item.GetParentChain();
+            if (!parentChain.Any())
+            {
+                return;
+            }
+
             treeView.SelectContainerFromItem<object>(parentChain);
         }
 
@@ -241,12 +254,47 @@ namespace StructuredLogViewer.Controls
                 }
             }
 
-            resultsList.ItemsSource = results;
+            resultsList.ItemsSource = BuildResultTree(results);
+        }
+
+        private IEnumerable BuildResultTree(IEnumerable<object> results)
+        {
+            if (results == null)
+            {
+                return results;
+            }
+
+            var root = new Folder();
+
+            foreach (var result in results)
+            {
+                TreeNode parent = root;
+
+                var parentedNode = result as ParentedNode;
+                if (parentedNode != null)
+                {
+                    var chain = parentedNode.GetParentChain();
+                    var project = parentedNode.GetNearestParent<Project>();
+                    if (project != null)
+                    {
+                        var projectProxy = root.GetOrCreateNodeWithName<ProxyNode>(project.Name);
+                        projectProxy.Original = project;
+                        parent = projectProxy;
+                        parent.IsExpanded = true;
+                    }
+                }
+
+                var proxy = new ProxyNode(result);
+                parent.Children.Add(proxy);
+            }
+
+            return root.Children;
         }
 
         private void TreeViewItem_RequestBringIntoView(object sender, RequestBringIntoViewEventArgs e)
         {
             var treeViewItem = (TreeViewItem)sender;
+            var treeView = (TreeView)typeof(TreeViewItem).GetProperty("ParentTreeView", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(treeViewItem);
 
             if (PresentationSource.FromDependencyObject(treeViewItem) == null)
             {

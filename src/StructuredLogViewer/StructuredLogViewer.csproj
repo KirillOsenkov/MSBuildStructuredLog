@@ -62,6 +62,7 @@
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ProxyNode.cs" />
     <Compile Include="Search.cs" />
     <Compile Include="SettingsService.cs" />
     <Compile Include="TypingConcurrentOperation.cs" />

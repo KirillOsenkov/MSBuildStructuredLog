@@ -286,6 +286,19 @@
     </StackPanel>
   </DataTemplate>
 
+  <HierarchicalDataTemplate DataType="{x:Type local:ProxyNode}"
+                            ItemsSource="{Binding Children}">
+    <StackPanel Orientation="Horizontal">
+      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="{StaticResource ParameterStroke}" Margin="3,3,6,3" Fill="{StaticResource ParameterBrush}" VerticalAlignment="Top" />
+      <TextBlock x:Name="name" Text="{Binding}" />
+    </StackPanel>
+    <!--<HierarchicalDataTemplate.Triggers>
+      <DataTrigger Binding="{Binding IsSelected}" Value="False">
+        <Setter TargetName="name" Property="Foreground" Value="{StaticResource ParameterStroke}" />
+      </DataTrigger>
+    </HierarchicalDataTemplate.Triggers>-->
+  </HierarchicalDataTemplate>
+
   <DataTemplate DataType="{x:Type local:WelcomeScreen}">
     <Grid x:Name="welcomeScreen"
           HorizontalAlignment="Center"
