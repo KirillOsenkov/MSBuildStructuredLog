@@ -3,7 +3,7 @@ using System.Reflection;
 using System.Windows;
 
 [assembly: AssemblyCompany("Microsoft")]
-[assembly: AssemblyProduct("MSBuild Structured Log")]
+[assembly: AssemblyProduct("MSBuild Structured Log Viewer")]
 [assembly: AssemblyTitle("MSBuild Structured Log Viewer")]
 
 namespace StructuredLogViewer

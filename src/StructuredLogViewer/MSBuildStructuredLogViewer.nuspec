@@ -2,8 +2,11 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
     <id>MSBuildStructuredLogViewer</id>
+    <title>MSBuild Structured Log Viewer</title>
     <summary>Structured logger and viewer to investigate MSBuild builds</summary>
-    <description>MSBuild Structured Log Viewer</description>
+    <description>
+      An MSBuild logger that can be passed to MSBuild to record a detailed .xml log file and a WPF viewer app to view .xml log files in a tree form.
+    </description>
     <dependencies>
     </dependencies>
 
