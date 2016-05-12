@@ -26,6 +26,15 @@
     <Exec Command="$(SrcRoot)\NuGet.exe Pack $(NuspecFileName).nuspec -BasePath $(OutDir) -OutputDirectory $(OutDir) -prop currentVersion=$(NuGetVersion)" />
   </Target>
 
+  <Target Name="SquirrelReleasify"
+          AfterTargets="BuildNuGet"
+          Condition="Exists('$(OutDir)\$(NuspecFileName).$(NuGetVersion).nupkg')"
+          DependsOnTargets="BuildNuGet"
+          Inputs="$(OutDir)\$(NuspecFileName).$(NuGetVersion).nupkg"
+          Outputs="$(OutDir)\Releases\Setup.exe">
+    <Exec Command="$(SrcRoot)\packages\squirrel.windows.1.4.0\tools\Squirrel.exe --releasify $(OutDir)\$(NuspecFileName).$(NuGetVersion).nupkg" />
+  </Target>
+
   <Target Name="_DownloadNuGet">
     <DownloadNuGet OutputFilename="$(NuGetExePath)" Condition="!Exists('$(NuGetExePath)')" />
   </Target>
