@@ -86,7 +86,15 @@ namespace StructuredLogViewer.Controls
         {
             var parentedNode = item as ParentedNode;
             IEnumerable<object> chain = parentedNode.GetParentChain();
-            chain = IntersperseWithSeparators(chain).ToArray();
+            if (chain == null || !chain.Any())
+            {
+                chain = new[] { item };
+            }
+            else
+            {
+                chain = IntersperseWithSeparators(chain).ToArray();
+            }
+
             breadCrumb.ItemsSource = chain;
             breadCrumb.SelectedIndex = -1;
         }
