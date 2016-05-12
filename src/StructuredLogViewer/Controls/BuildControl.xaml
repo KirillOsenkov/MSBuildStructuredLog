@@ -38,6 +38,7 @@
         <ListBox x:Name="breadCrumb" 
                  DockPanel.Dock="Bottom" 
                  Margin="0,7,0,0"
+                 MaxHeight="150"
                  BorderThickness="1"
                  Visibility="{Binding RelativeSource={RelativeSource Self}, Path=HasItems, Converter={StaticResource booleanToVisibilityConverter}}"
                  BorderBrush="Gray"

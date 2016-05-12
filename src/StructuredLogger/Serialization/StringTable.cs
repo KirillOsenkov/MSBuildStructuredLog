@@ -13,14 +13,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return null;
             }
 
+            // if it has line breaks, save some more space
+            text = text.Replace("\r\n", "\n");
+
+            // there might be orphan carriage returns
+            text = text.Replace('\r', '\n');
+
             string existing;
             if (deduplicationMap.TryGetValue(text, out existing))
             {
                 return existing;
             }
-
-            // if it has line breaks, save some more space
-            text = text.Replace("\r\n", "\n");
 
             deduplicationMap[text] = text;
 

@@ -47,6 +47,7 @@
     <Compile Include="ObjectModel\TextNode.cs" />
     <Compile Include="ObjectModel\TimedNode.cs" />
     <Compile Include="ObjectModel\TreeNode.cs" />
+    <Compile Include="ObjectModel\Utilities.cs" />
     <Compile Include="ObjectModel\Warning.cs" />
     <Compile Include="Serialization\StringTable.cs" />
     <Compile Include="Serialization\StringWriter.cs" />
