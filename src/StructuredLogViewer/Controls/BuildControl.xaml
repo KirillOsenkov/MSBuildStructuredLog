@@ -49,6 +49,17 @@
               <WrapPanel IsItemsHost="True" />
             </ItemsPanelTemplate>
           </ListBox.ItemsPanel>
+          <ListBox.Resources>
+            <Style TargetType="Separator">
+              <Setter Property="Template">
+                <Setter.Value>
+                  <ControlTemplate>
+                    <Polygon Points="0,0 3,3, 0,6" Stroke="Black" Fill="Black" />
+                  </ControlTemplate>
+                </Setter.Value>
+              </Setter>
+            </Style>
+          </ListBox.Resources>
         </ListBox>
         <TreeView x:Name="treeView"
                   VirtualizingPanel.IsVirtualizing="True" 

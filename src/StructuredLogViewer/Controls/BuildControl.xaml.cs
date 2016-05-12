@@ -67,8 +67,28 @@ namespace StructuredLogViewer.Controls
         public void UpdateBreadcrumb(object item)
         {
             var parentedNode = item as ParentedNode;
-            breadCrumb.ItemsSource = parentedNode.GetParentChain().Skip(1).Concat(new[] { item });
+            var chain = parentedNode.GetParentChain().Skip(1).Concat(new[] { item });
+            chain = IntersperseWithSeparators(chain).ToArray();
+            breadCrumb.ItemsSource = chain;
             breadCrumb.SelectedIndex = -1;
+        }
+
+        private IEnumerable<object> IntersperseWithSeparators(IEnumerable<object> list)
+        {
+            bool first = true;
+            foreach (var item in list)
+            {
+                if (first)
+                {
+                    first = false;
+                }
+                else
+                {
+                    yield return new Separator();
+                }
+
+                yield return item;
+            }
         }
 
         private void BuildControl_Loaded(object sender, RoutedEventArgs e)
