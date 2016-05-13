@@ -33,7 +33,9 @@
     <file src="Splat.dll" target="lib\net45" />
     <file src="Squirrel.dll" target="lib\net45" />
     <file src="StructuredLogger.dll" target="lib\net45" />
+    <file src="StructuredLogger.pdb" target="lib\net45" />
     <file src="StructuredLogViewer.exe" target="lib\net45" />
+    <file src="StructuredLogViewer.pdb" target="lib\net45" />
     <file src="StructuredLogViewer.exe.config" target="lib\net45" />
   </files>
 </package>

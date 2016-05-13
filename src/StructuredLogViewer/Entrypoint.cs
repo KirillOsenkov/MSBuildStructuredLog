@@ -13,6 +13,8 @@ namespace StructuredLogViewer
         [STAThread]
         public static void Main(string[] args)
         {
+            ExceptionHandler.Initialize();
+
             var app = new Application();
             var window = new MainWindow();
             app.Run(window);
