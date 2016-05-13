@@ -156,7 +156,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 Timestamp = args.Timestamp
             };
 
-            if (args.BuildEventContext.TaskId > 0)
+            if (args.BuildEventContext?.TaskId > 0)
             {
                 node = construction.GetOrAddProject(args.BuildEventContext.ProjectContextId)
                     .GetTargetById(args.BuildEventContext.TargetId)
@@ -189,7 +189,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                 }
             }
-            else if (args.BuildEventContext.TargetId > 0)
+            else if (args.BuildEventContext?.TargetId > 0)
             {
                 node = construction.GetOrAddProject(args.BuildEventContext.ProjectContextId)
                     .GetTargetById(args.BuildEventContext.TargetId);
@@ -199,7 +199,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     messageNode.IsLowRelevance = true;
                 }
             }
-            else if (args.BuildEventContext.ProjectContextId > 0)
+            else if (args.BuildEventContext?.ProjectContextId > 0)
             {
                 var project = construction.GetOrAddProject(args.BuildEventContext.ProjectContextId);
                 node = project;
@@ -219,25 +219,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 node = construction.Build;
 
-                if (message.StartsWith("Overriding target"))
-                {
+                if(message.StartsWith("Overriding target")) {
                     var folder = construction.Build.GetOrCreateNodeWithName<Folder>("TargetOverrides");
                     folder.IsLowRelevance = true;
                     node = folder;
                     messageNode.IsLowRelevance = true;
-                }
-                else if (message.StartsWith("The target") && message.Contains("does not exist in the project, and will be ignored"))
-                {
+                } else if(message.StartsWith("The target") && message.Contains("does not exist in the project, and will be ignored")) {
                     var folder = construction.Build.GetOrCreateNodeWithName<Folder>("MissingTargets");
                     folder.IsLowRelevance = true;
                     node = folder;
                     messageNode.IsLowRelevance = true;
-                }
-                else if (args.BuildEventContext.NodeId == 0 &&
+                } else if(args.BuildEventContext != null && (args.BuildEventContext.NodeId == 0 &&
                          args.BuildEventContext.ProjectContextId == 0 &&
                          args.BuildEventContext.ProjectInstanceId == 0 &&
                          args.BuildEventContext.TargetId == 0 &&
-                         args.BuildEventContext.TaskId == 0)
+                         args.BuildEventContext.TaskId == 0))
                 {
                     // must be Detailed Build Summary
                     // https://github.com/Microsoft/msbuild/blob/master/src/XMakeBuildEngine/BackEnd/Components/Scheduler/Scheduler.cs#L509
