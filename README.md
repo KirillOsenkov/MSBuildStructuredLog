@@ -1,6 +1,9 @@
 # MSBuildStructuredLog
 A logger for MSBuild that records a structured representation of executed targets, tasks, property and item values.
 
+## Install:
+https://github.com/KirillOsenkov/MSBuildStructuredLog/releases/download/1.0.0/MSBuildStructuredLogSetup.exe
+
 ![Screenshot1](/docs/Screenshot1.png)
 
 ## Requirements:
