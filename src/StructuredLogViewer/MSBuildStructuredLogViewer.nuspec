@@ -13,7 +13,7 @@
     <language>en-US</language>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <version>$currentVersion$</version>
-    <authors>KirillOsenkov</authors>
+    <authors>Kirill Osenkov</authors>
     <iconUrl>https://raw.githubusercontent.com/KirillOsenkov/MSBuildStructuredLog/master/docs/StructuredLogger.png</iconUrl>
     <licenseUrl>https://opensource.org/licenses/MIT</licenseUrl>
     <projectUrl>https://github.com/KirillOsenkov/MSBuildStructuredLog</projectUrl>
