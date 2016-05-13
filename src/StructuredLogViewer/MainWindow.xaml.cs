@@ -49,12 +49,17 @@ namespace StructuredLogViewer
         {
             try
             {
-                //using (var updateManager = new UpdateManager(""))
-                //{
-                //    await updateManager.UpdateApp();
-                //}
+                if (Debugger.IsAttached || SettingsService.DisableUpdates)
+                {
+                    return;
+                }
+
+                using (var updateManager = await UpdateManager.GitHubUpdateManager("https://github.com/KirillOsenkov/MSBuildStructuredLog"))
+                {
+                    await updateManager.UpdateApp();
+                }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
             }
         }

@@ -13,6 +13,7 @@ namespace StructuredLogViewer
         private static readonly string recentLogsFilePath = Path.Combine(GetRootPath(), "RecentLogs.txt");
         private static readonly string recentProjectsFilePath = Path.Combine(GetRootPath(), "RecentProjects.txt");
         private static readonly string customArgumentsFilePath = Path.Combine(GetRootPath(), "CustomMSBuildArguments.txt");
+        private static readonly string disableUpdatesFilePath = Path.Combine(GetRootPath(), "DisableUpdates.txt");
 
         public static void AddRecentLogFile(string filePath)
         {
@@ -111,6 +112,11 @@ namespace StructuredLogViewer
         }
 
         private const int MaximumProjectsInRecentArgumentsList = 100;
+
+        /// <summary>
+        /// Just an escape hatch in case some users might want it
+        /// </summary>
+        public static bool DisableUpdates => File.Exists(disableUpdatesFilePath);
 
         private static bool FindArguments(IList<string> lines, string projectFilePath, out string existingArguments, out int index)
         {
