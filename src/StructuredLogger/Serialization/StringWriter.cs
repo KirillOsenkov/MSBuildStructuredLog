@@ -16,7 +16,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private static void WriteNode(object rootNode, StringBuilder sb, int indent = 0)
         {
             Indent(sb, indent);
-            sb.AppendLine(rootNode.ToString());
+            var text = rootNode.ToString();
+
+            // when we injest strings we normalize on \n to save space.
+            // when the strings leave our app via clipboard, bring \r\n back so that notepad works
+            text = text.Replace("\n", "\r\n");
+
+            sb.AppendLine(text);
 
             var treeNode = rootNode as TreeNode;
             if (treeNode != null && treeNode.HasChildren)
