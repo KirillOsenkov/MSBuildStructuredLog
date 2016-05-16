@@ -52,30 +52,38 @@ namespace StructuredLogViewer
             }
         }
 
-        public static void PopulateSearchFields(object node, Action<string> searchFields)
+        public static void PopulateSearchFields(object node, Action<string> addSearchField)
         {
             var named = node as NamedNode;
             if (named != null && named.Name != null)
             {
-                searchFields(named.Name);
+                addSearchField(named.Name);
             }
 
             var textNode = node as TextNode;
             if (textNode != null && textNode.Text != null)
             {
-                searchFields(textNode.Text);
+                addSearchField(textNode.Text);
             }
 
             var nameValueNode = node as NameValueNode;
             if (nameValueNode != null)
             {
-                searchFields(nameValueNode.Name);
-                searchFields(nameValueNode.Value);
+                addSearchField(nameValueNode.Name);
+                addSearchField(nameValueNode.Value);
+            }
+
+            var diagnostic = node as AbstractDiagnostic;
+            if (diagnostic != null)
+            {
+                addSearchField(diagnostic.Code);
+                addSearchField(diagnostic.File);
+                addSearchField(diagnostic.ProjectFile);
             }
 
             // in case they want to narrow down the search such as "Build target" or "Copy task"
             var typeName = node.GetType().Name;
-            searchFields(typeName);
+            addSearchField(typeName);
         }
 
         /// <summary>
@@ -92,6 +100,11 @@ namespace StructuredLogViewer
                 for (int j = 0; j < fields.Count; j++)
                 {
                     var field = fields[j];
+                    if (string.IsNullOrEmpty(field))
+                    {
+                        continue;
+                    }
+
                     var index = field.IndexOf(word, StringComparison.OrdinalIgnoreCase);
                     if (index != -1)
                     {
@@ -109,7 +122,7 @@ namespace StructuredLogViewer
                         {
                             result.AddMatch(field, word, index);
                         }
-                        
+
                         anyFieldMatched = true;
                         break;
                     }
