@@ -1,4 +1,5 @@
-﻿using System.Xml.Linq;
+﻿using System;
+using System.Xml.Linq;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -162,8 +163,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void AddStartAndEndTime(XElement element, TimedNode node)
         {
-            SetString(element, nameof(TimedNode.StartTime), node.StartTime.ToString());
-            SetString(element, nameof(TimedNode.EndTime), node.EndTime.ToString());
+            SetString(element, nameof(TimedNode.StartTime), ToString(node.StartTime));
+            SetString(element, nameof(TimedNode.EndTime), ToString(node.EndTime));
+        }
+
+        private string ToString(DateTime time)
+        {
+            return time.ToString("o");
         }
 
         private string GetName(object node)

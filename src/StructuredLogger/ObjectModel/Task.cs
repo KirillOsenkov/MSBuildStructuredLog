@@ -7,7 +7,7 @@
 
         public override string ToString()
         {
-            return $"Task: Id={Id} Name={Name}";
+            return $"{Name}";
         }
     }
 }
