@@ -283,7 +283,11 @@ namespace StructuredLogViewer.Controls
                     {
                         var projectProxy = root.GetOrCreateNodeWithName<ProxyNode>(project.Name);
                         projectProxy.Original = project;
-                        projectProxy.Name = project.Name;
+                        if (projectProxy.Highlights.Count == 0)
+                        {
+                            projectProxy.Highlights.Add(project.Name);
+                        }
+
                         parent = projectProxy;
                         parent.IsExpanded = true;
                     }

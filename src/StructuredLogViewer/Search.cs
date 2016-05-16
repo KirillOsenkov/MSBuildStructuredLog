@@ -100,7 +100,16 @@ namespace StructuredLogViewer
                             result = new SearchResult();
                         }
 
-                        result.AddMatch(field, word, index);
+                        // if matched on the type of the node, special case it
+                        if (j == fields.Count - 1)
+                        {
+                            result.AddMatchByNodeType();
+                        }
+                        else
+                        {
+                            result.AddMatch(field, word, index);
+                        }
+                        
                         anyFieldMatched = true;
                         break;
                     }

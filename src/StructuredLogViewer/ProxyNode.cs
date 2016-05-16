@@ -16,16 +16,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
             set
             {
                 original = value;
-                Name = OriginalType;
-                Text = Original.ToString();
             }
         }
 
-        public List<object> Highlights { get; set; }
+        public List<object> Highlights { get; set; } = new List<object>();
 
         public void Populate(SearchResult result)
         {
-            Highlights = new List<object>();
+            if (result.MatchedByType && result.Before == null)
+            {
+                Highlights.Add(new HighlightedText { Text = OriginalType });
+                Highlights.Add(" " + result.Node.ToString());
+                return;
+            }
+
+            Highlights.Add(OriginalType + " ");
 
             Highlights.Add(result.Before);
 

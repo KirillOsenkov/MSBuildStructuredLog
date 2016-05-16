@@ -13,6 +13,7 @@ namespace StructuredLogViewer
         public string Before { get; set; }
         public string Highlighted { get; set; }
         public string After { get; set; }
+        public bool MatchedByType { get; private set; }
 
         public void AddMatch(string field, string word, int index)
         {
@@ -44,6 +45,11 @@ namespace StructuredLogViewer
             Before = field.Substring(0, index);
             Highlighted = field.Substring(index, word.Length);
             After = field.Substring(index + word.Length, field.Length - index - word.Length);
+        }
+
+        public void AddMatchByNodeType()
+        {
+            MatchedByType = true;
         }
     }
 }
