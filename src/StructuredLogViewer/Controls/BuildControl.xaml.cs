@@ -256,10 +256,6 @@ namespace StructuredLogViewer.Controls
             else
             {
                 watermark.Visibility = Visibility.Collapsed;
-                if (!results.Any())
-                {
-                    results = new SearchResult[] { new SearchResult { Node = new Message { Text = "No results found." } } };
-                }
             }
 
             resultsList.ItemsSource = BuildResultTree(results);
@@ -297,6 +293,11 @@ namespace StructuredLogViewer.Controls
                 proxy.Original = result.Node;
                 proxy.Populate(result);
                 parent.Children.Add(proxy);
+            }
+
+            if (!root.HasChildren)
+            {
+                root.Children.Add(new Message { Text = "No results found." });
             }
 
             return root.Children;
