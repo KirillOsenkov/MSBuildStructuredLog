@@ -69,16 +69,14 @@ namespace StructuredLogViewer.Controls
 
         private void ResultsList_SelectionChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            var item = resultsList.SelectedItem as ParentedNode;
-            if (item != null)
+            var proxy = resultsList.SelectedItem as ProxyNode;
+            if (proxy != null)
             {
-                var proxy = item as ProxyNode;
-                if (proxy != null)
+                var item = proxy.Original as ParentedNode;
+                if (item != null)
                 {
-                    item = proxy.Original as ParentedNode;
+                    SelectItem(item);
                 }
-
-                SelectItem(item);
             }
         }
 

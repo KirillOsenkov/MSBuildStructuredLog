@@ -26,6 +26,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 if (IsSelected == value)
                 {
+                    RaisePropertyChanged();
                     return;
                 }
 
