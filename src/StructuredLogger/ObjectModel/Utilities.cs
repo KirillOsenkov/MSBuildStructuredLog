@@ -29,7 +29,7 @@
                 }
             }
 
-            return text.Substring(0, newLength) + TrimPrompt;
+            return text.Substring(0, newLength) + trimPrompt;
         }
     }
 }

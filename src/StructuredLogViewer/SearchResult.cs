@@ -26,7 +26,7 @@ namespace StructuredLogViewer
             Word = word;
             Index = index;
 
-            if (Field.Length > Utilities.MaxDisplayedValueLength)
+            if (Field.Length > Utilities.MaxDisplayedValueLength || Field.Contains("\n"))
             {
                 field = Utilities.ShortenValue(field, "...");
                 if (index + word.Length < field.Length)
