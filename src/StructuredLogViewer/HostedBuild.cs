@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.Build.CommandLine;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Build.Utilities;
 
