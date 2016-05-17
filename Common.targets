@@ -2,7 +2,8 @@
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
-    <NuGetExePath>$(SrcRoot)\NuGet.exe</NuGetExePath>
+    <NuGetExePath>$(SrcRoot)NuGet.exe</NuGetExePath>
+    <NuspecPath>$(MSBuildProjectDirectory)\$(NuspecFileName).nuspec</NuspecPath>
   </PropertyGroup>
 
   <ItemDefinitionGroup>
@@ -12,31 +13,40 @@
   </ItemDefinitionGroup>
 
   <ItemGroup Condition="'$(NuspecFileName)' != ''">
-    <NuGetInput Condition="Exists('$(MSBuildProjectDirectory)\$(NuspecFileName).nuspec')" Include="$(MSBuildProjectDirectory)\$(NuspecFileName).nuspec" />
+    <NuGetInput Condition="Exists('$(NuspecPath)')" Include="$(NuspecPath)" />
     <NuGetInput Include="$(MSBuildThisFileFullPath)" />
   </ItemGroup>
 
-  <Target Name="BuildNuGet"
+  <Target Name="ExtractVersion"
           AfterTargets="CoreBuild"
-          Condition="Exists('$(MSBuildProjectDirectory)\$(NuspecFileName).nuspec')"
-          DependsOnTargets="CopyFilesToOutputDirectory;_DownloadNuGet"
-          Inputs="@(NuGetInput)"
-          Outputs="$(OutDir)\$(NuspecFileName).$(NuGetVersion).nupkg">
+          Condition="Exists('$(NuspecPath)')"
+          DependsOnTargets="CopyFilesToOutputDirectory;_DownloadNuGet">
     <GetAssemblyVersion FilePath="$(TargetPath)">
       <Output TaskParameter="Version" PropertyName="NuGetVersion"/>
     </GetAssemblyVersion>
-    <Exec Command="$(SrcRoot)\NuGet.exe Pack $(NuspecFileName).nuspec -BasePath $(OutDir) -OutputDirectory $(OutDir) -prop currentVersion=$(NuGetVersion)" />
+    <PropertyGroup>
+      <NupkgPath>$(OutDir)$(NuspecFileName).$(NuGetVersion).nupkg</NupkgPath>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="BuildNuGet"
+          AfterTargets="ExtractVersion"
+          Condition="Exists('$(NuspecPath)')"
+          DependsOnTargets="ExtractVersion"
+          Inputs="@(NuGetInput)"
+          Outputs="$(NupkgPath)">
+    <Exec Command="$(SrcRoot)NuGet.exe Pack $(NuspecFileName).nuspec -BasePath $(OutDir) -OutputDirectory $(OutDir) -prop currentVersion=$(NuGetVersion)" />
   </Target>
 
   <Target Name="SquirrelReleasify"
           AfterTargets="BuildNuGet"
-          Condition="Exists('$(OutDir)\$(NuspecFileName).$(NuGetVersion).nupkg')"
-          DependsOnTargets="BuildNuGet"
-          Inputs="$(OutDir)\$(NuspecFileName).$(NuGetVersion).nupkg"
-          Outputs="$(OutDir)\Releases\MSBuildStructuredLogSetup.exe">
-    <Exec Command="$(SrcRoot)\packages\squirrel.windows.1.4.0\tools\Squirrel.exe --releaseDir=$(OutDir)\Releases --no-msi --releasify $(OutDir)\$(NuspecFileName).$(NuGetVersion).nupkg" />
-    <Copy SourceFiles="$(OutDir)\Releases\Setup.exe" DestinationFiles="$(OutDir)\Releases\MSBuildStructuredLogSetup.exe" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" />
-    <Delete Files="$(OutDir)\Releases\Setup.exe" />
+          Condition="Exists('$(NupkgPath)')"
+          DependsOnTargets="ExtractVersion;BuildNuGet"
+          Inputs="$(NupkgPath)"
+          Outputs="$(OutDir)Releases\MSBuildStructuredLogSetup.exe">
+    <Exec Command="$(SrcRoot)packages\squirrel.windows.1.4.0\tools\Squirrel.exe --releaseDir=$(OutDir)Releases --no-msi --releasify $(NupkgPath)" />
+    <Copy SourceFiles="$(OutDir)Releases\Setup.exe" DestinationFiles="$(OutDir)Releases\MSBuildStructuredLogSetup.exe" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" />
+    <Delete Files="$(OutDir)Releases\Setup.exe" />
   </Target>
 
   <Target Name="_DownloadNuGet">

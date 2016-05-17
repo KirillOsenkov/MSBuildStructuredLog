@@ -18,8 +18,8 @@
   </PropertyGroup>
 
   <PropertyGroup Label="Output directory">
-    <BinariesFolder>$(SrcRoot)\bin</BinariesFolder>
-    <IntermediateOutputRoot>$(SrcRoot)\obj</IntermediateOutputRoot>
+    <BinariesFolder>$(SrcRoot)bin</BinariesFolder>
+    <IntermediateOutputRoot>$(SrcRoot)obj</IntermediateOutputRoot>
     <IntermediateOutputPath>$(IntermediateOutputRoot)\$(Configuration)\$(MSBuildProjectName)</IntermediateOutputPath>
     <AssemblyInfoPath Condition="'$(AssemblyInfoPath)' == ''">$(IntermediateOutputRoot)\GlobalAssemblyInfo.cs</AssemblyInfoPath>
     <CommonOutputDirectory>$(BinariesFolder)\$(Configuration)</CommonOutputDirectory>
