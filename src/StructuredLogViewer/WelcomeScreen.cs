@@ -1,15 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
 using StructuredLogViewer;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class WelcomeScreen
+    public class WelcomeScreen : INotifyPropertyChanged
     {
         private IEnumerable<string> recentLogs;
         public IEnumerable<string> RecentLogs => recentLogs ?? (recentLogs = SettingsService.GetRecentLogFiles());
@@ -25,13 +27,25 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public event Action OpenProjectRequested;
         public event Action OpenLogFileRequested;
 
+        private string version = GetVersion();
         public string Version
         {
             get
             {
-                var version = Assembly.GetEntryAssembly().GetName().Version;
-                return $"Version {version.Major}.{version.Minor}.{version.Build}";
+                return version;
             }
+
+            set
+            {
+                version = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private static string GetVersion()
+        {
+            var version = Assembly.GetEntryAssembly().GetName().Version;
+            return $"Version {version.Major}.{version.Minor}.{version.Build}";
         }
 
         public string SelectedLog
@@ -79,5 +93,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private ICommand openLogFileCommand;
         public ICommand OpenLogFileCommand => openLogFileCommand ?? (openLogFileCommand = new Command(OpenLogFile));
         private void OpenLogFile() => OpenLogFileRequested?.Invoke();
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected void RaisePropertyChanged([CallerMemberName] string propertyName = null)
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }
