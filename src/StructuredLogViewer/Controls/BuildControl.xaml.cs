@@ -7,7 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
-using System.Windows.Media;
+using System.Windows.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogViewer.Controls
@@ -48,14 +48,34 @@ namespace StructuredLogViewer.Controls
             typingConcurrentOperation.DisplayResults += results => DisplaySearchResults(results);
         }
 
+        /// <summary>
+        /// This is needed as a workaround for a weird bug. When the breadcrumb spans multiple lines
+        /// and we click on an item on the first line, it truncates the breadcrumb up to that item.
+        /// The fact that the breadcrumb moves down while the Mouse is captured results in a MouseMove
+        /// in the ListBox, which triggers moving selection to top and selecting the first item.
+        /// Without this "reentrancy" guard the event would be handled twice, with just the root
+        /// of the chain left in the breadcrumb at the end.
+        /// </summary>
+        private bool isProcessingBreadcrumbClick = false;
+
         private void BreadCrumb_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (isProcessingBreadcrumbClick)
+            {
+                return;
+            }
+
+            isProcessingBreadcrumbClick = true;
             var node = breadCrumb.SelectedItem as TreeNode;
             if (node != null)
             {
                 SelectItem(node);
                 treeView.Focus();
+                e.Handled = true;
             }
+
+            // turn it off only after the storm of layouts caused by the mouse click has subsided
+            Dispatcher.InvokeAsync(() => { isProcessingBreadcrumbClick = false; }, DispatcherPriority.Background);
         }
 
         private void TreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
