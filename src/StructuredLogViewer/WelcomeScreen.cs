@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Input;
 using StructuredLogViewer;
@@ -23,6 +24,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public event Action<string> RecentProjectSelected;
         public event Action OpenProjectRequested;
         public event Action OpenLogFileRequested;
+
+        public string Version
+        {
+            get
+            {
+                var version = Assembly.GetEntryAssembly().GetName().Version;
+                return $"Version {version.Major}.{version.Minor}.{version.Build}";
+            }
+        }
 
         public string SelectedLog
         {
