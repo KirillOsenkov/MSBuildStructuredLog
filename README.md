@@ -33,3 +33,7 @@ or you can build the solution or open an existing .xml log file through the view
  * Ctrl+C to copy an item and the entire subtree to Clipboard as text
  * Delete to hide nodes from the tree (to get uninteresting stuff out of the way)
  * Open and save .xml log files (ask a friend to record and send you the .xml log which you can then investigate on your machine)
+
+## MSBuild Resources
+ * [https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/MSBuild-Resources](https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/MSBuild-Resources)
+ * [https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/MSBuild-Tips-&-Tricks](https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/MSBuild-Tips-&-Tricks)
