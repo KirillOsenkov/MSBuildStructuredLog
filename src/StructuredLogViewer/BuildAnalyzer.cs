@@ -44,6 +44,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 build.AddChild(new Error { Text = "Build failed." });
             }
+            else
+            {
+                build.AddChild(new Item { Text = "Build succeeded." });
+            }
 
             build.VisitAllChildren<CopyTask>(c => AnalyzeFileCopies(c));
             AnalyzeDoubleWrites();
