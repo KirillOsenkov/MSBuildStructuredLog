@@ -4,7 +4,7 @@ A logger for MSBuild that records a structured representation of executed target
 ## Install:
 https://github.com/KirillOsenkov/MSBuildStructuredLog/releases/download/v1.0.1/MSBuildStructuredLogSetup.exe
 
-The app updates automatically via Squirrel (after launch it checks for updates in background), next launch starts the newly downloaded latest version.
+The app updates automatically via [Squirrel](https://github.com/Squirrel/Squirrel.Windows) (after launch it checks for updates in background), next launch starts the newly downloaded latest version.
 
 ![Screenshot1](/docs/Screenshot1.png)
 
