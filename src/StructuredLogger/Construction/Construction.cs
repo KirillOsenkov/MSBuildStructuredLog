@@ -26,7 +26,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private readonly object syncLock = new object();
 
-        private MessageProcessor messageProcessor;
+        private readonly MessageProcessor messageProcessor;
         private readonly StringTable stringTable;
 
         public event Action Completed;
@@ -41,11 +41,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             try
             {
-                Build = new Build();
-                StructuredLogger.CurrentBuild = Build;
-                Build.StartTime = args.Timestamp;
-                var properties = Build.GetOrCreateNodeWithName<Folder>("Environment");
-                AddProperties(properties, args.BuildEnvironment);
+                lock (syncLock)
+                {
+                    Build = new Build();
+                    StructuredLogger.CurrentBuild = Build;
+                    Build.StartTime = args.Timestamp;
+                    var properties = Build.GetOrCreateNodeWithName<Folder>("Environment");
+                    AddProperties(properties, args.BuildEnvironment);
+                }
 
             }
             catch (Exception ex)
@@ -58,12 +61,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             try
             {
-                Build.EndTime = args.Timestamp;
-                Build.Succeeded = args.Succeeded;
+                lock (syncLock)
+                {
+                    Build.EndTime = args.Timestamp;
+                    Build.Succeeded = args.Succeeded;
 
-                Build.VisitAllChildren<Project>(p => CalculateTargetGraph(p));
+                    Build.VisitAllChildren<Project>(p => CalculateTargetGraph(p));
 
-                Completed?.Invoke();
+                    Completed?.Invoke();
+                }
             }
             catch (Exception ex)
             {
@@ -272,44 +278,84 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public void MessageRaised(object sender, BuildMessageEventArgs args)
         {
-            messageProcessor.Process(args);
+            try
+            {
+                lock (syncLock)
+                {
+                    messageProcessor.Process(args);
+                }
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+            }
         }
 
         public void CustomEventRaised(object sender, CustomBuildEventArgs args)
         {
-            messageProcessor.Process(new BuildMessageEventArgs(
-                stringTable.Intern(args.Message),
-                stringTable.Intern(args.HelpKeyword),
-                stringTable.Intern(args.SenderName),
-                MessageImportance.Low));
+            try
+            {
+                lock (syncLock)
+                {
+                    messageProcessor.Process(new BuildMessageEventArgs(
+                            stringTable.Intern(args.Message),
+                            stringTable.Intern(args.HelpKeyword),
+                            stringTable.Intern(args.SenderName),
+                            MessageImportance.Low));
+                }
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+            }
         }
 
         public void WarningRaised(object sender, BuildWarningEventArgs args)
         {
-            TreeNode parent = GetOrAddProject(args.BuildEventContext.ProjectContextId);
-            if (parent == null)
+            try
             {
-                parent = Build;
-            }
+                lock (syncLock)
+                {
+                    TreeNode parent = GetOrAddProject(args.BuildEventContext.ProjectContextId);
+                    if (parent == null)
+                    {
+                        parent = Build;
+                    }
 
-            var warnings = parent.GetOrCreateNodeWithName<Folder>("Warnings");
-            var warning = new Warning();
-            Populate(warning, args);
-            warnings.AddChild(warning);
+                    var warnings = parent.GetOrCreateNodeWithName<Folder>("Warnings");
+                    var warning = new Warning();
+                    Populate(warning, args);
+                    warnings.AddChild(warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+            }
         }
 
         public void ErrorRaised(object sender, BuildErrorEventArgs args)
         {
-            TreeNode parent = GetOrAddProject(args.BuildEventContext.ProjectContextId);
-            if (parent == null)
+            try
             {
-                parent = Build;
-            }
+                lock (syncLock)
+                {
+                    TreeNode parent = GetOrAddProject(args.BuildEventContext.ProjectContextId);
+                    if (parent == null)
+                    {
+                        parent = Build;
+                    }
 
-            var errors = parent.GetOrCreateNodeWithName<Folder>("Errors");
-            var error = new Error();
-            Populate(error, args);
-            errors.AddChild(error);
+                    var errors = parent.GetOrCreateNodeWithName<Folder>("Errors");
+                    var error = new Error();
+                    Populate(error, args);
+                    errors.AddChild(error);
+                }
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+            }
         }
 
         private void Populate(AbstractDiagnostic message, BuildWarningEventArgs args)
@@ -342,6 +388,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void HandleException(Exception ex)
         {
+            try
+            {
+                lock (syncLock)
+                {
+                    Build.AddChild(new Error() { Text = ex.ToString() });
+                }
+            }
+            catch (Exception)
+            {
+            }
         }
 
         public static Project CreateProject(int id)
