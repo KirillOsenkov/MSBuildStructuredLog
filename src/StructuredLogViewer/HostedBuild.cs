@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Build.CommandLine;
 using Microsoft.Build.Logging.StructuredLogger;
@@ -19,40 +21,49 @@ namespace StructuredLogViewer
 
         public static string GetPrefixArguments(string projectFilePath)
         {
-            var msbuildExe = ToolLocationHelper.GetPathToBuildToolsFile("msbuild.exe", ToolLocationHelper.CurrentToolsVersion);
+            var msbuildExe = GetMSBuildExe();
             return $@"""{msbuildExe}"" ""{projectFilePath}""";
         }
+
+        private static string GetMSBuildExe()
+        {
+            return ToolLocationHelper.GetPathToBuildToolsFile("msbuild.exe", ToolLocationHelper.CurrentToolsVersion);
+        }
+
+        private static readonly string xmlLogFile = Path.Combine(Path.GetTempPath(), $"MSBuildStructuredLog-{Process.GetCurrentProcess().Id}.xml");
 
         public static string GetPostfixArguments()
         {
             var loggerDll = typeof(StructuredLogger).Assembly.Location;
-            return $@"/v:diag /noconlog /logger:{nameof(StructuredLogger)},""{loggerDll}"";BuildLog.xml";
+            return $@"/v:diag /nologo /noconlog /logger:{nameof(StructuredLogger)},""{loggerDll}"";""{xmlLogFile}""";
         }
 
         public Task<Build> BuildAndGetResult(BuildProgress progress)
         {
+            var msbuildExe = GetMSBuildExe();
             var prefixArguments = GetPrefixArguments(projectFilePath);
             var postfixArguments = GetPostfixArguments();
-            var commandLine = $@"{prefixArguments} {customArguments} {postfixArguments}";
 
+            // the command line we display to the user should contain the full path to msbuild.exe
+            var commandLine = $@"{prefixArguments} {customArguments} {postfixArguments}";
             progress.MSBuildCommandLine = commandLine;
-            StructuredLogger.SaveLogToDisk = false;
+
+            // the command line we pass to Process.Start doesn't need msbuild.exe
+            commandLine = $@"""{projectFilePath}"" {customArguments} {postfixArguments}";
 
             return System.Threading.Tasks.Task.Run(() =>
             {
                 try
                 {
-                    StructuredLogger.CurrentBuild = null;
-                    var exitType = MSBuildApp.Execute(commandLine);
-                    var result = StructuredLogger.CurrentBuild;
-                    if (result == null)
-                    {
-                        result = new Build();
-                        result.Succeeded = false;
-                        result.AddChild(new Message() { Text = "Build failed with exitType = " + exitType.ToString() });
-                    }
+                    var arguments = commandLine;
+                    var processStartInfo = new ProcessStartInfo(msbuildExe, arguments);
+                    processStartInfo.WorkingDirectory = Path.GetDirectoryName(projectFilePath);
+                    var process = Process.Start(processStartInfo);
+                    process.WaitForExit();
 
-                    return result;
+                    var build = XmlLogReader.ReadFromXml(xmlLogFile);
+                    File.Delete(xmlLogFile);
+                    return build;
                 }
                 catch (Exception ex)
                 {

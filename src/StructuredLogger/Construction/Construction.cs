@@ -44,7 +44,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 lock (syncLock)
                 {
                     Build = new Build();
-                    StructuredLogger.CurrentBuild = Build;
                     Build.StartTime = args.Timestamp;
                     var properties = Build.GetOrCreateNodeWithName<Folder>("Environment");
                     AddProperties(properties, args.BuildEnvironment);
