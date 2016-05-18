@@ -32,7 +32,12 @@
                      TextWrapping="Wrap"
                      HorizontalAlignment="Center"
                      Foreground="Gray"
-                     VerticalAlignment="Center">Search for projects, targets, tasks, properties and items. Search for multiple words separated by space. Results will display here.</TextBlock>
+                     VerticalAlignment="Center">
+            <Run>Type in the search box to search. Search for multiple words separated by space (space means AND). Results (up to 500) will display here.</Run>
+            <LineBreak />
+            <LineBreak />
+            <Run>Use syntax like "$property Prop" to narrow results down by item kind (supported kinds: $project, $target, $task, $error, $warning, $message, $property, $item, $additem, $removeitem, $metadata)</Run>
+          </TextBlock>
         </Grid>
       </DockPanel>
     </local:SplitterPanel.FirstChild>

@@ -54,6 +54,10 @@ namespace StructuredLogViewer
 
         public static void PopulateSearchFields(object node, Action<string> addSearchField)
         {
+            // in case they want to narrow down the search such as "Build target" or "Copy task"
+            var typeName = node.GetType().Name;
+            addSearchField(typeName);
+
             var named = node as NamedNode;
             if (named != null && named.Name != null)
             {
@@ -79,10 +83,6 @@ namespace StructuredLogViewer
                 addSearchField(diagnostic.File);
                 addSearchField(diagnostic.ProjectFile);
             }
-
-            // in case they want to narrow down the search such as "Build target" or "Copy task"
-            var typeName = node.GetType().Name;
-            addSearchField(typeName);
         }
 
         /// <summary>
@@ -96,6 +96,31 @@ namespace StructuredLogViewer
             {
                 bool anyFieldMatched = false;
                 var word = words[i];
+
+                // enable strict search for node type like "$property Foo" to search for properties only
+                if (word.StartsWith("$"))
+                {
+                    word = word.Substring(1);
+
+                    // zeroth field is always the type
+                    var type = fields[0];
+                    if (string.Equals(word, type, StringComparison.OrdinalIgnoreCase))
+                    {
+                        // this node is of the type that we need, search other fields
+                        if (result == null)
+                        {
+                            result = new SearchResult();
+                        }
+
+                        result.AddMatchByNodeType();
+                        continue;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+
                 for (int j = 0; j < fields.Count; j++)
                 {
                     var field = fields[j];
@@ -112,8 +137,8 @@ namespace StructuredLogViewer
                             result = new SearchResult();
                         }
 
-                        // if matched on the type of the node, special case it
-                        if (j == fields.Count - 1)
+                        // if matched on the type of the node (always field 0), special case it
+                        if (j == 0)
                         {
                             result.AddMatchByNodeType();
                         }
