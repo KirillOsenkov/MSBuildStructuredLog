@@ -148,6 +148,8 @@ namespace StructuredLogViewer.Controls
                     SelectItem(firstError);
                     treeView.Focus();
                 }
+
+                searchTextBox.Text = "$error";
             }
         }
 
