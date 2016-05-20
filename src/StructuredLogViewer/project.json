@@ -1,0 +1,11 @@
+﻿{
+  "dependencies": {
+    "squirrel.windows": "1.4.0"
+  },
+  "frameworks": {
+    "net46": { }
+  },
+  "runtimes": {
+    "win": { }
+  }
+}
