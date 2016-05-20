@@ -20,9 +20,6 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\AssemblyVersion.cs">
-      <Link>AssemblyVersion.cs</Link>
-    </Compile>
     <Compile Include="Construction\Construction.cs" />
     <Compile Include="Construction\ItemGroupParser.cs" />
     <Compile Include="Construction\MessageProcessor.cs" />
@@ -57,6 +54,9 @@
     <Compile Include="Serialization\XmlLogReader.cs" />
     <Compile Include="Serialization\XmlLogWriter.cs" />
     <Compile Include="StructuredLogger.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="project.json" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SrcRoot)\Common.targets" />
