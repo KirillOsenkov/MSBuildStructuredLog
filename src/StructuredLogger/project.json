@@ -1,0 +1,14 @@
+﻿{
+  "dependencies": {
+    "Nerdbank.GitVersioning": {
+      "version": "1.4.19",
+      "suppressParent": "none"
+    }
+  },
+  "frameworks": {
+    "net46": { }
+  },
+  "runtimes": {
+    "win": { }
+  }
+}
