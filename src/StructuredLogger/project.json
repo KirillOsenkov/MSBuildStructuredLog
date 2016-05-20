@@ -3,6 +3,10 @@
     "Nerdbank.GitVersioning": {
       "version": "1.4.19",
       "suppressParent": "none"
+    },
+    "NuProj.Common": {
+      "version": "0.10.48-beta-gea4a31bbc5",
+      "suppressParent": "none"
     }
   },
   "frameworks": {
