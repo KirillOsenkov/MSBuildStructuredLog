@@ -57,6 +57,7 @@ namespace StructuredLogViewer.Controls
         /// of the chain left in the breadcrumb at the end.
         /// </summary>
         private bool isProcessingBreadcrumbClick = false;
+        internal static TimeSpan Elapsed;
 
         private void BreadCrumb_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -323,6 +324,8 @@ namespace StructuredLogViewer.Controls
             {
                 root.Children.Add(new Message { Text = "No results found." });
             }
+
+            //root.Children.Add(new Message { Text = "Elapsed " + Elapsed.ToString() });
 
             return root.Children;
         }

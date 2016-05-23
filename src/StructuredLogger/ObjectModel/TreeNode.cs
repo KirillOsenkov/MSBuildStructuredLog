@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -355,8 +356,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return default(T);
         }
 
-        public void VisitAllChildren<T>(Action<T> processor)
+        public void VisitAllChildren<T>(Action<T> processor, CancellationToken cancellationToken = default(CancellationToken))
         {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+
             if (this is T)
             {
                 processor((T)(object)this);
@@ -366,10 +372,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 foreach (var child in Children)
                 {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
+
                     var node = child as TreeNode;
                     if (node != null)
                     {
-                        node.VisitAllChildren<T>(processor);
+                        node.VisitAllChildren<T>(processor, cancellationToken);
                     }
                     else if (child is T)
                     {

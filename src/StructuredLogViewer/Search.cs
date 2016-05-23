@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogViewer
@@ -26,17 +27,38 @@ namespace StructuredLogViewer
             this.query = query;
             this.words = query.Split(space, StringSplitOptions.RemoveEmptyEntries);
             resultSet = new List<SearchResult>();
-            build.VisitAllChildren<object>(Visit);
+
+            var matchesInStrings = new HashSet<string>();
+
+            foreach (var stringInstance in build.StringTable.Instances)
+            {
+                foreach (var word in words)
+                {
+                    if (stringInstance.IndexOf(word, StringComparison.OrdinalIgnoreCase) != -1)
+                    {
+                        matchesInStrings.Add(stringInstance);
+                    }
+                }
+            }
+
+            var cts = new CancellationTokenSource();
+            build.VisitAllChildren<object>(node => Visit(node, matchesInStrings, cts), cts.Token);
             return resultSet;
         }
 
         // avoid allocating this for every node
         private readonly List<string> searchFields = new List<string>(5);
 
-        private void Visit(object node)
+        private void Visit(object node, HashSet<string> stringsThatMatch, CancellationTokenSource cancellationTokenSource)
         {
+            if (cancellationTokenSource.IsCancellationRequested)
+            {
+                return;
+            }
+
             if (resultSet.Count > MaxResults)
             {
+                cancellationTokenSource.Cancel();
                 return;
             }
 
@@ -44,7 +66,7 @@ namespace StructuredLogViewer
 
             PopulateSearchFields(node, searchFields.Add);
 
-            var result = IsMatch(searchFields);
+            var result = IsMatch(searchFields, stringsThatMatch);
             if (result != null)
             {
                 result.Node = node;
@@ -88,7 +110,7 @@ namespace StructuredLogViewer
         /// <summary>
         ///  Each of the query words must be found in at least one field ∀w ∃f
         /// </summary>
-        private SearchResult IsMatch(List<string> fields)
+        private SearchResult IsMatch(List<string> fields, HashSet<string> stringsThatMatch)
         {
             SearchResult result = null;
 
@@ -126,6 +148,12 @@ namespace StructuredLogViewer
                     var field = fields[j];
                     if (string.IsNullOrEmpty(field))
                     {
+                        continue;
+                    }
+
+                    if (!stringsThatMatch.Contains(field))
+                    {
+                        // no point looking here, we know this string doesn't match anything
                         continue;
                     }
 

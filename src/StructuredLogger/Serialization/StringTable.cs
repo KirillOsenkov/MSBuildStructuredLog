@@ -6,6 +6,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
     {
         private Dictionary<string, string> deduplicationMap = new Dictionary<string, string>();
 
+        public IEnumerable<string> Instances => deduplicationMap.Keys;
+
         public string Intern(string text)
         {
             if (text == null)

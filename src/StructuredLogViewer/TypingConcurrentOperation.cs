@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using Microsoft.Build.Logging.StructuredLogger;
+using StructuredLogViewer.Controls;
 using TPLTask = System.Threading.Tasks.Task;
 
 namespace StructuredLogViewer
@@ -37,9 +38,11 @@ namespace StructuredLogViewer
 
         private void StartOperation(string searchText)
         {
-            var search = new Search(Build);
             Stopwatch sw = Stopwatch.StartNew();
+            var search = new Search(Build);
             var results = search.FindNodes(searchText);
+            var elapsed = sw.Elapsed;
+            BuildControl.Elapsed = elapsed;
             if (latestSearch == searchText)
             {
                 Application.Current.Dispatcher.InvokeAsync(() =>

@@ -40,7 +40,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return build;
         }
 
-        private readonly StringTable stringTable = new StringTable();
+        private StringTable stringTable;
 
         private enum AttributeNames
         {
@@ -107,6 +107,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             var node = (TreeNode)Activator.CreateInstance(type);
+
+            var build = node as Build;
+            if (build != null)
+            {
+                this.stringTable = build.StringTable;
+            }
 
             ReadAttributes(node, element);
 

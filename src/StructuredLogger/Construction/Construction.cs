@@ -33,7 +33,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public Construction()
         {
-            this.stringTable = new StringTable();
+            Build = new Build();
+            this.stringTable = Build.StringTable;
             this.messageProcessor = new MessageProcessor(this, stringTable);
         }
 
@@ -43,7 +44,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 lock (syncLock)
                 {
-                    Build = new Build();
                     Build.StartTime = args.Timestamp;
                     var properties = Build.GetOrCreateNodeWithName<Folder>("Environment");
                     AddProperties(properties, args.BuildEnvironment);
