@@ -43,17 +43,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public string GetDependent(string target)
         {
-            return dependents[target].FirstOrDefault();
-        }
+            HashSet<string> bucket;
+            if (dependents.TryGetValue(target, out bucket))
+            {
+                return bucket.FirstOrDefault();
+            }
 
-        public IEnumerable<string> GetDependents(string target)
-        {
-            return dependents[target];
+            return null;
         }
 
         public IEnumerable<string> GetDependencies(string target)
         {
-            return dependencies[target];
+            HashSet<string> bucket;
+            dependencies.TryGetValue(target, out bucket);
+            return bucket ?? Enumerable.Empty<string>();
         }
 
         public IEnumerable<string> GetTargetClosure(string targetName)

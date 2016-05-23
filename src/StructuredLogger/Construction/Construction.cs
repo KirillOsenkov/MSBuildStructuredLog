@@ -117,7 +117,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 if (t.Project == project)
                 {
-                    t.DependsOnTargets = stringTable.Intern(string.Join(",", targetGraph.GetDependencies(t.Name)));
+                    var dependencies = targetGraph.GetDependencies(t.Name);
+                    if (dependencies != null && dependencies.Any())
+                    {
+                        t.DependsOnTargets = stringTable.Intern(string.Join(",", dependencies));
+                    }
                 }
             });
         }
