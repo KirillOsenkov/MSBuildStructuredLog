@@ -452,6 +452,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     AddProperties(properties, args
                         .Properties
                         .Cast<DictionaryEntry>()
+                        .OrderBy(d => d.Key)
                         .Select(d => new KeyValuePair<string, string>(
                             stringTable.Intern(Convert.ToString(d.Key)),
                             stringTable.Intern(Convert.ToString(d.Value)))));
