@@ -71,6 +71,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SrcRoot)\Common.targets" />
   <PropertyGroup>
+    <StartAction>Program</StartAction>
     <StartProgram>$(MSBuildToolsPath)\MSBuild.exe</StartProgram>
     <StartArguments>$(SolutionPath) /p:Configuration=Release /t:Rebuild /v:diag /noconlog /logger:StructuredLogger,$(TargetPath);buildlog.xml</StartArguments>
     <StartWorkingDirectory>$(SolutionDir)</StartWorkingDirectory>
