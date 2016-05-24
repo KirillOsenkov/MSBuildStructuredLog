@@ -17,6 +17,9 @@ The app updates automatically via [Squirrel](https://github.com/Squirrel/Squirre
 
 ## Usage:
 
+The logger is in a single file called StructuredLogger.dll. It is available in a NuGet package:
+https://www.nuget.org/packages/Microsoft.Build.Logging.StructuredLogger
+
 You can either build your solution yourself and pass the logger:
 
 ```
