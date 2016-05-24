@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|AnyCPU">
+      <Configuration>Debug</Configuration>
+      <Platform>AnyCPU</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|AnyCPU">
+      <Configuration>Release</Configuration>
+      <Platform>AnyCPU</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>33F9C45A-200F-458C-9DBD-B8CA5FC0FD72</ProjectGuid>
+  </PropertyGroup>
+  <PropertyGroup>
+    <NuProjPath>$(UserProfile)\.nuget\packages\NuProj\0.10.48-beta-gea4a31bbc5\tools\</NuProjPath>
+  </PropertyGroup>
+  <Import Project="$(NuProjPath)\NuProj.props" Condition="Exists('$(NuProjPath)\NuProj.props')" />
+  <PropertyGroup Label="Configuration">
+    <Id>Microsoft.Build.Logging.StructuredLogger</Id>
+    <Title>MSBuild Structured Logger</Title>
+    <Authors>Kirill Osenkov</Authors>
+    <Owners>Kirill Osenkov</Owners>
+    <Description>An MSBuild logger that can be passed to MSBuild to record a detailed .xml log file.</Description>
+    <ReleaseNotes>
+    </ReleaseNotes>
+    <ProjectUrl>https://github.com/KirillOsenkov/MSBuildStructuredLog</ProjectUrl>
+    <LicenseUrl>https://raw.githubusercontent.com/KirillOsenkov/MSBuildStructuredLog/$GitCommitIdShort$/LICENSE</LicenseUrl>
+    <Tags>MSBuild Log Logger Structure Structured</Tags>
+    <IconUrl>https://raw.githubusercontent.com/KirillOsenkov/MSBuildStructuredLog/$GitCommitIdShort$/docs/StructuredLogger.png</IconUrl>
+    <Summary>Structured logger to investigate MSBuild builds</Summary>
+    <OutputPath>..\..\bin\$(Configuration)\</OutputPath>
+    <NoPackageAnalysis>true</NoPackageAnalysis>
+    <NoDefaultExcludes>true</NoDefaultExcludes>
+    <GenerateSymbolPackage>false</GenerateSymbolPackage>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="project.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\StructuredLogger\StructuredLogger.csproj">
+      <PackageOutputGroups>Build;GetRuntimeDependencies</PackageOutputGroups>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(NuProjPath)\NuProj.targets" />
+</Project>
