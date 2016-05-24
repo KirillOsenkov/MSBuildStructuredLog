@@ -95,7 +95,8 @@ namespace StructuredLogViewer
             var nameValueNode = node as NameValueNode;
             if (nameValueNode != null)
             {
-                addSearchField(nameValueNode.Name + " = " + nameValueNode.Value);
+                addSearchField(nameValueNode.Name);
+                addSearchField(nameValueNode.Value);
             }
 
             var diagnostic = node as AbstractDiagnostic;
