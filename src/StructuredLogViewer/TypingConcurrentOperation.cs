@@ -15,7 +15,7 @@ namespace StructuredLogViewer
 
         public event Action<IEnumerable<SearchResult>> DisplayResults;
 
-        public const int ThrottlingDelayMilliseconds = 200;
+        public const int ThrottlingDelayMilliseconds = 300;
 
         public void Reset()
         {
@@ -27,7 +27,7 @@ namespace StructuredLogViewer
         public void TextChanged(string searchText)
         {
             latestSearch = searchText;
-            TPLTask.Delay(300).ContinueWith(_ =>
+            TPLTask.Delay(ThrottlingDelayMilliseconds).ContinueWith(_ =>
             {
                 if (latestSearch == searchText)
                 {
