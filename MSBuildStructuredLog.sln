@@ -12,6 +12,7 @@ Project("{FF286327-C783-4F7A-AB73-9BCBAD0D4460}") = "MSBuildStructuredLogViewer"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1DA9000E-FE5B-467F-B6CB-2CFA7584ABF7}"
 	ProjectSection(SolutionItems) = preProject
+		appveyor.yml = appveyor.yml
 		Common.props = Common.props
 		Common.targets = Common.targets
 		nuget.config = nuget.config
