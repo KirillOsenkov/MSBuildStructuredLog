@@ -1,6 +1,6 @@
 ﻿{
   "dependencies": {
-    "Nerdbank.GitVersioning": "1.4.19",
+    "Nerdbank.GitVersioning": "1.4.41",
     "NuProj": "0.10.48-beta-gea4a31bbc5"
   },
   "frameworks": {
