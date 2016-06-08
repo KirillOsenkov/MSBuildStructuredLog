@@ -4,7 +4,7 @@ configuration: Release
 environment:
   VisualStudioVersion: 14.0
 cache:
-- '%USERPROFILE%\.nuget\packages'
+- '%USERPROFILE%\.nuget\packages -> **\project.json'
 install:
 - ps: >-
     iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/install-nuget-3-3-0.ps1'))

@@ -9,4 +9,9 @@
     "^refs/heads/master$", // we release out of master
     "^refs/heads/v\\d+(?:.\\d+)?$" // we also release out of vNN branches
   ],
+  "cloudBuild": {
+    "buildNumber": {
+      "enabled": true
+    }
+  }
 }
