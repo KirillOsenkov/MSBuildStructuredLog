@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    internal static class ItemGroupParser
+    public static class ItemGroupParser
     {
         /// <summary>
         /// Parses a log output string to a list of Items (e.g. ItemGroup with metadata or property string).
@@ -14,6 +14,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <returns>List of items within the list and all metadata.</returns>
         public static object ParsePropertyOrItemList(string message, string prefix, StringTable stringTable)
         {
+            message = message.Replace("\r\n", "\n");
+            message = message.Replace('\r', '\n');
             var lines = message.Split('\n');
 
             if (lines.Length == 1)
@@ -75,13 +77,29 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     case 16:
                         if (currentItem != null)
                         {
-                            var nameValue = ParseNameValue(line.Substring(16));
-                            var metadata = new Metadata
+                            var currentLine = line.Substring(16);
+                            if (!currentLine.Contains("="))
                             {
-                                Name = stringTable.Intern(nameValue.Key),
-                                Value = stringTable.Intern(nameValue.Value)
-                            };
-                            currentItem.AddChild(metadata);
+                                // must be a continuation of the metadata value from the previous line
+                                if (currentItem.HasChildren)
+                                {
+                                    var metadata = currentItem.Children[currentItem.Children.Count - 1] as Metadata;
+                                    if (metadata != null)
+                                    {
+                                        metadata.Value = stringTable.Intern((metadata.Value ?? "") + currentLine);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                var nameValue = ParseNameValue(currentLine);
+                                var metadata = new Metadata
+                                {
+                                    Name = stringTable.Intern(nameValue.Key),
+                                    Value = stringTable.Intern(nameValue.Value)
+                                };
+                                currentItem.AddChild(metadata);
+                            }
                         }
                         break;
                 }
