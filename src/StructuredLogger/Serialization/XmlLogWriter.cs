@@ -1,81 +1,106 @@
 ﻿using System;
-using System.Xml.Linq;
+using System.Xml;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class XmlLogWriter
     {
+        private XmlWriter xmlWriter;
+
         public static void WriteToXml(Build build, string logFile)
         {
-            var document = new XDocument();
             var writer = new XmlLogWriter();
-            var root = writer.WriteNode(build);
-            document.Add(root);
-            document.Save(logFile);
+            writer.Write(build, logFile);
         }
 
-        public XElement WriteNode(object node)
+        public void Write(Build build, string logFile)
         {
-            var result = new XElement(GetName(node));
-
-            var metadata = node as Metadata;
-            if (metadata != null)
+            using (xmlWriter = XmlWriter.Create(logFile, new XmlWriterSettings() { Indent = true }))
             {
-                SetString(result, nameof(Metadata.Name), metadata.Name);
-                result.Value = metadata.Value;
-                return result;
+                xmlWriter.WriteStartDocument();
+                WriteNode(build);
+                xmlWriter.WriteEndDocument();
             }
 
-            var property = node as Property;
-            if (property != null)
-            {
-                SetString(result, nameof(Property.Name), property.Name);
-                result.Value = property.Value;
-                return result;
-            }
-
-            var message = node as Message;
-            if (message != null)
-            {
-                if (message.IsLowRelevance)
-                {
-                    SetString(result, nameof(message.IsLowRelevance), "true");
-                }
-
-                result.Add(new XAttribute(nameof(Message.Timestamp), message.Timestamp));
-                result.Value = message.Text;
-                return result;
-            }
-
-            var treeNode = node as TreeNode;
-
-            WriteAttributes(treeNode, result);
-
-            var nameValueNode = node as NameValueNode;
-            if (nameValueNode != null)
-            {
-                result.Value = nameValueNode.Value;
-                return result;
-            }
-
-            if (treeNode.HasChildren)
-            {
-                foreach (var child in treeNode.Children)
-                {
-                    var childElement = WriteNode(child);
-                    result.Add(childElement);
-                }
-            }
-
-            return result;
+            xmlWriter = null;
         }
 
-        private void WriteAttributes(TreeNode node, XElement element)
+        private void WriteNode(object node)
+        {
+            var elementName = GetName(node);
+
+            xmlWriter.WriteStartElement(elementName);
+
+            try
+            {
+                var metadata = node as Metadata;
+                if (metadata != null)
+                {
+                    SetString(nameof(Metadata.Name), metadata.Name);
+                    if (!string.IsNullOrEmpty(metadata.Value))
+                    {
+                        xmlWriter.WriteString(metadata.Value);
+                    }
+                    else
+                    {
+                        xmlWriter.WriteWhitespace("");
+                    }
+
+                    return;
+                }
+
+                var property = node as Property;
+                if (property != null)
+                {
+                    SetString(nameof(Property.Name), property.Name);
+                    xmlWriter.WriteString(property.Value);
+                    return;
+                }
+
+                var message = node as Message;
+                if (message != null)
+                {
+                    if (message.IsLowRelevance)
+                    {
+                        SetString(nameof(message.IsLowRelevance), "true");
+                    }
+
+                    xmlWriter.WriteAttributeString(nameof(Message.Timestamp), XmlConvert.ToString(message.Timestamp, XmlDateTimeSerializationMode.RoundtripKind));
+                    xmlWriter.WriteString(message.Text);
+                    return;
+                }
+
+                var treeNode = node as TreeNode;
+
+                WriteAttributes(treeNode);
+
+                var nameValueNode = node as NameValueNode;
+                if (nameValueNode != null)
+                {
+                    xmlWriter.WriteString(nameValueNode.Value);
+                    return;
+                }
+
+                if (treeNode.HasChildren)
+                {
+                    foreach (var child in treeNode.Children)
+                    {
+                        WriteNode(child);
+                    }
+                }
+            }
+            finally
+            {
+                xmlWriter.WriteEndElement();
+            }
+        }
+
+        private void WriteAttributes(TreeNode node)
         {
             var namedNode = node as NamedNode;
             if (namedNode != null)
             {
-                SetString(element, nameof(NamedNode.Name), namedNode.Name?.Replace("\"", ""));
+                SetString(nameof(NamedNode.Name), namedNode.Name?.Replace("\"", ""));
             }
 
             var folder = node as Folder;
@@ -83,7 +108,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 if (folder.IsLowRelevance)
                 {
-                    SetString(element, nameof(folder.IsLowRelevance), "true");
+                    SetString(nameof(folder.IsLowRelevance), "true");
                 }
 
                 return;
@@ -92,21 +117,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var textNode = node as TextNode;
             if (textNode != null)
             {
-                SetString(element, nameof(TextNode.Text), textNode.Text);
+                SetString(nameof(TextNode.Text), textNode.Text);
             }
 
             if (node is TimedNode)
             {
-                AddStartAndEndTime(element, (TimedNode)node);
+                AddStartAndEndTime((TimedNode)node);
             }
 
             var task = node as Task;
             if (task != null)
             {
-                SetString(element, nameof(task.FromAssembly), task.FromAssembly);
+                SetString(nameof(task.FromAssembly), task.FromAssembly);
                 if (task.CommandLineArguments != null)
                 {
-                    SetString(element, nameof(task.CommandLineArguments), task.CommandLineArguments);
+                    SetString(nameof(task.CommandLineArguments), task.CommandLineArguments);
                 }
 
                 return;
@@ -115,10 +140,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var target = node as Target;
             if (target != null)
             {
-                SetString(element, nameof(target.DependsOnTargets), target.DependsOnTargets);
+                SetString(nameof(target.DependsOnTargets), target.DependsOnTargets);
                 if (target.IsLowRelevance)
                 {
-                    SetString(element, nameof(target.IsLowRelevance), "true");
+                    SetString(nameof(target.IsLowRelevance), "true");
                 }
 
                 return;
@@ -127,44 +152,44 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var diagnostic = node as AbstractDiagnostic;
             if (diagnostic != null)
             {
-                SetString(element, nameof(diagnostic.Code), diagnostic.Code);
-                SetString(element, nameof(diagnostic.File), diagnostic.File);
-                SetString(element, nameof(diagnostic.LineNumber), diagnostic.LineNumber.ToString());
-                SetString(element, nameof(diagnostic.ColumnNumber), diagnostic.ColumnNumber.ToString());
-                SetString(element, nameof(diagnostic.EndLineNumber), diagnostic.EndLineNumber.ToString());
-                SetString(element, nameof(diagnostic.EndColumnNumber), diagnostic.EndColumnNumber.ToString());
-                SetString(element, nameof(diagnostic.ProjectFile), diagnostic.ProjectFile);
+                SetString(nameof(diagnostic.Code), diagnostic.Code);
+                SetString(nameof(diagnostic.File), diagnostic.File);
+                SetString(nameof(diagnostic.LineNumber), diagnostic.LineNumber.ToString());
+                SetString(nameof(diagnostic.ColumnNumber), diagnostic.ColumnNumber.ToString());
+                SetString(nameof(diagnostic.EndLineNumber), diagnostic.EndLineNumber.ToString());
+                SetString(nameof(diagnostic.EndColumnNumber), diagnostic.EndColumnNumber.ToString());
+                SetString(nameof(diagnostic.ProjectFile), diagnostic.ProjectFile);
                 return;
             }
 
             var project = node as Project;
             if (project != null)
             {
-                SetString(element, nameof(project.ProjectFile), project.ProjectFile);
+                SetString(nameof(project.ProjectFile), project.ProjectFile);
                 return;
             }
 
             var build = node as Build;
             if (build != null)
             {
-                SetString(element, nameof(build.Succeeded), build.Succeeded.ToString());
-                SetString(element, nameof(Build.IsAnalyzed), build.IsAnalyzed.ToString());
+                SetString(nameof(build.Succeeded), build.Succeeded.ToString());
+                SetString(nameof(Build.IsAnalyzed), build.IsAnalyzed.ToString());
                 return;
             }
         }
 
-        private void SetString(XElement element, string name, string value)
+        private void SetString(string name, string value)
         {
             if (!string.IsNullOrEmpty(value))
             {
-                element.Add(new XAttribute(name, value));
+                xmlWriter.WriteAttributeString(name, value);
             }
         }
 
-        private void AddStartAndEndTime(XElement element, TimedNode node)
+        private void AddStartAndEndTime(TimedNode node)
         {
-            SetString(element, nameof(TimedNode.StartTime), ToString(node.StartTime));
-            SetString(element, nameof(TimedNode.EndTime), ToString(node.EndTime));
+            SetString(nameof(TimedNode.StartTime), ToString(node.StartTime));
+            SetString(nameof(TimedNode.EndTime), ToString(node.EndTime));
         }
 
         private string ToString(DateTime time)
