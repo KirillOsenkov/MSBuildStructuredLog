@@ -7,7 +7,7 @@
     <RootNamespace>StructuredLogViewer</RootNamespace>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <OutputType>WinExe</OutputType>
-    <Prefer32Bit Condition="$(Prefer32Bit)==''">true</Prefer32Bit>
+    <Prefer32Bit Condition="$(Prefer32Bit)==''">false</Prefer32Bit>
     <ApplicationIcon>StructuredLogger.ico</ApplicationIcon>
     <NuspecFileName>MSBuildStructuredLogViewer</NuspecFileName>
   </PropertyGroup>
