@@ -61,7 +61,7 @@
     <Compile Include="ObjectModel\Warning.cs" />
     <Compile Include="Serialization\StringTable.cs" />
     <Compile Include="Serialization\StringWriter.cs" />
-    <Compile Include="Serialization\XmlLogReader.cs" />
+    <Compile Include="Serialization\XlinqLogReader.cs" />
     <Compile Include="Serialization\XmlLogWriter.cs" />
     <Compile Include="StructuredLogger.cs" />
   </ItemGroup>

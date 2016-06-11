@@ -173,7 +173,7 @@ namespace StructuredLogViewer
             SetContent(progress);
             Build build = await System.Threading.Tasks.Task.Run(() =>
             {
-                return XmlLogReader.ReadFromXml(filePath, status => Dispatcher.InvokeAsync(() => progress.ProgressText = status));
+                return XlinqLogReader.ReadFromXml(filePath, status => Dispatcher.InvokeAsync(() => progress.ProgressText = status));
             });
             progress.ProgressText = "Analyzing " + filePath + "...";
             await System.Threading.Tasks.Task.Run(() => BuildAnalyzer.AnalyzeBuild(build));

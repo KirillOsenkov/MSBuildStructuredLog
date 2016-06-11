@@ -6,7 +6,7 @@ using System.Xml.Linq;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class XmlLogReader
+    public class XlinqLogReader
     {
         public static Build ReadFromXml(string xmlFilePath, Action<string> statusUpdate = null)
         {
@@ -27,7 +27,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     statusUpdate("Populating tree");
                 }
 
-                var reader = new XmlLogReader();
+                var reader = new XlinqLogReader();
                 build = (Build)reader.ReadNode(root);
             }
             catch (Exception ex)
