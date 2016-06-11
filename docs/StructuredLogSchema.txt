@@ -1,0 +1,34 @@
+Build
+  Project
+    Project
+    Target
+      Target
+      Task
+        Folder(Parameters)
+          Property
+          InputParameter
+        Folder(Output items)
+          Property
+          InputParameter
+        Folder(Output properties)
+          Property
+        Folder(Messages)
+          Message
+      Folder(Messages)
+        Property
+        InputParameter
+          Item
+            Property
+        Message
+      Property
+    Folder(Properties)
+      Folder(Global)
+        Property
+      Property
+    Folder(Messages)
+  Folder(Properties)
+    Property
+  Folder(Warnings)
+    Warning
+  Folder(Errors)
+    Error
