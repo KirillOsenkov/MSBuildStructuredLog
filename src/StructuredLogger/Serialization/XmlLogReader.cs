@@ -27,9 +27,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 var xmlReaderSettings = new XmlReaderSettings()
                 {
-                    IgnoreComments = true,
                     IgnoreWhitespace = true,
-                    IgnoreProcessingInstructions = true,
                 };
 
                 using (reader = XmlReader.Create(filePath, xmlReaderSettings))
