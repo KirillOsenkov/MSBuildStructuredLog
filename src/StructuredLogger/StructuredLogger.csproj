@@ -30,7 +30,6 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Serialization\AttributeNames.cs" />
     <Compile Include="Construction\Construction.cs" />
     <Compile Include="Construction\ItemGroupParser.cs" />
     <Compile Include="Construction\MessageProcessor.cs" />
@@ -60,14 +59,15 @@
     <Compile Include="ObjectModel\TreeNode.cs" />
     <Compile Include="ObjectModel\Utilities.cs" />
     <Compile Include="ObjectModel\Warning.cs" />
+    <Compile Include="Serialization\AttributeNames.cs" />
     <Compile Include="Serialization\Binary\BetterBinaryWriter.cs" />
     <Compile Include="Serialization\Binary\BinaryLogWriter.cs" />
     <Compile Include="Serialization\Binary\TreeBinaryWriter.cs" />
     <Compile Include="Serialization\Serialization.cs" />
     <Compile Include="Serialization\StringCache.cs" />
     <Compile Include="Serialization\StringWriter.cs" />
-    <Compile Include="Serialization\XmlLogReader.cs" />
     <Compile Include="Serialization\XlinqLogReader.cs" />
+    <Compile Include="Serialization\XmlLogReader.cs" />
     <Compile Include="Serialization\XmlLogWriter.cs" />
     <Compile Include="StructuredLogger.cs" />
   </ItemGroup>
