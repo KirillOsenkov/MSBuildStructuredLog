@@ -22,5 +22,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 .GetTypes()
                 .Where(t => typeof(TreeNode).IsAssignableFrom(t))
                 .ToDictionary(t => t.Name);
+
+        public static string GetNodeName(object node)
+        {
+            var folder = node as Folder;
+            if (folder != null && folder.Name != null)
+            {
+                return folder.Name;
+            }
+
+            return node.GetType().Name;
+        }
     }
 }

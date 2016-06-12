@@ -13,7 +13,7 @@ namespace StructuredLogger.Tests
         tmp
                 AcceptableNonZeroExitCodes=
                 AdditionalDependencies=kernel32.lib;user32.lib;
-                ;", MessageProcessor.OutputItemsMessagePrefix, new StringTable());
+                ;", MessageProcessor.OutputItemsMessagePrefix, new StringCache());
         }
     }
 }

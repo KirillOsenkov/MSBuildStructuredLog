@@ -2,7 +2,7 @@
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class StringTable
+    public class StringCache
     {
         private Dictionary<string, string> deduplicationMap = new Dictionary<string, string>();
 

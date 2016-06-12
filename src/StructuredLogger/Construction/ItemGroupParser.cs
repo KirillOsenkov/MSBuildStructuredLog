@@ -12,7 +12,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <param name="prefix">The prefix parsed out (e.g. 'Output Item(s): '.).</param>
         /// <param name="name">Out: The name of the list.</param>
         /// <returns>List of items within the list and all metadata.</returns>
-        public static object ParsePropertyOrItemList(string message, string prefix, StringTable stringTable)
+        public static object ParsePropertyOrItemList(string message, string prefix, StringCache stringTable)
         {
             message = message.Replace("\r\n", "\n");
             message = message.Replace('\r', '\n');

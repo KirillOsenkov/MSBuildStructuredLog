@@ -6,7 +6,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class XmlLogReader
     {
-        private StringTable stringTable;
+        private StringCache stringTable;
         private XmlReader reader;
         private readonly List<KeyValuePair<string, string>> attributes = new List<KeyValuePair<string, string>>(10);
 

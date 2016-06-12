@@ -14,9 +14,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public const string ItemGroupRemoveMessagePrefix = @"Removed Item(s): ";
 
         private readonly Construction construction;
-        private readonly StringTable stringTable;
+        private readonly StringCache stringTable;
 
-        public MessageProcessor(Construction construction, StringTable stringTable)
+        public MessageProcessor(Construction construction, StringCache stringTable)
         {
             this.construction = construction;
             this.stringTable = stringTable;

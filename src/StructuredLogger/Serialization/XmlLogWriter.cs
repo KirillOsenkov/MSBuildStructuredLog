@@ -27,7 +27,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void WriteNode(object node)
         {
-            var elementName = GetName(node);
+            var elementName = Serialization.GetNodeName(node);
 
             xmlWriter.WriteStartElement(elementName);
 
@@ -57,7 +57,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         SetString(nameof(message.IsLowRelevance), "true");
                     }
 
-                    xmlWriter.WriteAttributeString(nameof(Message.Timestamp), XmlConvert.ToString(message.Timestamp, XmlDateTimeSerializationMode.RoundtripKind));
+                    SetString(nameof(Message.Timestamp), ToString(message.Timestamp));
                     WriteContent(message.Text);
                     return;
                 }
@@ -65,13 +65,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 var treeNode = node as TreeNode;
 
                 WriteAttributes(treeNode);
-
-                var nameValueNode = node as NameValueNode;
-                if (nameValueNode != null)
-                {
-                    xmlWriter.WriteString(nameValueNode.Value);
-                    return;
-                }
 
                 if (treeNode.HasChildren)
                 {
@@ -89,14 +82,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void WriteContent(string value)
         {
-            if (!string.IsNullOrEmpty(value))
-            {
-                xmlWriter.WriteString(value);
-            }
-            else
-            {
-                xmlWriter.WriteWhitespace("");
-            }
+            xmlWriter.WriteString(value);
         }
 
         private void WriteAttributes(TreeNode node)
@@ -199,17 +185,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private string ToString(DateTime time)
         {
             return time.ToString("o");
-        }
-
-        private string GetName(object node)
-        {
-            var folder = node as Folder;
-            if (folder != null && folder.Name != null)
-            {
-                return folder.Name;
-            }
-
-            return node.GetType().Name;
         }
     }
 }

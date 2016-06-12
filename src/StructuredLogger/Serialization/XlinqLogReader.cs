@@ -37,7 +37,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return build;
         }
 
-        private StringTable stringTable;
+        private StringCache stringTable;
 
         private object ReadNode(XElement element)
         {

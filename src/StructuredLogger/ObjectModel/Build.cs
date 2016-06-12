@@ -5,7 +5,7 @@
     /// </summary>
     public class Build : TimedNode
     {
-        public StringTable StringTable { get; } = new StringTable();
+        public StringCache StringTable { get; } = new StringCache();
 
         public bool IsAnalyzed { get; set; }
         public bool Succeeded { get; set; }

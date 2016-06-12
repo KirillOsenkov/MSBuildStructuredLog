@@ -18,6 +18,7 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BinarySerializationTests.cs" />
     <Compile Include="ItemGroupParserTests.cs" />
     <Compile Include="Roundtrip.cs" />
   </ItemGroup>
