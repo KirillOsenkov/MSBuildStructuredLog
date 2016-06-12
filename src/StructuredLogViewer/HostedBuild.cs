@@ -60,7 +60,7 @@ namespace StructuredLogViewer
                     var process = Process.Start(processStartInfo);
                     process.WaitForExit();
 
-                    var build = XlinqLogReader.ReadFromXml(xmlLogFile);
+                    var build = XmlLogReader.ReadFromXml(xmlLogFile);
                     File.Delete(xmlLogFile);
                     return build;
                 }
