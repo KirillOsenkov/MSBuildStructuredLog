@@ -37,15 +37,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (metadata != null)
                 {
                     SetString(nameof(Metadata.Name), metadata.Name);
-                    if (!string.IsNullOrEmpty(metadata.Value))
-                    {
-                        xmlWriter.WriteString(metadata.Value);
-                    }
-                    else
-                    {
-                        xmlWriter.WriteWhitespace("");
-                    }
-
+                    WriteContent(metadata.Value);
                     return;
                 }
 
@@ -53,7 +45,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (property != null)
                 {
                     SetString(nameof(Property.Name), property.Name);
-                    xmlWriter.WriteString(property.Value);
+                    WriteContent(property.Value);
                     return;
                 }
 
@@ -66,7 +58,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
 
                     xmlWriter.WriteAttributeString(nameof(Message.Timestamp), XmlConvert.ToString(message.Timestamp, XmlDateTimeSerializationMode.RoundtripKind));
-                    xmlWriter.WriteString(message.Text);
+                    WriteContent(message.Text);
                     return;
                 }
 
@@ -92,6 +84,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
             finally
             {
                 xmlWriter.WriteEndElement();
+            }
+        }
+
+        private void WriteContent(string value)
+        {
+            if (!string.IsNullOrEmpty(value))
+            {
+                xmlWriter.WriteString(value);
+            }
+            else
+            {
+                xmlWriter.WriteWhitespace("");
             }
         }
 

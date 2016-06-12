@@ -49,7 +49,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                 var parent = (TreeNode)stack.Peek();
                                 parent.AddChild(node);
 
-                                stack.Push(node);
+                                if (!reader.IsEmptyElement)
+                                {
+                                    stack.Push(node);
+                                }
+
                                 break;
                             case XmlNodeType.EndElement:
                                 stack.Pop();
