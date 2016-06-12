@@ -57,22 +57,43 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                 stack.Pop();
                                 break;
                             case XmlNodeType.Text:
-                                var valueNode = stack.Peek();
-                                var nameValueNode = valueNode as NameValueNode;
-                                if (nameValueNode != null)
                                 {
-                                    nameValueNode.Value = reader.Value;
-                                }
-                                else
-                                {
-                                    var message = valueNode as Message;
-                                    if (message != null)
+                                    var valueNode = stack.Peek();
+                                    var nameValueNode = valueNode as NameValueNode;
+                                    if (nameValueNode != null)
                                     {
-                                        message.Text = reader.Value;
+                                        nameValueNode.Value = reader.Value;
                                     }
-                                }
+                                    else
+                                    {
+                                        var message = valueNode as Message;
+                                        if (message != null)
+                                        {
+                                            message.Text = reader.Value;
+                                        }
+                                    }
 
-                                break;
+                                    break;
+                                }
+                            case XmlNodeType.Whitespace:
+                                {
+                                    var valueNode = stack.Peek();
+                                    var nameValueNode = valueNode as NameValueNode;
+                                    if (nameValueNode != null)
+                                    {
+                                        nameValueNode.Value = reader.Value;
+                                    }
+                                    else
+                                    {
+                                        var message = valueNode as Message;
+                                        if (message != null)
+                                        {
+                                            message.Text = reader.Value;
+                                        }
+                                    }
+
+                                    break;
+                                }
                             case XmlNodeType.None:
                             case XmlNodeType.Attribute:
                             case XmlNodeType.CDATA:
@@ -84,7 +105,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             case XmlNodeType.DocumentType:
                             case XmlNodeType.DocumentFragment:
                             case XmlNodeType.Notation:
-                            case XmlNodeType.Whitespace:
                             case XmlNodeType.SignificantWhitespace:
                             case XmlNodeType.EndEntity:
                             case XmlNodeType.XmlDeclaration:
