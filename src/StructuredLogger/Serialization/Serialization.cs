@@ -12,6 +12,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             .GetFields(BindingFlags.Public | BindingFlags.Static)
             .Select(f => XNamespace.None.GetName(f.Name)).ToArray();
 
+        public static readonly string[] AttributeLocalNameList = typeof(AttributeNames)
+            .GetFields(BindingFlags.Public | BindingFlags.Static)
+            .Select(f => f.Name).ToArray();
+
         public static readonly Dictionary<string, Type> ObjectModelTypes =
             typeof(TreeNode)
                 .Assembly

@@ -48,7 +48,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 var metadata = new Metadata()
                 {
                     Name = GetString(element, AttributeNames.Name),
-                    Value = stringTable.Intern(element.Value)
+                    Value = ReadTextContent(element)
                 };
 
                 return metadata;
@@ -58,7 +58,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 var property = new Property()
                 {
                     Name = GetString(element, AttributeNames.Name),
-                    Value = stringTable.Intern(element.Value)
+                    Value = ReadTextContent(element)
                 };
 
                 return property;
@@ -92,6 +92,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return node;
         }
 
+        private string ReadTextContent(XElement element)
+        {
+            return stringTable.Intern(element.Value);
+        }
+
         private void ReadAttributes(TreeNode node, XElement element)
         {
             var item = node as Item;
@@ -107,7 +112,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 message.IsLowRelevance = GetBoolean(element, AttributeNames.IsLowRelevance);
                 message.Timestamp = GetDateTime(element, AttributeNames.Timestamp);
-                message.Text = stringTable.Intern(element.Value);
+                message.Text = ReadTextContent(element);
                 return;
             }
 
