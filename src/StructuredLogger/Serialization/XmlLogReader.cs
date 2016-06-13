@@ -62,14 +62,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                     var nameValueNode = valueNode as NameValueNode;
                                     if (nameValueNode != null)
                                     {
-                                        nameValueNode.Value = reader.Value;
+                                        nameValueNode.Value = GetCurrentValue();
                                     }
                                     else
                                     {
                                         var message = valueNode as Message;
                                         if (message != null)
                                         {
-                                            message.Text = reader.Value;
+                                            message.Text = GetCurrentValue();
                                         }
                                     }
 
@@ -81,14 +81,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                     var nameValueNode = valueNode as NameValueNode;
                                     if (nameValueNode != null)
                                     {
-                                        nameValueNode.Value = reader.Value;
+                                        nameValueNode.Value = GetCurrentValue();
                                     }
                                     else
                                     {
                                         var message = valueNode as Message;
                                         if (message != null)
                                         {
-                                            message.Text = reader.Value;
+                                            message.Text = GetCurrentValue();
                                         }
                                     }
 
@@ -124,9 +124,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return build;
         }
 
+        private string GetCurrentValue()
+        {
+            return stringTable.Intern(reader.Value);
+        }
+
         private object ReadNode()
         {
-            var name = reader.Name;
+            var name = stringTable.Intern(reader.Name);
 
             ReadAttributes();
 
