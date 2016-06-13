@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Reflection;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -10,23 +11,44 @@ namespace Microsoft.Build.Logging.StructuredLogger
     {
         private readonly string filePath;
         private readonly BinaryWriter binaryWriter;
+        private readonly BetterBinaryWriter treeNodesStreamBinaryWriter;
         private readonly FileStream fileStream;
         private readonly GZipStream gzipStream;
+
+        /// <summary>
+        /// We first write all nodes of the tree to the temporary memory stream,
+        /// then write the string table to the actual destination stream, then
+        /// write the nodes from memory to the actual stream.
+        /// String table has to come first because we need to have it already
+        /// when we start reading the nodes later.
+        /// </summary>
+        private readonly MemoryStream treeNodesStream;
         private readonly Dictionary<string, int> stringTable = new Dictionary<string, int>();
         private readonly List<string> attributes = new List<string>(10);
 
         public TreeBinaryWriter(string filePath)
         {
             this.filePath = filePath;
+            this.treeNodesStream = new MemoryStream();
             this.fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write);
+            WriteVersion();
             this.gzipStream = new GZipStream(fileStream, CompressionLevel.Optimal);
-            this.binaryWriter = new BetterBinaryWriter(gzipStream);
+            this.binaryWriter = new BetterBinaryWriter(DestinationStream);
+            this.treeNodesStreamBinaryWriter = new BetterBinaryWriter(treeNodesStream);
+        }
+
+        private void WriteVersion()
+        {
+            var version = Assembly.GetExecutingAssembly().GetName().Version;
+            fileStream.WriteByte((byte)version.Major);
+            fileStream.WriteByte((byte)version.Minor);
+            fileStream.WriteByte((byte)version.Build);
         }
 
         public void WriteNode(string name)
         {
             attributes.Clear();
-            binaryWriter.Write(GetStringIndex(name));
+            treeNodesStreamBinaryWriter.Write(GetStringIndex(name));
         }
 
         public void WriteAttributeValue(string value)
@@ -36,20 +58,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public void WriteEndAttributes()
         {
-            binaryWriter.Write(attributes.Count);
+            treeNodesStreamBinaryWriter.Write(attributes.Count);
             foreach (var attributeValue in attributes)
             {
-                binaryWriter.Write(GetStringIndex(attributeValue));
+                treeNodesStreamBinaryWriter.Write(GetStringIndex(attributeValue));
             }
         }
 
         public void WriteChildrenCount(int count)
         {
-            binaryWriter.Write(count);
-        }
-
-        public void WriteEndNode()
-        {
+            treeNodesStreamBinaryWriter.Write(count);
         }
 
         private int GetStringIndex(string text)
@@ -82,9 +100,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        private Stream DestinationStream => gzipStream;
+
         public void Dispose()
         {
             WriteStringTable();
+            treeNodesStream.Position = 0;
+            treeNodesStream.CopyTo(DestinationStream);
             binaryWriter.Dispose();
         }
     }

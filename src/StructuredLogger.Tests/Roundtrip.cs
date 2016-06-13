@@ -20,16 +20,28 @@ namespace StructuredLogger.Tests
                 var build = XlinqLogReader.ReadFromXml(file);
                 var newName = Path.ChangeExtension(file, ".new.xml");
                 XmlLogWriter.WriteToXml(build, newName);
-                var source = File.ReadAllText(file);
-                var destination = File.ReadAllText(newName);
-                if (source != destination)
+                if (Differ.AreDifferent(file, newName))
                 {
-                    Process.Start("devenv", $"/diff \"{file}\" \"{newName}\"");
                     break;
                 }
                 else
                 {
                     File.Delete(newName);
+                }
+
+                newName = Path.ChangeExtension(file, ".buildlog");
+                BinaryLogWriter.Write(build, newName);
+                build = BinaryLogReader.Read(newName);
+                newName = Path.ChangeExtension(file, ".new2.xml");
+                XmlLogWriter.WriteToXml(build, newName);
+                if (Differ.AreDifferent(file, newName))
+                {
+                    break;
+                }
+                else
+                {
+                    File.Delete(newName);
+                    //File.Delete(Path.ChangeExtension(file, ".buildlog"));
                 }
             }
         }

@@ -27,7 +27,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             WriteAttributes(node);
             writer.WriteEndAttributes();
             WriteChildren(node);
-            writer.WriteEndNode();
         }
 
         private void WriteChildren(object node)
@@ -74,17 +73,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            var namedNode = node as NamedNode;
-            if (namedNode != null)
-            {
-                SetString(nameof(NamedNode.Name), namedNode.Name?.Replace("\"", ""));
-            }
-
             var folder = node as Folder;
             if (folder != null)
             {
                 SetString(nameof(Folder.IsLowRelevance), folder.IsLowRelevance.ToString());
                 return;
+            }
+
+            var namedNode = node as NamedNode;
+            if (namedNode != null)
+            {
+                SetString(nameof(NamedNode.Name), namedNode.Name?.Replace("\"", ""));
             }
 
             var textNode = node as TextNode;

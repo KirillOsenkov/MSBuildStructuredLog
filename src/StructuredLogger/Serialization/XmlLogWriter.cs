@@ -87,12 +87,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void WriteAttributes(TreeNode node)
         {
-            var namedNode = node as NamedNode;
-            if (namedNode != null)
-            {
-                SetString(nameof(NamedNode.Name), namedNode.Name?.Replace("\"", ""));
-            }
-
             var folder = node as Folder;
             if (folder != null)
             {
@@ -102,6 +96,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
 
                 return;
+            }
+
+            var namedNode = node as NamedNode;
+            if (namedNode != null)
+            {
+                SetString(nameof(NamedNode.Name), namedNode.Name?.Replace("\"", ""));
             }
 
             var textNode = node as TextNode;

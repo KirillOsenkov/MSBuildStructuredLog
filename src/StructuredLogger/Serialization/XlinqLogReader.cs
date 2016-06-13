@@ -64,13 +64,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return property;
             }
 
-            Type type = null;
-            if (!Serialization.ObjectModelTypes.TryGetValue(name, out type))
-            {
-                type = typeof(Folder);
-            }
+            var node = Serialization.CreateNode(name);
 
-            var node = (TreeNode)Activator.CreateInstance(type);
+            var folder = node as Folder;
+            if (folder != null)
+            {
+                folder.Name = name;
+            }
 
             var build = node as Build;
             if (build != null)
@@ -82,10 +82,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (element.HasElements)
             {
+                var treeNode = (TreeNode)node;
                 foreach (var childElement in element.Elements())
                 {
                     var childNode = ReadNode(childElement);
-                    node.AddChild(childNode);
+                    treeNode.AddChild(childNode);
                 }
             }
 
@@ -97,7 +98,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return stringTable.Intern(element.Value);
         }
 
-        private void ReadAttributes(TreeNode node, XElement element)
+        private void ReadAttributes(object node, XElement element)
         {
             var item = node as Item;
             if (item != null)
@@ -120,7 +121,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (folder != null)
             {
                 folder.IsLowRelevance = GetBoolean(element, AttributeNames.IsLowRelevance);
-                folder.Name = GetString(element, AttributeNames.Name);
                 return;
             }
 
@@ -197,41 +197,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private bool GetBoolean(XElement element, AttributeNames attributeIndex)
         {
-            var text = GetString(element, attributeIndex);
-            if (text == null)
-            {
-                return false;
-            }
-
-            bool result;
-            bool.TryParse(text, out result);
-            return result;
+            return Serialization.GetBoolean(GetString(element, attributeIndex));
         }
 
         private DateTime GetDateTime(XElement element, AttributeNames attributeIndex)
         {
-            var text = GetString(element, attributeIndex);
-            if (text == null)
-            {
-                return default(DateTime);
-            }
-
-            DateTime result;
-            DateTime.TryParse(text, out result);
-            return result;
+            return Serialization.GetDateTime(GetString(element, attributeIndex));
         }
 
         private int GetInteger(XElement element, AttributeNames attributeIndex)
         {
-            var text = GetString(element, attributeIndex);
-            if (text == null)
-            {
-                return 0;
-            }
-
-            int result;
-            int.TryParse(text, out result);
-            return result;
+            return Serialization.GetInteger(GetString(element, attributeIndex));
         }
 
         private string GetString(XElement element, AttributeNames attributeIndex)

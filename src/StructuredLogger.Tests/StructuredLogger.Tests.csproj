@@ -19,6 +19,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BinarySerializationTests.cs" />
+    <Compile Include="Differ.cs" />
     <Compile Include="ItemGroupParserTests.cs" />
     <Compile Include="Roundtrip.cs" />
   </ItemGroup>

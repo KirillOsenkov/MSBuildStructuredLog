@@ -155,26 +155,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return property;
             }
 
-            TreeNode node = CreateNode(name);
+            object node = Serialization.CreateNode(name);
+
+            var folder = node as Folder;
+            if (folder != null)
+            {
+                folder.Name = name;
+                folder.IsLowRelevance = GetBoolean(AttributeNames.IsLowRelevance);
+                return folder;
+            }
 
             PopulateAttributes(node);
 
             return node;
         }
 
-        private static TreeNode CreateNode(string name)
-        {
-            Type type = null;
-            if (!Serialization.ObjectModelTypes.TryGetValue(name, out type))
-            {
-                type = typeof(Folder);
-            }
-
-            var node = (TreeNode)Activator.CreateInstance(type);
-            return node;
-        }
-
-        private void PopulateAttributes(TreeNode node)
+        private void PopulateAttributes(object node)
         {
             var item = node as Item;
             if (item != null)
@@ -189,14 +185,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 message.IsLowRelevance = GetBoolean(AttributeNames.IsLowRelevance);
                 message.Timestamp = GetDateTime(AttributeNames.Timestamp);
-                return;
-            }
-
-            var folder = node as Folder;
-            if (folder != null)
-            {
-                folder.IsLowRelevance = GetBoolean(AttributeNames.IsLowRelevance);
-                folder.Name = GetString(AttributeNames.Name);
                 return;
             }
 
@@ -293,41 +281,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private bool GetBoolean(AttributeNames attributeIndex)
         {
-            var text = GetString(attributeIndex);
-            if (text == null)
-            {
-                return false;
-            }
-
-            bool result;
-            bool.TryParse(text, out result);
-            return result;
+            return Serialization.GetBoolean(GetString(attributeIndex));
         }
 
         private DateTime GetDateTime(AttributeNames attributeIndex)
         {
-            var text = GetString(attributeIndex);
-            if (text == null)
-            {
-                return default(DateTime);
-            }
-
-            DateTime result;
-            DateTime.TryParse(text, out result);
-            return result;
+            return Serialization.GetDateTime(GetString(attributeIndex));
         }
 
         private int GetInteger(AttributeNames attributeIndex)
         {
-            var text = GetString(attributeIndex);
-            if (text == null)
-            {
-                return 0;
-            }
-
-            int result;
-            int.TryParse(text, out result);
-            return result;
+            return Serialization.GetInteger(GetString(attributeIndex));
         }
 
         private string GetString(AttributeNames attributeIndex)

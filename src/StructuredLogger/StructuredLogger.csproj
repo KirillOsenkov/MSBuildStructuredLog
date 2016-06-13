@@ -60,8 +60,11 @@
     <Compile Include="ObjectModel\Utilities.cs" />
     <Compile Include="ObjectModel\Warning.cs" />
     <Compile Include="Serialization\AttributeNames.cs" />
+    <Compile Include="Serialization\Binary\BetterBinaryReader.cs" />
     <Compile Include="Serialization\Binary\BetterBinaryWriter.cs" />
+    <Compile Include="Serialization\Binary\BinaryLogReader.cs" />
     <Compile Include="Serialization\Binary\BinaryLogWriter.cs" />
+    <Compile Include="Serialization\Binary\TreeBinaryReader.cs" />
     <Compile Include="Serialization\Binary\TreeBinaryWriter.cs" />
     <Compile Include="Serialization\Serialization.cs" />
     <Compile Include="Serialization\StringCache.cs" />
