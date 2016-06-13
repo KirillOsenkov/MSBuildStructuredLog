@@ -26,7 +26,10 @@ namespace StructuredLogViewer
 
         private static string GetMSBuildExe()
         {
-            return ToolLocationHelper.GetPathToBuildToolsFile("msbuild.exe", ToolLocationHelper.CurrentToolsVersion);
+            return ToolLocationHelper.GetPathToBuildToolsFile(
+                "msbuild.exe",
+                ToolLocationHelper.CurrentToolsVersion,
+                DotNetFrameworkArchitecture.Bitness32);
         }
 
         private static readonly string xmlLogFile = Path.Combine(Path.GetTempPath(), $"MSBuildStructuredLog-{Process.GetCurrentProcess().Id}.xml");
