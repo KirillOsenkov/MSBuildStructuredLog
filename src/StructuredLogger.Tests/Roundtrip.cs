@@ -17,7 +17,7 @@ namespace StructuredLogger.Tests
         {
             foreach (var file in Directory.GetFiles(@"D:\XmlBuildLogs", "*.xml", SearchOption.AllDirectories).ToArray())
             {
-                var build = XlinqLogReader.ReadFromXml(file);
+                var build = XmlLogReader.ReadFromXml(file);
                 var newName = Path.ChangeExtension(file, ".new.xml");
                 XmlLogWriter.WriteToXml(build, newName);
                 if (Differ.AreDifferent(file, newName))

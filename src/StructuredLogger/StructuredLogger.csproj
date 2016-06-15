@@ -34,6 +34,7 @@
     <Compile Include="Construction\ItemGroupParser.cs" />
     <Compile Include="Construction\MessageProcessor.cs" />
     <Compile Include="Construction\TargetGraph.cs" />
+    <Compile Include="ErrorReporting.cs" />
     <Compile Include="ObjectModel\AbstractDiagnostic.cs" />
     <Compile Include="ObjectModel\AddItem.cs" />
     <Compile Include="ObjectModel\BaseNode.cs" />

@@ -391,6 +391,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void HandleException(Exception ex)
         {
+            ErrorReporting.ReportException(ex);
+
             try
             {
                 lock (syncLock)

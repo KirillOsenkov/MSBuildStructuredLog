@@ -64,8 +64,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     XmlLogWriter.WriteToXml(construction.Build, _logFile);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    ErrorReporting.ReportException(ex);
                 }
             }
         }

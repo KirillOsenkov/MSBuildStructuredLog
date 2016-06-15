@@ -1,5 +1,5 @@
 ﻿using System;
-using System.IO;
+using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogViewer
 {
@@ -10,21 +10,9 @@ namespace StructuredLogViewer
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
         }
 
-        private static readonly string logFilePath = Path.Combine(SettingsService.GetRootPath(), "Log.txt");
-
         private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            try
-            {
-                var ex = e.ExceptionObject;
-                if (ex != null)
-                {
-                    File.WriteAllText(logFilePath, ex.ToString());
-                }
-            }
-            catch (Exception)
-            {
-            }
+            ErrorReporting.ReportException(e.ExceptionObject as Exception);
         }
     }
 }
