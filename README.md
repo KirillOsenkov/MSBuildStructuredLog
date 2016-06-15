@@ -34,6 +34,9 @@ or you can build the solution or open an existing log file through the viewer ap
 Logger supports two formats: *.xml (for large human-readable XML logs) and *.buildlog (compact binary logs). Depending on which file extension you pass to the logger it will either write XML or binary.
 The viewer supports both formats and defaults to binary. The binary log can be up to 200x smaller and faster.
 
+Read more about the log formats here:
+https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/Log-Format
+
 ## Features:
 
  * Displays double-writes (when files from different sources are written to the same destination during a build, thus causing non-determinism)
