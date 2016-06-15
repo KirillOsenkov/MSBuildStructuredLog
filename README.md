@@ -5,7 +5,7 @@ A logger for MSBuild that records a structured representation of executed target
 [![NuGet package](https://img.shields.io/nuget/v/Microsoft.Build.Logging.StructuredLogger.svg)](https://nuget.org/packages/Microsoft.Build.Logging.StructuredLogger)
 
 ## Install:
-https://github.com/KirillOsenkov/MSBuildStructuredLog/releases/download/v1.0.46/MSBuildStructuredLogSetup.exe
+https://github.com/KirillOsenkov/MSBuildStructuredLog/releases/download/v1.0.49/MSBuildStructuredLogSetup.exe
 
 The app updates automatically via [Squirrel](https://github.com/Squirrel/Squirrel.Windows) (after launch it checks for updates in background), next launch starts the newly downloaded latest version.
 
@@ -24,7 +24,7 @@ https://www.nuget.org/packages/Microsoft.Build.Logging.StructuredLogger
 You can either build your solution yourself and pass the logger:
 
 ```
-msbuild solution.sln /t:Rebuild /v:diag /noconlog /logger:StructuredLogger,%localappdata%\MSBuildStructuredLogViewer\app-1.0.46\StructuredLogger.dll;1.buildlog
+msbuild solution.sln /t:Rebuild /v:diag /noconlog /logger:StructuredLogger,%localappdata%\MSBuildStructuredLogViewer\app-1.0.49\StructuredLogger.dll;1.buildlog
 ```
 
 or you can build the solution or open an existing log file through the viewer app:
