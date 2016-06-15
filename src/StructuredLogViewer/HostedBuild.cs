@@ -32,12 +32,12 @@ namespace StructuredLogViewer
                 DotNetFrameworkArchitecture.Bitness32);
         }
 
-        private static readonly string xmlLogFile = Path.Combine(Path.GetTempPath(), $"MSBuildStructuredLog-{Process.GetCurrentProcess().Id}.xml");
+        private static readonly string logFilePath = Path.Combine(Path.GetTempPath(), $"MSBuildStructuredLog-{Process.GetCurrentProcess().Id}.buildlog");
 
         public static string GetPostfixArguments()
         {
             var loggerDll = typeof(StructuredLogger).Assembly.Location;
-            return $@"/v:diag /nologo /noconlog /logger:{nameof(StructuredLogger)},""{loggerDll}"";""{xmlLogFile}""";
+            return $@"/v:diag /nologo /noconlog /logger:{nameof(StructuredLogger)},""{loggerDll}"";""{logFilePath}""";
         }
 
         public Task<Build> BuildAndGetResult(BuildProgress progress)
@@ -63,8 +63,8 @@ namespace StructuredLogViewer
                     var process = Process.Start(processStartInfo);
                     process.WaitForExit();
 
-                    var build = XmlLogReader.ReadFromXml(xmlLogFile);
-                    File.Delete(xmlLogFile);
+                    var build = Serialization.Read(logFilePath);
+                    File.Delete(logFilePath);
                     return build;
                 }
                 catch (Exception ex)

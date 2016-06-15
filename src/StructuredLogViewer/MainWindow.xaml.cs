@@ -13,7 +13,7 @@ namespace StructuredLogViewer
 {
     public partial class MainWindow : Window
     {
-        private string xmlLogFilePath;
+        private string logFilePath;
         private string projectFilePath;
         private BuildControl currentBuild;
 
@@ -33,7 +33,7 @@ namespace StructuredLogViewer
         private void DisplayWelcomeScreen()
         {
             this.projectFilePath = null;
-            this.xmlLogFilePath = null;
+            this.logFilePath = null;
             this.currentBuild = null;
             Title = DefaultTitle;
             var welcomeScreen = new WelcomeScreen();
@@ -124,14 +124,14 @@ namespace StructuredLogViewer
             mainContent.Content = content;
             if (content == null)
             {
-                xmlLogFilePath = null;
+                logFilePath = null;
                 projectFilePath = null;
                 currentBuild = null;
             }
 
             if (content is BuildControl)
             {
-                ReloadMenu.Visibility = xmlLogFilePath != null ? Visibility.Visible : Visibility.Collapsed;
+                ReloadMenu.Visibility = logFilePath != null ? Visibility.Visible : Visibility.Collapsed;
                 SaveAsMenu.Visibility = Visibility.Visible;
                 EditMenu.Visibility = Visibility.Visible;
             }
@@ -163,7 +163,7 @@ namespace StructuredLogViewer
             }
 
             DisplayBuild(null);
-            this.xmlLogFilePath = filePath;
+            this.logFilePath = filePath;
             SettingsService.AddRecentLogFile(filePath);
             UpdateRecentItemsMenu();
             Title = DefaultTitle + " - " + filePath;
@@ -173,7 +173,7 @@ namespace StructuredLogViewer
             SetContent(progress);
             Build build = await System.Threading.Tasks.Task.Run(() =>
             {
-                return XmlLogReader.ReadFromXml(filePath);
+                return Serialization.Read(filePath);
             });
             progress.ProgressText = "Analyzing " + filePath + "...";
             await System.Threading.Tasks.Task.Run(() => BuildAnalyzer.AnalyzeBuild(build));
@@ -235,8 +235,8 @@ namespace StructuredLogViewer
         private void OpenLogFile()
         {
             var openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = "Structured XML Log Files (*.xml)|*.xml";
-            openFileDialog.Title = "Open .xml structured log file";
+            openFileDialog.Filter = Serialization.OpenFileDialogFilter;
+            openFileDialog.Title = "Open a structured build log file";
             openFileDialog.CheckFileExists = true;
             var result = openFileDialog.ShowDialog(this);
             if (result != true)
@@ -272,7 +272,7 @@ namespace StructuredLogViewer
 
         private void Reload()
         {
-            OpenLogFile(xmlLogFilePath);
+            OpenLogFile(logFilePath);
         }
 
         private void SaveAs()
@@ -280,7 +280,7 @@ namespace StructuredLogViewer
             if (currentBuild != null)
             {
                 var saveFileDialog = new SaveFileDialog();
-                saveFileDialog.Filter = "Structured XML Log Files (*.xml)|*.xml";
+                saveFileDialog.Filter = Serialization.FileDialogFilter;
                 saveFileDialog.Title = "Save log file as";
                 saveFileDialog.CheckFileExists = false;
                 saveFileDialog.OverwritePrompt = true;
@@ -291,15 +291,15 @@ namespace StructuredLogViewer
                     return;
                 }
 
-                xmlLogFilePath = saveFileDialog.FileName;
+                logFilePath = saveFileDialog.FileName;
                 System.Threading.Tasks.Task.Run(() =>
                 {
-                    XmlLogWriter.WriteToXml(currentBuild.Build, xmlLogFilePath);
+                    Serialization.Write(currentBuild.Build, logFilePath);
                     Dispatcher.InvokeAsync(() =>
                     {
-                        currentBuild.UpdateBreadcrumb(new Message { Text = $"Saved {xmlLogFilePath}" });
+                        currentBuild.UpdateBreadcrumb(new Message { Text = $"Saved {logFilePath}" });
                     });
-                    SettingsService.AddRecentLogFile(xmlLogFilePath);
+                    SettingsService.AddRecentLogFile(logFilePath);
                 });
             }
         }

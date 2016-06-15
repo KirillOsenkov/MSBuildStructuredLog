@@ -62,7 +62,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         }
                     }
 
-                    XmlLogWriter.WriteToXml(construction.Build, _logFile);
+                    Serialization.Write(construction.Build, _logFile);
                 }
                 catch (Exception ex)
                 {
@@ -78,7 +78,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </exception>
         private void ProcessParameters()
         {
-            const string invalidParamSpecificationMessage = @"Need to specify a log file using the following pattern: '/logger:StructuredLogger,StructuredLogger.dll;buildlog.xml";
+            const string invalidParamSpecificationMessage = @"Need to specify a log file using the following pattern: '/logger:StructuredLogger,StructuredLogger.dll;log.buildlog";
 
             if (Parameters == null)
             {

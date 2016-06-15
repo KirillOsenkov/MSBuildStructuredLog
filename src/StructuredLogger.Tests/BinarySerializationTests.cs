@@ -8,8 +8,8 @@ namespace StructuredLogger.Tests
         //[Fact]
         public void TestWriter()
         {
-            var build = XmlLogReader.ReadFromXml(@"D:\XmlBuildLogs\contentsync.xml");
-            BinaryLogWriter.Write(build, @"D:\1.buildlog");
+            var build = Serialization.Read(@"D:\XmlBuildLogs\contentsync.xml");
+            Serialization.Write(build, @"D:\1.buildlog");
         }
 
         //[Fact]
@@ -21,12 +21,12 @@ namespace StructuredLogger.Tests
             build.AddChild(new Property() { Name = "PropertyName", Value = "PropertyValue" });
             var file1 = @"D:\1.xml";
             var file2 = @"D:\2.xml";
-            XmlLogWriter.WriteToXml(build, file1);
+            Serialization.Write(build, file1);
             var filePath = @"D:\1.buildlog";
-            BinaryLogWriter.Write(build, filePath);
-            build = BinaryLogReader.Read(filePath);
-            XmlLogWriter.WriteToXml(build, file2);
-            BinaryLogWriter.Write(build, @"D:\2.buildlog");
+            Serialization.Write(build, filePath);
+            build = Serialization.Read(filePath);
+            Serialization.Write(build, file2);
+            Serialization.Write(build, @"D:\2.buildlog");
             Differ.AreDifferent(file1, file2);
         }
     }

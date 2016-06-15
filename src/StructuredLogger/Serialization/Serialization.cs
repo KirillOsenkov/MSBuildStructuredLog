@@ -8,6 +8,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class Serialization
     {
+        public static readonly string FileDialogFilter = "Binary (compact) Structured Build Log (*.buildlog)|*.buildlog|Readable (large) XML Log (*.xml)|*.xml";
+        public static readonly string OpenFileDialogFilter = "Structured Build Log (*.buildlog;*.xml)|*.buildlog;*.xml";
+
         public static readonly XName[] AttributeNameList = typeof(AttributeNames)
             .GetFields(BindingFlags.Public | BindingFlags.Static)
             .Select(f => XNamespace.None.GetName(f.Name)).ToArray();
@@ -22,6 +25,30 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 .GetTypes()
                 .Where(t => typeof(BaseNode).IsAssignableFrom(t))
                 .ToDictionary(t => t.Name);
+
+        public static Build Read(string filePath)
+        {
+            if (filePath.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
+            {
+                return XmlLogReader.ReadFromXml(filePath);
+            }
+            else
+            {
+                return BinaryLogReader.Read(filePath);
+            }
+        }
+
+        public static void Write(Build build, string filePath)
+        {
+            if (filePath.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
+            {
+                XmlLogWriter.WriteToXml(build, filePath);
+            }
+            else
+            {
+                BinaryLogWriter.Write(build, filePath);
+            }
+        }
 
         public static string GetNodeName(object node)
         {

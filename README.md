@@ -24,12 +24,15 @@ https://www.nuget.org/packages/Microsoft.Build.Logging.StructuredLogger
 You can either build your solution yourself and pass the logger:
 
 ```
-msbuild solution.sln /t:Rebuild /v:diag /noconlog /logger:StructuredLogger,C:\MSBuildStructuredLog\bin\Debug\StructuredLogger.dll;buildlog1.xml
+msbuild solution.sln /t:Rebuild /v:diag /noconlog /logger:StructuredLogger,%localappdata%\MSBuildStructuredLogViewer\app-1.0.46\StructuredLogger.dll;1.buildlog
 ```
 
-or you can build the solution or open an existing .xml log file through the viewer app:
+or you can build the solution or open an existing log file through the viewer app:
 
 ![Screenshot2](/docs/Screenshot2.png)
+
+Logger supports two formats: *.xml (for large human-readable XML logs) and *.buildlog (compact binary logs). Depending on which file extension you pass to the logger it will either write XML or binary.
+The viewer supports both formats and defaults to binary. The binary log can be up to 200x smaller and faster.
 
 ## Features:
 
@@ -38,7 +41,7 @@ or you can build the solution or open an existing .xml log file through the view
  * Text search through the entire log
  * Ctrl+C to copy an item and the entire subtree to Clipboard as text
  * Delete to hide nodes from the tree (to get uninteresting stuff out of the way)
- * Open and save .xml log files (ask a friend to record and send you the .xml log which you can then investigate on your machine)
+ * Open and save log files (ask a friend to record and send you the log which you can then investigate on your machine)
 
 ## MSBuild Resources
  * [https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/MSBuild-Resources](https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/MSBuild-Resources)

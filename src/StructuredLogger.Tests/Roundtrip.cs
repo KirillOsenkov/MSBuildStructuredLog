@@ -17,9 +17,9 @@ namespace StructuredLogger.Tests
         {
             foreach (var file in Directory.GetFiles(@"D:\XmlBuildLogs", "*.xml", SearchOption.AllDirectories).ToArray())
             {
-                var build = XmlLogReader.ReadFromXml(file);
+                var build = Serialization.Read(file);
                 var newName = Path.ChangeExtension(file, ".new.xml");
-                XmlLogWriter.WriteToXml(build, newName);
+                Serialization.Write(build, newName);
                 if (Differ.AreDifferent(file, newName))
                 {
                     break;
@@ -30,10 +30,10 @@ namespace StructuredLogger.Tests
                 }
 
                 newName = Path.ChangeExtension(file, ".buildlog");
-                BinaryLogWriter.Write(build, newName);
-                build = BinaryLogReader.Read(newName);
+                Serialization.Write(build, newName);
+                build = Serialization.Read(newName);
                 newName = Path.ChangeExtension(file, ".new2.xml");
-                XmlLogWriter.WriteToXml(build, newName);
+                Serialization.Write(build, newName);
                 if (Differ.AreDifferent(file, newName))
                 {
                     break;
@@ -50,7 +50,7 @@ namespace StructuredLogger.Tests
         public void SearchPerf()
         {
             var file = @"D:\contentsync.xml";
-            var build = XlinqLogReader.ReadFromXml(file);
+            var build = Serialization.Read(file);
             var sw = Stopwatch.StartNew();
             var search = new Search(build);
             var results = search.FindNodes("test");
