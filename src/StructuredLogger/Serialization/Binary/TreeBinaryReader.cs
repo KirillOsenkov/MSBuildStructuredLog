@@ -32,6 +32,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        public string[] StringTable => stringTable;
+
         public void ReadStringArray(Queue<string> array)
         {
             array.Clear();

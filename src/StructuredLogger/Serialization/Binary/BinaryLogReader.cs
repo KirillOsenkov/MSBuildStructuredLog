@@ -13,7 +13,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             using (var binaryLogReader = new BinaryLogReader(filePath))
             {
-                return (Build)binaryLogReader.ReadNode();
+                var build = (Build)binaryLogReader.ReadNode();
+                var buildStringCache = build.StringTable;
+
+                foreach (var stringInstance in binaryLogReader.reader.StringTable)
+                {
+                    buildStringCache.Intern(stringInstance);
+                }
+
+                return build;
             }
         }
 
