@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Build.Execution;
@@ -45,6 +46,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 lock (syncLock)
                 {
                     Build.StartTime = args.Timestamp;
+
+                    Build.AddChild(new Property { Name = "Process", Value = Process.GetCurrentProcess().MainModule.FileName });
+                    Build.AddChild(new Property { Name = "Command Line", Value = Environment.CommandLine });
+                    Build.AddChild(new Property { Name = "Current Directory", Value = Environment.CurrentDirectory });
+
                     var properties = Build.GetOrCreateNodeWithName<Folder>("Environment");
                     AddProperties(properties, args.BuildEnvironment);
                 }
