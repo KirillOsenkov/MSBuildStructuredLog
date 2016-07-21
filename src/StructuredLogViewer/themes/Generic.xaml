@@ -493,8 +493,14 @@
           <TextBlock Text="{Binding PrefixArguments}" />
           <TextBox x:Name="argumentsText"
                    Margin="4,0,4,0"
-                   Text="{Binding MSBuildArguments}" 
-                   MinWidth="300" />
+                   Text="{Binding MSBuildArguments, UpdateSourceTrigger=PropertyChanged}" 
+                   MinWidth="300">
+            <TextBox.InputBindings>
+              <KeyBinding  Key="Enter" 
+                           Command="{Binding BuildCommand}" />
+            </TextBox.InputBindings>
+           </TextBox>
+            
           <TextBlock Text="{Binding PostfixArguments}" />
         </WrapPanel>
       </StackPanel>
