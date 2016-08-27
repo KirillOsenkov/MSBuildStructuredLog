@@ -1,9 +1,6 @@
-﻿using System.ComponentModel;
-using System.Runtime.CompilerServices;
-
-namespace Microsoft.Build.Logging.StructuredLogger
+﻿namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class BuildProgress : INotifyPropertyChanged
+    public class BuildProgress : ObservableObject
     {
         private string progressText;
         public string ProgressText
@@ -37,10 +34,5 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         public bool ShowCommandLine => !string.IsNullOrEmpty(MSBuildCommandLine);
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected void RaisePropertyChanged([CallerMemberName] string propertyName = null)
-            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }

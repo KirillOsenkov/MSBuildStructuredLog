@@ -1,17 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
 using StructuredLogViewer;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class WelcomeScreen : INotifyPropertyChanged
+    public class WelcomeScreen : ObservableObject
     {
         private IEnumerable<string> recentLogs;
         public IEnumerable<string> RecentLogs => recentLogs ?? (recentLogs = SettingsService.GetRecentLogFiles());
@@ -38,6 +36,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
             set
             {
                 version = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        private string message;
+        public string Message
+        {
+            get
+            {
+                return message;
+            }
+
+            set
+            {
+                message = value;
                 RaisePropertyChanged();
             }
         }
@@ -93,10 +106,5 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private ICommand openLogFileCommand;
         public ICommand OpenLogFileCommand => openLogFileCommand ?? (openLogFileCommand = new Command(OpenLogFile));
         private void OpenLogFile() => OpenLogFileRequested?.Invoke();
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected void RaisePropertyChanged([CallerMemberName] string propertyName = null)
-            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }

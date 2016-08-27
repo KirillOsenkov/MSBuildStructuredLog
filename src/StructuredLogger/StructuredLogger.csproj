@@ -46,6 +46,7 @@
     <Compile Include="ObjectModel\Metadata.cs" />
     <Compile Include="ObjectModel\NamedNode.cs" />
     <Compile Include="ObjectModel\NameValueNode.cs" />
+    <Compile Include="ObjectModel\ObservableObject.cs" />
     <Compile Include="ObjectModel\Parameter.cs" />
     <Compile Include="ObjectModel\ParentedNode.cs" />
     <Compile Include="ObjectModel\Project.cs" />

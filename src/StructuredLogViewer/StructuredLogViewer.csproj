@@ -67,6 +67,7 @@
     </Compile>
     <Compile Include="Controls\Command.cs" />
     <Compile Include="Controls\SplitterPanel.cs" />
+    <Compile Include="Controls\StringEmptinessToVisibilityConverter.cs" />
     <Compile Include="Controls\TreeViewExtensions.cs" />
     <Compile Include="Entrypoint.cs" />
     <Compile Include="ExceptionHandler.cs" />

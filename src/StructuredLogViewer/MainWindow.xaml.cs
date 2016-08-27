@@ -25,18 +25,18 @@ namespace StructuredLogViewer
             var uri = new Uri("StructuredLogViewer;component/themes/Generic.xaml", UriKind.Relative);
             var generic = (ResourceDictionary)Application.LoadComponent(uri);
             Application.Current.Resources.MergedDictionaries.Add(generic);
-            Loaded += MainWindow_Loaded;
 
-            DisplayWelcomeScreen();
+            Loaded += MainWindow_Loaded;
         }
 
-        private void DisplayWelcomeScreen()
+        private void DisplayWelcomeScreen(string message = "")
         {
             this.projectFilePath = null;
             this.logFilePath = null;
             this.currentBuild = null;
             Title = DefaultTitle;
             var welcomeScreen = new WelcomeScreen();
+            welcomeScreen.Message = message;
             SetContent(welcomeScreen);
             welcomeScreen.RecentLogSelected += log => OpenLogFile(log);
             welcomeScreen.RecentProjectSelected += project => BuildProject(project);
@@ -49,6 +49,43 @@ namespace StructuredLogViewer
         {
             try
             {
+                var args = Environment.GetCommandLineArgs();
+                if (args.Length > 1)
+                {
+                    if (args.Length > 2)
+                    {
+                        DisplayWelcomeScreen("Structured Log Viewer can only accept a single command-line argument: a full path to an existing log file or MSBuild project/solution.");
+                        return;
+                    }
+
+                    var filePath = args[1];
+                    if (!File.Exists(filePath))
+                    {
+                        DisplayWelcomeScreen($"File {filePath} not found.");
+                        return;
+                    }
+
+                    if (filePath.EndsWith(".xml", StringComparison.OrdinalIgnoreCase) ||
+                        filePath.EndsWith(".buildlog", StringComparison.OrdinalIgnoreCase))
+                    {
+                        OpenLogFile(filePath);
+                        return;
+                    }
+
+                    if (filePath.EndsWith(".sln", StringComparison.OrdinalIgnoreCase) ||
+                        filePath.EndsWith("proj", StringComparison.OrdinalIgnoreCase))
+                    {
+                        BuildProject(filePath);
+                        return;
+                    }
+
+                    DisplayWelcomeScreen($"File extension not supported: {filePath}");
+                    return;
+                }
+
+                DisplayWelcomeScreen();
+
+                // only check for updates if there were no command-line arguments and debugger not attached
                 if (Debugger.IsAttached || SettingsService.DisableUpdates)
                 {
                     return;
@@ -84,7 +121,7 @@ namespace StructuredLogViewer
                 var welcomeScreen = mainContent.Content as WelcomeScreen;
                 if (welcomeScreen != null)
                 {
-                    welcomeScreen.Version = ex.ToString();
+                    welcomeScreen.Message = ex.ToString();
                 }
             }
         }

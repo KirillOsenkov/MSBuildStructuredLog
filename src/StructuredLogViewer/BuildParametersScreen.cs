@@ -1,19 +1,12 @@
 ﻿using System;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Windows.Input;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class BuildParametersScreen : INotifyPropertyChanged
+    public class BuildParametersScreen : ObservableObject
     {
-        public event PropertyChangedEventHandler PropertyChanged;
-
         public event Action BuildRequested;
         public event Action CancelRequested;
-
-        protected void RaisePropertyChanged([CallerMemberName] string propertyName = null)
-            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 
         public string PrefixArguments { get; set; }
         public string MSBuildArguments { get; set; }
@@ -28,4 +21,3 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private void Cancel() => CancelRequested?.Invoke();
     }
 }
-
