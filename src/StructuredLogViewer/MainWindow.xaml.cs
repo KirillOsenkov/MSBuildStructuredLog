@@ -29,6 +29,8 @@ namespace StructuredLogViewer
             Loaded += MainWindow_Loaded;
         }
 
+        public ICommand RebuildCommand => new Command(RebuildProjectOrSolution, () => !string.IsNullOrEmpty(projectFilePath));
+
         private void DisplayWelcomeScreen(string message = "")
         {
             this.projectFilePath = null;
@@ -299,6 +301,15 @@ namespace StructuredLogViewer
             BuildProject(openFileDialog.FileName);
         }
 
+        private void RebuildProjectOrSolution()
+        {
+            if (!string.IsNullOrEmpty(projectFilePath))
+            {
+                var args = SettingsService.GetCustomArguments(projectFilePath);
+                BuildCore(projectFilePath, args);
+            }
+        }
+
         private void DisplayBuild(Build build)
         {
             currentBuild = build != null ? new BuildControl(build) : null;
@@ -347,7 +358,11 @@ namespace StructuredLogViewer
             {
                 Reload();
             }
-            else if (e.Key == Key.F6)
+            else if (e.Key == Key.F6 && e.KeyboardDevice.Modifiers == ModifierKeys.Shift)
+            {
+                RebuildProjectOrSolution();
+            }
+			else if (e.Key == Key.F6)
             {
                 OpenProjectOrSolution();
             }
