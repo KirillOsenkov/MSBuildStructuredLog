@@ -19,6 +19,7 @@
     <Menu DockPanel.Dock="Top">
       <MenuItem Header="_File">
         <MenuItem Header="_Build Solution/Project..." Click="Build_Click" InputGestureText="F6" />
+        <MenuItem Header="Rebuild Solution/Project" Command="{Binding RebuildCommand}" InputGestureText="Shift+F6" />
         <Separator />
         <MenuItem Header="_Open Log..." Click="Open_Click" InputGestureText="Ctrl+O" />
         <MenuItem x:Name="ReloadMenu" Header="_Reload" Click="Reload_Click" InputGestureText="F5" />
