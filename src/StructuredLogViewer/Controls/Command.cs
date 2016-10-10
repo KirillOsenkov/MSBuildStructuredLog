@@ -8,7 +8,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private readonly Action execute;
         private readonly Func<bool> canExecute;
 
-        public Command(Action execute) 
+        public Command(Action execute)
             : this(execute, () => true)
         {
         }

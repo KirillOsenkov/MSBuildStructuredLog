@@ -362,7 +362,7 @@ namespace StructuredLogViewer
             {
                 RebuildProjectOrSolution();
             }
-			else if (e.Key == Key.F6)
+            else if (e.Key == Key.F6)
             {
                 OpenProjectOrSolution();
             }
