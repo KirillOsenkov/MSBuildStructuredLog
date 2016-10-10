@@ -60,6 +60,13 @@ namespace StructuredLogViewer
                         return;
                     }
 
+                    var argument = args[1];
+                    if (argument.StartsWith("--"))
+                    {
+                        // we don't do anything about the potential "--squirrel-firstrun" argument
+                        return;
+                    }
+
                     var filePath = args[1];
                     if (!File.Exists(filePath))
                     {
