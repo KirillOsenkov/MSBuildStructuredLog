@@ -57,100 +57,110 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return node;
         }
 
+        private string Dequeue()
+        {
+            if (attributes.Count > 0)
+            {
+                return attributes.Dequeue();
+            }
+
+            return null;
+        }
+
         private void SetAttributes(object node)
         {
             var metadata = node as Metadata;
             if (metadata != null)
             {
-                metadata.Name = attributes.Dequeue();
-                metadata.Value = attributes.Dequeue();
+                metadata.Name = Dequeue();
+                metadata.Value = Dequeue();
                 return;
             }
 
             var property = node as Property;
             if (property != null)
             {
-                property.Name = attributes.Dequeue();
-                property.Value = attributes.Dequeue();
+                property.Name = Dequeue();
+                property.Value = Dequeue();
                 return;
             }
 
             var message = node as Message;
             if (message != null)
             {
-                message.IsLowRelevance = Serialization.GetBoolean(attributes.Dequeue());
-                message.Timestamp = Serialization.GetDateTime(attributes.Dequeue());
-                message.Text = attributes.Dequeue();
+                message.IsLowRelevance = Serialization.GetBoolean(Dequeue());
+                message.Timestamp = Serialization.GetDateTime(Dequeue());
+                message.Text = Dequeue();
                 return;
             }
 
             var folder = node as Folder;
             if (folder != null)
             {
-                folder.IsLowRelevance = Serialization.GetBoolean(attributes.Dequeue());
+                folder.IsLowRelevance = Serialization.GetBoolean(Dequeue());
                 return;
             }
 
             var namedNode = node as NamedNode;
             if (namedNode != null)
             {
-                namedNode.Name = attributes.Dequeue();
+                namedNode.Name = Dequeue();
             }
 
             var textNode = node as TextNode;
             if (textNode != null)
             {
-                textNode.Text = attributes.Dequeue();
+                textNode.Text = Dequeue();
             }
 
             var timedNode = node as TimedNode;
             if (timedNode != null)
             {
-                timedNode.StartTime = Serialization.GetDateTime(attributes.Dequeue());
-                timedNode.EndTime = Serialization.GetDateTime(attributes.Dequeue());
+                timedNode.StartTime = Serialization.GetDateTime(Dequeue());
+                timedNode.EndTime = Serialization.GetDateTime(Dequeue());
             }
 
             var task = node as Task;
             if (task != null)
             {
-                task.FromAssembly = attributes.Dequeue();
-                task.CommandLineArguments = attributes.Dequeue();
+                task.FromAssembly = Dequeue();
+                task.CommandLineArguments = Dequeue();
                 return;
             }
 
             var target = node as Target;
             if (target != null)
             {
-                target.DependsOnTargets = attributes.Dequeue();
-                target.IsLowRelevance = Serialization.GetBoolean(attributes.Dequeue());
+                target.DependsOnTargets = Dequeue();
+                target.IsLowRelevance = Serialization.GetBoolean(Dequeue());
                 return;
             }
 
             var diagnostic = node as AbstractDiagnostic;
             if (diagnostic != null)
             {
-                diagnostic.Code = attributes.Dequeue();
-                diagnostic.File = attributes.Dequeue();
-                diagnostic.LineNumber = Serialization.GetInteger(attributes.Dequeue());
-                diagnostic.ColumnNumber = Serialization.GetInteger(attributes.Dequeue());
-                diagnostic.EndLineNumber = Serialization.GetInteger(attributes.Dequeue());
-                diagnostic.EndColumnNumber = Serialization.GetInteger(attributes.Dequeue());
-                diagnostic.ProjectFile = attributes.Dequeue();
+                diagnostic.Code = Dequeue();
+                diagnostic.File = Dequeue();
+                diagnostic.LineNumber = Serialization.GetInteger(Dequeue());
+                diagnostic.ColumnNumber = Serialization.GetInteger(Dequeue());
+                diagnostic.EndLineNumber = Serialization.GetInteger(Dequeue());
+                diagnostic.EndColumnNumber = Serialization.GetInteger(Dequeue());
+                diagnostic.ProjectFile = Dequeue();
                 return;
             }
 
             var project = node as Project;
             if (project != null)
             {
-                project.ProjectFile = attributes.Dequeue();
+                project.ProjectFile = Dequeue();
                 return;
             }
 
             var build = node as Build;
             if (build != null)
             {
-                build.Succeeded = Serialization.GetBoolean(attributes.Dequeue());
-                build.IsAnalyzed = Serialization.GetBoolean(attributes.Dequeue());
+                build.Succeeded = Serialization.GetBoolean(Dequeue());
+                build.IsAnalyzed = Serialization.GetBoolean(Dequeue());
                 return;
             }
         }
