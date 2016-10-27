@@ -46,6 +46,14 @@ https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/Log-Format
  * Delete to hide nodes from the tree (to get uninteresting stuff out of the way)
  * Open and save log files (ask a friend to record and send you the log which you can then investigate on your machine)
 
+## Investigating problems with MSBuildStructuredLog
+
+Open an issue if you're running into something weird and I can take a look into it. If MSBuildStructuredLog crashes during the build, it will attempt to write the exception call stack to:
+
+```
+%localappdata%\Microsoft\MSBuildStructuredLog\LoggerExceptions.txt
+```
+
 ## MSBuild Resources
  * [https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/MSBuild-Resources](https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/MSBuild-Resources)
  * [https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/MSBuild-Tips-&-Tricks](https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/MSBuild-Tips-&-Tricks)
