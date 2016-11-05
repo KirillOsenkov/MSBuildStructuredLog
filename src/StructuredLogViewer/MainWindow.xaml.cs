@@ -37,6 +37,7 @@ namespace StructuredLogViewer
             this.logFilePath = null;
             this.currentBuild = null;
             Title = DefaultTitle;
+
             var welcomeScreen = new WelcomeScreen();
             welcomeScreen.Message = message;
             SetContent(welcomeScreen);
@@ -217,12 +218,31 @@ namespace StructuredLogViewer
             var progress = new BuildProgress();
             progress.ProgressText = "Opening " + filePath + "...";
             SetContent(progress);
+
+            bool shouldAnalyze = true;
+
             Build build = await System.Threading.Tasks.Task.Run(() =>
             {
-                return Serialization.Read(filePath);
+                try
+                {
+                    return Serialization.Read(filePath);
+                }
+                catch (Exception ex)
+                {
+                    shouldAnalyze = false;
+                    build = new Build() { Succeeded = false };
+                    build.AddChild(new Error() { Text = "Error when opening file: " + filePath });
+                    build.AddChild(new Error() { Text = ex.ToString() });
+                    return build;
+                }
             });
-            progress.ProgressText = "Analyzing " + filePath + "...";
-            await System.Threading.Tasks.Task.Run(() => BuildAnalyzer.AnalyzeBuild(build));
+
+            if (shouldAnalyze)
+            {
+                progress.ProgressText = "Analyzing " + filePath + "...";
+                await System.Threading.Tasks.Task.Run(() => BuildAnalyzer.AnalyzeBuild(build));
+            }
+
             DisplayBuild(build);
         }
 
