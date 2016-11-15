@@ -432,6 +432,21 @@ namespace StructuredLogViewer
             }
         }
 
+        private void SetMSBuild_Click(object sender, RoutedEventArgs e)
+        {
+            var openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "MSBuild.exe|MSBuild.exe";
+            openFileDialog.Title = "Select MSBuild.exe location";
+            openFileDialog.CheckFileExists = true;
+            var result = openFileDialog.ShowDialog(this);
+            if (result != true)
+            {
+                return;
+            }
+
+            SettingsService.SetMSBuildExe(openFileDialog.FileName);
+        }
+
         private void SaveAs_Click(object sender, RoutedEventArgs e)
         {
             SaveAs();
@@ -441,6 +456,7 @@ namespace StructuredLogViewer
         {
             Process.Start("https://github.com/KirillOsenkov/MSBuildStructuredLog");
         }
+
 
         private void Exit_Click(object sender, RoutedEventArgs e)
         {
