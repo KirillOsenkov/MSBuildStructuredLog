@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.Build.Utilities;
 
 namespace StructuredLogViewer
 {
@@ -12,8 +13,15 @@ namespace StructuredLogViewer
         // TODO: protect access to these with a Mutex
         private static readonly string recentLogsFilePath = Path.Combine(GetRootPath(), "RecentLogs.txt");
         private static readonly string recentProjectsFilePath = Path.Combine(GetRootPath(), "RecentProjects.txt");
+        private static readonly string customMSBuildFilePath = Path.Combine(GetRootPath(), "CustomMSBuild.txt");
         private static readonly string customArgumentsFilePath = Path.Combine(GetRootPath(), "CustomMSBuildArguments.txt");
         private static readonly string disableUpdatesFilePath = Path.Combine(GetRootPath(), "DisableUpdates.txt");
+
+        private static readonly Lazy<string> DefaultMSBuildPath = new Lazy<string>(() => ToolLocationHelper
+            .GetPathToBuildToolsFile(
+                "msbuild.exe",
+                ToolLocationHelper.CurrentToolsVersion,
+                DotNetFrameworkArchitecture.Bitness32));
 
         public static void AddRecentLogFile(string filePath)
         {
@@ -89,6 +97,28 @@ namespace StructuredLogViewer
 
             list.Insert(0, item);
             return true;
+        }
+
+        public static void SetMSBuildExe(string msBuildFilePath)
+        {
+            string directoryName = Path.GetDirectoryName(customMSBuildFilePath);
+            Directory.CreateDirectory(directoryName);
+            File.WriteAllText(customMSBuildFilePath, msBuildFilePath);
+        }
+
+        public static string GetMSBuildExe()
+        {
+            if (!File.Exists(customMSBuildFilePath))
+            {
+                return DefaultMSBuildPath.Value;
+            }
+
+            var customPath = File.ReadAllText(customMSBuildFilePath).Trim();
+
+            if (customPath.Length == 0)
+                return DefaultMSBuildPath.Value;
+
+            return customPath;
         }
 
         private const string DefaultArguments = "/t:Rebuild";

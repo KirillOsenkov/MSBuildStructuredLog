@@ -20,16 +20,8 @@ namespace StructuredLogViewer
 
         public static string GetPrefixArguments(string projectFilePath)
         {
-            var msbuildExe = GetMSBuildExe();
+            var msbuildExe = SettingsService.GetMSBuildExe();
             return $@"""{msbuildExe}"" ""{projectFilePath}""";
-        }
-
-        private static string GetMSBuildExe()
-        {
-            return ToolLocationHelper.GetPathToBuildToolsFile(
-                "msbuild.exe",
-                ToolLocationHelper.CurrentToolsVersion,
-                DotNetFrameworkArchitecture.Bitness32);
         }
 
         private static readonly string logFilePath = Path.Combine(Path.GetTempPath(), $"MSBuildStructuredLog-{Process.GetCurrentProcess().Id}.buildlog");
@@ -42,7 +34,7 @@ namespace StructuredLogViewer
 
         public Task<Build> BuildAndGetResult(BuildProgress progress)
         {
-            var msbuildExe = GetMSBuildExe();
+            var msbuildExe = SettingsService.GetMSBuildExe();
             var prefixArguments = GetPrefixArguments(projectFilePath);
             var postfixArguments = GetPostfixArguments();
 
