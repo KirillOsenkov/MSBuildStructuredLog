@@ -24,39 +24,50 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public void Process(BuildMessageEventArgs args)
         {
+            if (args == null)
+            {
+                return;
+            }
+
+            var message = args.Message;
+            if (message == null)
+            {
+                return;
+            }
+
             // Task Input / Outputs
-            if (args.Message.StartsWith(TaskParameterMessagePrefix))
+            if (message.StartsWith(TaskParameterMessagePrefix))
             {
                 var task = GetTask(args);
                 var folder = task.GetOrCreateNodeWithName<Folder>("Parameters");
-                var parameter = ItemGroupParser.ParsePropertyOrItemList(args.Message, TaskParameterMessagePrefix, stringTable);
+                var parameter = ItemGroupParser.ParsePropertyOrItemList(message, TaskParameterMessagePrefix, stringTable);
                 folder.AddChild(parameter);
             }
-            else if (args.Message.StartsWith(OutputItemsMessagePrefix))
+            else if (message.StartsWith(OutputItemsMessagePrefix))
             {
                 var task = GetTask(args);
                 var folder = task.GetOrCreateNodeWithName<Folder>("OutputItems");
-                var parameter = ItemGroupParser.ParsePropertyOrItemList(args.Message, OutputItemsMessagePrefix, stringTable);
+                var parameter = ItemGroupParser.ParsePropertyOrItemList(message, OutputItemsMessagePrefix, stringTable);
                 folder.AddChild(parameter);
             }
-            else if (args.Message.StartsWith(OutputPropertyMessagePrefix))
+            else if (message.StartsWith(OutputPropertyMessagePrefix))
             {
                 var task = GetTask(args);
                 var folder = task.GetOrCreateNodeWithName<Folder>("OutputProperties");
-                var parameter = ItemGroupParser.ParsePropertyOrItemList(args.Message, OutputPropertyMessagePrefix, stringTable);
+                var parameter = ItemGroupParser.ParsePropertyOrItemList(message, OutputPropertyMessagePrefix, stringTable);
                 folder.AddChild(parameter);
             }
 
             // Item / Property groups
-            else if (args.Message.StartsWith(PropertyGroupMessagePrefix))
+            else if (message.StartsWith(PropertyGroupMessagePrefix))
             {
                 AddPropertyGroup(args, PropertyGroupMessagePrefix);
             }
-            else if (args.Message.StartsWith(ItemGroupIncludeMessagePrefix))
+            else if (message.StartsWith(ItemGroupIncludeMessagePrefix))
             {
                 AddItemGroup(args, ItemGroupIncludeMessagePrefix, new AddItem());
             }
-            else if (args.Message.StartsWith(ItemGroupRemoveMessagePrefix))
+            else if (message.StartsWith(ItemGroupRemoveMessagePrefix))
             {
                 AddItemGroup(args, ItemGroupRemoveMessagePrefix, new RemoveItem());
             }
@@ -72,7 +83,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 // A task from assembly message (parses out the task name and assembly path).
                 const string taskAssemblyPattern = "Using \"(?<task>.+)\" task from (assembly|the task factory) \"(?<assembly>.+)\"\\.";
-                var match = Regex.Match(args.Message, taskAssemblyPattern);
+                var match = Regex.Match(message, taskAssemblyPattern);
                 if (match.Success)
                 {
                     construction.SetTaskAssembly(
@@ -82,7 +93,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 else
                 {
                     // Just the generic log message or something we currently don't handle in the object model.
-                    AddMessage(args, args.Message);
+                    AddMessage(args, message);
                 }
             }
         }

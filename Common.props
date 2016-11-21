@@ -34,6 +34,7 @@
     <OutputType Condition="$(OutputType)==''">Library</OutputType>
     <RootNamespace Condition="$(RootNamespace)=='' AND $(AssemblyName)!=''">$(AssemblyName)</RootNamespace>
     <TargetFrameworkVersion Condition="$(TargetFrameworkVersion)==''">v4.6</TargetFrameworkVersion>
+    <Deterministic>True</Deterministic>
     <SignAssembly Condition="'$(SignAssembly)' == ''">false</SignAssembly>
     <DefineConstants Condition="'$(SignAssembly)' == 'true'">$(DefineConstants);SIGN;</DefineConstants>
     <DelaySign>false</DelaySign>
