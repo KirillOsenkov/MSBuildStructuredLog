@@ -8,7 +8,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public event Action BuildRequested;
         public event Action CancelRequested;
 
-        public string PrefixArguments { get; set; }
+        private string prefixArguments;
+        public string PrefixArguments
+        {
+            get
+            {
+                return prefixArguments;
+            }
+
+            set
+            {
+                prefixArguments = value;
+                RaisePropertyChanged();
+            }
+        }
+
         public string MSBuildArguments { get; set; }
         public string PostfixArguments { get; set; }
 

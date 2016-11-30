@@ -29,8 +29,6 @@ namespace StructuredLogViewer
             Loaded += MainWindow_Loaded;
         }
 
-        public ICommand RebuildCommand => new Command(RebuildProjectOrSolution, () => !string.IsNullOrEmpty(projectFilePath));
-
         private void DisplayWelcomeScreen(string message = "")
         {
             this.projectFilePath = null;
@@ -416,6 +414,11 @@ namespace StructuredLogViewer
             Reload();
         }
 
+        private void Rebuild_Click(object sender, RoutedEventArgs e)
+        {
+            RebuildProjectOrSolution();
+        }
+
         private void Copy_Click(object sender, RoutedEventArgs e)
         {
             if (currentBuild != null)
@@ -445,6 +448,12 @@ namespace StructuredLogViewer
             }
 
             SettingsService.SetMSBuildExe(openFileDialog.FileName);
+
+            var buildParametersScreen = mainContent.Content as BuildParametersScreen;
+            if (buildParametersScreen != null)
+            {
+                buildParametersScreen.PrefixArguments = HostedBuild.GetPrefixArguments(this.projectFilePath);
+            }
         }
 
         private void SaveAs_Click(object sender, RoutedEventArgs e)
@@ -456,7 +465,6 @@ namespace StructuredLogViewer
         {
             Process.Start("https://github.com/KirillOsenkov/MSBuildStructuredLog");
         }
-
 
         private void Exit_Click(object sender, RoutedEventArgs e)
         {
