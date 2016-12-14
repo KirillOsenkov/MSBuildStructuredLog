@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
@@ -27,7 +28,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             MSBuildLocations.Clear();
             foreach (var msbuild in SettingsService.GetRecentMSBuildLocations())
             {
-                MSBuildLocations.Add(msbuild);
+                // our list might have gotten stale, so double-check file existence here
+                if (File.Exists(msbuild))
+                {
+                    MSBuildLocations.Add(msbuild);
+                }
             }
 
             if (MSBuildLocations.Count > 0)
