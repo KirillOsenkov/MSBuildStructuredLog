@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Microsoft.Build.Utilities;
 
 namespace StructuredLogViewer
 {
@@ -13,15 +12,9 @@ namespace StructuredLogViewer
         // TODO: protect access to these with a Mutex
         private static readonly string recentLogsFilePath = Path.Combine(GetRootPath(), "RecentLogs.txt");
         private static readonly string recentProjectsFilePath = Path.Combine(GetRootPath(), "RecentProjects.txt");
-        private static readonly string customMSBuildFilePath = Path.Combine(GetRootPath(), "CustomMSBuild.txt");
+        private static readonly string recentMSBuildLocationsFilePath = Path.Combine(GetRootPath(), "RecentMSBuildLocations.txt");
         private static readonly string customArgumentsFilePath = Path.Combine(GetRootPath(), "CustomMSBuildArguments.txt");
         private static readonly string disableUpdatesFilePath = Path.Combine(GetRootPath(), "DisableUpdates.txt");
-
-        private static readonly Lazy<string> DefaultMSBuildPath = new Lazy<string>(() => ToolLocationHelper
-            .GetPathToBuildToolsFile(
-                "msbuild.exe",
-                ToolLocationHelper.CurrentToolsVersion,
-                DotNetFrameworkArchitecture.Bitness32));
 
         public static void AddRecentLogFile(string filePath)
         {
@@ -33,6 +26,12 @@ namespace StructuredLogViewer
             AddRecentItem(filePath, recentProjectsFilePath);
         }
 
+        public static void AddRecentMSBuildLocation(string filePath)
+        {
+            EnsureRecentMSBuildLocationsArePopulated();
+            AddRecentItem(filePath, recentMSBuildLocationsFilePath);
+        }
+
         public static IEnumerable<string> GetRecentLogFiles()
         {
             return GetRecentItems(recentLogsFilePath);
@@ -41,6 +40,12 @@ namespace StructuredLogViewer
         public static IEnumerable<string> GetRecentProjects()
         {
             return GetRecentItems(recentProjectsFilePath);
+        }
+
+        public static IEnumerable<string> GetRecentMSBuildLocations()
+        {
+            EnsureRecentMSBuildLocationsArePopulated();
+            return GetRecentItems(recentMSBuildLocationsFilePath);
         }
 
         private static void AddRecentItem(string item, string storageFilePath)
@@ -99,26 +104,17 @@ namespace StructuredLogViewer
             return true;
         }
 
-        public static void SetMSBuildExe(string msBuildFilePath)
-        {
-            string directoryName = Path.GetDirectoryName(customMSBuildFilePath);
-            Directory.CreateDirectory(directoryName);
-            File.WriteAllText(customMSBuildFilePath, msBuildFilePath);
-        }
-
         public static string GetMSBuildExe()
         {
-            if (!File.Exists(customMSBuildFilePath))
+            return GetRecentMSBuildLocations().FirstOrDefault();
+        }
+
+        private static void EnsureRecentMSBuildLocationsArePopulated()
+        {
+            if (!File.Exists(recentMSBuildLocationsFilePath))
             {
-                return DefaultMSBuildPath.Value;
+                SaveText(recentMSBuildLocationsFilePath, MSBuildLocator.GetMSBuildLocations());
             }
-
-            var customPath = File.ReadAllText(customMSBuildFilePath).Trim();
-
-            if (customPath.Length == 0)
-                return DefaultMSBuildPath.Value;
-
-            return customPath;
         }
 
         private const string DefaultArguments = "/t:Rebuild";

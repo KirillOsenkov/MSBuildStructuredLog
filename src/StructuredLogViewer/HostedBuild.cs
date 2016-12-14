@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.Build.Logging.StructuredLogger;
-using Microsoft.Build.Utilities;
 
 namespace StructuredLogViewer
 {
@@ -20,8 +19,22 @@ namespace StructuredLogViewer
 
         public static string GetPrefixArguments(string projectFilePath)
         {
-            var msbuildExe = SettingsService.GetMSBuildExe();
-            return $@"""{msbuildExe}"" ""{projectFilePath}""";
+            return QuoteIfNeeded(projectFilePath);
+        }
+
+        public static string QuoteIfNeeded(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return text;
+            }
+
+            if (text.Contains(" "))
+            {
+                text = "\"" + text + "\"";
+            }
+
+            return text;
         }
 
         private static readonly string logFilePath = Path.Combine(Path.GetTempPath(), $"MSBuildStructuredLog-{Process.GetCurrentProcess().Id}.buildlog");
@@ -39,7 +52,7 @@ namespace StructuredLogViewer
             var postfixArguments = GetPostfixArguments();
 
             // the command line we display to the user should contain the full path to msbuild.exe
-            var commandLine = $@"{prefixArguments} {customArguments} {postfixArguments}";
+            var commandLine = $@"{msbuildExe} {prefixArguments} {customArguments} {postfixArguments}";
             progress.MSBuildCommandLine = commandLine;
 
             // the command line we pass to Process.Start doesn't need msbuild.exe

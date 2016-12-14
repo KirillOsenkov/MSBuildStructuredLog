@@ -501,26 +501,50 @@
         <TextBlock Text="Specify custom MSBuild command line arguments:" 
                    Margin="0,0,0,7"/>
         <WrapPanel Orientation="Horizontal">
-          <TextBlock Text="{Binding PrefixArguments}" />
+          <ComboBox ItemsSource="{Binding MSBuildLocations}" 
+                    IsSynchronizedWithCurrentItem="True"
+                    ToolTip="Select MSBuild toolset to use for building"
+                    IsEditable="False" />
+          <Button Command="{Binding BrowseForMSBuildCommand}"
+                  Width="21"
+                  Height="21"
+                  ToolTip="Browse for custom MSBuild.exe location..."
+                  Margin="0,0,8,0">
+            <StackPanel Orientation="Horizontal">
+              <Rectangle Width="2" Height="2" Margin="2" Fill="Black" />
+              <Rectangle Width="2" Height="2" Margin="0,2,2,2" Fill="Black" />
+              <Rectangle Width="2" Height="2" Margin="0,2,2,2" Fill="Black" />
+            </StackPanel>
+          </Button>
+          <TextBlock Text="{Binding PrefixArguments}" 
+                     TextWrapping="Wrap" />
           <TextBox x:Name="argumentsText"
                    Margin="4,0,4,0"
                    Text="{Binding MSBuildArguments, UpdateSourceTrigger=PropertyChanged}" 
+                   TextWrapping="Wrap"
                    MinWidth="300">
             <TextBox.InputBindings>
-              <KeyBinding  Key="Enter" 
-                           Command="{Binding BuildCommand}" />
+              <KeyBinding Key="Enter" 
+                          Command="{Binding BuildCommand}" />
             </TextBox.InputBindings>
           </TextBox>
 
-          <TextBlock Text="{Binding PostfixArguments}" />
+          <TextBlock Text="{Binding PostfixArguments}"
+                     TextWrapping="Wrap"/>
         </WrapPanel>
+        <Button Content="Copy command line to clipboard" 
+                Command="{Binding CopyCommand}"
+                Padding="4,0,4,0"
+                Height="23"
+                HorizontalAlignment="Right"
+                Margin="7" />
       </StackPanel>
       <StackPanel Grid.Row="1"
                   HorizontalAlignment="Center"
                   Margin="40,10,40,40"
                   Orientation="Horizontal">
         <Button Content="Build" Command="{Binding BuildCommand}" Width="75" Height="23" Margin="7" />
-        <Button Content="Cancel" Command="{Binding CancelCommand}" Width="75" Height="23" Margin="0,7,0,7" />
+        <Button Content="Cancel" Command="{Binding CancelCommand}" Width="75" Height="23" Margin="0,7,7,7" />
       </StackPanel>
     </Grid>
   </DataTemplate>
