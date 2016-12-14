@@ -5,7 +5,7 @@ A logger for MSBuild that records a structured representation of executed target
 [![NuGet package](https://img.shields.io/nuget/v/Microsoft.Build.Logging.StructuredLogger.svg)](https://nuget.org/packages/Microsoft.Build.Logging.StructuredLogger)
 
 ## Install:
-https://github.com/KirillOsenkov/MSBuildStructuredLog/releases/download/v1.0.72/MSBuildStructuredLogSetup.exe
+https://github.com/KirillOsenkov/MSBuildStructuredLog/releases/download/v1.0.76/MSBuildStructuredLogSetup.exe
 
 The app updates automatically via [Squirrel](https://github.com/Squirrel/Squirrel.Windows) (after launch it checks for updates in background), next launch starts the newly downloaded latest version.
 
@@ -13,8 +13,8 @@ The app updates automatically via [Squirrel](https://github.com/Squirrel/Squirre
 
 ## Requirements:
  * .NET Framework 4.6
- * MSBuild 14.0
- * Visual Studio 2015
+ * MSBuild 14.0 or 15.0
+ * Visual Studio 2015 or 2017
 
 ## Usage:
 
