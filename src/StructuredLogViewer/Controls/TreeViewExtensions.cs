@@ -109,10 +109,25 @@ namespace StructuredLogViewer.Controls
                     ItemsPresenter itemsPresenter = FindVisualChild<ItemsPresenter>(container);
                     if (itemsPresenter != null)
                     {
-                        VirtualizingStackPanel virtualizingPanel = (VirtualizingStackPanel)VisualTreeHelper.GetChild(itemsPresenter, 0);
+                        int index = container.Items.IndexOf(currentItem);
+
+                        var child = VisualTreeHelper.GetChild(itemsPresenter, 0);
+                        var virtualizingPanel = child as VirtualizingStackPanel;
                         if (virtualizingPanel != null)
                         {
-                            virtualizingPanel.BringIndexIntoViewPublic(container.Items.IndexOf(currentItem));
+                            virtualizingPanel.BringIndexIntoViewPublic(index);
+                        }
+                        else
+                        {
+                            var stackPanel = child as StackPanel;
+                            if (stackPanel != null)
+                            {
+                                var frameworkElement = stackPanel.Children[index] as FrameworkElement;
+                                if (frameworkElement != null)
+                                {
+                                    frameworkElement.BringIntoView();
+                                }
+                            }
                         }
                     }
 

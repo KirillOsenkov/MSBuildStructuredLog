@@ -47,7 +47,7 @@
         <local:SplitterPanel.SecondChild>
           <DockPanel>
             <TreeView x:Name="treeView"
-                      VirtualizingPanel.IsVirtualizing="True"
+                      VirtualizingPanel.IsVirtualizing="False"
                       VirtualizingPanel.VirtualizationMode="Recycling"
                       TreeViewItem.Selected="TreeViewItem_Selected"
                       ItemsSource="{Binding Children}">
