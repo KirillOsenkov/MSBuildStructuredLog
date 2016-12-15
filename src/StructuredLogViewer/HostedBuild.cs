@@ -17,11 +17,6 @@ namespace StructuredLogViewer
             this.customArguments = customArguments ?? "";
         }
 
-        public static string GetPrefixArguments(string projectFilePath)
-        {
-            return QuoteIfNeeded(projectFilePath);
-        }
-
         public static string QuoteIfNeeded(string text)
         {
             if (string.IsNullOrEmpty(text))
@@ -48,15 +43,13 @@ namespace StructuredLogViewer
         public Task<Build> BuildAndGetResult(BuildProgress progress)
         {
             var msbuildExe = SettingsService.GetMSBuildExe();
-            var prefixArguments = GetPrefixArguments(projectFilePath);
             var postfixArguments = GetPostfixArguments();
 
-            // the command line we display to the user should contain the full path to msbuild.exe
-            var commandLine = $@"{msbuildExe} {prefixArguments} {customArguments} {postfixArguments}";
-            progress.MSBuildCommandLine = commandLine;
-
             // the command line we pass to Process.Start doesn't need msbuild.exe
-            commandLine = $@"""{projectFilePath}"" {customArguments} {postfixArguments}";
+            var commandLine = $"{QuoteIfNeeded(projectFilePath)} {customArguments} {postfixArguments}";
+
+            // the command line we display to the user should contain the full path to msbuild.exe
+            progress.MSBuildCommandLine = $"{QuoteIfNeeded(msbuildExe)} {commandLine}";
 
             return System.Threading.Tasks.Task.Run(() =>
             {
