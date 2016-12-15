@@ -504,10 +504,11 @@
           <ComboBox ItemsSource="{Binding MSBuildLocations}" 
                     IsSynchronizedWithCurrentItem="True"
                     ToolTip="Select MSBuild toolset to use for building"
+                    Height="22"
                     IsEditable="False" />
           <Button Command="{Binding BrowseForMSBuildCommand}"
-                  Width="21"
-                  Height="21"
+                  Width="22"
+                  Height="22"
                   ToolTip="Browse for custom MSBuild.exe location..."
                   Margin="0,0,8,0">
             <StackPanel Orientation="Horizontal">
@@ -517,9 +518,11 @@
             </StackPanel>
           </Button>
           <TextBlock Text="{Binding PrefixArguments}" 
+                     Margin="0,3,0,0"
                      TextWrapping="Wrap" />
           <TextBox x:Name="argumentsText"
                    Margin="4,0,4,0"
+                   Padding="0,1,0,0"
                    Text="{Binding MSBuildArguments, UpdateSourceTrigger=PropertyChanged}" 
                    TextWrapping="Wrap"
                    MinWidth="300">
@@ -537,7 +540,7 @@
                 Padding="4,0,4,0"
                 Height="23"
                 HorizontalAlignment="Right"
-                Margin="7" />
+                Margin="4" />
       </StackPanel>
       <StackPanel Grid.Row="1"
                   HorizontalAlignment="Center"
