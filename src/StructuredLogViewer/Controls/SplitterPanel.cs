@@ -1,4 +1,4 @@
-﻿ using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 
 namespace StructuredLogViewer.Controls
@@ -80,20 +80,26 @@ namespace StructuredLogViewer.Controls
                 ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1.0, GridUnitType.Star) });
                 ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(5) });
                 ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(3.0, GridUnitType.Star) });
+                RowDefinitions.Add(new RowDefinition());
                 SetRow(gridSplitter, 0);
                 SetColumn(gridSplitter, 1);
                 gridSplitter.ResizeDirection = GridResizeDirection.Columns;
                 gridSplitter.Width = 5;
+                gridSplitter.HorizontalAlignment = HorizontalAlignment.Stretch;
+                gridSplitter.VerticalAlignment = VerticalAlignment.Stretch;
             }
             else
             {
-                RowDefinitions.Add(new RowDefinition());
+                RowDefinitions.Add(new RowDefinition() { Height = new GridLength(1.0, GridUnitType.Star) });
                 RowDefinitions.Add(new RowDefinition() { Height = new GridLength(5) });
-                RowDefinitions.Add(new RowDefinition());
+                RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50) });
+                ColumnDefinitions.Add(new ColumnDefinition());
                 SetRow(gridSplitter, 1);
                 SetColumn(gridSplitter, 0);
                 gridSplitter.ResizeDirection = GridResizeDirection.Rows;
                 gridSplitter.Height = 5;
+                gridSplitter.HorizontalAlignment = HorizontalAlignment.Stretch;
+                gridSplitter.VerticalAlignment = VerticalAlignment.Stretch;
             }
 
             if (FirstChild != null)

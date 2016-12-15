@@ -1,81 +1,93 @@
 ﻿<UserControl x:Class="StructuredLogViewer.Controls.BuildControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:StructuredLogViewer.Controls"
-             mc:Ignorable="d" 
+             mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300">
   <UserControl.Resources>
     <BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter" />
   </UserControl.Resources>
 
-  <local:SplitterPanel>
-    <local:SplitterPanel.FirstChild>
-      <DockPanel>
-        <Grid DockPanel.Dock="Top">
-          <TextBox x:Name="searchTextBox" TextChanged="searchTextBox_TextChanged" />
-          <Path Data="{DynamicResource SearchGeometry}" 
-                Fill="#717171" 
-                HorizontalAlignment="Right"
-                VerticalAlignment="Center"
-                Margin="3"/>
-        </Grid>
+  <local:SplitterPanel Orientation="Vertical">
 
-        <Grid>
-          <TreeView x:Name="resultsList" 
-                    VirtualizingPanel.IsVirtualizing="True" 
-                    VirtualizingPanel.VirtualizationMode="Recycling"
-                    Background="#F5F5F5"></TreeView>
-          <TextBlock x:Name="watermark" 
-                     Margin="40" 
-                     TextWrapping="Wrap"
-                     HorizontalAlignment="Center"
-                     Foreground="Gray"
-                     VerticalAlignment="Center">
-            <Run>Type in the search box to search. Search for multiple words separated by space (space means AND). Results (up to 500) will display here.</Run>
-            <LineBreak />
-            <LineBreak />
-            <Run>Use syntax like "$property Prop" to narrow results down by item kind (supported kinds: $project, $target, $task, $error, $warning, $message, $property, $item, $additem, $removeitem, $metadata)</Run>
-          </TextBlock>
-        </Grid>
-      </DockPanel>
+    <local:SplitterPanel.FirstChild>
+      <local:SplitterPanel>
+        <local:SplitterPanel.FirstChild>
+          <DockPanel>
+            <Grid DockPanel.Dock="Top">
+              <TextBox x:Name="searchTextBox" TextChanged="searchTextBox_TextChanged" />
+              <Path Data="{DynamicResource SearchGeometry}"
+                    Fill="#717171"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Margin="3"/>
+            </Grid>
+
+            <Grid>
+              <TreeView x:Name="resultsList"
+                        VirtualizingPanel.IsVirtualizing="True"
+                        VirtualizingPanel.VirtualizationMode="Recycling"
+                        Background="#F5F5F5"></TreeView>
+              <TextBlock x:Name="watermark"
+                         Margin="40"
+                         TextWrapping="Wrap"
+                         HorizontalAlignment="Center"
+                         Foreground="Gray"
+                         VerticalAlignment="Center">
+                <Run>Type in the search box to search. Search for multiple words separated by space (space means AND). Results (up to 500) will display here.</Run>
+                <LineBreak />
+                <LineBreak />
+                <Run>Use syntax like "$property Prop" to narrow results down by item kind (supported kinds: $project, $target, $task, $error, $warning, $message, $property, $item, $additem, $removeitem, $metadata)</Run>
+              </TextBlock>
+            </Grid>
+          </DockPanel>
+        </local:SplitterPanel.FirstChild>
+        <local:SplitterPanel.SecondChild>
+          <DockPanel>
+            <TreeView x:Name="treeView"
+                      VirtualizingPanel.IsVirtualizing="True"
+                      VirtualizingPanel.VirtualizationMode="Recycling"
+                      TreeViewItem.Selected="TreeViewItem_Selected"
+                      ItemsSource="{Binding Children}">
+            </TreeView>
+          </DockPanel>
+        </local:SplitterPanel.SecondChild>
+      </local:SplitterPanel>
     </local:SplitterPanel.FirstChild>
+
     <local:SplitterPanel.SecondChild>
-      <DockPanel>
-        <ListBox x:Name="breadCrumb" 
-                 DockPanel.Dock="Bottom" 
-                 Margin="0,7,0,0"
-                 MaxHeight="150"
-                 BorderThickness="1"
-                 Visibility="{Binding RelativeSource={RelativeSource Self}, Path=HasItems, Converter={StaticResource booleanToVisibilityConverter}}"
-                 BorderBrush="Gray"
-                 Background="LightYellow"
-                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-          <ListBox.ItemsPanel>
-            <ItemsPanelTemplate>
-              <WrapPanel IsItemsHost="True" />
-            </ItemsPanelTemplate>
-          </ListBox.ItemsPanel>
-          <ListBox.Resources>
-            <Style TargetType="Separator">
-              <Setter Property="Template">
-                <Setter.Value>
-                  <ControlTemplate>
-                    <Polygon Points="0,0 3,3, 0,6" Stroke="Black" Fill="Black" />
-                  </ControlTemplate>
-                </Setter.Value>
-              </Setter>
-            </Style>
-          </ListBox.Resources>
-        </ListBox>
-        <TreeView x:Name="treeView"
-                  VirtualizingPanel.IsVirtualizing="True" 
-                  VirtualizingPanel.VirtualizationMode="Recycling"
-                  TreeViewItem.Selected="TreeViewItem_Selected"
-                  ItemsSource="{Binding Children}">
-        </TreeView>
-      </DockPanel>
+      <Border BorderBrush="Gray"
+              BorderThickness="1">
+        <ScrollViewer>
+          <ListBox x:Name="breadCrumb"
+                   BorderThickness="0"
+                   BorderBrush="Transparent"
+                   ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                   ScrollViewer.CanContentScroll="False"
+                   Background="LightYellow">
+            <ListBox.ItemsPanel>
+              <ItemsPanelTemplate>
+                <WrapPanel IsItemsHost="True"/>
+              </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+            <ListBox.Resources>
+              <Style TargetType="Separator">
+                <Setter Property="Template">
+                  <Setter.Value>
+                    <ControlTemplate>
+                      <Polygon Points="0,0 3,3, 0,6" Stroke="Black" Fill="Black" />
+                    </ControlTemplate>
+                  </Setter.Value>
+                </Setter>
+              </Style>
+            </ListBox.Resources>
+          </ListBox>
+        </ScrollViewer>
+      </Border>
     </local:SplitterPanel.SecondChild>
+
   </local:SplitterPanel>
+
 </UserControl>

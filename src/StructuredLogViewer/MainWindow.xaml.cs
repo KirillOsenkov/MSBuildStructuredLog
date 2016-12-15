@@ -129,7 +129,13 @@ namespace StructuredLogViewer
                 var welcomeScreen = mainContent.Content as WelcomeScreen;
                 if (welcomeScreen != null)
                 {
-                    welcomeScreen.Message = ex.ToString();
+                    var text = ex.ToString();
+                    if (text.Contains("Update.exe not found"))
+                    {
+                        text = "Update.exe not found; app will not update.";
+                    }
+
+                    welcomeScreen.Message = text;
                 }
             }
         }
