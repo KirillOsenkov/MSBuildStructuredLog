@@ -125,6 +125,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return existing;
         }
 
+        public virtual T FindChild<T>(string name) where T : NamedNode
+        {
+            return FindChild<T>(c => c.Name == name);
+        }
+
         public virtual T FindChild<T>(Predicate<T> predicate = null)
         {
             if (HasChildren)
@@ -148,10 +153,26 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return (T)(object)this;
             }
 
-            return FindFirstChild<T>(predicate);
+            return FindFirstDescendant<T>(predicate);
         }
 
         public virtual T FindFirstChild<T>(Predicate<T> predicate = null)
+        {
+            if (HasChildren)
+            {
+                foreach (var child in Children)
+                {
+                    if (child is T && (predicate == null || predicate((T)child)))
+                    {
+                        return (T)child;
+                    }
+                }
+            }
+
+            return default(T);
+        }
+
+        public virtual T FindFirstDescendant<T>(Predicate<T> predicate = null)
         {
             if (HasChildren)
             {
@@ -178,7 +199,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public virtual T FindLastInSubtreeIncludingSelf<T>(Predicate<T> predicate = null)
         {
-            var child = FindLastChild<T>(predicate);
+            var child = FindLastDescendant<T>(predicate);
             if (child != null)
             {
                 return child;
@@ -193,6 +214,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         public virtual T FindLastChild<T>(Predicate<T> predicate = null)
+        {
+            if (HasChildren)
+            {
+                foreach (var child in Children.Reverse())
+                {
+                    if (child is T && (predicate == null || predicate((T)child)))
+                    {
+                        return (T)child;
+                    }
+                }
+            }
+
+            return default(T);
+        }
+
+        public virtual T FindLastDescendant<T>(Predicate<T> predicate = null)
         {
             if (HasChildren)
             {
