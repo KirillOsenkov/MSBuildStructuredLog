@@ -17,17 +17,25 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static void AnalyzeBuild(Build build)
         {
-            if (build.IsAnalyzed)
+            try
             {
+                if (build.IsAnalyzed)
+                {
+                    Seal(build);
+                    return;
+                }
+
+                var analyzer = new BuildAnalyzer(build);
+                analyzer.Analyze();
+                build.IsAnalyzed = true;
+
                 Seal(build);
-                return;
             }
-
-            var analyzer = new BuildAnalyzer(build);
-            analyzer.Analyze();
-            build.IsAnalyzed = true;
-
-            Seal(build);
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show(
+                    "Error while analyzing build. Very sorry about that. Please Ctrl+C to copy this text and file an issue on https://github.com/KirillOsenkov/MSBuildStructuredLog \r\n" + ex.ToString());
+            }
         }
 
         private static void Seal(Build build)
@@ -63,6 +71,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (!string.IsNullOrEmpty(task.FromAssembly))
             {
                 task.AddChildAtBeginning(new Property { Name = "Assembly", Value = task.FromAssembly });
+            }
+
+            if (task.Name == "ResolveAssemblyReference")
+            {
+                CopyLocalAnalyzer.AnalyzeResolveAssemblyReference(task);
             }
         }
 

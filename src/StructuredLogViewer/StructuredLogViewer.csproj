@@ -44,6 +44,7 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Analyzers\ResolveAssemblyReferenceAnalyzer\CopyLocalAnalyzer.cs" />
     <Compile Include="BuildAnalyzer.cs" />
     <Compile Include="BuildParametersScreen.cs" />
     <Compile Include="BuildProgress.cs" />
