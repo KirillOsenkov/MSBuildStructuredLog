@@ -187,10 +187,25 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             message = message.Substring(4);
                             if (!string.IsNullOrWhiteSpace(message))
                             {
-                                parameter.AddChild(new Item()
+                                node = parameter;
+
+                                if (message.StartsWith("    "))
                                 {
-                                    Text = stringTable.Intern(message)
-                                });
+                                    var lastItem = parameter.FindLastChild<Item>();
+                                    if (lastItem != null)
+                                    {
+                                        node = lastItem;
+                                        message = message.Substring(4);
+                                    }
+                                }
+
+                                if (!string.IsNullOrEmpty(message))
+                                {
+                                    node.AddChild(new Item()
+                                    {
+                                        Text = stringTable.Intern(message)
+                                    });
+                                }
                             }
 
                             return;
