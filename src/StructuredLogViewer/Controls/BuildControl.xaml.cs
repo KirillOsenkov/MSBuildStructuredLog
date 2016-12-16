@@ -291,6 +291,8 @@ namespace StructuredLogViewer.Controls
 
             var root = new Folder();
 
+            // root.Children.Add(new Message { Text = "Elapsed " + Elapsed.ToString() });
+
             foreach (var result in results)
             {
                 TreeNode parent = root;
@@ -324,8 +326,6 @@ namespace StructuredLogViewer.Controls
             {
                 root.Children.Add(new Message { Text = "No results found." });
             }
-
-            //root.Children.Add(new Message { Text = "Elapsed " + Elapsed.ToString() });
 
             return root.Children;
         }
