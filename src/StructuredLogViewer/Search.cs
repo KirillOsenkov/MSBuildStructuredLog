@@ -8,7 +8,7 @@ namespace StructuredLogViewer
 {
     public class Search
     {
-        public const int MaxResults = 500;
+        public const int MaxResults = 1000;
 
         private Build build;
         private string query;
