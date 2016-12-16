@@ -175,7 +175,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 var task = node as Task;
                 if (task != null && task.Name == "ResolveAssemblyReference")
                 {
-                    node = task.GetOrCreateNodeWithName<Folder>("Inputs");
+                    Folder inputs = task.GetOrCreateNodeWithName<Folder>("Inputs");
+                    Folder results = task.FindChild<Folder>(c => c.Name == "Results");
+                    node = results ?? inputs;
+
                     if (message.StartsWith("    "))
                     {
                         var parameter = node.FindLastChild<Parameter>();
@@ -195,7 +198,29 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                     else
                     {
-                        node = node.GetOrCreateNodeWithName<Parameter>(message.TrimEnd(':'));
+                        if (results == null)
+                        {
+                            bool isResult = message.StartsWith("Unified primary reference ") ||
+                                message.StartsWith("Primary reference ") ||
+                                message.StartsWith("Dependency ") ||
+                                message.StartsWith("Unified Dependency ");
+
+                            if (isResult)
+                            {
+                                results = task.GetOrCreateNodeWithName<Folder>("Results");
+                                node = results;
+                            }
+                            else
+                            {
+                                node = inputs;
+                            }
+                        }
+                        else
+                        {
+                            node = results;
+                        }
+
+                        node.GetOrCreateNodeWithName<Parameter>(message.TrimEnd(':'));
                         return;
                     }
                 }
