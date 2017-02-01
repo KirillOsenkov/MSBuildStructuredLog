@@ -15,6 +15,7 @@ The app updates automatically via [Squirrel](https://github.com/Squirrel/Squirre
  * .NET Framework 4.6
  * MSBuild 14.0 or 15.0
  * Visual Studio 2015 or 2017
+ * http://nuproj.net is required to be installed in VS in order to open and build the two .nuproj projects
 
 ## Usage:
 
