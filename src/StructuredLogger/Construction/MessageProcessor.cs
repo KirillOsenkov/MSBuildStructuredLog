@@ -181,21 +181,23 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     if (message.StartsWith("    "))
                     {
+                        message = message.Substring(4);
+
                         var parameter = node.FindLastChild<Parameter>();
                         if (parameter != null)
                         {
-                            message = message.Substring(4);
                             if (!string.IsNullOrWhiteSpace(message))
                             {
                                 node = parameter;
 
                                 if (message.StartsWith("    "))
                                 {
+                                    message = message.Substring(4);
+
                                     var lastItem = parameter.FindLastChild<Item>();
                                     if (lastItem != null)
                                     {
                                         node = lastItem;
-                                        message = message.Substring(4);
                                     }
                                 }
 
