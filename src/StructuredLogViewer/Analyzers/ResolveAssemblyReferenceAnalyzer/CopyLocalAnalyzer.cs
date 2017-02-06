@@ -40,7 +40,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             var assemblies = rar.FindChild<Folder>("Parameters")?.FindChild<Parameter>("Assemblies");
                             if (assemblies != null)
                             {
-                                var dictionary = assemblies.Children.OfType<Item>().ToDictionary(a => a.Text, StringComparer.OrdinalIgnoreCase);
+                                var dictionary = assemblies.Children
+                                    .OfType<Item>()
+                                    .GroupBy(i => i.Text, StringComparer.OrdinalIgnoreCase)
+                                    .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
 
                                 foreach (var sourceItem in requiredBy)
                                 {
