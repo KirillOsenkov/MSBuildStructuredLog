@@ -195,7 +195,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                     message = message.Substring(4);
 
                                     var lastItem = parameter.FindLastChild<Item>();
-                                    if (lastItem != null)
+
+                                    // only indent if it's not a "For SearchPath..." message - that one needs to be directly under parameter
+                                    if (lastItem != null && !message.StartsWith("For SearchPath"))
                                     {
                                         node = lastItem;
                                     }
