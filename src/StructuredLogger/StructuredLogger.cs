@@ -28,6 +28,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             Environment.SetEnvironmentVariable("MSBUILDTARGETOUTPUTLOGGING", "true");
 
+            // Set this environment variable to log AssemblyFoldersEx search results from ResolveAssemblyReference
+            // Environment.SetEnvironmentVariable("MSBUILDLOGVERBOSERARSEARCHRESULTS", "true");
+
             ProcessParameters();
 
             construction = new Construction();
