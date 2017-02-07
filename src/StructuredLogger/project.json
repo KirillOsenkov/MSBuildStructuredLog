@@ -8,10 +8,6 @@
       "version": "1.5.62",
       "suppressParent": "none"
     },
-    "NuProj.Common": {
-      "version": "0.11.14-beta",
-      "suppressParent": "none"
-    }
   },
   "frameworks": {
     "net46": {}

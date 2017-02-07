@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>MSBuildStructuredLogViewer</id>
+    <title>MSBuild Structured Log Viewer</title>
+    <authors>Kirill Osenkov</authors>
+    <owners>Kirill Osenkov</owners>
+    <version>$currentVersion$</version>
+    <language>en-US</language>
+    <licenseUrl>https://github.com/KirillOsenkov/MSBuildStructuredLog/blob/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/KirillOsenkov/MSBuildStructuredLog</projectUrl>
+    <iconUrl>https://raw.githubusercontent.com/KirillOsenkov/MSBuildStructuredLog/$GitCommitIdShort$/docs/StructuredLogger.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>A logger that can be passed to MSBuild to record a detailed log file and a WPF viewer app to view the log files in a tree form.</description>
+    <summary>Structured logger and viewer to investigate MSBuild builds</summary>
+    <tags>MSBuild Log Structure Structured WPF Viewer Tree</tags>
+  </metadata>
+  <files>
+    <file src="DeltaCompressionDotNet.dll" target="lib\net46" />
+    <file src="DeltaCompressionDotNet.MsDelta.dll" target="lib\net46" />
+    <file src="DeltaCompressionDotNet.PatchApi.dll" target="lib\net46" />
+    <file src="ICSharpCode.SharpZipLib.dll" target="lib\net46" />
+    <file src="Mono.Cecil.dll" target="lib\net46" />
+    <file src="Mono.Cecil.Mdb.dll" target="lib\net46" />
+    <file src="Mono.Cecil.Pdb.dll" target="lib\net46" />
+    <file src="Mono.Cecil.Rocks.dll" target="lib\net46" />
+    <file src="NuGet.Squirrel.dll" target="lib\net46" />
+    <file src="Splat.dll" target="lib\net46" />
+    <file src="Squirrel.dll" target="lib\net46" />
+    <file src="StructuredLogger.dll" target="lib\net46" />
+    <file src="StructuredLogger.pdb" target="lib\net46" />
+    <file src="StructuredLogViewer.exe" target="lib\net46" />
+    <file src="StructuredLogViewer.pdb" target="lib\net46" />
+    <file src="StructuredLogViewer.exe.config" target="lib\net46" />
+  </files>
+</package>
