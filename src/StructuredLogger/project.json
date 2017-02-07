@@ -5,7 +5,7 @@
     "Microsoft.Build.Tasks.Core": "14.3.0",
     "Microsoft.Build.Utilities.Core": "14.3.0",
     "Nerdbank.GitVersioning": {
-      "version": "1.4.41",
+      "version": "1.5.62",
       "suppressParent": "none"
     },
     "NuProj.Common": {
