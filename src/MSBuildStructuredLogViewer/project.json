@@ -1,7 +1,7 @@
 ﻿{
   "dependencies": {
     "Nerdbank.GitVersioning": "1.5.62",
-    "NuProj": "0.10.48-beta-gea4a31bbc5",
+    "NuProj": "0.11.14-beta",
     "squirrel.windows": "1.5.2"
   },
   "frameworks": {
