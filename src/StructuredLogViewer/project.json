@@ -1,6 +1,6 @@
 ﻿{
   "dependencies": {
-    "squirrel.windows": "1.4.0"
+    "squirrel.windows": "1.5.2"
   },
   "frameworks": {
     "net46": { }

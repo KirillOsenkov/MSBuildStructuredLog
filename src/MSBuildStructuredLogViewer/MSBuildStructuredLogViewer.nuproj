@@ -45,7 +45,7 @@
   </ItemGroup>
   <Import Project="$(NuProjPath)\NuProj.targets" />
   <Target Name="SquirrelReleasify" AfterTargets="Build" Inputs="$(TargetPath)" Outputs="$(OutDir)Releases\MSBuildStructuredLogSetup.exe">
-    <Exec Command="$(UserProfile)\.nuget\packages\squirrel.windows\1.4.0\tools\Squirrel.exe --releaseDir=$(OutDir)Releases --no-msi --releasify &quot;$(TargetPath)&quot; " />
+    <Exec Command="$(UserProfile)\.nuget\packages\squirrel.windows\1.5.2\tools\Squirrel.exe --releaseDir=$(OutDir)Releases --no-msi --releasify &quot;$(TargetPath)&quot; " />
     <Copy SourceFiles="$(OutDir)Releases\Setup.exe" DestinationFiles="$(OutDir)Releases\MSBuildStructuredLogSetup.exe" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" />
     <Delete Files="$(OutDir)Releases\Setup.exe" />
   </Target>
