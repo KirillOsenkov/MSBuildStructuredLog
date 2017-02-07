@@ -21,6 +21,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static readonly Dictionary<string, Type> ObjectModelTypes =
             typeof(TreeNode)
+                .GetTypeInfo()
                 .Assembly
                 .GetTypes()
                 .Where(t => typeof(BaseNode).IsAssignableFrom(t))

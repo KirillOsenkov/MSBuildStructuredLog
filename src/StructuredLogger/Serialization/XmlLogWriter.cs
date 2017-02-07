@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Xml;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -15,7 +16,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public void Write(Build build, string logFile)
         {
-            using (xmlWriter = XmlWriter.Create(logFile, new XmlWriterSettings() { Indent = true }))
+            var settings = new XmlWriterSettings()
+            {
+                Indent = true
+            };
+            FileStream stream = File.OpenWrite(logFile);
+            using (xmlWriter = XmlWriter.Create(stream, settings))
             {
                 xmlWriter.WriteStartDocument();
                 WriteNode(build);

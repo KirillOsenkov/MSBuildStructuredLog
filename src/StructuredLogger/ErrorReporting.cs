@@ -9,7 +9,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private static string GetRootPath()
         {
+#if NETCORE
+            var path = Path.GetTempPath();
+#else
             var path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+#endif
+
             path = Path.Combine(path, "Microsoft", "MSBuildStructuredLog");
             return path;
         }

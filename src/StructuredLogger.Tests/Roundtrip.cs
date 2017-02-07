@@ -47,16 +47,16 @@ namespace StructuredLogger.Tests
         }
 
         //[Fact]
-        public void SearchPerf()
-        {
-            var file = @"D:\contentsync.xml";
-            var build = Serialization.Read(file);
-            var sw = Stopwatch.StartNew();
-            var search = new Search(build);
-            var results = search.FindNodes("test");
-            var elapsed = sw.Elapsed;
-            MessageBox.Show(elapsed.ToString());
-            File.WriteAllLines(@"D:\2.txt", results.Select(r => r.Field).ToArray());
-        }
+        //public void SearchPerf()
+        //{
+        //    var file = @"D:\contentsync.xml";
+        //    var build = Serialization.Read(file);
+        //    var sw = Stopwatch.StartNew();
+        //    var search = new Search(build);
+        //    var results = search.FindNodes("test");
+        //    var elapsed = sw.Elapsed;
+        //    MessageBox.Show(elapsed.ToString());
+        //    File.WriteAllLines(@"D:\2.txt", results.Select(r => r.Field).ToArray());
+        //}
     }
 }

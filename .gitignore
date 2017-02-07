@@ -237,3 +237,6 @@ _Pvt_Extensions
 # FAKE - F# Make
 .fake/
 /NuGet.exe
+
+# Visual Studio Code
+.vscode/
