@@ -51,43 +51,8 @@ namespace StructuredLogViewer
             try
             {
                 var args = Environment.GetCommandLineArgs();
-                if (args.Length > 1)
+                if (args.Length > 1 && HandleArguments(args))
                 {
-                    if (args.Length > 2)
-                    {
-                        DisplayWelcomeScreen("Structured Log Viewer can only accept a single command-line argument: a full path to an existing log file or MSBuild project/solution.");
-                        return;
-                    }
-
-                    var argument = args[1];
-                    if (argument.StartsWith("--"))
-                    {
-                        // we don't do anything about the potential "--squirrel-firstrun" argument
-                        return;
-                    }
-
-                    var filePath = args[1];
-                    if (!File.Exists(filePath))
-                    {
-                        DisplayWelcomeScreen($"File {filePath} not found.");
-                        return;
-                    }
-
-                    if (filePath.EndsWith(".xml", StringComparison.OrdinalIgnoreCase) ||
-                        filePath.EndsWith(".buildlog", StringComparison.OrdinalIgnoreCase))
-                    {
-                        OpenLogFile(filePath);
-                        return;
-                    }
-
-                    if (filePath.EndsWith(".sln", StringComparison.OrdinalIgnoreCase) ||
-                        filePath.EndsWith("proj", StringComparison.OrdinalIgnoreCase))
-                    {
-                        BuildProject(filePath);
-                        return;
-                    }
-
-                    DisplayWelcomeScreen($"File extension not supported: {filePath}");
                     return;
                 }
 
@@ -138,6 +103,46 @@ namespace StructuredLogViewer
                     welcomeScreen.Message = text;
                 }
             }
+        }
+
+        private bool HandleArguments(string[] args)
+        {
+            if (args.Length > 2)
+            {
+                DisplayWelcomeScreen("Structured Log Viewer can only accept a single command-line argument: a full path to an existing log file or MSBuild project/solution.");
+                return true;
+            }
+
+            var argument = args[1];
+            if (argument.StartsWith("--"))
+            {
+                // we don't do anything about the potential "--squirrel-firstrun" argument
+                return false;
+            }
+
+            var filePath = args[1];
+            if (!File.Exists(filePath))
+            {
+                DisplayWelcomeScreen($"File {filePath} not found.");
+                return true;
+            }
+
+            if (filePath.EndsWith(".xml", StringComparison.OrdinalIgnoreCase) ||
+                filePath.EndsWith(".buildlog", StringComparison.OrdinalIgnoreCase))
+            {
+                OpenLogFile(filePath);
+                return true;
+            }
+
+            if (filePath.EndsWith(".sln", StringComparison.OrdinalIgnoreCase) ||
+                filePath.EndsWith("proj", StringComparison.OrdinalIgnoreCase))
+            {
+                BuildProject(filePath);
+                return true;
+            }
+
+            DisplayWelcomeScreen($"File extension not supported: {filePath}");
+            return true;
         }
 
         private void UpdateRecentItemsMenu(WelcomeScreen welcomeScreen = null)
