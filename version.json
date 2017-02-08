@@ -1,12 +1,13 @@
 {
   "$schema": "https://raw.githubusercontent.com/AArnott/Nerdbank.GitVersioning/master/src/NerdBank.GitVersioning/version.schema.json",
-  "version": "1.0",
+  "version": "1.0-beta",
   "assemblyVersion": {
       "precision": "build"
   },
   "buildNumberOffset": 2,
   "publicReleaseRefSpec": [
     "^refs/heads/master$", // we release out of master
+    "^refs/heads/netcore$", // we release out of master
     "^refs/heads/v\\d+(?:.\\d+)?$" // we also release out of vNN branches
   ],
   "cloudBuild": {
