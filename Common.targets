@@ -20,7 +20,7 @@
   <Target Name="ExtractVersion"
           AfterTargets="CoreBuild"
           Condition="Exists('$(NuspecPath)')"
-          DependsOnTargets="CopyFilesToOutputDirectory;_DownloadNuGet;PrepareResources">
+          DependsOnTargets="PrepareResources;GenerateAssemblyVersionInfo">
     <PropertyGroup>
       <NupkgPath>$(OutDir)$(NuspecFileName).$(Version).nupkg</NupkgPath>
     </PropertyGroup>
