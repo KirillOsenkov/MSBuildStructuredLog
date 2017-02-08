@@ -39,10 +39,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void WriteVersion()
         {
-            var versionParts = ThisAssembly.AssemblyVersion.Split('.');
-            fileStream.WriteByte((byte)int.Parse(versionParts[0]));
-            fileStream.WriteByte((byte)int.Parse(versionParts[1]));
-            fileStream.WriteByte((byte)int.Parse(versionParts[2]));
+            var version = this.GetType().GetTypeInfo().Assembly.GetName().Version;
+            fileStream.WriteByte((byte)version.Major);
+            fileStream.WriteByte((byte)version.Minor);
+            fileStream.WriteByte((byte)version.Build);
         }
 
         public void WriteNode(string name)
