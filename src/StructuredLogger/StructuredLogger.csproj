@@ -3,11 +3,23 @@
     <AssemblyName>StructuredLogger</AssemblyName>
     <RootNamespace>Microsoft.Build.Logging.StructuredLogger</RootNamespace>
     <TargetFrameworks>net46;netstandard1.5</TargetFrameworks>
-    <Version>1.0.110</Version>
+    <NBGV_DoNotEmitNonVersionCustomAttributes>true</NBGV_DoNotEmitNonVersionCustomAttributes>
   </PropertyGroup>
-  <!--<ItemGroup>
+  <PropertyGroup>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageId>Microsoft.Build.Logging.StructuredLogger</PackageId>
+    <Authors>Kirill Osenkov, Microsoft</Authors>
+    <Company>Microsoft</Company>
+    <Description>An MSBuild logger that can be passed to MSBuild to record a detailed structured log file. See usage example at: https://github.com/KirillOsenkov/MSBuildStructuredLog/blob/master/README.md#usage</Description>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/KirillOsenkov/MSBuildStructuredLog/65f57afb85/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/KirillOsenkov/MSBuildStructuredLog</PackageProjectUrl>
+    <PackageIconUrl>https://github.com/KirillOsenkov/MSBuildStructuredLog/blob/08a544cbc97fdb80f78822e599b52756a7df047c/docs/StructuredLogger.png</PackageIconUrl>
+    <RepositoryUrl>https://github.com/KirillOsenkov/MSBuildStructuredLog</RepositoryUrl>
+    <PackageTags>MSBuild Log Logger Structure Structured</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
     <PackageReference Include="Nerdbank.GitVersioning" Version="1.5.62" />
-  </ItemGroup>-->
+  </ItemGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.5'">
     <DefineConstants>$(DefineConstants);NETCORE</DefineConstants>
   </PropertyGroup>
