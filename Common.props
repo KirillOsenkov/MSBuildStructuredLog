@@ -3,13 +3,6 @@
 
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
 
-  <PropertyGroup Condition="'$(DevEnvDir)' == ''">
-    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">14.0</VisualStudioVersion>
-    <DevEnvDir Condition="'$(VisualStudioVersion)' == '12.0'">$(VS120COMNTOOLS)\..\IDE</DevEnvDir>
-    <DevEnvDir Condition="'$(VisualStudioVersion)' == '14.0'">$(VS140COMNTOOLS)\..\IDE</DevEnvDir>
-    <DevEnvDir>$([System.IO.Path]::GetFullPath('$(DevEnvDir)'))</DevEnvDir>
-  </PropertyGroup>
-
   <PropertyGroup>
     <SrcRoot>$(MSBuildThisFileDirectory)</SrcRoot>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">$(SrcRoot)\</SolutionDir>
