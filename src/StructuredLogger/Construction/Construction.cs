@@ -625,6 +625,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void AddProperties(TreeNode parent, IEnumerable<KeyValuePair<string, string>> properties)
         {
+            if (properties == null)
+            {
+                return;
+            }
+
             foreach (var kvp in properties)
             {
                 var property = new Property
