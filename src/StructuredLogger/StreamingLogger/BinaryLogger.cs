@@ -16,6 +16,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public override void Initialize(IEventSource eventSource)
         {
+            Environment.SetEnvironmentVariable("MSBUILDTARGETOUTPUTLOGGING", "true");
+
             ProcessParameters();
 
             try
