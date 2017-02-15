@@ -1,9 +1,5 @@
 ﻿{
   "dependencies": {
-    "Microsoft.Build": "14.3.0",
-    "Microsoft.Build.Framework": "14.3.0",
-    "Microsoft.Build.Tasks.Core": "14.3.0",
-    "Microsoft.Build.Utilities.Core": "14.3.0",
     "Nerdbank.GitVersioning": {
       "version": "1.5.62",
       "suppressParent": "none"
