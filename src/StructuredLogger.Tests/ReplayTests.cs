@@ -21,7 +21,7 @@ namespace StructuredLoggerTests
             fileLogger.Parameters = $"ENABLEMPLOGGING;SHOWPROJECTFILE=TRUE;verbosity=diagnostic;logfile=D:\\2.txt";
             fileLogger.Initialize(logReplayEventSource);
 
-            logReplayEventSource.Replay(@"D:\1.msbuildlog");
+            logReplayEventSource.Replay(@"D:\1.binlog");
         }
     }
 }

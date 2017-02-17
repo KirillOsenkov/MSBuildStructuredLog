@@ -2,6 +2,7 @@
 using System.IO;
 using System.Reflection;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Logging.Serialization;
 using Microsoft.Build.Utilities;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -11,6 +12,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private Stream stream;
         private BetterBinaryWriter binaryWriter;
         private Action<BuildEventArgs, BinaryWriter> writeToStream;
+        private EventArgsWriter eventArgsWriter;
 
         public string FilePath { get; set; }
 
@@ -32,6 +34,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             //stream = new GZipStream(stream, CompressionLevel.Optimal);
 
             binaryWriter = new BetterBinaryWriter(stream);
+
+            eventArgsWriter = new EventArgsWriter(binaryWriter);
 
             writeToStream = (Action<BuildEventArgs, BinaryWriter>)Delegate.CreateDelegate(
                 typeof(Action<BuildEventArgs, BinaryWriter>),
@@ -72,8 +76,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             if (stream != null)
             {
-                binaryWriter.Write(e.GetType().MetadataToken);
-                writeToStream(e, binaryWriter);
+                eventArgsWriter.Write(e);
+                //binaryWriter.Write(e.GetType().MetadataToken);
+                //writeToStream(e, binaryWriter);
             }
         }
 
