@@ -39,7 +39,7 @@ https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/Log-Format
 
 ## Features:
 
- * Displays double-writes (when files from different sources are written to the same destination during a build, thus causing non-determinism)
+ * Displays [double-writes](https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/Double%20write%20detection) (when files from different sources are written to the same destination during a build, thus causing non-determinism)
  * Displays target dependencies for each target
  * Text search through the entire log
  * Ctrl+C to copy an item and the entire subtree to Clipboard as text
