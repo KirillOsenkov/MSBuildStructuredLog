@@ -387,23 +387,16 @@ namespace Microsoft.Build.Logging.Serialization
                 return;
             }
 
-            var entries = items.OfType<DictionaryEntry>();
+            var entries = items.OfType<DictionaryEntry>()
+                .Where(e => e.Key is string && e.Value is ITaskItem);
             Write(entries.Count());
 
             foreach (DictionaryEntry entry in entries)
             {
                 string key = entry.Key as string;
                 ITaskItem item = entry.Value as ITaskItem;
-                if (key != null && item != null)
-                {
-                    Write(key);
-                    Write(item);
-                }
-                else
-                {
-                    Write(false);
-                    Write(false);
-                }
+                Write(key);
+                Write(item);
             }
         }
 
