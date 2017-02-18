@@ -2,18 +2,27 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Logging.StructuredLogger;
 
 namespace Microsoft.Build.Logging.Serialization
 {
     public class EventArgsWriter
     {
-        private BetterBinaryWriter binaryWriter;
+        private BinaryWriter binaryWriter;
 
-        public EventArgsWriter(BetterBinaryWriter binaryWriter)
+        private static FieldInfo lazyFormattedArgumentsField =
+            typeof(LazyFormattedBuildEventArgs).GetField("arguments", BindingFlags.Instance | BindingFlags.NonPublic);
+        private static FieldInfo buildEventArgsMessageField =
+            typeof(BuildEventArgs).GetField("message", BindingFlags.Instance | BindingFlags.NonPublic);
+        private static Func<CultureInfo, string, object[], string> formatStringDelegate =
+            (Func<CultureInfo, string, object[], string>)Delegate.CreateDelegate(
+                typeof(Func<CultureInfo, string, object[], string>),
+                typeof(LazyFormattedBuildEventArgs).GetMethod("FormatString", BindingFlags.Static | BindingFlags.NonPublic));
+
+        public EventArgsWriter(BinaryWriter binaryWriter)
         {
             this.binaryWriter = binaryWriter;
         }
@@ -192,13 +201,58 @@ namespace Microsoft.Build.Logging.Serialization
             WriteMessageFields(e);
         }
 
+        private void Write(CustomBuildEventArgs e)
+        {
+            Write(LogRecordKind.CustomEvent);
+            WriteBuildEventArgsFields(e);
+        }
+
+        private void WriteBuildEventArgsFields(BuildEventArgs e)
+        {
+            var flags = GetBuildEventArgsFieldFlags(e);
+            Write((int)flags);
+            WriteBaseFields(e, flags);
+        }
+
+        private void WriteBaseFields(BuildEventArgs e, BuildEventArgsFieldFlags flags)
+        {
+            if ((flags & BuildEventArgsFieldFlags.Message) != 0)
+            {
+                WriteMessage((LazyFormattedBuildEventArgs)e);
+            }
+
+            if ((flags & BuildEventArgsFieldFlags.BuildEventContext) != 0)
+            {
+                Write(e.BuildEventContext);
+            }
+
+            if ((flags & BuildEventArgsFieldFlags.ThreadId) != 0)
+            {
+                Write(e.ThreadId);
+            }
+
+            if ((flags & BuildEventArgsFieldFlags.HelpHeyword) != 0)
+            {
+                Write(e.HelpKeyword);
+            }
+
+            if ((flags & BuildEventArgsFieldFlags.SenderName) != 0)
+            {
+                Write(e.SenderName);
+            }
+
+            if ((flags & BuildEventArgsFieldFlags.Timestamp) != 0)
+            {
+                Write(e.Timestamp);
+            }
+        }
+
         private void WriteMessageFields(BuildMessageEventArgs e)
         {
             var flags = GetBuildEventArgsFieldFlags(e);
             flags = GetMessageFlags(e, flags);
 
             Write((int)e.Importance);
-
             Write((int)flags);
 
             WriteBaseFields(e, flags);
@@ -289,10 +343,40 @@ namespace Microsoft.Build.Logging.Serialization
             return flags;
         }
 
-        private void Write(CustomBuildEventArgs e)
+        private static BuildEventArgsFieldFlags GetBuildEventArgsFieldFlags(BuildEventArgs e)
         {
-            Write(LogRecordKind.CustomEvent);
-            WriteBuildEventArgsFields(e);
+            var flags = BuildEventArgsFieldFlags.None;
+            if (e.BuildEventContext != null)
+            {
+                flags |= BuildEventArgsFieldFlags.BuildEventContext;
+            }
+
+            if (e.HelpKeyword != null)
+            {
+                flags |= BuildEventArgsFieldFlags.HelpHeyword;
+            }
+
+            if (e.Message != null)
+            {
+                flags |= BuildEventArgsFieldFlags.Message;
+            }
+
+            if (e.SenderName != null)
+            {
+                flags |= BuildEventArgsFieldFlags.SenderName;
+            }
+
+            if (e.ThreadId != -1)
+            {
+                flags |= BuildEventArgsFieldFlags.ThreadId;
+            }
+
+            if (e.Timestamp != default(DateTime))
+            {
+                flags |= BuildEventArgsFieldFlags.Timestamp;
+            }
+
+            return flags;
         }
 
         private void WriteItems(IEnumerable items)
@@ -361,82 +445,6 @@ namespace Microsoft.Build.Logging.Serialization
             }
         }
 
-        private void WriteBuildEventArgsFields(BuildEventArgs e)
-        {
-            var flags = GetBuildEventArgsFieldFlags(e);
-            Write((int)flags);
-            WriteBaseFields(e, flags);
-        }
-
-        private void WriteBaseFields(BuildEventArgs e, BuildEventArgsFieldFlags flags)
-        {
-            if ((flags & BuildEventArgsFieldFlags.Message) != 0)
-            {
-                WriteMessage((LazyFormattedBuildEventArgs)e);
-            }
-
-            if ((flags & BuildEventArgsFieldFlags.BuildEventContext) != 0)
-            {
-                Write(e.BuildEventContext);
-            }
-
-            if ((flags & BuildEventArgsFieldFlags.ThreadId) != 0)
-            {
-                Write(e.ThreadId);
-            }
-
-            if ((flags & BuildEventArgsFieldFlags.HelpHeyword) != 0)
-            {
-                Write(e.HelpKeyword);
-            }
-
-            if ((flags & BuildEventArgsFieldFlags.SenderName) != 0)
-            {
-                Write(e.SenderName);
-            }
-
-            if ((flags & BuildEventArgsFieldFlags.Timestamp) != 0)
-            {
-                Write(e.Timestamp);
-            }
-        }
-
-        private static BuildEventArgsFieldFlags GetBuildEventArgsFieldFlags(BuildEventArgs e)
-        {
-            var flags = BuildEventArgsFieldFlags.None;
-            if (e.BuildEventContext != null)
-            {
-                flags |= BuildEventArgsFieldFlags.BuildEventContext;
-            }
-
-            if (e.HelpKeyword != null)
-            {
-                flags |= BuildEventArgsFieldFlags.HelpHeyword;
-            }
-
-            if (e.Message != null)
-            {
-                flags |= BuildEventArgsFieldFlags.Message;
-            }
-
-            if (e.SenderName != null)
-            {
-                flags |= BuildEventArgsFieldFlags.SenderName;
-            }
-
-            if (e.ThreadId != -1)
-            {
-                flags |= BuildEventArgsFieldFlags.ThreadId;
-            }
-
-            if (e.Timestamp != default(DateTime))
-            {
-                flags |= BuildEventArgsFieldFlags.Timestamp;
-            }
-
-            return flags;
-        }
-
         private void Write(BuildEventContext buildEventContext)
         {
             Write(buildEventContext.NodeId);
@@ -446,15 +454,6 @@ namespace Microsoft.Build.Logging.Serialization
             Write(buildEventContext.SubmissionId);
             Write(buildEventContext.ProjectInstanceId);
         }
-
-        private FieldInfo lazyFormattedArgumentsField =
-            typeof(LazyFormattedBuildEventArgs).GetField("arguments", BindingFlags.Instance | BindingFlags.NonPublic);
-        private FieldInfo buildEventArgsMessageField =
-            typeof(BuildEventArgs).GetField("message", BindingFlags.Instance | BindingFlags.NonPublic);
-        private Func<CultureInfo, string, object[], string> formatStringDelegate =
-            (Func<CultureInfo, string, object[], string>)Delegate.CreateDelegate(
-                typeof(Func<CultureInfo, string, object[], string>),
-                typeof(LazyFormattedBuildEventArgs).GetMethod("FormatString", BindingFlags.Static | BindingFlags.NonPublic));
 
         private void WriteMessage(LazyFormattedBuildEventArgs e)
         {

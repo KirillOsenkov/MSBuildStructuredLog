@@ -68,6 +68,7 @@
     <Compile Include="Serialization\Binary\TreeBinaryReader.cs" />
     <Compile Include="Serialization\Binary\TreeBinaryWriter.cs" />
     <Compile Include="StreamingLogger\BuildEventArgsFieldFlags.cs" />
+    <Compile Include="StreamingLogger\EventArgsReader.cs" />
     <Compile Include="StreamingLogger\EventArgsWriter.cs" />
     <Compile Include="Serialization\Serialization.cs" />
     <Compile Include="Serialization\StringCache.cs" />
