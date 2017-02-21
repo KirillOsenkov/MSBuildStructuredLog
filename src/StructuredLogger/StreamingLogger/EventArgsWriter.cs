@@ -145,7 +145,7 @@ namespace Microsoft.Build.Logging.Serialization
             WriteOptionalString(e.ProjectFile);
             WriteOptionalString(e.TargetFile);
             WriteOptionalString(e.TargetName);
-            WriteItems(e.TargetOutputs);
+            WriteItemList(e.TargetOutputs);
         }
 
         private void Write(TaskStartedEventArgs e)
@@ -379,11 +379,43 @@ namespace Microsoft.Build.Logging.Serialization
             return flags;
         }
 
+        private void WriteItemList(IEnumerable items)
+        {
+            var taskItems = items as IEnumerable<ITaskItem>;
+            if (taskItems != null)
+            {
+                Write(taskItems.Count());
+
+                foreach (var item in taskItems)
+                {
+                    Write(item);
+                }
+
+                return;
+            }
+
+            Write(0);
+        }
+
         private void WriteItems(IEnumerable items)
         {
             if (items == null)
             {
                 Write(0);
+                return;
+            }
+
+            var taskItems = items as IEnumerable<ITaskItem>;
+            if (taskItems != null)
+            {
+                Write(taskItems.Count());
+
+                foreach (var item in taskItems)
+                {
+                    Write("Item");
+                    Write(item);
+                }
+
                 return;
             }
 
@@ -403,9 +435,10 @@ namespace Microsoft.Build.Logging.Serialization
         private void Write(ITaskItem item)
         {
             Write(item.ItemSpec);
-            Write(item.MetadataCount);
+            IDictionary customMetadata = item.CloneCustomMetadata();
+            Write(customMetadata.Count);
 
-            foreach (string metadataName in item.MetadataNames)
+            foreach (string metadataName in customMetadata.Keys)
             {
                 Write(metadataName);
                 Write(item.GetMetadata(metadataName));

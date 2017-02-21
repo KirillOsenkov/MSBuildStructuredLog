@@ -237,7 +237,7 @@ namespace Microsoft.Build.Logging.Serialization
             ReadOptionalString(e, targetFinishedFieldProjectFile);
             ReadOptionalString(e, targetFinishedFieldTargetFile);
             ReadOptionalString(e, targetFinishedFieldTargetName);
-            targetFinishedFieldTargetOutputs.SetValue(e, ReadItems());
+            targetFinishedFieldTargetOutputs.SetValue(e, ReadItemList());
             return e;
         }
 
@@ -590,6 +590,25 @@ namespace Microsoft.Build.Logging.Serialization
                 string key = ReadString();
                 ITaskItem item = ReadItem();
                 list.Add(new DictionaryEntry(key, item));
+            }
+
+            return list;
+        }
+
+        private IEnumerable ReadItemList()
+        {
+            int count = ReadInt32();
+            if (count == 0)
+            {
+                return null;
+            }
+
+            var list = new List<ITaskItem>(count);
+
+            for (int i = 0; i < count; i++)
+            {
+                ITaskItem item = ReadItem();
+                list.Add(item);
             }
 
             return list;

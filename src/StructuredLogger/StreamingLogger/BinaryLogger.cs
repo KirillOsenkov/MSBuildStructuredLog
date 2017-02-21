@@ -19,6 +19,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public override void Initialize(IEventSource eventSource)
         {
             Environment.SetEnvironmentVariable("MSBUILDTARGETOUTPUTLOGGING", "true");
+            Verbosity = LoggerVerbosity.Diagnostic;
 
             ProcessParameters();
 
