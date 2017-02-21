@@ -4,6 +4,7 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.Serialization;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Logging.Serialization;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -35,16 +36,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
             using (var stream = new FileStream(sourceFilePath, FileMode.Open))
             {
                 var binaryReader = new BetterBinaryReader(stream);
+                EventArgsReader reader = new EventArgsReader(binaryReader);
                 while (stream.Position < stream.Length)
                 {
-                    int metadataToken = binaryReader.ReadInt32();
-                    Type type = GetType(metadataToken, typeLookup);
-                    type = typeof(BuildEventArgs).Assembly.GetType(type.FullName);
+                    var instance = reader.Read();
+                    //int metadataToken = binaryReader.ReadInt32();
+                    //Type type = GetType(metadataToken, typeLookup);
+                    //type = typeof(BuildEventArgs).Assembly.GetType(type.FullName);
 
-                    var instance = (BuildEventArgs)FormatterServices.GetUninitializedObject(type);
-                    CallOnDeserialized(instance);
+                    //var instance = (BuildEventArgs)FormatterServices.GetUninitializedObject(type);
+                    //CallOnDeserialized(instance);
 
-                    CreateFromStream(instance, binaryReader, 21);
+                    //CreateFromStream(instance, binaryReader, 21);
 
                     Dispatch(instance);
                 }
