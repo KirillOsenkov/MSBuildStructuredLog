@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Reflection;
 using System.Runtime.Serialization;
 using Microsoft.Build.Framework;
@@ -35,11 +36,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             using (var stream = new FileStream(sourceFilePath, FileMode.Open))
             {
-                var binaryReader = new BetterBinaryReader(stream);
+                var gzipStream = new GZipStream(stream, CompressionMode.Decompress, leaveOpen: true);
+                var binaryReader = new BetterBinaryReader(gzipStream);
                 EventArgsReader reader = new EventArgsReader(binaryReader);
-                while (stream.Position < stream.Length)
+                while (true)
                 {
                     var instance = reader.Read();
+                    if (instance == null)
+                    {
+                        break;
+                    }
                     //int metadataToken = binaryReader.ReadInt32();
                     //Type type = GetType(metadataToken, typeLookup);
                     //type = typeof(BuildEventArgs).Assembly.GetType(type.FullName);

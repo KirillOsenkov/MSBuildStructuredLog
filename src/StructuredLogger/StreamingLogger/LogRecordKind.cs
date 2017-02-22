@@ -2,6 +2,7 @@
 {
     public enum LogRecordKind
     {
+        EndOfFile = 0,
         BuildStarted,
         BuildFinished,
         ProjectStarted,

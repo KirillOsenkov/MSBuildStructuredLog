@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.IO.Compression;
 using System.Reflection;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Logging.Serialization;
@@ -32,7 +33,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 throw new LoggerException("Invalid file logger file path: " + FilePath, e);
             }
 
-            //stream = new GZipStream(stream, CompressionLevel.Optimal);
+            stream = new GZipStream(stream, CompressionLevel.Optimal);
 
             binaryWriter = new BetterBinaryWriter(stream);
 
@@ -62,6 +63,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             base.Shutdown();
             if (stream != null)
             {
+                // It's hard to determine whether we're at the end of decoding GZipStream
+                // so add an explicit 0 at the end to signify end of file
+                stream.WriteByte(0);
                 stream.Flush();
                 stream.Close();
                 stream = null;

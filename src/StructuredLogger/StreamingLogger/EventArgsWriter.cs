@@ -405,20 +405,6 @@ namespace Microsoft.Build.Logging.Serialization
                 return;
             }
 
-            var taskItems = items as IEnumerable<ITaskItem>;
-            if (taskItems != null)
-            {
-                Write(taskItems.Count());
-
-                foreach (var item in taskItems)
-                {
-                    Write("Item");
-                    Write(item);
-                }
-
-                return;
-            }
-
             var entries = items.OfType<DictionaryEntry>()
                 .Where(e => e.Key is string && e.Value is ITaskItem);
             Write(entries.Count());

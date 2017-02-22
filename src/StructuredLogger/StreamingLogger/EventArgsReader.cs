@@ -118,6 +118,8 @@ namespace Microsoft.Build.Logging.Serialization
             BuildEventArgs result = null;
             switch (recordKind)
             {
+                case LogRecordKind.EndOfFile:
+                    break;
                 case LogRecordKind.BuildStarted:
                     result = ReadBuildStartedEventArgs();
                     break;
