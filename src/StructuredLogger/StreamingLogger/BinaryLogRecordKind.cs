@@ -1,6 +1,6 @@
-﻿namespace Microsoft.Build.Logging.Serialization
+﻿namespace Microsoft.Build.Logging
 {
-    public enum LogRecordKind
+    public enum BinaryLogRecordKind
     {
         EndOfFile = 0,
         BuildStarted,

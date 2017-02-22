@@ -6,9 +6,9 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using Microsoft.Build.Framework;
 
-namespace Microsoft.Build.Logging.Serialization
+namespace Microsoft.Build.Logging
 {
-    public class EventArgsReader
+    public class BuildEventArgsReader
     {
         private readonly BinaryReader binaryReader;
 
@@ -107,59 +107,59 @@ namespace Microsoft.Build.Logging.Serialization
         private static FieldInfo taskFinishedFieldSucceeded =
             typeof(TaskFinishedEventArgs).GetField("succeeded", BindingFlags.Instance | BindingFlags.NonPublic);
 
-        public EventArgsReader(BinaryReader binaryReader)
+        public BuildEventArgsReader(BinaryReader binaryReader)
         {
             this.binaryReader = binaryReader;
         }
 
         public BuildEventArgs Read()
         {
-            LogRecordKind recordKind = (LogRecordKind)ReadInt32();
+            BinaryLogRecordKind recordKind = (BinaryLogRecordKind)ReadInt32();
             BuildEventArgs result = null;
             switch (recordKind)
             {
-                case LogRecordKind.EndOfFile:
+                case BinaryLogRecordKind.EndOfFile:
                     break;
-                case LogRecordKind.BuildStarted:
+                case BinaryLogRecordKind.BuildStarted:
                     result = ReadBuildStartedEventArgs();
                     break;
-                case LogRecordKind.BuildFinished:
+                case BinaryLogRecordKind.BuildFinished:
                     result = ReadBuildFinishedEventArgs();
                     break;
-                case LogRecordKind.ProjectStarted:
+                case BinaryLogRecordKind.ProjectStarted:
                     result = ReadProjectStartedEventArgs();
                     break;
-                case LogRecordKind.ProjectFinished:
+                case BinaryLogRecordKind.ProjectFinished:
                     result = ReadProjectFinishedEventArgs();
                     break;
-                case LogRecordKind.TargetStarted:
+                case BinaryLogRecordKind.TargetStarted:
                     result = ReadTargetStartedEventArgs();
                     break;
-                case LogRecordKind.TargetFinished:
+                case BinaryLogRecordKind.TargetFinished:
                     result = ReadTargetFinishedEventArgs();
                     break;
-                case LogRecordKind.TaskStarted:
+                case BinaryLogRecordKind.TaskStarted:
                     result = ReadTaskStartedEventArgs();
                     break;
-                case LogRecordKind.TaskFinished:
+                case BinaryLogRecordKind.TaskFinished:
                     result = ReadTaskFinishedEventArgs();
                     break;
-                case LogRecordKind.Error:
+                case BinaryLogRecordKind.Error:
                     result = ReadBuildErrorEventArgs();
                     break;
-                case LogRecordKind.Warning:
+                case BinaryLogRecordKind.Warning:
                     result = ReadBuildWarningEventArgs();
                     break;
-                case LogRecordKind.Message:
+                case BinaryLogRecordKind.Message:
                     result = ReadBuildMessageEventArgs();
                     break;
-                case LogRecordKind.CriticalBuildMessage:
+                case BinaryLogRecordKind.CriticalBuildMessage:
                     result = ReadCriticalBuildMessageEventArgs();
                     break;
-                case LogRecordKind.TaskCommandLine:
+                case BinaryLogRecordKind.TaskCommandLine:
                     result = ReadTaskCommandLineEventArgs();
                     break;
-                case LogRecordKind.CustomEvent:
+                case BinaryLogRecordKind.CustomEvent:
                     result = ReadCustomBuildEventArgs();
                     break;
                 default:

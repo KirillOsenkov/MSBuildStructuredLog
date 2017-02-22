@@ -7,11 +7,11 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.Build.Framework;
 
-namespace Microsoft.Build.Logging.Serialization
+namespace Microsoft.Build.Logging
 {
-    public class EventArgsWriter
+    public class BuildEventArgsWriter
     {
-        private BinaryWriter binaryWriter;
+        private readonly BinaryWriter binaryWriter;
 
         // these are used to access the Message without forcing formatting the message
         private static FieldInfo lazyFormattedArgumentsField =
@@ -23,7 +23,7 @@ namespace Microsoft.Build.Logging.Serialization
                 typeof(Func<CultureInfo, string, object[], string>),
                 typeof(LazyFormattedBuildEventArgs).GetMethod("FormatString", BindingFlags.Static | BindingFlags.NonPublic));
 
-        public EventArgsWriter(BinaryWriter binaryWriter)
+        public BuildEventArgsWriter(BinaryWriter binaryWriter)
         {
             this.binaryWriter = binaryWriter;
         }
@@ -83,21 +83,21 @@ namespace Microsoft.Build.Logging.Serialization
 
         private void Write(BuildStartedEventArgs e)
         {
-            Write(LogRecordKind.BuildStarted);
+            Write(BinaryLogRecordKind.BuildStarted);
             WriteBuildEventArgsFields(e);
             Write(e.BuildEnvironment);
         }
 
         private void Write(BuildFinishedEventArgs e)
         {
-            Write(LogRecordKind.BuildFinished);
+            Write(BinaryLogRecordKind.BuildFinished);
             WriteBuildEventArgsFields(e);
             Write(e.Succeeded);
         }
 
         private void Write(ProjectStartedEventArgs e)
         {
-            Write(LogRecordKind.ProjectStarted);
+            Write(BinaryLogRecordKind.ProjectStarted);
             WriteBuildEventArgsFields(e);
 
             if (e.ParentProjectBuildEventContext == null)
@@ -123,7 +123,7 @@ namespace Microsoft.Build.Logging.Serialization
 
         private void Write(ProjectFinishedEventArgs e)
         {
-            Write(LogRecordKind.ProjectFinished);
+            Write(BinaryLogRecordKind.ProjectFinished);
             WriteBuildEventArgsFields(e);
             WriteOptionalString(e.ProjectFile);
             Write(e.Succeeded);
@@ -131,7 +131,7 @@ namespace Microsoft.Build.Logging.Serialization
 
         private void Write(TargetStartedEventArgs e)
         {
-            Write(LogRecordKind.TargetStarted);
+            Write(BinaryLogRecordKind.TargetStarted);
             WriteBuildEventArgsFields(e);
             WriteOptionalString(e.TargetName);
             WriteOptionalString(e.ProjectFile);
@@ -141,7 +141,7 @@ namespace Microsoft.Build.Logging.Serialization
 
         private void Write(TargetFinishedEventArgs e)
         {
-            Write(LogRecordKind.TargetFinished);
+            Write(BinaryLogRecordKind.TargetFinished);
             WriteBuildEventArgsFields(e);
             Write(e.Succeeded);
             WriteOptionalString(e.ProjectFile);
@@ -152,7 +152,7 @@ namespace Microsoft.Build.Logging.Serialization
 
         private void Write(TaskStartedEventArgs e)
         {
-            Write(LogRecordKind.TaskStarted);
+            Write(BinaryLogRecordKind.TaskStarted);
             WriteBuildEventArgsFields(e);
             WriteOptionalString(e.TaskName);
             WriteOptionalString(e.ProjectFile);
@@ -161,7 +161,7 @@ namespace Microsoft.Build.Logging.Serialization
 
         private void Write(TaskFinishedEventArgs e)
         {
-            Write(LogRecordKind.TaskFinished);
+            Write(BinaryLogRecordKind.TaskFinished);
             WriteBuildEventArgsFields(e);
             Write(e.Succeeded);
             WriteOptionalString(e.TaskName);
@@ -171,7 +171,7 @@ namespace Microsoft.Build.Logging.Serialization
 
         private void Write(BuildErrorEventArgs e)
         {
-            Write(LogRecordKind.Error);
+            Write(BinaryLogRecordKind.Error);
             WriteBuildEventArgsFields(e);
             WriteOptionalString(e.Subcategory);
             WriteOptionalString(e.Code);
@@ -185,7 +185,7 @@ namespace Microsoft.Build.Logging.Serialization
 
         private void Write(BuildWarningEventArgs e)
         {
-            Write(LogRecordKind.Warning);
+            Write(BinaryLogRecordKind.Warning);
             WriteBuildEventArgsFields(e);
             WriteOptionalString(e.Subcategory);
             WriteOptionalString(e.Code);
@@ -210,19 +210,19 @@ namespace Microsoft.Build.Logging.Serialization
                 return;
             }
 
-            Write(LogRecordKind.Message);
+            Write(BinaryLogRecordKind.Message);
             WriteMessageFields(e);
         }
 
         private void Write(CriticalBuildMessageEventArgs e)
         {
-            Write(LogRecordKind.CriticalBuildMessage);
+            Write(BinaryLogRecordKind.CriticalBuildMessage);
             WriteMessageFields(e);
         }
 
         private void Write(TaskCommandLineEventArgs e)
         {
-            Write(LogRecordKind.TaskCommandLine);
+            Write(BinaryLogRecordKind.TaskCommandLine);
             WriteMessageFields(e);
             WriteOptionalString(e.CommandLine);
             WriteOptionalString(e.TaskName);
@@ -230,7 +230,7 @@ namespace Microsoft.Build.Logging.Serialization
 
         private void Write(CustomBuildEventArgs e)
         {
-            Write(LogRecordKind.CustomEvent);
+            Write(BinaryLogRecordKind.CustomEvent);
             WriteBuildEventArgsFields(e);
         }
 
@@ -526,7 +526,7 @@ namespace Microsoft.Build.Logging.Serialization
             }
         }
 
-        private void Write(LogRecordKind kind)
+        private void Write(BinaryLogRecordKind kind)
         {
             Write((int)kind);
         }

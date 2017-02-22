@@ -4,7 +4,7 @@ using System.IO.Compression;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
-namespace Microsoft.Build.Logging.Serialization
+namespace Microsoft.Build.Logging
 {
     public class BinaryLogger : Logger
     {
@@ -12,7 +12,7 @@ namespace Microsoft.Build.Logging.Serialization
 
         private Stream stream;
         private BinaryWriter binaryWriter;
-        private EventArgsWriter eventArgsWriter;
+        private BuildEventArgsWriter eventArgsWriter;
 
         public string FilePath { get; set; }
 
@@ -34,7 +34,7 @@ namespace Microsoft.Build.Logging.Serialization
 
             stream = new GZipStream(stream, CompressionLevel.Optimal);
             binaryWriter = new BinaryWriter(stream);
-            eventArgsWriter = new EventArgsWriter(binaryWriter);
+            eventArgsWriter = new BuildEventArgsWriter(binaryWriter);
 
             binaryWriter.Write(FileFormatVersion);
 

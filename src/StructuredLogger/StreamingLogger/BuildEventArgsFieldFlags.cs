@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Microsoft.Build.Logging.Serialization
+namespace Microsoft.Build.Logging
 {
     [Flags]
     public enum BuildEventArgsFieldFlags

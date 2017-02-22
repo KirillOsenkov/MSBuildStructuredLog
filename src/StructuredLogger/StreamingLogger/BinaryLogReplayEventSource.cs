@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.IO.Compression;
 
-namespace Microsoft.Build.Logging.Serialization
+namespace Microsoft.Build.Logging
 {
     public class BinaryLogReplayEventSource : EventArgsDispatcher
     {
@@ -14,7 +14,7 @@ namespace Microsoft.Build.Logging.Serialization
 
                 int fileFormatVersion = binaryReader.ReadInt32();
 
-                var reader = new EventArgsReader(binaryReader);
+                var reader = new BuildEventArgsReader(binaryReader);
                 while (true)
                 {
                     var instance = reader.Read();

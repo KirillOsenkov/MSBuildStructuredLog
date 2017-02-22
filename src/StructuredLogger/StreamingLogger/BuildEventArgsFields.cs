@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.Build.Framework;
 
-namespace Microsoft.Build.Logging.Serialization
+namespace Microsoft.Build.Logging
 {
     public class BuildEventArgsFields
     {
