@@ -344,8 +344,7 @@ namespace Microsoft.Build.Logging.Serialization
 
             if (e.ProjectFile != null)
             {
-                // It seems that this is never used, so let's save some space
-                //flags |= BuildEventArgsFieldFlags.ProjectFile;
+                flags |= BuildEventArgsFieldFlags.ProjectFile;
             }
 
             if (e.LineNumber != 0)

@@ -285,6 +285,7 @@ namespace Microsoft.Build.Logging.Serialization
                 fields.HelpKeyword,
                 fields.SenderName,
                 fields.Timestamp);
+            result.BuildEventContext = fields.BuildEventContext;
             return result;
         }
 
@@ -303,6 +304,7 @@ namespace Microsoft.Build.Logging.Serialization
                 fields.HelpKeyword,
                 fields.SenderName,
                 fields.Timestamp);
+            result.BuildEventContext = fields.BuildEventContext;
             return result;
         }
 
