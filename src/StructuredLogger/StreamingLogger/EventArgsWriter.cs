@@ -396,7 +396,7 @@ namespace Microsoft.Build.Logging.Serialization
                 flags |= BuildEventArgsFieldFlags.SenderName;
             }
 
-            if (e.ThreadId != -1)
+            if (e.ThreadId > 0)
             {
                 flags |= BuildEventArgsFieldFlags.ThreadId;
             }
