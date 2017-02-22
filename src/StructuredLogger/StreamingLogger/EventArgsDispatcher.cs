@@ -1,6 +1,6 @@
 ﻿using Microsoft.Build.Framework;
 
-namespace Microsoft.Build.Logging.StructuredLogger
+namespace Microsoft.Build.Logging.Serialization
 {
     public class EventArgsDispatcher : IEventSource
     {

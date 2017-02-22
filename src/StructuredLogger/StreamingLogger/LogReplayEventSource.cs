@@ -5,9 +5,8 @@ using System.IO.Compression;
 using System.Reflection;
 using System.Runtime.Serialization;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Logging.Serialization;
 
-namespace Microsoft.Build.Logging.StructuredLogger
+namespace Microsoft.Build.Logging.Serialization
 {
     public class LogReplayEventSource : EventArgsDispatcher
     {

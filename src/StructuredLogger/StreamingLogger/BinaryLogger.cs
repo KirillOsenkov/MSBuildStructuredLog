@@ -2,10 +2,9 @@
 using System.IO;
 using System.IO.Compression;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Logging.Serialization;
 using Microsoft.Build.Utilities;
 
-namespace Microsoft.Build.Logging.StructuredLogger
+namespace Microsoft.Build.Logging.Serialization
 {
     public class BinaryLogger : Logger
     {

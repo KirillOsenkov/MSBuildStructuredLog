@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace Microsoft.Build.Logging.StructuredLogger
+namespace Microsoft.Build.Logging.Serialization
 {
     public class BetterBinaryWriter : BinaryWriter
     {

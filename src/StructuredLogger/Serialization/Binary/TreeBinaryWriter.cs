@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
+using Microsoft.Build.Logging.Serialization;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
