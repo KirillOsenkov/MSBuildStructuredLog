@@ -75,10 +75,6 @@ namespace Microsoft.Build.Logging
             {
                 Write((BuildFinishedEventArgs)e);
             }
-            else if (e is CustomBuildEventArgs)
-            {
-                Write((CustomBuildEventArgs)e);
-            }
         }
 
         private void Write(BuildStartedEventArgs e)
@@ -226,12 +222,6 @@ namespace Microsoft.Build.Logging
             WriteMessageFields(e);
             WriteOptionalString(e.CommandLine);
             WriteOptionalString(e.TaskName);
-        }
-
-        private void Write(CustomBuildEventArgs e)
-        {
-            Write(BinaryLogRecordKind.CustomEvent);
-            WriteBuildEventArgsFields(e);
         }
 
         private void WriteBuildEventArgsFields(BuildEventArgs e)

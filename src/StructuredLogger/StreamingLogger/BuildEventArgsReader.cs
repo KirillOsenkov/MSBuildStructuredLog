@@ -159,9 +159,6 @@ namespace Microsoft.Build.Logging
                 case BinaryLogRecordKind.TaskCommandLine:
                     result = ReadTaskCommandLineEventArgs();
                     break;
-                case BinaryLogRecordKind.CustomEvent:
-                    result = ReadCustomBuildEventArgs();
-                    break;
                 default:
                     break;
             }
@@ -391,13 +388,6 @@ namespace Microsoft.Build.Logging
             result.BuildEventContext = fields.BuildEventContext;
             result.ProjectFile = fields.ProjectFile;
             return result;
-        }
-
-        private BuildEventArgs ReadCustomBuildEventArgs()
-        {
-            var e = CreateInstance<CustomBuildEventArgs>();
-            ReadBuildEventArgsFields(e);
-            return e;
         }
 
         private T CreateInstance<T>() where T : BuildEventArgs
