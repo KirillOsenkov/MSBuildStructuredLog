@@ -13,6 +13,7 @@ namespace Microsoft.Build.Logging.Serialization
     {
         private BinaryWriter binaryWriter;
 
+        // these are used to access the Message without forcing formatting the message
         private static FieldInfo lazyFormattedArgumentsField =
             typeof(LazyFormattedBuildEventArgs).GetField("arguments", BindingFlags.Instance | BindingFlags.NonPublic);
         private static FieldInfo buildEventArgsMessageField =
@@ -343,7 +344,8 @@ namespace Microsoft.Build.Logging.Serialization
 
             if (e.ProjectFile != null)
             {
-                flags |= BuildEventArgsFieldFlags.ProjectFile;
+                // It seems that this is never used, so let's save some space
+                //flags |= BuildEventArgsFieldFlags.ProjectFile;
             }
 
             if (e.LineNumber != 0)
@@ -382,12 +384,14 @@ namespace Microsoft.Build.Logging.Serialization
                 flags |= BuildEventArgsFieldFlags.HelpHeyword;
             }
 
-            if (e.Message != null)
+            // don't want to force evaluation of e.Message, so accessing the field directly
+            if (buildEventArgsMessageField.GetValue(e) is string)
             {
                 flags |= BuildEventArgsFieldFlags.Message;
             }
 
-            if (e.SenderName != null)
+            // no need to waste space for the default sender name
+            if (e.SenderName != null && e.SenderName != "MSBuild")
             {
                 flags |= BuildEventArgsFieldFlags.SenderName;
             }
