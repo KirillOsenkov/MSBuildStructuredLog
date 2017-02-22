@@ -289,6 +289,7 @@ namespace Microsoft.Build.Logging.Serialization
                 fields.SenderName,
                 fields.Timestamp);
             result.BuildEventContext = fields.BuildEventContext;
+            result.ProjectFile = fields.ProjectFile;
             return result;
         }
 
@@ -311,6 +312,7 @@ namespace Microsoft.Build.Logging.Serialization
                 fields.SenderName,
                 fields.Timestamp);
             result.BuildEventContext = fields.BuildEventContext;
+            result.ProjectFile = fields.ProjectFile;
             return result;
         }
 
@@ -350,6 +352,7 @@ namespace Microsoft.Build.Logging.Serialization
                 importance,
                 fields.Timestamp);
             result.BuildEventContext = fields.BuildEventContext;
+            result.ProjectFile = fields.ProjectFile;
             return result;
         }
 
@@ -365,6 +368,7 @@ namespace Microsoft.Build.Logging.Serialization
                 importance,
                 fields.Timestamp);
             result.BuildEventContext = fields.BuildEventContext;
+            result.ProjectFile = fields.ProjectFile;
             return result;
         }
 
@@ -385,6 +389,7 @@ namespace Microsoft.Build.Logging.Serialization
                 fields.SenderName,
                 fields.Timestamp);
             result.BuildEventContext = fields.BuildEventContext;
+            result.ProjectFile = fields.ProjectFile;
             return result;
         }
 
