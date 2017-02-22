@@ -10,6 +10,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class BinaryLogger : Logger
     {
+        public const int FileFormatVersion = 1;
+
         private Stream stream;
         private BetterBinaryWriter binaryWriter;
         private Action<BuildEventArgs, BinaryWriter> writeToStream;
@@ -39,9 +41,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             eventArgsWriter = new EventArgsWriter(binaryWriter);
 
+            binaryWriter.Write(FileFormatVersion);
+
             writeToStream = (Action<BuildEventArgs, BinaryWriter>)Delegate.CreateDelegate(
                 typeof(Action<BuildEventArgs, BinaryWriter>),
                 typeof(BuildEventArgs).GetMethod("WriteToStream", BindingFlags.Instance | BindingFlags.NonPublic));
+
             eventSource.AnyEventRaised += EventSource_AnyEventRaised;
             eventSource.CustomEventRaised += EventSource_CustomEventRaised;
             eventSource.BuildStarted += EventSource_BuildStarted;

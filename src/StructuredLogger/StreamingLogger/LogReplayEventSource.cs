@@ -38,6 +38,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 var gzipStream = new GZipStream(stream, CompressionMode.Decompress, leaveOpen: true);
                 var binaryReader = new BetterBinaryReader(gzipStream);
+
+                int fileFormatVersion = binaryReader.ReadInt32();
+
                 EventArgsReader reader = new EventArgsReader(binaryReader);
                 while (true)
                 {
