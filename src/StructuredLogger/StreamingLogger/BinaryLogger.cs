@@ -36,7 +36,7 @@ namespace Microsoft.Build.Logging
             binaryWriter = new BinaryWriter(stream);
             eventArgsWriter = new BuildEventArgsWriter(binaryWriter);
 
-            binaryWriter.Write(FileFormatVersion);
+            binaryWriter.Write((byte)FileFormatVersion);
 
             eventSource.AnyEventRaised += EventSource_AnyEventRaised;
         }

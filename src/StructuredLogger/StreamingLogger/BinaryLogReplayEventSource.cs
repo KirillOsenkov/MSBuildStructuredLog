@@ -12,7 +12,7 @@ namespace Microsoft.Build.Logging
                 var gzipStream = new GZipStream(stream, CompressionMode.Decompress, leaveOpen: true);
                 var binaryReader = new BinaryReader(gzipStream);
 
-                int fileFormatVersion = binaryReader.ReadInt32();
+                byte fileFormatVersion = binaryReader.ReadByte();
 
                 var reader = new BuildEventArgsReader(binaryReader);
                 while (true)
