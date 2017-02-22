@@ -269,7 +269,6 @@ namespace Microsoft.Build.Logging
             var flags = GetBuildEventArgsFieldFlags(e);
             flags = GetMessageFlags(e, flags);
 
-            Write((int)e.Importance);
             Write((int)flags);
 
             WriteBaseFields(e, flags);
@@ -313,6 +312,8 @@ namespace Microsoft.Build.Logging
             {
                 Write(e.EndColumnNumber);
             }
+
+            Write((int)e.Importance);
         }
 
         private static BuildEventArgsFieldFlags GetMessageFlags(BuildMessageEventArgs e, BuildEventArgsFieldFlags flags)
@@ -572,7 +573,7 @@ namespace Microsoft.Build.Logging
         private void Write(DateTime timestamp)
         {
             binaryWriter.Write(timestamp.Ticks);
-            binaryWriter.Write((int)timestamp.Kind);
+            Write((int)timestamp.Kind);
         }
     }
 }
