@@ -153,6 +153,12 @@ namespace Microsoft.Build.Logging.Serialization
                 case LogRecordKind.Message:
                     result = ReadBuildMessageEventArgs();
                     break;
+                case LogRecordKind.CriticalBuildMessage:
+                    result = ReadCriticalBuildMessageEventArgs();
+                    break;
+                case LogRecordKind.TaskCommandLine:
+                    result = ReadTaskCommandLineEventArgs();
+                    break;
                 case LogRecordKind.CustomEvent:
                     result = ReadCustomBuildEventArgs();
                     break;
@@ -316,6 +322,41 @@ namespace Microsoft.Build.Logging.Serialization
                 fields.HelpKeyword,
                 fields.SenderName,
                 importance,
+                fields.Timestamp);
+            result.BuildEventContext = fields.BuildEventContext;
+            return result;
+        }
+
+        private BuildEventArgs ReadTaskCommandLineEventArgs()
+        {
+            var importance = (MessageImportance)ReadInt32();
+            var fields = ReadBuildEventArgsFields();
+            var commandLine = ReadOptionalString();
+            var taskName = ReadOptionalString();
+            var result = new TaskCommandLineEventArgs(
+                commandLine,
+                taskName,
+                importance,
+                fields.Timestamp);
+            result.BuildEventContext = fields.BuildEventContext;
+            return result;
+        }
+
+        private BuildEventArgs ReadCriticalBuildMessageEventArgs()
+        {
+            var importance = (MessageImportance)ReadInt32();
+            var fields = ReadBuildEventArgsFields();
+            var result = new CriticalBuildMessageEventArgs(
+                fields.Subcategory,
+                fields.Code,
+                fields.File,
+                fields.LineNumber,
+                fields.ColumnNumber,
+                fields.EndLineNumber,
+                fields.EndColumnNumber,
+                fields.Message,
+                fields.HelpKeyword,
+                fields.SenderName,
                 fields.Timestamp);
             result.BuildEventContext = fields.BuildEventContext;
             return result;
@@ -614,6 +655,18 @@ namespace Microsoft.Build.Logging.Serialization
             }
 
             return list;
+        }
+
+        private string ReadOptionalString()
+        {
+            if (ReadBoolean())
+            {
+                return ReadString();
+            }
+            else
+            {
+                return null;
+            }
         }
 
         private void ReadOptionalString(object target, FieldInfo field)

@@ -69,6 +69,14 @@ namespace Microsoft.Build.Logging.Serialization
             {
                 Write((BuildWarningEventArgs)e);
             }
+            else if (e is CriticalBuildMessageEventArgs)
+            {
+                Write((CriticalBuildMessageEventArgs)e);
+            }
+            else if (e is TaskCommandLineEventArgs)
+            {
+                Write((TaskCommandLineEventArgs)e);
+            }
             else if (e is BuildMessageEventArgs)
             {
                 Write((BuildMessageEventArgs)e);
@@ -199,6 +207,20 @@ namespace Microsoft.Build.Logging.Serialization
         {
             Write(LogRecordKind.Message);
             WriteMessageFields(e);
+        }
+
+        private void Write(CriticalBuildMessageEventArgs e)
+        {
+            Write(LogRecordKind.CriticalBuildMessage);
+            WriteMessageFields(e);
+        }
+
+        private void Write(TaskCommandLineEventArgs e)
+        {
+            Write(LogRecordKind.TaskCommandLine);
+            WriteMessageFields(e);
+            WriteOptionalString(e.CommandLine);
+            WriteOptionalString(e.TaskName);
         }
 
         private void Write(CustomBuildEventArgs e)

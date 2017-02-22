@@ -14,6 +14,8 @@
         Error,
         Warning,
         Message,
+        TaskCommandLine,
+        CriticalBuildMessage,
         CustomEvent
     }
 }
