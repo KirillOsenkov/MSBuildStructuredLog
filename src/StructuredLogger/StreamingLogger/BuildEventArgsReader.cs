@@ -3,118 +3,38 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Runtime.Serialization;
 using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Logging
 {
+    /// <summary>
+    /// Deserializes and returns BuildEventArgs-derived objects from a BinaryReader
+    /// </summary>
     public class BuildEventArgsReader
     {
         private readonly BinaryReader binaryReader;
 
-        private static FieldInfo buildEventArgsFieldMessage =
-            typeof(BuildEventArgs).GetField("message", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static FieldInfo buildEventArgsFieldContext =
-            typeof(BuildEventArgs).GetField("buildEventContext", BindingFlags.Instance | BindingFlags.NonPublic);
+        // reflection is needed to set these three fields because public constructors don't provide
+        // a way to set these from the outside
         private static FieldInfo buildEventArgsFieldThreadId =
             typeof(BuildEventArgs).GetField("threadId", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static FieldInfo buildEventArgsFieldHelpKeyword =
-            typeof(BuildEventArgs).GetField("helpKeyword", BindingFlags.Instance | BindingFlags.NonPublic);
         private static FieldInfo buildEventArgsFieldSenderName =
             typeof(BuildEventArgs).GetField("senderName", BindingFlags.Instance | BindingFlags.NonPublic);
         private static FieldInfo buildEventArgsFieldTimestamp =
             typeof(BuildEventArgs).GetField("timestamp", BindingFlags.Instance | BindingFlags.NonPublic);
-
-        private static FieldInfo lazyFormattedLockerField =
-            typeof(LazyFormattedBuildEventArgs).GetField("locker", BindingFlags.Instance | BindingFlags.NonPublic);
-
-        private static FieldInfo messageEventArgsFieldSubcategory =
-            typeof(LazyFormattedBuildEventArgs).GetField("subcategory", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static FieldInfo messageEventArgsFieldCode =
-            typeof(LazyFormattedBuildEventArgs).GetField("code", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static FieldInfo messageEventArgsFieldFile =
-            typeof(LazyFormattedBuildEventArgs).GetField("file", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static FieldInfo messageEventArgsFieldProjectFile =
-            typeof(LazyFormattedBuildEventArgs).GetField("projectFile", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static FieldInfo messageEventArgsFieldLineNumber =
-            typeof(LazyFormattedBuildEventArgs).GetField("lineNumber", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static FieldInfo messageEventArgsFieldColumnNumber =
-            typeof(LazyFormattedBuildEventArgs).GetField("columnNumber", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static FieldInfo messageEventArgsFieldEndLineNumber =
-            typeof(LazyFormattedBuildEventArgs).GetField("endLineNumber", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static FieldInfo messageEventArgsFieldEndColumnNumber =
-            typeof(LazyFormattedBuildEventArgs).GetField("endColumnNumber", BindingFlags.Instance | BindingFlags.NonPublic);
-
-        private static FieldInfo buildStartedFieldEnvironmentOnBuildStart =
-            typeof(BuildStartedEventArgs).GetField("environmentOnBuildStart", BindingFlags.Instance | BindingFlags.NonPublic);
-
-        private static FieldInfo buildFinishedFieldSucceeded =
-            typeof(BuildFinishedEventArgs).GetField("succeeded", BindingFlags.Instance | BindingFlags.NonPublic);
-
-        private static FieldInfo projectStartedFieldParentProjectBuildEventContext =
-            typeof(ProjectStartedEventArgs).GetField("parentProjectBuildEventContext", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static FieldInfo projectStartedFieldProjectFile =
-            typeof(ProjectStartedEventArgs).GetField("projectFile", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static FieldInfo projectStartedFieldProjectId =
-            typeof(ProjectStartedEventArgs).GetField("projectId", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static FieldInfo projectStartedFieldTargetNames =
-            typeof(ProjectStartedEventArgs).GetField("targetNames", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static FieldInfo projectStartedFieldToolsVersion =
-            typeof(ProjectStartedEventArgs).GetField("toolsVersion", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static FieldInfo projectStartedFieldProperties =
-            typeof(ProjectStartedEventArgs).GetField("properties", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static FieldInfo projectStartedFieldItems =
-            typeof(ProjectStartedEventArgs).GetField("items", BindingFlags.Instance | BindingFlags.NonPublic);
-
-        private static FieldInfo projectFinishedFieldProjectFile =
-            typeof(ProjectFinishedEventArgs).GetField("projectFile", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static FieldInfo projectFinishedFieldSucceeded =
-            typeof(ProjectFinishedEventArgs).GetField("succeeded", BindingFlags.Instance | BindingFlags.NonPublic);
-
-        private static FieldInfo targetStartedFieldTargetName =
-            typeof(TargetStartedEventArgs).GetField("targetName", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static FieldInfo targetStartedFieldProjectFile =
-            typeof(TargetStartedEventArgs).GetField("projectFile", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static FieldInfo targetStartedFieldTargetFile =
-            typeof(TargetStartedEventArgs).GetField("targetFile", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static FieldInfo targetStartedFieldParentTarget =
-            typeof(TargetStartedEventArgs).GetField("parentTarget", BindingFlags.Instance | BindingFlags.NonPublic);
-
-        private static FieldInfo targetFinishedFieldSucceeded =
-            typeof(TargetFinishedEventArgs).GetField("succeeded", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static FieldInfo targetFinishedFieldProjectFile =
-            typeof(TargetFinishedEventArgs).GetField("projectFile", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static FieldInfo targetFinishedFieldTargetFile =
-            typeof(TargetFinishedEventArgs).GetField("targetFile", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static FieldInfo targetFinishedFieldTargetName =
-            typeof(TargetFinishedEventArgs).GetField("targetName", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static FieldInfo targetFinishedFieldTargetOutputs =
-            typeof(TargetFinishedEventArgs).GetField("targetOutputs", BindingFlags.Instance | BindingFlags.NonPublic);
-
-        private static FieldInfo taskStartedFieldTaskName =
-            typeof(TaskStartedEventArgs).GetField("taskName", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static FieldInfo taskStartedFieldProjectFile =
-            typeof(TaskStartedEventArgs).GetField("projectFile", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static FieldInfo taskStartedFieldTaskFile =
-            typeof(TaskStartedEventArgs).GetField("taskFile", BindingFlags.Instance | BindingFlags.NonPublic);
-
-        private static FieldInfo taskFinishedFieldTaskName =
-            typeof(TaskFinishedEventArgs).GetField("taskName", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static FieldInfo taskFinishedFieldProjectFile =
-            typeof(TaskFinishedEventArgs).GetField("projectFile", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static FieldInfo taskFinishedFieldTaskFile =
-            typeof(TaskFinishedEventArgs).GetField("taskFile", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static FieldInfo taskFinishedFieldSucceeded =
-            typeof(TaskFinishedEventArgs).GetField("succeeded", BindingFlags.Instance | BindingFlags.NonPublic);
 
         public BuildEventArgsReader(BinaryReader binaryReader)
         {
             this.binaryReader = binaryReader;
         }
 
+        /// <summary>
+        /// Reads the next log record from the binary reader. If there are no more records, returns null.
+        /// </summary>
         public BuildEventArgs Read()
         {
             BinaryLogRecordKind recordKind = (BinaryLogRecordKind)ReadInt32();
+
             BuildEventArgs result = null;
             switch (recordKind)
             {
@@ -168,112 +88,164 @@ namespace Microsoft.Build.Logging
 
         private BuildEventArgs ReadBuildStartedEventArgs()
         {
-            var e = CreateInstance<BuildStartedEventArgs>();
-            ReadBuildEventArgsFields(e);
-            buildStartedFieldEnvironmentOnBuildStart.SetValue(e, ReadStringDictionary());
+            var fields = ReadBuildEventArgsFields();
+            var environment = ReadStringDictionary();
+
+            var e = new BuildStartedEventArgs(
+                fields.Message,
+                fields.HelpKeyword,
+                environment);
+            SetCommonFields(e, fields);
             return e;
         }
 
         private BuildEventArgs ReadBuildFinishedEventArgs()
         {
-            var e = CreateInstance<BuildFinishedEventArgs>();
-            ReadBuildEventArgsFields(e);
-            buildFinishedFieldSucceeded.SetValue(e, ReadBoolean());
+            var fields = ReadBuildEventArgsFields();
+            var succeeded = ReadBoolean();
+
+            var e = new BuildFinishedEventArgs(
+                fields.Message,
+                fields.HelpKeyword,
+                succeeded,
+                fields.Timestamp);
+            SetCommonFields(e, fields);
             return e;
         }
 
         private BuildEventArgs ReadProjectStartedEventArgs()
         {
-            var e = CreateInstance<ProjectStartedEventArgs>();
-            ReadBuildEventArgsFields(e);
+            var fields = ReadBuildEventArgsFields();
+            BuildEventContext parentContext = null;
             if (ReadBoolean())
             {
-                projectStartedFieldParentProjectBuildEventContext.SetValue(e, ReadBuildEventContext());
+                parentContext = ReadBuildEventContext();
             }
 
-            ReadOptionalString(e, projectStartedFieldProjectFile);
-            projectStartedFieldProjectId.SetValue(e, ReadInt32());
-            projectStartedFieldTargetNames.SetValue(e, ReadString());
-            ReadOptionalString(e, projectStartedFieldToolsVersion);
+            var projectFile = ReadOptionalString();
+            var projectId = ReadInt32();
+            var targetNames = ReadString();
+            var toolsVersion = ReadOptionalString();
+            var propertyList = ReadPropertyList();
+            var itemList = ReadItems();
 
-            var properties = ReadStringDictionary();
-            if (properties != null)
-            {
-                var list = new ArrayList();
-                foreach (var property in properties)
-                {
-                    var entry = new DictionaryEntry(property.Key, property.Value);
-                    list.Add(entry);
-                }
-
-                projectStartedFieldProperties.SetValue(e, list);
-            }
-
-            projectStartedFieldItems.SetValue(e, ReadItems());
-
+            var e = new ProjectStartedEventArgs(
+                projectId,
+                fields.Message,
+                fields.HelpKeyword,
+                projectFile,
+                targetNames,
+                propertyList,
+                itemList,
+                parentContext,
+                null,
+                toolsVersion);
+            SetCommonFields(e, fields);
             return e;
         }
 
         private BuildEventArgs ReadProjectFinishedEventArgs()
         {
-            var e = CreateInstance<ProjectFinishedEventArgs>();
-            ReadBuildEventArgsFields(e);
-            ReadOptionalString(e, projectFinishedFieldProjectFile);
-            projectFinishedFieldSucceeded.SetValue(e, ReadBoolean());
+            var fields = ReadBuildEventArgsFields();
+            var projectFile = ReadOptionalString();
+            var succeeded = ReadBoolean();
+
+            var e = new ProjectFinishedEventArgs(
+                fields.Message,
+                fields.HelpKeyword,
+                projectFile,
+                succeeded,
+                fields.Timestamp);
+            SetCommonFields(e, fields);
             return e;
         }
 
         private BuildEventArgs ReadTargetStartedEventArgs()
         {
-            var e = CreateInstance<TargetStartedEventArgs>();
-            ReadBuildEventArgsFields(e);
-            ReadOptionalString(e, targetStartedFieldTargetName);
-            ReadOptionalString(e, targetStartedFieldProjectFile);
-            ReadOptionalString(e, targetStartedFieldTargetFile);
-            ReadOptionalString(e, targetStartedFieldParentTarget);
+            var fields = ReadBuildEventArgsFields();
+            var targetName = ReadOptionalString();
+            var projectFile = ReadOptionalString();
+            var targetFile = ReadOptionalString();
+            var parentTarget = ReadOptionalString();
+
+            var e = new TargetStartedEventArgs(
+                fields.Message,
+                fields.HelpKeyword,
+                targetName,
+                projectFile,
+                targetFile,
+                parentTarget,
+                fields.Timestamp);
+            SetCommonFields(e, fields);
             return e;
         }
 
         private BuildEventArgs ReadTargetFinishedEventArgs()
         {
-            var e = CreateInstance<TargetFinishedEventArgs>();
-            ReadBuildEventArgsFields(e);
-            targetFinishedFieldSucceeded.SetValue(e, ReadBoolean());
-            ReadOptionalString(e, targetFinishedFieldProjectFile);
-            ReadOptionalString(e, targetFinishedFieldTargetFile);
-            ReadOptionalString(e, targetFinishedFieldTargetName);
-            targetFinishedFieldTargetOutputs.SetValue(e, ReadItemList());
+            var fields = ReadBuildEventArgsFields();
+            var succeeded = ReadBoolean();
+            var projectFile = ReadOptionalString();
+            var targetFile = ReadOptionalString();
+            var targetName = ReadOptionalString();
+            var targetOutputItemList = ReadItemList();
+
+            var e = new TargetFinishedEventArgs(
+                fields.Message,
+                fields.HelpKeyword,
+                targetName,
+                projectFile,
+                targetFile,
+                succeeded,
+                fields.Timestamp,
+                targetOutputItemList);
+            SetCommonFields(e, fields);
             return e;
         }
 
         private BuildEventArgs ReadTaskStartedEventArgs()
         {
-            var e = CreateInstance<TaskStartedEventArgs>();
-            ReadBuildEventArgsFields(e);
-            ReadOptionalString(e, taskStartedFieldTaskName);
-            ReadOptionalString(e, taskStartedFieldProjectFile);
-            ReadOptionalString(e, taskStartedFieldTaskFile);
+            var fields = ReadBuildEventArgsFields();
+            var taskName = ReadOptionalString();
+            var projectFile = ReadOptionalString();
+            var taskFile = ReadOptionalString();
+
+            var e = new TaskStartedEventArgs(
+                fields.Message,
+                fields.HelpKeyword,
+                projectFile,
+                taskFile,
+                taskName,
+                fields.Timestamp);
+            SetCommonFields(e, fields);
             return e;
         }
 
         private BuildEventArgs ReadTaskFinishedEventArgs()
         {
-            var e = CreateInstance<TaskFinishedEventArgs>();
-            ReadBuildEventArgsFields(e);
-            taskFinishedFieldSucceeded.SetValue(e, ReadBoolean());
-            ReadOptionalString(e, taskFinishedFieldTaskName);
-            ReadOptionalString(e, taskFinishedFieldProjectFile);
-            ReadOptionalString(e, taskFinishedFieldTaskFile);
+            var fields = ReadBuildEventArgsFields();
+            var succeeded = ReadBoolean();
+            var taskName = ReadOptionalString();
+            var projectFile = ReadOptionalString();
+            var taskFile = ReadOptionalString();
+
+            var e = new TaskFinishedEventArgs(
+                fields.Message,
+                fields.HelpKeyword,
+                projectFile,
+                taskFile,
+                taskName,
+                succeeded,
+                fields.Timestamp);
+            SetCommonFields(e, fields);
             return e;
         }
 
         private BuildEventArgs ReadBuildErrorEventArgs()
         {
             var fields = ReadBuildEventArgsFields();
-
             ReadDiagnosticFields(fields);
 
-            var result = new BuildErrorEventArgs(
+            var e = new BuildErrorEventArgs(
                 fields.Subcategory,
                 fields.Code,
                 fields.File,
@@ -285,18 +257,17 @@ namespace Microsoft.Build.Logging
                 fields.HelpKeyword,
                 fields.SenderName,
                 fields.Timestamp);
-            result.BuildEventContext = fields.BuildEventContext;
-            result.ProjectFile = fields.ProjectFile;
-            return result;
+            e.BuildEventContext = fields.BuildEventContext;
+            e.ProjectFile = fields.ProjectFile;
+            return e;
         }
 
         private BuildEventArgs ReadBuildWarningEventArgs()
         {
             var fields = ReadBuildEventArgsFields();
-
             ReadDiagnosticFields(fields);
 
-            var result = new BuildWarningEventArgs(
+            var e = new BuildWarningEventArgs(
                 fields.Subcategory,
                 fields.Code,
                 fields.File,
@@ -308,9 +279,71 @@ namespace Microsoft.Build.Logging
                 fields.HelpKeyword,
                 fields.SenderName,
                 fields.Timestamp);
-            result.BuildEventContext = fields.BuildEventContext;
-            result.ProjectFile = fields.ProjectFile;
-            return result;
+            e.BuildEventContext = fields.BuildEventContext;
+            e.ProjectFile = fields.ProjectFile;
+            return e;
+        }
+
+        private BuildEventArgs ReadBuildMessageEventArgs()
+        {
+            var fields = ReadBuildEventArgsFields();
+            var importance = (MessageImportance)ReadInt32();
+
+            var e = new BuildMessageEventArgs(
+                fields.Subcategory,
+                fields.Code,
+                fields.File,
+                fields.LineNumber,
+                fields.ColumnNumber,
+                fields.EndLineNumber,
+                fields.EndColumnNumber,
+                fields.Message,
+                fields.HelpKeyword,
+                fields.SenderName,
+                importance,
+                fields.Timestamp);
+            e.BuildEventContext = fields.BuildEventContext;
+            e.ProjectFile = fields.ProjectFile;
+            return e;
+        }
+
+        private BuildEventArgs ReadTaskCommandLineEventArgs()
+        {
+            var fields = ReadBuildEventArgsFields();
+            var importance = (MessageImportance)ReadInt32();
+            var commandLine = ReadOptionalString();
+            var taskName = ReadOptionalString();
+
+            var e = new TaskCommandLineEventArgs(
+                commandLine,
+                taskName,
+                importance,
+                fields.Timestamp);
+            e.BuildEventContext = fields.BuildEventContext;
+            e.ProjectFile = fields.ProjectFile;
+            return e;
+        }
+
+        private BuildEventArgs ReadCriticalBuildMessageEventArgs()
+        {
+            var fields = ReadBuildEventArgsFields();
+            var importance = (MessageImportance)ReadInt32();
+
+            var e = new CriticalBuildMessageEventArgs(
+                fields.Subcategory,
+                fields.Code,
+                fields.File,
+                fields.LineNumber,
+                fields.ColumnNumber,
+                fields.EndLineNumber,
+                fields.EndColumnNumber,
+                fields.Message,
+                fields.HelpKeyword,
+                fields.SenderName,
+                fields.Timestamp);
+            e.BuildEventContext = fields.BuildEventContext;
+            e.ProjectFile = fields.ProjectFile;
+            return e;
         }
 
         /// <summary>
@@ -331,150 +364,11 @@ namespace Microsoft.Build.Logging
             fields.EndColumnNumber = ReadInt32();
         }
 
-        private BuildEventArgs ReadBuildMessageEventArgs()
-        {
-            var importance = (MessageImportance)ReadInt32();
-            var fields = ReadBuildEventArgsFields();
-            var result = new BuildMessageEventArgs(
-                fields.Subcategory,
-                fields.Code,
-                fields.File,
-                fields.LineNumber,
-                fields.ColumnNumber,
-                fields.EndLineNumber,
-                fields.EndColumnNumber,
-                fields.Message,
-                fields.HelpKeyword,
-                fields.SenderName,
-                importance,
-                fields.Timestamp);
-            result.BuildEventContext = fields.BuildEventContext;
-            result.ProjectFile = fields.ProjectFile;
-            return result;
-        }
-
-        private BuildEventArgs ReadTaskCommandLineEventArgs()
-        {
-            var importance = (MessageImportance)ReadInt32();
-            var fields = ReadBuildEventArgsFields();
-            var commandLine = ReadOptionalString();
-            var taskName = ReadOptionalString();
-            var result = new TaskCommandLineEventArgs(
-                commandLine,
-                taskName,
-                importance,
-                fields.Timestamp);
-            result.BuildEventContext = fields.BuildEventContext;
-            result.ProjectFile = fields.ProjectFile;
-            return result;
-        }
-
-        private BuildEventArgs ReadCriticalBuildMessageEventArgs()
-        {
-            var importance = (MessageImportance)ReadInt32();
-            var fields = ReadBuildEventArgsFields();
-            var result = new CriticalBuildMessageEventArgs(
-                fields.Subcategory,
-                fields.Code,
-                fields.File,
-                fields.LineNumber,
-                fields.ColumnNumber,
-                fields.EndLineNumber,
-                fields.EndColumnNumber,
-                fields.Message,
-                fields.HelpKeyword,
-                fields.SenderName,
-                fields.Timestamp);
-            result.BuildEventContext = fields.BuildEventContext;
-            result.ProjectFile = fields.ProjectFile;
-            return result;
-        }
-
-        private T CreateInstance<T>() where T : BuildEventArgs
-        {
-            T result = (T)FormatterServices.GetUninitializedObject(typeof(T));
-            lazyFormattedLockerField.SetValue(result, result);
-            return result;
-        }
-
-        private void ReadBuildEventArgsFields(BuildEventArgs e)
-        {
-            BuildEventArgsFieldFlags flags = (BuildEventArgsFieldFlags)ReadInt32();
-            if ((flags & BuildEventArgsFieldFlags.Message) != 0)
-            {
-                buildEventArgsFieldMessage.SetValue(e, ReadString());
-            }
-
-            if ((flags & BuildEventArgsFieldFlags.BuildEventContext) != 0)
-            {
-                buildEventArgsFieldContext.SetValue(e, ReadBuildEventContext());
-            }
-
-            if ((flags & BuildEventArgsFieldFlags.ThreadId) != 0)
-            {
-                buildEventArgsFieldThreadId.SetValue(e, ReadInt32());
-            }
-
-            if ((flags & BuildEventArgsFieldFlags.HelpHeyword) != 0)
-            {
-                buildEventArgsFieldHelpKeyword.SetValue(e, ReadString());
-            }
-
-            if ((flags & BuildEventArgsFieldFlags.SenderName) != 0)
-            {
-                buildEventArgsFieldSenderName.SetValue(e, ReadString());
-            }
-
-            if ((flags & BuildEventArgsFieldFlags.Timestamp) != 0)
-            {
-                buildEventArgsFieldTimestamp.SetValue(e, ReadDateTime());
-            }
-
-            if ((flags & BuildEventArgsFieldFlags.Subcategory) != 0)
-            {
-                messageEventArgsFieldSubcategory.SetValue(e, ReadString());
-            }
-
-            if ((flags & BuildEventArgsFieldFlags.Code) != 0)
-            {
-                messageEventArgsFieldCode.SetValue(e, ReadString());
-            }
-
-            if ((flags & BuildEventArgsFieldFlags.File) != 0)
-            {
-                messageEventArgsFieldFile.SetValue(e, ReadString());
-            }
-
-            if ((flags & BuildEventArgsFieldFlags.ProjectFile) != 0)
-            {
-                messageEventArgsFieldProjectFile.SetValue(e, ReadString());
-            }
-
-            if ((flags & BuildEventArgsFieldFlags.LineNumber) != 0)
-            {
-                messageEventArgsFieldLineNumber.SetValue(e, ReadInt32());
-            }
-
-            if ((flags & BuildEventArgsFieldFlags.ColumnNumber) != 0)
-            {
-                messageEventArgsFieldColumnNumber.SetValue(e, ReadInt32());
-            }
-
-            if ((flags & BuildEventArgsFieldFlags.EndLineNumber) != 0)
-            {
-                messageEventArgsFieldEndLineNumber.SetValue(e, ReadInt32());
-            }
-
-            if ((flags & BuildEventArgsFieldFlags.EndColumnNumber) != 0)
-            {
-                messageEventArgsFieldEndColumnNumber.SetValue(e, ReadInt32());
-            }
-        }
-
         private BuildEventArgsFields ReadBuildEventArgsFields()
         {
             BuildEventArgsFieldFlags flags = (BuildEventArgsFieldFlags)ReadInt32();
             var result = new BuildEventArgsFields();
+            result.Flags = flags;
 
             if ((flags & BuildEventArgsFieldFlags.Message) != 0)
             {
@@ -547,6 +441,44 @@ namespace Microsoft.Build.Logging
             }
 
             return result;
+        }
+
+        private void SetCommonFields(BuildEventArgs buildEventArgs, BuildEventArgsFields fields)
+        {
+            buildEventArgs.BuildEventContext = fields.BuildEventContext;
+
+            if ((fields.Flags & BuildEventArgsFieldFlags.ThreadId) != 0)
+            {
+                buildEventArgsFieldThreadId.SetValue(buildEventArgs, fields.ThreadId);
+            }
+
+            if ((fields.Flags & BuildEventArgsFieldFlags.SenderName) != 0)
+            {
+                buildEventArgsFieldSenderName.SetValue(buildEventArgs, fields.SenderName);
+            }
+
+            if ((fields.Flags & BuildEventArgsFieldFlags.Timestamp) != 0)
+            {
+                buildEventArgsFieldTimestamp.SetValue(buildEventArgs, fields.Timestamp);
+            }
+        }
+
+        private ArrayList ReadPropertyList()
+        {
+            var properties = ReadStringDictionary();
+            if (properties == null)
+            {
+                return null;
+            }
+
+            var list = new ArrayList();
+            foreach (var property in properties)
+            {
+                var entry = new DictionaryEntry(property.Key, property.Value);
+                list.Add(entry);
+            }
+
+            return list;
         }
 
         private BuildEventContext ReadBuildEventContext()
@@ -687,14 +619,6 @@ namespace Microsoft.Build.Logging
             else
             {
                 return null;
-            }
-        }
-
-        private void ReadOptionalString(object target, FieldInfo field)
-        {
-            if (ReadBoolean())
-            {
-                field.SetValue(target, ReadString());
             }
         }
 

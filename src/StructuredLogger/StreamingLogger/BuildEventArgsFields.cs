@@ -5,6 +5,8 @@ namespace Microsoft.Build.Logging
 {
     public class BuildEventArgsFields
     {
+        public BuildEventArgsFieldFlags Flags { get; set; }
+
         public string Message { get; set; }
         public BuildEventContext BuildEventContext { get; set; }
         public int ThreadId { get; set; }
