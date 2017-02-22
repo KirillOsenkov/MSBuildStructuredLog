@@ -273,6 +273,9 @@ namespace Microsoft.Build.Logging.Serialization
         private BuildEventArgs ReadBuildErrorEventArgs()
         {
             var fields = ReadBuildEventArgsFields();
+
+            ReadDiagnosticFields(fields);
+
             var result = new BuildErrorEventArgs(
                 fields.Subcategory,
                 fields.Code,
@@ -292,6 +295,9 @@ namespace Microsoft.Build.Logging.Serialization
         private BuildEventArgs ReadBuildWarningEventArgs()
         {
             var fields = ReadBuildEventArgsFields();
+
+            ReadDiagnosticFields(fields);
+
             var result = new BuildWarningEventArgs(
                 fields.Subcategory,
                 fields.Code,
@@ -306,6 +312,24 @@ namespace Microsoft.Build.Logging.Serialization
                 fields.Timestamp);
             result.BuildEventContext = fields.BuildEventContext;
             return result;
+        }
+
+        /// <summary>
+        /// For errors and warnings these 8 fields are written out explicitly
+        /// (their presence is not marked as a bit in the flags). So we have to
+        /// read explicitly.
+        /// </summary>
+        /// <param name="fields"></param>
+        private void ReadDiagnosticFields(BuildEventArgsFields fields)
+        {
+            fields.Subcategory = ReadOptionalString();
+            fields.Code = ReadOptionalString();
+            fields.File = ReadOptionalString();
+            fields.ProjectFile = ReadOptionalString();
+            fields.LineNumber = ReadInt32();
+            fields.ColumnNumber = ReadInt32();
+            fields.EndLineNumber = ReadInt32();
+            fields.EndColumnNumber = ReadInt32();
         }
 
         private BuildEventArgs ReadBuildMessageEventArgs()
