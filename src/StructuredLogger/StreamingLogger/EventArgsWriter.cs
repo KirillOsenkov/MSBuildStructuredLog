@@ -29,29 +29,10 @@ namespace Microsoft.Build.Logging.Serialization
 
         public void Write(BuildEventArgs e)
         {
-            if (e is BuildStartedEventArgs)
+            // the cases are ordered by most used first for performance
+            if (e is BuildMessageEventArgs)
             {
-                Write((BuildStartedEventArgs)e);
-            }
-            else if (e is BuildFinishedEventArgs)
-            {
-                Write((BuildFinishedEventArgs)e);
-            }
-            else if (e is ProjectStartedEventArgs)
-            {
-                Write((ProjectStartedEventArgs)e);
-            }
-            else if (e is ProjectFinishedEventArgs)
-            {
-                Write((ProjectFinishedEventArgs)e);
-            }
-            else if (e is TargetStartedEventArgs)
-            {
-                Write((TargetStartedEventArgs)e);
-            }
-            else if (e is TargetFinishedEventArgs)
-            {
-                Write((TargetFinishedEventArgs)e);
+                Write((BuildMessageEventArgs)e);
             }
             else if (e is TaskStartedEventArgs)
             {
@@ -61,6 +42,14 @@ namespace Microsoft.Build.Logging.Serialization
             {
                 Write((TaskFinishedEventArgs)e);
             }
+            else if (e is TargetStartedEventArgs)
+            {
+                Write((TargetStartedEventArgs)e);
+            }
+            else if (e is TargetFinishedEventArgs)
+            {
+                Write((TargetFinishedEventArgs)e);
+            }
             else if (e is BuildErrorEventArgs)
             {
                 Write((BuildErrorEventArgs)e);
@@ -69,17 +58,21 @@ namespace Microsoft.Build.Logging.Serialization
             {
                 Write((BuildWarningEventArgs)e);
             }
-            else if (e is CriticalBuildMessageEventArgs)
+            else if (e is ProjectStartedEventArgs)
             {
-                Write((CriticalBuildMessageEventArgs)e);
+                Write((ProjectStartedEventArgs)e);
             }
-            else if (e is TaskCommandLineEventArgs)
+            else if (e is ProjectFinishedEventArgs)
             {
-                Write((TaskCommandLineEventArgs)e);
+                Write((ProjectFinishedEventArgs)e);
             }
-            else if (e is BuildMessageEventArgs)
+            else if (e is BuildStartedEventArgs)
             {
-                Write((BuildMessageEventArgs)e);
+                Write((BuildStartedEventArgs)e);
+            }
+            else if (e is BuildFinishedEventArgs)
+            {
+                Write((BuildFinishedEventArgs)e);
             }
             else if (e is CustomBuildEventArgs)
             {
@@ -205,6 +198,17 @@ namespace Microsoft.Build.Logging.Serialization
 
         private void Write(BuildMessageEventArgs e)
         {
+            if (e is CriticalBuildMessageEventArgs)
+            {
+                Write((CriticalBuildMessageEventArgs)e);
+                return;
+            }
+            else if (e is TaskCommandLineEventArgs)
+            {
+                Write((TaskCommandLineEventArgs)e);
+                return;
+            }
+
             Write(LogRecordKind.Message);
             WriteMessageFields(e);
         }
