@@ -10,7 +10,7 @@ namespace StructuredLoggerTests
         [Fact]
         public void ReplayEndToEnd()
         {
-            var logReplayEventSource = new LogReplayEventSource();
+            var logReplayEventSource = new BinaryLogReplayEventSource();
 
             var structuredLogger = new Microsoft.Build.Logging.StructuredLogger.StructuredLogger();
             structuredLogger.Parameters = "D:\\2.xml";

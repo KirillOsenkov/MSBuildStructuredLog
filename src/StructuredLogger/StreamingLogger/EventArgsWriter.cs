@@ -531,9 +531,22 @@ namespace Microsoft.Build.Logging.Serialization
             Write((int)kind);
         }
 
-        private void Write(int number)
+        private void Write(int value)
         {
-            binaryWriter.Write(number);
+            Write7BitEncodedInt(binaryWriter, value);
+        }
+
+        private void Write7BitEncodedInt(BinaryWriter writer, int value)
+        {
+            // Write out an int 7 bits at a time.  The high bit of the byte,
+            // when on, tells reader to continue reading more bytes.
+            uint v = (uint)value;   // support negative numbers
+            while (v >= 0x80)
+            {
+                writer.Write((byte)(v | 0x80));
+                v >>= 7;
+            }
+            writer.Write((byte)v);
         }
 
         private void Write(bool boolean)
@@ -549,7 +562,7 @@ namespace Microsoft.Build.Logging.Serialization
             }
             else
             {
-                binaryWriter.Write(0);
+                binaryWriter.Write(false);
             }
         }
 

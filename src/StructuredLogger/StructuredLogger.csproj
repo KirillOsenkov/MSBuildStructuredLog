@@ -80,7 +80,7 @@
     <Compile Include="StreamingLogger\BinaryLogger.cs" />
     <Compile Include="StreamingLogger\EventArgsDispatcher.cs" />
     <Compile Include="StreamingLogger\LogRecordKind.cs" />
-    <Compile Include="StreamingLogger\LogReplayEventSource.cs" />
+    <Compile Include="StreamingLogger\BinaryLogReplayEventSource.cs" />
     <Compile Include="StructuredLogger.cs" />
   </ItemGroup>
   <ItemGroup>

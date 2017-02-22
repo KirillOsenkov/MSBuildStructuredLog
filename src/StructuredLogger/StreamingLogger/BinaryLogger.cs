@@ -11,7 +11,7 @@ namespace Microsoft.Build.Logging.Serialization
         public const int FileFormatVersion = 1;
 
         private Stream stream;
-        private BetterBinaryWriter binaryWriter;
+        private BinaryWriter binaryWriter;
         private EventArgsWriter eventArgsWriter;
 
         public string FilePath { get; set; }
@@ -33,7 +33,7 @@ namespace Microsoft.Build.Logging.Serialization
             }
 
             stream = new GZipStream(stream, CompressionLevel.Optimal);
-            binaryWriter = new BetterBinaryWriter(stream);
+            binaryWriter = new BinaryWriter(stream);
             eventArgsWriter = new EventArgsWriter(binaryWriter);
 
             binaryWriter.Write(FileFormatVersion);
@@ -69,11 +69,6 @@ namespace Microsoft.Build.Logging.Serialization
                     eventArgsWriter.Write(e);
                 }
             }
-
-            // A way to call into built-in serialization using reflection. Not used here.
-            // writeToStream = (Action<BuildEventArgs, BinaryWriter>)Delegate.CreateDelegate(
-            //    typeof(Action<BuildEventArgs, BinaryWriter>),
-            //    typeof(BuildEventArgs).GetMethod("WriteToStream", BindingFlags.Instance | BindingFlags.NonPublic));
         }
 
         /// <summary>
