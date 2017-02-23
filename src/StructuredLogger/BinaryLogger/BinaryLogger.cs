@@ -2,6 +2,7 @@
 using System.IO;
 using System.IO.Compression;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Shared;
 
 namespace Microsoft.Build.Logging
 {
@@ -48,7 +49,10 @@ namespace Microsoft.Build.Logging
             }
             catch (Exception e)
             {
-                throw new LoggerException("Invalid file logger file path: " + FilePath, e);
+                string errorCode = "";
+                string helpKeyword = "";
+                string message = e.Message;
+                throw new LoggerException(message, e, errorCode, helpKeyword);
             }
 
             stream = new GZipStream(stream, CompressionLevel.Optimal);
@@ -100,7 +104,7 @@ namespace Microsoft.Build.Logging
         /// </exception>
         private void ProcessParameters()
         {
-            const string invalidParamSpecificationMessage = @"Need to specify a log file using the following pattern: '/logger:StructuredLogger,StructuredLogger.dll;log.buildlog";
+            const string invalidParamSpecificationMessage = @"Need to specify a valid log file name, such as msbuild.binlog";
 
             if (Parameters == null)
             {
@@ -115,6 +119,18 @@ namespace Microsoft.Build.Logging
             }
 
             FilePath = parameters[0].TrimStart('"').TrimEnd('"');
+
+            try
+            {
+                FilePath = Path.GetFullPath(FilePath);
+            }
+            catch (Exception e)
+            {
+                string errorCode = "";
+                string helpKeyword = "";
+                string message = e.Message;
+                throw new LoggerException(message, e, errorCode, helpKeyword);
+            }
         }
     }
 }

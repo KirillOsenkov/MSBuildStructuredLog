@@ -3,6 +3,9 @@ using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Logging
 {
+    /// <summary>
+    /// Represents a collective set of common properties on BuildEventArgs. Used for deserialization.
+    /// </summary>
     internal class BuildEventArgsFields
     {
         public BuildEventArgsFieldFlags Flags { get; set; }
