@@ -67,20 +67,20 @@
     <Compile Include="Serialization\Binary\BinaryLogWriter.cs" />
     <Compile Include="Serialization\Binary\TreeBinaryReader.cs" />
     <Compile Include="Serialization\Binary\TreeBinaryWriter.cs" />
-    <Compile Include="StreamingLogger\BuildEventArgsFieldFlags.cs" />
-    <Compile Include="StreamingLogger\BuildEventArgsFields.cs" />
-    <Compile Include="StreamingLogger\BuildEventArgsReader.cs" />
-    <Compile Include="StreamingLogger\BuildEventArgsWriter.cs" />
+    <Compile Include="BinaryLogger\BuildEventArgsFieldFlags.cs" />
+    <Compile Include="BinaryLogger\BuildEventArgsFields.cs" />
+    <Compile Include="BinaryLogger\BuildEventArgsReader.cs" />
+    <Compile Include="BinaryLogger\BuildEventArgsWriter.cs" />
     <Compile Include="Serialization\Serialization.cs" />
     <Compile Include="Serialization\StringCache.cs" />
     <Compile Include="Serialization\StringWriter.cs" />
     <Compile Include="Serialization\XlinqLogReader.cs" />
     <Compile Include="Serialization\XmlLogReader.cs" />
     <Compile Include="Serialization\XmlLogWriter.cs" />
-    <Compile Include="StreamingLogger\BinaryLogger.cs" />
-    <Compile Include="StreamingLogger\BuildEventArgsDispatcher.cs" />
-    <Compile Include="StreamingLogger\BinaryLogRecordKind.cs" />
-    <Compile Include="StreamingLogger\BinaryLogReplayEventSource.cs" />
+    <Compile Include="BinaryLogger\BinaryLogger.cs" />
+    <Compile Include="BinaryLogger\BuildEventArgsDispatcher.cs" />
+    <Compile Include="BinaryLogger\BinaryLogRecordKind.cs" />
+    <Compile Include="BinaryLogger\BinaryLogReplayEventSource.cs" />
     <Compile Include="StructuredLogger.cs" />
   </ItemGroup>
   <ItemGroup>
