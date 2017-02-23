@@ -29,6 +29,14 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BinaryLogger\BinaryLogger.cs" />
+    <Compile Include="BinaryLogger\BinaryLogRecordKind.cs" />
+    <Compile Include="BinaryLogger\BinaryLogReplayEventSource.cs" />
+    <Compile Include="BinaryLogger\BuildEventArgsDispatcher.cs" />
+    <Compile Include="BinaryLogger\BuildEventArgsFieldFlags.cs" />
+    <Compile Include="BinaryLogger\BuildEventArgsFields.cs" />
+    <Compile Include="BinaryLogger\BuildEventArgsReader.cs" />
+    <Compile Include="BinaryLogger\BuildEventArgsWriter.cs" />
     <Compile Include="Construction\Construction.cs" />
     <Compile Include="Construction\ItemGroupParser.cs" />
     <Compile Include="Construction\MessageProcessor.cs" />
@@ -67,20 +75,12 @@
     <Compile Include="Serialization\Binary\BinaryLogWriter.cs" />
     <Compile Include="Serialization\Binary\TreeBinaryReader.cs" />
     <Compile Include="Serialization\Binary\TreeBinaryWriter.cs" />
-    <Compile Include="BinaryLogger\BuildEventArgsFieldFlags.cs" />
-    <Compile Include="BinaryLogger\BuildEventArgsFields.cs" />
-    <Compile Include="BinaryLogger\BuildEventArgsReader.cs" />
-    <Compile Include="BinaryLogger\BuildEventArgsWriter.cs" />
     <Compile Include="Serialization\Serialization.cs" />
     <Compile Include="Serialization\StringCache.cs" />
     <Compile Include="Serialization\StringWriter.cs" />
     <Compile Include="Serialization\XlinqLogReader.cs" />
     <Compile Include="Serialization\XmlLogReader.cs" />
     <Compile Include="Serialization\XmlLogWriter.cs" />
-    <Compile Include="BinaryLogger\BinaryLogger.cs" />
-    <Compile Include="BinaryLogger\BuildEventArgsDispatcher.cs" />
-    <Compile Include="BinaryLogger\BinaryLogRecordKind.cs" />
-    <Compile Include="BinaryLogger\BinaryLogReplayEventSource.cs" />
     <Compile Include="StructuredLogger.cs" />
   </ItemGroup>
   <ItemGroup>
