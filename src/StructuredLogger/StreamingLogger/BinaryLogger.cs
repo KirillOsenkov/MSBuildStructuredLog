@@ -64,6 +64,7 @@ namespace Microsoft.Build.Logging
         {
             if (stream != null)
             {
+                // TODO: think about queuing to avoid contention
                 lock (eventArgsWriter)
                 {
                     eventArgsWriter.Write(e);

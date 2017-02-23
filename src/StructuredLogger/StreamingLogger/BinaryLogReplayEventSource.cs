@@ -1,5 +1,7 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.IO.Compression;
+using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Logging
 {
@@ -17,7 +19,29 @@ namespace Microsoft.Build.Logging
                 var reader = new BuildEventArgsReader(binaryReader);
                 while (true)
                 {
-                    var instance = reader.Read();
+                    BuildEventArgs instance = null;
+
+                    try
+                    {
+                        instance = reader.Read();
+                    }
+                    catch (Exception ex)
+                    {
+                        var text = $"Exception while reading log file:{Environment.NewLine}{ex.ToString()}";
+                        var message = new BuildErrorEventArgs(
+                            subcategory: "",
+                            code: "",
+                            file: sourceFilePath,
+                            lineNumber: 0,
+                            columnNumber: 0,
+                            endLineNumber: 0,
+                            endColumnNumber: 0,
+                            message: text,
+                            helpKeyword: null,
+                            senderName: "MSBuild");
+                        Dispatch(message);
+                    }
+
                     if (instance == null)
                     {
                         break;

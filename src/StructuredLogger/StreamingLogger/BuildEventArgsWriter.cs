@@ -75,6 +75,17 @@ namespace Microsoft.Build.Logging
             {
                 Write((BuildFinishedEventArgs)e);
             }
+            else
+            {
+                // convert all unrecognized objects to message
+                // and just preserve the message
+                var buildMessageEventArgs = new BuildMessageEventArgs(
+                    e.Message,
+                    e.HelpKeyword,
+                    e.SenderName,
+                    MessageImportance.Normal);
+                Write(buildMessageEventArgs);
+            }
         }
 
         private void Write(BuildStartedEventArgs e)
