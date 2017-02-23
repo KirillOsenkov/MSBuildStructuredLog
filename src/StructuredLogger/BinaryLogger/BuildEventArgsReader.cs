@@ -23,6 +23,10 @@ namespace Microsoft.Build.Logging
         private static FieldInfo buildEventArgsFieldTimestamp =
             typeof(BuildEventArgs).GetField("timestamp", BindingFlags.Instance | BindingFlags.NonPublic);
 
+        /// <summary>
+        /// Initializes a new instance of BuildEventArgsReader using a BinaryReader instance
+        /// </summary>
+        /// <param name="binaryReader">The BinaryReader to read BuildEventArgs from</param>
         public BuildEventArgsReader(BinaryReader binaryReader)
         {
             this.binaryReader = binaryReader;

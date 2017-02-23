@@ -9,6 +9,9 @@ using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Logging
 {
+    /// <summary>
+    /// Serializes BuildEventArgs-derived objects into a provided BinaryWriter
+    /// </summary>
     public class BuildEventArgsWriter
     {
         private readonly BinaryWriter binaryWriter;
@@ -23,11 +26,18 @@ namespace Microsoft.Build.Logging
                 typeof(Func<CultureInfo, string, object[], string>),
                 typeof(LazyFormattedBuildEventArgs).GetMethod("FormatString", BindingFlags.Static | BindingFlags.NonPublic));
 
+        /// <summary>
+        /// Initializes a new instance of BuildEventArgsWriter with a BinaryWriter
+        /// </summary>
+        /// <param name="binaryWriter">A BinaryWriter to write the BuildEventArgs instances to</param>
         public BuildEventArgsWriter(BinaryWriter binaryWriter)
         {
             this.binaryWriter = binaryWriter;
         }
 
+        /// <summary>
+        /// Write a provided instance of BuildEventArgs to the BinaryWriter
+        /// </summary>
         public void Write(BuildEventArgs e)
         {
             // the cases are ordered by most used first for performance

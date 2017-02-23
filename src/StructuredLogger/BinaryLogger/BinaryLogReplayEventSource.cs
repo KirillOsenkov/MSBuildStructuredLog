@@ -5,8 +5,16 @@ using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Logging
 {
+    /// <summary>
+    /// Provides a method to read a binary log file (*.binlog) and replay all stored BuildEventArgs
+    /// by implementing IEventSource and raising corresponding events.
+    /// </summary>
     public class BinaryLogReplayEventSource : EventArgsDispatcher
     {
+        /// <summary>
+        /// Read the provided binary log file and raise corresponding events for each BuildEventArgs
+        /// </summary>
+        /// <param name="sourceFilePath">The full file path of the binary log file</param>
         public void Replay(string sourceFilePath)
         {
             using (var stream = new FileStream(sourceFilePath, FileMode.Open))

@@ -3,7 +3,7 @@
 namespace Microsoft.Build.Logging
 {
     [Flags]
-    public enum BuildEventArgsFieldFlags
+    internal enum BuildEventArgsFieldFlags
     {
         None = 0,
         BuildEventContext = 1 << 0,

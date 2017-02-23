@@ -3,7 +3,7 @@ using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Logging
 {
-    public class BuildEventArgsFields
+    internal class BuildEventArgsFields
     {
         public BuildEventArgsFieldFlags Flags { get; set; }
 

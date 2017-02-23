@@ -5,19 +5,37 @@ using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Logging
 {
+    /// <summary>
+    /// A logger that serializes all incoming BuildEventArgs in a compressed binary file (*.binlog). The file
+    /// can later be played back and piped into other loggers (file, console, etc) to reconstruct the log contents
+    /// as if a real build was happening. Additionally, this format can be read by tools for
+    /// analysis or visualization. Since the file format preserves structure, tools don't have to parse
+    /// text logs that erase a lot of useful information.
+    /// </summary>
     public class BinaryLogger : ILogger
     {
-        public const int FileFormatVersion = 1;
+        private const int FileFormatVersion = 1;
 
         private Stream stream;
         private BinaryWriter binaryWriter;
         private BuildEventArgsWriter eventArgsWriter;
 
-        public string FilePath { get; set; }
+        private string FilePath { get; set; }
 
+        /// <summary>
+        /// The binary logger Verbosity is always maximum (Diagnostic). It tries to capture as much
+        /// information as possible.
+        /// </summary>
         public LoggerVerbosity Verbosity { get; set; } = LoggerVerbosity.Diagnostic;
+
+        /// <summary>
+        /// The only supported parameter is the output log file path (e.g. "msbuild.binlog") 
+        /// </summary>
         public string Parameters { get; set; }
 
+        /// <summary>
+        /// Initializes the logger by subscribing to events of IEventSource
+        /// </summary>
         public void Initialize(IEventSource eventSource)
         {
             Environment.SetEnvironmentVariable("MSBUILDTARGETOUTPUTLOGGING", "true");
@@ -42,6 +60,9 @@ namespace Microsoft.Build.Logging
             eventSource.AnyEventRaised += EventSource_AnyEventRaised;
         }
 
+        /// <summary>
+        /// Closes the underlying file stream.
+        /// </summary>
         public void Shutdown()
         {
             if (stream != null)
@@ -55,7 +76,7 @@ namespace Microsoft.Build.Logging
             }
         }
 
-        public void EventSource_AnyEventRaised(object sender, BuildEventArgs e)
+        private void EventSource_AnyEventRaised(object sender, BuildEventArgs e)
         {
             Write(e);
         }
