@@ -13,9 +13,10 @@ namespace Microsoft.Build.Logging
     /// analysis or visualization. Since the file format preserves structure, tools don't have to parse
     /// text logs that erase a lot of useful information.
     /// </summary>
-    public class BinaryLogger : ILogger
+    /// <remarks>The logger is public so that it can be instantiated from MSBuild.exe via command-line switch.</remarks>
+    public sealed class BinaryLogger : ILogger
     {
-        private const int FileFormatVersion = 1;
+        internal const int FileFormatVersion = 1;
 
         private Stream stream;
         private BinaryWriter binaryWriter;
@@ -59,7 +60,7 @@ namespace Microsoft.Build.Logging
             binaryWriter = new BinaryWriter(stream);
             eventArgsWriter = new BuildEventArgsWriter(binaryWriter);
 
-            binaryWriter.Write((byte)FileFormatVersion);
+            binaryWriter.Write(FileFormatVersion);
 
             eventSource.AnyEventRaised += EventSource_AnyEventRaised;
         }
@@ -73,7 +74,7 @@ namespace Microsoft.Build.Logging
             {
                 // It's hard to determine whether we're at the end of decoding GZipStream
                 // so add an explicit 0 at the end to signify end of file
-                stream.WriteByte(0);
+                stream.WriteByte((byte)BinaryLogRecordKind.EndOfFile);
                 stream.Flush();
                 stream.Dispose();
                 stream = null;
