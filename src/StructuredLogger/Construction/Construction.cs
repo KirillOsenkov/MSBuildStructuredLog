@@ -485,7 +485,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                         var item = new Item();
 
-                        var taskItem = kvp.Value as ITaskItem2;
+                        var taskItem = kvp.Value as ITaskItem;
                         if (taskItem != null)
                         {
                             item.Text = stringTable.Intern(taskItem.ItemSpec);
