@@ -20,7 +20,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 Indent = true
             };
-            FileStream stream = File.OpenWrite(logFile);
+            using (FileStream stream = File.Open(logFile, FileMode.Create))
             using (xmlWriter = XmlWriter.Create(stream, settings))
             {
                 xmlWriter.WriteStartDocument();
