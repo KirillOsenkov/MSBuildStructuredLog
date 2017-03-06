@@ -3,9 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Windows.Forms;
 using Microsoft.Build.Logging.StructuredLogger;
-using StructuredLogViewer;
 using Xunit;
 
 namespace StructuredLogger.Tests
