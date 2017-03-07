@@ -128,7 +128,8 @@ namespace StructuredLogViewer
             }
 
             if (filePath.EndsWith(".xml", StringComparison.OrdinalIgnoreCase) ||
-                filePath.EndsWith(".buildlog", StringComparison.OrdinalIgnoreCase))
+                filePath.EndsWith(".buildlog", StringComparison.OrdinalIgnoreCase) ||
+                filePath.EndsWith(".binlog", StringComparison.OrdinalIgnoreCase))
             {
                 OpenLogFile(filePath);
                 return true;
@@ -239,12 +240,15 @@ namespace StructuredLogViewer
                 catch (Exception ex)
                 {
                     shouldAnalyze = false;
-                    build = new Build() { Succeeded = false };
-                    build.AddChild(new Error() { Text = "Error when opening file: " + filePath });
-                    build.AddChild(new Error() { Text = ex.ToString() });
-                    return build;
+                    return GetErrorBuild(filePath, ex.ToString());
                 }
             });
+
+            if (build == null)
+            {
+                build = GetErrorBuild(filePath, "");
+                shouldAnalyze = false;
+            }
 
             if (shouldAnalyze)
             {
@@ -253,6 +257,14 @@ namespace StructuredLogViewer
             }
 
             DisplayBuild(build);
+        }
+
+        private static Build GetErrorBuild(string filePath, string message)
+        {
+            var build = new Build() { Succeeded = false };
+            build.AddChild(new Error() { Text = "Error when opening file: " + filePath });
+            build.AddChild(new Error() { Text = message });
+            return build;
         }
 
         private void BuildProject(string filePath)
@@ -312,7 +324,7 @@ namespace StructuredLogViewer
         {
             var openFileDialog = new OpenFileDialog();
             openFileDialog.Filter = Serialization.OpenFileDialogFilter;
-            openFileDialog.Title = "Open a structured build log file";
+            openFileDialog.Title = "Open a build log file";
             openFileDialog.CheckFileExists = true;
             var result = openFileDialog.ShowDialog(this);
             if (result != true)

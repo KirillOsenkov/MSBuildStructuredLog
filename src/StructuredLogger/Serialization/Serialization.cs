@@ -9,7 +9,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
     public class Serialization
     {
         public static readonly string FileDialogFilter = "Binary (compact) Structured Build Log (*.buildlog)|*.buildlog|Readable (large) XML Log (*.xml)|*.xml";
-        public static readonly string OpenFileDialogFilter = "Structured Build Log (*.buildlog;*.xml)|*.buildlog;*.xml";
+        public static readonly string OpenFileDialogFilter = "Build Log (*.binlog;*.buildlog;*.xml)|*.binlog;*.buildlog;*.xml";
 
         public static readonly XName[] AttributeNameList = typeof(AttributeNames)
             .GetFields(BindingFlags.Public | BindingFlags.Static)
@@ -33,10 +33,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 return XmlLogReader.ReadFromXml(filePath);
             }
-            else
+            else if (filePath.EndsWith(".binlog", StringComparison.OrdinalIgnoreCase))
+            {
+                return BinaryLog.ReadBuild(filePath);
+            }
+            else if (filePath.EndsWith(".buildlog", StringComparison.OrdinalIgnoreCase))
             {
                 return BinaryLogReader.Read(filePath);
             }
+
+            return null;
         }
 
         public static void Write(Build build, string filePath)

@@ -72,6 +72,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     ErrorReporting.ReportException(ex);
                 }
             }
+            else
+            {
+                CurrentBuild = construction.Build;
+            }
         }
 
         /// <summary>
