@@ -14,11 +14,11 @@ The app updates automatically via [Squirrel](https://github.com/Squirrel/Squirre
 ## Requirements:
  * .NET Framework 4.6
  * MSBuild 14.0 or 15.0
- * Visual Studio 2017 (for development of this project, not needed for logger to work)
+ * Visual Studio 2017 (only needed for development)
 
 ## Usage:
 
-The logger is in a single file called StructuredLogger.dll. It is available in a NuGet package:
+The logger is in a single file: StructuredLogger.dll. It is available in a NuGet package:
 https://www.nuget.org/packages/Microsoft.Build.Logging.StructuredLogger
 
 You can either build your solution yourself and pass the logger:
@@ -35,10 +35,10 @@ Logger supports three formats:
 
  1. *.binlog (official MSBuild binary log format)
  2. *.xml (for large human-readable XML logs)
- 3. *.buildlog (compact binary logs)
+ 3. *.buildlog (compact binary logs, may run out of memory on very large builds)
  
 Depending on which file extension you pass to the logger it will either write XML or binary.
-The viewer supports both formats and defaults to binary. The binary log can be up to 200x smaller and faster.
+The viewer supports all formats and defaults to binary when saving. The binary log can be up to 200x smaller and faster.
 
 Read more about the log formats here:
 https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/Log-Format
