@@ -19,13 +19,24 @@ namespace Microsoft.Build.Logging.StructuredLogger
             .GetFields(BindingFlags.Public | BindingFlags.Static)
             .Select(f => f.Name).ToArray();
 
-        public static readonly Dictionary<string, Type> ObjectModelTypes =
-            typeof(TreeNode)
-                .GetTypeInfo()
-                .Assembly
-                .GetTypes()
-                .Where(t => typeof(BaseNode).IsAssignableFrom(t))
-                .ToDictionary(t => t.Name);
+        private static Dictionary<string, Type> objectModelTypes;
+        public static Dictionary<string, Type> ObjectModelTypes
+        {
+            get
+            {
+                if (objectModelTypes == null)
+                {
+                    objectModelTypes = typeof(TreeNode)
+                        .GetTypeInfo()
+                        .Assembly
+                        .GetTypes()
+                        .Where(t => typeof(BaseNode).IsAssignableFrom(t))
+                        .ToDictionary(t => t.Name);
+                }
+
+                return objectModelTypes;
+            }
+        }
 
         public static Build Read(string filePath)
         {

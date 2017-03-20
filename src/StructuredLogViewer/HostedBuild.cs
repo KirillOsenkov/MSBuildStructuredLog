@@ -67,6 +67,7 @@ namespace StructuredLogViewer
                 }
                 catch (Exception ex)
                 {
+                    ex = ExceptionHandler.Unwrap(ex);
                     var build = new Build();
                     build.Succeeded = false;
                     build.AddChild(new Message() { Text = "Exception occurred during build:" });

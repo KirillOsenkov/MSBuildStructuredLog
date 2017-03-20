@@ -239,6 +239,7 @@ namespace StructuredLogViewer
                 }
                 catch (Exception ex)
                 {
+                    ex = ExceptionHandler.Unwrap(ex);
                     shouldAnalyze = false;
                     return GetErrorBuild(filePath, ex.ToString());
                 }
