@@ -20,6 +20,10 @@
     <file src="DeltaCompressionDotNet.MsDelta.dll" target="lib\net46" />
     <file src="DeltaCompressionDotNet.PatchApi.dll" target="lib\net46" />
     <file src="ICSharpCode.SharpZipLib.dll" target="lib\net46" />
+    <file src="Microsoft.Build.dll" target="lib\net46" />
+    <file src="Microsoft.Build.Framework.dll" target="lib\net46" />
+    <file src="Microsoft.Build.Tasks.Core.dll" target="lib\net46" />
+    <file src="Microsoft.Build.Utilities.Core.dll" target="lib\net46" />
     <file src="Mono.Cecil.dll" target="lib\net46" />
     <file src="Mono.Cecil.Mdb.dll" target="lib\net46" />
     <file src="Mono.Cecil.Pdb.dll" target="lib\net46" />
