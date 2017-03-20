@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using Microsoft.Build.Framework;
@@ -45,6 +46,64 @@ namespace Microsoft.Build.Logging
                     }
 
                     Dispatch(instance);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Enumerate over all records in the file. For each record store the bytes,
+        /// the start position in the stream, length in bytes and the deserialized object.
+        /// </summary>
+        /// <remarks>Useful for debugging and analyzing binary logs</remarks>
+        public IEnumerable<Record> ReadRecords(string sourceFilePath)
+        {
+            using (var stream = new FileStream(sourceFilePath, FileMode.Open))
+            {
+                var gzipStream = new GZipStream(stream, CompressionMode.Decompress, leaveOpen: true);
+                var memoryStream = new MemoryStream();
+                gzipStream.CopyTo(memoryStream);
+                memoryStream.Position = 0;
+
+                var binaryReader = new BinaryReader(memoryStream);
+                var bytes = memoryStream.ToArray();
+
+                int fileFormatVersion = binaryReader.ReadInt32();
+
+                // the log file is written using a newer version of file format
+                // that we don't know how to read
+                if (fileFormatVersion > BinaryLogger.FileFormatVersion)
+                {
+                    var text = $"Unsupported log file format. Latest supported version is {BinaryLogger.FileFormatVersion}, the log file has version {fileFormatVersion}.";
+                    throw new NotSupportedException(text);
+                }
+
+                var reader = new BuildEventArgsReader(binaryReader);
+                long index = memoryStream.Position;
+                while (true)
+                {
+                    BuildEventArgs instance = null;
+
+                    instance = reader.Read();
+                    if (instance == null)
+                    {
+                        break;
+                    }
+
+                    var position = memoryStream.Position;
+                    var length = position - index;
+                    var chunk = new byte[length];
+                    Array.Copy(bytes, (int)index, chunk, 0, (int)length);
+                    var record = new Record
+                    {
+                        Bytes = chunk,
+                        Args = instance,
+                        Start = index,
+                        Length = length
+                    };
+
+                    yield return record;
+
+                    index = position;
                 }
             }
         }
