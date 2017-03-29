@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
 using Xunit;
+using Microsoft.Build.Logging;
 
 namespace StructuredLogger.Tests
 {
@@ -56,5 +57,17 @@ namespace StructuredLogger.Tests
         //    MessageBox.Show(elapsed.ToString());
         //    File.WriteAllLines(@"D:\2.txt", results.Select(r => r.Field).ToArray());
         //}
+
+        //[Fact]
+        public void ReadBinaryLogRecords()
+        {
+            var reader = new BinaryLogReplayEventSource();
+            var records = reader.ReadRecords(@"D:\msbuild.binlog").ToArray();
+            var count = records.Length;
+            foreach (var record in records)
+            {
+                var t = record.Args;
+            }
+        }
     }
 }
