@@ -18,7 +18,7 @@ The app updates automatically via [Squirrel](https://github.com/Squirrel/Squirre
 
 ## Usage:
 
-The logger is in a single file: StructuredLogger.dll. It is available in a NuGet package:
+The logger is in a single file: `StructuredLogger.dll`. It is available in a NuGet package:
 https://www.nuget.org/packages/Microsoft.Build.Logging.StructuredLogger
 
 You can either build your solution yourself and pass the logger:
@@ -31,7 +31,7 @@ or you can build the solution or open an existing log file through the viewer ap
 
 ![Screenshot2](/docs/Screenshot2.png)
 
-To use a portable version of the logger (e.g. with the `dotnet msbuild` command) you need a .NET Standard version of StructuredLogger.dll, not the .NET Framework (Desktop) version.
+To use a portable version of the logger (e.g. with the `dotnet msbuild` command) you need a .NET Standard version of `StructuredLogger.dll`, not the .NET Framework (Desktop) version.
 
 Download this NuGet package: https://www.nuget.org/packages/Microsoft.Build.Logging.StructuredLogger/1.0.130
 and inside it there's the `lib\netstandard1.5\StructuredLogger.dll`. Try passing that to `dotnet build` like this:
@@ -69,5 +69,5 @@ Open an issue if you're running into something weird and I can take a look into 
 ```
 
 ## MSBuild Resources
- * [https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/MSBuild-Resources](https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/MSBuild-Resources)
- * [https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/MSBuild-Tips-&-Tricks](https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/MSBuild-Tips-&-Tricks)
+ * [https://github.com/Microsoft/msbuild/wiki/MSBuild-Resources](https://github.com/Microsoft/msbuild/wiki/MSBuild-Resources)
+ * [https://github.com/Microsoft/msbuild/wiki/MSBuild-Tips-&-Tricks](https://github.com/Microsoft/msbuild/wiki/MSBuild-Tips-&-Tricks)
