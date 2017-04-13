@@ -60,6 +60,23 @@ https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/Log-Format
  * Delete to hide nodes from the tree (to get uninteresting stuff out of the way)
  * Open and save log files (ask a friend to record and send you the log which you can then investigate on your machine)
 
+## Differences between StructuredLogger and the new BinaryLogger that is shipped with MSBuild as of 15.1
+
+Starting with Visual Studio 2017 Update 1 MSBuild supports a new `BinaryLogger` documented here:
+https://github.com/Microsoft/MSBuild/wiki/Binary-Log
+
+The Structured Log Viewer is able to open the `.binlog` format created by `BinaryLogger` (as well as its own `.buildlog` format). Here are some differences between the `BinaryLogger` and the `StructuredLogger`:
+
+ * `BinaryLogger` (`/bl`) will consume less memory and hopefully not OOM on huge builds, whereas the `StructuredLogger` `.buildlog` format may OOM on large builds (by design). The /bl `.binlog` format is streaming and should be constant in terms of memory.
+
+ * `StructuredLogger` on the other hand captures the target graph so it is able to show DependsOn list for each target and also order targets slightly better in some cases.
+
+ * `StructuredLogger` is much more compact since it is not streaming and thus able to use string deduplication, reducing the log file up to 10x smaller as a `.binlog` for a Binary Logger.
+
+ * `BinaryLogger` is replayable and you're able to reconstruct text logs of any verbosity out of it. It is hard to reconstruct text logs of conventional format from a StructuredLogger log.
+
+Other than that they're pretty much equivalent.
+
 ## Investigating problems with MSBuildStructuredLog
 
 Open an issue if you're running into something weird and I can take a look into it. If MSBuildStructuredLog crashes during the build, it will attempt to write the exception call stack to:
