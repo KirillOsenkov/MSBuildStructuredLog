@@ -44,5 +44,8 @@
     <StartProgram>$(MSBuildToolsPath)\MSBuild.exe</StartProgram>
     <StartArguments>$(SolutionPath) /p:Configuration=Release /t:Rebuild /v:diag /noconlog /logger:StructuredLogger,$(TargetPath);log.buildlog</StartArguments>
     <StartWorkingDirectory>$(SolutionDir)</StartWorkingDirectory>
+    <SignAssembly>True</SignAssembly>
+    <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
+    <DelaySign>False</DelaySign>
   </PropertyGroup>
 </Project>
