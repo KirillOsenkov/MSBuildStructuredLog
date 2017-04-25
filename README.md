@@ -5,7 +5,7 @@ A logger for MSBuild that records a structured representation of executed target
 [![NuGet package](https://img.shields.io/nuget/v/Microsoft.Build.Logging.StructuredLogger.svg)](https://nuget.org/packages/Microsoft.Build.Logging.StructuredLogger)
 
 ## Install:
-https://github.com/KirillOsenkov/MSBuildStructuredLog/releases/download/v1.0.127/MSBuildStructuredLogSetup.exe
+https://github.com/KirillOsenkov/MSBuildStructuredLog/releases/download/v1.0.130/MSBuildStructuredLogSetup.exe
 
 The app updates automatically via [Squirrel](https://github.com/Squirrel/Squirrel.Windows) (after launch it checks for updates in background), next launch starts the newly downloaded latest version.
 
@@ -18,20 +18,28 @@ The app updates automatically via [Squirrel](https://github.com/Squirrel/Squirre
 
 ## Usage:
 
-The logger is in a single file: StructuredLogger.dll. It is available in a NuGet package:
+The logger is in a single file: `StructuredLogger.dll`. It is available in a NuGet package:
 https://www.nuget.org/packages/Microsoft.Build.Logging.StructuredLogger
 
 You can either build your solution yourself and pass the logger:
 
 ```
-msbuild solution.sln /t:Rebuild /v:diag /noconlog /logger:StructuredLogger,%localappdata%\MSBuildStructuredLogViewer\app-1.0.127\StructuredLogger.dll;1.buildlog
+msbuild solution.sln /t:Rebuild /v:diag /noconlog /logger:StructuredLogger,%localappdata%\MSBuildStructuredLogViewer\app-1.0.130\StructuredLogger.dll;1.buildlog
 ```
 
 or you can build the solution or open an existing log file through the viewer app:
 
 ![Screenshot2](/docs/Screenshot2.png)
 
-Logger supports three formats:
+To use a portable version of the logger (e.g. with the `dotnet msbuild` command) you need a .NET Standard version of `StructuredLogger.dll`, not the .NET Framework (Desktop) version.
+
+Download this NuGet package: https://www.nuget.org/packages/Microsoft.Build.Logging.StructuredLogger/1.0.130
+and inside it there's the `lib\netstandard1.5\StructuredLogger.dll`. Try passing that to `dotnet build` like this:
+```
+dotnet msbuild Some.sln /v:diag /nologo /logger:StructuredLogger,"packages\Microsoft.Build.Logging.StructuredLogger.1.0.130\lib\netstandard1.5\StructuredLogger.dll";"C:\Users\SomeUser\Desktop\structuredlog.buildlog"
+```
+
+The logger supports three file formats:
 
  1. *.binlog (official MSBuild binary log format)
  2. *.xml (for large human-readable XML logs)
@@ -52,6 +60,23 @@ https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/Log-Format
  * Delete to hide nodes from the tree (to get uninteresting stuff out of the way)
  * Open and save log files (ask a friend to record and send you the log which you can then investigate on your machine)
 
+## Differences between StructuredLogger and the new BinaryLogger that is shipped with MSBuild as of 15.1
+
+Starting with Visual Studio 2017 Update 1 MSBuild supports a new `BinaryLogger` documented here:
+https://github.com/Microsoft/MSBuild/wiki/Binary-Log
+
+The Structured Log Viewer is able to open the `.binlog` format created by `BinaryLogger` (as well as its own `.buildlog` format). Here are some differences between the `BinaryLogger` and the `StructuredLogger`:
+
+ * `BinaryLogger` (`/bl`) will consume less memory and hopefully not OOM on huge builds, whereas the `StructuredLogger` `.buildlog` format may OOM on large builds (by design). The /bl `.binlog` format is streaming and should be constant in terms of memory.
+
+ * `StructuredLogger` on the other hand captures the target graph so it is able to show DependsOn list for each target and also order targets slightly better in some cases.
+
+ * `StructuredLogger` is much more compact since it is not streaming and thus able to use string deduplication, reducing the log file up to 10x smaller as a `.binlog` for a Binary Logger.
+
+ * `BinaryLogger` is replayable and you're able to reconstruct text logs of any verbosity out of it. It is hard to reconstruct text logs of conventional format from a StructuredLogger log.
+
+Other than that they're pretty much equivalent.
+
 ## Investigating problems with MSBuildStructuredLog
 
 Open an issue if you're running into something weird and I can take a look into it. If MSBuildStructuredLog crashes during the build, it will attempt to write the exception call stack to:
@@ -61,5 +86,5 @@ Open an issue if you're running into something weird and I can take a look into 
 ```
 
 ## MSBuild Resources
- * [https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/MSBuild-Resources](https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/MSBuild-Resources)
- * [https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/MSBuild-Tips-&-Tricks](https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/MSBuild-Tips-&-Tricks)
+ * [https://github.com/Microsoft/msbuild/wiki/MSBuild-Resources](https://github.com/Microsoft/msbuild/wiki/MSBuild-Resources)
+ * [https://github.com/Microsoft/msbuild/wiki/MSBuild-Tips-&-Tricks](https://github.com/Microsoft/msbuild/wiki/MSBuild-Tips-&-Tricks)
