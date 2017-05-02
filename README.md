@@ -41,9 +41,9 @@ dotnet msbuild Some.sln /v:diag /nologo /logger:StructuredLogger,"packages\Micro
 
 The logger supports three file formats:
 
- 1. *.binlog (official MSBuild binary log format)
- 2. *.xml (for large human-readable XML logs)
- 3. *.buildlog (compact binary logs, may run out of memory on very large builds)
+ 1. `*.binlog` (official MSBuild binary log format, same as `msbuild.exe /bl`)
+ 2. `*.xml` (for large human-readable XML logs)
+ 3. `*.buildlog` (compact binary logs, may run out of memory on very large builds)
  
 Depending on which file extension you pass to the logger it will either write XML or binary.
 The viewer supports all formats and defaults to binary when saving. The binary log can be up to 200x smaller and faster.
