@@ -45,14 +45,23 @@
           </DockPanel>
         </local:SplitterPanel.FirstChild>
         <local:SplitterPanel.SecondChild>
-          <DockPanel>
-            <TreeView x:Name="treeView"
+
+          <local:SplitterPanel>
+            <local:SplitterPanel.FirstChild>
+              <DockPanel>
+                <TreeView x:Name="treeView"
                       VirtualizingPanel.IsVirtualizing="False"
                       VirtualizingPanel.VirtualizationMode="Recycling"
                       TreeViewItem.Selected="TreeViewItem_Selected"
                       ItemsSource="{Binding Children}">
-            </TreeView>
-          </DockPanel>
+                </TreeView>
+              </DockPanel>
+            </local:SplitterPanel.FirstChild>
+
+            <local:SplitterPanel.SecondChild>
+              <local:DocumentWell x:Name="documentWell" Visibility="Collapsed"></local:DocumentWell>
+            </local:SplitterPanel.SecondChild>
+          </local:SplitterPanel>
         </local:SplitterPanel.SecondChild>
       </local:SplitterPanel>
     </local:SplitterPanel.FirstChild>

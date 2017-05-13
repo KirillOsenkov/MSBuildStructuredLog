@@ -297,8 +297,7 @@ namespace StructuredLogViewer.Controls
                 return false;
             }
 
-            text = text.Substring(0, Math.Min(100, text.Length));
-            MessageBox.Show(text);
+            documentWell.DisplaySource(sourceFilePath, text);
             return true;
         }
 

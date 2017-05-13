@@ -1,0 +1,38 @@
+﻿<UserControl x:Class="StructuredLogViewer.Controls.TextViewerControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:StructuredLogViewer.Controls"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300">
+  <Grid>
+    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+
+        <TextBlock x:Name="lineNumbers"
+                   Background="White"
+                   FontFamily="Consolas"
+                   FontSize="12"
+                   Foreground="Teal"
+                   Margin="8,0,8,0">
+        </TextBlock>
+        
+        <TextBox x:Name="textBlock"
+                 Grid.Column="1"
+                 BorderBrush="Transparent"
+                 BorderThickness="0"
+                 Background="White"
+                 FontFamily="Consolas"
+                 FontSize="12"
+                 AcceptsReturn="True"
+                 IsReadOnly="True"
+                 IsReadOnlyCaretVisible="True"></TextBox>
+      </Grid>
+    </ScrollViewer>
+  </Grid>
+</UserControl>

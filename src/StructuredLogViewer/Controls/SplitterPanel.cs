@@ -43,10 +43,16 @@ namespace StructuredLogViewer.Controls
 
             set
             {
+                if (firstChild != null)
+                {
+                    firstChild.IsVisibleChanged -= OnChildIsVisibleChanged;
+                }
+
                 firstChild = value;
                 if (firstChild != null)
                 {
                     UpdateRowColumnInfo();
+                    firstChild.IsVisibleChanged += OnChildIsVisibleChanged;
                 }
             }
         }
@@ -61,12 +67,23 @@ namespace StructuredLogViewer.Controls
 
             set
             {
+                if (secondChild != null)
+                {
+                    secondChild.IsVisibleChanged -= OnChildIsVisibleChanged;
+                }
+
                 secondChild = value;
                 if (secondChild != null)
                 {
                     UpdateRowColumnInfo();
+                    secondChild.IsVisibleChanged += OnChildIsVisibleChanged;
                 }
             }
+        }
+
+        private void OnChildIsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            UpdateSplitterVisibility();
         }
 
         private void UpdateRowColumnInfo()
@@ -129,6 +146,49 @@ namespace StructuredLogViewer.Controls
                 SetRowSpan(SecondChild, 1);
                 SetColumnSpan(SecondChild, 1);
                 Children.Add(SecondChild);
+            }
+
+            UpdateSplitterVisibility();
+        }
+
+        private void UpdateSplitterVisibility()
+        {
+            bool isFirstChildVisible = FirstChild != null && FirstChild.IsVisible;
+            bool isSecondChildVisible = SecondChild != null && SecondChild.IsVisible;
+            bool areBothVisible = isFirstChildVisible && isSecondChildVisible;
+            gridSplitter.Visibility = areBothVisible ? Visibility.Visible : Visibility.Collapsed;
+
+            if (Orientation == Orientation.Horizontal)
+            {
+                if (ColumnDefinitions.Count == 3)
+                {
+                    if (isFirstChildVisible)
+                    {
+                        ColumnDefinitions[0].Width = new GridLength(1.0, GridUnitType.Star);
+                    }
+                    else
+                    {
+                        ColumnDefinitions[0].Width = new GridLength(0);
+                    }
+
+                    if (areBothVisible)
+                    {
+                        ColumnDefinitions[1].Width = new GridLength(5);
+                    }
+                    else
+                    {
+                        ColumnDefinitions[1].Width = new GridLength(0);
+                    }
+
+                    if (isSecondChildVisible)
+                    {
+                        ColumnDefinitions[2].Width = new GridLength(3.0, GridUnitType.Star);
+                    }
+                    else
+                    {
+                        ColumnDefinitions[2].Width = new GridLength(0);
+                    }
+                }
             }
         }
     }
