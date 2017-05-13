@@ -102,6 +102,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 SetString(nameof(Task.FromAssembly), task.FromAssembly);
                 SetString(nameof(Task.CommandLineArguments), task.CommandLineArguments);
+                SetString(nameof(Task.SourceFilePath), task.SourceFilePath);
                 return;
             }
 
@@ -110,6 +111,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 SetString(nameof(Target.DependsOnTargets), target.DependsOnTargets);
                 SetString(nameof(Target.IsLowRelevance), target.IsLowRelevance.ToString());
+                SetString(nameof(Target.SourceFilePath), target.SourceFilePath);
                 return;
             }
 

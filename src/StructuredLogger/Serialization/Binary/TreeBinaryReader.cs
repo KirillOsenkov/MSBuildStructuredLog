@@ -20,7 +20,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             this.fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
             int major = fileStream.ReadByte();
             int minor = fileStream.ReadByte();
-            int revision = fileStream.ReadByte();
+            int build = fileStream.ReadByte();
+            Version = new Version(major, minor, build, 0);
+            
             this.gzipStream = new GZipStream(fileStream, CompressionMode.Decompress);
             this.binaryReader = new BetterBinaryReader(gzipStream);
 
@@ -31,6 +33,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 stringTable[i] = binaryReader.ReadString();
             }
         }
+
+        public Version Version { get; private set; }
 
         public string[] StringTable => stringTable;
 

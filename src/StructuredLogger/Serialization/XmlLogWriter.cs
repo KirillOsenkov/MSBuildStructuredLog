@@ -125,10 +125,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (task != null)
             {
                 SetString(nameof(task.FromAssembly), task.FromAssembly);
-                if (task.CommandLineArguments != null)
-                {
-                    SetString(nameof(task.CommandLineArguments), task.CommandLineArguments);
-                }
+                SetString(nameof(task.CommandLineArguments), task.CommandLineArguments);
+                SetString(nameof(AttributeNames.File), task.SourceFilePath);
 
                 return;
             }
@@ -141,6 +139,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     SetString(nameof(target.IsLowRelevance), "true");
                 }
+
+                SetString(nameof(AttributeNames.File), target.SourceFilePath);
 
                 return;
             }

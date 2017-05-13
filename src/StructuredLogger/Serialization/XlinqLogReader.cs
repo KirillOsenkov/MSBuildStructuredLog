@@ -162,6 +162,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 task.FromAssembly = GetString(element, AttributeNames.FromAssembly);
                 task.CommandLineArguments = GetString(element, AttributeNames.CommandLineArguments);
+                task.SourceFilePath = GetString(element, AttributeNames.File);
                 return;
             }
 
@@ -170,6 +171,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 target.IsLowRelevance = GetBoolean(element, AttributeNames.IsLowRelevance);
                 target.DependsOnTargets = GetString(element, AttributeNames.DependsOnTargets);
+                target.SourceFilePath = GetString(element, AttributeNames.File);
                 return;
             }
 

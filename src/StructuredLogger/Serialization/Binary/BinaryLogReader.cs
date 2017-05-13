@@ -9,6 +9,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private TreeBinaryReader reader;
         private readonly Queue<string> attributes = new Queue<string>(10);
 
+        private readonly bool formatSupportsSourceFiles;
+
         public static Build Read(string filePath)
         {
             using (var binaryLogReader = new BinaryLogReader(filePath))
@@ -29,6 +31,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             this.filePath = filePath;
             this.reader = new TreeBinaryReader(filePath);
+            this.formatSupportsSourceFiles = reader.Version > new Version(1, 0, 130);
         }
 
         private object ReadNode()
@@ -125,6 +128,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 task.FromAssembly = Dequeue();
                 task.CommandLineArguments = Dequeue();
+                if (formatSupportsSourceFiles)
+                {
+                    task.SourceFilePath = Dequeue();
+                }
+
                 return;
             }
 
@@ -133,6 +141,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 target.DependsOnTargets = Dequeue();
                 target.IsLowRelevance = Serialization.GetBoolean(Dequeue());
+                if (formatSupportsSourceFiles)
+                {
+                    target.SourceFilePath = Dequeue();
+                }
+
                 return;
             }
 
