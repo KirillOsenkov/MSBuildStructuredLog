@@ -2,7 +2,7 @@
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class AbstractDiagnostic : TextNode
+    public class AbstractDiagnostic : TextNode, IHasSourceFile
     {
         public DateTime Timestamp { get; set; }
         public string Code { get; set; }
@@ -13,6 +13,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public int LineNumber { get; set; }
         public string ProjectFile { get; set; }
         public string Subcategory { get; set; }
+
+        string IHasSourceFile.SourceFilePath => File;
 
         public override string ToString()
         {
