@@ -11,6 +11,11 @@ namespace StructuredLogViewer
 
         public string GetSourceFileText(string filePath)
         {
+            if (filePath == null)
+            {
+                return null;
+            }
+
             foreach (var resolver in resolvers)
             {
                 var candidate = resolver.GetSourceFileText(filePath);
