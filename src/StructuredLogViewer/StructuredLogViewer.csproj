@@ -67,6 +67,9 @@
     <Compile Include="Search.cs" />
     <Compile Include="SearchResult.cs" />
     <Compile Include="SettingsService.cs" />
+    <Compile Include="SourceFiles\ISourceFileResolver.cs" />
+    <Compile Include="SourceFiles\LocalSourceFileResolver.cs" />
+    <Compile Include="SourceFiles\SourceFileResolver.cs" />
     <Compile Include="TypingConcurrentOperation.cs" />
     <Compile Include="WelcomeScreen.cs" />
   </ItemGroup>
