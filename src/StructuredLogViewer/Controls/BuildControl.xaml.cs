@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Windows;
@@ -19,6 +20,8 @@ namespace StructuredLogViewer.Controls
 
         private TypingConcurrentOperation typingConcurrentOperation = new TypingConcurrentOperation();
         private ScrollViewer scrollViewer;
+
+        private SourceFileResolver sourceFileResolver = new SourceFileResolver();
 
         public BuildControl(Build build)
         {
@@ -197,7 +200,7 @@ namespace StructuredLogViewer.Controls
                 return;
             }
 
-            var text = StringWriter.GetString(treeNode);
+            var text = Microsoft.Build.Logging.StructuredLogger.StringWriter.GetString(treeNode);
             try
             {
                 Clipboard.SetText(text);
@@ -239,12 +242,64 @@ namespace StructuredLogViewer.Controls
 
         private void OnItemDoubleClick(object sender, MouseButtonEventArgs args)
         {
+            // workaround for http://stackoverflow.com/a/36244243/37899
+            var treeViewItem = sender as TreeViewItem;
+            if (!treeViewItem.IsSelected)
+            {
+                return;
+            }
+
             TreeNode treeNode = GetNode(args);
             if (treeNode != null)
             {
-                // TODO: handle double-click on node
-                args.Handled = true;
+                args.Handled = Invoke(treeNode);
             }
+        }
+
+        private bool Invoke(TreeNode treeNode)
+        {
+            try
+            {
+                switch (treeNode)
+                {
+                    case AbstractDiagnostic diagnostic:
+                        var path = diagnostic.File;
+                        if (!DisplayFile(path) && 
+                            path != null && 
+                            !Path.IsPathRooted(path) &&
+                            diagnostic.ProjectFile != null)
+                        {
+                            // path must be relative, try to normalize:
+                            path = Path.Combine(Path.GetDirectoryName(diagnostic.ProjectFile), path);
+                            return DisplayFile(path);
+                        }
+
+                        break;
+                    case IHasSourceFile hasSourceFile:
+                        return DisplayFile(hasSourceFile.SourceFilePath);
+                    default:
+                        return false;
+                }
+            }
+            catch
+            {
+                // in case our guessing of file path goes awry
+            }
+
+            return false;
+        }
+
+        private bool DisplayFile(string sourceFilePath)
+        {
+            var text = sourceFileResolver.GetSourceFileText(sourceFilePath);
+            if (text == null)
+            {
+                return false;
+            }
+
+            text = text.Substring(0, Math.Min(100, text.Length));
+            MessageBox.Show(text);
+            return true;
         }
 
         private static TreeNode GetNode(RoutedEventArgs args)
