@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "StructuredLogger": {
+      "commandName": "Executable",
+      "executablePath": "$(MSBuildToolsPath)\\MSBuild.exe",
+      "commandLineArgs": "$(SolutionDir) /p:Configuration=Release /t:Rebuild /v:diag /noconlog /logger:StructuredLogger,$(TargetPath);log.buildlog",
+      "workingDirectory": "$(SolutionDir)"
+    }
+  }
+}

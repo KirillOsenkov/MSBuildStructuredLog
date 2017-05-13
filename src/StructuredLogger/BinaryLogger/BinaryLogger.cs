@@ -20,6 +20,7 @@ namespace Microsoft.Build.Logging
         private Stream stream;
         private BinaryWriter binaryWriter;
         private BuildEventArgsWriter eventArgsWriter;
+        private SourceFileCollector sourceFileCollector;
 
         private string FilePath { get; set; }
 
@@ -46,6 +47,7 @@ namespace Microsoft.Build.Logging
             try
             {
                 stream = new FileStream(FilePath, FileMode.Create);
+                sourceFileCollector = new SourceFileCollector(FilePath);
             }
             catch (Exception e)
             {
@@ -78,11 +80,25 @@ namespace Microsoft.Build.Logging
                 stream.Dispose();
                 stream = null;
             }
+
+            if (sourceFileCollector != null)
+            {
+                sourceFileCollector.Close();
+                sourceFileCollector = null;
+            }
         }
 
         private void EventSource_AnyEventRaised(object sender, BuildEventArgs e)
         {
-            Write(e);
+            try
+            {
+                Write(e);
+            }
+            catch
+            {
+                // Exceptions here are unlikely but it'd be bad for a logger to crash the build.
+                // We can't log either because the logger is likely broken. Best just do nothing.
+            }
         }
 
         private void Write(BuildEventArgs e)
@@ -94,6 +110,8 @@ namespace Microsoft.Build.Logging
                 {
                     eventArgsWriter.Write(e);
                 }
+
+                sourceFileCollector.IncludeSourceFiles(e);
             }
         }
 

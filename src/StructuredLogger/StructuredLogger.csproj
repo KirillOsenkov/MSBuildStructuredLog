@@ -20,6 +20,9 @@
   <ItemGroup>
     <PackageReference Include="Nerdbank.GitVersioning" Version="1.5.62" />
   </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.IO.Compression" />
+  </ItemGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.5'">
     <DefineConstants>$(DefineConstants);NETCORE</DefineConstants>
   </PropertyGroup>

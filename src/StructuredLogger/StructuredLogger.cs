@@ -16,6 +16,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// The path to the log file specified by the user
         /// </summary>
         private string _logFile;
+        private SourceFileCollector sourceFileCollector;
 
         public static Build CurrentBuild { get; set; }
         public static bool SaveLogToDisk { get; set; } = true;
@@ -33,6 +34,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             ProcessParameters();
 
+            if (SaveLogToDisk)
+            {
+                try
+                {
+                    sourceFileCollector = new SourceFileCollector(_logFile);
+                }
+                catch (Exception ex)
+                {
+                    throw new LoggerException($"Failed to create the source archive for log file {_logFile}", ex);
+                }
+            }
+
             construction = new Construction();
             construction.Completed += Construction_Completed;
 
@@ -48,6 +61,33 @@ namespace Microsoft.Build.Logging.StructuredLogger
             eventSource.WarningRaised += construction.WarningRaised;
             eventSource.ErrorRaised += construction.ErrorRaised;
             eventSource.CustomEventRaised += construction.CustomEventRaised;
+
+            if (sourceFileCollector != null)
+            {
+                eventSource.AnyEventRaised += EventSource_AnyEventRaised;
+            }
+        }
+
+        private void EventSource_AnyEventRaised(object sender, BuildEventArgs e)
+        {
+            try
+            {
+                sourceFileCollector?.IncludeSourceFiles(e);
+            }
+            catch
+            {
+            }
+        }
+
+        public override void Shutdown()
+        {
+            base.Shutdown();
+
+            if (sourceFileCollector != null)
+            {
+                sourceFileCollector.Close();
+                sourceFileCollector = null;
+            }
         }
 
         private void Construction_Completed()
