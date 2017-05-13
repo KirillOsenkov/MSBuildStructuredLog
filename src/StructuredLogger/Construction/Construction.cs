@@ -203,6 +203,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
 
                     target.Id = args.BuildEventContext.TargetId;
+                    target.SourceFilePath = stringTable.Intern(args.TargetFile);
                 }
             }
             catch (Exception ex)
@@ -564,32 +565,27 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private Task CreateTask(TaskStartedEventArgs taskStartedEventArgs)
         {
             var taskName = stringTable.Intern(taskStartedEventArgs.TaskName);
-            var assembly = stringTable.Intern(GetTaskAssembly(taskStartedEventArgs.TaskName));
+            var assembly = stringTable.Intern(GetTaskAssembly(taskName));
             var taskId = taskStartedEventArgs.BuildEventContext.TaskId;
             var startTime = taskStartedEventArgs.Timestamp;
 
             Task result;
             if (taskName == "Copy")
             {
-                result = new CopyTask()
-                {
-                    Name = taskName,
-                    Id = taskId,
-                    StartTime = startTime,
-                    FromAssembly = assembly
-                };
-                return result;
+                result = new CopyTask();
+            }
+            else
+            {
+                result = new Task();
             }
 
-            var task = new Task
-            {
-                Name = taskName,
-                Id = taskId,
-                StartTime = startTime,
-                FromAssembly = assembly
-            };
+            result.Name = taskName;
+            result.Id = taskId;
+            result.StartTime = startTime;
+            result.FromAssembly = assembly;
+            result.SourceFilePath = stringTable.Intern(taskStartedEventArgs.TaskFile);
 
-            return task;
+            return result;
         }
 
         /// <summary>
