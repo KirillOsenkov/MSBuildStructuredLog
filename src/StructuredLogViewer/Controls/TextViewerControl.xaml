@@ -7,7 +7,8 @@
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
   <Grid>
-    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+    <ScrollViewer HorizontalScrollBarVisibility="Auto" 
+                  VerticalScrollBarVisibility="Auto">
       <Grid>
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="Auto" />
@@ -21,7 +22,7 @@
                    Foreground="Teal"
                    Margin="8,0,8,0">
         </TextBlock>
-        
+
         <TextBox x:Name="textBlock"
                  Grid.Column="1"
                  BorderBrush="Transparent"

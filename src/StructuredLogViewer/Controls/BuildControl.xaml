@@ -10,7 +10,7 @@
     <BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter" />
   </UserControl.Resources>
 
-  <local:SplitterPanel Orientation="Vertical" FirstChildRelativeSize="Auto" SecondChildRelativeSize="50">
+  <local:SplitterPanel Orientation="Vertical" FirstChildRelativeSize="*" SecondChildRelativeSize="50">
 
     <local:SplitterPanel.FirstChild>
       <local:SplitterPanel FirstChildRelativeSize="1*" SecondChildRelativeSize="3*">
