@@ -57,7 +57,7 @@ namespace StructuredLogViewer
             elapsed = sw.Elapsed;
         }
 
-        private static bool LooksLikeXml(string text)
+        public static bool LooksLikeXml(string text)
         {
             if (string.IsNullOrEmpty(text))
             {
