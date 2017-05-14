@@ -777,5 +777,23 @@
     </ControlTemplate.Triggers>
   </ControlTemplate>
 
+  <DataTemplate x:Key="SourceFileTabHeaderTemplate">
+    <Grid>
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+      <Button x:Uid="HideButton"
+              x:Name="HideButton"
+              Template="{StaticResource closeButtonTemplate}"
+              Grid.Column="1"
+              Command="{Binding Close}"
+              VerticalAlignment="Center"
+              Margin="4,2,0,0"
+              ToolTip="Close">
+      </Button>
+      <TextBlock MinWidth="50" Text="{Binding Header}" VerticalAlignment="Center" />
+    </Grid>
+  </DataTemplate>
 
 </ResourceDictionary>

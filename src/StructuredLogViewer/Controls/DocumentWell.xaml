@@ -7,10 +7,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
   <Grid>
-    <TabControl x:Name="tabControl">
-      <TabItem Header="Source">
-        <local:TextViewerControl x:Name="textViewerControl"></local:TextViewerControl>
-      </TabItem>
+    <TabControl x:Name="tabControl" IsSynchronizedWithCurrentItem="True">
     </TabControl>
     <Button x:Name="closeButton"
             HorizontalAlignment="Right"
