@@ -36,6 +36,7 @@ namespace StructuredLogViewer.Controls
             treeViewItemStyle.Setters.Add(new Setter(TreeViewItem.VisibilityProperty, new Binding("IsVisible") { Mode = BindingMode.TwoWay, Converter = new BooleanToVisibilityConverter() }));
             treeViewItemStyle.Setters.Add(new EventSetter(MouseDoubleClickEvent, (MouseButtonEventHandler)OnItemDoubleClick));
             treeViewItemStyle.Setters.Add(new EventSetter(RequestBringIntoViewEvent, (RequestBringIntoViewEventHandler)TreeViewItem_RequestBringIntoView));
+            treeViewItemStyle.Setters.Add(new EventSetter(KeyDownEvent, (KeyEventHandler)OnItemKeyDown));
             //treeViewItemStyle.Setters.Add(new Setter(FrameworkElement.ContextMenuProperty, contextMenu));
 
             treeView.ItemContainerStyle = treeViewItemStyle;
@@ -240,6 +241,18 @@ namespace StructuredLogViewer.Controls
             }
         }
 
+        private void OnItemKeyDown(object sender, KeyEventArgs args)
+        {
+            if (args.Key == Key.Space || args.Key == Key.Return)
+            {
+                var treeNode = GetNode(args);
+                if (treeNode != null)
+                {
+                    args.Handled = Invoke(treeNode);
+                }
+            }
+        }
+
         private void OnItemDoubleClick(object sender, MouseButtonEventArgs args)
         {
             // workaround for http://stackoverflow.com/a/36244243/37899
@@ -264,8 +277,8 @@ namespace StructuredLogViewer.Controls
                 {
                     case AbstractDiagnostic diagnostic:
                         var path = diagnostic.File;
-                        if (!DisplayFile(path) && 
-                            path != null && 
+                        if (!DisplayFile(path) &&
+                            path != null &&
                             !Path.IsPathRooted(path) &&
                             diagnostic.ProjectFile != null)
                         {

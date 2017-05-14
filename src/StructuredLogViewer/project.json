@@ -1,15 +1,16 @@
 ﻿{
   "dependencies": {
-    "squirrel.windows": "1.4.0",
+    "Microsoft.Language.Xml": "1.0.15",
     "Nerdbank.GitVersioning": {
       "version": "1.5.62",
       "suppressParent": "none"
-    }
+    },
+    "squirrel.windows": "1.4.0"
   },
   "frameworks": {
-    "net46": { }
+    "net46": {}
   },
   "runtimes": {
-    "win": { }
+    "win": {}
   }
 }

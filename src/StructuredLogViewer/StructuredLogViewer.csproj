@@ -59,6 +59,7 @@
     <Compile Include="Controls\BuildControl.xaml.cs">
       <DependentUpon>BuildControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Classifier.cs" />
     <Compile Include="Controls\DocumentWell.xaml.cs">
       <DependentUpon>DocumentWell.xaml</DependentUpon>
     </Compile>

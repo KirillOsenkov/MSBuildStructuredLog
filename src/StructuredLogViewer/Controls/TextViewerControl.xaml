@@ -7,8 +7,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
   <Grid>
-    <ScrollViewer HorizontalScrollBarVisibility="Auto" 
-                  VerticalScrollBarVisibility="Auto">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
       <Grid>
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="Auto" />
@@ -18,21 +17,25 @@
         <TextBlock x:Name="lineNumbers"
                    Background="White"
                    FontFamily="Consolas"
-                   FontSize="12"
+                   FontSize="14"
                    Foreground="Teal"
-                   Margin="8,0,8,0">
+                   LineHeight="18"
+                   Margin="8,1,8,0">
         </TextBlock>
 
-        <TextBox x:Name="textBlock"
-                 Grid.Column="1"
-                 BorderBrush="Transparent"
-                 BorderThickness="0"
-                 Background="White"
-                 FontFamily="Consolas"
-                 FontSize="12"
-                 AcceptsReturn="True"
-                 IsReadOnly="True"
-                 IsReadOnlyCaretVisible="True"></TextBox>
+        <RichTextBox x:Name="textBlock"
+                     Grid.Column="1"
+                     BorderBrush="Transparent"
+                     BorderThickness="0"
+                     FontFamily="Consolas"
+                     FontSize="14"
+                     AcceptsReturn="True"
+                     IsReadOnly="True"
+                     IsReadOnlyCaretVisible="True"><RichTextBox.Resources>
+            <Style TargetType="{x:Type Paragraph}">
+              <Setter Property="Margin" Value="0,1,0,0" />
+            </Style>
+          </RichTextBox.Resources></RichTextBox>
       </Grid>
     </ScrollViewer>
   </Grid>
