@@ -12,5 +12,12 @@
         <local:TextViewerControl x:Name="textViewerControl"></local:TextViewerControl>
       </TabItem>
     </TabControl>
+    <Button x:Name="closeButton"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            Click="closeButton_Click"
+            Template="{DynamicResource closeButtonTemplate}"
+            ToolTip="Close the source code view">
+    </Button>
   </Grid>
 </UserControl>

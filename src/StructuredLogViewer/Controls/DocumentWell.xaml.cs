@@ -16,5 +16,10 @@ namespace StructuredLogViewer.Controls
             Visibility = Visibility.Visible;
             textViewerControl.DisplaySource(sourceFilePath, text);
         }
+
+        private void closeButton_Click(object sender, RoutedEventArgs e)
+        {
+            Visibility = Visibility.Collapsed;
+        }
     }
 }

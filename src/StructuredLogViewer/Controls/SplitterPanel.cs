@@ -5,6 +5,24 @@ namespace StructuredLogViewer.Controls
 {
     public class SplitterPanel : Grid
     {
+        public GridLength FirstChildRelativeSize
+        {
+            get { return (GridLength)GetValue(FirstChildRelativeSizeProperty); }
+            set { SetValue(FirstChildRelativeSizeProperty, value); }
+        }
+
+        public static readonly DependencyProperty FirstChildRelativeSizeProperty =
+            DependencyProperty.Register("FirstChildRelativeSize", typeof(GridLength), typeof(SplitterPanel), new PropertyMetadata(new GridLength(1, GridUnitType.Star)));
+
+        public GridLength SecondChildRelativeSize
+        {
+            get { return (GridLength)GetValue(SecondChildRelativeSizeProperty); }
+            set { SetValue(SecondChildRelativeSizeProperty, value); }
+        }
+
+        public static readonly DependencyProperty SecondChildRelativeSizeProperty =
+            DependencyProperty.Register("SecondChildRelativeSize", typeof(GridLength), typeof(SplitterPanel), new PropertyMetadata(new GridLength(1, GridUnitType.Star)));
+
         private readonly GridSplitter gridSplitter = new GridSplitter()
         {
             ResizeBehavior = GridResizeBehavior.PreviousAndNext
@@ -92,11 +110,21 @@ namespace StructuredLogViewer.Controls
             RowDefinitions.Clear();
             ColumnDefinitions.Clear();
 
+            if (oldFirstSize == default(GridLength))
+            {
+                oldFirstSize = FirstChildRelativeSize;
+            }
+
+            if (oldSecondSize == default(GridLength))
+            {
+                oldSecondSize = SecondChildRelativeSize;
+            }
+
             if (Orientation == Orientation.Horizontal)
             {
-                ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1.0, GridUnitType.Star) });
-                ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(5) });
-                ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(3.0, GridUnitType.Star) });
+                ColumnDefinitions.Add(new ColumnDefinition() { Width = oldFirstSize });
+                ColumnDefinitions.Add(new ColumnDefinition() { Width = separatorSize });
+                ColumnDefinitions.Add(new ColumnDefinition() { Width = oldSecondSize });
                 RowDefinitions.Add(new RowDefinition());
                 SetRow(gridSplitter, 0);
                 SetColumn(gridSplitter, 1);
@@ -107,9 +135,9 @@ namespace StructuredLogViewer.Controls
             }
             else
             {
-                RowDefinitions.Add(new RowDefinition() { Height = new GridLength(1.0, GridUnitType.Star) });
-                RowDefinitions.Add(new RowDefinition() { Height = new GridLength(5) });
-                RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50) });
+                RowDefinitions.Add(new RowDefinition() { Height = oldFirstSize });
+                RowDefinitions.Add(new RowDefinition() { Height = separatorSize });
+                RowDefinitions.Add(new RowDefinition() { Height = oldSecondSize });
                 ColumnDefinitions.Add(new ColumnDefinition());
                 SetRow(gridSplitter, 1);
                 SetColumn(gridSplitter, 0);
@@ -151,6 +179,11 @@ namespace StructuredLogViewer.Controls
             UpdateSplitterVisibility();
         }
 
+        private GridLength oldFirstSize;
+        private GridLength oldSecondSize;
+        private static readonly GridLength zero = new GridLength(0);
+        private static readonly GridLength separatorSize = new GridLength(5);
+
         private void UpdateSplitterVisibility()
         {
             bool isFirstChildVisible = FirstChild != null && FirstChild.IsVisible;
@@ -164,29 +197,55 @@ namespace StructuredLogViewer.Controls
                 {
                     if (isFirstChildVisible)
                     {
-                        ColumnDefinitions[0].Width = new GridLength(1.0, GridUnitType.Star);
+                        if (oldFirstSize == default(GridLength) || oldFirstSize == zero)
+                        {
+                            oldFirstSize = FirstChildRelativeSize;
+                        }
+
+                        if (ColumnDefinitions[0].Width == zero)
+                        {
+                            ColumnDefinitions[0].Width = oldFirstSize;
+                        }
                     }
                     else
                     {
-                        ColumnDefinitions[0].Width = new GridLength(0);
+                        if (ColumnDefinitions[0].Width != zero)
+                        {
+                            oldFirstSize = ColumnDefinitions[0].Width;
+                        }
+
+                        ColumnDefinitions[0].Width = zero;
                     }
 
                     if (areBothVisible)
                     {
-                        ColumnDefinitions[1].Width = new GridLength(5);
+                        ColumnDefinitions[1].Width = separatorSize;
                     }
                     else
                     {
-                        ColumnDefinitions[1].Width = new GridLength(0);
+                        ColumnDefinitions[1].Width = zero;
                     }
 
                     if (isSecondChildVisible)
                     {
-                        ColumnDefinitions[2].Width = new GridLength(3.0, GridUnitType.Star);
+                        if (oldSecondSize == default(GridLength) || oldSecondSize == zero)
+                        {
+                            oldSecondSize = SecondChildRelativeSize;
+                        }
+
+                        if (ColumnDefinitions[2].Width == zero)
+                        {
+                            ColumnDefinitions[2].Width = oldSecondSize;
+                        }
                     }
                     else
                     {
-                        ColumnDefinitions[2].Width = new GridLength(0);
+                        if (ColumnDefinitions[2].Width != zero)
+                        {
+                            oldSecondSize = ColumnDefinitions[2].Width;
+                        }
+
+                        ColumnDefinitions[2].Width = zero;
                     }
                 }
             }
