@@ -251,6 +251,14 @@ namespace StructuredLogViewer.Controls
                     args.Handled = Invoke(treeNode);
                 }
             }
+
+            if (args.Key == Key.Escape)
+            {
+                if (documentWell.IsVisible)
+                {
+                    documentWell.Hide();
+                }
+            }
         }
 
         private void OnItemDoubleClick(object sender, MouseButtonEventArgs args)

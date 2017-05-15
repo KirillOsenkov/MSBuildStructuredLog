@@ -34,12 +34,24 @@ namespace StructuredLogViewer.Controls
             return Tabs.FirstOrDefault(t => string.Equals(t.FilePath, filePath, StringComparison.OrdinalIgnoreCase));
         }
 
+        public void CloseAllTabs()
+        {
+            Tabs.Clear();
+        }
+
+        public void Hide()
+        {
+            Visibility = Visibility.Collapsed;
+        }
+
         public void DisplaySource(string sourceFilePath, string text)
         {
             var existing = Find(sourceFilePath);
             if (existing != null)
             {
+                Visibility = Visibility.Visible;
                 tabControl.SelectedItem = existing;
+                return;
             }
 
             var textViewerControl = new TextViewerControl();
@@ -61,7 +73,7 @@ namespace StructuredLogViewer.Controls
 
         private void closeButton_Click(object sender, RoutedEventArgs e)
         {
-            Tabs.Clear();
+            Hide();
         }
     }
 }
