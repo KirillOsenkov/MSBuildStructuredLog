@@ -23,6 +23,7 @@ namespace StructuredLogViewer.Controls
         private ScrollViewer scrollViewer;
 
         private SourceFileResolver sourceFileResolver;
+        private ArchiveFileResolver archiveFile => sourceFileResolver.ArchiveFile;
 
         public BuildControl(Build build, string logFilePath)
         {
@@ -32,6 +33,12 @@ namespace StructuredLogViewer.Controls
 
             LogFilePath = logFilePath;
             sourceFileResolver = new SourceFileResolver(logFilePath);
+
+            if (archiveFile != null)
+            {
+                filesTab.Visibility = Visibility.Visible;
+                findInFilesTab.Visibility = Visibility.Visible;
+            }
 
             var existingTreeViewItemStyle = (Style)Application.Current.Resources[typeof(TreeViewItem)];
             var treeViewItemStyle = new Style(typeof(TreeViewItem), existingTreeViewItemStyle);

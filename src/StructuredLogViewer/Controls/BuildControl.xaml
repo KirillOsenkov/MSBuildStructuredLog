@@ -15,22 +15,27 @@
     <local:SplitterPanel.FirstChild>
       <local:SplitterPanel FirstChildRelativeSize="1*" SecondChildRelativeSize="3*">
         <local:SplitterPanel.FirstChild>
-          <DockPanel>
-            <Grid DockPanel.Dock="Top">
-              <TextBox x:Name="searchTextBox" TextChanged="searchTextBox_TextChanged" />
-              <Path Data="{DynamicResource SearchGeometry}"
+          <TabControl TabStripPlacement="Bottom" Margin="0" Padding="0">
+            <TabItem Header="Search Log">
+              <DockPanel>
+                <Grid DockPanel.Dock="Top">
+                  <TextBox x:Name="searchTextBox" 
+                           TextChanged="searchTextBox_TextChanged" 
+                           BorderThickness="0,0,0,1" />
+                  <Path Data="{DynamicResource SearchGeometry}"
                     Fill="#717171"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Center"
                     Margin="3"/>
-            </Grid>
+                </Grid>
 
-            <Grid>
-              <TreeView x:Name="resultsList"
+                <Grid>
+                  <TreeView x:Name="resultsList"
                         VirtualizingPanel.IsVirtualizing="True"
                         VirtualizingPanel.VirtualizationMode="Recycling"
+                        BorderThickness="0"
                         Background="#F5F5F5"></TreeView>
-              <TextBlock x:Name="watermark"
+                  <TextBlock x:Name="watermark"
                          Margin="40"
                          TextWrapping="Wrap"
                          HorizontalAlignment="Center"
@@ -40,9 +45,22 @@
                 <LineBreak />
                 <LineBreak />
                 <Run>Use syntax like "$property Prop" to narrow results down by item kind (supported kinds: $project, $target, $task, $error, $warning, $message, $property, $item, $additem, $removeitem, $metadata)</Run>
-              </TextBlock>
-            </Grid>
-          </DockPanel>
+                  </TextBlock>
+                </Grid>
+              </DockPanel>
+            </TabItem>
+
+            <TabItem x:Name="filesTab" Header="Files" Visibility="Collapsed">
+              <TreeView x:Name="filesTree"
+                        Background="#F5F5F5"
+                        BorderThickness="0">
+              </TreeView>
+            </TabItem>
+
+            <TabItem x:Name="findInFilesTab" Header="Find in Files" Visibility="Collapsed">
+
+            </TabItem>
+          </TabControl>
         </local:SplitterPanel.FirstChild>
         <local:SplitterPanel.SecondChild>
 

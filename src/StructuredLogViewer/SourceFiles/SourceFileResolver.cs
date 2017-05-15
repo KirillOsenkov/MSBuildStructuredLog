@@ -12,6 +12,8 @@ namespace StructuredLogViewer
 
         private const string buildsourceszip = ".buildsources.zip";
 
+        public ArchiveFileResolver ArchiveFile { get; private set; }
+
         public SourceFileResolver(string logFilePath)
         {
             if (!string.IsNullOrEmpty(logFilePath))
@@ -19,7 +21,8 @@ namespace StructuredLogViewer
                 var buildSources = Path.ChangeExtension(logFilePath, buildsourceszip);
                 if (File.Exists(buildSources))
                 {
-                    resolvers.Insert(0, new ArchiveFileResolver(buildSources));
+                    ArchiveFile = new ArchiveFileResolver(buildSources);
+                    resolvers.Insert(0, ArchiveFile);
                 }
             }
         }
