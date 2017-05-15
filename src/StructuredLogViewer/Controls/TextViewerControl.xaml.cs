@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System.Diagnostics;
+using System.Linq;
+using System.Windows;
 using System.Windows.Controls;
 using ICSharpCode.AvalonEdit.Folding;
 using ICSharpCode.AvalonEdit.Highlighting;
@@ -8,6 +10,9 @@ namespace StructuredLogViewer.Controls
 {
     public partial class TextViewerControl : UserControl
     {
+        public string FilePath { get; private set; }
+        public string Text { get; private set; }
+
         public TextViewerControl()
         {
             InitializeComponent();
@@ -16,6 +21,11 @@ namespace StructuredLogViewer.Controls
 
         public void DisplaySource(string sourceFilePath, string text)
         {
+            this.FilePath = sourceFilePath;
+            this.Text = text;
+
+            filePathText.Text = sourceFilePath;
+
             textEditor.Text = text;
 
             if (Classifier.LooksLikeXml(text))
@@ -35,6 +45,16 @@ namespace StructuredLogViewer.Controls
             //document.Blocks.Clear();
 
             //new Classifier().Classify(textBlock, text);
+        }
+
+        private void openInExternalEditor_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            Process.Start(FilePath, null);
+        }
+
+        private void copyFullPath_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            Clipboard.SetText(FilePath);
         }
     }
 }

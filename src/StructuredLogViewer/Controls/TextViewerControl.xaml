@@ -9,8 +9,41 @@
              d:DesignHeight="300" d:DesignWidth="300">
   <Grid>
 
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition />
+    </Grid.RowDefinitions>
+
+    <DockPanel Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
+      <Button x:Name="openInExternalEditor" 
+              DockPanel.Dock="Left"
+              Content="Open" 
+              VerticalAlignment="Center"
+              BorderThickness="0"
+              Click="openInExternalEditor_Click"
+              Background="Transparent"
+              Padding="6,3,6,3"
+              ToolTip="Open in external editor" />
+      <Button x:Name="copyFullPath" 
+              Content="Copy" 
+              Padding="6,3,6,3"
+              Click="copyFullPath_Click"
+              BorderThickness="0"
+              Background="Transparent"
+              VerticalAlignment="Center"
+              DockPanel.Dock="Left"
+              ToolTip="Copy full path" />
+      <TextBox x:Name="filePathText" 
+               Padding="4" 
+               Background="Transparent"
+               BorderThickness="0"
+               IsReadOnly="True" 
+               IsReadOnlyCaretVisible="True" />
+    </DockPanel>
+
     <a:TextEditor x:Name="textEditor"
                   FontFamily="Consolas"
+                  Grid.Row="1"
                   ShowLineNumbers="True"
                   LineNumbersForeground="Teal"
                   FontSize="14">
