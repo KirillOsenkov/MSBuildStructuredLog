@@ -362,7 +362,7 @@ namespace StructuredLogViewer
 
         private void DisplayBuild(Build build)
         {
-            currentBuild = build != null ? new BuildControl(build) : null;
+            currentBuild = build != null ? new BuildControl(build, logFilePath) : null;
             SetContent(currentBuild);
 
             GC.Collect();

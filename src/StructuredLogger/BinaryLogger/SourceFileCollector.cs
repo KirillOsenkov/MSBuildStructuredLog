@@ -126,7 +126,7 @@ namespace Microsoft.Build.Logging
             }
         }
 
-        private string CalculateArchivePath(string filePath)
+        private static string CalculateArchivePath(string filePath)
         {
             string archivePath = filePath;
 

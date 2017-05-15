@@ -17,17 +17,21 @@ namespace StructuredLogViewer.Controls
     {
         public Build Build { get; set; }
         public TreeViewItem SelectedTreeViewItem { get; private set; }
+        public string LogFilePath { get; private set; }
 
         private TypingConcurrentOperation typingConcurrentOperation = new TypingConcurrentOperation();
         private ScrollViewer scrollViewer;
 
-        private SourceFileResolver sourceFileResolver = new SourceFileResolver();
+        private SourceFileResolver sourceFileResolver;
 
-        public BuildControl(Build build)
+        public BuildControl(Build build, string logFilePath)
         {
             InitializeComponent();
             DataContext = build;
             Build = build;
+
+            LogFilePath = logFilePath;
+            sourceFileResolver = new SourceFileResolver(logFilePath);
 
             var existingTreeViewItemStyle = (Style)Application.Current.Resources[typeof(TreeViewItem)];
             var treeViewItemStyle = new Style(typeof(TreeViewItem), existingTreeViewItemStyle);

@@ -18,6 +18,7 @@
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.IO.Compression" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
@@ -84,6 +85,7 @@
     <Compile Include="Search.cs" />
     <Compile Include="SearchResult.cs" />
     <Compile Include="SettingsService.cs" />
+    <Compile Include="SourceFiles\ArchiveFileResolver.cs" />
     <Compile Include="SourceFiles\ISourceFileResolver.cs" />
     <Compile Include="SourceFiles\LocalSourceFileResolver.cs" />
     <Compile Include="SourceFiles\SourceFileResolver.cs" />
