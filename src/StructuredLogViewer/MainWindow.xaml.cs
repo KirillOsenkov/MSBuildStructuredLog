@@ -4,6 +4,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Win32;
 using Squirrel;
@@ -256,6 +257,9 @@ namespace StructuredLogViewer
                 progress.ProgressText = "Analyzing " + filePath + "...";
                 await System.Threading.Tasks.Task.Run(() => BuildAnalyzer.AnalyzeBuild(build));
             }
+
+            progress.ProgressText = "Rendering tree...";
+            await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Loaded); // let the progress message be rendered before we block the UI again
 
             DisplayBuild(build);
         }
