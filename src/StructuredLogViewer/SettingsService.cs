@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace StructuredLogViewer
 {
@@ -15,6 +16,9 @@ namespace StructuredLogViewer
         private static readonly string recentMSBuildLocationsFilePath = Path.Combine(GetRootPath(), "RecentMSBuildLocations.txt");
         private static readonly string customArgumentsFilePath = Path.Combine(GetRootPath(), "CustomMSBuildArguments.txt");
         private static readonly string disableUpdatesFilePath = Path.Combine(GetRootPath(), "DisableUpdates.txt");
+        private static readonly string settingsFilePath = Path.Combine(GetRootPath(), "Settings.txt");
+
+        private static bool settingsRead = false;
 
         public static void AddRecentLogFile(string filePath)
         {
@@ -206,6 +210,66 @@ namespace StructuredLogViewer
             }
 
             File.WriteAllLines(customArgumentsFilePath, list);
+        }
+
+        private static bool enableTreeViewVirtualization = true;
+        public static bool EnableTreeViewVirtualization
+        {
+            get
+            {
+                EnsureSettingsRead();
+                return enableTreeViewVirtualization;
+            }
+
+            set
+            {
+                if (enableTreeViewVirtualization == value)
+                {
+                    return;
+                }
+
+                enableTreeViewVirtualization = value;
+                SaveSettings();
+            }
+        }
+
+        private static void EnsureSettingsRead()
+        {
+            if (!settingsRead)
+            {
+                ReadSettings();
+                settingsRead = true;
+            }
+        }
+
+        const string Virtualization = "Virtualization=";
+
+        private static void SaveSettings()
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine(Virtualization + enableTreeViewVirtualization.ToString());
+            File.WriteAllText(settingsFilePath, sb.ToString());
+        }
+
+        private static void ReadSettings()
+        {
+            if (!File.Exists(settingsFilePath))
+            {
+                return;
+            }
+
+            var lines = File.ReadAllLines(settingsFilePath);
+            foreach (var line in lines)
+            {
+                if (line.StartsWith(Virtualization))
+                {
+                    var value = line.Substring(Virtualization.Length);
+                    if (bool.TryParse(value, out bool boolValue))
+                    {
+                        enableTreeViewVirtualization = boolValue;
+                    }
+                }
+            }
         }
     }
 }

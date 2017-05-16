@@ -106,5 +106,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private ICommand openLogFileCommand;
         public ICommand OpenLogFileCommand => openLogFileCommand ?? (openLogFileCommand = new Command(OpenLogFile));
         private void OpenLogFile() => OpenLogFileRequested?.Invoke();
+
+        public bool EnableVirtualization
+        {
+            get => SettingsService.EnableTreeViewVirtualization;
+
+            set
+            {
+                SettingsService.EnableTreeViewVirtualization = value;
+            }
+        }
     }
 }

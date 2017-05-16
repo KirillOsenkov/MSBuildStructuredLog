@@ -28,6 +28,9 @@ namespace StructuredLogViewer.Controls
         public BuildControl(Build build, string logFilePath)
         {
             InitializeComponent();
+
+            VirtualizingPanel.SetIsVirtualizing(treeView, SettingsService.EnableTreeViewVirtualization);
+
             DataContext = build;
             Build = build;
 
