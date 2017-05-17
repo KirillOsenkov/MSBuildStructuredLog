@@ -106,8 +106,14 @@ namespace Microsoft.Build.Logging
                 if (CaptureSourceFiles == SourceFileCaptureMode.Embedded)
                 {
                     var archiveFilePath = sourceFileCollector.ArchiveFilePath;
-                    eventArgsWriter.WriteBlob(BinaryLogRecordKind.SourceArchive, File.ReadAllBytes(archiveFilePath));
-                    File.Delete(archiveFilePath);
+
+                    // It is possible that the archive couldn't be created for some reason.
+                    // Only embed it if it actually exists.
+                    if (File.Exists(archiveFilePath))
+                    {
+                        eventArgsWriter.WriteBlob(BinaryLogRecordKind.SourceArchive, File.ReadAllBytes(archiveFilePath));
+                        File.Delete(archiveFilePath);
+                    }
                 }
 
                 sourceFileCollector = null;
