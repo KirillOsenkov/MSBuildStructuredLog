@@ -13,6 +13,8 @@ namespace Microsoft.Build.Logging
     /// <remarks>The class is public so that we can call it from MSBuild.exe when replaying a log file.</remarks>
     public sealed class BinaryLogReplayEventSource : EventArgsDispatcher
     {
+        public event Action<BinaryLogRecordKind, byte[]> OnBlobRead;
+
         /// <summary>
         /// Read the provided binary log file and raise corresponding events for each BuildEventArgs
         /// </summary>
@@ -35,6 +37,7 @@ namespace Microsoft.Build.Logging
                 }
 
                 var reader = new BuildEventArgsReader(binaryReader);
+                reader.OnBlobRead += OnBlobRead;
                 while (true)
                 {
                     BuildEventArgs instance = null;
@@ -77,8 +80,26 @@ namespace Microsoft.Build.Logging
                     throw new NotSupportedException(text);
                 }
 
-                var reader = new BuildEventArgsReader(binaryReader);
                 long index = memoryStream.Position;
+                long lengthOfBlobsAddedLastTime = 0;
+
+                List<Record> blobs = new List<Record>();
+
+                var reader = new BuildEventArgsReader(binaryReader);
+                reader.OnBlobRead += (kind, blob) =>
+                {
+                    var record = new Record
+                    {
+                        Bytes = blob,
+                        Args = null,
+                        Start = index,
+                        Length = blob.Length
+                    };
+
+                    blobs.Add(record);
+                    lengthOfBlobsAddedLastTime += blob.Length;
+                };
+
                 while (true)
                 {
                     BuildEventArgs instance = null;
@@ -90,9 +111,10 @@ namespace Microsoft.Build.Logging
                     }
 
                     var position = memoryStream.Position;
-                    var length = position - index;
+                    var length = position - index - lengthOfBlobsAddedLastTime;
+
                     var chunk = new byte[length];
-                    Array.Copy(bytes, (int)index, chunk, 0, (int)length);
+                    Array.Copy(bytes, (int)(index + lengthOfBlobsAddedLastTime), chunk, 0, (int)length);
                     var record = new Record
                     {
                         Bytes = chunk,
@@ -104,6 +126,12 @@ namespace Microsoft.Build.Logging
                     yield return record;
 
                     index = position;
+                    lengthOfBlobsAddedLastTime = 0;
+                }
+
+                foreach (var blob in blobs)
+                {
+                    yield return blob;
                 }
             }
         }

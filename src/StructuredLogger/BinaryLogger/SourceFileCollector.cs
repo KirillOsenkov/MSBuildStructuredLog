@@ -14,9 +14,10 @@ namespace Microsoft.Build.Logging
     /// </summary>
     internal class SourceFileCollector
     {
-        private string _filePath;
         private FileStream _fileStream;
         private ZipArchive _zipArchive;
+
+        public string ArchiveFilePath { get; set; }
 
         /// <summary>
         /// Avoid visiting each file more than once.
@@ -41,11 +42,11 @@ namespace Microsoft.Build.Logging
 
         public SourceFileCollector(string logFilePath, string sourcesArchiveExtension = ".buildsources.zip")
         {
-            this._filePath = Path.ChangeExtension(logFilePath, sourcesArchiveExtension);
+            ArchiveFilePath = Path.ChangeExtension(logFilePath, sourcesArchiveExtension);
 
             try
             {
-                _fileStream = new FileStream(_filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.Delete);
+                _fileStream = new FileStream(ArchiveFilePath, FileMode.Create, FileAccess.ReadWrite, FileShare.Delete);
                 _zipArchive = new ZipArchive(_fileStream, ZipArchiveMode.Create);
             }
             catch

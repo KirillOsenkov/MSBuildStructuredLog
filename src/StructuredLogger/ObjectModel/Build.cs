@@ -10,6 +10,8 @@
         public bool IsAnalyzed { get; set; }
         public bool Succeeded { get; set; }
 
+        public byte[] SourceFilesArchive { get; set; }
+
         public override string ToString() => "Build " + (Succeeded ? "succeeded" : "failed");
     }
 }

@@ -35,7 +35,17 @@ namespace StructuredLogViewer.Controls
             Build = build;
 
             LogFilePath = logFilePath;
-            sourceFileResolver = new SourceFileResolver(logFilePath);
+
+            if (build.SourceFilesArchive != null)
+            {
+                // first try to see if the source archive was embedded in the log
+                sourceFileResolver = new SourceFileResolver(build.SourceFilesArchive);
+            }
+            else
+            {
+                // otherwise try to read from the .zip file on disk if present
+                sourceFileResolver = new SourceFileResolver(logFilePath);
+            }
 
             if (archiveFile != null)
             {

@@ -1,6 +1,6 @@
 ﻿namespace Microsoft.Build.Logging
 {
-    internal enum BinaryLogRecordKind
+    public enum BinaryLogRecordKind
     {
         EndOfFile = 0,
         BuildStarted,
@@ -15,6 +15,7 @@
         Warning,
         Message,
         TaskCommandLine,
-        CriticalBuildMessage
+        CriticalBuildMessage,
+        SourceArchive
     }
 }

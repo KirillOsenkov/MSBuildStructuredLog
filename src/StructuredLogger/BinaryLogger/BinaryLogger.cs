@@ -25,6 +25,30 @@ namespace Microsoft.Build.Logging
         private string FilePath { get; set; }
 
         /// <summary>
+        /// Describes whether to capture the project and target source files used during the build.
+        /// If the source files are captured, they can be embedded in the log file or as a separate zip archive.
+        /// </summary>
+        public enum SourceFileCaptureMode
+        {
+            /// <summary>
+            /// Don't capture the source files during the build.
+            /// </summary>
+            None,
+
+            /// <summary>
+            /// Embed the source files directly in the log file.
+            /// </summary>
+            Embedded,
+
+            /// <summary>
+            /// Create an external .buildsources.zip archive for the files.
+            /// </summary>
+            ZipFile
+        }
+
+        public SourceFileCaptureMode CaptureSourceFiles { get; set; } = SourceFileCaptureMode.Embedded;
+
+        /// <summary>
         /// The binary logger Verbosity is always maximum (Diagnostic). It tries to capture as much
         /// information as possible.
         /// </summary>
@@ -47,7 +71,11 @@ namespace Microsoft.Build.Logging
             try
             {
                 stream = new FileStream(FilePath, FileMode.Create);
-                sourceFileCollector = new SourceFileCollector(FilePath);
+
+                if (CaptureSourceFiles != SourceFileCaptureMode.None)
+                {
+                    sourceFileCollector = new SourceFileCollector(FilePath);
+                }
             }
             catch (Exception e)
             {
@@ -71,6 +99,20 @@ namespace Microsoft.Build.Logging
         /// </summary>
         public void Shutdown()
         {
+            if (sourceFileCollector != null)
+            {
+                sourceFileCollector.Close();
+
+                if (CaptureSourceFiles == SourceFileCaptureMode.Embedded)
+                {
+                    var archiveFilePath = sourceFileCollector.ArchiveFilePath;
+                    eventArgsWriter.WriteBlob(BinaryLogRecordKind.SourceArchive, File.ReadAllBytes(archiveFilePath));
+                    File.Delete(archiveFilePath);
+                }
+
+                sourceFileCollector = null;
+            }
+
             if (stream != null)
             {
                 // It's hard to determine whether we're at the end of decoding GZipStream
@@ -79,12 +121,6 @@ namespace Microsoft.Build.Logging
                 stream.Flush();
                 stream.Dispose();
                 stream = null;
-            }
-
-            if (sourceFileCollector != null)
-            {
-                sourceFileCollector.Close();
-                sourceFileCollector = null;
             }
         }
 
@@ -111,7 +147,10 @@ namespace Microsoft.Build.Logging
                     eventArgsWriter.Write(e);
                 }
 
-                sourceFileCollector.IncludeSourceFiles(e);
+                if (sourceFileCollector != null)
+                {
+                    sourceFileCollector.IncludeSourceFiles(e);
+                }
             }
         }
 

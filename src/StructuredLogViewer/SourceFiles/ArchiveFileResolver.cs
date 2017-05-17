@@ -7,14 +7,26 @@ namespace StructuredLogViewer
 {
     public class ArchiveFileResolver : ISourceFileResolver
     {
-        private readonly string zipFullPath;
         private readonly Dictionary<string, string> fileContents = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         public ArchiveFileResolver(string zipFullPath)
         {
-            this.zipFullPath = zipFullPath;
-
             using (var stream = new FileStream(zipFullPath, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete))
+            {
+                ExtractFilesFromStream(stream);
+            }
+        }
+
+        public ArchiveFileResolver(byte[] sourceFilesArchive)
+        {
+            using (var stream = new MemoryStream(sourceFilesArchive))
+            {
+                ExtractFilesFromStream(stream);
+            }
+        }
+
+        private void ExtractFilesFromStream(Stream stream)
+        {
             using (var zipArchive = new ZipArchive(stream, ZipArchiveMode.Read))
             {
                 foreach (var entry in zipArchive.Entries)

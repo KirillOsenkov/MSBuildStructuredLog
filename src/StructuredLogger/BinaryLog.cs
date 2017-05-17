@@ -6,6 +6,16 @@
         {
             var eventSource = new BinaryLogReplayEventSource();
 
+            byte[] sourceArchive = null;
+
+            eventSource.OnBlobRead += (kind, bytes) =>
+            {
+                if (kind == BinaryLogRecordKind.SourceArchive)
+                {
+                    sourceArchive = bytes;
+                }
+            };
+
             StructuredLogger.SaveLogToDisk = false;
             StructuredLogger.CurrentBuild = null;
             var structuredLogger = new StructuredLogger();
@@ -16,6 +26,8 @@
 
             var build = StructuredLogger.CurrentBuild;
             StructuredLogger.CurrentBuild = null;
+
+            build.SourceFilesArchive = sourceArchive;
 
             return build;
         }

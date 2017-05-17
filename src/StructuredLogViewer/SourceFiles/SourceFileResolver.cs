@@ -14,6 +14,12 @@ namespace StructuredLogViewer
 
         public ArchiveFileResolver ArchiveFile { get; private set; }
 
+        public SourceFileResolver(byte[] sourceFilesArchive)
+        {
+            ArchiveFile = new ArchiveFileResolver(sourceFilesArchive);
+            resolvers.Insert(0, ArchiveFile);
+        }
+
         public SourceFileResolver(string logFilePath)
         {
             if (!string.IsNullOrEmpty(logFilePath))
