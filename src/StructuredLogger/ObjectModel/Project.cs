@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class Project : TimedNode
+    public class Project : TimedNode, IHasSourceFile
     {
         /// <summary>
         /// The full path to the MSBuild project file for this project.
@@ -14,6 +14,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public string ProjectFile { get; set; }
 
         public string ProjectFileExtension => ProjectFile != null ? Path.GetExtension(ProjectFile).ToLowerInvariant() : "";
+
+        public string SourceFilePath => ProjectFile;
 
         /// <summary>
         /// A lookup table mapping of target names to targets. 
