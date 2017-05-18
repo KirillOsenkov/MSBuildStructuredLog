@@ -13,6 +13,10 @@ namespace Microsoft.Build.Logging
     /// <remarks>The class is public so that we can call it from MSBuild.exe when replaying a log file.</remarks>
     public sealed class BinaryLogReplayEventSource : EventArgsDispatcher
     {
+        /// <summary>
+        /// Raised when the log reader encounters a binary blob embedded in the stream.
+        /// The arguments include the blob kind and the byte buffer with the contents.
+        /// </summary>
         public event Action<BinaryLogRecordKind, byte[]> OnBlobRead;
 
         /// <summary>

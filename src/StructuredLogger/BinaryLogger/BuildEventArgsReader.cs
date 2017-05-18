@@ -32,6 +32,10 @@ namespace Microsoft.Build.Logging
             this.binaryReader = binaryReader;
         }
 
+        /// <summary>
+        /// Raised when the log reader encounters a binary blob embedded in the stream.
+        /// The arguments include the blob kind and the byte buffer with the contents.
+        /// </summary>
         public event Action<BinaryLogRecordKind, byte[]> OnBlobRead;
 
         /// <summary>
@@ -102,7 +106,6 @@ namespace Microsoft.Build.Logging
         /// <summary>
         /// For now it's just the SourceArchive.
         /// </summary>
-        /// <returns></returns>
         private static bool IsBlob(BinaryLogRecordKind recordKind)
         {
             return recordKind == BinaryLogRecordKind.SourceArchive;
