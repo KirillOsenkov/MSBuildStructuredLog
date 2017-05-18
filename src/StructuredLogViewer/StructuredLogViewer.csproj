@@ -39,6 +39,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Controls\SearchAndResultsControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Controls\TextViewerControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -63,6 +67,9 @@
     <Compile Include="Controls\Classifier.cs" />
     <Compile Include="Controls\DocumentWell.xaml.cs">
       <DependentUpon>DocumentWell.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\SearchAndResultsControl.xaml.cs">
+      <DependentUpon>SearchAndResultsControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\SourceFileTab.cs" />
     <Compile Include="Controls\SourceFileTabHeader.cs" />
@@ -89,6 +96,8 @@
     <Compile Include="SourceFiles\ISourceFileResolver.cs" />
     <Compile Include="SourceFiles\LocalSourceFileResolver.cs" />
     <Compile Include="SourceFiles\SourceFileResolver.cs" />
+    <Compile Include="SourceFiles\SourceText.cs" />
+    <Compile Include="SourceFiles\Span.cs" />
     <Compile Include="SourceFiles\TextUtilities.cs" />
     <Compile Include="TypingConcurrentOperation.cs" />
     <Compile Include="WelcomeScreen.cs" />

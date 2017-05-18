@@ -19,7 +19,6 @@ namespace StructuredLogViewer.Controls
         public TreeViewItem SelectedTreeViewItem { get; private set; }
         public string LogFilePath { get; private set; }
 
-        private TypingConcurrentOperation typingConcurrentOperation = new TypingConcurrentOperation();
         private ScrollViewer scrollViewer;
 
         private SourceFileResolver sourceFileResolver;
@@ -28,6 +27,22 @@ namespace StructuredLogViewer.Controls
         public BuildControl(Build build, string logFilePath)
         {
             InitializeComponent();
+
+            searchLogControl.WatermarkText = @"Type in the search box to search. Search for multiple words separated by space (space means AND). Results (up to 500) will display here.
+
+
+Use syntax like '$property Prop' to narrow results down by item kind (supported kinds: $project, $target, $task, $error, $warning, $message, $property, $item, $additem, $removeitem, $metadata)";
+
+            searchLogControl.ExecuteSearch = searchText =>
+            {
+                var search = new Search(Build);
+                var results = search.FindNodes(searchText);
+                return results;
+            };
+            searchLogControl.ResultsTreeBuilder = BuildResultTree;
+
+            findInFilesControl.ExecuteSearch = FindInFiles;
+            findInFilesControl.ResultsTreeBuilder = BuildFindResults;
 
             VirtualizingPanel.SetIsVirtualizing(treeView, SettingsService.EnableTreeViewVirtualization);
 
@@ -61,8 +76,10 @@ namespace StructuredLogViewer.Controls
             treeView.KeyDown += TreeView_KeyDown;
             treeView.SelectedItemChanged += TreeView_SelectedItemChanged;
 
-            resultsList.ItemContainerStyle = treeViewItemStyle;
-            resultsList.SelectedItemChanged += ResultsList_SelectionChanged;
+            searchLogControl.ResultsList.ItemContainerStyle = treeViewItemStyle;
+            searchLogControl.ResultsList.SelectedItemChanged += ResultsList_SelectionChanged;
+
+            findInFilesControl.ResultsList.ItemContainerStyle = treeViewItemStyle;
 
             if (archiveFile != null)
             {
@@ -75,7 +92,67 @@ namespace StructuredLogViewer.Controls
             breadCrumb.SelectionChanged += BreadCrumb_SelectionChanged;
 
             Loaded += BuildControl_Loaded;
-            typingConcurrentOperation.DisplayResults += results => DisplaySearchResults(results);
+        }
+
+        private object FindInFiles(string searchText)
+        {
+            var results = new List<(string, IEnumerable<(int, string)>)>();
+
+            foreach (var file in archiveFile.Files)
+            {
+                var haystack = file.Value;
+                var resultsInFile = haystack.Find(searchText);
+                if (resultsInFile.Count > 0)
+                {
+                    results.Add((file.Key, resultsInFile.Select(lineNumber => (lineNumber, haystack.GetLineText(lineNumber)))));
+                }
+            }
+
+            return results;
+        }
+
+        private IEnumerable BuildFindResults(object resultsObject)
+        {
+            if (resultsObject == null)
+            {
+                return null;
+            }
+
+            var results = resultsObject as IEnumerable<(string, IEnumerable<(int, string)>)>;
+
+            var root = new Folder();
+
+            // root.Children.Add(new Message { Text = "Elapsed " + Elapsed.ToString() });
+
+            if (results != null)
+            {
+                foreach (var file in results)
+                {
+                    var folder = new SourceFile()
+                    {
+                        Name = Path.GetFileName(file.Item1),
+                        SourceFilePath = file.Item1,
+                        IsExpanded = true
+                    };
+                    root.AddChild(folder);
+                    foreach (var line in file.Item2)
+                    {
+                        var sourceFileLine = new SourceFileLine()
+                        {
+                            LineNumber = line.Item1 + 1,
+                            LineText = line.Item2
+                        };
+                        folder.AddChild(sourceFileLine);
+                    }
+                }
+            }
+
+            if (!root.HasChildren && !string.IsNullOrEmpty(findInFilesControl.SearchText))
+            {
+                root.Children.Add(new Message { Text = "No results found." });
+            }
+
+            return root.Children;
         }
 
         private void PopulateFilesTab()
@@ -181,7 +258,7 @@ namespace StructuredLogViewer.Controls
 
         private void ResultsList_SelectionChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            var proxy = resultsList.SelectedItem as ProxyNode;
+            var proxy = searchLogControl.ResultsList.SelectedItem as ProxyNode;
             if (proxy != null)
             {
                 var item = proxy.Original as ParentedNode;
@@ -231,7 +308,6 @@ namespace StructuredLogViewer.Controls
         {
             scrollViewer = treeView.Template.FindName("_tv_scrollviewer_", treeView) as ScrollViewer;
 
-            searchTextBox.Focus();
             if (!Build.Succeeded)
             {
                 var firstError = Build.FindFirstInSubtreeIncludingSelf<Error>();
@@ -241,7 +317,7 @@ namespace StructuredLogViewer.Controls
                     treeView.Focus();
                 }
 
-                searchTextBox.Text = "$error";
+                searchLogControl.SearchText = "$error";
             }
         }
 
@@ -385,6 +461,15 @@ namespace StructuredLogViewer.Controls
                         break;
                     case IHasSourceFile hasSourceFile:
                         return DisplayFile(hasSourceFile.SourceFilePath);
+                    case SourceFileLine sourceFileLine:
+                        var file = sourceFileLine.Parent as SourceFile;
+                        if (file != null)
+                        {
+                            DisplayFile(file.SourceFilePath);
+                            return true;
+                        }
+
+                        return false;
                     default:
                         return false;
                 }
@@ -405,7 +490,7 @@ namespace StructuredLogViewer.Controls
                 return false;
             }
 
-            documentWell.DisplaySource(sourceFilePath, text);
+            documentWell.DisplaySource(sourceFilePath, text.Text);
             return true;
         }
 
@@ -416,36 +501,9 @@ namespace StructuredLogViewer.Controls
             return treeNode;
         }
 
-        private void searchTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        private IEnumerable BuildResultTree(object resultsObject)
         {
-            var searchText = searchTextBox.Text;
-            if (string.IsNullOrWhiteSpace(searchText))
-            {
-                typingConcurrentOperation.Reset();
-                DisplaySearchResults(null);
-                return;
-            }
-
-            typingConcurrentOperation.Build = Build;
-            typingConcurrentOperation.TextChanged(searchText);
-        }
-
-        private void DisplaySearchResults(IEnumerable<SearchResult> results)
-        {
-            if (results == null)
-            {
-                watermark.Visibility = Visibility.Visible;
-            }
-            else
-            {
-                watermark.Visibility = Visibility.Collapsed;
-            }
-
-            resultsList.ItemsSource = BuildResultTree(results);
-        }
-
-        private IEnumerable BuildResultTree(IEnumerable<SearchResult> results)
-        {
+            var results = resultsObject as IEnumerable<SearchResult>;
             if (results == null)
             {
                 return results;

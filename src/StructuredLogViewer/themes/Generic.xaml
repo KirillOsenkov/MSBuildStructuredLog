@@ -289,11 +289,24 @@
     </StackPanel>
   </DataTemplate>
 
-  <DataTemplate DataType="{x:Type l:SourceFile}">
+  <HierarchicalDataTemplate DataType="{x:Type l:SourceFile}"
+                            ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
       <Rectangle x:Name="icon" Width="14" Height="11" Stroke="{StaticResource MessageStroke}" Margin="3,3,6,3" Fill="{StaticResource MessageBrush}" VerticalAlignment="Top" />
       <TextBlock x:Name="messageText" Text="{Binding Name}" />
     </StackPanel>
+  </HierarchicalDataTemplate>
+
+  <DataTemplate DataType="{x:Type l:SourceFileLine}">
+    <StackPanel Orientation="Horizontal">
+      <TextBlock x:Name="lineNumber" Text="{Binding LineNumber}" FontFamily="Consolas" Foreground="Teal" Margin="0,0,12,0" />
+      <TextBlock x:Name="messageText" Text="{Binding LineText}" FontFamily="Consolas" />
+    </StackPanel>
+    <DataTemplate.Triggers>
+      <DataTrigger Binding="{Binding IsSelected}" Value="True">
+        <Setter TargetName="lineNumber" Property="Foreground" Value="White" />
+      </DataTrigger>
+    </DataTemplate.Triggers>
   </DataTemplate>
 
   <HierarchicalDataTemplate DataType="{x:Type local:ProxyNode}"

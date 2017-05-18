@@ -17,37 +17,7 @@
         <local:SplitterPanel.FirstChild>
           <TabControl TabStripPlacement="Bottom" Margin="0" Padding="0">
             <TabItem Header="Search Log">
-              <DockPanel>
-                <Grid DockPanel.Dock="Top">
-                  <TextBox x:Name="searchTextBox" 
-                           TextChanged="searchTextBox_TextChanged" 
-                           BorderThickness="0,0,0,1" />
-                  <Path Data="{DynamicResource SearchGeometry}"
-                    Fill="#717171"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Center"
-                    Margin="3"/>
-                </Grid>
-
-                <Grid>
-                  <TreeView x:Name="resultsList"
-                        VirtualizingPanel.IsVirtualizing="True"
-                        VirtualizingPanel.VirtualizationMode="Recycling"
-                        BorderThickness="0"
-                        Background="#F5F5F5"></TreeView>
-                  <TextBlock x:Name="watermark"
-                         Margin="40"
-                         TextWrapping="Wrap"
-                         HorizontalAlignment="Center"
-                         Foreground="Gray"
-                         VerticalAlignment="Center">
-                <Run>Type in the search box to search. Search for multiple words separated by space (space means AND). Results (up to 500) will display here.</Run>
-                <LineBreak />
-                <LineBreak />
-                <Run>Use syntax like "$property Prop" to narrow results down by item kind (supported kinds: $project, $target, $task, $error, $warning, $message, $property, $item, $additem, $removeitem, $metadata)</Run>
-                  </TextBlock>
-                </Grid>
-              </DockPanel>
+              <local:SearchAndResultsControl x:Name="searchLogControl"></local:SearchAndResultsControl>
             </TabItem>
 
             <TabItem x:Name="filesTab" Header="Files" Visibility="Collapsed">
@@ -60,7 +30,7 @@
             </TabItem>
 
             <TabItem x:Name="findInFilesTab" Header="Find in Files" Visibility="Collapsed">
-
+              <local:SearchAndResultsControl x:Name="findInFilesControl" WatermarkText="Search in files"></local:SearchAndResultsControl>
             </TabItem>
           </TabControl>
         </local:SplitterPanel.FirstChild>

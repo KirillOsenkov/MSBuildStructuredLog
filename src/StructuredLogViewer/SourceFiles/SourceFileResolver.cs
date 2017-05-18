@@ -33,7 +33,7 @@ namespace StructuredLogViewer
             }
         }
 
-        public string GetSourceFileText(string filePath)
+        public SourceText GetSourceFileText(string filePath)
         {
             if (filePath == null)
             {

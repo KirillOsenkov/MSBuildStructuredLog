@@ -7,9 +7,9 @@ namespace StructuredLogViewer
 {
     public class ArchiveFileResolver : ISourceFileResolver
     {
-        private readonly Dictionary<string, string> fileContents = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, SourceText> fileContents = new Dictionary<string, SourceText>(StringComparer.OrdinalIgnoreCase);
 
-        public Dictionary<string, string> Files => fileContents;
+        public Dictionary<string, SourceText> Files => fileContents;
 
         public ArchiveFileResolver(string zipFullPath)
         {
@@ -54,17 +54,17 @@ namespace StructuredLogViewer
             return archivePath;
         }
 
-        public string GetSourceFileText(string filePath)
+        public SourceText GetSourceFileText(string filePath)
         {
             filePath = CalculateArchivePath(filePath);
-            string result;
+            SourceText result;
             fileContents.TryGetValue(filePath, out result);
             return result;
         }
 
         private void AddFile(string fullName, string text)
         {
-            fileContents[fullName] = text;
+            fileContents[fullName] = new SourceText(text);
         }
     }
 }

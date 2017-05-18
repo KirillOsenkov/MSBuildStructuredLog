@@ -5,7 +5,7 @@ namespace StructuredLogViewer
 {
     public static class TextUtilities
     {
-        public static int[] GetLineLengths(this string text)
+        public static Span[] GetLineSpans(this string text)
         {
             if (text == null)
             {
@@ -14,10 +14,11 @@ namespace StructuredLogViewer
 
             if (text.Length == 0)
             {
-                return new int[0];
+                return new Span[0];
             }
 
-            var result = new List<int>();
+            var result = new List<Span>();
+            int currentPosition = 0;
             int currentLineLength = 0;
             bool previousWasCarriageReturn = false;
 
@@ -28,7 +29,8 @@ namespace StructuredLogViewer
                     if (previousWasCarriageReturn)
                     {
                         currentLineLength++;
-                        result.Add(currentLineLength);
+                        result.Add(new Span(currentPosition, currentLineLength));
+                        currentPosition += currentLineLength;
                         currentLineLength = 0;
                         previousWasCarriageReturn = false;
                     }
@@ -42,7 +44,8 @@ namespace StructuredLogViewer
                 {
                     previousWasCarriageReturn = false;
                     currentLineLength++;
-                    result.Add(currentLineLength);
+                    result.Add(new Span(currentPosition, currentLineLength));
+                    currentPosition += currentLineLength;
                     currentLineLength = 0;
                 }
                 else
@@ -52,11 +55,11 @@ namespace StructuredLogViewer
                 }
             }
 
-            result.Add(currentLineLength);
+            result.Add(new Span(currentPosition, currentLineLength));
 
             if (previousWasCarriageReturn)
             {
-                result.Add(0);
+                result.Add(new Span(currentPosition, 0));
             }
 
             return result.ToArray();

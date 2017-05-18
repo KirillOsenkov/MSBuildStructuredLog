@@ -2,6 +2,6 @@
 {
     public interface ISourceFileResolver
     {
-        string GetSourceFileText(string filePath);
+        SourceText GetSourceFileText(string filePath);
     }
 }

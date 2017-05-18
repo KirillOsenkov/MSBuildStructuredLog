@@ -4,13 +4,13 @@ namespace StructuredLogViewer
 {
     public class LocalSourceFileResolver : ISourceFileResolver
     {
-        public string GetSourceFileText(string filePath)
+        public SourceText GetSourceFileText(string filePath)
         {
             try
             {
                 if (File.Exists(filePath))
                 {
-                    return File.ReadAllText(filePath);
+                    return new SourceText(File.ReadAllText(filePath));
                 }
 
                 return null;

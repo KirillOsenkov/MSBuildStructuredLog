@@ -6,7 +6,8 @@
       "version": "1.5.62",
       "suppressParent": "none"
     },
-    "squirrel.windows": "1.4.0"
+    "squirrel.windows": "1.4.0",
+    "System.ValueTuple": "4.4.0-preview1-25305-02"
   },
   "frameworks": {
     "net46": {}

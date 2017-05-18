@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Windows;
-using Microsoft.Build.Logging.StructuredLogger;
 using StructuredLogViewer.Controls;
 using TPLTask = System.Threading.Tasks.Task;
 
@@ -11,9 +9,8 @@ namespace StructuredLogViewer
 {
     public class TypingConcurrentOperation
     {
-        public Build Build { get; internal set; }
-
-        public event Action<IEnumerable<SearchResult>> DisplayResults;
+        public event Action<object> DisplayResults;
+        public Func<string, object> ExecuteSearch;
 
         public const int ThrottlingDelayMilliseconds = 300;
 
@@ -39,8 +36,7 @@ namespace StructuredLogViewer
         private void StartOperation(string searchText)
         {
             Stopwatch sw = Stopwatch.StartNew();
-            var search = new Search(Build);
-            var results = search.FindNodes(searchText);
+            var results = ExecuteSearch(searchText);
             var elapsed = sw.Elapsed;
             BuildControl.Elapsed = elapsed;
             if (latestSearch == searchText)
