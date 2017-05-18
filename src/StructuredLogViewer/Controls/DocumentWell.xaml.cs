@@ -44,18 +44,19 @@ namespace StructuredLogViewer.Controls
             Visibility = Visibility.Collapsed;
         }
 
-        public void DisplaySource(string sourceFilePath, string text)
+        public void DisplaySource(string sourceFilePath, string text, int lineNumber = 0, int column = 0)
         {
             var existing = Find(sourceFilePath);
             if (existing != null)
             {
                 Visibility = Visibility.Visible;
                 tabControl.SelectedItem = existing;
+                (existing.Content as TextViewerControl)?.DisplaySource(lineNumber, column);
                 return;
             }
 
             var textViewerControl = new TextViewerControl();
-            textViewerControl.DisplaySource(sourceFilePath, text);
+            textViewerControl.DisplaySource(sourceFilePath, text, lineNumber, column);
             var tab = new SourceFileTab()
             {
                 FilePath = sourceFilePath,

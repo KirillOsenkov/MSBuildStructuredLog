@@ -1,8 +1,11 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Threading;
 using ICSharpCode.AvalonEdit.Folding;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Search;
@@ -20,12 +23,18 @@ namespace StructuredLogViewer.Controls
             SearchPanel.Install(textEditor.TextArea);
         }
 
-        public void DisplaySource(string sourceFilePath, string text)
+        public void DisplaySource(string sourceFilePath, string text, int lineNumber = 0, int column = 0)
         {
             this.FilePath = sourceFilePath;
             this.Text = text;
 
             filePathText.Text = sourceFilePath;
+
+            var textView = textEditor.TextArea.TextView;
+            textView.CurrentLineBackground = Brushes.LightCyan;
+            textView.CurrentLineBorder = new Pen(Brushes.Transparent, 0);
+            textView.Options.HighlightCurrentLine = true;
+            textEditor.IsReadOnly = true;
 
             textEditor.Text = text;
 
@@ -36,21 +45,35 @@ namespace StructuredLogViewer.Controls
 
             if (Classifier.LooksLikeXml(text))
             {
-                textEditor.SyntaxHighlighting = HighlightingManager.Instance.GetDefinition("XML");
+                var highlighting = HighlightingManager.Instance.GetDefinition("XML");
+                highlighting.GetNamedColor("XmlTag").Foreground = new SimpleHighlightingBrush(Color.FromRgb(163, 21, 21));
+                textEditor.SyntaxHighlighting = highlighting;
 
                 var foldingManager = FoldingManager.Install(textEditor.TextArea);
                 var foldingStrategy = new XmlFoldingStrategy();
                 foldingStrategy.UpdateFoldings(foldingManager, textEditor.Document);
             }
-            //int lineCount = text.GetLineLengths().Length;
-            //lineNumbers.Text = string.Join("\n", Enumerable.Range(1, lineCount).Select(i => i.ToString()));
 
-            //var document = textBlock.Document;
-            //document.PageWidth = 20000;
-            //document.LineHeight = 18;
-            //document.Blocks.Clear();
+            DisplaySource(lineNumber, column);
+        }
 
-            //new Classifier().Classify(textBlock, text);
+        public void DisplaySource(int lineNumber, int column)
+        {
+            Dispatcher.InvokeAsync(() =>
+            {
+                if (lineNumber > 0)
+                {
+                    textEditor.ScrollToLine(lineNumber);
+                    textEditor.TextArea.Caret.Line = lineNumber;
+                    textEditor.TextArea.TextView.HighlightedLine = lineNumber;
+
+                    if (column > 0)
+                    {
+                        textEditor.ScrollTo(lineNumber, column);
+                        textEditor.TextArea.Caret.Column = column;
+                    }
+                }
+            }, DispatcherPriority.Background);
         }
 
         private void openInExternalEditor_Click(object sender, System.Windows.RoutedEventArgs e)

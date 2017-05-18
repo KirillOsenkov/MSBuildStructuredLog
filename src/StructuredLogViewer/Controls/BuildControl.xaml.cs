@@ -465,7 +465,7 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
                         var file = sourceFileLine.Parent as SourceFile;
                         if (file != null)
                         {
-                            DisplayFile(file.SourceFilePath);
+                            DisplayFile(file.SourceFilePath, sourceFileLine.LineNumber);
                             return true;
                         }
 
@@ -482,7 +482,7 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
             return false;
         }
 
-        private bool DisplayFile(string sourceFilePath)
+        private bool DisplayFile(string sourceFilePath, int lineNumber = 0, int column = 0)
         {
             var text = sourceFileResolver.GetSourceFileText(sourceFilePath);
             if (text == null)
@@ -490,7 +490,7 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
                 return false;
             }
 
-            documentWell.DisplaySource(sourceFilePath, text.Text);
+            documentWell.DisplaySource(sourceFilePath, text.Text, lineNumber, column);
             return true;
         }
 
