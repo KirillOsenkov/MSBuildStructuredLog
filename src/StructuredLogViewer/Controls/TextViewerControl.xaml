@@ -14,7 +14,7 @@
       <RowDefinition />
     </Grid.RowDefinitions>
 
-    <DockPanel Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
+    <DockPanel Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" x:Name="filePathToolbar">
       <Button x:Name="openInExternalEditor" 
               DockPanel.Dock="Left"
               Content="Open" 

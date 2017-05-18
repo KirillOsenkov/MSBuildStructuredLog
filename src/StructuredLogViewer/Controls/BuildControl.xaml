@@ -52,6 +52,8 @@
 
             <TabItem x:Name="filesTab" Header="Files" Visibility="Collapsed">
               <TreeView x:Name="filesTree"
+                        VirtualizingPanel.IsVirtualizing="True"
+                        VirtualizingPanel.VirtualizationMode="Recycling"
                         Background="#F5F5F5"
                         BorderThickness="0">
               </TreeView>
@@ -66,7 +68,7 @@
 
           <local:SplitterPanel>
             <local:SplitterPanel.FirstChild>
-              <DockPanel>
+              <DockPanel MinWidth="10">
                 <TreeView x:Name="treeView"
                       VirtualizingPanel.IsVirtualizing="True"
                       VirtualizingPanel.VirtualizationMode="Recycling"

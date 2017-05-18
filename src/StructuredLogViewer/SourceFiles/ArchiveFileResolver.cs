@@ -9,6 +9,8 @@ namespace StructuredLogViewer
     {
         private readonly Dictionary<string, string> fileContents = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
+        public Dictionary<string, string> Files => fileContents;
+
         public ArchiveFileResolver(string zipFullPath)
         {
             using (var stream = new FileStream(zipFullPath, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete))

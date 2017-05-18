@@ -47,12 +47,6 @@ namespace StructuredLogViewer.Controls
                 sourceFileResolver = new SourceFileResolver(logFilePath);
             }
 
-            if (archiveFile != null)
-            {
-                filesTab.Visibility = Visibility.Visible;
-                findInFilesTab.Visibility = Visibility.Visible;
-            }
-
             var existingTreeViewItemStyle = (Style)Application.Current.Resources[typeof(TreeViewItem)];
             var treeViewItemStyle = new Style(typeof(TreeViewItem), existingTreeViewItemStyle);
             treeViewItemStyle.Setters.Add(new Setter(TreeViewItem.IsExpandedProperty, new Binding("IsExpanded") { Mode = BindingMode.TwoWay }));
@@ -70,10 +64,79 @@ namespace StructuredLogViewer.Controls
             resultsList.ItemContainerStyle = treeViewItemStyle;
             resultsList.SelectedItemChanged += ResultsList_SelectionChanged;
 
+            if (archiveFile != null)
+            {
+                filesTab.Visibility = Visibility.Visible;
+                findInFilesTab.Visibility = Visibility.Visible;
+                PopulateFilesTab();
+                filesTree.ItemContainerStyle = treeViewItemStyle;
+            }
+
             breadCrumb.SelectionChanged += BreadCrumb_SelectionChanged;
 
             Loaded += BuildControl_Loaded;
             typingConcurrentOperation.DisplayResults += results => DisplaySearchResults(results);
+        }
+
+        private void PopulateFilesTab()
+        {
+            var root = new Folder();
+
+            foreach (var file in archiveFile.Files.OrderBy(kvp => kvp.Key, StringComparer.OrdinalIgnoreCase))
+            {
+                var parts = file.Key.Split('\\');
+                AddSourceFile(root, file.Key, parts, 0);
+            }
+
+            foreach (var subFolder in root.Children.OfType<Folder>())
+            {
+                CompressTree(subFolder);
+            }
+
+            filesTree.ItemsSource = root.Children;
+        }
+
+        private void CompressTree(Folder parent)
+        {
+            if (parent.Children.Count == 1 && parent.Children[0] is Folder subfolder)
+            {
+                parent.Children.Clear();
+                var grandchildren = subfolder.Children.ToArray();
+                subfolder.Children.Clear();
+                foreach (var grandChild in grandchildren)
+                {
+                    parent.Children.Add(grandChild);
+                }
+
+                parent.Name = Path.Combine(parent.Name, subfolder.Name);
+                CompressTree(parent);
+            }
+            else
+            {
+                foreach (var subFolder in parent.Children.OfType<Folder>())
+                {
+                    CompressTree(subFolder);
+                }
+            }
+        }
+
+        private void AddSourceFile(Folder folder, string filePath, string[] parts, int index)
+        {
+            if (index == parts.Length - 1)
+            {
+                var file = new SourceFile()
+                {
+                    SourceFilePath = filePath,
+                    Name = parts[index]
+                };
+                folder.AddChild(file);
+            }
+            else
+            {
+                var subfolder = folder.GetOrCreateNodeWithName<Folder>(parts[index]);
+                subfolder.IsExpanded = true;
+                AddSourceFile(subfolder, filePath, parts, index + 1);
+            }
         }
 
         /// <summary>

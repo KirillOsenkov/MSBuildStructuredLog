@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -27,6 +28,11 @@ namespace StructuredLogViewer.Controls
             filePathText.Text = sourceFilePath;
 
             textEditor.Text = text;
+
+            if (!File.Exists(FilePath))
+            {
+                filePathToolbar.Visibility = Visibility.Collapsed;
+            }
 
             if (Classifier.LooksLikeXml(text))
             {
