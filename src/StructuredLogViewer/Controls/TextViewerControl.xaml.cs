@@ -61,9 +61,9 @@ namespace StructuredLogViewer.Controls
 
         public void DisplaySource(int lineNumber, int column)
         {
-            Dispatcher.InvokeAsync(() =>
+            if (lineNumber > 0)
             {
-                if (lineNumber > 0)
+                Dispatcher.InvokeAsync(() =>
                 {
                     textEditor.ScrollToLine(lineNumber);
                     textEditor.TextArea.Caret.Line = lineNumber;
@@ -74,8 +74,8 @@ namespace StructuredLogViewer.Controls
                         textEditor.ScrollTo(lineNumber, column);
                         textEditor.TextArea.Caret.Column = column;
                     }
-                }
-            }, DispatcherPriority.Background);
+                }, DispatcherPriority.Background);
+            }
         }
 
         private void openInExternalEditor_Click(object sender, System.Windows.RoutedEventArgs e)

@@ -23,10 +23,13 @@ namespace StructuredLogViewer.Controls
 
         private SourceFileResolver sourceFileResolver;
         private ArchiveFileResolver archiveFile => sourceFileResolver.ArchiveFile;
+        private PreprocessedFileManager preprocessedFileManager;
 
         public BuildControl(Build build, string logFilePath)
         {
             InitializeComponent();
+
+            preprocessedFileManager = new PreprocessedFileManager(this, sourceFileResolver);
 
             searchLogControl.WatermarkText = @"Type in the search box to search. Search for multiple words separated by space (space means AND). Results (up to 500) will display here.
 
@@ -482,7 +485,7 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
             return false;
         }
 
-        private bool DisplayFile(string sourceFilePath, int lineNumber = 0, int column = 0)
+        public bool DisplayFile(string sourceFilePath, int lineNumber = 0, int column = 0)
         {
             var text = sourceFileResolver.GetSourceFileText(sourceFilePath);
             if (text == null)
@@ -490,7 +493,9 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
                 return false;
             }
 
-            documentWell.DisplaySource(sourceFilePath, text.Text, lineNumber, column);
+            Action preprocess = preprocessedFileManager.GetPreprocessAction(sourceFilePath, text);
+
+            documentWell.DisplaySource(sourceFilePath, text.Text, lineNumber, column, preprocess);
             return true;
         }
 

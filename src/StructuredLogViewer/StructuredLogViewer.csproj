@@ -88,6 +88,7 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="MSBuildLocator.cs" />
+    <Compile Include="PreprocessedFileManager.cs" />
     <Compile Include="ProxyNode.cs" />
     <Compile Include="Search.cs" />
     <Compile Include="SearchResult.cs" />
