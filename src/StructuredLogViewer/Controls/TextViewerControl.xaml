@@ -25,7 +25,7 @@
               Padding="6,3,6,3"
               ToolTip="Open in external editor" />
       <Button x:Name="copyFullPath" 
-              Content="Copy" 
+              Content="Copy Path" 
               Padding="6,3,6,3"
               Click="copyFullPath_Click"
               BorderThickness="0"
@@ -33,6 +33,15 @@
               VerticalAlignment="Center"
               DockPanel.Dock="Left"
               ToolTip="Copy full path" />
+      <Button x:Name="preprocess"
+              Content="Preprocess"
+              Padding="6,3,6,3"
+              Click="preprocess_Click"
+              BorderThickness="0"
+              Background="Transparent"
+              VerticalAlignment="Center"
+              DockPanel.Dock="Left"
+              ToolTip="Show preprocessed project with all imports inlined"/>
       <TextBox x:Name="filePathText" 
                Padding="4" 
                Background="Transparent"

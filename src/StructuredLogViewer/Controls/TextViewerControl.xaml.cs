@@ -16,6 +16,8 @@ namespace StructuredLogViewer.Controls
     {
         public string FilePath { get; private set; }
         public string Text { get; private set; }
+        public Action Preprocess { get; private set; }
+        public bool IsXml { get; private set; }
 
         public TextViewerControl()
         {
@@ -23,10 +25,13 @@ namespace StructuredLogViewer.Controls
             SearchPanel.Install(textEditor.TextArea);
         }
 
-        public void DisplaySource(string sourceFilePath, string text, int lineNumber = 0, int column = 0)
+        public void DisplaySource(string sourceFilePath, string text, int lineNumber = 0, int column = 0, Action showPreprocessed = null)
         {
             this.FilePath = sourceFilePath;
             this.Text = text;
+            this.Preprocess = showPreprocessed;
+
+            preprocess.Visibility = showPreprocessed != null ? Visibility.Visible : Visibility.Collapsed;
 
             filePathText.Text = sourceFilePath;
 
@@ -38,13 +43,10 @@ namespace StructuredLogViewer.Controls
 
             textEditor.Text = text;
 
-            if (!File.Exists(FilePath))
-            {
-                filePathToolbar.Visibility = Visibility.Collapsed;
-            }
-
             if (Classifier.LooksLikeXml(text))
             {
+                IsXml = true;
+
                 var highlighting = HighlightingManager.Instance.GetDefinition("XML");
                 highlighting.GetNamedColor("XmlTag").Foreground = new SimpleHighlightingBrush(Color.FromRgb(163, 21, 21));
                 textEditor.SyntaxHighlighting = highlighting;
@@ -78,12 +80,24 @@ namespace StructuredLogViewer.Controls
 
         private void openInExternalEditor_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            Process.Start(FilePath, null);
+            var filePath = FilePath;
+            if (!File.Exists(filePath))
+            {
+                var extension = IsXml ? ".xml" : ".txt";
+                filePath = SettingsService.WriteContentToTempFileAndGetPath(Text, extension);
+            }
+
+            Process.Start(filePath, null);
         }
 
         private void copyFullPath_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             Clipboard.SetText(FilePath);
+        }
+
+        private void preprocess_Click(object sender, RoutedEventArgs e)
+        {
+            Preprocess?.Invoke();
         }
     }
 }

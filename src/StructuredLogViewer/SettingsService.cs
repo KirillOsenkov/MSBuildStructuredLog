@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace StructuredLogViewer
@@ -17,6 +18,7 @@ namespace StructuredLogViewer
         private static readonly string customArgumentsFilePath = Path.Combine(GetRootPath(), "CustomMSBuildArguments.txt");
         private static readonly string disableUpdatesFilePath = Path.Combine(GetRootPath(), "DisableUpdates.txt");
         private static readonly string settingsFilePath = Path.Combine(GetRootPath(), "Settings.txt");
+        private static readonly string tempFolder = Path.Combine(GetRootPath(), "Temp");
 
         private static bool settingsRead = false;
 
@@ -270,6 +272,97 @@ namespace StructuredLogViewer
                     }
                 }
             }
+        }
+
+        private static bool cleanedUpTempFiles = false;
+        private static readonly object cleanLock = new object();
+
+        public static string WriteContentToTempFileAndGetPath(string content, string fileExtension)
+        {
+            var folder = tempFolder;
+            var filePath = Path.Combine(folder, GetHash(content, 16) + fileExtension);
+            if (File.Exists(filePath))
+            {
+                return filePath;
+            }
+
+            Directory.CreateDirectory(folder);
+            File.WriteAllText(filePath, content);
+
+            if (!cleanedUpTempFiles)
+            {
+                System.Threading.Tasks.Task.Run(() => CleanupTempFiles());
+            }
+
+            return filePath;
+        }
+
+        /// <summary>
+        /// Delete temp files older than one month
+        /// </summary>
+        private static void CleanupTempFiles()
+        {
+            lock (cleanLock)
+            {
+                if (cleanedUpTempFiles)
+                {
+                    return;
+                }
+
+                cleanedUpTempFiles = true;
+
+                var folder = tempFolder;
+                try
+                {
+                    foreach (var file in Directory.GetFiles(folder))
+                    {
+                        try
+                        {
+                            var fileInfo = new FileInfo(file);
+                            if (fileInfo.LastWriteTimeUtc < DateTime.UtcNow - TimeSpan.FromDays(30))
+                            {
+                                fileInfo.Delete();
+                            }
+                        }
+                        catch
+                        {
+                        }
+                    }
+                }
+                catch
+                {
+                }
+            }
+        }
+
+        public static string GetHash(string input, int digits)
+        {
+            using (var md5 = MD5.Create())
+            {
+                var bytes = Encoding.UTF8.GetBytes(input);
+                var hashBytes = md5.ComputeHash(bytes);
+                return ByteArrayToHexString(hashBytes, digits);
+            }
+        }
+
+        public static string ByteArrayToHexString(byte[] bytes, int digits = 0)
+        {
+            if (digits == 0)
+            {
+                digits = bytes.Length * 2;
+            }
+
+            char[] c = new char[digits];
+            byte b;
+            for (int i = 0; i < digits / 2; i++)
+            {
+                b = ((byte)(bytes[i] >> 4));
+                c[i * 2] = (char)(b > 9 ? b + 87 : b + 0x30);
+                b = ((byte)(bytes[i] & 0xF));
+                c[i * 2 + 1] = (char)(b > 9 ? b + 87 : b + 0x30);
+            }
+
+            return new string(c);
         }
     }
 }
