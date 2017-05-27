@@ -1,4 +1,6 @@
-﻿namespace Microsoft.Build.Logging.StructuredLogger
+﻿using System.Collections.Generic;
+
+namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class Utilities
     {
@@ -30,6 +32,30 @@
             }
 
             return text.Substring(0, newLength) + trimPrompt;
+        }
+
+        public static KeyValuePair<string, string> ParseNameValue(string nameEqualsValue)
+        {
+            var equals = nameEqualsValue.IndexOf('=');
+            if (equals == -1)
+            {
+                return new KeyValuePair<string, string>(nameEqualsValue, "");
+            }
+
+            var name = nameEqualsValue.Substring(0, equals);
+            var value = nameEqualsValue.Substring(equals + 1);
+            return new KeyValuePair<string, string>(name, value);
+        }
+
+        public static int GetNumberOfLeadingSpaces(string line)
+        {
+            int result = 0;
+            while (result < line.Length && line[result] == ' ')
+            {
+                result++;
+            }
+
+            return result;
         }
     }
 }

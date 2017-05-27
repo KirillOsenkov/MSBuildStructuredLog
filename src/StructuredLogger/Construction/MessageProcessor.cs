@@ -260,17 +260,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         }
 
                         node = node.FindLastChild<Folder>();
-                        int equals = message.IndexOf('=');
-                        if (equals > -1 && message[0] == ' ' && message[1] == ' ')
+                        if (message[0] == ' ' && message[1] == ' ')
                         {
-                            var name = stringTable.Intern(message.Substring(2, equals - 2));
-                            var value = stringTable.Intern(message.Substring(equals + 1, message.Length - equals - 1));
-                            nodeToAdd = new Property
-                            {
-                                Name = name,
-                                Value = value,
-                            };
+                            message = message.Substring(2);
                         }
+
+                        var kvp = Utilities.ParseNameValue(message);
+                        nodeToAdd = new Property
+                        {
+                            Name = stringTable.Intern(kvp.Key),
+                            Value = stringTable.Intern(kvp.Value)
+                        };
                     }
                 }
             }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -22,7 +21,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 var line = lines[0];
                 line = line.Substring(prefix.Length);
-                var nameValue = ParseNameValue(line);
+                var nameValue = Utilities.ParseNameValue(line);
                 var property = new Property
                 {
                     Name = stringTable.Intern(nameValue.Key),
@@ -36,7 +35,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (lines[0].Length > prefix.Length)
             {
                 // we have a weird case of multi-line value
-                var nameValue = ParseNameValue(lines[0].Substring(prefix.Length));
+                var nameValue = Utilities.ParseNameValue(lines[0].Substring(prefix.Length));
 
                 parameter.Name = stringTable.Intern(nameValue.Key);
 
@@ -57,9 +56,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             Item currentItem = null;
+            Property currentProperty = null;
             foreach (var line in lines)
             {
-                switch (GetNumberOfLeadingSpaces(line))
+                var numberOfLeadingSpaces = Utilities.GetNumberOfLeadingSpaces(line);
+                switch (numberOfLeadingSpaces)
                 {
                     case 4:
                         if (line.EndsWith("=", StringComparison.Ordinal))
@@ -68,16 +69,31 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         }
                         break;
                     case 8:
-                        currentItem = new Item
+                        if (line.IndexOf('=') != -1)
                         {
-                            Text = stringTable.Intern(line.Substring(8))
-                        };
-                        parameter.AddChild(currentItem);
+                            var kvp = Utilities.ParseNameValue(line.Substring(8));
+                            currentProperty = new Property
+                            {
+                                Name = stringTable.Intern(kvp.Key),
+                                Value = stringTable.Intern(kvp.Value)
+                            };
+                            parameter.AddChild(currentProperty);
+                            currentItem = null;
+                        }
+                        else
+                        {
+                            currentItem = new Item
+                            {
+                                Text = stringTable.Intern(line.Substring(8))
+                            };
+                            parameter.AddChild(currentItem);
+                            currentProperty = null;
+                        }
                         break;
                     case 16:
+                        var currentLine = line.Substring(16);
                         if (currentItem != null)
                         {
-                            var currentLine = line.Substring(16);
                             if (!currentLine.Contains("="))
                             {
                                 // must be a continuation of the metadata value from the previous line
@@ -92,7 +108,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             }
                             else
                             {
-                                var nameValue = ParseNameValue(currentLine);
+                                var nameValue = Utilities.ParseNameValue(currentLine);
                                 var metadata = new Metadata
                                 {
                                     Name = stringTable.Intern(nameValue.Key),
@@ -102,29 +118,30 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             }
                         }
                         break;
+                    default:
+                        if (numberOfLeadingSpaces == 0 && line == prefix)
+                        {
+                            continue;
+                        }
+
+                        // must be a continuation of a multi-line value
+                        if (currentProperty != null)
+                        {
+                            currentProperty.Value += "\n" + line;
+                        }
+                        else if (currentItem != null && currentItem.HasChildren)
+                        {
+                            var metadata = currentItem.Children[currentItem.Children.Count - 1] as Metadata;
+                            if (metadata != null)
+                            {
+                                metadata.Value = (metadata.Value ?? "") + line;
+                            }
+                        }
+                        break;
                 }
             }
 
             return parameter;
-        }
-
-        private static KeyValuePair<string, string> ParseNameValue(string nameEqualsValue)
-        {
-            var equals = nameEqualsValue.IndexOf('=');
-            var name = nameEqualsValue.Substring(0, equals);
-            var value = nameEqualsValue.Substring(equals + 1);
-            return new KeyValuePair<string, string>(name, value);
-        }
-
-        private static int GetNumberOfLeadingSpaces(string line)
-        {
-            int result = 0;
-            while (result < line.Length && line[result] == ' ')
-            {
-                result++;
-            }
-
-            return result;
         }
     }
 }
