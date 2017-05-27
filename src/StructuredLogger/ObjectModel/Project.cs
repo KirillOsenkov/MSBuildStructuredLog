@@ -22,6 +22,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// Target names are unique to a project and the id is not always specified in the log.
         /// </summary>
         private readonly ConcurrentDictionary<string, Target> _targetNameToTargetMap = new ConcurrentDictionary<string, Target>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<int, Target> targetsById = new Dictionary<int, Target>();
 
         public IEnumerable<Target> GetUnparentedTargets()
         {
@@ -36,7 +37,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <returns>Target with the given ID</returns>
         public Target GetTargetById(int id)
         {
-            return _targetNameToTargetMap.Values.First(t => t.Id == id);
+            if (targetsById.TryGetValue(id, out var target))
+            {
+                return target;
+            }
+
+            target = _targetNameToTargetMap.Values.First(t => t.Id == id);
+            targetsById[id] = target;
+            return target;
         }
 
         public override string ToString()
@@ -54,7 +62,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             if (string.IsNullOrEmpty(targetName))
             {
-                return _targetNameToTargetMap.Values.First(t => t.Id == targetId);
+                return GetTargetById(targetId);
             }
 
             Target result;
