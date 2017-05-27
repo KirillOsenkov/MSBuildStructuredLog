@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class Project : TimedNode, IHasSourceFile
+    public class Project : TimedNode, IHasSourceFile, IHasRelevance
     {
         /// <summary>
         /// The full path to the MSBuild project file for this project.
@@ -60,6 +60,26 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Target result;
             _targetNameToTargetMap.TryGetValue(targetName, out result);
             return result;
+        }
+
+        private bool isLowRelevance = false;
+        public bool IsLowRelevance
+        {
+            get
+            {
+                return isLowRelevance && !IsSelected;
+            }
+
+            set
+            {
+                if (isLowRelevance == value)
+                {
+                    return;
+                }
+
+                isLowRelevance = value;
+                RaisePropertyChanged();
+            }
         }
     }
 }

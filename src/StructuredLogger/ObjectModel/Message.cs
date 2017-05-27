@@ -2,7 +2,7 @@
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class Message : TextNode
+    public class Message : TextNode, IHasRelevance
     {
         /// <summary>
         /// Let's see if we even need timestamp, it's just eating memory for now

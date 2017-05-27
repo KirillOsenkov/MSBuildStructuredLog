@@ -1,6 +1,6 @@
 ﻿namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class Folder : NamedNode
+    public class Folder : NamedNode, IHasRelevance
     {
         private bool isLowRelevance = false;
         public bool IsLowRelevance

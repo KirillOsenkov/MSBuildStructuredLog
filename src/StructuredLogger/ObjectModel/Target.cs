@@ -2,7 +2,7 @@
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class Target : TimedNode, IHasSourceFile
+    public class Target : TimedNode, IHasSourceFile, IHasRelevance
     {
         public bool Succeeded { get; internal set; }
         public string DependsOnTargets { get; set; }
