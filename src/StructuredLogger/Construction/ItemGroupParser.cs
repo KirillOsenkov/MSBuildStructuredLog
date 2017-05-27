@@ -13,15 +13,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <returns>List of items within the list and all metadata.</returns>
         public static object ParsePropertyOrItemList(string message, string prefix, StringCache stringTable)
         {
-            message = message.Replace("\r\n", "\n");
-            message = message.Replace('\r', '\n');
-            var lines = message.Split('\n');
-
-            if (lines.Length == 1)
+            if (!Utilities.ContainsLineBreak(message))
             {
-                var line = lines[0];
-                line = line.Substring(prefix.Length);
-                var nameValue = Utilities.ParseNameValue(line);
+                message = message.Substring(prefix.Length);
+                var nameValue = Utilities.ParseNameValue(message);
                 var property = new Property
                 {
                     Name = stringTable.Intern(nameValue.Key),
@@ -29,6 +24,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 };
                 return property;
             }
+
+            message = message.Replace("\r\n", "\n");
+            message = message.Replace('\r', '\n');
+            var lines = message.Split('\n');
 
             var parameter = new Parameter();
 

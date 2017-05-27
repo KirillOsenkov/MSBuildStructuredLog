@@ -34,6 +34,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return text.Substring(0, newLength) + trimPrompt;
         }
 
+        public static bool ContainsLineBreak(string text)
+        {
+            return text.IndexOf('\n') != -1;
+        }
+
         public static KeyValuePair<string, string> ParseNameValue(string nameEqualsValue)
         {
             var equals = nameEqualsValue.IndexOf('=');
@@ -56,6 +61,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             return result;
+        }
+
+        public static string ParseQuotedSubstring(string text)
+        {
+            int firstQuote = text.IndexOf('"');
+            int secondQuote = text.IndexOf('"', firstQuote + 1);
+            if (firstQuote == -1 || secondQuote == -1)
+            {
+                return text;
+            }
+
+            return text.Substring(firstQuote + 1, secondQuote - firstQuote - 1);
         }
     }
 }
