@@ -160,12 +160,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <param name="args">The <see cref="BuildMessageEventArgs"/> instance containing the event data.</param>
         public void AddMessage(LazyFormattedBuildEventArgs args, string message)
         {
+            message = stringTable.Intern(message);
+
             TreeNode node = null;
             var messageNode = new Message
             {
-                Text = stringTable.Intern(message),
+                Text = message,
                 Timestamp = args.Timestamp
             };
+            object nodeToAdd = messageNode;
 
             if (args.BuildEventContext?.TaskId > 0)
             {
@@ -173,74 +176,101 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     .GetTargetById(args.BuildEventContext.TargetId)
                     .GetTaskById(args.BuildEventContext.TaskId);
                 var task = node as Task;
-                if (task != null && task.Name == "ResolveAssemblyReference")
+                if (task != null)
                 {
-                    Folder inputs = task.GetOrCreateNodeWithName<Folder>("Inputs");
-                    Folder results = task.FindChild<Folder>(c => c.Name == "Results");
-                    node = results ?? inputs;
-
-                    if (message.StartsWith("    "))
+                    if (task.Name == "ResolveAssemblyReference")
                     {
-                        message = message.Substring(4);
+                        Folder inputs = task.GetOrCreateNodeWithName<Folder>("Inputs");
+                        Folder results = task.FindChild<Folder>(c => c.Name == "Results");
+                        node = results ?? inputs;
 
-                        var parameter = node.FindLastChild<Parameter>();
-                        if (parameter != null)
+                        if (message.StartsWith("    "))
                         {
-                            if (!string.IsNullOrWhiteSpace(message))
+                            message = message.Substring(4);
+
+                            var parameter = node.FindLastChild<Parameter>();
+                            if (parameter != null)
                             {
-                                node = parameter;
-
-                                if (message.StartsWith("    "))
+                                if (!string.IsNullOrWhiteSpace(message))
                                 {
-                                    message = message.Substring(4);
+                                    node = parameter;
 
-                                    var lastItem = parameter.FindLastChild<Item>();
-
-                                    // only indent if it's not a "For SearchPath..." message - that one needs to be directly under parameter
-                                    if (lastItem != null && !message.StartsWith("For SearchPath"))
+                                    if (message.StartsWith("    "))
                                     {
-                                        node = lastItem;
+                                        message = message.Substring(4);
+
+                                        var lastItem = parameter.FindLastChild<Item>();
+
+                                        // only indent if it's not a "For SearchPath..." message - that one needs to be directly under parameter
+                                        if (lastItem != null && !message.StartsWith("For SearchPath"))
+                                        {
+                                            node = lastItem;
+                                        }
+                                    }
+
+                                    if (!string.IsNullOrEmpty(message))
+                                    {
+                                        node.AddChild(new Item()
+                                        {
+                                            Text = stringTable.Intern(message)
+                                        });
                                     }
                                 }
 
-                                if (!string.IsNullOrEmpty(message))
-                                {
-                                    node.AddChild(new Item()
-                                    {
-                                        Text = stringTable.Intern(message)
-                                    });
-                                }
-                            }
-
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        if (results == null)
-                        {
-                            bool isResult = message.StartsWith("Unified primary reference ") ||
-                                message.StartsWith("Primary reference ") ||
-                                message.StartsWith("Dependency ") ||
-                                message.StartsWith("Unified Dependency ");
-
-                            if (isResult)
-                            {
-                                results = task.GetOrCreateNodeWithName<Folder>("Results");
-                                node = results;
-                            }
-                            else
-                            {
-                                node = inputs;
+                                return;
                             }
                         }
                         else
                         {
-                            node = results;
+                            if (results == null)
+                            {
+                                bool isResult = message.StartsWith("Unified primary reference ") ||
+                                    message.StartsWith("Primary reference ") ||
+                                    message.StartsWith("Dependency ") ||
+                                    message.StartsWith("Unified Dependency ");
+
+                                if (isResult)
+                                {
+                                    results = task.GetOrCreateNodeWithName<Folder>("Results");
+                                    node = results;
+                                }
+                                else
+                                {
+                                    node = inputs;
+                                }
+                            }
+                            else
+                            {
+                                node = results;
+                            }
+
+                            node.GetOrCreateNodeWithName<Parameter>(stringTable.Intern(message.TrimEnd(':')));
+                            return;
+                        }
+                    }
+                    else if (task.Name == "MSBuild")
+                    {
+                        if (message.StartsWith("Global Properties") ||
+                            message.StartsWith("Additional Properties") ||
+                            message.StartsWith("Overriding Global Properties") ||
+                            message.StartsWith("Removing Properties"))
+                        {
+                            node.GetOrCreateNodeWithName<Folder>(message);
+                            return;
                         }
 
-                        node.GetOrCreateNodeWithName<Parameter>(message.TrimEnd(':'));
-                        return;
+                        node = node.FindLastChild<Folder>();
+                        int equals = message.IndexOf('=');
+                        if (equals > -1 && message[0] == ' ' && message[1] == ' ')
+                        {
+                            var name = stringTable.Intern(message.Substring(2, equals - 2));
+                            var value = stringTable.Intern(message.Substring(equals + 1, message.Length - equals - 1));
+                            nodeToAdd = new Property
+                            {
+                                Name = name,
+                                Value = value,
+                            };
+                        }
                     }
                 }
             }
@@ -300,7 +330,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
-            node.AddChild(messageNode);
+            node.AddChild(nodeToAdd);
         }
 
         private string ParseTargetName(string message)
