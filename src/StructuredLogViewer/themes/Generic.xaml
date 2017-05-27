@@ -130,11 +130,14 @@
 
   <HierarchicalDataTemplate DataType="{x:Type l:Project}"
                             ItemsSource="{Binding Children}">
-    <StackPanel Orientation="Horizontal">
+    <StackPanel Orientation="Horizontal" x:Name="projectRoot">
       <Rectangle x:Name="icon" Width="16" Height="16" Margin="2,2,6,2" Fill="{StaticResource GenericProjectIcon}" VerticalAlignment="Top" />
       <TextBlock Text="{Binding Name}" Margin="0,1,0,0" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
+      <DataTrigger Binding="{Binding IsLowRelevance}" Value="True">
+        <Setter TargetName="projectRoot" Property="Opacity" Value="0.25" />
+      </DataTrigger>
       <DataTrigger Binding="{Binding ProjectFileExtension}" Value=".sln">
         <Setter TargetName="icon" Property="Fill" Value="{StaticResource SlnIcon}" />
       </DataTrigger>

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -45,9 +44,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void Analyze()
         {
-            build.VisitAllChildren<Task>(t => AnalyzeTask(t));
+            Visit(build);
 
-            build.VisitAllChildren<Target>(t => AnalyzeTarget(t));
             if (!build.Succeeded)
             {
                 build.AddChild(new Error { Text = "Build failed." });
@@ -57,8 +55,96 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 build.AddChild(new Item { Text = "Build succeeded." });
             }
 
-            build.VisitAllChildren<CopyTask>(c => AnalyzeFileCopies(c));
             AnalyzeDoubleWrites();
+        }
+
+        private void Visit(TreeNode node)
+        {
+            ProcessBeforeChildrenVisited(node);
+
+            if (node.HasChildren)
+            {
+                foreach (var child in node.Children)
+                {
+                    var childNode = child as TreeNode;
+                    if (childNode != null)
+                    {
+                        Visit(childNode);
+                    }
+                    else
+                    {
+                        ProcessTerminalNode(child);
+                    }
+                }
+            }
+
+            ProcessAfterChildrenVisited(node);
+        }
+
+        private void ProcessBeforeChildrenVisited(TreeNode node)
+        {
+            if (node is Task task)
+            {
+                AnalyzeTask(task);
+            }
+            else if (node is Target target)
+            {
+                AnalyzeTarget(target);
+            }
+            else if (node is Message message)
+            {
+                AnalyzeMessage(message);
+            }
+        }
+
+        private void AnalyzeMessage(Message message)
+        {
+            if (message.Text != null && message.Text.StartsWith("Building with tools version"))
+            {
+                message.IsLowRelevance = true;
+            }
+        }
+
+        private void ProcessAfterChildrenVisited(TreeNode node)
+        {
+            if (node is Project project)
+            {
+                PostAnalyzeProject(project);
+            }
+        }
+
+        private void PostAnalyzeProject(Project project)
+        {
+            // if nothing in the project is important, mark the project as not important as well
+            if (project.HasChildren)
+            {
+                bool allLowRelevance = true;
+                foreach (var child in project.Children)
+                {
+                    if (child is IHasRelevance hasRelevance)
+                    {
+                        if (!hasRelevance.IsLowRelevance)
+                        {
+                            allLowRelevance = false;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        allLowRelevance = false;
+                        break;
+                    }
+                }
+
+                if (allLowRelevance)
+                {
+                    project.IsLowRelevance = true;
+                }
+            }
+        }
+
+        private void ProcessTerminalNode(object instance)
+        {
         }
 
         private void AnalyzeTask(Task task)
@@ -76,6 +162,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (task.Name == "ResolveAssemblyReference")
             {
                 CopyLocalAnalyzer.AnalyzeResolveAssemblyReference(task);
+            }
+
+            if (task is CopyTask copyTask)
+            {
+                AnalyzeFileCopies(copyTask);
             }
         }
 
