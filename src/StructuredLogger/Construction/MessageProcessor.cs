@@ -266,11 +266,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         }
 
                         var kvp = Utilities.ParseNameValue(message);
-                        nodeToAdd = new Property
+                        if (kvp.Value == "")
                         {
-                            Name = stringTable.Intern(kvp.Key),
-                            Value = stringTable.Intern(kvp.Value)
-                        };
+                            nodeToAdd = new Item
+                            {
+                                Text = stringTable.Intern(kvp.Key)
+                            };
+                        }
+                        else
+                        {
+                            nodeToAdd = new Property
+                            {
+                                Name = stringTable.Intern(kvp.Key),
+                                Value = stringTable.Intern(kvp.Value)
+                            };
+                        }
                     }
                 }
             }
