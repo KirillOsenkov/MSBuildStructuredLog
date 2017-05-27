@@ -101,6 +101,7 @@
     <Compile Include="SourceFiles\Span.cs" />
     <Compile Include="SourceFiles\TextUtilities.cs" />
     <Compile Include="TypingConcurrentOperation.cs" />
+    <Compile Include="Utilities.cs" />
     <Compile Include="WelcomeScreen.cs" />
   </ItemGroup>
   <ItemGroup>

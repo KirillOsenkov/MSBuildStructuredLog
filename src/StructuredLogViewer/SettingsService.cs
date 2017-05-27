@@ -280,7 +280,7 @@ namespace StructuredLogViewer
         public static string WriteContentToTempFileAndGetPath(string content, string fileExtension)
         {
             var folder = tempFolder;
-            var filePath = Path.Combine(folder, GetHash(content, 16) + fileExtension);
+            var filePath = Path.Combine(folder, Utilities.GetMD5Hash(content, 16) + fileExtension);
             if (File.Exists(filePath))
             {
                 return filePath;
@@ -333,36 +333,6 @@ namespace StructuredLogViewer
                 {
                 }
             }
-        }
-
-        public static string GetHash(string input, int digits)
-        {
-            using (var md5 = MD5.Create())
-            {
-                var bytes = Encoding.UTF8.GetBytes(input);
-                var hashBytes = md5.ComputeHash(bytes);
-                return ByteArrayToHexString(hashBytes, digits);
-            }
-        }
-
-        public static string ByteArrayToHexString(byte[] bytes, int digits = 0)
-        {
-            if (digits == 0)
-            {
-                digits = bytes.Length * 2;
-            }
-
-            char[] c = new char[digits];
-            byte b;
-            for (int i = 0; i < digits / 2; i++)
-            {
-                b = ((byte)(bytes[i] >> 4));
-                c[i * 2] = (char)(b > 9 ? b + 87 : b + 0x30);
-                b = ((byte)(bytes[i] & 0xF));
-                c[i * 2 + 1] = (char)(b > 9 ? b + 87 : b + 0x30);
-            }
-
-            return new string(c);
         }
     }
 }

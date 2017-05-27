@@ -1,6 +1,4 @@
-﻿using Microsoft.Build.Logging.StructuredLogger;
-
-namespace StructuredLogViewer
+﻿namespace StructuredLogViewer
 {
     public class SearchResult
     {
@@ -26,9 +24,9 @@ namespace StructuredLogViewer
             Word = word;
             Index = index;
 
-            if (Field.Length > Utilities.MaxDisplayedValueLength || Field.Contains("\n"))
+            if (Field.Length > Microsoft.Build.Logging.StructuredLogger.Utilities.MaxDisplayedValueLength || Field.Contains("\n"))
             {
-                field = Utilities.ShortenValue(field, "...");
+                field = Microsoft.Build.Logging.StructuredLogger.Utilities.ShortenValue(field, "...");
                 if (index + word.Length < field.Length)
                 {
                     Before = field.Substring(0, index);
