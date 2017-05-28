@@ -56,7 +56,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 if (children == null)
                 {
-                    children = new List<object>(1);
+                    children = new ChildrenList();
                 }
 
                 return children;
@@ -75,10 +75,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             if (children == null)
             {
-                children = new List<object>(1);
+                children = new ChildrenList();
             }
 
             children.Insert(0, child);
+            if (child is NamedNode named)
+            {
+                ((ChildrenList)children).OnAdded(named);
+            }
 
             var treeNode = child as ParentedNode;
             if (treeNode != null)
@@ -96,10 +100,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             if (children == null)
             {
-                children = new List<object>(1);
+                children = new ChildrenList();
             }
 
             children.Add(child);
+            if (child is NamedNode named)
+            {
+                ((ChildrenList)children).OnAdded(named);
+            }
 
             var treeNode = child as ParentedNode;
             if (treeNode != null)
@@ -115,18 +123,29 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public T GetOrCreateNodeWithName<T>(string name) where T : NamedNode, new()
         {
-            var existing = FindChild<T>(n => n.Name == name);
-            if (existing == null)
+            T node = null;
+            if (Children is ChildrenList list)
             {
-                existing = new T() { Name = name };
-                this.AddChild(existing);
+                node = list.GetOrCreateNodeWithName<T>(name);
             }
 
-            return existing;
+            if (node != null)
+            {
+                return node;
+            }
+
+            var newNode = new T() { Name = name };
+            this.AddChild(newNode);
+            return newNode;
         }
 
         public virtual T FindChild<T>(string name) where T : NamedNode
         {
+            if (!HasChildren)
+            {
+                return default(T);
+            }
+
             return FindChild<T>(c => c.Name == name);
         }
 
