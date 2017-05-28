@@ -109,8 +109,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 ((ChildrenList)children).OnAdded(named);
             }
 
-            var treeNode = child as ParentedNode;
-            if (treeNode != null)
+            if (child is ParentedNode treeNode)
             {
                 treeNode.Parent = this;
             }
