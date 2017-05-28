@@ -123,12 +123,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public T GetOrCreateNodeWithName<T>(string name) where T : NamedNode, new()
         {
-            T node = null;
-            if (Children is ChildrenList list)
-            {
-                node = list.GetOrCreateNodeWithName<T>(name);
-            }
-
+            T node = FindChild<T>(name);
             if (node != null)
             {
                 return node;
@@ -141,21 +136,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public virtual T FindChild<T>(string name) where T : NamedNode
         {
-            if (!HasChildren)
+            if (Children is ChildrenList list)
             {
-                return default(T);
+                return list.FindNode<T>(name);
             }
 
             return FindChild<T>(c => c.Name == name);
         }
 
-        public virtual T FindChild<T>(Predicate<T> predicate = null)
+        public virtual T FindChild<T>(Predicate<T> predicate)
         {
             if (HasChildren)
             {
-                foreach (var child in Children.OfType<T>())
+                for (int i = 0; i < Children.Count; i++)
                 {
-                    if (predicate == null || predicate(child))
+                    if (Children[i] is T child && predicate(child))
                     {
                         return child;
                     }

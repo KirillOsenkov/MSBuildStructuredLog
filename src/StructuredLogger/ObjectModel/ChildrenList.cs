@@ -11,7 +11,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private Dictionary<ChildrenCacheKey, object> childrenCache;
 
-        public T GetOrCreateNodeWithName<T>(string name) where T : NamedNode, new()
+        public T FindNode<T>(string name) where T : NamedNode
         {
             EnsureCacheCreated();
 

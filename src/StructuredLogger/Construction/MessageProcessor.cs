@@ -169,7 +169,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (args.BuildEventContext?.TaskId > 0)
             {
-                node = construction.GetOrAddProject(args.BuildEventContext.ProjectContextId)
+                node = construction
+                    .GetOrAddProject(args.BuildEventContext.ProjectContextId)
                     .GetTargetById(args.BuildEventContext.TargetId)
                     .GetTaskById(args.BuildEventContext.TaskId);
                 var task = node as Task;
@@ -178,7 +179,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     if (task.Name == "ResolveAssemblyReference")
                     {
                         Folder inputs = task.GetOrCreateNodeWithName<Folder>("Inputs");
-                        Folder results = task.FindChild<Folder>(c => c.Name == "Results");
+                        Folder results = task.FindChild<Folder>("Results");
                         node = results ?? inputs;
 
                         if (message.StartsWith("    "))
@@ -283,7 +284,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
             else if (args.BuildEventContext?.TargetId > 0)
             {
-                node = construction.GetOrAddProject(args.BuildEventContext.ProjectContextId)
+                node = construction
+                    .GetOrAddProject(args.BuildEventContext.ProjectContextId)
                     .GetTargetById(args.BuildEventContext.TargetId);
 
                 if (message.StartsWith("Task") && message.Contains("skipped"))
