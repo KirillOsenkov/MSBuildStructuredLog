@@ -118,14 +118,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var project = construction.GetOrAddProject(args.BuildEventContext.ProjectContextId);
             var target = project.GetTargetById(args.BuildEventContext.TargetId);
 
-            var equals = message.IndexOf('=');
-            var name = message.Substring(0, equals);
-            var value = message.Substring(equals + 1);
-
+            var kvp = Utilities.ParseNameValue(message);
             target.AddChild(new Property
             {
-                Name = stringTable.Intern(name),
-                Value = stringTable.Intern(value)
+                Name = stringTable.Intern(kvp.Key),
+                Value = stringTable.Intern(kvp.Value)
             });
         }
 
