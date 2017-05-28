@@ -47,6 +47,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        private Dictionary<ChildrenCacheKey, object> childrenCache;
+
         private IList<object> children;
         public bool HasChildren => children != null && children.Count > 0;
 
@@ -69,6 +71,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 children = children.ToArray();
             }
+            childrenCache = null;
         }
 
         public void AddChildAtBeginning(object child)
@@ -115,11 +118,27 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public T GetOrCreateNodeWithName<T>(string name) where T : NamedNode, new()
         {
-            var existing = FindChild<T>(n => n.Name == name);
+            if (childrenCache == null)
+            {
+                childrenCache = new Dictionary<ChildrenCacheKey, object>();
+            }
+
+            T existing;
+            var key = new ChildrenCacheKey(typeof(T), name);
+            if (childrenCache.TryGetValue(key, out var existingObject))
+            {
+                existing = (T) existingObject;
+            }
+            else
+            {
+                existing = FindChild<T>(n => n.Name == name);
+            }
+
             if (existing == null)
             {
                 existing = new T() { Name = name };
                 this.AddChild(existing);
+                childrenCache[key] = existing;
             }
 
             return existing;
@@ -423,6 +442,37 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     {
                         processor((T)child);
                     }
+                }
+            }
+        }
+
+        private struct ChildrenCacheKey
+        {
+            private readonly Type _type;
+            private readonly string _name;
+
+            public ChildrenCacheKey(Type type, string name)
+            {
+                _type = type;
+                _name = name;
+            }
+
+            public bool Equals(ChildrenCacheKey other)
+            {
+                return _type.Equals(other._type) && string.Equals(_name, other._name);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                return obj is ChildrenCacheKey && Equals((ChildrenCacheKey) obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return (_type.GetHashCode() * 397) ^ _name.GetHashCode();
                 }
             }
         }
