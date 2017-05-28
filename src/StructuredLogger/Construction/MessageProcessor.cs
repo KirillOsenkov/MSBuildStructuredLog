@@ -300,7 +300,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 if (message.StartsWith("Target") && message.Contains("skipped"))
                 {
-                    var targetName = stringTable.Intern(ParseTargetName(message));
+                    var targetName = stringTable.Intern(Utilities.ParseQuotedSubstring(message));
                     if (targetName != null)
                     {
                         node = project.GetOrAddTargetByName(targetName);
@@ -340,28 +340,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             node.AddChild(nodeToAdd);
-        }
-
-        private string ParseTargetName(string message)
-        {
-            int firstQuote = message.IndexOf('"');
-            if (firstQuote == -1)
-            {
-                return null;
-            }
-
-            int secondQuote = message.IndexOf('"', firstQuote + 1);
-            if (secondQuote == -1)
-            {
-                return null;
-            }
-
-            if (secondQuote - firstQuote < 2)
-            {
-                return null;
-            }
-
-            return message.Substring(firstQuote + 1, secondQuote - firstQuote - 1);
         }
 
         /// <summary>

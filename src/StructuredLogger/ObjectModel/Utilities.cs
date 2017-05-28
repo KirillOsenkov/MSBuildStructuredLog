@@ -66,8 +66,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string ParseQuotedSubstring(string text)
         {
             int firstQuote = text.IndexOf('"');
+            if (firstQuote == -1)
+            {
+                return text;
+            }
+
             int secondQuote = text.IndexOf('"', firstQuote + 1);
-            if (firstQuote == -1 || secondQuote == -1)
+            if (secondQuote == -1)
+            {
+                return text;
+            }
+
+            if (secondQuote - firstQuote < 2)
             {
                 return text;
             }
