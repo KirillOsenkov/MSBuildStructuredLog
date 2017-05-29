@@ -192,7 +192,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 lock (syncLock)
                 {
                     var project = GetOrAddProject(args.BuildEventContext.ProjectContextId);
-                    var target = project.GetOrAddTargetByName(stringTable.Intern(args.TargetName));
+                    var targetName = stringTable.Intern(args.TargetName);
+                    var target = project.CreateTarget(targetName, args.BuildEventContext.TargetId);
+
                     if (!string.IsNullOrEmpty(args.ParentTarget))
                     {
                         var parentTarget = project.GetOrAddTargetByName(stringTable.Intern(args.ParentTarget));
@@ -203,7 +205,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         project.AddChild(target);
                     }
 
-                    target.Id = args.BuildEventContext.TargetId;
                     target.SourceFilePath = stringTable.Intern(args.TargetFile);
                 }
             }
