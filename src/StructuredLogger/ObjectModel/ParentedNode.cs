@@ -4,7 +4,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class ParentedNode : BaseNode
     {
-        public TreeNode Parent { get; set; }
+        private TreeNode parent;
+        public TreeNode Parent
+        {
+            get => parent;
+            set
+            {
+#if DEBUG
+                if (parent != null)
+                {
+                    throw new System.InvalidOperationException("A node is being reparented");
+                }
+#endif
+
+                parent = value;
+            }
+        }
 
         public IEnumerable<ParentedNode> GetParentChain()
         {
