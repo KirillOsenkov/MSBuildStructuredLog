@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -40,6 +41,18 @@ namespace Microsoft.Build.Logging
                     throw new NotSupportedException(text);
                 }
 
+                // Use a producer-consumer queue so that IO can happen on one thread
+                // while processing can happen on another thread decoupled. The speed
+                // up is from 4.65 to 4.15 seconds.
+                var queue = new BlockingCollection<BuildEventArgs>();
+                var processingTask = System.Threading.Tasks.Task.Run(() =>
+                {
+                    foreach (var args in queue.GetConsumingEnumerable())
+                    {
+                        Dispatch(args);
+                    }
+                });
+
                 var reader = new BuildEventArgsReader(binaryReader);
                 reader.OnBlobRead += OnBlobRead;
                 while (true)
@@ -49,11 +62,14 @@ namespace Microsoft.Build.Logging
                     instance = reader.Read();
                     if (instance == null)
                     {
+                        queue.CompleteAdding();
                         break;
                     }
 
-                    Dispatch(instance);
+                    queue.Add(instance);
                 }
+
+                processingTask.Wait();
             }
         }
 
