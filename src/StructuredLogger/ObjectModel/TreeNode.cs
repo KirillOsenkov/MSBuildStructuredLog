@@ -226,15 +226,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return default(T);
         }
 
-        public virtual T FindLastChild<T>(Predicate<T> predicate = null)
+        public virtual T FindLastChild<T>()
         {
             if (HasChildren)
             {
-                foreach (var child in Children.Reverse())
+                for (int i = Children.Count - 1; i >= 0; i--)
                 {
-                    if (child is T && (predicate == null || predicate((T)child)))
+                    if (Children[i] is T t)
                     {
-                        return (T)child;
+                        return t;
                     }
                 }
             }
