@@ -8,10 +8,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
     public class BuildAnalyzer
     {
         private Build build;
+        private DoubleWritesAnalyzer doubleWritesAnalyzer;
 
         public BuildAnalyzer(Build build)
         {
             this.build = build;
+            doubleWritesAnalyzer = new DoubleWritesAnalyzer(this);
         }
 
         public static void AnalyzeBuild(Build build)
@@ -27,13 +29,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 var analyzer = new BuildAnalyzer(build);
                 analyzer.Analyze();
                 build.IsAnalyzed = true;
-
-                Seal(build);
             }
             catch (Exception ex)
             {
                 System.Windows.MessageBox.Show(
-                    "Error while analyzing build. Very sorry about that. Please Ctrl+C to copy this text and file an issue on https://github.com/KirillOsenkov/MSBuildStructuredLog \r\n" + ex.ToString());
+                    "Error while analyzing build. Sorry about that. Please Ctrl+C to copy this text and file an issue on https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/new \r\n" + ex.ToString());
             }
         }
 
@@ -45,17 +45,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private void Analyze()
         {
             Visit(build);
-
-            if (!build.Succeeded)
-            {
-                build.AddChild(new Error { Text = "Build failed." });
-            }
-            else
-            {
-                build.AddChild(new Item { Text = "Build succeeded." });
-            }
-
-            AnalyzeDoubleWrites();
         }
 
         private void Visit(TreeNode node)
@@ -79,6 +68,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             ProcessAfterChildrenVisited(node);
+            node.Seal();
         }
 
         private void ProcessBeforeChildrenVisited(TreeNode node)
@@ -111,6 +101,24 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 PostAnalyzeProject(project);
             }
+            else if (node is Build build)
+            {
+                PostAnalyzeBuild(build);
+            }
+        }
+
+        private void PostAnalyzeBuild(Build build)
+        {
+            if (!build.Succeeded)
+            {
+                build.AddChild(new Error { Text = "Build failed." });
+            }
+            else
+            {
+                build.AddChild(new Item { Text = "Build succeeded." });
+            }
+
+            doubleWritesAnalyzer.AnalyzeDoubleWrites(build);
         }
 
         private void PostAnalyzeProject(Project project)
@@ -163,72 +171,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 CopyLocalAnalyzer.AnalyzeResolveAssemblyReference(task);
             }
-
-            if (task is CopyTask copyTask)
+            else if (task is CopyTask copyTask)
             {
-                AnalyzeFileCopies(copyTask);
+                doubleWritesAnalyzer.AnalyzeFileCopies(copyTask);
             }
-        }
-
-        private void AnalyzeDoubleWrites()
-        {
-            foreach (var bucket in fileCopySourcesForDestination)
-            {
-                if (IsDoubleWrite(bucket))
-                {
-                    var doubleWrites = build.GetOrCreateNodeWithName<Folder>("DoubleWrites");
-                    var item = new Item { Text = bucket.Key };
-                    doubleWrites.AddChild(item);
-                    foreach (var source in bucket.Value)
-                    {
-                        item.AddChild(new Item { Text = source });
-                    }
-                }
-            }
-        }
-
-        private static bool IsDoubleWrite(KeyValuePair<string, HashSet<string>> bucket)
-        {
-            if (bucket.Value.Count < 2)
-            {
-                return false;
-            }
-
-            if (bucket.Value
-                .Select(f => new FileInfo(f))
-                .Select(f => f.FullName)
-                .Distinct()
-                .Count() == 1)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        private static readonly Dictionary<string, HashSet<string>> fileCopySourcesForDestination = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
-
-        private void AnalyzeFileCopies(CopyTask copyTask)
-        {
-            foreach (var copyOperation in copyTask.FileCopyOperations)
-            {
-                if (copyOperation.Copied)
-                {
-                    ProcessCopy(copyOperation.Source, copyOperation.Destination);
-                }
-            }
-        }
-
-        private static void ProcessCopy(string source, string destination)
-        {
-            HashSet<string> bucket = null;
-            if (!fileCopySourcesForDestination.TryGetValue(destination, out bucket))
-            {
-                bucket = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                fileCopySourcesForDestination.Add(destination, bucket);
-            }
-
-            bucket.Add(source);
         }
 
         private void AnalyzeTarget(Target target)
