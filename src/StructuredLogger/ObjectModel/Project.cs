@@ -54,8 +54,28 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public Target GetOrAddTargetByName(string targetName)
         {
-            Target result = _targetNameToTargetMap.GetOrAdd(targetName, key => new Target() { Name = key });
+            Target result = _targetNameToTargetMap.GetOrAdd(targetName, key => CreateTargetInstance(key));
             return result;
+        }
+
+        public Target CreateTarget(string name, int id)
+        {
+            var target = CreateTargetInstance(name);
+            target.Id = id;
+
+            // there may already exist a target with this name
+            _targetNameToTargetMap.TryAdd(name, target);
+            targetsById[id] = target;
+
+            return target;
+        }
+
+        private static Target CreateTargetInstance(string name)
+        {
+            return new Target()
+            {
+                Name = name
+            };
         }
 
         public Target GetTarget(string targetName, int targetId)
