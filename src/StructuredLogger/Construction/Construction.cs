@@ -149,7 +149,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         parent = GetOrAddProject(parentProjectId);
                     }
 
-                    var project = GetOrAddProject(args.BuildEventContext.ProjectContextId, args, parent);
+
+                    var project = GetOrAddProject(args, parent);
 
                     if (parent != null)
                     {
@@ -430,16 +431,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <param name="args">The <see cref="ProjectStartedEventArgs"/> instance containing the event data.</param>
         /// <param name="parentProject">The parent project, if any.</param>
         /// <returns>Project object</returns>
-        public Project GetOrAddProject(int projectId, ProjectStartedEventArgs args = null, Project parentProject = null)
+        public Project GetOrAddProject(ProjectStartedEventArgs args, Project parentProject = null)
         {
+            var projectId = args.BuildEventContext.ProjectContextId;
             Project result = _projectIdToProjectMap.GetOrAdd(projectId,
                 id => CreateProject(id));
 
-            if (args != null)
-            {
-                UpdateProject(result, args);
-            }
+            UpdateProject(result, args);
 
+            return result;
+        }
+
+        public Project GetOrAddProject(int projectId)
+        {
+            Project result = _projectIdToProjectMap.GetOrAdd(projectId, id => CreateProject(id));
             return result;
         }
 
