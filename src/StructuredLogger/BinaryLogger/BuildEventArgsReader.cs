@@ -583,9 +583,9 @@ namespace Microsoft.Build.Logging
             if (fileFormatVersion > 1)
             {
                 int evaluationId = ReadInt32();
-                if (projectContextId == -2 && evaluationId != -1)
+                if (projectContextId == -2 && evaluationId >= 0)
                 {
-                    projectContextId = evaluationId;
+                    projectContextId = -evaluationId;
                 }
             }
 

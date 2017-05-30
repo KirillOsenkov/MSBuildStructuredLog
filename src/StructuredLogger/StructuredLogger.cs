@@ -61,6 +61,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             eventSource.WarningRaised += construction.WarningRaised;
             eventSource.ErrorRaised += construction.ErrorRaised;
             eventSource.CustomEventRaised += construction.CustomEventRaised;
+            eventSource.StatusEventRaised += construction.StatusEventRaised;
 
             if (sourceFileCollector != null)
             {

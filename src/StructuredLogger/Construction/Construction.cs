@@ -30,6 +30,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private readonly MessageProcessor messageProcessor;
         private readonly StringCache stringTable;
 
+        public Folder EvaluationFolder;
+
         public event Action Completed;
 
         public Construction()
@@ -56,8 +58,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     var properties = Build.GetOrCreateNodeWithName<Folder>("Environment");
                     AddProperties(properties, args.BuildEnvironment);
-                }
 
+                    EvaluationFolder = Build.GetOrCreateNodeWithName<Folder>("Evaluation");
+                }
             }
             catch (Exception ex)
             {
@@ -317,6 +320,35 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             stringTable.Intern(args.HelpKeyword),
                             stringTable.Intern(args.SenderName),
                             MessageImportance.Low));
+                }
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+            }
+        }
+
+        public void StatusEventRaised(object sender, BuildStatusEventArgs e)
+        {
+            try
+            {
+                lock (syncLock)
+                {
+                    if (e is ProjectEvaluationStartedEventArgs projectEvaluationStarted)
+                    {
+                        var projectName = projectEvaluationStarted.ProjectFile;
+                        var project = EvaluationFolder.GetOrCreateNodeWithName<Project>(projectName);
+                        project.Id = e.BuildEventContext.ProjectContextId;
+                    }
+                    else if (e is ProjectEvaluationFinishedEventArgs projectEvaluationFinished)
+                    {
+                    }
+                    else if (e.Message.StartsWith("Evaluation started"))
+                    {
+                        var projectName = Utilities.ParseQuotedSubstring(e.Message);
+                        var project = EvaluationFolder.GetOrCreateNodeWithName<Project>(projectName);
+                        project.Id = e.BuildEventContext.ProjectContextId;
+                    }
                 }
             }
             catch (Exception ex)

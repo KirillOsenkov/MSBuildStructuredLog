@@ -308,6 +308,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                 }
             }
+            else if (args.BuildEventContext?.ProjectContextId < 0)
+            {
+                var evaluation = construction.EvaluationFolder;
+                var evaluationId = args.BuildEventContext.ProjectContextId;
+                var project = evaluation.FindChild<Project>(p => p.Id == evaluationId);
+                node = project;
+            }
 
             if (node == null)
             {
