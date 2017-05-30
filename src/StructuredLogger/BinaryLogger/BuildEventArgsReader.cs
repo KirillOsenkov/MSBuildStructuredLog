@@ -13,6 +13,7 @@ namespace Microsoft.Build.Logging
     internal class BuildEventArgsReader
     {
         private readonly BinaryReader binaryReader;
+        private readonly int fileFormatVersion;
 
         // reflection is needed to set these three fields because public constructors don't provide
         // a way to set these from the outside
@@ -27,9 +28,10 @@ namespace Microsoft.Build.Logging
         /// Initializes a new instance of BuildEventArgsReader using a BinaryReader instance
         /// </summary>
         /// <param name="binaryReader">The BinaryReader to read BuildEventArgs from</param>
-        public BuildEventArgsReader(BinaryReader binaryReader)
+        public BuildEventArgsReader(BinaryReader binaryReader, int fileFormatVersion)
         {
             this.binaryReader = binaryReader;
+            this.fileFormatVersion = fileFormatVersion;
         }
 
         /// <summary>
@@ -96,11 +98,42 @@ namespace Microsoft.Build.Logging
                 case BinaryLogRecordKind.TaskCommandLine:
                     result = ReadTaskCommandLineEventArgs();
                     break;
+                case BinaryLogRecordKind.ProjectEvaluationStarted:
+                    result = ReadProjectEvaluationStartedEventArgs();
+                    break;
+                case BinaryLogRecordKind.ProjectEvaluationFinished:
+                    result = ReadProjectEvaluationFinishedEventArgs();
+                    break;
+                case BinaryLogRecordKind.ProjectImported:
+                    result = ReadProjectImportedEventArgs();
+                    break;
                 default:
                     break;
             }
 
             return result;
+        }
+
+        private BuildEventArgs ReadProjectImportedEventArgs()
+        {
+            var fields = ReadBuildEventArgsFields();
+            // Read unused Importance, it defaults to Low
+            ReadInt32();
+            var importedProjectFile = ReadOptionalString();
+            var unexpandedProject = ReadOptionalString();
+
+            var e = new ProjectImportedEventArgs(
+                fields.LineNumber,
+                fields.ColumnNumber,
+                fields.Message);
+
+            SetCommonFields(e, fields);
+
+            e.ProjectFile = fields.ProjectFile;
+
+            e.ImportedProjectFile = importedProjectFile;
+            e.UnexpandedProject = unexpandedProject;
+            return e;
         }
 
         /// <summary>
@@ -141,6 +174,32 @@ namespace Microsoft.Build.Logging
                 fields.HelpKeyword,
                 succeeded,
                 fields.Timestamp);
+            SetCommonFields(e, fields);
+            return e;
+        }
+
+        private BuildEventArgs ReadProjectEvaluationStartedEventArgs()
+        {
+            var fields = ReadBuildEventArgsFields();
+            var projectFile = ReadString();
+
+            var e = new ProjectEvaluationStartedEventArgs(fields.Message)
+            {
+                ProjectFile = projectFile
+            };
+            SetCommonFields(e, fields);
+            return e;
+        }
+
+        private BuildEventArgs ReadProjectEvaluationFinishedEventArgs()
+        {
+            var fields = ReadBuildEventArgsFields();
+            var projectFile = ReadString();
+
+            var e = new ProjectEvaluationFinishedEventArgs(fields.Message)
+            {
+                ProjectFile = projectFile
+            };
             SetCommonFields(e, fields);
             return e;
         }
@@ -521,6 +580,14 @@ namespace Microsoft.Build.Logging
             int taskId = ReadInt32();
             int submissionId = ReadInt32();
             int projectInstanceId = ReadInt32();
+            if (fileFormatVersion > 1)
+            {
+                int evaluationId = ReadInt32();
+                if (projectContextId == -2 && evaluationId != -1)
+                {
+                    projectContextId = evaluationId;
+                }
+            }
 
             var result = new BuildEventContext(
                 submissionId,

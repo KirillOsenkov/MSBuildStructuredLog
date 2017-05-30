@@ -53,7 +53,7 @@ namespace Microsoft.Build.Logging
                     }
                 });
 
-                var reader = new BuildEventArgsReader(binaryReader);
+                var reader = new BuildEventArgsReader(binaryReader, fileFormatVersion);
                 reader.OnBlobRead += OnBlobRead;
                 while (true)
                 {
@@ -105,7 +105,7 @@ namespace Microsoft.Build.Logging
 
                 List<Record> blobs = new List<Record>();
 
-                var reader = new BuildEventArgsReader(binaryReader);
+                var reader = new BuildEventArgsReader(binaryReader, fileFormatVersion);
                 reader.OnBlobRead += (kind, blob) =>
                 {
                     var record = new Record

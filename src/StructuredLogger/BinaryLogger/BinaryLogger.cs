@@ -15,7 +15,7 @@ namespace Microsoft.Build.Logging
     /// <remarks>The logger is public so that it can be instantiated from MSBuild.exe via command-line switch.</remarks>
     public sealed class BinaryLogger : ILogger
     {
-        internal const int FileFormatVersion = 1;
+        internal const int FileFormatVersion = 2;
 
         private Stream stream;
         private BinaryWriter binaryWriter;
