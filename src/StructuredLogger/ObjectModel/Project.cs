@@ -60,11 +60,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public Target CreateTarget(string name, int id)
         {
-            var target = CreateTargetInstance(name);
-            target.Id = id;
+            if (!_targetNameToTargetMap.TryGetValue(name, out var target) || target.Id != -1)
+            {
+                target = CreateTargetInstance(name);
+                _targetNameToTargetMap.TryAdd(name, target);
+            }
 
-            // there may already exist a target with this name
-            _targetNameToTargetMap.TryAdd(name, target);
+            target.Id = id;
             targetsById[id] = target;
 
             return target;
