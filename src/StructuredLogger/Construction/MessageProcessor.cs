@@ -22,6 +22,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             this.stringTable = stringTable;
         }
 
+        private static Regex usingTaskRegex = new Regex("Using \"(?<task>.+)\" task from (assembly|the task factory) \"(?<assembly>.+)\"\\.", RegexOptions.Compiled);
+
         public void Process(BuildMessageEventArgs args)
         {
             if (args == null)
@@ -30,72 +32,87 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             var message = args.Message;
-            if (message == null)
+            if (string.IsNullOrEmpty(message))
             {
                 return;
             }
 
-            // Task Input / Outputs
-            if (message.StartsWith(TaskParameterMessagePrefix))
+            switch (message[0])
             {
-                var task = GetTask(args);
-                var folder = task.GetOrCreateNodeWithName<Folder>("Parameters");
-                var parameter = ItemGroupParser.ParsePropertyOrItemList(message, TaskParameterMessagePrefix, stringTable);
-                folder.AddChild(parameter);
-            }
-            else if (message.StartsWith(OutputItemsMessagePrefix))
-            {
-                var task = GetTask(args);
-                var folder = task.GetOrCreateNodeWithName<Folder>("OutputItems");
-                var parameter = ItemGroupParser.ParsePropertyOrItemList(message, OutputItemsMessagePrefix, stringTable);
-                folder.AddChild(parameter);
-            }
-            else if (message.StartsWith(OutputPropertyMessagePrefix))
-            {
-                var task = GetTask(args);
-                var folder = task.GetOrCreateNodeWithName<Folder>("OutputProperties");
-                var parameter = ItemGroupParser.ParsePropertyOrItemList(message, OutputPropertyMessagePrefix, stringTable);
-                folder.AddChild(parameter);
+                case 'A':
+                    if (message.StartsWith(ItemGroupIncludeMessagePrefix))
+                    {
+                        AddItemGroup(args, ItemGroupIncludeMessagePrefix, new AddItem());
+                        return;
+                    }
+                    break;
+                case 'O':
+                    if (message.StartsWith(OutputItemsMessagePrefix))
+                    {
+                        var task = GetTask(args);
+                        var folder = task.GetOrCreateNodeWithName<Folder>("OutputItems");
+                        var parameter = ItemGroupParser.ParsePropertyOrItemList(message, OutputItemsMessagePrefix, stringTable);
+                        folder.AddChild(parameter);
+                        return;
+                    }
+
+                    if (message.StartsWith(OutputPropertyMessagePrefix))
+                    {
+                        var task = GetTask(args);
+                        var folder = task.GetOrCreateNodeWithName<Folder>("OutputProperties");
+                        var parameter = ItemGroupParser.ParsePropertyOrItemList(message, OutputPropertyMessagePrefix, stringTable);
+                        folder.AddChild(parameter);
+                        return;
+                    }
+                    break;
+                case 'R':
+                    if (message.StartsWith(ItemGroupRemoveMessagePrefix))
+                    {
+                        AddItemGroup(args, ItemGroupRemoveMessagePrefix, new RemoveItem());
+                        return;
+                    }
+                    break;
+                case 'S':
+                    if (message.StartsWith(PropertyGroupMessagePrefix))
+                    {
+                        AddPropertyGroup(args, PropertyGroupMessagePrefix);
+                        return;
+                    }
+                    break;
+                case 'T':
+                    if (message.StartsWith(TaskParameterMessagePrefix))
+                    {
+                        var task = GetTask(args);
+                        var folder = task.GetOrCreateNodeWithName<Folder>("Parameters");
+                        var parameter = ItemGroupParser.ParsePropertyOrItemList(message, TaskParameterMessagePrefix, stringTable);
+                        folder.AddChild(parameter);
+                        return;
+                    }
+                    break;
+                case 'U':
+                    // A task from assembly message (parses out the task name and assembly path).
+                    var match = usingTaskRegex.Match(message);
+                    if (match.Success)
+                    {
+                        construction.SetTaskAssembly(
+                            stringTable.Intern(match.Groups["task"].Value),
+                            stringTable.Intern(match.Groups["assembly"].Value));
+                        return;
+                    }
+
+                    break;
+                default:
+                    break;
             }
 
-            // Item / Property groups
-            else if (message.StartsWith(PropertyGroupMessagePrefix))
+            if (args is TaskCommandLineEventArgs taskArgs)
             {
-                AddPropertyGroup(args, PropertyGroupMessagePrefix);
+                AddCommandLine(taskArgs);
+                return;
             }
-            else if (message.StartsWith(ItemGroupIncludeMessagePrefix))
-            {
-                AddItemGroup(args, ItemGroupIncludeMessagePrefix, new AddItem());
-            }
-            else if (message.StartsWith(ItemGroupRemoveMessagePrefix))
-            {
-                AddItemGroup(args, ItemGroupRemoveMessagePrefix, new RemoveItem());
-            }
-            else
-            {
-                // This was command line arguments for task
-                var taskArgs = args as TaskCommandLineEventArgs;
-                if (taskArgs != null)
-                {
-                    AddCommandLine(taskArgs);
-                    return;
-                }
 
-                // A task from assembly message (parses out the task name and assembly path).
-                const string taskAssemblyPattern = "Using \"(?<task>.+)\" task from (assembly|the task factory) \"(?<assembly>.+)\"\\.";
-                var match = Regex.Match(message, taskAssemblyPattern);
-                if (match.Success)
-                {
-                    construction.SetTaskAssembly(
-                        stringTable.Intern(match.Groups["task"].Value),
-                        stringTable.Intern(match.Groups["assembly"].Value));
-                }
-                else
-                {
-                    // Just the generic log message or something we currently don't handle in the object model.
-                    AddMessage(args, message);
-                }
-            }
+            // Just the generic log message or something we currently don't handle in the object model.
+            AddMessage(args, message);
         }
 
         private Task GetTask(BuildMessageEventArgs args)
