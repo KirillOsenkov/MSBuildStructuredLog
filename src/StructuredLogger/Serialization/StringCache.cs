@@ -20,11 +20,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return string.Empty;
             }
 
-            if (text.Length > 1000)
-            {
-                // if it has line breaks, save some more space
-                text = text.Replace("\r\n", "\n");
-            }
+            // if it has line breaks, save some more space
+            text = text.Replace("\r\n", "\n");
+            text = text.Replace("\r", "\n");
 
             string existing;
             if (deduplicationMap.TryGetValue(text, out existing))
