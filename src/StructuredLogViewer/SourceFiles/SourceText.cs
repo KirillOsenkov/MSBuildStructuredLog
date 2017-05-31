@@ -37,13 +37,23 @@ namespace StructuredLogViewer
         public string GetLineText(int lineNumber)
         {
             var line = Lines[lineNumber];
+            if (line.Length == 0)
+            {
+                return "";
+            }
+
             var end = line.End - 1;
-            while (TextUtilities.IsLineBreakChar(Text[end]) && end > line.Start)
+            while (end >= line.Start && TextUtilities.IsLineBreakChar(Text[end]))
             {
                 end--;
             }
 
-            return Text.Substring(line.Start, end - line.Start);
+            if (end < line.Start)
+            {
+                return "";
+            }
+
+            return Text.Substring(line.Start, end - line.Start + 1);
         }
     }
 }
