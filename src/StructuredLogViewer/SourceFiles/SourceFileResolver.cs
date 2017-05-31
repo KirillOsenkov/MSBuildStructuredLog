@@ -13,7 +13,7 @@ namespace StructuredLogViewer
 
         private const string buildsourceszip = ".buildsources.zip";
 
-        private readonly Dictionary<string, bool> fileExistenceCache = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, SourceText> fileContentsCache = new Dictionary<string, SourceText>(StringComparer.OrdinalIgnoreCase);
 
         public ArchiveFileResolver ArchiveFile { get; private set; }
 
@@ -38,14 +38,7 @@ namespace StructuredLogViewer
 
         public bool HasFile(string filePath)
         {
-            if (fileExistenceCache.TryGetValue(filePath, out bool result))
-            {
-                return result;
-            }
-
-            result = GetSourceFileText(filePath) != null;
-            fileExistenceCache[filePath] = result;
-            return result;
+            return GetSourceFileText(filePath) != null;
         }
 
         public SourceText GetSourceFileText(string filePath)
@@ -55,15 +48,22 @@ namespace StructuredLogViewer
                 return null;
             }
 
+            if (fileContentsCache.TryGetValue(filePath, out var result))
+            {
+                return result;
+            }
+
             foreach (var resolver in resolvers)
             {
                 var candidate = resolver.GetSourceFileText(filePath);
                 if (candidate != null)
                 {
+                    fileContentsCache[filePath] = candidate;
                     return candidate;
                 }
             }
 
+            fileContentsCache[filePath] = null;
             return null;
         }
     }
