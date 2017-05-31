@@ -15,8 +15,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             if (!Utilities.ContainsLineBreak(message))
             {
-                message = message.Substring(prefix.Length);
-                var nameValue = Utilities.ParseNameValue(message);
+                var nameValue = Utilities.ParseNameValue(message, trimFromStart: prefix.Length);
                 var property = new Property
                 {
                     Name = stringTable.Intern(nameValue.Key),

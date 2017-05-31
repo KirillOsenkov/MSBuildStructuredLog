@@ -39,7 +39,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return text.IndexOf('\n') != -1;
         }
 
-        public static KeyValuePair<string, string> ParseNameValue(string nameEqualsValue)
+        public static KeyValuePair<string, string> ParseNameValue(string nameEqualsValue, int trimFromStart = 0)
         {
             var equals = nameEqualsValue.IndexOf('=');
             if (equals == -1)
@@ -47,7 +47,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return new KeyValuePair<string, string>(nameEqualsValue, "");
             }
 
-            var name = nameEqualsValue.Substring(0, equals);
+            var name = nameEqualsValue.Substring(trimFromStart, equals - trimFromStart);
             var value = nameEqualsValue.Substring(equals + 1);
             return new KeyValuePair<string, string>(name, value);
         }
