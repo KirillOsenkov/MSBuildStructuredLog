@@ -34,7 +34,7 @@ namespace StructuredLogViewer
             public ProjectImport(string importedProject, int line, int column)
             {
                 ProjectPath = importedProject;
-                Line = line - 1;
+                Line = line;
                 Column = column;
             }
 
@@ -90,11 +90,35 @@ namespace StructuredLogViewer
                         {
                             var line = int.Parse(match.Groups[3].Value);
                             var column = int.Parse(match.Groups[4].Value);
+                            if (line > 0)
+                            {
+                                line = line - 1; // should be 0-based 
+                            }
+
                             AddImport(importMap, project, importedProject, line, column);
                         }
                     }
                 }
             }
+        }
+
+        private int CorrectForMultilineImportElement(SourceText text, int lineNumber)
+        {
+            var line = text.Lines[lineNumber];
+            var lineText = text.GetLineText(lineNumber);
+            if (lineText.Contains("<Import"))
+            {
+                int lastElementLineNumber = lineNumber;
+                while (!lineText.Contains("/>") && lastElementLineNumber < text.Lines.Length - 1)
+                {
+                    lastElementLineNumber++;
+                    lineText = text.GetLineText(lastElementLineNumber);
+                }
+
+                return lastElementLineNumber;
+            }
+
+            return lineNumber;
         }
 
         private static void AddImport(Dictionary<string, Bucket> importMap, string project, string importedProject, int line, int column)
@@ -139,7 +163,9 @@ namespace StructuredLogViewer
 
                 foreach (var import in imports.OrderBy(i => i.Line).ToArray())
                 {
-                    for (; line <= import.Line; line++)
+                    var importEndLine = CorrectForMultilineImportElement(sourceText, import.Line);
+
+                    for (; line <= importEndLine; line++)
                     {
                         sb.AppendLine(sourceText.GetLineText(line));
                     }
@@ -147,6 +173,7 @@ namespace StructuredLogViewer
                     var importText = GetPreprocessedText(import.ProjectPath);
                     sb.AppendLine($"<!-- ======== {import.ProjectPath} ======= -->");
                     sb.AppendLine(importText);
+                    sb.AppendLine($"<!-- ======== END OF {import.ProjectPath} ======= -->");
                 }
 
                 for (; line < sourceText.Lines.Length; line++)
@@ -178,7 +205,7 @@ namespace StructuredLogViewer
 
         private bool CanPreprocess(string sourceFilePath)
         {
-            return sourceFileResolver.HasFile(sourceFilePath) 
+            return sourceFileResolver.HasFile(sourceFilePath)
                 && importMap.TryGetValue(sourceFilePath, out var bucket)
                 && bucket.Count > 0;
         }
