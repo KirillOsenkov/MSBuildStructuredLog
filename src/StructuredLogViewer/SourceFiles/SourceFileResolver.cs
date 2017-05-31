@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace StructuredLogViewer
@@ -11,6 +12,8 @@ namespace StructuredLogViewer
         };
 
         private const string buildsourceszip = ".buildsources.zip";
+
+        private readonly Dictionary<string, bool> fileExistenceCache = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
 
         public ArchiveFileResolver ArchiveFile { get; private set; }
 
@@ -31,6 +34,18 @@ namespace StructuredLogViewer
                     resolvers.Insert(0, ArchiveFile);
                 }
             }
+        }
+
+        public bool HasFile(string filePath)
+        {
+            if (fileExistenceCache.TryGetValue(filePath, out bool result))
+            {
+                return result;
+            }
+
+            result = GetSourceFileText(filePath) != null;
+            fileExistenceCache[filePath] = result;
+            return result;
         }
 
         public SourceText GetSourceFileText(string filePath)
