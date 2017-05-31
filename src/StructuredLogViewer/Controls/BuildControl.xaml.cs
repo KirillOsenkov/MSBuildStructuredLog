@@ -29,8 +29,6 @@ namespace StructuredLogViewer.Controls
         {
             InitializeComponent();
 
-            preprocessedFileManager = new PreprocessedFileManager(this, sourceFileResolver);
-
             searchLogControl.WatermarkText = @"Type in the search box to search. Search for multiple words separated by space (space means AND). Results (up to 500) will display here.
 
 
@@ -95,6 +93,8 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
             breadCrumb.SelectionChanged += BreadCrumb_SelectionChanged;
 
             Loaded += BuildControl_Loaded;
+
+            preprocessedFileManager = new PreprocessedFileManager(this, sourceFileResolver);
         }
 
         private object FindInFiles(string searchText)
