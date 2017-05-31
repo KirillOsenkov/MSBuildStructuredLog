@@ -224,7 +224,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 lock (syncLock)
                 {
                     var project = GetOrAddProject(args.BuildEventContext.ProjectContextId);
-                    var target = project.GetTarget(stringTable.Intern(args.TargetName), args.BuildEventContext.TargetId);
+                    var target = project.GetTarget(args.TargetName, args.BuildEventContext.TargetId);
 
                     target.EndTime = args.Timestamp;
                     target.Succeeded = args.Succeeded;
