@@ -3,7 +3,7 @@
     "StructuredLogger": {
       "commandName": "Executable",
       "executablePath": "$(MSBuildToolsPath)\\MSBuild.exe",
-      "commandLineArgs": "$(SolutionDir) /p:Configuration=Release /t:Rebuild /v:diag /noconlog /logger:StructuredLogger,$(TargetPath);C:\\temp\\codecleanuptools.buildlog",
+      "commandLineArgs": "C:\\monodevelop\\main\\main.sln /p:Configuration=DebugWin32 /p:Platform=\"Any CPU\" /t:Rebuild /v:diag /noconlog /logger:BinaryLogger,$(TargetPath);C:\\temp\\md2.binlog",
       "workingDirectory": "$(SolutionDir)"
     }
   }

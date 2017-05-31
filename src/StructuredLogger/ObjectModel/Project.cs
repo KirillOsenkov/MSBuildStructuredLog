@@ -26,7 +26,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public IEnumerable<Target> GetUnparentedTargets()
         {
-            return _targetNameToTargetMap.Values.Where(t => t.Parent == null);
+            return _targetNameToTargetMap.Values.Where(t => t.Parent == null).ToArray();
         }
 
         /// <summary>
