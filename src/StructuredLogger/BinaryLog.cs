@@ -31,6 +31,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var build = StructuredLogger.CurrentBuild;
             StructuredLogger.CurrentBuild = null;
 
+            if (build == null)
+            {
+                build = new Build() { Succeeded = false };
+                build.AddChild(new Error() { Text = "Error when opening the file: " + filePath });
+            }
+
             build.SourceFilesArchive = sourceArchive;
             // build.AddChildAtBeginning(new Message { Text = "Elapsed: " + elapsed.ToString() });
 
