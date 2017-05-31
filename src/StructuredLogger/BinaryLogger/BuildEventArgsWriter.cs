@@ -73,6 +73,14 @@ namespace Microsoft.Build.Logging
             {
                 Write((BuildFinishedEventArgs)e);
             }
+            else if (e is ProjectEvaluationStartedEventArgs)
+            {
+                Write((ProjectEvaluationStartedEventArgs)e);
+            }
+            else if (e is ProjectEvaluationFinishedEventArgs)
+            {
+                Write((ProjectEvaluationFinishedEventArgs)e);
+            }
             else
             {
                 // convert all unrecognized objects to message
@@ -105,6 +113,20 @@ namespace Microsoft.Build.Logging
             Write(BinaryLogRecordKind.BuildFinished);
             WriteBuildEventArgsFields(e);
             Write(e.Succeeded);
+        }
+
+        private void Write(ProjectEvaluationStartedEventArgs e)
+        {
+            Write(BinaryLogRecordKind.ProjectEvaluationStarted);
+            WriteBuildEventArgsFields(e);
+            Write(e.ProjectFile);
+        }
+
+        private void Write(ProjectEvaluationFinishedEventArgs e)
+        {
+            Write(BinaryLogRecordKind.ProjectEvaluationFinished);
+            WriteBuildEventArgsFields(e);
+            Write(e.ProjectFile);
         }
 
         private void Write(ProjectStartedEventArgs e)
@@ -216,14 +238,29 @@ namespace Microsoft.Build.Logging
                 Write((CriticalBuildMessageEventArgs)e);
                 return;
             }
-            else if (e is TaskCommandLineEventArgs)
+
+            if (e is TaskCommandLineEventArgs)
             {
                 Write((TaskCommandLineEventArgs)e);
                 return;
             }
 
+            if (e is ProjectImportedEventArgs)
+            {
+                Write((ProjectImportedEventArgs)e);
+                return;
+            }
+
             Write(BinaryLogRecordKind.Message);
             WriteMessageFields(e);
+        }
+
+        private void Write(ProjectImportedEventArgs e)
+        {
+            Write(BinaryLogRecordKind.ProjectImported);
+            WriteMessageFields(e);
+            WriteOptionalString(e.ImportedProjectFile);
+            WriteOptionalString(e.UnexpandedProject);
         }
 
         private void Write(CriticalBuildMessageEventArgs e)
@@ -505,6 +542,7 @@ namespace Microsoft.Build.Logging
             Write(buildEventContext.TaskId);
             Write(buildEventContext.SubmissionId);
             Write(buildEventContext.ProjectInstanceId);
+            Write(-1);
         }
 
         private void Write<TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> keyValuePairs)
