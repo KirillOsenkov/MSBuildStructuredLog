@@ -310,6 +310,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
             else if (args.BuildEventContext?.ProjectContextId < 0)
             {
+                // evaluation messages have negative context Ids (EvaluationId is stashed that way)
                 var evaluation = construction.EvaluationFolder;
                 var evaluationId = args.BuildEventContext.ProjectContextId;
                 var project = evaluation.FindChild<Project>(p => p.Id == evaluationId);
