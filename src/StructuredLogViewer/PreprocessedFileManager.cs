@@ -77,6 +77,11 @@ namespace StructuredLogViewer
         public void BuildImportMap()
         {
             var evaluation = build.FindChild<Folder>("Evaluation");
+            if (evaluation == null)
+            {
+                return;
+            }
+
             foreach (var projectNode in evaluation.Children.OfType<Project>())
             {
                 foreach (var message in projectNode.Children.OfType<Message>())
