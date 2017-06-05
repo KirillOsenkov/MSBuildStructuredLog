@@ -141,7 +141,7 @@ namespace Microsoft.Build.Logging
         /// </summary>
         private static bool IsBlob(BinaryLogRecordKind recordKind)
         {
-            return recordKind == BinaryLogRecordKind.SourceArchive;
+            return recordKind == BinaryLogRecordKind.ProjectImportArchive;
         }
 
         private void ReadBlob(BinaryLogRecordKind kind)

@@ -12,7 +12,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             eventSource.OnBlobRead += (kind, bytes) =>
             {
-                if (kind == BinaryLogRecordKind.SourceArchive)
+                if (kind == BinaryLogRecordKind.ProjectImportArchive)
                 {
                     sourceArchive = bytes;
                 }

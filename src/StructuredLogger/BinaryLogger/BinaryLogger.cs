@@ -111,7 +111,7 @@ namespace Microsoft.Build.Logging
                     // Only embed it if it actually exists.
                     if (File.Exists(archiveFilePath))
                     {
-                        eventArgsWriter.WriteBlob(BinaryLogRecordKind.SourceArchive, File.ReadAllBytes(archiveFilePath));
+                        eventArgsWriter.WriteBlob(BinaryLogRecordKind.ProjectImportArchive, File.ReadAllBytes(archiveFilePath));
                         File.Delete(archiveFilePath);
                     }
                 }

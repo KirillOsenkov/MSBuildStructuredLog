@@ -19,6 +19,6 @@
         ProjectEvaluationStarted,
         ProjectEvaluationFinished,
         ProjectImported,
-        SourceArchive
+        ProjectImportArchive
     }
 }
