@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Microsoft.Build.Logging
 {
     /// <summary>
-    /// Creates a msbuild.buildsources.zip archive with all the .csproj and .targets files used in the build.
+    /// Creates a zip archive with all the .csproj and .targets encountered during the build.
     /// The internal .zip file structure matches closely the layout of the original sources on disk.
     /// The .zip file can be used to correlate the file names and positions in the build log file with the
     /// actual sources.
@@ -40,7 +40,7 @@ namespace Microsoft.Build.Logging
         // this will form a chain of file write tasks, running sequentially on a background thread
         private Task _currentTask = Task.CompletedTask;
 
-        public ProjectImportsCollector(string logFilePath, string sourcesArchiveExtension = ".buildsources.zip")
+        public ProjectImportsCollector(string logFilePath, string sourcesArchiveExtension = ".ProjectImports.zip")
         {
             ArchiveFilePath = Path.ChangeExtension(logFilePath, sourcesArchiveExtension);
 
