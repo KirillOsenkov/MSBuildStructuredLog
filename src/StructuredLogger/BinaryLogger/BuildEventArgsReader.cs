@@ -114,6 +114,21 @@ namespace Microsoft.Build.Logging
             return result;
         }
 
+        /// <summary>
+        /// For now it's just the ProjectImportArchive.
+        /// </summary>
+        private static bool IsBlob(BinaryLogRecordKind recordKind)
+        {
+            return recordKind == BinaryLogRecordKind.ProjectImportArchive;
+        }
+
+        private void ReadBlob(BinaryLogRecordKind kind)
+        {
+            int length = ReadInt32();
+            byte[] bytes = binaryReader.ReadBytes(length);
+            OnBlobRead?.Invoke(kind, bytes);
+        }
+
         private BuildEventArgs ReadProjectImportedEventArgs()
         {
             var fields = ReadBuildEventArgsFields();
@@ -134,21 +149,6 @@ namespace Microsoft.Build.Logging
             e.ImportedProjectFile = importedProjectFile;
             e.UnexpandedProject = unexpandedProject;
             return e;
-        }
-
-        /// <summary>
-        /// For now it's just the SourceArchive.
-        /// </summary>
-        private static bool IsBlob(BinaryLogRecordKind recordKind)
-        {
-            return recordKind == BinaryLogRecordKind.ProjectImportArchive;
-        }
-
-        private void ReadBlob(BinaryLogRecordKind kind)
-        {
-            int length = ReadInt32();
-            byte[] bytes = binaryReader.ReadBytes(length);
-            OnBlobRead?.Invoke(kind, bytes);
         }
 
         private BuildEventArgs ReadBuildStartedEventArgs()
