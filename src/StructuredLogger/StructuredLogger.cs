@@ -16,7 +16,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// The path to the log file specified by the user
         /// </summary>
         private string _logFile;
-        private SourceFileCollector sourceFileCollector;
+        private ProjectImportsCollector sourceFileCollector;
 
         public static Build CurrentBuild { get; set; }
         public static bool SaveLogToDisk { get; set; } = true;
@@ -38,7 +38,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 try
                 {
-                    sourceFileCollector = new SourceFileCollector(_logFile);
+                    sourceFileCollector = new ProjectImportsCollector(_logFile);
                 }
                 catch (Exception ex)
                 {

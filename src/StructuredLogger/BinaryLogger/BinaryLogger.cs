@@ -20,7 +20,7 @@ namespace Microsoft.Build.Logging
         private Stream stream;
         private BinaryWriter binaryWriter;
         private BuildEventArgsWriter eventArgsWriter;
-        private SourceFileCollector sourceFileCollector;
+        private ProjectImportsCollector projectImportsCollector;
 
         private string FilePath { get; set; }
 
@@ -28,7 +28,7 @@ namespace Microsoft.Build.Logging
         /// Describes whether to capture the project and target source files used during the build.
         /// If the source files are captured, they can be embedded in the log file or as a separate zip archive.
         /// </summary>
-        public enum SourceFileCaptureMode
+        public enum ProjectImportsCollectionMode
         {
             /// <summary>
             /// Don't capture the source files during the build.
@@ -38,7 +38,7 @@ namespace Microsoft.Build.Logging
             /// <summary>
             /// Embed the source files directly in the log file.
             /// </summary>
-            Embedded,
+            Embed,
 
             /// <summary>
             /// Create an external .buildsources.zip archive for the files.
@@ -46,7 +46,7 @@ namespace Microsoft.Build.Logging
             ZipFile
         }
 
-        public SourceFileCaptureMode CaptureSourceFiles { get; set; } = SourceFileCaptureMode.Embedded;
+        public ProjectImportsCollectionMode CollectProjectImports { get; set; } = ProjectImportsCollectionMode.Embed;
 
         /// <summary>
         /// The binary logger Verbosity is always maximum (Diagnostic). It tries to capture as much
@@ -72,9 +72,9 @@ namespace Microsoft.Build.Logging
             {
                 stream = new FileStream(FilePath, FileMode.Create);
 
-                if (CaptureSourceFiles != SourceFileCaptureMode.None)
+                if (CollectProjectImports != ProjectImportsCollectionMode.None)
                 {
-                    sourceFileCollector = new SourceFileCollector(FilePath);
+                    projectImportsCollector = new ProjectImportsCollector(FilePath);
                 }
             }
             catch (Exception e)
@@ -99,13 +99,13 @@ namespace Microsoft.Build.Logging
         /// </summary>
         public void Shutdown()
         {
-            if (sourceFileCollector != null)
+            if (projectImportsCollector != null)
             {
-                sourceFileCollector.Close();
+                projectImportsCollector.Close();
 
-                if (CaptureSourceFiles == SourceFileCaptureMode.Embedded)
+                if (CollectProjectImports == ProjectImportsCollectionMode.Embed)
                 {
-                    var archiveFilePath = sourceFileCollector.ArchiveFilePath;
+                    var archiveFilePath = projectImportsCollector.ArchiveFilePath;
 
                     // It is possible that the archive couldn't be created for some reason.
                     // Only embed it if it actually exists.
@@ -116,7 +116,7 @@ namespace Microsoft.Build.Logging
                     }
                 }
 
-                sourceFileCollector = null;
+                projectImportsCollector = null;
             }
 
             if (stream != null)
@@ -145,9 +145,9 @@ namespace Microsoft.Build.Logging
                     eventArgsWriter.Write(e);
                 }
 
-                if (sourceFileCollector != null)
+                if (projectImportsCollector != null)
                 {
-                    sourceFileCollector.IncludeSourceFiles(e);
+                    projectImportsCollector.IncludeSourceFiles(e);
                 }
             }
         }

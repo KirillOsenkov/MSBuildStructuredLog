@@ -7,7 +7,7 @@ namespace Microsoft.Build.Logging
     // have the population from BuildEventArgs in a separate file.
     internal static class SourceFileCollectorExtensions
     {
-        public static void IncludeSourceFiles(this SourceFileCollector sourceFileCollector, BuildEventArgs e)
+        public static void IncludeSourceFiles(this ProjectImportsCollector sourceFileCollector, BuildEventArgs e)
         {
             if (e is TaskStartedEventArgs)
             {
