@@ -15,6 +15,9 @@ namespace Microsoft.Build.Logging
     /// <remarks>The logger is public so that it can be instantiated from MSBuild.exe via command-line switch.</remarks>
     public sealed class BinaryLogger : ILogger
     {
+        // version 2: 
+        //   - new BuildEventContext.EvaluationId
+        //   - new record kinds: ProjectEvaluationStarted, ProjectEvaluationFinished
         internal const int FileFormatVersion = 2;
 
         private Stream stream;
@@ -22,31 +25,34 @@ namespace Microsoft.Build.Logging
         private BuildEventArgsWriter eventArgsWriter;
         private ProjectImportsCollector projectImportsCollector;
 
-        private string FilePath { get; set; }
-
         /// <summary>
-        /// Describes whether to capture the project and target source files used during the build.
-        /// If the source files are captured, they can be embedded in the log file or as a separate zip archive.
+        /// Describes whether to collect the project files (including imported project files) used during the build.
+        /// If the project files are collected they can be embedded in the log file or as a separate zip archive.
         /// </summary>
         public enum ProjectImportsCollectionMode
         {
             /// <summary>
-            /// Don't capture the source files during the build.
+            /// Don't collect any files during the build.
             /// </summary>
             None,
 
             /// <summary>
-            /// Embed the source files directly in the log file.
+            /// Embed all project files directly in the log file.
             /// </summary>
             Embed,
 
             /// <summary>
-            /// Create an external .buildsources.zip archive for the files.
+            /// Create an external .ProjectImports.zip archive for the project files.
             /// </summary>
             ZipFile
         }
 
+        /// <summary>
+        /// Gets or sets whether to capture and embed project and target source files used during the build.
+        /// </summary>
         public ProjectImportsCollectionMode CollectProjectImports { get; set; } = ProjectImportsCollectionMode.Embed;
+
+        private string FilePath { get; set; }
 
         /// <summary>
         /// The binary logger Verbosity is always maximum (Diagnostic). It tries to capture as much
@@ -147,9 +153,21 @@ namespace Microsoft.Build.Logging
 
                 if (projectImportsCollector != null)
                 {
-                    projectImportsCollector.IncludeSourceFiles(e);
+                    CollectImports(e);
                 }
             }
+        }
+
+        private void CollectImports(BuildEventArgs e)
+        {
+            ProjectImportedEventArgs importArgs = e as ProjectImportedEventArgs;
+            if (importArgs != null && importArgs.ImportedProjectFile != null)
+            {
+                projectImportsCollector.AddFile(importArgs.ImportedProjectFile);
+                return;
+            }
+
+            projectImportsCollector.IncludeSourceFiles(e);
         }
 
         /// <summary>
@@ -159,21 +177,48 @@ namespace Microsoft.Build.Logging
         /// </exception>
         private void ProcessParameters()
         {
-            const string invalidParamSpecificationMessage = @"Need to specify a valid log file name, such as msbuild.binlog";
+            const string invalidParamSpecificationMessage = @"MSB4234: Invalid binary logger parameter(s): ""{0}"". Expected: ProjectImports={{None,Embed,ZipFile}} and/or [LogFile=]filePath.binlog (the log file name or path, must have the "".binlog"" extension).";
 
             if (Parameters == null)
             {
-                throw new LoggerException(invalidParamSpecificationMessage);
+                throw new LoggerException(string.Format(invalidParamSpecificationMessage, ""));
             }
 
-            string[] parameters = Parameters.Split(';');
-
-            if (parameters.Length != 1)
+            var parameters = Parameters.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var parameter in parameters)
             {
-                throw new LoggerException(invalidParamSpecificationMessage);
+                if (string.Equals(parameter, "ProjectImports=None", StringComparison.OrdinalIgnoreCase))
+                {
+                    CollectProjectImports = ProjectImportsCollectionMode.None;
+                }
+                else if (string.Equals(parameter, "ProjectImports=Embed", StringComparison.OrdinalIgnoreCase))
+                {
+                    CollectProjectImports = ProjectImportsCollectionMode.Embed;
+                }
+                else if (string.Equals(parameter, "ProjectImports=ZipFile", StringComparison.OrdinalIgnoreCase))
+                {
+                    CollectProjectImports = ProjectImportsCollectionMode.ZipFile;
+                }
+                else if (parameter.EndsWith(".binlog", StringComparison.OrdinalIgnoreCase))
+                {
+                    FilePath = parameter;
+                    if (FilePath.StartsWith("LogFile=", StringComparison.OrdinalIgnoreCase))
+                    {
+                        FilePath = FilePath.Substring("LogFile=".Length);
+                    }
+
+                    FilePath = parameter.TrimStart('"').TrimEnd('"');
+                }
+                else
+                {
+                    throw new LoggerException(string.Format(invalidParamSpecificationMessage, parameter));
+                }
             }
 
-            FilePath = parameters[0].TrimStart('"').TrimEnd('"');
+            if (FilePath == null)
+            {
+                FilePath = "msbuild.binlog";
+            }
 
             try
             {
