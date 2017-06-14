@@ -370,7 +370,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 lock (syncLock)
                 {
-                    TreeNode parent = GetOrAddProject(args.BuildEventContext.ProjectContextId);
+                    TreeNode parent = FindParent(args.BuildEventContext);
                     if (parent == null)
                     {
                         parent = Build;
@@ -388,13 +388,37 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        private TreeNode FindParent(BuildEventContext buildEventContext)
+        {
+            Project project = GetOrAddProject(buildEventContext.ProjectContextId);
+            TreeNode result = project;
+            if (buildEventContext.TargetId > 0)
+            {
+                var target = project.GetTargetById(buildEventContext.TargetId);
+                if (target != null)
+                {
+                    result = target;
+                    if (buildEventContext.TaskId > 0)
+                    {
+                        var task = target.GetTaskById(buildEventContext.TaskId);
+                        if (task != null)
+                        {
+                            result = task;
+                        }
+                    }
+                }
+            }
+
+            return result;
+        }
+
         public void ErrorRaised(object sender, BuildErrorEventArgs args)
         {
             try
             {
                 lock (syncLock)
                 {
-                    TreeNode parent = GetOrAddProject(args.BuildEventContext.ProjectContextId);
+                    TreeNode parent = FindParent(args.BuildEventContext);
                     if (parent == null)
                     {
                         parent = Build;
