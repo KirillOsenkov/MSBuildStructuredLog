@@ -106,22 +106,29 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             var targetGraph = new TargetGraph(projectInstance);
 
-            var unparentedTargets = project.GetUnparentedTargets();
-            foreach (var unparentedTarget in unparentedTargets)
+            IEnumerable<Target> unparentedTargets = null;
+            while ((unparentedTargets = project.GetUnparentedTargets()).Any())
             {
-                var parent = targetGraph.GetDependent(unparentedTarget.Name);
-                if (parent != null)
+                foreach (var unparentedTarget in unparentedTargets)
                 {
-                    var parentNode = project.GetOrAddTargetByName(parent);
-                    if (parentNode != null)
+                    var parents = targetGraph.GetDependents(unparentedTarget.Name);
+                    if (parents != null && parents.Any())
                     {
-                        parentNode.AddChild(unparentedTarget);
+                        foreach (var parent in parents)
+                        {
+                            var parentNode = project.GetOrAddTargetByName(parent);
+                            if (parentNode != null && (parentNode.Id != -1 || parentNode.HasChildren))
+                            {
+                                parentNode.AddChild(unparentedTarget);
+                                break;
+                            }
+                        }
                     }
-                }
 
-                if (unparentedTarget.Parent == null)
-                {
-                    project.AddChild(unparentedTarget);
+                    if (unparentedTarget.Parent == null)
+                    {
+                        project.AddChild(unparentedTarget);
+                    }
                 }
             }
 

@@ -26,7 +26,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public IEnumerable<Target> GetUnparentedTargets()
         {
-            return _targetNameToTargetMap.Values.Where(t => t.Parent == null).ToArray();
+            return _targetNameToTargetMap
+                .Values
+                .Union(targetsById.Values)
+                .Where(t => t.Parent == null)
+                .ToArray();
         }
 
         /// <summary>
@@ -60,7 +64,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public Target CreateTarget(string name, int id)
         {
-            if (!_targetNameToTargetMap.TryGetValue(name, out var target) || target.Id != -1)
+            if (!_targetNameToTargetMap.TryGetValue(name, out var target) || (target.Id != -1 && target.Id != id))
             {
                 target = CreateTargetInstance(name);
                 _targetNameToTargetMap.TryAdd(name, target);

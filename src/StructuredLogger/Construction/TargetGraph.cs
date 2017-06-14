@@ -41,6 +41,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        public IEnumerable<string> GetDependents(string target)
+        {
+            dependents.TryGetValue(target, out var bucket);
+            return bucket;
+        }
+
         public string GetDependent(string target)
         {
             HashSet<string> bucket;
