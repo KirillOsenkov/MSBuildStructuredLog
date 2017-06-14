@@ -458,7 +458,7 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
                         {
                             // path must be relative, try to normalize:
                             path = Path.Combine(Path.GetDirectoryName(diagnostic.ProjectFile), path);
-                            return DisplayFile(path);
+                            return DisplayFile(path, diagnostic.LineNumber, diagnostic.ColumnNumber);
                         }
 
                         break;
