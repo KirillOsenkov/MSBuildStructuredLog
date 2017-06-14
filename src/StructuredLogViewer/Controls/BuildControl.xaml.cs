@@ -462,6 +462,8 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
                         }
 
                         break;
+                    case Target target:
+                        return DisplayTarget(target.SourceFilePath, target.Name);
                     case IHasSourceFile hasSourceFile:
                         return DisplayFile(hasSourceFile.SourceFilePath);
                     case SourceFileLine sourceFileLine:
@@ -494,9 +496,40 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
             }
 
             Action preprocess = preprocessedFileManager.GetPreprocessAction(sourceFilePath, text);
-
             documentWell.DisplaySource(sourceFilePath, text.Text, lineNumber, column, preprocess);
             return true;
+        }
+
+        public bool DisplayTarget(string sourceFilePath, string targetName)
+        {
+            var text = sourceFileResolver.GetSourceFileText(sourceFilePath);
+            if (text == null)
+            {
+                return false;
+            }
+
+            var xml = text.XmlRoot;
+            int startPosition = 0;
+            int line = 0;
+            foreach (var element in xml.Elements.First().Elements)
+            {
+                if (element.Name == "Target" && element.Attributes != null)
+                {
+                    var nameAttribute = element.AsSyntaxElement.Attributes.FirstOrDefault(a => a.Name == "Name" && a.Value == targetName);
+                    if (nameAttribute != null)
+                    {
+                        startPosition = nameAttribute.ValueNode.Start;
+                        break;
+                    }
+                }
+            }
+
+            if (startPosition > 0)
+            {
+                line = text.GetLineNumberFromPosition(startPosition);
+            }
+
+            return DisplayFile(sourceFilePath, line + 1);
         }
 
         private static TreeNode GetNode(RoutedEventArgs args)

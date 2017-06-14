@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Microsoft.Language.Xml;
 
 namespace StructuredLogViewer
 {
@@ -13,6 +14,20 @@ namespace StructuredLogViewer
 
         public string Text { get; }
         public Span[] Lines { get; }
+
+        private XmlDocumentSyntax xmlRoot;
+        public XmlDocumentSyntax XmlRoot
+        {
+            get
+            {
+                if (xmlRoot == null)
+                {
+                    xmlRoot = Parser.ParseText(Text);
+                }
+
+                return xmlRoot;
+            }
+        }
 
         public IReadOnlyList<int> Find(string searchText)
         {
@@ -54,6 +69,19 @@ namespace StructuredLogViewer
             }
 
             return Text.Substring(line.Start, end - line.Start + 1);
+        }
+
+        public int GetLineNumberFromPosition(int startPosition)
+        {
+            for (int i = 0; i < Lines.Length; i++)
+            {
+                if (startPosition >= Lines[i].Start && startPosition < Lines[i].End)
+                {
+                    return i;
+                }
+            }
+
+            return 0;
         }
     }
 }
