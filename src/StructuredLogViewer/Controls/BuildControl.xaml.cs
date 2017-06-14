@@ -464,6 +464,8 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
                         break;
                     case Target target:
                         return DisplayTarget(target.SourceFilePath, target.Name);
+                    case Task task:
+                        return DisplayTask(task.SourceFilePath, task.Parent, task.Name);
                     case IHasSourceFile hasSourceFile:
                         return DisplayFile(hasSourceFile.SourceFilePath);
                     case SourceFileLine sourceFileLine:
@@ -498,6 +500,17 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
             Action preprocess = preprocessedFileManager.GetPreprocessAction(sourceFilePath, text);
             documentWell.DisplaySource(sourceFilePath, text.Text, lineNumber, column, preprocess);
             return true;
+        }
+
+        private bool DisplayTask(string sourceFilePath, TreeNode parent, string name)
+        {
+            Target target = parent as Target;
+            if (target == null)
+            {
+                return DisplayFile(sourceFilePath);
+            }
+
+            return DisplayTarget(sourceFilePath, target.Name);
         }
 
         public bool DisplayTarget(string sourceFilePath, string targetName)
