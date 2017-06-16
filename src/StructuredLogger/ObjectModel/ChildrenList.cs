@@ -20,7 +20,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 for (int i = 0; i < Count; i++)
                 {
-                    if (this[i] is T t && t.Name == name)
+                    if (this[i] is T t && t.LookupKey == name)
                     {
                         childrenCache[key] = t;
                         return t;
@@ -41,14 +41,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public void OnAdded(NamedNode child)
         {
-            if (child?.Name == null)
+            if (child?.LookupKey == null)
             {
                 return;
             }
 
             EnsureCacheCreated();
 
-            var key = new ChildrenCacheKey(child.GetType(), child.Name);
+            var key = new ChildrenCacheKey(child.GetType(), child.LookupKey);
             childrenCache[key] = child;
         }
 

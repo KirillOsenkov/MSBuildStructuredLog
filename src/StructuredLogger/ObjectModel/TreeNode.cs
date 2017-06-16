@@ -140,7 +140,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return list.FindNode<T>(name);
             }
 
-            return FindChild<T>(c => c.Name == name);
+            return FindChild<T>(c => c.LookupKey == name);
         }
 
         public virtual T FindChild<T>(Predicate<T> predicate)
