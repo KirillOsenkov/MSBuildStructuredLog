@@ -169,7 +169,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             target.AddChild(containerNode);
         }
 
-        private HashSet<string> searchPathsBeingUsed = new HashSet<string>(StringComparer.Ordinal);
+        private HashSet<string> evaluationMessagesAlreadySeen = new HashSet<string>(StringComparer.Ordinal);
 
         /// <summary>
         /// Handles a generic BuildMessage event and assigns it to the appropriate logging node.
@@ -335,20 +335,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 var evaluationId = args.BuildEventContext.ProjectContextId;
                 var project = evaluation.FindChild<Project>(p => p.Id == evaluationId);
                 node = project;
+
+                if (node != null && node.FindChild<Message>(message) != null)
+                {
+                    return;
+                }
             }
 
             if (node == null)
             {
                 node = construction.Build;
 
-                if (message.StartsWith("Overriding target"))
+                if (IsEvaluationMessage(message))
                 {
-                    node = construction.EvaluationFolder;
-                    messageNode.IsLowRelevance = true;
-                }
-                else if (message.StartsWith("Search paths being used"))
-                {
-                    if (!searchPathsBeingUsed.Add(message))
+                    if (!evaluationMessagesAlreadySeen.Add(message))
                     {
                         return;
                     }
@@ -357,8 +357,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
                 else if (message.StartsWith("The target") && message.Contains("does not exist in the project, and will be ignored"))
                 {
-                    var folder = construction.Build.GetOrCreateNodeWithName<Folder>("MissingTargets");
-                    folder.IsLowRelevance = true;
+                    var folder = construction.EvaluationFolder;
                     node = folder;
                     messageNode.IsLowRelevance = true;
                 }
@@ -375,6 +374,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             node.AddChild(nodeToAdd);
+        }
+
+        private bool IsEvaluationMessage(string message)
+        {
+            return message.StartsWith("Search paths being used")
+                || message.StartsWith("Overriding target")
+                || message.StartsWith("Trying to import")
+                || message.StartsWith("Property reassignment")
+                || message.StartsWith("Importing project");
         }
 
         /// <summary>
