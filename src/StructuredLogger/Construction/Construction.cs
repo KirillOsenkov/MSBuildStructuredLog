@@ -209,6 +209,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     {
                         var parentTarget = project.GetOrAddTargetByName(stringTable.Intern(args.ParentTarget));
                         parentTarget.AddChild(target);
+                        if (parentTarget.Parent == null)
+                        {
+                            project.AddChild(parentTarget);
+                        }
                     }
                     else
                     {
