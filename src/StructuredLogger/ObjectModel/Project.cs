@@ -30,6 +30,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 .Values
                 .Union(targetsById.Values)
                 .Where(t => t.Parent == null)
+                .OrderBy(t => t.StartTime)
                 .ToArray();
         }
 
