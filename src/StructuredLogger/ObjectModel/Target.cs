@@ -16,7 +16,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public void TryAddTarget(Target target)
         {
-            if (target.Parent != null)
+            if (target.Parent == null)
             {
                 AddChild(target);
             }
