@@ -5,7 +5,7 @@ A logger for MSBuild that records a structured representation of executed target
 [![NuGet package](https://img.shields.io/nuget/v/Microsoft.Build.Logging.StructuredLogger.svg)](https://nuget.org/packages/Microsoft.Build.Logging.StructuredLogger)
 
 ## Install:
-https://github.com/KirillOsenkov/MSBuildStructuredLog/releases/download/v1.0.130/MSBuildStructuredLogSetup.exe
+https://github.com/KirillOsenkov/MSBuildStructuredLog/releases/download/v1.1.85/MSBuildStructuredLogSetup.exe
 
 The app updates automatically via [Squirrel](https://github.com/Squirrel/Squirrel.Windows) (after launch it checks for updates in background), next launch starts the newly downloaded latest version.
 
@@ -24,7 +24,7 @@ https://www.nuget.org/packages/Microsoft.Build.Logging.StructuredLogger
 You can either build your solution yourself and pass the logger:
 
 ```
-msbuild solution.sln /t:Rebuild /v:diag /noconlog /logger:StructuredLogger,%localappdata%\MSBuildStructuredLogViewer\app-1.0.130\StructuredLogger.dll;1.buildlog
+msbuild solution.sln /t:Rebuild /v:diag /noconlog /logger:StructuredLogger,%localappdata%\MSBuildStructuredLogViewer\app-1.1.85\StructuredLogger.dll;1.buildlog
 ```
 
 or you can build the solution or open an existing log file through the viewer app:
@@ -33,10 +33,10 @@ or you can build the solution or open an existing log file through the viewer ap
 
 To use a portable version of the logger (e.g. with the `dotnet msbuild` command) you need a .NET Standard version of `StructuredLogger.dll`, not the .NET Framework (Desktop) version.
 
-Download this NuGet package: https://www.nuget.org/packages/Microsoft.Build.Logging.StructuredLogger/1.0.130
+Download this NuGet package: https://www.nuget.org/packages/Microsoft.Build.Logging.StructuredLogger/1.1.85
 and inside it there's the `lib\netstandard1.5\StructuredLogger.dll`. Try passing that to `dotnet build` like this:
 ```
-dotnet msbuild Some.sln /v:diag /nologo /logger:StructuredLogger,"packages\Microsoft.Build.Logging.StructuredLogger.1.0.130\lib\netstandard1.5\StructuredLogger.dll";"C:\Users\SomeUser\Desktop\structuredlog.buildlog"
+dotnet msbuild Some.sln /v:diag /nologo /logger:StructuredLogger,"packages\Microsoft.Build.Logging.StructuredLogger.1.1.85\lib\netstandard1.5\StructuredLogger.dll";"C:\Users\SomeUser\Desktop\structuredlog.buildlog"
 ```
 
 The logger supports three file formats:
