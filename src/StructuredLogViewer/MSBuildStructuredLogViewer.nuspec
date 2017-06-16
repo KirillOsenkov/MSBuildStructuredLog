@@ -25,6 +25,7 @@
     <file src="Microsoft.Build.Framework.dll" target="lib\net46" />
     <file src="Microsoft.Build.Tasks.Core.dll" target="lib\net46" />
     <file src="Microsoft.Build.Utilities.Core.dll" target="lib\net46" />
+    <file src="Microsoft.Language.Xml.dll" target="lib\net46" />
     <file src="Mono.Cecil.dll" target="lib\net46" />
     <file src="Mono.Cecil.Mdb.dll" target="lib\net46" />
     <file src="Mono.Cecil.Pdb.dll" target="lib\net46" />
