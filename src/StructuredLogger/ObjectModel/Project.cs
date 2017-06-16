@@ -24,6 +24,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private readonly ConcurrentDictionary<string, Target> _targetNameToTargetMap = new ConcurrentDictionary<string, Target>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<int, Target> targetsById = new Dictionary<int, Target>();
 
+        public void TryAddTarget(Target target)
+        {
+            if (target.Parent != null)
+            {
+                AddChild(target);
+            }
+        }
+
         public IEnumerable<Target> GetUnparentedTargets()
         {
             return _targetNameToTargetMap

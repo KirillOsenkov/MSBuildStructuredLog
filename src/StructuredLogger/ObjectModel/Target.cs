@@ -14,6 +14,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Id = -1;
         }
 
+        public void TryAddTarget(Target target)
+        {
+            if (target.Parent != null)
+            {
+                AddChild(target);
+            }
+        }
+
         public Task GetTaskById(int taskId)
         {
             return Children.OfType<Task>().First(t => t.Id == taskId);

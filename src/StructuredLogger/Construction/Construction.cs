@@ -98,7 +98,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 var unparented = project.GetUnparentedTargets();
                 foreach (var orphan in unparented)
                 {
-                    project.AddChild(orphan);
+                    project.TryAddTarget(orphan);
                 }
 
                 return;
@@ -119,16 +119,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             var parentNode = project.GetOrAddTargetByName(parent);
                             if (parentNode != null && (parentNode.Id != -1 || parentNode.HasChildren))
                             {
-                                parentNode.AddChild(unparentedTarget);
+                                parentNode.TryAddTarget(unparentedTarget);
                                 break;
                             }
                         }
                     }
 
-                    if (unparentedTarget.Parent == null)
-                    {
-                        project.AddChild(unparentedTarget);
-                    }
+                    project.TryAddTarget(unparentedTarget);
                 }
             }
 
@@ -208,15 +205,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     if (!string.IsNullOrEmpty(args.ParentTarget))
                     {
                         var parentTarget = project.GetOrAddTargetByName(stringTable.Intern(args.ParentTarget));
-                        parentTarget.AddChild(target);
-                        if (parentTarget.Parent == null)
-                        {
-                            project.AddChild(parentTarget);
-                        }
+                        parentTarget.TryAddTarget(target);
+                        project.TryAddTarget(parentTarget);
                     }
                     else
                     {
-                        project.AddChild(target);
+                        project.TryAddTarget(target);
                     }
 
                     target.SourceFilePath = stringTable.Intern(args.TargetFile);

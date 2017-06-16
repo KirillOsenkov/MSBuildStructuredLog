@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
 
@@ -167,6 +168,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             containerNode.AddChild(itemGroup);
             target.AddChild(containerNode);
         }
+
+        private HashSet<string> searchPathsBeingUsed = new HashSet<string>(StringComparer.Ordinal);
 
         /// <summary>
         /// Handles a generic BuildMessage event and assigns it to the appropriate logging node.
@@ -340,10 +343,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 if (message.StartsWith("Overriding target"))
                 {
-                    var folder = construction.Build.GetOrCreateNodeWithName<Folder>("TargetOverrides");
-                    folder.IsLowRelevance = true;
-                    node = folder;
+                    node = construction.EvaluationFolder;
                     messageNode.IsLowRelevance = true;
+                }
+                else if (message.StartsWith("Search paths being used"))
+                {
+                    if (!searchPathsBeingUsed.Add(message))
+                    {
+                        return;
+                    }
+
+                    node = construction.EvaluationFolder;
                 }
                 else if (message.StartsWith("The target") && message.Contains("does not exist in the project, and will be ignored"))
                 {
