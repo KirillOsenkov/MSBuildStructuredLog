@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
@@ -16,7 +17,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// The path to the log file specified by the user
         /// </summary>
         private string _logFile;
-        private ProjectImportsCollector sourceFileCollector;
+        private ProjectImportsCollector projectImportsCollector;
 
         public static Build CurrentBuild { get; set; }
         public static bool SaveLogToDisk { get; set; } = true;
@@ -28,6 +29,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public override void Initialize(IEventSource eventSource)
         {
             Environment.SetEnvironmentVariable("MSBUILDTARGETOUTPUTLOGGING", "true");
+            Environment.SetEnvironmentVariable("MSBUILDLOGIMPORTS", "1");
 
             // Set this environment variable to log AssemblyFoldersEx search results from ResolveAssemblyReference
             // Environment.SetEnvironmentVariable("MSBUILDLOGVERBOSERARSEARCHRESULTS", "true");
@@ -38,7 +40,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 try
                 {
-                    sourceFileCollector = new ProjectImportsCollector(_logFile);
+                    projectImportsCollector = new ProjectImportsCollector(_logFile);
                 }
                 catch (Exception ex)
                 {
@@ -63,17 +65,44 @@ namespace Microsoft.Build.Logging.StructuredLogger
             eventSource.CustomEventRaised += construction.CustomEventRaised;
             eventSource.StatusEventRaised += construction.StatusEventRaised;
 
-            if (sourceFileCollector != null)
+            if (projectImportsCollector != null)
             {
                 eventSource.AnyEventRaised += EventSource_AnyEventRaised;
             }
+
+            projectImportedEventArgsType = typeof(BuildEventArgs)
+                .GetTypeInfo()
+                .Assembly
+                .GetType("Microsoft.Build.Framework.ProjectImportedEventArgs");
+            if (projectImportedEventArgsType != null)
+            {
+                importedProjectFile = projectImportedEventArgsType.GetProperty("ImportedProjectFile", BindingFlags.Public | BindingFlags.Instance);
+                unexpandedProject = projectImportedEventArgsType.GetProperty("UnexpandedProject", BindingFlags.Public | BindingFlags.Instance);
+            }
         }
+
+        private Type projectImportedEventArgsType;
+        private PropertyInfo importedProjectFile;
+        private PropertyInfo unexpandedProject;
 
         private void EventSource_AnyEventRaised(object sender, BuildEventArgs e)
         {
             try
             {
-                sourceFileCollector?.IncludeSourceFiles(e);
+                if (projectImportedEventArgsType != null && e.GetType() == projectImportedEventArgsType)
+                {
+                    string importedProjectFile = (string)this.importedProjectFile.GetValue(e);
+                    //string unexpandedProject = (string)this.unexpandedProject.GetValue(e);
+                    //var buildMessage = (BuildMessageEventArgs)e;
+                    //ProjectImportedEventArgs args = new ProjectImportedEventArgs(buildMessage.LineNumber, buildMessage.ColumnNumber, buildMessage.Message);
+                    //args.ImportedProjectFile = importedProjectFile;
+                    //args.UnexpandedProject = unexpandedProject;
+                    //args.BuildEventContext = buildMessage.BuildEventContext;
+                    projectImportsCollector.AddFile(importedProjectFile);
+                    return;
+                }
+
+                projectImportsCollector?.IncludeSourceFiles(e);
             }
             catch
             {
@@ -84,10 +113,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             base.Shutdown();
 
-            if (sourceFileCollector != null)
+            if (projectImportsCollector != null)
             {
-                sourceFileCollector.Close();
-                sourceFileCollector = null;
+                projectImportsCollector.Close();
+                projectImportsCollector = null;
             }
         }
 

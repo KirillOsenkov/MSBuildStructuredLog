@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.IO;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -35,6 +36,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 build = new Build() { Succeeded = false };
                 build.AddChild(new Error() { Text = "Error when opening the file: " + filePath });
+            }
+
+            var projectImportsZip = Path.ChangeExtension(filePath, ".ProjectImports.zip");
+            if (sourceArchive == null && File.Exists(projectImportsZip))
+            {
+                sourceArchive = File.ReadAllBytes(projectImportsZip);
             }
 
             build.SourceFilesArchive = sourceArchive;

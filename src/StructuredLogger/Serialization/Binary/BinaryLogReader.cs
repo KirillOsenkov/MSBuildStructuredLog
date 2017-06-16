@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -21,6 +22,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 foreach (var stringInstance in binaryLogReader.reader.StringTable)
                 {
                     buildStringCache.Intern(stringInstance);
+                }
+
+                var projectImportsZip = Path.ChangeExtension(filePath, ".ProjectImports.zip");
+                if (File.Exists(projectImportsZip))
+                {
+                    build.SourceFilesArchive = File.ReadAllBytes(projectImportsZip);
                 }
 
                 return build;

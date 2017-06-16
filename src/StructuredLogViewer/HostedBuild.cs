@@ -63,6 +63,13 @@ namespace StructuredLogViewer
 
                     var build = Serialization.Read(logFilePath);
                     File.Delete(logFilePath);
+
+                    var projectImportsZip = Path.ChangeExtension(logFilePath, ".ProjectImports.zip");
+                    if (File.Exists(projectImportsZip))
+                    {
+                        File.Delete(projectImportsZip);
+                    }
+
                     return build;
                 }
                 catch (Exception ex)
