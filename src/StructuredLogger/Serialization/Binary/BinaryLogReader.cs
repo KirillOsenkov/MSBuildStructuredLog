@@ -11,6 +11,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private readonly Queue<string> attributes = new Queue<string>(10);
 
         private readonly bool formatSupportsSourceFiles;
+        private readonly bool formatSupportsEmbeddedProjectImportsArchive;
 
         public static Build Read(string filePath)
         {
@@ -25,7 +26,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
 
                 var projectImportsZip = Path.ChangeExtension(filePath, ".ProjectImports.zip");
-                if (File.Exists(projectImportsZip))
+                if (build.SourceFilesArchive == null && File.Exists(projectImportsZip))
                 {
                     build.SourceFilesArchive = File.ReadAllBytes(projectImportsZip);
                 }
@@ -39,6 +40,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             this.filePath = filePath;
             this.reader = new TreeBinaryReader(filePath);
             this.formatSupportsSourceFiles = reader.Version > new Version(1, 0, 130);
+            this.formatSupportsEmbeddedProjectImportsArchive = reader.Version > new Version(1, 1, 87);
         }
 
         private object ReadNode()
@@ -62,6 +64,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     var child = ReadNode();
                     treeNode.AddChild(child);
                 }
+            }
+
+            if (node is Build build && formatSupportsEmbeddedProjectImportsArchive)
+            {
+                build.SourceFilesArchive = reader.ReadByteArray();
             }
 
             return node;

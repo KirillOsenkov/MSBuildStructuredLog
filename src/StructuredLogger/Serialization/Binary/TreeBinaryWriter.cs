@@ -100,6 +100,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        public void WriteByteArray(byte[] bytes)
+        {
+            bytes = bytes ?? Array.Empty<byte>();
+            treeNodesStreamBinaryWriter.Write(bytes.Length);
+            if (bytes.Length > 0)
+            {
+                treeNodesStreamBinaryWriter.Write(bytes);
+            }
+        }
+
         private Stream DestinationStream => gzipStream;
 
         public void Dispose()

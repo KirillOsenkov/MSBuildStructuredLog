@@ -38,6 +38,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public string[] StringTable => stringTable;
 
+        public byte[] ReadByteArray()
+        {
+            int length = binaryReader.ReadInt32();
+            if (length > 0)
+            {
+                return binaryReader.ReadBytes(length);
+            }
+
+            return null;
+        }
+
         public void ReadStringArray(Queue<string> array)
         {
             array.Clear();

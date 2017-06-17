@@ -27,6 +27,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             WriteAttributes(node);
             writer.WriteEndAttributes();
             WriteChildren(node);
+
+            if (node is Build build)
+            {
+                writer.WriteByteArray(build.SourceFilesArchive);
+            }
         }
 
         private void WriteChildren(object node)
