@@ -436,14 +436,14 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
                 return;
             }
 
-            TreeNode treeNode = GetNode(args);
-            if (treeNode != null)
+            var node = GetNode(args);
+            if (node != null)
             {
-                args.Handled = Invoke(treeNode);
+                args.Handled = Invoke(node);
             }
         }
 
-        private bool Invoke(TreeNode treeNode)
+        private bool Invoke(ParentedNode treeNode)
         {
             try
             {
@@ -477,6 +477,12 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
                         }
 
                         return false;
+                    case NameValueNode nameValueNode:
+                        if (nameValueNode.IsValueShortened)
+                        {
+                            return DisplayText(nameValueNode.Value);
+                        }
+                        return false;
                     case TextNode textNode:
                         if (textNode.IsTextShortened)
                         {
@@ -509,9 +515,9 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
             return true;
         }
 
-        public bool DisplayText(string text)
+        public bool DisplayText(string text, string caption = null)
         {
-            documentWell.DisplaySource("Text", text);
+            documentWell.DisplaySource(caption ?? "Text", text);
             return true;
         }
 
@@ -558,11 +564,11 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
             return DisplayFile(sourceFilePath, line + 1);
         }
 
-        private static TreeNode GetNode(RoutedEventArgs args)
+        private static ParentedNode GetNode(RoutedEventArgs args)
         {
             var treeViewItem = args.Source as TreeViewItem;
-            var treeNode = treeViewItem?.DataContext as TreeNode;
-            return treeNode;
+            var node = treeViewItem?.DataContext as ParentedNode;
+            return node;
         }
 
         private IEnumerable BuildResultTree(object resultsObject)
