@@ -451,7 +451,7 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
                 {
                     case AbstractDiagnostic diagnostic:
                         var path = diagnostic.File;
-                        if (!DisplayFile(path) &&
+                        if (!DisplayFile(path, diagnostic.LineNumber) &&
                             path != null &&
                             !Path.IsPathRooted(path) &&
                             diagnostic.ProjectFile != null)
@@ -477,6 +477,13 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
                         }
 
                         return false;
+                    case TextNode textNode:
+                        if (textNode.IsTextShortened)
+                        {
+                            return DisplayText(textNode.Text);
+                        }
+
+                        return false;
                     default:
                         return false;
                 }
@@ -499,6 +506,12 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
 
             Action preprocess = preprocessedFileManager.GetPreprocessAction(sourceFilePath, text);
             documentWell.DisplaySource(sourceFilePath, text.Text, lineNumber, column, preprocess);
+            return true;
+        }
+
+        public bool DisplayText(string text)
+        {
+            documentWell.DisplaySource("Text", text);
             return true;
         }
 
