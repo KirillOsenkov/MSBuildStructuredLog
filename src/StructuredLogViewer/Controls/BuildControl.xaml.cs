@@ -26,6 +26,7 @@ namespace StructuredLogViewer.Controls
         private PreprocessedFileManager preprocessedFileManager;
 
         private MenuItem copyItem;
+        private MenuItem copySubtreeItem;
         private MenuItem copyNameItem;
         private MenuItem copyValueItem;
         private MenuItem viewItem;
@@ -71,15 +72,18 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
             var contextMenu = new ContextMenu();
             contextMenu.Opened += ContextMenu_Opened;
             copyItem = new MenuItem() { Header = "Copy" };
+            copySubtreeItem = new MenuItem() { Header = "Copy subtree" };
             copyNameItem = new MenuItem() { Header = "Copy name" };
             copyValueItem = new MenuItem() { Header = "Copy value" };
             viewItem = new MenuItem() { Header = "View" };
             copyItem.Click += (s, a) => Copy();
+            copySubtreeItem.Click += (s, a) => CopySubtree();
             copyNameItem.Click += (s, a) => CopyName();
             copyValueItem.Click += (s, a) => CopyValue();
             viewItem.Click += (s, a) => Invoke(treeView.SelectedItem as ParentedNode);
             contextMenu.Items.Add(viewItem);
             contextMenu.Items.Add(copyItem);
+            contextMenu.Items.Add(copySubtreeItem);
             contextMenu.Items.Add(copyNameItem);
             contextMenu.Items.Add(copyValueItem);
 
@@ -89,10 +93,11 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
             treeViewItemStyle.Setters.Add(new Setter(TreeViewItem.IsSelectedProperty, new Binding("IsSelected") { Mode = BindingMode.TwoWay }));
             treeViewItemStyle.Setters.Add(new Setter(TreeViewItem.VisibilityProperty, new Binding("IsVisible") { Mode = BindingMode.TwoWay, Converter = new BooleanToVisibilityConverter() }));
             treeViewItemStyle.Setters.Add(new EventSetter(MouseDoubleClickEvent, (MouseButtonEventHandler)OnItemDoubleClick));
+            treeViewItemStyle.Setters.Add(new EventSetter(PreviewMouseRightButtonDownEvent, (MouseButtonEventHandler)OnPreviewMouseRightButtonDown));
             treeViewItemStyle.Setters.Add(new EventSetter(RequestBringIntoViewEvent, (RequestBringIntoViewEventHandler)TreeViewItem_RequestBringIntoView));
             treeViewItemStyle.Setters.Add(new EventSetter(KeyDownEvent, (KeyEventHandler)OnItemKeyDown));
-            treeViewItemStyle.Setters.Add(new Setter(FrameworkElement.ContextMenuProperty, contextMenu));
 
+            treeView.ContextMenu = contextMenu;
             treeView.ItemContainerStyle = treeViewItemStyle;
             treeView.KeyDown += TreeView_KeyDown;
             treeView.SelectedItemChanged += TreeView_SelectedItemChanged;
@@ -124,6 +129,7 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
             copyNameItem.Visibility = visibility;
             copyValueItem.Visibility = visibility;
             viewItem.Visibility = CanView(node) ? Visibility.Visible : Visibility.Collapsed;
+            copySubtreeItem.Visibility = node is TreeNode t && t.HasChildren ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private object FindInFiles(string searchText)
@@ -373,7 +379,7 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
             }
             else if (args.Key == Key.C && args.KeyboardDevice.Modifiers == ModifierKeys.Control)
             {
-                Copy();
+                CopySubtree();
                 args.Handled = true;
             }
         }
@@ -391,13 +397,21 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
         public void Copy()
         {
             var treeNode = treeView.SelectedItem;
-            if (treeNode == null)
+            if (treeNode != null)
             {
-                return;
+                var text = treeNode.ToString();
+                CopyToClipboard(text);
             }
+        }
 
-            var text = Microsoft.Build.Logging.StructuredLogger.StringWriter.GetString(treeNode);
-            CopyToClipboard(text);
+        public void CopySubtree()
+        {
+            var treeNode = treeView.SelectedItem;
+            if (treeNode != null)
+            {
+                var text = Microsoft.Build.Logging.StructuredLogger.StringWriter.GetString(treeNode);
+                CopyToClipboard(text);
+            }
         }
 
         private static void CopyToClipboard(string text)
@@ -492,6 +506,15 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
             if (node != null)
             {
                 args.Handled = Invoke(node);
+            }
+        }
+
+        private void OnPreviewMouseRightButtonDown(object sender, MouseButtonEventArgs args)
+        {
+            var treeViewItem = sender as TreeViewItem;
+            if (treeViewItem != null)
+            {
+                treeViewItem.IsSelected = true;
             }
         }
 

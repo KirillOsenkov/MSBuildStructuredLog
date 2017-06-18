@@ -452,7 +452,7 @@ namespace StructuredLogViewer
         {
             if (currentBuild != null)
             {
-                currentBuild.Copy();
+                currentBuild.CopySubtree();
             }
         }
 
