@@ -15,6 +15,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private static void WriteNode(object rootNode, StringBuilder sb, int indent = 0)
         {
+            if (rootNode == null)
+            {
+                return;
+            }
+
             Indent(sb, indent);
             var text = rootNode.ToString() ?? "";
 

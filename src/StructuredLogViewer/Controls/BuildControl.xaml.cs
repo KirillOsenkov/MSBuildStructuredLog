@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -32,6 +33,8 @@ namespace StructuredLogViewer.Controls
         private MenuItem viewItem;
         private MenuItem preprocessItem;
         private MenuItem hideItem;
+        private MenuItem copyAllItem;
+        private ContextMenu sharedTreeContextMenu;
 
         public TreeView ActiveTreeView;
 
@@ -72,6 +75,11 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
                 // otherwise try to read from the .zip file on disk if present
                 sourceFileResolver = new SourceFileResolver(logFilePath);
             }
+
+            sharedTreeContextMenu = new ContextMenu();
+            copyAllItem = new MenuItem() { Header = "Copy All" };
+            copyAllItem.Click += (s, a) => CopyAll();
+            sharedTreeContextMenu.Items.Add(copyAllItem);
 
             var contextMenu = new ContextMenu();
             contextMenu.Opened += ContextMenu_Opened;
@@ -116,9 +124,12 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
             searchLogControl.ResultsList.ItemContainerStyle = treeViewItemStyle;
             searchLogControl.ResultsList.SelectedItemChanged += ResultsList_SelectionChanged;
             searchLogControl.ResultsList.GotFocus += (s, a) => ActiveTreeView = searchLogControl.ResultsList;
+            searchLogControl.ResultsList.ContextMenu = sharedTreeContextMenu;
 
+            findInFilesControl.GotFocus += (s, a) => ActiveTreeView = findInFilesControl.ResultsList;
             findInFilesControl.ResultsList.ItemContainerStyle = treeViewItemStyle;
             findInFilesControl.ResultsList.GotFocus += (s, a) => ActiveTreeView = findInFilesControl.ResultsList;
+            findInFilesControl.ResultsList.ContextMenu = sharedTreeContextMenu;
 
             if (archiveFile != null)
             {
@@ -229,6 +240,7 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
 
             filesTree.ItemsSource = root.Children;
             filesTree.GotFocus += (s, a) => ActiveTreeView = filesTree;
+            filesTree.ContextMenu = sharedTreeContextMenu;
         }
 
         private void CompressTree(Folder parent)
@@ -432,6 +444,24 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
                 var text = Microsoft.Build.Logging.StructuredLogger.StringWriter.GetString(treeNode);
                 CopyToClipboard(text);
             }
+        }
+
+        private void CopyAll()
+        {
+            var tree = ActiveTreeView;
+            if (tree == null)
+            {
+                return;
+            }
+
+            var sb = new StringBuilder();
+            foreach (var item in tree.Items)
+            {
+                var text = Microsoft.Build.Logging.StructuredLogger.StringWriter.GetString(item);
+                sb.AppendLine(text);
+            }
+
+            CopyToClipboard(sb.ToString());
         }
 
         private static void CopyToClipboard(string text)

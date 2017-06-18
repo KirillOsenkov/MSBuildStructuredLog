@@ -58,5 +58,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             return result;
         }
+
+        public override string ToString() => Original.ToString();
     }
 }
