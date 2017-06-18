@@ -25,6 +25,11 @@ namespace StructuredLogViewer.Controls
         private ArchiveFileResolver archiveFile => sourceFileResolver.ArchiveFile;
         private PreprocessedFileManager preprocessedFileManager;
 
+        private MenuItem copyItem;
+        private MenuItem copyNameItem;
+        private MenuItem copyValueItem;
+        private MenuItem viewItem;
+
         public BuildControl(Build build, string logFilePath)
         {
             InitializeComponent();
@@ -63,6 +68,21 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
                 sourceFileResolver = new SourceFileResolver(logFilePath);
             }
 
+            var contextMenu = new ContextMenu();
+            contextMenu.Opened += ContextMenu_Opened;
+            copyItem = new MenuItem() { Header = "Copy" };
+            copyNameItem = new MenuItem() { Header = "Copy name" };
+            copyValueItem = new MenuItem() { Header = "Copy value" };
+            viewItem = new MenuItem() { Header = "View" };
+            copyItem.Click += (s, a) => Copy();
+            copyNameItem.Click += (s, a) => CopyName();
+            copyValueItem.Click += (s, a) => CopyValue();
+            viewItem.Click += (s, a) => Invoke(treeView.SelectedItem as ParentedNode);
+            contextMenu.Items.Add(viewItem);
+            contextMenu.Items.Add(copyItem);
+            contextMenu.Items.Add(copyNameItem);
+            contextMenu.Items.Add(copyValueItem);
+
             var existingTreeViewItemStyle = (Style)Application.Current.Resources[typeof(TreeViewItem)];
             var treeViewItemStyle = new Style(typeof(TreeViewItem), existingTreeViewItemStyle);
             treeViewItemStyle.Setters.Add(new Setter(TreeViewItem.IsExpandedProperty, new Binding("IsExpanded") { Mode = BindingMode.TwoWay }));
@@ -71,7 +91,7 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
             treeViewItemStyle.Setters.Add(new EventSetter(MouseDoubleClickEvent, (MouseButtonEventHandler)OnItemDoubleClick));
             treeViewItemStyle.Setters.Add(new EventSetter(RequestBringIntoViewEvent, (RequestBringIntoViewEventHandler)TreeViewItem_RequestBringIntoView));
             treeViewItemStyle.Setters.Add(new EventSetter(KeyDownEvent, (KeyEventHandler)OnItemKeyDown));
-            //treeViewItemStyle.Setters.Add(new Setter(FrameworkElement.ContextMenuProperty, contextMenu));
+            treeViewItemStyle.Setters.Add(new Setter(FrameworkElement.ContextMenuProperty, contextMenu));
 
             treeView.ItemContainerStyle = treeViewItemStyle;
             treeView.KeyDown += TreeView_KeyDown;
@@ -95,6 +115,15 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
             Loaded += BuildControl_Loaded;
 
             preprocessedFileManager = new PreprocessedFileManager(this, sourceFileResolver);
+        }
+
+        private void ContextMenu_Opened(object sender, RoutedEventArgs e)
+        {
+            var node = treeView.SelectedItem as ParentedNode;
+            var visibility = node is NameValueNode ? Visibility.Visible : Visibility.Collapsed;
+            copyNameItem.Visibility = visibility;
+            copyValueItem.Visibility = visibility;
+            viewItem.Visibility = CanView(node) ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private object FindInFiles(string searchText)
@@ -368,6 +397,11 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
             }
 
             var text = Microsoft.Build.Logging.StructuredLogger.StringWriter.GetString(treeNode);
+            CopyToClipboard(text);
+        }
+
+        private static void CopyToClipboard(string text)
+        {
             try
             {
                 Clipboard.SetText(text);
@@ -375,6 +409,24 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
             catch (Exception)
             {
                 // clipboard API is notoriously flaky
+            }
+        }
+
+        public void CopyName()
+        {
+            var nameValueNode = treeView.SelectedItem as NameValueNode;
+            if (nameValueNode != null)
+            {
+                CopyToClipboard(nameValueNode.Name);
+            }
+        }
+
+        public void CopyValue()
+        {
+            var nameValueNode = treeView.SelectedItem as NameValueNode;
+            if (nameValueNode != null)
+            {
+                CopyToClipboard(nameValueNode.Value);
             }
         }
 
@@ -443,8 +495,24 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
             }
         }
 
+        private bool CanView(ParentedNode node)
+        {
+            return node is AbstractDiagnostic
+                || node is Project
+                || (node is Target t && t.SourceFilePath != null)
+                || node is Task
+                || (node is IHasSourceFile ihsf && ihsf.SourceFilePath != null)
+                || (node is NameValueNode nvn && nvn.IsValueShortened)
+                || (node is TextNode tn && tn.IsTextShortened);
+        }
+
         private bool Invoke(ParentedNode treeNode)
         {
+            if (treeNode == null)
+            {
+                return false;
+            }
+
             try
             {
                 switch (treeNode)
