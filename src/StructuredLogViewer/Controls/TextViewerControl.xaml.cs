@@ -25,10 +25,14 @@ namespace StructuredLogViewer.Controls
             SearchPanel.Install(textEditor.TextArea);
         }
 
-        public void DisplaySource(string sourceFilePath, string text, int lineNumber = 0, int column = 0, Action showPreprocessed = null)
+        public void DisplaySource(
+            string sourceFilePath, 
+            string text, 
+            int lineNumber = 0, 
+            int column = 0, 
+            Action showPreprocessed = null)
         {
             this.FilePath = sourceFilePath;
-            this.Text = text;
             this.Preprocess = showPreprocessed;
 
             preprocess.Visibility = showPreprocessed != null ? Visibility.Visible : Visibility.Collapsed;
@@ -41,9 +45,17 @@ namespace StructuredLogViewer.Controls
             textView.Options.HighlightCurrentLine = true;
             textEditor.IsReadOnly = true;
 
+            SetText(text);
+            DisplaySource(lineNumber, column);
+        }
+
+        public void SetText(string text)
+        {
+            Text = text;
             textEditor.Text = text;
 
-            if (Classifier.LooksLikeXml(text))
+            bool looksLikeXml = Classifier.LooksLikeXml(text);
+            if (looksLikeXml && !IsXml)
             {
                 IsXml = true;
 
@@ -55,8 +67,19 @@ namespace StructuredLogViewer.Controls
                 var foldingStrategy = new XmlFoldingStrategy();
                 foldingStrategy.UpdateFoldings(foldingManager, textEditor.Document);
             }
+            else if (!looksLikeXml && IsXml)
+            {
+                IsXml = false;
 
-            DisplaySource(lineNumber, column);
+                textEditor.SyntaxHighlighting = null;
+            }
+        }
+
+        public void SetPathDisplay(bool displayPath)
+        {
+            var visibility = displayPath ? Visibility.Visible : Visibility.Collapsed;
+            this.copyFullPath.Visibility = visibility;
+            this.filePathText.Visibility = visibility;
         }
 
         public void DisplaySource(int lineNumber, int column)

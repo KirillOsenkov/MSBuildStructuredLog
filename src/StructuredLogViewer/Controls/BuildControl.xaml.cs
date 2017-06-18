@@ -480,13 +480,14 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
                     case NameValueNode nameValueNode:
                         if (nameValueNode.IsValueShortened)
                         {
-                            return DisplayText(nameValueNode.Value);
+                            return DisplayText(nameValueNode.Value, nameValueNode.Name);
                         }
+
                         return false;
                     case TextNode textNode:
                         if (textNode.IsTextShortened)
                         {
-                            return DisplayText(textNode.Text);
+                            return DisplayText(textNode.Text, textNode.Name ?? textNode.GetType().Name);
                         }
 
                         return false;
@@ -517,7 +518,7 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
 
         public bool DisplayText(string text, string caption = null)
         {
-            documentWell.DisplaySource(caption ?? "Text", text);
+            documentWell.DisplaySource(caption ?? "Text", text, displayPath: false);
             return true;
         }
 

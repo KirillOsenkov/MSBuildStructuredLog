@@ -44,14 +44,26 @@ namespace StructuredLogViewer.Controls
             Visibility = Visibility.Collapsed;
         }
 
-        public void DisplaySource(string sourceFilePath, string text, int lineNumber = 0, int column = 0, Action preprocess = null)
+        public void DisplaySource(string sourceFilePath, string text, int lineNumber = 0, int column = 0, Action preprocess = null, bool displayPath = true)
         {
             var existing = Find(sourceFilePath);
             if (existing != null)
             {
                 Visibility = Visibility.Visible;
                 tabControl.SelectedItem = existing;
-                (existing.Content as TextViewerControl)?.DisplaySource(lineNumber, column);
+                var textViewer = existing.Content as TextViewerControl;
+                if (textViewer != null)
+                {
+                    textViewer.SetPathDisplay(displayPath);
+
+                    if (textViewer.Text != text)
+                    {
+                        textViewer.SetText(text);
+                    }
+
+                    textViewer.DisplaySource(lineNumber, column);
+                }
+
                 return;
             }
 
@@ -67,6 +79,7 @@ namespace StructuredLogViewer.Controls
             tab.Header = header;
             header.CloseRequested += t => Tabs.Remove(t);
             tab.HeaderTemplate = (DataTemplate)Application.Current.Resources["SourceFileTabHeaderTemplate"];
+            textViewerControl.SetPathDisplay(displayPath);
 
             Tabs.Add(tab);
             tabControl.SelectedItem = tab;
