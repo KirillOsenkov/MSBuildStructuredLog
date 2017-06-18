@@ -30,6 +30,7 @@ namespace StructuredLogViewer.Controls
         private MenuItem copyNameItem;
         private MenuItem copyValueItem;
         private MenuItem viewItem;
+        private MenuItem preprocessItem;
 
         public BuildControl(Build build, string logFilePath)
         {
@@ -76,12 +77,15 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
             copyNameItem = new MenuItem() { Header = "Copy name" };
             copyValueItem = new MenuItem() { Header = "Copy value" };
             viewItem = new MenuItem() { Header = "View" };
+            preprocessItem = new MenuItem() { Header = "Preprocess" };
             copyItem.Click += (s, a) => Copy();
             copySubtreeItem.Click += (s, a) => CopySubtree();
             copyNameItem.Click += (s, a) => CopyName();
             copyValueItem.Click += (s, a) => CopyValue();
             viewItem.Click += (s, a) => Invoke(treeView.SelectedItem as ParentedNode);
+            preprocessItem.Click += (s, a) => Preprocess(treeView.SelectedItem as Project);
             contextMenu.Items.Add(viewItem);
+            contextMenu.Items.Add(preprocessItem);
             contextMenu.Items.Add(copyItem);
             contextMenu.Items.Add(copySubtreeItem);
             contextMenu.Items.Add(copyNameItem);
@@ -122,6 +126,11 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
             preprocessedFileManager = new PreprocessedFileManager(this, sourceFileResolver);
         }
 
+        private void Preprocess(Project project)
+        {
+            preprocessedFileManager.ShowPreprocessed(project.SourceFilePath);
+        }
+
         private void ContextMenu_Opened(object sender, RoutedEventArgs e)
         {
             var node = treeView.SelectedItem as ParentedNode;
@@ -130,6 +139,7 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
             copyValueItem.Visibility = visibility;
             viewItem.Visibility = CanView(node) ? Visibility.Visible : Visibility.Collapsed;
             copySubtreeItem.Visibility = node is TreeNode t && t.HasChildren ? Visibility.Visible : Visibility.Collapsed;
+            preprocessItem.Visibility = node is Project p && preprocessedFileManager.CanPreprocess(p.SourceFilePath) ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private object FindInFiles(string searchText)
@@ -522,9 +532,9 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
         {
             return node is AbstractDiagnostic
                 || node is Project
-                || (node is Target t && t.SourceFilePath != null)
-                || node is Task
-                || (node is IHasSourceFile ihsf && ihsf.SourceFilePath != null)
+                || (node is Target t && t.SourceFilePath != null && sourceFileResolver.HasFile(t.SourceFilePath))
+                || (node is Task task && task.Parent is Target parentTarget && sourceFileResolver.HasFile(parentTarget.SourceFilePath))
+                || (node is IHasSourceFile ihsf && ihsf.SourceFilePath != null && sourceFileResolver.HasFile(ihsf.SourceFilePath))
                 || (node is NameValueNode nvn && nvn.IsValueShortened)
                 || (node is TextNode tn && tn.IsTextShortened);
         }

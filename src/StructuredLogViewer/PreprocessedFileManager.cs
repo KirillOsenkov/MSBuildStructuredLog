@@ -137,6 +137,17 @@ namespace StructuredLogViewer
             bucket.Add(new ProjectImport(importedProject, line, column));
         }
 
+        public Action GetPreprocessAction(string sourceFilePath)
+        {
+            var text = sourceFileResolver.GetSourceFileText(sourceFilePath);
+            if (text == null)
+            {
+                return null;
+            }
+
+            return GetPreprocessAction(sourceFilePath, text);
+        }
+
         public Action GetPreprocessAction(string sourceFilePath, SourceText text)
         {
             if (!CanPreprocess(sourceFilePath))
@@ -201,16 +212,27 @@ namespace StructuredLogViewer
             return result;
         }
 
-        private void ShowPreprocessed(string sourceFilePath)
+        public void ShowPreprocessed(string sourceFilePath)
         {
+            if (sourceFilePath == null)
+            {
+                return;
+            }
+
             var preprocessedText = GetPreprocessedText(sourceFilePath);
+            if (preprocessedText == null)
+            {
+                return;
+            }
+
             var filePath = SettingsService.WriteContentToTempFileAndGetPath(preprocessedText, ".xml");
             buildControl.DisplayFile(filePath);
         }
 
-        private bool CanPreprocess(string sourceFilePath)
+        public bool CanPreprocess(string sourceFilePath)
         {
-            return sourceFileResolver.HasFile(sourceFilePath)
+            return sourceFilePath != null
+                && sourceFileResolver.HasFile(sourceFilePath)
                 && importMap.TryGetValue(sourceFilePath, out var bucket)
                 && bucket.Count > 0;
         }
