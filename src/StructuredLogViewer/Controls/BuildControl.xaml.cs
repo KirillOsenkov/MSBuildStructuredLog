@@ -31,6 +31,9 @@ namespace StructuredLogViewer.Controls
         private MenuItem copyValueItem;
         private MenuItem viewItem;
         private MenuItem preprocessItem;
+        private MenuItem hideItem;
+
+        public TreeView ActiveTreeView;
 
         public BuildControl(Build build, string logFilePath)
         {
@@ -78,18 +81,21 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
             copyValueItem = new MenuItem() { Header = "Copy value" };
             viewItem = new MenuItem() { Header = "View" };
             preprocessItem = new MenuItem() { Header = "Preprocess" };
+            hideItem = new MenuItem() { Header = "Hide" };
             copyItem.Click += (s, a) => Copy();
             copySubtreeItem.Click += (s, a) => CopySubtree();
             copyNameItem.Click += (s, a) => CopyName();
             copyValueItem.Click += (s, a) => CopyValue();
             viewItem.Click += (s, a) => Invoke(treeView.SelectedItem as ParentedNode);
             preprocessItem.Click += (s, a) => Preprocess(treeView.SelectedItem as Project);
+            hideItem.Click += (s, a) => Delete();
             contextMenu.Items.Add(viewItem);
             contextMenu.Items.Add(preprocessItem);
             contextMenu.Items.Add(copyItem);
             contextMenu.Items.Add(copySubtreeItem);
             contextMenu.Items.Add(copyNameItem);
             contextMenu.Items.Add(copyValueItem);
+            contextMenu.Items.Add(hideItem);
 
             var existingTreeViewItemStyle = (Style)Application.Current.Resources[typeof(TreeViewItem)];
             var treeViewItemStyle = new Style(typeof(TreeViewItem), existingTreeViewItemStyle);
@@ -105,11 +111,14 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
             treeView.ItemContainerStyle = treeViewItemStyle;
             treeView.KeyDown += TreeView_KeyDown;
             treeView.SelectedItemChanged += TreeView_SelectedItemChanged;
+            treeView.GotFocus += (s, a) => ActiveTreeView = treeView;
 
             searchLogControl.ResultsList.ItemContainerStyle = treeViewItemStyle;
             searchLogControl.ResultsList.SelectedItemChanged += ResultsList_SelectionChanged;
+            searchLogControl.ResultsList.GotFocus += (s, a) => ActiveTreeView = searchLogControl.ResultsList;
 
             findInFilesControl.ResultsList.ItemContainerStyle = treeViewItemStyle;
+            findInFilesControl.ResultsList.GotFocus += (s, a) => ActiveTreeView = findInFilesControl.ResultsList;
 
             if (archiveFile != null)
             {
@@ -219,6 +228,7 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
             }
 
             filesTree.ItemsSource = root.Children;
+            filesTree.GotFocus += (s, a) => ActiveTreeView = filesTree;
         }
 
         private void CompressTree(Folder parent)

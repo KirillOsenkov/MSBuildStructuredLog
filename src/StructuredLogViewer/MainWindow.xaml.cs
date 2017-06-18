@@ -191,13 +191,11 @@ namespace StructuredLogViewer
             {
                 ReloadMenu.Visibility = logFilePath != null ? Visibility.Visible : Visibility.Collapsed;
                 SaveAsMenu.Visibility = Visibility.Visible;
-                EditMenu.Visibility = Visibility.Visible;
             }
             else
             {
                 ReloadMenu.Visibility = Visibility.Collapsed;
                 SaveAsMenu.Visibility = Visibility.Collapsed;
-                EditMenu.Visibility = Visibility.Collapsed;
             }
         }
 
