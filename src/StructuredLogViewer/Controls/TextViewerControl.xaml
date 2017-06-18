@@ -42,6 +42,13 @@
               VerticalAlignment="Center"
               DockPanel.Dock="Left"
               ToolTip="Show preprocessed project with all imports inlined"/>
+      <CheckBox x:Name="wordWrap" 
+                Margin="4"
+                VerticalAlignment="Center"
+                DockPanel.Dock="Left"
+                Content="Word Wrap"
+                Checked="wordWrap_Checked"
+                Unchecked="wordWrap_Unchecked"/>
       <TextBox x:Name="filePathText" 
                Padding="4" 
                Background="Transparent"

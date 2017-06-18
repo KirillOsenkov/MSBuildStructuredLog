@@ -54,6 +54,11 @@ namespace StructuredLogViewer.Controls
             Text = text;
             textEditor.Text = text;
 
+            if (text.Length > 200 && !text.Contains("\n"))
+            {
+                wordWrap.IsChecked = true;
+            }
+
             bool looksLikeXml = Classifier.LooksLikeXml(text);
             if (looksLikeXml && !IsXml)
             {
@@ -121,6 +126,16 @@ namespace StructuredLogViewer.Controls
         private void preprocess_Click(object sender, RoutedEventArgs e)
         {
             Preprocess?.Invoke();
+        }
+
+        private void wordWrap_Checked(object sender, RoutedEventArgs e)
+        {
+            textEditor.WordWrap = true;
+        }
+
+        private void wordWrap_Unchecked(object sender, RoutedEventArgs e)
+        {
+            textEditor.WordWrap = false;
         }
     }
 }
