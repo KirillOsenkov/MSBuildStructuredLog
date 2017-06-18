@@ -5,7 +5,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
     public class Utilities
     {
         public const int MaxDisplayedValueLength = 260;
-        private const string TrimPrompt = "... (Ctrl+C to copy full text)";
+        private const string TrimPrompt = "... (Space: view, Ctrl+C: copy)";
 
         public static string ShortenValue(string text, string trimPrompt = TrimPrompt)
         {
