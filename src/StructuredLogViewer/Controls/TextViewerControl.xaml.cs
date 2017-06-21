@@ -43,6 +43,8 @@ namespace StructuredLogViewer.Controls
             textView.CurrentLineBackground = Brushes.LightCyan;
             textView.CurrentLineBorder = new Pen(Brushes.Transparent, 0);
             textView.Options.HighlightCurrentLine = true;
+            textView.Options.EnableEmailHyperlinks = false;
+            textView.Options.EnableHyperlinks = false;
             textEditor.IsReadOnly = true;
 
             SetText(text);
