@@ -121,6 +121,8 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
             treeView.SelectedItemChanged += TreeView_SelectedItemChanged;
             treeView.GotFocus += (s, a) => ActiveTreeView = treeView;
 
+            ActiveTreeView = treeView;
+
             searchLogControl.ResultsList.ItemContainerStyle = treeViewItemStyle;
             searchLogControl.ResultsList.SelectedItemChanged += ResultsList_SelectionChanged;
             searchLogControl.ResultsList.GotFocus += (s, a) => ActiveTreeView = searchLogControl.ResultsList;
@@ -413,6 +415,18 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
             {
                 CopySubtree();
                 args.Handled = true;
+            }
+        }
+
+        public void FocusSearch()
+        {
+            if (leftPaneTabControl.SelectedItem == searchLogTab)
+            {
+                searchLogControl.searchTextBox.Focus();
+            }
+            else if (leftPaneTabControl.SelectedItem == findInFilesTab)
+            {
+                findInFilesControl.searchTextBox.Focus();
             }
         }
 

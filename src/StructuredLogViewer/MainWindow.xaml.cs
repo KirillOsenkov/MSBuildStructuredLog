@@ -177,6 +177,8 @@ namespace StructuredLogViewer
             }
         }
 
+        private BuildControl CurrentBuildControl => mainContent.Content as BuildControl;
+
         private void SetContent(object content)
         {
             mainContent.Content = content;
@@ -422,6 +424,10 @@ namespace StructuredLogViewer
             {
                 OpenLogFile();
             }
+            else if (e.Key == Key.F && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
+            {
+                FocusSearch();
+            }
             else if (e.Key == Key.C && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
             {
                 var content = mainContent.Content as BuildProgress;
@@ -434,6 +440,11 @@ namespace StructuredLogViewer
             {
                 SaveAs();
             }
+        }
+
+        private void FocusSearch()
+        {
+            CurrentBuildControl?.FocusSearch();
         }
 
         private void Reload_Click(object sender, RoutedEventArgs e)

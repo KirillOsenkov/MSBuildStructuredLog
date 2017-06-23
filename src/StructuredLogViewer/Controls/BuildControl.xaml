@@ -15,8 +15,8 @@
     <local:SplitterPanel.FirstChild>
       <local:SplitterPanel FirstChildRelativeSize="1*" SecondChildRelativeSize="3*">
         <local:SplitterPanel.FirstChild>
-          <TabControl TabStripPlacement="Bottom" Margin="0" Padding="0">
-            <TabItem Header="Search Log">
+          <TabControl x:Name="leftPaneTabControl" TabStripPlacement="Bottom" Margin="0" Padding="0">
+            <TabItem x:Name="searchLogTab" Header="Search Log">
               <local:SearchAndResultsControl x:Name="searchLogControl"></local:SearchAndResultsControl>
             </TabItem>
 
