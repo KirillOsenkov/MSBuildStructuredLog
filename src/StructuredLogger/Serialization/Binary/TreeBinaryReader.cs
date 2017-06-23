@@ -8,7 +8,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
     public class TreeBinaryReader : IDisposable
     {
         private readonly string filePath;
-        private readonly BinaryReader binaryReader;
+        private BinaryReader binaryReader;
         private readonly FileStream fileStream;
         private readonly GZipStream gzipStream;
         private readonly string[] stringTable;
@@ -18,20 +18,57 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             this.filePath = filePath;
             this.fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+            if (fileStream.Length < 8)
+            {
+                // file is too short to be valid
+                fileStream.Dispose();
+                fileStream = null;
+                return;
+            }
+
             int major = fileStream.ReadByte();
             int minor = fileStream.ReadByte();
             int build = fileStream.ReadByte();
             Version = new Version(major, minor, build, 0);
-            
-            this.gzipStream = new GZipStream(fileStream, CompressionMode.Decompress);
-            this.binaryReader = new BetterBinaryReader(gzipStream);
 
-            var count = binaryReader.ReadInt32();
-            stringTable = new string[count];
-            for (int i = 0; i < count; i++)
+            if (major != 1)
             {
-                stringTable[i] = binaryReader.ReadString();
+                // invalid or unsupported file format
+                fileStream.Dispose();
+                fileStream = null;
+                return;
             }
+
+            try
+            {
+                this.gzipStream = new GZipStream(fileStream, CompressionMode.Decompress);
+                this.binaryReader = new BetterBinaryReader(gzipStream);
+
+                var count = binaryReader.ReadInt32();
+                stringTable = new string[count];
+                for (int i = 0; i < count; i++)
+                {
+                    stringTable[i] = binaryReader.ReadString();
+                }
+            }
+            catch (Exception)
+            {
+                if (binaryReader != null)
+                {
+                    binaryReader.Dispose();
+                    binaryReader = null;
+                }
+                else if (fileStream != null)
+                {
+                    fileStream.Dispose();
+                    fileStream = null;
+                }
+            }
+        }
+
+        public bool IsValid()
+        {
+            return binaryReader != null;
         }
 
         public Version Version { get; private set; }
@@ -87,7 +124,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public void Dispose()
         {
-            binaryReader.Dispose();
+            if (binaryReader != null)
+            {
+                binaryReader.Dispose();
+                binaryReader = null;
+            }
         }
     }
 }

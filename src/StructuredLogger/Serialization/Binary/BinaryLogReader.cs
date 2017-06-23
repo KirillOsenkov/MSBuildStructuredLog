@@ -12,11 +12,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private readonly bool formatSupportsSourceFiles;
         private readonly bool formatSupportsEmbeddedProjectImportsArchive;
+        private readonly bool formatIsValid;
 
         public static Build Read(string filePath)
         {
             using (var binaryLogReader = new BinaryLogReader(filePath))
             {
+                if (!binaryLogReader.formatIsValid)
+                {
+                    throw new Exception("Invalid log file format");
+                }
+
                 var build = (Build)binaryLogReader.ReadNode();
                 var buildStringCache = build.StringTable;
 
@@ -41,6 +47,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             this.reader = new TreeBinaryReader(filePath);
             this.formatSupportsSourceFiles = reader.Version > new Version(1, 0, 130);
             this.formatSupportsEmbeddedProjectImportsArchive = reader.Version > new Version(1, 1, 87);
+            this.formatIsValid = reader.IsValid();
         }
 
         private object ReadNode()

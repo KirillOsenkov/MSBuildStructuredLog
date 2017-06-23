@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
@@ -46,11 +47,64 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
             else if (filePath.EndsWith(".binlog", StringComparison.OrdinalIgnoreCase))
             {
-                return BinaryLog.ReadBuild(filePath);
+                try
+                {
+                    return BinaryLog.ReadBuild(filePath);
+                }
+                catch (Exception)
+                {
+                    if (DetectLogFormat(filePath) == ".buildlog")
+                    {
+                        return BinaryLogReader.Read(filePath);
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
             }
             else if (filePath.EndsWith(".buildlog", StringComparison.OrdinalIgnoreCase))
             {
-                return BinaryLogReader.Read(filePath);
+                try
+                {
+                    return BinaryLogReader.Read(filePath);
+                }
+                catch (Exception)
+                {
+                    if (DetectLogFormat(filePath) == ".binlog")
+                    {
+                        return BinaryLog.ReadBuild(filePath);
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        public static string DetectLogFormat(string filePath)
+        {
+            using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete))
+            {
+                if (stream.Length < 4)
+                {
+                    return null;
+                }
+
+                var b1 = stream.ReadByte();
+                var b2 = stream.ReadByte();
+                if (b1 == 0x1F && b2 == 0x8B)
+                {
+                    return ".binlog";
+                }
+
+                if (b1 == 0x1)
+                {
+                    return ".buildlog";
+                }
             }
 
             return null;
