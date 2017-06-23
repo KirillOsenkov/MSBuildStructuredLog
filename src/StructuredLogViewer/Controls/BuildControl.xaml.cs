@@ -608,7 +608,14 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
                     case Task task:
                         return DisplayTask(task.SourceFilePath, task.Parent, task.Name);
                     case IHasSourceFile hasSourceFile:
-                        return DisplayFile(hasSourceFile.SourceFilePath);
+                        int line = 0;
+                        var hasLine = hasSourceFile as IHasLineNumber;
+                        if (hasLine != null)
+                        {
+                            line = hasLine.LineNumber ?? 0;
+                        }
+
+                        return DisplayFile(hasSourceFile.SourceFilePath, line);
                     case SourceFileLine sourceFileLine:
                         var file = sourceFileLine.Parent as SourceFile;
                         if (file != null)
