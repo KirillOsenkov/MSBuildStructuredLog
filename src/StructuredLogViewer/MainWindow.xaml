@@ -8,6 +8,7 @@
         Title="{x:Static local:MainWindow.DefaultTitle}" 
         WindowStartupLocation="CenterScreen"
         WindowState="Maximized"
+        AllowDrop="True"
         Background="#EEEEF2"
         UseLayoutRounding="True"
         TextOptions.TextFormattingMode="Display"

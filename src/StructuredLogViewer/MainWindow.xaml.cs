@@ -28,6 +28,22 @@ namespace StructuredLogViewer
             Application.Current.Resources.MergedDictionaries.Add(generic);
 
             Loaded += MainWindow_Loaded;
+            Drop += MainWindow_Drop;
+        }
+
+        private const string ClipboardFileFormat = "FileDrop";
+
+        private void MainWindow_Drop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(ClipboardFileFormat))
+            {
+                var data = e.Data.GetData(ClipboardFileFormat) as string[];
+                if (data != null && data.Length == 1)
+                {
+                    var filePath = data[0];
+                    OpenFile(filePath);
+                }
+            }
         }
 
         private void DisplayWelcomeScreen(string message = "")
@@ -128,6 +144,22 @@ namespace StructuredLogViewer
                 return true;
             }
 
+            if (OpenFile(filePath))
+            {
+                return true;
+            }
+
+            DisplayWelcomeScreen($"File extension not supported: {filePath}");
+            return true;
+        }
+
+        public bool OpenFile(string filePath)
+        {
+            if (!File.Exists(filePath))
+            {
+                return false;
+            }
+
             if (filePath.EndsWith(".xml", StringComparison.OrdinalIgnoreCase) ||
                 filePath.EndsWith(".buildlog", StringComparison.OrdinalIgnoreCase) ||
                 filePath.EndsWith(".binlog", StringComparison.OrdinalIgnoreCase))
@@ -143,8 +175,7 @@ namespace StructuredLogViewer
                 return true;
             }
 
-            DisplayWelcomeScreen($"File extension not supported: {filePath}");
-            return true;
+            return false;
         }
 
         private void UpdateRecentItemsMenu(WelcomeScreen welcomeScreen = null)
