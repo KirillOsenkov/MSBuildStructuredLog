@@ -89,6 +89,7 @@ namespace StructuredLogViewer
                     if (result == null || result.Version == currentVersion)
                     {
                         message = "You have the latest version: " + currentVersion.ToString();
+                        FileAssociations.EnsureAssociationsSet();
                     }
                     else if (result.Version > currentVersion)
                     {

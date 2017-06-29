@@ -83,6 +83,7 @@
     <Compile Include="Controls\TreeViewExtensions.cs" />
     <Compile Include="Entrypoint.cs" />
     <Compile Include="ExceptionHandler.cs" />
+    <Compile Include="FileAssociations.cs" />
     <Compile Include="HighlightedText.cs" />
     <Compile Include="HostedBuild.cs" />
     <Compile Include="MainWindow.xaml.cs">
