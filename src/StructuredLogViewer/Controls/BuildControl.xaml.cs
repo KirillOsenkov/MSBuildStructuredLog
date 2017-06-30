@@ -344,7 +344,7 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
         public void UpdateBreadcrumb(object item)
         {
             var parentedNode = item as ParentedNode;
-            IEnumerable<object> chain = parentedNode.GetParentChain();
+            IEnumerable<object> chain = parentedNode?.GetParentChain();
             if (chain == null || !chain.Any())
             {
                 chain = new[] { item };
