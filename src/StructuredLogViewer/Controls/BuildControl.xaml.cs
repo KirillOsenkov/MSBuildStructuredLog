@@ -175,7 +175,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
         private void UpdateWatermark()
         {
-            string watermarkText = @"Type in the search box to search. Search for multiple words separated by space (space means AND). Results (up to 500) will display here.
+            string watermarkText = @"Type in the search box to search. Search for multiple words separated by space (space means AND). Results (up to 1000) will display here.
 
 Use syntax like '$property Prop' to narrow results down by item kind (supported kinds: $project, $target, $task, $error, $warning, $message, $property, $item, $additem, $removeitem, $metadata)
 

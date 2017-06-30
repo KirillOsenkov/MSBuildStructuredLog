@@ -47,7 +47,7 @@ namespace StructuredLogViewer
         }
 
         // avoid allocating this for every node
-        private readonly List<string> searchFields = new List<string>(5);
+        private readonly List<string> searchFields = new List<string>(6);
 
         private void Visit(object node, HashSet<string> stringsThatMatch, CancellationTokenSource cancellationTokenSource)
         {
@@ -79,6 +79,12 @@ namespace StructuredLogViewer
             // in case they want to narrow down the search such as "Build target" or "Copy task"
             var typeName = node.GetType().Name;
             addSearchField(typeName);
+
+            // for tasks derived from Task $task should still work
+            if (node is Task && typeName != "Task")
+            {
+                addSearchField("Task");
+            }
 
             var named = node as NamedNode;
             if (named != null && named.Name != null)
@@ -127,7 +133,9 @@ namespace StructuredLogViewer
 
                     // zeroth field is always the type
                     var type = fields[0];
-                    if (string.Equals(word, type, StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals(word, type, StringComparison.OrdinalIgnoreCase) ||
+                        // special case for types derived from Task, $task should still work
+                        (string.Equals("task", word, StringComparison.OrdinalIgnoreCase) && fields.Count > 1 && fields[1] == "Task"))
                     {
                         // this node is of the type that we need, search other fields
                         if (result == null)
