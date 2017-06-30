@@ -63,6 +63,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        public void SortChildren()
+        {
+            if (!(children is ChildrenList list))
+            {
+                return;
+            }
+
+            list.Sort((o1, o2) => string.CompareOrdinal(o1.ToString(), o2.ToString()));
+        }
+
         public void Seal()
         {
             if (children != null)

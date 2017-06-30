@@ -16,6 +16,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var results = rar.FindChild<Folder>(c => c.Name == "Results");
             if (results != null)
             {
+                results.SortChildren();
+
                 foreach (var reference in results.Children.OfType<Parameter>())
                 {
                     if (reference.Name.StartsWith("Dependency ") || reference.Name.StartsWith("Unified Dependency "))
