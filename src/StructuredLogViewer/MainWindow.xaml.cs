@@ -46,6 +46,35 @@ namespace StructuredLogViewer
             }
         }
 
+        private void TryOpenFromClipboard()
+        {
+            var text = GetSingleFileFromClipboard();
+            if (string.IsNullOrEmpty(text) || text.Length > 1024)
+            {
+                return;
+            }
+
+            text = text.TrimStart('"').TrimEnd('"');
+            if (OpenFile(text))
+            {
+                return;
+            }
+        }
+
+        private string GetSingleFileFromClipboard()
+        {
+            if (Clipboard.ContainsFileDropList())
+            {
+                var fileDropList = Clipboard.GetFileDropList();
+                if (fileDropList.Count == 1)
+                {
+                    return fileDropList[0];
+                }
+            }
+
+            return Clipboard.GetText();
+        }
+
         private void DisplayWelcomeScreen(string message = "")
         {
             this.projectFilePath = null;
@@ -74,6 +103,7 @@ namespace StructuredLogViewer
                 }
 
                 DisplayWelcomeScreen();
+                TryOpenFromClipboard();
 
                 // only check for updates if there were no command-line arguments and debugger not attached
                 if (Debugger.IsAttached || SettingsService.DisableUpdates)
