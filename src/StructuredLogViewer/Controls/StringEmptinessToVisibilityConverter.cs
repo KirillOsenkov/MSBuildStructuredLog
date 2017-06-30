@@ -12,7 +12,13 @@ namespace StructuredLogViewer
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             var text = value as string;
-            return string.IsNullOrEmpty(text) ? Visibility.Collapsed : Visibility.Visible;
+            bool result = string.IsNullOrEmpty(text);
+            if (parameter is string s && s == "Invert")
+            {
+                result = !result;
+            }
+
+            return result ? Visibility.Collapsed : Visibility.Visible;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

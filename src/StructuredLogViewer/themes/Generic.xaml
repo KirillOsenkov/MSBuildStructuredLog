@@ -799,6 +799,7 @@
     <Border x:Name="border"
             Background="Transparent"
             Margin="0,2,2,0"
+            Visibility="{TemplateBinding Visibility}"
             Width="16"
             Height="16">
       <Path Width="10"

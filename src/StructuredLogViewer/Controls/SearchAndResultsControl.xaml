@@ -3,19 +3,31 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:StructuredLogViewer.Controls"
+             xmlns:local="clr-namespace:StructuredLogViewer"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
+  <UserControl.Resources>
+    <local:StringEmptinessToVisibilityConverter x:Key="stringEmptinessToVisibilityConverter" />
+  </UserControl.Resources>
+  
   <DockPanel>
     <Grid DockPanel.Dock="Top">
       <TextBox x:Name="searchTextBox"
                TextChanged="searchTextBox_TextChanged"
                BorderThickness="0,0,0,1" />
-      <Path Data="{DynamicResource SearchGeometry}"
+      <Path x:Name="magnifyingGlass"
+            Data="{DynamicResource SearchGeometry}"
             Fill="#717171"
             HorizontalAlignment="Right"
             VerticalAlignment="Center"
+            Visibility="{Binding ElementName=searchTextBox, Path=Text, Converter={StaticResource stringEmptinessToVisibilityConverter}, ConverterParameter=Invert }"
             Margin="3"/>
+      <Button x:Name="clearSearchButton"
+              HorizontalAlignment="Right"
+              VerticalAlignment="Center"
+              Margin="2,0,0,1"
+              Template="{DynamicResource closeButtonTemplate}"
+              Visibility="{Binding ElementName=searchTextBox, Path=Text, Converter={StaticResource stringEmptinessToVisibilityConverter} }"/>
     </Grid>
 
     <Grid>
