@@ -68,7 +68,14 @@ namespace StructuredLogViewer.Controls
             set
             {
                 searchTextBox.Text = value;
+                searchTextBox.CaretIndex = value.Length;
+                searchTextBox.Focus();
             }
+        }
+
+        private void clearSearchButton_Click(object sender, RoutedEventArgs e)
+        {
+            SearchText = "";
         }
     }
 }

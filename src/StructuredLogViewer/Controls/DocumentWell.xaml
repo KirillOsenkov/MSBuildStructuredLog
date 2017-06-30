@@ -12,6 +12,8 @@
     <Button x:Name="closeButton"
             HorizontalAlignment="Right"
             VerticalAlignment="Top"
+            Width="16"
+            Height="16"
             Click="closeButton_Click"
             Template="{DynamicResource closeButtonTemplate}"
             ToolTip="Close the source code view">
