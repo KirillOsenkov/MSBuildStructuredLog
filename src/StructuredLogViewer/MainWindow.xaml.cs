@@ -256,7 +256,7 @@ namespace StructuredLogViewer
             this.logFilePath = filePath;
             SettingsService.AddRecentLogFile(filePath);
             UpdateRecentItemsMenu();
-            Title = DefaultTitle + " - " + filePath;
+            Title = filePath + " - " + DefaultTitle;
 
             var progress = new BuildProgress();
             progress.ProgressText = "Opening " + filePath + "...";
@@ -315,7 +315,7 @@ namespace StructuredLogViewer
             this.projectFilePath = filePath;
             SettingsService.AddRecentProject(projectFilePath);
             UpdateRecentItemsMenu();
-            Title = DefaultTitle + " - " + projectFilePath;
+            Title = projectFilePath + " - " + DefaultTitle;
 
             string customArguments = SettingsService.GetCustomArguments(filePath);
             var parametersScreen = new BuildParametersScreen();
