@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
@@ -46,19 +47,27 @@ namespace StructuredLogViewer
             }
         }
 
-        private void TryOpenFromClipboard()
+        private bool TryOpenFromClipboard()
         {
             var text = GetSingleFileFromClipboard();
             if (string.IsNullOrEmpty(text) || text.Length > 1024)
             {
-                return;
+                return false;
             }
 
             text = text.TrimStart('"').TrimEnd('"');
-            if (OpenFile(text))
+
+            // only open a file from clipboard if it's not listed in the recent files
+            var recentFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            recentFiles.UnionWith(SettingsService.GetRecentLogFiles());
+            recentFiles.UnionWith(SettingsService.GetRecentProjects());
+
+            if (!recentFiles.Contains(text) && OpenFile(text))
             {
-                return;
+                return true;
             }
+
+            return false;
         }
 
         private string GetSingleFileFromClipboard()
@@ -102,8 +111,12 @@ namespace StructuredLogViewer
                     return;
                 }
 
+                if (TryOpenFromClipboard())
+                {
+                    return;
+                }
+
                 DisplayWelcomeScreen();
-                TryOpenFromClipboard();
 
                 // only check for updates if there were no command-line arguments and debugger not attached
                 if (Debugger.IsAttached || SettingsService.DisableUpdates)
@@ -559,6 +572,11 @@ namespace StructuredLogViewer
         private void Exit_Click(object sender, RoutedEventArgs e)
         {
             Application.Current.Shutdown();
+        }
+
+        private void StartPage_Click(object sender, RoutedEventArgs e)
+        {
+            DisplayWelcomeScreen();
         }
     }
 }

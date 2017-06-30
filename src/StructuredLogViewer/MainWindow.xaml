@@ -19,6 +19,8 @@
   <DockPanel>
     <Menu x:Name="mainMenu" DockPanel.Dock="Top">
       <MenuItem Header="_File">
+        <MenuItem Header="Start Page" Click="StartPage_Click" />
+        <Separator />
         <MenuItem Header="_Build Solution/Project..." Click="Build_Click" InputGestureText="F6" />
         <MenuItem Header="Rebuild Solution/Project" Click="Rebuild_Click" InputGestureText="Shift+F6" />
         <Separator />
