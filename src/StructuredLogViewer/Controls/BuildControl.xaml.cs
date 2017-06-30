@@ -165,6 +165,9 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             "There was a conflict",
             "Building target completely",
             "is newer than output",
+            "Property reassignment: $(",
+            "Importing project",
+            "was not imported by",
             "out-of-date",
             "csc $task",
             "ResolveAssemblyReference $task"

@@ -121,7 +121,7 @@ namespace StructuredLogViewer
                 var word = words[i];
 
                 // enable strict search for node type like "$property Foo" to search for properties only
-                if (word.StartsWith("$"))
+                if (word.Length > 2 && word[0] == '$' && word[1] != '(')
                 {
                     word = word.Substring(1);
 
