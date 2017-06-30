@@ -688,10 +688,10 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                 return DisplayFile(sourceFilePath);
             }
 
-            return DisplayTarget(sourceFilePath, target.Name);
+            return DisplayTarget(sourceFilePath, target.Name, name);
         }
 
-        public bool DisplayTarget(string sourceFilePath, string targetName)
+        public bool DisplayTarget(string sourceFilePath, string targetName, string taskName = null)
         {
             var text = sourceFileResolver.GetSourceFileText(sourceFilePath);
             if (text == null)
@@ -710,6 +710,16 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                     if (nameAttribute != null)
                     {
                         startPosition = nameAttribute.ValueNode.Start;
+
+                        if (taskName != null)
+                        {
+                            var tasks = element.Elements.Where(e => e.Name == taskName).ToArray();
+                            if (tasks.Length == 1)
+                            {
+                                startPosition = tasks[0].AsSyntaxElement.Name.Start;
+                            }
+                        }
+
                         break;
                     }
                 }
