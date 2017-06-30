@@ -9,6 +9,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
         }
 
+        public ChildrenList(IEnumerable<object> children) : base(children)
+        {
+        }
+
         private Dictionary<ChildrenCacheKey, object> childrenCache;
 
         public T FindNode<T>(string name) where T : NamedNode

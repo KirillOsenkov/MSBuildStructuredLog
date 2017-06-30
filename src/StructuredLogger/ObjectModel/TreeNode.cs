@@ -71,6 +71,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        public void Unseal()
+        {
+            if (children is object[])
+            {
+                children = new ChildrenList(children);
+            }
+        }
+
         public void AddChildAtBeginning(object child)
         {
             if (children == null)
