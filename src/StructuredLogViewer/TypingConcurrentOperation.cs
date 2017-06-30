@@ -12,6 +12,8 @@ namespace StructuredLogViewer
         public event Action<object> DisplayResults;
         public Func<string, object> ExecuteSearch;
 
+        public event Action<string, object> SearchComplete;
+
         public const int ThrottlingDelayMilliseconds = 300;
 
         public void Reset()
@@ -44,6 +46,7 @@ namespace StructuredLogViewer
                 Application.Current.Dispatcher.InvokeAsync(() =>
                 {
                     DisplayResults?.Invoke(results);
+                    SearchComplete?.Invoke(searchText, results);
                 });
             }
         }

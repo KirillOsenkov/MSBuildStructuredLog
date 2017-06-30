@@ -13,10 +13,17 @@ namespace StructuredLogViewer.Controls
         {
             InitializeComponent();
             typingConcurrentOperation.DisplayResults += r => DisplaySearchResults(r);
+            typingConcurrentOperation.SearchComplete += TypingConcurrentOperation_SearchComplete;
+        }
+
+        private void TypingConcurrentOperation_SearchComplete(string searchText, object arg2)
+        {
+            SettingsService.AddRecentSearchText(searchText, discardPrefixes: true);
         }
 
         public TreeView ResultsList => resultsList;
         public Func<object, IEnumerable> ResultsTreeBuilder { get; set; }
+        public event Action WatermarkDisplayed;
 
         public Func<string, object> ExecuteSearch
         {
@@ -42,6 +49,7 @@ namespace StructuredLogViewer.Controls
             if (results == null)
             {
                 watermark.Visibility = Visibility.Visible;
+                WatermarkDisplayed?.Invoke();
             }
             else
             {

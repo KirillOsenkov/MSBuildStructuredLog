@@ -15,6 +15,7 @@ namespace StructuredLogViewer
         private static readonly string recentLogsFilePath = Path.Combine(GetRootPath(), "RecentLogs.txt");
         private static readonly string recentProjectsFilePath = Path.Combine(GetRootPath(), "RecentProjects.txt");
         private static readonly string recentMSBuildLocationsFilePath = Path.Combine(GetRootPath(), "RecentMSBuildLocations.txt");
+        private static readonly string recentSearchesFilePath = Path.Combine(GetRootPath(), "RecentSearches.txt");
         private static readonly string customArgumentsFilePath = Path.Combine(GetRootPath(), "CustomMSBuildArguments.txt");
         private static readonly string disableUpdatesFilePath = Path.Combine(GetRootPath(), "DisableUpdates.txt");
         private static readonly string settingsFilePath = Path.Combine(GetRootPath(), "Settings.txt");
@@ -38,6 +39,11 @@ namespace StructuredLogViewer
             AddRecentItem(filePath, recentMSBuildLocationsFilePath);
         }
 
+        public static void AddRecentSearchText(string searchText, bool discardPrefixes = false)
+        {
+            AddRecentItem(searchText, recentSearchesFilePath, discardPrefixes);
+        }
+
         public static IEnumerable<string> GetRecentLogFiles()
         {
             return GetRecentItems(recentLogsFilePath);
@@ -54,10 +60,15 @@ namespace StructuredLogViewer
             return GetRecentItems(recentMSBuildLocationsFilePath);
         }
 
-        private static void AddRecentItem(string item, string storageFilePath)
+        public static IEnumerable<string> GetRecentSearchStrings()
+        {
+            return GetRecentItems(recentSearchesFilePath);
+        }
+
+        private static void AddRecentItem(string item, string storageFilePath, bool discardPrefixes = false)
         {
             var list = GetRecentItems(storageFilePath).ToList();
-            if (AddOrPromote(list, item))
+            if (AddOrPromote(list, item, discardPrefixes))
             {
                 SaveText(storageFilePath, list);
             }
@@ -88,7 +99,7 @@ namespace StructuredLogViewer
             File.WriteAllLines(storageFilePath, lines);
         }
 
-        private static bool AddOrPromote(List<string> list, string item)
+        private static bool AddOrPromote(List<string> list, string item, bool discardPrefixes = false)
         {
             if (list.Count > 0 && list[0] == item)
             {
@@ -101,7 +112,16 @@ namespace StructuredLogViewer
             {
                 list.RemoveAt(index);
             }
-            else if (list.Count >= maxCount)
+            else if (discardPrefixes)
+            {
+                index = list.FindIndex(i => item.StartsWith(i));
+                if (index >= 0)
+                {
+                    list.RemoveAt(index);
+                }
+            }
+
+            if (list.Count >= maxCount)
             {
                 list.RemoveAt(list.Count - 1);
             }

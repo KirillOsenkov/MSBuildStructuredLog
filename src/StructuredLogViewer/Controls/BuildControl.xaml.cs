@@ -43,33 +43,7 @@ namespace StructuredLogViewer.Controls
         {
             InitializeComponent();
 
-            string watermarkText = @"Type in the search box to search. Search for multiple words separated by space (space means AND). Results (up to 500) will display here.
-
-Use syntax like '$property Prop' to narrow results down by item kind (supported kinds: $project, $target, $task, $error, $warning, $message, $property, $item, $additem, $removeitem, $metadata)
-
-Examples:
- • Copying example.dll
-";
-
-            Inline MakeLink(string query)
-            {
-                var hyperlink = new Hyperlink(new Run(query));
-                hyperlink.Click += (s, e) => searchLogControl.SearchText = query;
-
-                var span = new System.Windows.Documents.Span();
-                span.Inlines.Add(new Run(" • "));
-                span.Inlines.Add(hyperlink);
-                span.Inlines.Add(new LineBreak());
-                return span;
-            }
-
-            var watermark = new TextBlock();
-            watermark.Inlines.Add(watermarkText);
-            watermark.Inlines.Add(MakeLink("There was a conflict"));
-            watermark.Inlines.Add(MakeLink("csc $task"));
-            watermark.Inlines.Add(MakeLink("ResolveAssemblyReference $task"));
-
-            searchLogControl.WatermarkContent = watermark;
+            UpdateWatermark();
 
             searchLogControl.ExecuteSearch = searchText =>
             {
@@ -78,6 +52,7 @@ Examples:
                 return results;
             };
             searchLogControl.ResultsTreeBuilder = BuildResultTree;
+            searchLogControl.WatermarkDisplayed += () => UpdateWatermark();
 
             findInFilesControl.ExecuteSearch = FindInFiles;
             findInFilesControl.ResultsTreeBuilder = BuildFindResults;
@@ -165,7 +140,7 @@ Examples:
                 filesTree.ItemContainerStyle = treeViewItemStyle;
 
                 var filesNote = new TextBlock();
-                var text = 
+                var text =
 @"This log contains the full text of projects and imported files used during the build.
 You can use the 'Files' tab in the bottom left to view these files and the 'Find in Files' tab for full-text search.
 For many nodes in the tree (Targets, Tasks, Errors, Projects, etc) pressing SPACE or ENTER or double-clicking 
@@ -183,6 +158,61 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             Loaded += BuildControl_Loaded;
 
             preprocessedFileManager = new PreprocessedFileManager(this, sourceFileResolver);
+        }
+
+        private static string[] searchExamples = new[]
+        {
+            "There was a conflict",
+            "Building target completely",
+            "is newer than output",
+            "out-of-date",
+            "csc $task",
+            "ResolveAssemblyReference $task"
+        };
+
+        private void UpdateWatermark()
+        {
+            string watermarkText = @"Type in the search box to search. Search for multiple words separated by space (space means AND). Results (up to 500) will display here.
+
+Use syntax like '$property Prop' to narrow results down by item kind (supported kinds: $project, $target, $task, $error, $warning, $message, $property, $item, $additem, $removeitem, $metadata)
+
+Examples:
+ • Copying example.dll
+";
+
+            Inline MakeLink(string query)
+            {
+                var hyperlink = new Hyperlink(new Run(query));
+                hyperlink.Click += (s, e) => searchLogControl.SearchText = query;
+
+                var span = new System.Windows.Documents.Span();
+                span.Inlines.Add(new Run(" • "));
+                span.Inlines.Add(hyperlink);
+                span.Inlines.Add(new LineBreak());
+                return span;
+            }
+
+            var watermark = new TextBlock();
+            watermark.Inlines.Add(watermarkText);
+            foreach (var example in searchExamples)
+            {
+                watermark.Inlines.Add(MakeLink(example));
+            }
+
+            var recentSearches = SettingsService.GetRecentSearchStrings();
+            if (recentSearches.Any())
+            {
+                watermark.Inlines.Add(@"
+Recent:
+");
+
+                foreach (var recentSearch in recentSearches.Where(s => !searchExamples.Contains(s)))
+                {
+                    watermark.Inlines.Add(MakeLink(recentSearch));
+                }
+            }
+
+            searchLogControl.WatermarkContent = watermark;
         }
 
         private void Preprocess(Project project)
