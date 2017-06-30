@@ -139,6 +139,19 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
                 findInFilesTab.Visibility = Visibility.Visible;
                 PopulateFilesTab();
                 filesTree.ItemContainerStyle = treeViewItemStyle;
+
+                var filesNote = new TextBlock();
+                var text = 
+@"This log contains the full text of projects and imported files used during the build.
+You can use the 'Files' tab in the bottom left to view these files and the 'Find in Files' tab for full-text search.
+For many nodes in the tree (Targets, Tasks, Errors, Projects, etc) pressing SPACE or ENTER or double-clicking 
+on the node will navigate to the corresponding source code associated with the node.
+
+More functionality is available from the right-click context menu for each node.
+Right-clicking a project node may show the 'Preprocess' option if the version of MSBuild was at least 15.3.";
+                build.Unseal();
+                build.AddChild(new Note { Text = text });
+                build.Seal();
             }
 
             breadCrumb.SelectionChanged += BreadCrumb_SelectionChanged;
@@ -621,7 +634,7 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
                         return DisplayTarget(target.SourceFilePath, target.Name);
                     case Task task:
                         return DisplayTask(task.SourceFilePath, task.Parent, task.Name);
-                    case IHasSourceFile hasSourceFile:
+                    case IHasSourceFile hasSourceFile when hasSourceFile.SourceFilePath != null:
                         int line = 0;
                         var hasLine = hasSourceFile as IHasLineNumber;
                         if (hasLine != null)
@@ -630,29 +643,12 @@ Use syntax like '$property Prop' to narrow results down by item kind (supported 
                         }
 
                         return DisplayFile(hasSourceFile.SourceFilePath, line);
-                    case SourceFileLine sourceFileLine:
-                        var file = sourceFileLine.Parent as SourceFile;
-                        if (file != null)
-                        {
-                            DisplayFile(file.SourceFilePath, sourceFileLine.LineNumber);
-                            return true;
-                        }
-
-                        return false;
-                    case NameValueNode nameValueNode:
-                        if (nameValueNode.IsValueShortened)
-                        {
-                            return DisplayText(nameValueNode.Value, nameValueNode.Name);
-                        }
-
-                        return false;
-                    case TextNode textNode:
-                        if (textNode.IsTextShortened)
-                        {
-                            return DisplayText(textNode.Text, textNode.Name ?? textNode.GetType().Name);
-                        }
-
-                        return false;
+                    case SourceFileLine sourceFileLine when sourceFileLine.Parent is SourceFile sourceFile && sourceFile.SourceFilePath != null:
+                        return DisplayFile(sourceFile.SourceFilePath, sourceFileLine.LineNumber);
+                    case NameValueNode nameValueNode when nameValueNode.IsValueShortened:
+                        return DisplayText(nameValueNode.Value, nameValueNode.Name);
+                    case TextNode textNode when textNode.IsTextShortened:
+                        return DisplayText(textNode.Text, textNode.Name ?? textNode.GetType().Name);
                     default:
                         return false;
                 }

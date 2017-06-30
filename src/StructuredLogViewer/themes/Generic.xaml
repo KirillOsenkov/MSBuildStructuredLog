@@ -292,6 +292,16 @@
     </StackPanel>
   </DataTemplate>
 
+  <DataTemplate DataType="{x:Type local:Note}">
+    <StackPanel Orientation="Horizontal">
+      <Border BorderBrush="LightGray" BorderThickness="1" Margin="4" Background="LightYellow" Padding="6">
+        <TextBlock Text="{Binding Text}"
+                   Foreground="Gray"
+                   TextWrapping="Wrap"/>
+      </Border>
+    </StackPanel>
+  </DataTemplate>
+
   <HierarchicalDataTemplate DataType="{x:Type l:SourceFile}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">

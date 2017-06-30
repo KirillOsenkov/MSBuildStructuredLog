@@ -199,6 +199,11 @@ namespace StructuredLogViewer
 
         public bool OpenFile(string filePath)
         {
+            if (filePath.IndexOfAny(Path.GetInvalidPathChars()) != -1)
+            {
+                return false;
+            }
+
             if (!File.Exists(filePath))
             {
                 return false;
