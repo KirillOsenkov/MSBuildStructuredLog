@@ -51,13 +51,13 @@ namespace StructuredLogViewer.Controls
             resultsList.ItemsSource = ResultsTreeBuilder(results);
         }
 
-        public string WatermarkText
+        public object WatermarkContent
         {
-            get => watermark.Text;
+            get => watermark.Content;
 
             set
             {
-                watermark.Text = value;
+                watermark.Content = value;
             }
         }
 

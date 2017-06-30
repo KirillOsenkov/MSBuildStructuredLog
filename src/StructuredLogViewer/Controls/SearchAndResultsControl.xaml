@@ -24,13 +24,18 @@
                 VirtualizingPanel.VirtualizationMode="Recycling"
                 BorderThickness="0"
                 Background="#F5F5F5"></TreeView>
-      <TextBlock x:Name="watermark"
+      <ContentPresenter x:Name="watermark"
                  Margin="40"
-                 TextWrapping="Wrap"
                  HorizontalAlignment="Center"
-                 Foreground="Gray"
-                 Text="{Binding WatermarkText}"
-                 VerticalAlignment="Center" />
+                 Content="{Binding WatermarkText}"
+                 VerticalAlignment="Center">
+        <ContentPresenter.Resources>
+          <Style TargetType="{x:Type TextBlock}">
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="Foreground" Value="Gray" />
+          </Style>
+        </ContentPresenter.Resources>
+      </ContentPresenter>
     </Grid>
   </DockPanel>
 

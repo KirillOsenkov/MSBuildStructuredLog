@@ -30,7 +30,7 @@
             </TabItem>
 
             <TabItem x:Name="findInFilesTab" Header="Find in Files" Visibility="Collapsed">
-              <local:SearchAndResultsControl x:Name="findInFilesControl" WatermarkText="Search in files"></local:SearchAndResultsControl>
+              <local:SearchAndResultsControl x:Name="findInFilesControl" WatermarkContent="Search in files"></local:SearchAndResultsControl>
             </TabItem>
           </TabControl>
         </local:SplitterPanel.FirstChild>

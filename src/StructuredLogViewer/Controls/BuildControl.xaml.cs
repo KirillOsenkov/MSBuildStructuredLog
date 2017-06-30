@@ -8,6 +8,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
@@ -42,10 +43,33 @@ namespace StructuredLogViewer.Controls
         {
             InitializeComponent();
 
-            searchLogControl.WatermarkText = @"Type in the search box to search. Search for multiple words separated by space (space means AND). Results (up to 500) will display here.
+            string watermarkText = @"Type in the search box to search. Search for multiple words separated by space (space means AND). Results (up to 500) will display here.
 
+Use syntax like '$property Prop' to narrow results down by item kind (supported kinds: $project, $target, $task, $error, $warning, $message, $property, $item, $additem, $removeitem, $metadata)
 
-Use syntax like '$property Prop' to narrow results down by item kind (supported kinds: $project, $target, $task, $error, $warning, $message, $property, $item, $additem, $removeitem, $metadata)";
+Examples:
+ • Copying example.dll
+";
+
+            Inline MakeLink(string query)
+            {
+                var hyperlink = new Hyperlink(new Run(query));
+                hyperlink.Click += (s, e) => searchLogControl.SearchText = query;
+
+                var span = new System.Windows.Documents.Span();
+                span.Inlines.Add(new Run(" • "));
+                span.Inlines.Add(hyperlink);
+                span.Inlines.Add(new LineBreak());
+                return span;
+            }
+
+            var watermark = new TextBlock();
+            watermark.Inlines.Add(watermarkText);
+            watermark.Inlines.Add(MakeLink("There was a conflict"));
+            watermark.Inlines.Add(MakeLink("csc $task"));
+            watermark.Inlines.Add(MakeLink("ResolveAssemblyReference $task"));
+
+            searchLogControl.WatermarkContent = watermark;
 
             searchLogControl.ExecuteSearch = searchText =>
             {
