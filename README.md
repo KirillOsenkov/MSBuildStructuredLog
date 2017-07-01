@@ -24,7 +24,7 @@ https://www.nuget.org/packages/Microsoft.Build.Logging.StructuredLogger
 You can either build your solution yourself and pass the logger:
 
 ```
-msbuild solution.sln /t:Rebuild /v:diag /noconlog /logger:StructuredLogger,%localappdata%\MSBuildStructuredLogViewer\app-1.1.85\StructuredLogger.dll;1.buildlog
+msbuild solution.sln /t:Rebuild /v:diag /noconlog /logger:StructuredLogger,%localappdata%\MSBuildStructuredLogViewer\app-1.1.123\StructuredLogger.dll;1.buildlog
 ```
 
 or you can build the solution or open an existing log file through the viewer app:
@@ -33,10 +33,10 @@ or you can build the solution or open an existing log file through the viewer ap
 
 To use a portable version of the logger (e.g. with the `dotnet msbuild` command) you need a .NET Standard version of `StructuredLogger.dll`, not the .NET Framework (Desktop) version.
 
-Download this NuGet package: https://www.nuget.org/packages/Microsoft.Build.Logging.StructuredLogger/1.1.85
+Download this NuGet package: https://www.nuget.org/packages/Microsoft.Build.Logging.StructuredLogger/1.1.123
 and inside it there's the `lib\netstandard1.5\StructuredLogger.dll`. Try passing that to `dotnet build` like this:
 ```
-dotnet msbuild Some.sln /v:diag /nologo /logger:StructuredLogger,"packages\Microsoft.Build.Logging.StructuredLogger.1.1.85\lib\netstandard1.5\StructuredLogger.dll";"C:\Users\SomeUser\Desktop\structuredlog.buildlog"
+dotnet msbuild Some.sln /v:diag /nologo /logger:StructuredLogger,"packages\Microsoft.Build.Logging.StructuredLogger.1.1.123\lib\netstandard1.5\StructuredLogger.dll";"C:\Users\SomeUser\Desktop\structuredlog.buildlog"
 ```
 
 The logger supports three file formats:
@@ -60,9 +60,9 @@ https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/Log-Format
  * Delete to hide nodes from the tree (to get uninteresting stuff out of the way)
  * Open and save log files (ask a friend to record and send you the log which you can then investigate on your machine)
 
-## Differences between StructuredLogger and the new BinaryLogger that is shipped with MSBuild as of 15.1
+## Differences between StructuredLogger and the new BinaryLogger that is shipped with MSBuild as of 15.3
 
-Starting with Visual Studio 2017 Update 1 MSBuild supports a new `BinaryLogger` documented here:
+Starting with Visual Studio 2017 Update 3 MSBuild supports a new `BinaryLogger` documented here:
 https://github.com/Microsoft/MSBuild/wiki/Binary-Log
 
 The Structured Log Viewer is able to open the `.binlog` format created by `BinaryLogger` (as well as its own `.buildlog` format). Here are some differences between the `BinaryLogger` and the `StructuredLogger`:
