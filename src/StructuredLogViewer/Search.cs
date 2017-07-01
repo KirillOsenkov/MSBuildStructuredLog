@@ -20,12 +20,25 @@ namespace StructuredLogViewer
         }
 
         private static readonly char[] space = { ' ' };
-        private string[] words;
+        private List<string> words;
+        private string typeKeyword;
 
         public IEnumerable<SearchResult> FindNodes(string query)
         {
             this.query = query;
-            this.words = query.Split(space, StringSplitOptions.RemoveEmptyEntries);
+            this.words = query.Split(space, StringSplitOptions.RemoveEmptyEntries).ToList();
+
+            for (int i = words.Count - 1; i >= 0; i--)
+            {
+                var word = words[i];
+                if (word.Length > 2 && word[0] == '$' && word[1] != '(')
+                {
+                    words.RemoveAt(i);
+                    typeKeyword = word.Substring(1).ToLowerInvariant();
+                    break;
+                }
+            }
+
             resultSet = new List<SearchResult>();
 
             var matchesInStrings = new HashSet<string>();
@@ -64,7 +77,7 @@ namespace StructuredLogViewer
 
             searchFields.Clear();
 
-            PopulateSearchFields(node, searchFields.Add);
+            PopulateSearchFields(node);
 
             var result = IsMatch(searchFields, stringsThatMatch);
             if (result != null)
@@ -74,43 +87,61 @@ namespace StructuredLogViewer
             }
         }
 
-        public static void PopulateSearchFields(object node, Action<string> addSearchField)
+        public void PopulateSearchFields(object node)
         {
             // in case they want to narrow down the search such as "Build target" or "Copy task"
             var typeName = node.GetType().Name;
-            addSearchField(typeName);
+            searchFields.Add(typeName);
 
             // for tasks derived from Task $task should still work
             if (node is Task && typeName != "Task")
             {
-                addSearchField("Task");
+                searchFields.Add("Task");
             }
 
             var named = node as NamedNode;
-            if (named != null && named.Name != null)
+            if (named != null && !string.IsNullOrEmpty(named.Name))
             {
-                addSearchField(named.Name);
+                searchFields.Add(named.Name);
             }
 
             var textNode = node as TextNode;
-            if (textNode != null && textNode.Text != null)
+            if (textNode != null && !string.IsNullOrEmpty(textNode.Text))
             {
-                addSearchField(textNode.Text);
+                searchFields.Add(textNode.Text);
             }
 
             var nameValueNode = node as NameValueNode;
             if (nameValueNode != null)
             {
-                addSearchField(nameValueNode.Name);
-                addSearchField(nameValueNode.Value);
+                if (!string.IsNullOrEmpty(nameValueNode.Name))
+                {
+                    searchFields.Add(nameValueNode.Name);
+                }
+
+                if (!string.IsNullOrEmpty(nameValueNode.Value))
+                {
+                    searchFields.Add(nameValueNode.Value);
+                }
             }
 
             var diagnostic = node as AbstractDiagnostic;
             if (diagnostic != null)
             {
-                addSearchField(diagnostic.Code);
-                addSearchField(diagnostic.File);
-                addSearchField(diagnostic.ProjectFile);
+                if (!string.IsNullOrEmpty(diagnostic.Code))
+                {
+                    searchFields.Add(diagnostic.Code);
+                }
+
+                if (!string.IsNullOrEmpty(diagnostic.File))
+                {
+                    searchFields.Add(diagnostic.File);
+                }
+
+                if (!string.IsNullOrEmpty(diagnostic.ProjectFile))
+                {
+                    searchFields.Add(diagnostic.ProjectFile);
+                }
             }
         }
 
@@ -121,44 +152,35 @@ namespace StructuredLogViewer
         {
             SearchResult result = null;
 
-            for (int i = 0; i < words.Length; i++)
+            if (typeKeyword != null)
+            {
+                // zeroth field is always the type
+                if (string.Equals(typeKeyword, fields[0], StringComparison.OrdinalIgnoreCase) ||
+                    // special case for types derived from Task, $task should still work
+                    (typeKeyword == "task" && fields.Count > 1 && fields[1] == "Task"))
+                {
+                    // this node is of the type that we need, search other fields
+                    if (result == null)
+                    {
+                        result = new SearchResult();
+                    }
+
+                    result.AddMatchByNodeType();
+                }
+                else
+                {
+                    return null;
+                }
+            }
+
+            for (int i = 0; i < words.Count; i++)
             {
                 bool anyFieldMatched = false;
                 var word = words[i];
 
-                // enable strict search for node type like "$property Foo" to search for properties only
-                if (word.Length > 2 && word[0] == '$' && word[1] != '(')
-                {
-                    word = word.Substring(1);
-
-                    // zeroth field is always the type
-                    var type = fields[0];
-                    if (string.Equals(word, type, StringComparison.OrdinalIgnoreCase) ||
-                        // special case for types derived from Task, $task should still work
-                        (string.Equals("task", word, StringComparison.OrdinalIgnoreCase) && fields.Count > 1 && fields[1] == "Task"))
-                    {
-                        // this node is of the type that we need, search other fields
-                        if (result == null)
-                        {
-                            result = new SearchResult();
-                        }
-
-                        result.AddMatchByNodeType();
-                        continue;
-                    }
-                    else
-                    {
-                        return null;
-                    }
-                }
-
                 for (int j = 0; j < fields.Count; j++)
                 {
                     var field = fields[j];
-                    if (string.IsNullOrEmpty(field))
-                    {
-                        continue;
-                    }
 
                     if (!stringsThatMatch.Contains(field))
                     {
