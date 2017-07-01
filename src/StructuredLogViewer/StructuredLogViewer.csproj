@@ -89,6 +89,7 @@
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="NodeQueryMarcher.cs" />
     <Compile Include="MSBuildLocator.cs" />
     <Compile Include="Note.cs" />
     <Compile Include="PreprocessedFileManager.cs" />

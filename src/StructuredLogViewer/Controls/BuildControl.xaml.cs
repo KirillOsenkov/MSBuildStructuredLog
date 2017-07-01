@@ -175,9 +175,15 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
         private void UpdateWatermark()
         {
-            string watermarkText = @"Type in the search box to search. Search for multiple words separated by space (space means AND). Results (up to 1000) will display here.
+            string watermarkText = @"Type in the search box to search. Press Ctrl+F to focus the search box. Results (up to 1000) will display here.
+
+Search for multiple words separated by space (space means AND). Enclose multiple words in double-quotes """" to search for the exact phrase.
 
 Use syntax like '$property Prop' to narrow results down by item kind (supported kinds: $project, $target, $task, $error, $warning, $message, $property, $item, $additem, $removeitem, $metadata)
+
+Use the under(FILTER) clause to filter results to only the nodes where any of the parent nodes in the parent chain matches the FILTER. Examples:
+ • $task csc under($project Core)
+ • Copying file under(Parent)
 
 Examples:
  • Copying example.dll
