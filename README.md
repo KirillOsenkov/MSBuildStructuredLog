@@ -56,9 +56,14 @@ https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/Log-Format
  * Displays [double-writes](https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/Double%20write%20detection) (when files from different sources are written to the same destination during a build, thus causing non-determinism)
  * Displays target dependencies for each target
  * Text search through the entire log
- * Ctrl+C to copy an item and the entire subtree to Clipboard as text
- * Delete to hide nodes from the tree (to get uninteresting stuff out of the way)
+ * Narrow down the search results using the under() clause to only display results under a certain parent.
+ * Each node in the tree has a context menu. Ctrl+C to copy an item and the entire subtree to Clipboard as text.
+ * Delete to hide nodes from the tree (to get uninteresting stuff out of the way).
  * Open and save log files (ask a friend to record and send you the log which you can then investigate on your machine)
+ * Logs can include the source code project files and all imported files used during the build.
+ * If a log has embedded files, you can view the list of files, full-text search in all files, and use the Space key (or double-click) on most nodes to view the source code.
+ * If MSBuild 15.3 or later was used during the build the log can also display a preprocessed view for each project, with all imported projects inlined.
+ * The viewer associates with `*.binlog` and `*.buildlog` so you can double-click a log file in Explorer to open it.
 
 ## Differences between StructuredLogger and the new BinaryLogger that is shipped with MSBuild as of 15.3
 
@@ -67,7 +72,7 @@ https://github.com/Microsoft/MSBuild/wiki/Binary-Log
 
 The Structured Log Viewer is able to open the `.binlog` format created by `BinaryLogger` (as well as its own `.buildlog` format). Here are some differences between the `BinaryLogger` and the `StructuredLogger`:
 
- * `BinaryLogger` (`/bl`) will consume less memory and hopefully not OOM on huge builds, whereas the `StructuredLogger` `.buildlog` format may OOM on large builds (by design). The /bl `.binlog` format is streaming and should be constant in terms of memory.
+ * `BinaryLogger` (`/bl`) will consume less memory and hopefully not OOM on huge builds, whereas the `StructuredLogger` `.buildlog` format may OOM on very large builds (by design). The /bl `.binlog` format is streaming and should be constant in terms of memory.
 
  * `StructuredLogger` on the other hand captures the target graph so it is able to show DependsOn list for each target and also order targets slightly better in some cases.
 
@@ -75,7 +80,7 @@ The Structured Log Viewer is able to open the `.binlog` format created by `Binar
 
  * `BinaryLogger` is replayable and you're able to reconstruct text logs of any verbosity out of it. It is hard to reconstruct text logs of conventional format from a StructuredLogger log.
 
-Other than that they're pretty much equivalent.
+Other than that they're pretty much equivalent and both can be opened in the viewer.
 
 ## Investigating problems with MSBuildStructuredLog
 
