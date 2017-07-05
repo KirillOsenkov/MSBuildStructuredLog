@@ -27,10 +27,10 @@
     <DefineConstants>$(DefineConstants);NETCORE</DefineConstants>
   </PropertyGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.5' ">
-    <PackageReference Include="Microsoft.Build" Version="15.1.0-preview-000523-01" />
-    <PackageReference Include="Microsoft.Build.Framework" Version="15.1.0-preview-000523-01" />
-    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="15.1.0-preview-000523-01" />
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="15.1.0-preview-000523-01" />
+    <PackageReference Include="Microsoft.Build" Version="15.1.1012" />
+    <PackageReference Include="Microsoft.Build.Framework" Version="15.1.1012" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="15.1.1012" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="15.1.1012" />
   </ItemGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'net46' ">
     <Reference Include="System" />
