@@ -73,6 +73,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (!File.Exists(value))
                 {
                     MessageBox.Show($"File {value} doesn't exist.");
+                    SettingsService.RemoveRecentLogFile(value);
+                    recentLogs = null;
+                    RaisePropertyChanged(nameof(RecentLogs));
+                    RaisePropertyChanged(nameof(ShowRecentLogs));
                     return;
                 }
 
@@ -92,6 +96,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (!File.Exists(value))
                 {
                     MessageBox.Show($"Project {value} doesn't exist.");
+                    SettingsService.RemoveRecentProject(value);
+                    recentProjects = null;
+                    RaisePropertyChanged(nameof(RecentProjects));
+                    RaisePropertyChanged(nameof(ShowRecentProjects));
                     return;
                 }
 

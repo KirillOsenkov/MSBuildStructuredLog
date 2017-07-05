@@ -54,6 +54,16 @@ namespace StructuredLogViewer
             return GetRecentItems(recentProjectsFilePath);
         }
 
+        public static void RemoveRecentLogFile(string filePath)
+        {
+            RemoveRecentItem(filePath, recentLogsFilePath);
+        }
+
+        public static void RemoveRecentProject(string filePath)
+        {
+            RemoveRecentItem(filePath, recentProjectsFilePath);
+        }
+
         public static IEnumerable<string> GetRecentMSBuildLocations()
         {
             EnsureRecentMSBuildLocationsArePopulated();
@@ -69,6 +79,15 @@ namespace StructuredLogViewer
         {
             var list = GetRecentItems(storageFilePath).ToList();
             if (AddOrPromote(list, item, discardPrefixes))
+            {
+                SaveText(storageFilePath, list);
+            }
+        }
+
+        private static void RemoveRecentItem(string item, string storageFilePath)
+        {
+            var list = GetRecentItems(storageFilePath).ToList();
+            if (list.Remove(item))
             {
                 SaveText(storageFilePath, list);
             }
