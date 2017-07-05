@@ -174,15 +174,31 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             "ResolveAssemblyReference $task"
         };
 
+        private static string[] nodeKinds = new[]
+        {
+            "$project",
+            "$target",
+            "$task",
+            "$error",
+            "$warning",
+            "$message",
+            "$property",
+            "$item",
+            "$additem",
+            "$removeitem",
+            "$metadata",
+            "$copytask"
+        };
+
         private void UpdateWatermark()
         {
-            string watermarkText = @"Type in the search box to search. Press Ctrl+F to focus the search box. Results (up to 1000) will display here.
+            string watermarkText1 = @"Type in the search box to search. Press Ctrl+F to focus the search box. Results (up to 1000) will display here.
 
 Search for multiple words separated by space (space means AND). Enclose multiple words in double-quotes """" to search for the exact phrase.
 
-Use syntax like '$property Prop' to narrow results down by item kind (supported kinds: $project, $target, $task, $error, $warning, $message, $property, $item, $additem, $removeitem, $metadata)
+Use syntax like '$property Prop' to narrow results down by item kind. Supported kinds: ";
 
-Use the under(FILTER) clause to filter results to only the nodes where any of the parent nodes in the parent chain matches the FILTER. Examples:
+            string watermarkText2 = @"Use the under(FILTER) clause to filter results to only the nodes where any of the parent nodes in the parent chain matches the FILTER. Examples:
  • $task csc under($project Core)
  • Copying file under(Parent)
 
@@ -190,20 +206,54 @@ Examples:
  • Copying example.dll
 ";
 
-            Inline MakeLink(string query)
+            Inline MakeLink(string query, string before = " • ", string after = "\r\n")
             {
                 var hyperlink = new Hyperlink(new Run(query));
                 hyperlink.Click += (s, e) => searchLogControl.SearchText = query;
 
                 var span = new System.Windows.Documents.Span();
-                span.Inlines.Add(new Run(" • "));
+                if (before != null)
+                {
+                    span.Inlines.Add(new Run(before));
+                }
+                
                 span.Inlines.Add(hyperlink);
-                span.Inlines.Add(new LineBreak());
+
+                if (after != null)
+                {
+                    if (after == "\r\n")
+                    {
+                        span.Inlines.Add(new LineBreak());
+                    }
+                    else
+                    {
+                        span.Inlines.Add(new Run(after));
+                    }
+                }
+                
                 return span;
             }
 
             var watermark = new TextBlock();
-            watermark.Inlines.Add(watermarkText);
+            watermark.Inlines.Add(watermarkText1);
+
+            bool isFirst = true;
+            foreach (var nodeKind in nodeKinds)
+            {
+                if (!isFirst)
+                {
+                    watermark.Inlines.Add(", ");
+                }
+
+                isFirst = false;
+                watermark.Inlines.Add(MakeLink(nodeKind, before: null, after: null));
+            }
+
+            watermark.Inlines.Add(new LineBreak());
+            watermark.Inlines.Add(new LineBreak());
+
+            watermark.Inlines.Add(watermarkText2);
+            
             foreach (var example in searchExamples)
             {
                 watermark.Inlines.Add(MakeLink(example));
@@ -216,7 +266,7 @@ Examples:
 Recent:
 ");
 
-                foreach (var recentSearch in recentSearches.Where(s => !searchExamples.Contains(s)))
+                foreach (var recentSearch in recentSearches.Where(s => !searchExamples.Contains(s) && !nodeKinds.Contains(s)))
                 {
                     watermark.Inlines.Add(MakeLink(recentSearch));
                 }
