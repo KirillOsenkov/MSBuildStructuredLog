@@ -12,6 +12,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
+using Microsoft.Language.Xml;
 
 namespace StructuredLogViewer.Controls
 {
@@ -763,9 +764,18 @@ Recent:
             }
 
             var xml = text.XmlRoot;
+            IXmlElement root = xml;
             int startPosition = 0;
             int line = 0;
-            foreach (var element in xml.Elements.First().Elements)
+
+            // work around a bug in Xml Parser where a virtual parent is created around the root element
+            // when the root element is preceded by trivia (comment)
+            if (root.Name == null && root.Elements.FirstOrDefault() is IXmlElement firstElement && firstElement.Name == "Project")
+            {
+                root = firstElement;
+            }
+
+            foreach (var element in root.Elements)
             {
                 if (element.Name == "Target" && element.Attributes != null)
                 {
