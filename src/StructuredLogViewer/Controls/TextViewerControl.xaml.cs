@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using ICSharpCode.AvalonEdit.Folding;
@@ -23,6 +24,15 @@ namespace StructuredLogViewer.Controls
         {
             InitializeComponent();
             SearchPanel.Install(textEditor.TextArea);
+            textEditor.TextArea.MouseRightButtonDown += TextAreaMouseRightButtonDown;
+
+            var textView = textEditor.TextArea.TextView;
+            textView.CurrentLineBackground = new SolidColorBrush(Color.FromRgb(224, 224, 224));
+            textView.CurrentLineBorder = new Pen(Brushes.Transparent, 0);
+            textView.Options.HighlightCurrentLine = true;
+            textView.Options.EnableEmailHyperlinks = false;
+            textView.Options.EnableHyperlinks = false;
+            textEditor.IsReadOnly = true;
         }
 
         public void DisplaySource(
@@ -39,16 +49,17 @@ namespace StructuredLogViewer.Controls
 
             filePathText.Text = sourceFilePath;
 
-            var textView = textEditor.TextArea.TextView;
-            textView.CurrentLineBackground = Brushes.LightCyan;
-            textView.CurrentLineBorder = new Pen(Brushes.Transparent, 0);
-            textView.Options.HighlightCurrentLine = true;
-            textView.Options.EnableEmailHyperlinks = false;
-            textView.Options.EnableHyperlinks = false;
-            textEditor.IsReadOnly = true;
-
             SetText(text);
             DisplaySource(lineNumber, column);
+        }
+
+        private void TextAreaMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            var position = textEditor.GetPositionFromPoint(e.GetPosition(textEditor));
+            if (position.HasValue)
+            {
+                textEditor.TextArea.Caret.Position = position.Value;
+            }
         }
 
         public void SetText(string text)
@@ -138,6 +149,11 @@ namespace StructuredLogViewer.Controls
         private void wordWrap_Unchecked(object sender, RoutedEventArgs e)
         {
             textEditor.WordWrap = false;
+        }
+
+        private void copyMenu_Click(object sender, RoutedEventArgs e)
+        {
+            textEditor.Copy();
         }
     }
 }

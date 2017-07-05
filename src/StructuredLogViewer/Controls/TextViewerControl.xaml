@@ -63,6 +63,11 @@
                   ShowLineNumbers="True"
                   LineNumbersForeground="Teal"
                   FontSize="14">
+      <a:TextEditor.ContextMenu>
+        <ContextMenu>
+          <MenuItem Header="Copy" Click="copyMenu_Click" />
+        </ContextMenu>
+      </a:TextEditor.ContextMenu>
     </a:TextEditor>
 
     <!--<ScrollViewer VerticalScrollBarVisibility="Auto">
