@@ -32,8 +32,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public Folder EvaluationFolder;
 
-        public event Action Completed;
-
         public Construction()
         {
             Build = new Build();
@@ -78,8 +76,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     Build.Succeeded = args.Succeeded;
 
                     Build.VisitAllChildren<Project>(p => CalculateTargetGraph(p));
-
-                    Completed?.Invoke();
                 }
             }
             catch (Exception ex)

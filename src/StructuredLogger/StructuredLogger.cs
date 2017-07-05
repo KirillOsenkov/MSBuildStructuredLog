@@ -49,7 +49,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             construction = new Construction();
-            construction.Completed += Construction_Completed;
 
             eventSource.BuildStarted += construction.BuildStarted;
             eventSource.BuildFinished += construction.BuildFinished;
@@ -115,13 +114,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (projectImportsCollector != null)
             {
+                var archiveFilePath = projectImportsCollector.ArchiveFilePath;
+
                 projectImportsCollector.Close();
                 projectImportsCollector = null;
-            }
-        }
 
-        private void Construction_Completed()
-        {
+                if (File.Exists(archiveFilePath))
+                {
+                    var bytes = File.ReadAllBytes(archiveFilePath);
+                    construction.Build.SourceFilesArchive = bytes;
+                    File.Delete(archiveFilePath);
+                }
+            }
+
             if (SaveLogToDisk)
             {
                 try
