@@ -50,7 +50,7 @@ namespace StructuredLogViewer
         private bool TryOpenFromClipboard()
         {
             var text = GetSingleFileFromClipboard();
-            if (string.IsNullOrEmpty(text) || text.Length > 1024)
+            if (string.IsNullOrEmpty(text) || text.Length > 260)
             {
                 return false;
             }
