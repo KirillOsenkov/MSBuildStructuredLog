@@ -13,7 +13,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public BuildAnalyzer(Build build)
         {
             this.build = build;
-            doubleWritesAnalyzer = new DoubleWritesAnalyzer(this);
+            doubleWritesAnalyzer = new DoubleWritesAnalyzer();
         }
 
         public static void AnalyzeBuild(Build build)
@@ -118,7 +118,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 build.AddChild(new Item { Text = "Build succeeded." });
             }
 
-            doubleWritesAnalyzer.AnalyzeDoubleWrites(build);
+            doubleWritesAnalyzer.AppendDoubleWritesFolder(build);
         }
 
         private void PostAnalyzeProject(Project project)

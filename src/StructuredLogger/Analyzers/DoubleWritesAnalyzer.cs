@@ -7,12 +7,33 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class DoubleWritesAnalyzer
     {
-        private BuildAnalyzer buildAnalyzer;
         private readonly Dictionary<string, HashSet<string>> fileCopySourcesForDestination = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
 
-        public DoubleWritesAnalyzer(BuildAnalyzer buildAnalyzer)
+        public static IEnumerable<KeyValuePair<string, HashSet<string>>> GetDoubleWrites(Build build)
         {
-            this.buildAnalyzer = buildAnalyzer;
+            var analyzer = new DoubleWritesAnalyzer();
+            build.VisitAllChildren<CopyTask>(copyTask => analyzer.AnalyzeFileCopies(copyTask));
+            return analyzer.GetDoubleWrites();
+        }
+
+        public IEnumerable<KeyValuePair<string, HashSet<string>>> GetDoubleWrites()
+        {
+            return fileCopySourcesForDestination.Where(IsDoubleWrite);
+        }
+
+        public void AppendDoubleWritesFolder(Build build)
+        {
+            Folder doubleWrites = null;
+            foreach (var bucket in GetDoubleWrites())
+            {
+                doubleWrites = doubleWrites ?? build.GetOrCreateNodeWithName<Folder>("DoubleWrites");
+                var item = new Item { Text = bucket.Key };
+                doubleWrites.AddChild(item);
+                foreach (var source in bucket.Value)
+                {
+                    item.AddChild(new Item { Text = source });
+                }
+            }
         }
 
         public void AnalyzeFileCopies(CopyTask copyTask)
@@ -22,23 +43,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (copyOperation.Copied)
                 {
                     ProcessCopy(copyOperation.Source, copyOperation.Destination);
-                }
-            }
-        }
-
-        public void AnalyzeDoubleWrites(Build build)
-        {
-            foreach (var bucket in fileCopySourcesForDestination)
-            {
-                if (IsDoubleWrite(bucket))
-                {
-                    var doubleWrites = build.GetOrCreateNodeWithName<Folder>("DoubleWrites");
-                    var item = new Item { Text = bucket.Key };
-                    doubleWrites.AddChild(item);
-                    foreach (var source in bucket.Value)
-                    {
-                        item.AddChild(new Item { Text = source });
-                    }
                 }
             }
         }
