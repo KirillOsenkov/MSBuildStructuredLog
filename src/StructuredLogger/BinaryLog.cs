@@ -29,6 +29,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             eventSource.Replay(filePath);
             var elapsed = sw.Elapsed;
 
+            structuredLogger.Shutdown();
+
             var build = StructuredLogger.CurrentBuild;
             StructuredLogger.CurrentBuild = null;
 
