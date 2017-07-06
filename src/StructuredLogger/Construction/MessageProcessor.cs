@@ -382,7 +382,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 || message.StartsWith("Overriding target")
                 || message.StartsWith("Trying to import")
                 || message.StartsWith("Property reassignment")
-                || message.StartsWith("Importing project");
+                || message.StartsWith("Importing project")
+                || (message.StartsWith("Project \"") && message.Contains("was not imported by"));
         }
 
         /// <summary>
