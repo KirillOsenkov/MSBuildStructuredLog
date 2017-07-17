@@ -67,10 +67,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             if (!(children is ChildrenList list))
             {
-                return;
+                list = new ChildrenList(children);
             }
 
             list.Sort((o1, o2) => string.CompareOrdinal(o1.ToString(), o2.ToString()));
+            if (list != children)
+            {
+                children = list.ToArray();
+            }
+
+            RaisePropertyChanged("HasChildren");
+            RaisePropertyChanged("Children");
         }
 
         public void Seal()
