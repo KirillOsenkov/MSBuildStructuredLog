@@ -163,12 +163,14 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
         private static string[] searchExamples = new[]
         {
+            "Copying file from ",
+            "Resolved file path is ",
             "There was a conflict",
-            "Building target completely",
-            "is newer than output",
+            "Building target completely ",
+            "is newer than output ",
             "Property reassignment: $(",
-            "Importing project",
-            "was not imported by",
+            "Importing project ",
+            "was not imported by ",
             "out-of-date",
             "csc $task",
             "ResolveAssemblyReference $task"
@@ -203,7 +205,6 @@ Use syntax like '$property Prop' to narrow results down by item kind. Supported 
  • Copying file under(Parent)
 
 Examples:
- • Copying example.dll
 ";
 
             Inline MakeLink(string query, string before = " • ", string after = "\r\n")
