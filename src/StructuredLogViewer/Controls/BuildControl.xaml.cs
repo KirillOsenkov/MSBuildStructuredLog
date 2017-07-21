@@ -30,6 +30,7 @@ namespace StructuredLogViewer.Controls
 
         private MenuItem copyItem;
         private MenuItem copySubtreeItem;
+        private MenuItem sortChildrenItem;
         private MenuItem copyNameItem;
         private MenuItem copyValueItem;
         private MenuItem viewItem;
@@ -85,6 +86,7 @@ namespace StructuredLogViewer.Controls
             contextMenu.Opened += ContextMenu_Opened;
             copyItem = new MenuItem() { Header = "Copy" };
             copySubtreeItem = new MenuItem() { Header = "Copy subtree" };
+            sortChildrenItem = new MenuItem() { Header = "Sort children" };
             copyNameItem = new MenuItem() { Header = "Copy name" };
             copyValueItem = new MenuItem() { Header = "Copy value" };
             viewItem = new MenuItem() { Header = "View" };
@@ -92,6 +94,7 @@ namespace StructuredLogViewer.Controls
             hideItem = new MenuItem() { Header = "Hide" };
             copyItem.Click += (s, a) => Copy();
             copySubtreeItem.Click += (s, a) => CopySubtree();
+            sortChildrenItem.Click += (s, a) => SortChildren();
             copyNameItem.Click += (s, a) => CopyName();
             copyValueItem.Click += (s, a) => CopyValue();
             viewItem.Click += (s, a) => Invoke(treeView.SelectedItem as ParentedNode);
@@ -101,6 +104,7 @@ namespace StructuredLogViewer.Controls
             contextMenu.Items.Add(preprocessItem);
             contextMenu.Items.Add(copyItem);
             contextMenu.Items.Add(copySubtreeItem);
+            contextMenu.Items.Add(sortChildrenItem);
             contextMenu.Items.Add(copyNameItem);
             contextMenu.Items.Add(copyValueItem);
             contextMenu.Items.Add(hideItem);
@@ -288,7 +292,9 @@ Recent:
             copyNameItem.Visibility = visibility;
             copyValueItem.Visibility = visibility;
             viewItem.Visibility = CanView(node) ? Visibility.Visible : Visibility.Collapsed;
-            copySubtreeItem.Visibility = node is TreeNode t && t.HasChildren ? Visibility.Visible : Visibility.Collapsed;
+            var hasChildren = node is TreeNode t && t.HasChildren;
+            copySubtreeItem.Visibility = hasChildren ? Visibility.Visible : Visibility.Collapsed;
+            sortChildrenItem.Visibility = hasChildren ? Visibility.Visible : Visibility.Collapsed;
             preprocessItem.Visibility = node is Project p && preprocessedFileManager.CanPreprocess(p.SourceFilePath) ? Visibility.Visible : Visibility.Collapsed;
         }
 
@@ -585,6 +591,15 @@ Recent:
             {
                 var text = Microsoft.Build.Logging.StructuredLogger.StringWriter.GetString(treeNode);
                 CopyToClipboard(text);
+            }
+        }
+
+        public void SortChildren()
+        {
+            var selectedItem = treeView.SelectedItem;
+            if (selectedItem is TreeNode treeNode)
+            {
+                treeNode.SortChildren();
             }
         }
 
