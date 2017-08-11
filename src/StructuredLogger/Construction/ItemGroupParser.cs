@@ -39,14 +39,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 parameter.AddChild(new Item
                 {
-                    Text = stringTable.Intern(nameValue.Value.Replace("\r", ""))
+                    Text = stringTable.Intern(nameValue.Value)
                 });
 
                 for (int i = 1; i < lines.Length; i++)
                 {
                     parameter.AddChild(new Item
                     {
-                        Text = stringTable.Intern(lines[i].Replace("\r", ""))
+                        Text = stringTable.Intern(lines[i])
                     });
                 }
 
