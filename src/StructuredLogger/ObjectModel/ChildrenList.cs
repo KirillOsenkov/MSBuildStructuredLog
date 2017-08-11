@@ -60,16 +60,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             private readonly Type _type;
             private readonly string _name;
+            private readonly int hashCode;
 
             public ChildrenCacheKey(Type type, string name)
             {
                 _type = type;
                 _name = name;
+                hashCode = unchecked((_type.GetHashCode() * 397) ^ _name.ToLowerInvariant().GetHashCode());
             }
 
             public bool Equals(ChildrenCacheKey other)
             {
-                return _type == other._type && _name == other._name;
+                return _type == other._type && string.Equals(_name, other._name, StringComparison.OrdinalIgnoreCase);
             }
 
             public override bool Equals(object obj)
@@ -77,13 +79,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return obj is ChildrenCacheKey && Equals((ChildrenCacheKey)obj);
             }
 
-            public override int GetHashCode()
-            {
-                unchecked
-                {
-                    return (_type.GetHashCode() * 397) ^ _name.GetHashCode();
-                }
-            }
+            public override int GetHashCode() => hashCode;
         }
     }
 }

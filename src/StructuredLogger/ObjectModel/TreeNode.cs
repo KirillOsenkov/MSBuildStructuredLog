@@ -165,7 +165,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return list.FindNode<T>(name);
             }
 
-            return FindChild<T>(c => c.LookupKey == name);
+            return FindChild<T>(c => string.Equals(c.LookupKey, name, StringComparison.OrdinalIgnoreCase));
         }
 
         public virtual T FindChild<T>(Predicate<T> predicate)
