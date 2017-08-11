@@ -82,29 +82,26 @@ namespace StructuredLogViewer
                 return;
             }
 
-            foreach (var projectNode in evaluation.Children.OfType<Project>())
+            evaluation.VisitAllChildren<Message>(message =>
             {
-                foreach (var message in projectNode.Children.OfType<Message>())
+                var match = importingProjectRegex.Match(message.Text);
+                if (match.Success && match.Groups.Count == 5)
                 {
-                    var match = importingProjectRegex.Match(message.Text);
-                    if (match.Success && match.Groups.Count == 5)
+                    var project = match.Groups[2].Value;
+                    var importedProject = match.Groups[1].Value;
+                    if (sourceFileResolver.HasFile(project) && sourceFileResolver.HasFile(importedProject))
                     {
-                        var project = match.Groups[2].Value;
-                        var importedProject = match.Groups[1].Value;
-                        if (sourceFileResolver.HasFile(project) && sourceFileResolver.HasFile(importedProject))
+                        var line = int.Parse(match.Groups[3].Value);
+                        var column = int.Parse(match.Groups[4].Value);
+                        if (line > 0)
                         {
-                            var line = int.Parse(match.Groups[3].Value);
-                            var column = int.Parse(match.Groups[4].Value);
-                            if (line > 0)
-                            {
-                                line = line - 1; // should be 0-based 
-                            }
-
-                            AddImport(importMap, project, importedProject, line, column);
+                            line = line - 1; // should be 0-based 
                         }
+
+                        AddImport(importMap, project, importedProject, line, column);
                     }
                 }
-            }
+            });
         }
 
         private int CorrectForMultilineImportElement(SourceText text, int lineNumber)
