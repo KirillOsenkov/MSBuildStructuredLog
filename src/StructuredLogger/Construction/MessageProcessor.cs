@@ -171,6 +171,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private HashSet<string> evaluationMessagesAlreadySeen = new HashSet<string>(StringComparer.Ordinal);
 
+        private static readonly char[] space = { ' ' };
+
         /// <summary>
         /// Handles a generic BuildMessage event and assigns it to the appropriate logging node.
         /// </summary>
@@ -228,10 +230,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                                     if (!string.IsNullOrEmpty(message))
                                     {
-                                        node.AddChild(new Item()
+                                        if (message.IndexOf('=') != -1)
                                         {
-                                            Text = stringTable.Intern(message)
-                                        });
+                                            var kvp = Utilities.ParseNameValue(message);
+                                            node.AddChild(new Metadata
+                                            {
+                                                Name = stringTable.Intern(kvp.Key.TrimEnd(space)),
+                                                Value = stringTable.Intern(kvp.Value.TrimStart(space))
+                                            });
+                                        }
+                                        else
+                                        {
+                                            node.AddChild(new Item()
+                                            {
+                                                Text = stringTable.Intern(message)
+                                            });
+                                        }
                                     }
                                 }
 
