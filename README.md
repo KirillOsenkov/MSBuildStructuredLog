@@ -4,8 +4,10 @@ A logger for MSBuild that records a structured representation of executed target
 [![Build status](https://ci.appveyor.com/api/projects/status/v7vwgphs239i14ya?svg=true)](https://ci.appveyor.com/project/KirillOsenkov/msbuildstructuredlog)
 [![NuGet package](https://img.shields.io/nuget/v/Microsoft.Build.Logging.StructuredLogger.svg)](https://nuget.org/packages/Microsoft.Build.Logging.StructuredLogger)
 
+Homepage: http://msbuildlog.com
+
 ## Install:
-https://github.com/KirillOsenkov/MSBuildStructuredLog/releases/download/v1.1.142/MSBuildStructuredLogSetup.exe
+https://github.com/KirillOsenkov/MSBuildStructuredLog/releases/download/v1.1.153/MSBuildStructuredLogSetup.exe
 
 The app updates automatically via [Squirrel](https://github.com/Squirrel/Squirrel.Windows) (after launch it checks for updates in background), next launch starts the newly downloaded latest version.
 
@@ -24,7 +26,7 @@ https://www.nuget.org/packages/Microsoft.Build.Logging.StructuredLogger
 You can either build your solution yourself and pass the logger:
 
 ```
-msbuild solution.sln /t:Rebuild /v:diag /noconlog /logger:StructuredLogger,%localappdata%\MSBuildStructuredLogViewer\app-1.1.142\StructuredLogger.dll;1.buildlog
+msbuild solution.sln /t:Rebuild /v:diag /noconlog /logger:BinaryLogger,%localappdata%\MSBuildStructuredLogViewer\app-1.1.153\BinaryLogger.dll;1.binlog
 ```
 
 or you can build the solution or open an existing log file through the viewer app:
@@ -33,20 +35,19 @@ or you can build the solution or open an existing log file through the viewer ap
 
 To use a portable version of the logger (e.g. with the `dotnet msbuild` command) you need a .NET Standard version of `StructuredLogger.dll`, not the .NET Framework (Desktop) version.
 
-Download this NuGet package: https://www.nuget.org/packages/Microsoft.Build.Logging.StructuredLogger/1.1.142
+Download this NuGet package: https://www.nuget.org/packages/Microsoft.Build.Logging.StructuredLogger/1.1.153
 and inside it there's the `lib\netstandard1.5\StructuredLogger.dll`. Try passing that to `dotnet build` like this:
 ```
-dotnet msbuild Some.sln /v:diag /nologo /logger:StructuredLogger,"packages\Microsoft.Build.Logging.StructuredLogger.1.1.142\lib\netstandard1.5\StructuredLogger.dll";"C:\Users\SomeUser\Desktop\structuredlog.buildlog"
+dotnet msbuild Some.sln /v:diag /nologo /logger:BinaryLogger,"packages\Microsoft.Build.Logging.StructuredLogger.1.1.153\lib\netstandard1.5\StructuredLogger.dll";"C:\Users\SomeUser\Desktop\binarylog.binlog"
 ```
 
 The logger supports three file formats:
 
  1. `*.binlog` (official MSBuild binary log format, same as `msbuild.exe /bl`)
- 2. `*.xml` (for large human-readable XML logs)
- 3. `*.buildlog` (compact binary logs, may run out of memory on very large builds)
+ 2. `*.buildlog` (when you Save As... in the Viewer)
+ 3. `*.xml` (for large human-readable XML logs)
  
-Depending on which file extension you pass to the logger it will either write XML or binary.
-The viewer supports all formats and defaults to binary when saving. The binary log can be up to 200x smaller and faster.
+The viewer can read all 3 formats and can save to either `.buildlog` or `.xml`.
 
 Read more about the log formats here:
 https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/Log-Format
@@ -70,13 +71,17 @@ https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/Log-Format
 Starting with Visual Studio 2017 Update 3 MSBuild supports a new `BinaryLogger` documented here:
 https://github.com/Microsoft/MSBuild/wiki/Binary-Log
 
-The Structured Log Viewer is able to open the `.binlog` format created by `BinaryLogger` (as well as its own `.buildlog` format). Here are some differences between the `BinaryLogger` and the `StructuredLogger`:
+`BinaryLogger` is the low-level and exact representation of the events that happened during the build in the original order. You can fully reconstruct other build logs from a binary log by "playing back" the log file. `.binlog` is the file extension. Pass a `.binlog` file to MSBuild instead of a project or solution to "replay it" and specify the target loggers to replay to as if a real build was happening.
 
- * `BinaryLogger` (`/bl`) will consume less memory and hopefully not OOM on huge builds, whereas the `StructuredLogger` `.buildlog` format may OOM on very large builds (by design). The /bl `.binlog` format is streaming and should be constant in terms of memory.
+`StructuredLogger` is the format used by the viewer to save build trees to disk. It is as comprehensive as the binary log, but you can't easily reconstruct other logs from this format, it is only used by the viewer.
 
- * `StructuredLogger` on the other hand captures the target graph so it is able to show DependsOn list for each target and also order targets slightly better in some cases.
+The Structured Log Viewer is able to open both formats, but can only save the `.buildlog` format. Here are some differences between the `BinaryLogger` and the `StructuredLogger`:
 
- * `StructuredLogger` is much more compact since it is not streaming and thus able to use string deduplication, reducing the log file up to 10x smaller as a `.binlog` for a Binary Logger.
+ * `BinaryLogger` (format used by `msbuild /bl`) will consume less memory and disk size, whereas the `StructuredLogger` `.buildlog` format may run out of memory on very large builds (by design).
+
+ * `StructuredLogger` captures the target graph so it is able to show DependsOn list for each target and also order targets slightly better in some cases.
+
+ * `StructuredLogger` is slightly more compact since it is not streaming and thus able to use string deduplication, reducing the log file up to 10x smaller compared to `.binlog`.
 
  * `BinaryLogger` is replayable and you're able to reconstruct text logs of any verbosity out of it. It is hard to reconstruct text logs of conventional format from a StructuredLogger log.
 
@@ -91,5 +96,6 @@ Open an issue if you're running into something weird and I can take a look into 
 ```
 
 ## MSBuild Resources
+ * [http://msbuildlog.com](http://msbuildlog.com)
  * [https://github.com/Microsoft/msbuild/wiki/MSBuild-Resources](https://github.com/Microsoft/msbuild/wiki/MSBuild-Resources)
  * [https://github.com/Microsoft/msbuild/wiki/MSBuild-Tips-&-Tricks](https://github.com/Microsoft/msbuild/wiki/MSBuild-Tips-&-Tricks)
