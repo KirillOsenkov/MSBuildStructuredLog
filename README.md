@@ -11,7 +11,7 @@ https://github.com/KirillOsenkov/MSBuildStructuredLog/releases/download/v1.1.153
 
 The app updates automatically via [Squirrel](https://github.com/Squirrel/Squirrel.Windows) (after launch it checks for updates in background), next launch starts the newly downloaded latest version.
 
-![Screenshot1](http://msbuildlog.com/ViewerOverview3.gif)
+![Screenshot1](http://msbuildlog.com/Screenshot1.png)
 
 ## Requirements:
  * .NET Framework 4.6
