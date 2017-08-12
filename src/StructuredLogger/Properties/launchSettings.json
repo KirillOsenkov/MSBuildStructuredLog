@@ -3,7 +3,7 @@
     "StructuredLogger": {
       "commandName": "Executable",
       "executablePath": "$(MSBuildToolsPath)\\MSBuild.exe",
-      "commandLineArgs": "$(SolutionDir)\\src\\StructuredLogger.Tests\\StructuredLoggerTests.csproj /t:Rebuild /v:diag /noconlog /logger:StructuredLogger,$(TargetPath);test.buildlog",
+      "commandLineArgs": "$(SolutionDir)src\\StructuredLogger.Tests\\StructuredLogger.Tests.csproj /t:Rebuild /v:diag /noconlog /logger:StructuredLogger,$(TargetPath);test.buildlog",
       "workingDirectory": "$(SolutionDir)"
     }
   }
