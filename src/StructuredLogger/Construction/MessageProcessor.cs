@@ -347,11 +347,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 // evaluation messages have negative context Ids (EvaluationId is stashed that way)
                 var evaluation = construction.EvaluationFolder;
                 var evaluationId = args.BuildEventContext.ProjectContextId;
-                var project = evaluation.FindChild<Project>(p => p.Id == evaluationId);
-                node = project;
+                if (evaluationId != int.MinValue)
+                {
+                    var project = evaluation.FindChild<Project>(p => p.Id == evaluationId);
+                    node = project;
+                }
 
                 if (node != null && node.FindChild<Message>(message) != null)
                 {
+                    // avoid duplicate messages
                     return;
                 }
             }

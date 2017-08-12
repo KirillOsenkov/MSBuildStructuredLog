@@ -29,7 +29,7 @@ namespace Microsoft.Build.Logging
         public void Write(BuildEventArgs e)
         {
             // the cases are ordered by most used first for performance
-            if (e is BuildMessageEventArgs)
+            if (e is BuildMessageEventArgs && e.GetType().Name != "ProjectImportedEventArgs")
             {
                 Write((BuildMessageEventArgs)e);
             }
@@ -80,6 +80,38 @@ namespace Microsoft.Build.Logging
             else if (e is ProjectEvaluationFinishedEventArgs)
             {
                 Write((ProjectEvaluationFinishedEventArgs)e);
+            }
+            // The following cases are due to the fact that StructuredLogger.dll 
+            // only references MSBuild 14.0 .dlls. The following BuildEventArgs types
+            // were only introduced in MSBuild 15.3 so we can't refer to them statically.
+            // To still provide a good experience to those who are using the BinaryLogger
+            // from StructuredLogger.dll against MSBuild 15.3 or later we need to preserve
+            // these new events, so use reflection to create our "equivalents" of those
+            // and populate them to be binary identical to the originals. Then serialize
+            // our copies so that it's impossible to tell what wrote these.
+            else if (e.GetType().Name == "ProjectEvaluationStartedEventArgs")
+            {
+                var evaluationStarted = new ProjectEvaluationStartedEventArgs(e.Message);
+                evaluationStarted.BuildEventContext = e.BuildEventContext;
+                evaluationStarted.ProjectFile = Reflector.GetProjectFileFromEvaluationStarted(e);
+                Write(evaluationStarted);
+            }
+            else if (e.GetType().Name == "ProjectEvaluationFinishedEventArgs")
+            {
+                var evaluationFinished = new ProjectEvaluationFinishedEventArgs(e.Message);
+                evaluationFinished.BuildEventContext = e.BuildEventContext;
+                evaluationFinished.ProjectFile = Reflector.GetProjectFileFromEvaluationFinished(e);
+                Write(evaluationFinished);
+            }
+            else if (e.GetType().Name == "ProjectImportedEventArgs")
+            {
+                var message = e as BuildMessageEventArgs;
+                var projectImported = new ProjectImportedEventArgs(message.LineNumber, message.ColumnNumber, e.Message);
+                projectImported.BuildEventContext = e.BuildEventContext;
+                projectImported.ProjectFile = message.ProjectFile;
+                projectImported.ImportedProjectFile = Reflector.GetImportedProjectFile(e);
+                projectImported.UnexpandedProject = Reflector.GetUnexpandedProject(e);
+                Write(projectImported);
             }
             else
             {
@@ -544,7 +576,9 @@ namespace Microsoft.Build.Logging
             Write(buildEventContext.TaskId);
             Write(buildEventContext.SubmissionId);
             Write(buildEventContext.ProjectInstanceId);
-            Write(-1);
+
+            var evaluationId = Reflector.GetEvaluationId(buildEventContext);
+            Write(evaluationId);
         }
 
         private void Write<TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> keyValuePairs)
