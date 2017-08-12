@@ -759,6 +759,11 @@ Recent:
                             return DisplayFile(path, diagnostic.LineNumber, diagnostic.ColumnNumber);
                         }
 
+                        if (diagnostic.IsTextShortened)
+                        {
+                            return DisplayText(diagnostic.Text, diagnostic.GetType().Name);
+                        }
+
                         break;
                     case Target target:
                         return DisplayTarget(target.SourceFilePath, target.Name);
