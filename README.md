@@ -26,7 +26,7 @@ Starting with MSBuild 15.3 you can just pass the new `/bl` switch to `msbuild.ex
 
 or you can build the solution or open an existing log file through the viewer app:
 
-![Screenshot2](/docs/Screenshot2.png)
+![Screenshot2](http://msbuildlog.com/ViewerOverview3.gif)
 
 Alternatively (useful for older versions of MSBuild) you can attach the logger to any MSBuild-based build using the logger library: `StructuredLogger.dll`. It is available in a NuGet package:
 https://www.nuget.org/packages/Microsoft.Build.Logging.StructuredLogger
