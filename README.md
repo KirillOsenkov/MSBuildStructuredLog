@@ -1,5 +1,5 @@
 # MSBuildStructuredLog
-A logger for MSBuild that records a structured representation of executed targets, tasks, property and item values.
+A logger for MSBuild that records a structured representation of executed targets, tasks, property and item values. It can greatly simplify build investigations and providers a portable log interchange format and a rich interactive log viewer app.
 
 [![Build status](https://ci.appveyor.com/api/projects/status/v7vwgphs239i14ya?svg=true)](https://ci.appveyor.com/project/KirillOsenkov/msbuildstructuredlog)
 [![NuGet package](https://img.shields.io/nuget/v/Microsoft.Build.Logging.StructuredLogger.svg)](https://nuget.org/packages/Microsoft.Build.Logging.StructuredLogger)
