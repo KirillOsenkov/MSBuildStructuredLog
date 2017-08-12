@@ -11,7 +11,7 @@ https://github.com/KirillOsenkov/MSBuildStructuredLog/releases/download/v1.1.153
 
 The app updates automatically via [Squirrel](https://github.com/Squirrel/Squirrel.Windows) (after launch it checks for updates in background), next launch starts the newly downloaded latest version.
 
-![Screenshot1](/docs/Screenshot1.png)
+![Screenshot1](http://msbuildlog.com/ViewerOverview3.gif)
 
 ## Requirements:
  * .NET Framework 4.6
@@ -26,7 +26,7 @@ Starting with MSBuild 15.3 you can just pass the new `/bl` switch to `msbuild.ex
 
 or you can build the solution or open an existing log file through the viewer app:
 
-![Screenshot2](http://msbuildlog.com/ViewerOverview3.gif)
+![Screenshot2](/docs/Screenshot2.png)
 
 Alternatively (useful for older versions of MSBuild) you can attach the logger to any MSBuild-based build using the logger library: `StructuredLogger.dll`. It is available in a NuGet package:
 https://www.nuget.org/packages/Microsoft.Build.Logging.StructuredLogger
