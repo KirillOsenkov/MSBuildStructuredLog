@@ -20,18 +20,20 @@ The app updates automatically via [Squirrel](https://github.com/Squirrel/Squirre
 
 ## Usage:
 
-The logger is in a single file: `StructuredLogger.dll`. It is available in a NuGet package:
-https://www.nuget.org/packages/Microsoft.Build.Logging.StructuredLogger
+Starting with MSBuild 15.3 you can just pass the new `/bl` switch to `msbuild.exe` to record a binary build log to `msbuild.binlog`, in the same folder as the project/solution being built:
 
-You can either build your solution yourself and pass the logger:
-
-```
-msbuild solution.sln /t:Rebuild /v:diag /noconlog /logger:BinaryLogger,%localappdata%\MSBuildStructuredLogViewer\app-1.1.153\BinaryLogger.dll;1.binlog
-```
+![Screenshot](http://msbuildlog.com/BinLogFromCommandLine.png)
 
 or you can build the solution or open an existing log file through the viewer app:
 
 ![Screenshot2](/docs/Screenshot2.png)
+
+Alternatively (useful for older versions of MSBuild) you can attach the logger to any MSBuild-based build using the logger library: `StructuredLogger.dll`. It is available in a NuGet package:
+https://www.nuget.org/packages/Microsoft.Build.Logging.StructuredLogger
+
+```
+msbuild solution.sln /t:Rebuild /v:diag /noconlog /logger:BinaryLogger,%localappdata%\MSBuildStructuredLogViewer\app-1.1.153\BinaryLogger.dll;1.binlog
+```
 
 To use a portable version of the logger (e.g. with the `dotnet msbuild` command) you need a .NET Standard version of `StructuredLogger.dll`, not the .NET Framework (Desktop) version.
 
