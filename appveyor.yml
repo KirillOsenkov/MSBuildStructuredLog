@@ -1,11 +1,12 @@
 version: 1.1.{build}
-image: Visual Studio 2017
+branches:
+  only:
+  - master
+image: Visual Studio 2017 Preview
 configuration: Release
 before_build:
-- ps: dotnet restore
+- cmd: dotnet restore
 build:
   parallel: true
   verbosity: minimal
-artifacts:
-- path: bin\**\Releases\*
-  name: Installer
+test: off
