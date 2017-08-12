@@ -335,6 +335,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 lock (syncLock)
                 {
+                    // This happens when we consume args created by us (deserialized)
                     if (e is ProjectEvaluationStartedEventArgs projectEvaluationStarted)
                     {
                         var projectName = projectEvaluationStarted.ProjectFile;
@@ -344,11 +345,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     else if (e is ProjectEvaluationFinishedEventArgs projectEvaluationFinished)
                     {
                     }
-                    else if (e.Message.StartsWith("Evaluation started"))
+                    // this happens during live build using MSBuild 15.3 or newer
+                    else if (e.GetType().Name == "ProjectEvaluationStartedEventArgs")
                     {
                         var projectName = Utilities.ParseQuotedSubstring(e.Message);
                         var project = EvaluationFolder.GetOrCreateNodeWithName<Project>(projectName);
-                        project.Id = e.BuildEventContext.ProjectContextId;
+                        project.Id = Reflector.GetEvaluationId(e.BuildEventContext);
                     }
                 }
             }

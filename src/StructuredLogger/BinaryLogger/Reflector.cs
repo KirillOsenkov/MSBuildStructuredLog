@@ -79,7 +79,7 @@ namespace Microsoft.Build.Logging
                 }
                 else
                 {
-                    EvaluationIdGetter = b => int.MinValue;
+                    EvaluationIdGetter = b => buildEventContext.ProjectContextId < 0 ? buildEventContext.ProjectContextId : int.MinValue;
                 }
             }
 

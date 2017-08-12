@@ -342,16 +342,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                 }
             }
-            else if (args.BuildEventContext?.ProjectContextId < 0)
+            else if (args.BuildEventContext != null && Reflector.GetEvaluationId(args.BuildEventContext) is int evaluationId && evaluationId != int.MinValue)
             {
-                // evaluation messages have negative context Ids (EvaluationId is stashed that way)
                 var evaluation = construction.EvaluationFolder;
-                var evaluationId = args.BuildEventContext.ProjectContextId;
-                if (evaluationId != int.MinValue)
-                {
-                    var project = evaluation.FindChild<Project>(p => p.Id == evaluationId);
-                    node = project;
-                }
+                var project = evaluation.FindChild<Project>(p => p.Id == evaluationId);
+                node = project;
 
                 if (node != null && node.FindChild<Message>(message) != null)
                 {
