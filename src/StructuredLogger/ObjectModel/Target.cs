@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.IO;
+using System.Linq;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -29,7 +30,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public override string ToString()
         {
-            return $"Target Id={Id} Name={Name} Project={Project?.Name}";
+            return $"Target Name={Name} Project={Path.GetFileName(Project?.ProjectFile)}";
         }
 
         private bool isLowRelevance = false;
