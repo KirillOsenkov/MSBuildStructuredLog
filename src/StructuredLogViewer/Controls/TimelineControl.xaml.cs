@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
@@ -13,7 +14,61 @@ namespace StructuredLogViewer.Controls
     {
         public TimelineControl()
         {
+            scaleTransform = new ScaleTransform();
             InitializeComponent();
+            this.PreviewMouseWheel += TimelineControl_MouseWheel;
+            grid.LayoutTransform = scaleTransform;
+        }
+
+        private double scaleFactor = 1;
+
+        private void zoomSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            double ratio = zoomSlider.Value;
+            if (Math.Abs(zoomSlider.Value - 1) <= 0.001)
+            {
+                ratio = 1;
+            }
+
+            Zoom(ratio);
+            resetZoomButton.Visibility = ratio == 1 ? Visibility.Hidden : Visibility.Visible;
+        }
+
+        private void Zoom(double value)
+        {
+            scaleFactor = value;
+            scaleTransform.ScaleX = scaleFactor;
+            scaleTransform.ScaleY = scaleFactor;
+        }
+
+        private const double minimumZoom = 0.3;
+        private const double maximumZoom = 4.0;
+
+        private void TimelineControl_MouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            if ((Keyboard.Modifiers & ModifierKeys.Control) == 0)
+            {
+                return;
+            }
+
+            if (e.Delta > 0)
+            {
+                if (scaleFactor < 4)
+                {
+                    scaleFactor += 0.1;
+                    zoomSlider.Value = scaleFactor;
+                }
+            }
+            else
+            {
+                if (scaleFactor > minimumZoom + 0.1)
+                {
+                    scaleFactor -= 0.1;
+                    zoomSlider.Value = scaleFactor;
+                }
+            }
+
+            e.Handled = true;
         }
 
         public BuildControl BuildControl { get; set; }
@@ -195,6 +250,7 @@ namespace StructuredLogViewer.Controls
         private static readonly Brush projectBackground = new SolidColorBrush(Color.FromArgb(10, 180, 180, 180));
         private static readonly Brush targetBackground = new SolidColorBrush(Color.FromArgb(20, 255, 100, 255));
         private static readonly Brush taskBackground = new SolidColorBrush(Color.FromArgb(30, 100, 255, 255));
+        private readonly ScaleTransform scaleTransform;
 
         private static Brush ChooseBackground(Block block)
         {
@@ -221,6 +277,11 @@ namespace StructuredLogViewer.Controls
             }
 
             return stackPanel;
+        }
+
+        private void ResetZoom_Click(object sender, RoutedEventArgs e)
+        {
+            zoomSlider.Value = 1;
         }
     }
 }
