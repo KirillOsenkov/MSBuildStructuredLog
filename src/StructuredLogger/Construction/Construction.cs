@@ -35,6 +35,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public Construction()
         {
             Build = new Build();
+            Build.Name = "Build";
             this.stringTable = Build.StringTable;
             this.messageProcessor = new MessageProcessor(this, stringTable);
         }
@@ -197,6 +198,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     var project = GetOrAddProject(args.BuildEventContext.ProjectContextId);
                     var targetName = stringTable.Intern(args.TargetName);
                     var target = project.CreateTarget(targetName, args.BuildEventContext.TargetId);
+                    target.NodeId = args.BuildEventContext.NodeId;
+                    target.StartTime = args.Timestamp;
 
                     if (!string.IsNullOrEmpty(args.ParentTarget))
                     {
@@ -496,6 +499,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var projectId = args.BuildEventContext.ProjectContextId;
             Project result = _projectIdToProjectMap.GetOrAdd(projectId,
                 id => CreateProject(id));
+            result.NodeId = args.BuildEventContext.NodeId;
 
             UpdateProject(result, args);
 
@@ -646,6 +650,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             result.Name = taskName;
             result.Id = taskId;
+            result.NodeId = taskStartedEventArgs.BuildEventContext.NodeId;
             result.StartTime = startTime;
             result.FromAssembly = assembly;
             result.SourceFilePath = stringTable.Intern(taskStartedEventArgs.TaskFile);
