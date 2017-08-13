@@ -47,6 +47,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Controls\TimelineControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -79,6 +83,9 @@
     <Compile Include="Controls\Command.cs" />
     <Compile Include="Controls\SplitterPanel.cs" />
     <Compile Include="Controls\StringEmptinessToVisibilityConverter.cs" />
+    <Compile Include="Controls\TimelineControl.xaml.cs">
+      <DependentUpon>TimelineControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\TreeViewExtensions.cs" />
     <Compile Include="Entrypoint.cs" />
     <Compile Include="ExceptionHandler.cs" />
@@ -103,6 +110,9 @@
     <Compile Include="SourceFiles\SourceText.cs" />
     <Compile Include="SourceFiles\Span.cs" />
     <Compile Include="SourceFiles\TextUtilities.cs" />
+    <Compile Include="Timeline\Block.cs" />
+    <Compile Include="Timeline\Lane.cs" />
+    <Compile Include="Timeline\Timeline.cs" />
     <Compile Include="TypingConcurrentOperation.cs" />
     <Compile Include="Utilities.cs" />
     <Compile Include="WelcomeScreen.cs" />

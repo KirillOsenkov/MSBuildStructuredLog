@@ -38,14 +38,27 @@
 
           <local:SplitterPanel>
             <local:SplitterPanel.FirstChild>
-              <DockPanel MinWidth="10">
-                <TreeView x:Name="treeView"
-                      VirtualizingPanel.IsVirtualizing="True"
-                      VirtualizingPanel.VirtualizationMode="Recycling"
-                      TreeViewItem.Selected="TreeViewItem_Selected"
-                      ItemsSource="{Binding Children}">
-                </TreeView>
-              </DockPanel>
+              <TabControl x:Name="centralTabControl" 
+                          TabStripPlacement="Bottom" 
+                          SelectedIndex="1"
+                          MinWidth="10">
+                <TabItem x:Name="mainTreeTab" Header="Log">
+                  <TreeView x:Name="treeView"
+                            BorderBrush="Transparent"
+                            BorderThickness="0"
+                            VirtualizingPanel.IsVirtualizing="True"
+                            VirtualizingPanel.VirtualizationMode="Recycling"
+                            TreeViewItem.Selected="TreeViewItem_Selected"
+                            ItemsSource="{Binding Children}">
+                  </TreeView>
+                </TabItem>
+
+                <TabItem x:Name="timelineTab" Header="Timeline">
+                  <local:TimelineControl x:Name="timeline">
+                    
+                  </local:TimelineControl>
+                </TabItem>
+              </TabControl>
             </local:SplitterPanel.FirstChild>
 
             <local:SplitterPanel.SecondChild>

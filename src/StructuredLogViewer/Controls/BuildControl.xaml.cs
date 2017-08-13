@@ -163,6 +163,20 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             Loaded += BuildControl_Loaded;
 
             preprocessedFileManager = new PreprocessedFileManager(this, sourceFileResolver);
+
+            PopulateTimeline();
+        }
+
+        public void SelectTree()
+        {
+            centralTabControl.SelectedIndex = 0;
+        }
+
+        private void PopulateTimeline()
+        {
+            var timeline = new Timeline(Build);
+            this.timeline.BuildControl = this;
+            this.timeline.SetTimeline(timeline);
         }
 
         private static string[] searchExamples = new[]
@@ -527,7 +541,7 @@ Recent:
             }
         }
 
-        private void SelectItem(ParentedNode item)
+        public void SelectItem(ParentedNode item)
         {
             var parentChain = item.GetParentChain();
             if (!parentChain.Any())
@@ -535,6 +549,7 @@ Recent:
                 return;
             }
 
+            SelectTree();
             treeView.SelectContainerFromItem<object>(parentChain);
         }
 
@@ -935,6 +950,11 @@ Recent:
 
         private void TreeViewItem_RequestBringIntoView(object sender, RequestBringIntoViewEventArgs e)
         {
+            if (scrollViewer == null)
+            {
+                return;
+            }
+
             var treeViewItem = (TreeViewItem)sender;
             var treeView = (TreeView)typeof(TreeViewItem).GetProperty("ParentTreeView", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(treeViewItem);
 
