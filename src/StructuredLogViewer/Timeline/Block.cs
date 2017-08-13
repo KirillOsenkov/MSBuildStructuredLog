@@ -16,6 +16,9 @@ namespace StructuredLogViewer
         public ParentedNode Node { get; set; }
         public int Indent { get; set; }
 
+        public BlockEndpoint StartPoint;
+        public BlockEndpoint EndPoint;
+
         public string GetTooltip()
         {
             var text = Node.ToString();
@@ -33,5 +36,12 @@ namespace StructuredLogViewer
 
             return text;
         }
+    }
+
+    public class BlockEndpoint
+    {
+        public Block Block;
+        public long Timestamp;
+        public bool IsStart;
     }
 }

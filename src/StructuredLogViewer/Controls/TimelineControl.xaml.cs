@@ -45,6 +45,41 @@ namespace StructuredLogViewer.Controls
             var canvas = new Canvas();
             canvas.VerticalAlignment = VerticalAlignment.Top;
 
+            var endpoints = new List<BlockEndpoint>();
+
+            foreach (var block in blocks)
+            {
+                block.StartPoint = new BlockEndpoint()
+                {
+                    Block = block,
+                    Timestamp = block.StartTime.Ticks,
+                    IsStart = true
+                };
+                block.EndPoint = new BlockEndpoint()
+                {
+                    Block = block,
+                    Timestamp = block.EndTime.Ticks
+                };
+                endpoints.Add(block.StartPoint);
+                endpoints.Add(block.EndPoint);
+            }
+
+            endpoints.Sort((l, r) => l.Timestamp.CompareTo(r.Timestamp));
+
+            int level = 0;
+            foreach (var endpoint in endpoints)
+            {
+                if (endpoint.IsStart)
+                {
+                    level++;
+                    endpoint.Block.Indent = level;
+                }
+                else
+                {
+                    level--;
+                }
+            }
+
             blocks.Sort((l, r) =>
             {
                 var startDifference = l.StartTime.Ticks.CompareTo(r.StartTime.Ticks);
