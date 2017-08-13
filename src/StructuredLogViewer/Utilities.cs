@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -6,6 +7,31 @@ namespace StructuredLogViewer
 {
     public class Utilities
     {
+        public static string DisplayDuration(TimeSpan span)
+        {
+            if (span.TotalMilliseconds < 1)
+            {
+                return "";
+            }
+
+            if (span.TotalSeconds > 3600)
+            {
+                return span.ToString(@"h\:mm\:ss");
+            }
+
+            if (span.TotalSeconds > 60)
+            {
+                return span.ToString(@"m\:ss\.fff");
+            }
+
+            if (span.TotalMilliseconds > 1000)
+            {
+                return span.ToString(@"s\.fff") + " s";
+            }
+
+            return span.Milliseconds + " ms";
+        }
+
         public static string ByteArrayToHexString(byte[] bytes, int digits = 0)
         {
             if (digits == 0)
