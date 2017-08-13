@@ -205,6 +205,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (timedNode != null)
             {
                 AddStartAndEndTime(timedNode);
+                timedNode.NodeId = GetInteger(AttributeNames.NodeId);
             }
 
             // finally, concrete tests with early exit, sorted by commonality

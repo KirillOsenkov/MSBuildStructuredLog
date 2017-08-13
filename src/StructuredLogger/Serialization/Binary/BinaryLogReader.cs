@@ -12,6 +12,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private readonly bool formatSupportsSourceFiles;
         private readonly bool formatSupportsEmbeddedProjectImportsArchive;
+        private readonly bool formatSupportsTimedNodeId;
         private readonly bool formatIsValid;
 
         public static Build Read(string filePath)
@@ -47,6 +48,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             this.reader = new TreeBinaryReader(filePath);
             this.formatSupportsSourceFiles = reader.Version > new Version(1, 0, 130);
             this.formatSupportsEmbeddedProjectImportsArchive = reader.Version > new Version(1, 1, 87);
+            this.formatSupportsTimedNodeId = reader.Version > new Version(1, 1, 153);
             this.formatIsValid = reader.IsValid();
         }
 
@@ -142,6 +144,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 timedNode.StartTime = Serialization.GetDateTime(Dequeue());
                 timedNode.EndTime = Serialization.GetDateTime(Dequeue());
+                if (formatSupportsTimedNodeId)
+                {
+                    timedNode.NodeId = Serialization.GetInteger(Dequeue());
+                }
             }
 
             var task = node as Task;

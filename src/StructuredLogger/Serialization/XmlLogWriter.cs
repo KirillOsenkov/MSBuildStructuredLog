@@ -116,9 +116,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 SetString(nameof(TextNode.Text), textNode.Text);
             }
 
-            if (node is TimedNode)
+            if (node is TimedNode timedNode)
             {
-                AddStartAndEndTime((TimedNode)node);
+                AddStartAndEndTime(timedNode);
+                SetString(nameof(TimedNode.NodeId), timedNode.NodeId.ToString());
             }
 
             var task = node as Task;

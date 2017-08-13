@@ -19,6 +19,7 @@
         EndTime,
         Succeeded,
         Timestamp,
-        IsAnalyzed
+        IsAnalyzed,
+        NodeId
     }
 }
