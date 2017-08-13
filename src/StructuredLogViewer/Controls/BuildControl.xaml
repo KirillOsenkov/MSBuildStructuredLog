@@ -40,7 +40,7 @@
             <local:SplitterPanel.FirstChild>
               <TabControl x:Name="centralTabControl" 
                           TabStripPlacement="Bottom" 
-                          SelectedIndex="1"
+                          SelectedIndex="0"
                           MinWidth="10">
                 <TabItem x:Name="mainTreeTab" Header="Log">
                   <TreeView x:Name="treeView"
