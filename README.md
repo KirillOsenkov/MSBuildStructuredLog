@@ -32,7 +32,7 @@ Alternatively (useful for older versions of MSBuild) you can attach the logger t
 https://www.nuget.org/packages/Microsoft.Build.Logging.StructuredLogger
 
 ```
-msbuild solution.sln /t:Rebuild /v:diag /noconlog /logger:BinaryLogger,%localappdata%\MSBuildStructuredLogViewer\app-1.1.168\BinaryLogger.dll;1.binlog
+msbuild solution.sln /t:Rebuild /v:diag /noconlog /logger:BinaryLogger,%localappdata%\MSBuildStructuredLogViewer\app-1.1.168\StructuredLogger.dll;1.binlog
 ```
 
 To use a portable version of the logger (e.g. with the `dotnet msbuild` command) you need a .NET Standard version of `StructuredLogger.dll`, not the .NET Framework (Desktop) version.
