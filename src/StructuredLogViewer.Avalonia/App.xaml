@@ -1,0 +1,869 @@
+﻿<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:l="clr-namespace:Microsoft.Build.Logging.StructuredLogger;assembly=StructuredLogger"
+             xmlns:common="clr-namespace:Microsoft.Build.Logging.StructuredLogger;assembly=StructuredLogViewer.Common"
+             xmlns:s="clr-namespace:StructuredLogViewer.Avalonia.Controls;assembly=StructuredLogViewer.Avalonia">
+    <Application.Styles>
+        <StyleInclude Source="resm:Avalonia.Themes.Default.DefaultTheme.xaml?assembly=Avalonia.Themes.Default" />
+        <StyleInclude Source="resm:Avalonia.Themes.Default.Accents.BaseLight.xaml?assembly=Avalonia.Themes.Default" />
+        <StyleInclude Source="resm:AvaloniaEdit.AvaloniaEdit.xaml?assembly=AvaloniaEdit" />
+        <StyleInclude Source="resm:StructuredLogViewer.Avalonia.Styles.xaml?assembly=StructuredLogViewer.Avalonia" />
+
+        <Style Selector="s|TabItemsControl">
+            <Setter Property="Background"
+                    Value="Transparent" />
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                        <DockPanel>
+                            <TabStrip Items="{TemplateBinding Headers}"
+                                      DockPanel.Dock="{TemplateBinding TabStripPlacement}"
+                                      SelectedIndex="{TemplateBinding Path=SelectedIndex, Mode=TwoWay}" />
+                            <Carousel Items="{TemplateBinding Tabs}"
+                                      MemberSelector="Content"
+                                      SelectedIndex="{TemplateBinding SelectedIndex}" />
+                        </DockPanel>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+
+    </Application.Styles>
+    <Application.DataTemplates>
+
+        <TreeDataTemplate DataType="{x:Type l:Folder}"
+                          ItemsSource="{Binding Children}">
+            <StackPanel Orientation="Horizontal">
+                <Rectangle Name="icon"
+                           Width="14"
+                           Height="11"
+                           Stroke="{StyleResource FolderStroke}"
+                           Margin="3,3,6,3"
+                           Fill="{StyleResource ClosedFolderBrush}" />
+                <TextBlock Name="nameText"
+                           Text="{Binding Name}" />
+            </StackPanel>
+            <!--<TreeDataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsSelected}"
+                             Value="False">
+                    <Setter TargetName="nameText"
+                            Property="Foreground"
+                            Value="DarkGoldenrod" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Name}"
+                             Value="DoubleWrites">
+                    <Setter TargetName="nameText"
+                            Property="Foreground"
+                            Value="Red" />
+                    <Setter TargetName="icon"
+                            Property="Fill"
+                            Value="{StyleResource ErrorBrush}" />
+                </DataTrigger>
+            </TreeDataTemplate.Triggers>-->
+        </TreeDataTemplate>
+
+        <TreeDataTemplate DataType="{x:Type l:Project}"
+                          ItemsSource="{Binding Children}">
+            <StackPanel Orientation="Horizontal"
+                        Name="projectRoot">
+                <Rectangle Name="icon"
+                           Width="16"
+                           Height="16"
+                           Margin="2,2,6,2"
+                           VerticalAlignment="Top" />
+                <!-- 
+                           Fill="{StyleResource GenericProjectIcon}"
+                
+                -->
+                <TextBlock Text="{Binding Name}"
+                           Margin="0,1,0,0" />
+            </StackPanel>
+            <!--<TreeDataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsLowRelevance}"
+                             Value="True">
+                    <Setter TargetName="projectRoot"
+                            Property="Opacity"
+                            Value="0.25" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding ProjectFileExtension}"
+                             Value=".sln">
+                    <Setter TargetName="icon"
+                            Property="Fill"
+                            Value="{StyleResource SlnIcon}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding ProjectFileExtension}"
+                             Value=".csproj">
+                    <Setter TargetName="icon"
+                            Property="Fill"
+                            Value="{StyleResource CSProjIcon}" />
+                </DataTrigger>
+            </TreeDataTemplate.Triggers>-->
+        </TreeDataTemplate>
+
+        <TreeDataTemplate DataType="{x:Type l:Target}"
+                          ItemsSource="{Binding Children}">
+            <StackPanel Orientation="Horizontal"
+                        Name="targetRoot">
+                <Rectangle Name="icon"
+                           Width="14"
+                           Height="11"
+                           Stroke="{StyleResource TargetStroke}"
+                           Margin="3,3,6,3"
+                           Fill="{StyleResource TargetBrush}"
+                           VerticalAlignment="Top" />
+                <TextBlock Name="label"
+                           Text="Target " />
+                <TextBlock Text="{Binding Name}" />
+            </StackPanel>
+            <!--<TreeDataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsLowRelevance}"
+                             Value="True">
+                    <Setter TargetName="targetRoot"
+                            Property="Opacity"
+                            Value="0.25" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsSelected}"
+                             Value="False">
+                    <Setter TargetName="label"
+                            Property="Foreground"
+                            Value="{StyleResource TargetStroke}" />
+                </DataTrigger>
+            </TreeDataTemplate.Triggers>-->
+        </TreeDataTemplate>
+
+        <TreeDataTemplate DataType="{x:Type l:Task}"
+                          ItemsSource="{Binding Children}">
+            <StackPanel Orientation="Horizontal">
+                <Rectangle Name="icon"
+                           Width="14"
+                           Height="11"
+                           Stroke="{StyleResource TaskStroke}"
+                           Margin="3,3,6,3"
+                           Fill="{StyleResource TaskBrush}"
+                           VerticalAlignment="Top" />
+                <TextBlock Name="label"
+                           Text="Task " />
+                <TextBlock Text="{Binding Name}" />
+                <TextBlock Name="duration"
+                           Text="{Binding DurationText}" />
+            </StackPanel>
+            <!--<TreeDataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsSelected}"
+                             Value="False">
+                    <Setter TargetName="label"
+                            Property="Foreground"
+                            Value="{StyleResource TaskStroke}" />
+                    <Setter TargetName="duration"
+                            Property="Foreground"
+                            Value="LightGray" />
+                </DataTrigger>
+            </TreeDataTemplate.Triggers>-->
+        </TreeDataTemplate>
+
+        <TreeDataTemplate DataType="{x:Type l:AddItem}"
+                          ItemsSource="{Binding Children}">
+            <StackPanel Orientation="Horizontal">
+                <Rectangle Name="icon"
+                           Width="14"
+                           Height="11"
+                           Stroke="{StyleResource ItemStroke}"
+                           Margin="3,3,6,3"
+                           Fill="{StyleResource ItemBrush}"
+                           VerticalAlignment="Top" />
+                <TextBlock Name="label"
+                           Text="Add Item " />
+                <TextBlock Text="{Binding Name}" />
+            </StackPanel>
+            <!--<TreeDataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsSelected}"
+                             Value="False">
+                    <Setter TargetName="label"
+                            Property="Foreground"
+                            Value="Teal" />
+                </DataTrigger>
+            </TreeDataTemplate.Triggers>-->
+        </TreeDataTemplate>
+
+        <TreeDataTemplate DataType="{x:Type l:RemoveItem}"
+                          ItemsSource="{Binding Children}">
+            <StackPanel Orientation="Horizontal">
+                <Rectangle Name="icon"
+                           Width="14"
+                           Height="11"
+                           Stroke="{StyleResource ItemStroke}"
+                           Margin="3,3,6,3"
+                           Fill="{StyleResource ItemBrush}"
+                           VerticalAlignment="Top" />
+                <TextBlock Name="label"
+                           Text="Remove Item " />
+                <TextBlock Text="{Binding Name}" />
+            </StackPanel>
+            <!--<TreeDataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsSelected}"
+                             Value="False">
+                    <Setter TargetName="label"
+                            Property="Foreground"
+                            Value="Teal" />
+                </DataTrigger>
+            </TreeDataTemplate.Triggers>-->
+        </TreeDataTemplate>
+
+        <TreeDataTemplate DataType="{x:Type l:Item}"
+                          ItemsSource="{Binding Children}">
+            <StackPanel Orientation="Horizontal">
+                <Rectangle Name="icon"
+                           Width="14"
+                           Height="11"
+                           Stroke="{StyleResource ItemStroke}"
+                           Margin="3,3,6,3"
+                           Fill="{StyleResource ItemBrush}"
+                           VerticalAlignment="Top" />
+                <TextBlock Name="nameAndEquals"
+                           Text="{Binding NameAndEquals}" />
+                <TextBlock Text="{Binding ShortenedText}" />
+            </StackPanel>
+            <!--<TreeDataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsSelected}"
+                             Value="False">
+                    <Setter TargetName="nameAndEquals"
+                            Property="Foreground"
+                            Value="Green" />
+                </DataTrigger>
+            </TreeDataTemplate.Triggers>-->
+        </TreeDataTemplate>
+
+        <DataTemplate DataType="{x:Type l:Metadata}">
+            <StackPanel Orientation="Horizontal">
+                <Rectangle Name="icon"
+                           Width="14"
+                           Height="11"
+                           Stroke="{StyleResource MetadataStroke}"
+                           Margin="3,3,6,3"
+                           Fill="{StyleResource ItemBrush}"
+                           VerticalAlignment="Top" />
+                <TextBlock Name="label"
+                           Text="{Binding NameAndEquals, Mode=OneTime}" />
+                <TextBlock Text="{Binding ShortenedValue}" />
+            </StackPanel>
+            <!--<DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsSelected}"
+                             Value="False">
+                    <Setter TargetName="label"
+                            Property="Foreground"
+                            Value="LightSeaGreen" />
+                </DataTrigger>
+            </DataTemplate.Triggers>-->
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type l:Property}">
+            <StackPanel Orientation="Horizontal">
+                <Rectangle Name="icon"
+                           Width="14"
+                           Height="11"
+                           Stroke="{StyleResource PropertyStroke}"
+                           Margin="3,3,6,3"
+                           Fill="{StyleResource PropertyBrush}"
+                           VerticalAlignment="Top" />
+                <TextBlock Name="label"
+                           Text="{Binding NameAndEquals, Mode=OneTime}" />
+                <TextBlock Text="{Binding ShortenedValue}" />
+            </StackPanel>
+            <!--<DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsSelected}"
+                             Value="False">
+                    <Setter TargetName="label"
+                            Property="Foreground"
+                            Value="{StyleResource PropertyStroke}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>-->
+        </DataTemplate>
+
+        <TreeDataTemplate DataType="{x:Type l:Parameter}"
+                          ItemsSource="{Binding Children}">
+            <StackPanel Orientation="Horizontal">
+                <Rectangle Name="icon"
+                           Width="14"
+                           Height="11"
+                           Stroke="{StyleResource ParameterStroke}"
+                           Margin="3,3,6,3"
+                           Fill="{StyleResource ParameterBrush}"
+                           VerticalAlignment="Top" />
+                <TextBlock Name="name"
+                           Text="{Binding Name}" />
+            </StackPanel>
+            <!--<TreeDataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsSelected}"
+                             Value="False">
+                    <Setter TargetName="name"
+                            Property="Foreground"
+                            Value="{StyleResource ParameterStroke}" />
+                </DataTrigger>
+            </TreeDataTemplate.Triggers>-->
+        </TreeDataTemplate>
+
+        <DataTemplate DataType="{x:Type l:Message}">
+            <StackPanel Orientation="Horizontal">
+                <Rectangle Name="icon"
+                           Width="14"
+                           Height="11"
+                           Stroke="{StyleResource MessageStroke}"
+                           Margin="3,3,6,3"
+                           Fill="{StyleResource MessageBrush}"
+                           VerticalAlignment="Top" />
+                <TextBlock Name="messageText"
+                           Text="{Binding ShortenedText}" />
+            </StackPanel>
+            <!--<DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsLowRelevance}"
+                             Value="True">
+                    <Setter TargetName="messageText"
+                            Property="Opacity"
+                            Value="0.25" />
+                </DataTrigger>
+            </DataTemplate.Triggers>-->
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type l:Error}">
+            <StackPanel Orientation="Horizontal">
+                <Rectangle Name="icon"
+                           Width="14"
+                           Height="11"
+                           Stroke="{StyleResource ErrorStroke}"
+                           Margin="3,3,6,3"
+                           Fill="{StyleResource ErrorBrush}"
+                           VerticalAlignment="Top" />
+                <TextBlock Name="text"
+                           Text="{Binding}" />
+            </StackPanel>
+            <!--<DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsSelected}"
+                             Value="False">
+                    <Setter TargetName="text"
+                            Property="Foreground"
+                            Value="{StyleResource ErrorStroke}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>-->
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type l:Warning}">
+            <StackPanel Orientation="Horizontal">
+                <Rectangle Name="icon"
+                           Width="14"
+                           Height="11"
+                           Stroke="{StyleResource WarningStroke}"
+                           Margin="3,3,6,3"
+                           Fill="{StyleResource WarningBrush}"
+                           VerticalAlignment="Top" />
+                <TextBlock Text="{Binding}" />
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type common:Note}">
+            <StackPanel Orientation="Horizontal">
+                <Border BorderBrush="LightGray"
+                        BorderThickness="1"
+                        Margin="4"
+                        Background="LightYellow"
+                        Padding="6">
+                    <TextBlock Text="{Binding Text}"
+                               Foreground="Gray"
+                               TextWrapping="Wrap" />
+                </Border>
+            </StackPanel>
+        </DataTemplate>
+
+        <TreeDataTemplate DataType="{x:Type l:SourceFile}"
+                          ItemsSource="{Binding Children}">
+            <StackPanel Orientation="Horizontal">
+                <Rectangle Name="icon"
+                           Width="14"
+                           Height="11"
+                           Stroke="{StyleResource MessageStroke}"
+                           Margin="3,3,6,3"
+                           Fill="{StyleResource MessageBrush}"
+                           VerticalAlignment="Top" />
+                <TextBlock Name="messageText"
+                           Text="{Binding Name}" />
+            </StackPanel>
+        </TreeDataTemplate>
+
+        <DataTemplate DataType="{x:Type l:SourceFileLine}">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Name="lineNumber"
+                           Text="{Binding LineNumber}"
+                           FontFamily="Consolas"
+                           Foreground="Teal"
+                           Margin="0,0,12,0" />
+                <TextBlock Name="messageText"
+                           Text="{Binding LineText}"
+                           FontFamily="Consolas" />
+            </StackPanel>
+            <!--<DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsSelected}"
+                             Value="True">
+                    <Setter TargetName="lineNumber"
+                            Property="Foreground"
+                            Value="White" />
+                </DataTrigger>
+            </DataTemplate.Triggers>-->
+        </DataTemplate>
+
+        <TreeDataTemplate DataType="{x:Type common:ProxyNode}"
+                          ItemsSource="{Binding Children}">
+            <StackPanel Orientation="Horizontal">
+                <Rectangle Name="icon"
+                           Width="14"
+                           Height="11"
+                           Stroke="{StyleResource ParameterStroke}"
+                           Margin="3,3,6,3"
+                           Fill="{StyleResource ParameterBrush}"
+                           VerticalAlignment="Top" />
+                <ItemsControl Items="{Binding Highlights}"
+                              Focusable="False">
+                    <ItemsControl.DataTemplates>
+                        <DataTemplate DataType="{x:Type common:HighlightedText}">
+                            <TextBlock Foreground="Black"
+                                       Background="Yellow"
+                                       Text="{Binding Text}" />
+                        </DataTemplate>
+                    </ItemsControl.DataTemplates>
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+            </StackPanel>
+            <!--<TreeDataTemplate.Triggers>
+                <DataTrigger Binding="{Binding OriginalType}"
+                             Value="Folder">
+                    <Setter TargetName="icon"
+                            Property="Stroke"
+                            Value="{StyleResource FolderStroke}" />
+                    <Setter TargetName="icon"
+                            Property="Fill"
+                            Value="{StyleResource ClosedFolderBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding OriginalType}"
+                             Value="Target">
+                    <Setter TargetName="icon"
+                            Property="Stroke"
+                            Value="{StyleResource TargetStroke}" />
+                    <Setter TargetName="icon"
+                            Property="Fill"
+                            Value="{StyleResource TargetBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding OriginalType}"
+                             Value="Task">
+                    <Setter TargetName="icon"
+                            Property="Stroke"
+                            Value="{StyleResource TaskStroke}" />
+                    <Setter TargetName="icon"
+                            Property="Fill"
+                            Value="{StyleResource TaskBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding OriginalType}"
+                             Value="AddItem">
+                    <Setter TargetName="icon"
+                            Property="Stroke"
+                            Value="{StyleResource ItemStroke}" />
+                    <Setter TargetName="icon"
+                            Property="Fill"
+                            Value="{StyleResource ItemBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding OriginalType}"
+                             Value="RemoveItem">
+                    <Setter TargetName="icon"
+                            Property="Stroke"
+                            Value="{StyleResource ItemStroke}" />
+                    <Setter TargetName="icon"
+                            Property="Fill"
+                            Value="{StyleResource ItemBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding OriginalType}"
+                             Value="Item">
+                    <Setter TargetName="icon"
+                            Property="Stroke"
+                            Value="{StyleResource ItemStroke}" />
+                    <Setter TargetName="icon"
+                            Property="Fill"
+                            Value="{StyleResource ItemBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding OriginalType}"
+                             Value="Metadata">
+                    <Setter TargetName="icon"
+                            Property="Stroke"
+                            Value="{StyleResource MetadataStroke}" />
+                    <Setter TargetName="icon"
+                            Property="Fill"
+                            Value="{StyleResource ItemBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding OriginalType}"
+                             Value="Property">
+                    <Setter TargetName="icon"
+                            Property="Stroke"
+                            Value="{StyleResource PropertyStroke}" />
+                    <Setter TargetName="icon"
+                            Property="Fill"
+                            Value="{StyleResource PropertyBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding OriginalType}"
+                             Value="Parameter">
+                    <Setter TargetName="icon"
+                            Property="Stroke"
+                            Value="{StyleResource ParameterStroke}" />
+                    <Setter TargetName="icon"
+                            Property="Fill"
+                            Value="{StyleResource ParameterBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding OriginalType}"
+                             Value="Message">
+                    <Setter TargetName="icon"
+                            Property="Stroke"
+                            Value="{StyleResource MessageStroke}" />
+                    <Setter TargetName="icon"
+                            Property="Fill"
+                            Value="{StyleResource MessageBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding OriginalType}"
+                             Value="Error">
+                    <Setter TargetName="icon"
+                            Property="Stroke"
+                            Value="{StyleResource ErrorStroke}" />
+                    <Setter TargetName="icon"
+                            Property="Fill"
+                            Value="{StyleResource ErrorBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding OriginalType}"
+                             Value="Warning">
+                    <Setter TargetName="icon"
+                            Property="Stroke"
+                            Value="{StyleResource WarningStroke}" />
+                    <Setter TargetName="icon"
+                            Property="Fill"
+                            Value="{StyleResource WarningBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding ProjectExtension}"
+                             Value=".sln">
+                    <Setter TargetName="icon"
+                            Property="Fill"
+                            Value="{StyleResource SlnIcon}" />
+                    <Setter TargetName="icon"
+                            Property="Height"
+                            Value="16" />
+                    <Setter TargetName="icon"
+                            Property="Width"
+                            Value="16" />
+                    <Setter TargetName="icon"
+                            Property="Stroke"
+                            Value="Transparent" />
+                    <Setter TargetName="icon"
+                            Property="Margin"
+                            Value="2,2,6,2" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding ProjectExtension}"
+                             Value=".csproj">
+                    <Setter TargetName="icon"
+                            Property="Fill"
+                            Value="{StyleResource CSProjIcon}" />
+                    <Setter TargetName="icon"
+                            Property="Height"
+                            Value="16" />
+                    <Setter TargetName="icon"
+                            Property="Width"
+                            Value="16" />
+                    <Setter TargetName="icon"
+                            Property="Stroke"
+                            Value="Transparent" />
+                    <Setter TargetName="icon"
+                            Property="Margin"
+                            Value="2,2,6,2" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding ProjectExtension}"
+                             Value="other">
+                    <Setter TargetName="icon"
+                            Property="Fill"
+                            Value="{StyleResource GenericProjectIcon}" />
+                    <Setter TargetName="icon"
+                            Property="Height"
+                            Value="16" />
+                    <Setter TargetName="icon"
+                            Property="Width"
+                            Value="16" />
+                    <Setter TargetName="icon"
+                            Property="Stroke"
+                            Value="Transparent" />
+                    <Setter TargetName="icon"
+                            Property="Margin"
+                            Value="2,2,6,2" />
+                </DataTrigger>
+            </TreeDataTemplate.Triggers>-->
+        </TreeDataTemplate>
+
+        <DataTemplate DataType="{x:Type common:WelcomeScreen}">
+            <Grid Name="welcomeScreen">
+                <TextBlock Text="{Binding Version}"
+                           Foreground="Gray"
+                           FontSize="16"
+                           Margin="20"
+                           HorizontalAlignment="Right"
+                           VerticalAlignment="Top" />
+                <Grid HorizontalAlignment="Center"
+                      VerticalAlignment="Center">
+                    <Rectangle Fill="Black" />
+                    <Grid Background="White">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Name="customMessage"
+                                   Grid.Row="0"
+                                   FontSize="16"
+                                   Foreground="Red"
+                                   Margin="10"
+                                   TextWrapping="Wrap"
+                                   Text="{Binding Message}" />
+                        <!--
+                                   IsVisible="{Binding Message, Converter={StyleResource StringEmptinessToVisibilityConverter}}"
+                        -->
+                        <Grid Name="openLogOrProjectCompartment"
+                              Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Button Margin="20"
+                                    MinWidth="200"
+                                    MinHeight="200"
+                                    Command="{Binding OpenProjectCommand}">
+                                <StackPanel>
+                                    <Rectangle Width="100"
+                                               Height="100"
+                                               Margin="20" />
+                                    <!--
+                                               Fill="{StyleResource SlnIcon}"
+                                    -->
+                                    <TextBlock Text="Open Project/Solution"
+                                               FontSize="16"
+                                               Margin="10"
+                                               HorizontalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                            <Button Margin="0,20,20,20"
+                                    MinWidth="200"
+                                    MinHeight="200"
+                                    Command="{Binding OpenLogFileCommand}"
+                                    Grid.Column="1">
+                                <StackPanel>
+                                    <Canvas Width="100"
+                                            Height="100"
+                                            Margin="20">
+                                        <Rectangle Width="35"
+                                                   Height="35"
+                                                   Canvas.Left="0"
+                                                   Canvas.Top="0"
+                                                   Stroke="{StyleResource TargetStroke}"
+                                                   Fill="{StyleResource TargetBrush}" />
+                                        <Rectangle Width="35"
+                                                   Height="35"
+                                                   Canvas.Left="25"
+                                                   Canvas.Top="35"
+                                                   Stroke="{StyleResource ParameterStroke}"
+                                                   Fill="{StyleResource ParameterBrush}" />
+                                        <Rectangle Width="35"
+                                                   Height="35"
+                                                   Canvas.Left="25"
+                                                   Canvas.Top="70"
+                                                   Stroke="{StyleResource TaskStroke}"
+                                                   Fill="{StyleResource TaskBrush}" />
+                                        <Rectangle Width="35"
+                                                   Height="35"
+                                                   Canvas.Left="60"
+                                                   Canvas.Top="35"
+                                                   Stroke="{StyleResource ItemStroke}"
+                                                   Fill="{StyleResource ItemBrush}" />
+                                        <Rectangle Width="35"
+                                                   Height="35"
+                                                   Canvas.Left="60"
+                                                   Canvas.Top="70"
+                                                   Stroke="{StyleResource FolderStroke}"
+                                                   Fill="{StyleResource ClosedFolderBrush}" />
+                                        <Line StartPoint="16,35"
+                                              EndPoint="16,87"
+                                              Stroke="Black" />
+                                        <Line StartPoint="16,87"
+                                              EndPoint="25,87"
+                                              Stroke="Black" />
+                                        <Line StartPoint="16,53"
+                                              EndPoint="25,53"
+                                              Stroke="Black" />
+                                    </Canvas>
+                                    <TextBlock Text="Open Log File"
+                                               FontSize="16"
+                                               Margin="10"
+                                               HorizontalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                        <Grid Name="recentProjects"
+                              Grid.Row="2"
+                              IsVisible="{Binding ShowRecentProjects}">
+                            <Expander IsExpanded="True"
+                                      Header="Recent projects and solutions"
+                                      Margin="10">
+                                <ListBox Items="{Binding RecentProjects}"
+                                         Margin="10"
+                                         SelectedItem="{Binding SelectedProject, Mode=OneWayToSource}"
+                                         Background="Transparent"
+                                         BorderBrush="Transparent"
+                                         BorderThickness="0" />
+                            </Expander>
+                        </Grid>
+                        <Grid Name="recentLogs"
+                              Grid.Row="3"
+                              IsVisible="{Binding ShowRecentLogs}">
+                            <Expander IsExpanded="True"
+                                      Header="Recent logs"
+                                      Margin="10">
+                                <ListBox Items="{Binding RecentLogs}"
+                                         Margin="10"
+                                         SelectedItem="{Binding SelectedLog, Mode=OneWayToSource}"
+                                         Background="Transparent"
+                                         BorderBrush="Transparent"
+                                         BorderThickness="0" />
+                            </Expander>
+                        </Grid>
+                        <CheckBox Content="Enable tree virtualization (faster, but may cause hangs)"
+                                  Margin="10,0,10,10"
+                                  Grid.Row="4"
+                                  IsChecked="{Binding EnableVirtualization}"
+                                  ToolTip.Tip="Disable virtualization if you're experiencing hangs or deadlocks when scrolling the tree" />
+                    </Grid>
+                </Grid>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type common:BuildParametersScreen}">
+            <Grid Name="buildParameters"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Margin="40">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <StackPanel Grid.Row="0"
+                            Margin="40,40,40,10">
+                    <TextBlock Text="Specify custom MSBuild command line arguments:"
+                               Margin="0,0,0,7" />
+                    <WrapPanel Orientation="Horizontal">
+                        <DropDown Items="{Binding MSBuildLocations}"
+                                  ToolTip.Tip="Select MSBuild toolset to use for building"
+                                  Height="22" />
+                        <Button Command="{Binding BrowseForMSBuildCommand}"
+                                Width="22"
+                                Height="22"
+                                ToolTip.Tip="Browse for custom MSBuild.exe location..."
+                                Margin="0,0,8,0">
+                            <StackPanel Orientation="Horizontal">
+                                <Rectangle Width="2"
+                                           Height="2"
+                                           Margin="2"
+                                           Fill="Black" />
+                                <Rectangle Width="2"
+                                           Height="2"
+                                           Margin="0,2,2,2"
+                                           Fill="Black" />
+                                <Rectangle Width="2"
+                                           Height="2"
+                                           Margin="0,2,2,2"
+                                           Fill="Black" />
+                            </StackPanel>
+                        </Button>
+                        <TextBlock Text="{Binding PrefixArguments}"
+                                   Margin="0,3,0,0"
+                                   TextWrapping="Wrap" />
+                        <TextBox Name="argumentsText"
+                                 Margin="4,0,4,0"
+                                 Padding="0,1,0,0"
+                                 Text="{Binding MSBuildArguments}"
+                                 TextWrapping="Wrap"
+                                 MinWidth="300">
+                            <TextBox.KeyBindings>
+                                <KeyBinding Gesture="Enter"
+                                            Command="{Binding BuildCommand}" />
+                            </TextBox.KeyBindings>
+                        </TextBox>
+
+                        <TextBlock Text="{Binding PostfixArguments}"
+                                   TextWrapping="Wrap" />
+                    </WrapPanel>
+                    <Button Content="Copy command line to clipboard"
+                            Command="{Binding CopyCommand}"
+                            Padding="4,0,4,0"
+                            Height="23"
+                            HorizontalAlignment="Right"
+                            Margin="4" />
+                </StackPanel>
+                <StackPanel Grid.Row="1"
+                            HorizontalAlignment="Center"
+                            Margin="40,10,40,40"
+                            Orientation="Horizontal">
+                    <Button Content="Build"
+                            Command="{Binding BuildCommand}"
+                            Width="75"
+                            Height="23"
+                            Margin="7" />
+                    <Button Content="Cancel"
+                            Command="{Binding CancelCommand}"
+                            Width="75"
+                            Height="23"
+                            Margin="0,7,7,7" />
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type common:BuildProgress}">
+            <Grid Name="buildProgress"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Margin="40">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <TextBlock Name="text"
+                           Text="{Binding ProgressText}"
+                           HorizontalAlignment="Center"
+                           TextWrapping="Wrap" />
+                <ProgressBar Grid.Row="1"
+                             Value="100"
+                             HorizontalAlignment="Center"
+                             Width="200"
+                             Height="23"
+                             Margin="10" />
+                <!--TODO:
+                IsIndeterminate="True"
+                -->
+                <StackPanel Grid.Row="2"
+                            Margin="40"
+                            IsVisible="{Binding ShowCommandLine}">
+                    <TextBlock Text="Using command line (press Ctrl+C to copy):"
+                               Margin="0,0,0,7" />
+                    <TextBox Text="{Binding MSBuildCommandLine}"
+                             IsReadOnly="True"
+                             TextWrapping="Wrap"
+                             AcceptsReturn="True"
+                             Background="#E0E0E0"
+                             MinHeight="23" />
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+    </Application.DataTemplates>
+</Application>

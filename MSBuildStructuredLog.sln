@@ -18,7 +18,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		version.json = version.json
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StructuredLogViewer.Common", "src\StructuredLogViewer.Common\StructuredLogViewer.Common.csproj", "{414B24CC-CC52-4B14-991C-D89A522E2433}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StructuredLogViewer.Common", "src\StructuredLogViewer.Common\StructuredLogViewer.Common.csproj", "{414B24CC-CC52-4B14-991C-D89A522E2433}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StructuredLogViewer.Avalonia", "src\StructuredLogViewer.Avalonia\StructuredLogViewer.Avalonia.csproj", "{B54A8B12-DDF1-4A29-8760-7ED80CE9F49F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -60,6 +62,14 @@ Global
 		{414B24CC-CC52-4B14-991C-D89A522E2433}.Release|Any CPU.Build.0 = Release|Any CPU
 		{414B24CC-CC52-4B14-991C-D89A522E2433}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{414B24CC-CC52-4B14-991C-D89A522E2433}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{B54A8B12-DDF1-4A29-8760-7ED80CE9F49F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B54A8B12-DDF1-4A29-8760-7ED80CE9F49F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B54A8B12-DDF1-4A29-8760-7ED80CE9F49F}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{B54A8B12-DDF1-4A29-8760-7ED80CE9F49F}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{B54A8B12-DDF1-4A29-8760-7ED80CE9F49F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B54A8B12-DDF1-4A29-8760-7ED80CE9F49F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B54A8B12-DDF1-4A29-8760-7ED80CE9F49F}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{B54A8B12-DDF1-4A29-8760-7ED80CE9F49F}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
