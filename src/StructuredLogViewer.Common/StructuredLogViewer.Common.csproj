@@ -6,9 +6,12 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
+  <ItemGroup Condition=" '$(OS)' == 'Windows' ">
+    <PackageReference Include="Nerdbank.GitVersioning" Version="1.5.62" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.Language.Xml" Version="1.1.20" />
-    <PackageReference Include="Nerdbank.GitVersioning" Version="1.5.62" />
     <PackageReference Include="System.ValueTuple" Version="4.4.0-preview1-25305-02" />
 
   </ItemGroup>

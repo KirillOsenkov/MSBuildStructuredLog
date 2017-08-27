@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -106,8 +107,18 @@ namespace StructuredLogViewer
 
         public static string GetRootPath()
         {
-            // TODO: xplat
-            var path = Environment.GetEnvironmentVariable("LocalAppData");
+            string path;
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                path = Environment.GetEnvironmentVariable("LocalAppData");
+
+            }
+            else
+            {
+                path = "~/";
+            }
+
             if (!string.IsNullOrEmpty(path))
             {
                 path = Path.Combine(path, "Microsoft", "MSBuildStructuredLog");
