@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard1.5;net46</TargetFrameworks>
+    <RootNamespace>StructuredLogViewer</RootNamespace>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Language.Xml" Version="1.1.20" />
+    <PackageReference Include="Nerdbank.GitVersioning" Version="1.5.62" />
+    <PackageReference Include="System.ValueTuple" Version="4.4.0-preview1-25305-02" />
+
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\StructuredLogger\StructuredLogger.csproj" />
+  </ItemGroup>
+
+</Project>

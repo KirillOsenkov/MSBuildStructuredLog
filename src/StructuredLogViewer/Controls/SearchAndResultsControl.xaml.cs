@@ -12,8 +12,8 @@ namespace StructuredLogViewer.Controls
         public SearchAndResultsControl()
         {
             InitializeComponent();
-            typingConcurrentOperation.DisplayResults += r => DisplaySearchResults(r);
-            typingConcurrentOperation.SearchComplete += TypingConcurrentOperation_SearchComplete;
+            typingConcurrentOperation.DisplayResults += r => Dispatcher.InvokeAsync(() => DisplaySearchResults(r));
+            typingConcurrentOperation.SearchComplete += (text, arg) => Dispatcher.InvokeAsync(() => TypingConcurrentOperation_SearchComplete(text, arg));
         }
 
         private void TypingConcurrentOperation_SearchComplete(string searchText, object arg2)

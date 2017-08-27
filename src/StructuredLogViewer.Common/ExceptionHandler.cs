@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Reflection;
-using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogViewer
 {
@@ -8,12 +7,10 @@ namespace StructuredLogViewer
     {
         public static void Initialize()
         {
-            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-        }
-
-        private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
-        {
-            ErrorReporting.ReportException(e.ExceptionObject as Exception);
+#if NET46
+            AppDomain.CurrentDomain.UnhandledException += (o, e) => 
+                Microsoft.Build.Logging.StructuredLogger.ErrorReporting.ReportException(e.ExceptionObject as Exception);
+#endif
         }
 
         public static Exception Unwrap(Exception ex)

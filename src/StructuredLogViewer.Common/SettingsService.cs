@@ -106,8 +106,13 @@ namespace StructuredLogViewer
 
         public static string GetRootPath()
         {
-            var path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            path = Path.Combine(path, "Microsoft", "MSBuildStructuredLog");
+            // TODO: xplat
+            var path = Environment.GetEnvironmentVariable("LocalAppData");
+            if (!string.IsNullOrEmpty(path))
+            {
+                path = Path.Combine(path, "Microsoft", "MSBuildStructuredLog");
+            }
+
             return path;
         }
 

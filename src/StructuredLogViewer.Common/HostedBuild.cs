@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Build.Logging.StructuredLogger;
 
@@ -36,7 +37,7 @@ namespace StructuredLogViewer
 
         public static string GetPostfixArguments()
         {
-            var loggerDll = typeof(StructuredLogger).Assembly.Location;
+            var loggerDll = typeof(StructuredLogger).GetTypeInfo().Assembly.Location;
             return $@"/v:diag /nologo /noconlog /logger:{nameof(StructuredLogger)},""{loggerDll}"";""{logFilePath}""";
         }
 

@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Windows;
-using StructuredLogViewer.Controls;
 using TPLTask = System.Threading.Tasks.Task;
 
 namespace StructuredLogViewer
@@ -40,14 +37,10 @@ namespace StructuredLogViewer
             Stopwatch sw = Stopwatch.StartNew();
             var results = ExecuteSearch(searchText);
             var elapsed = sw.Elapsed;
-            BuildControl.Elapsed = elapsed;
             if (latestSearch == searchText)
             {
-                Application.Current.Dispatcher.InvokeAsync(() =>
-                {
-                    DisplayResults?.Invoke(results);
-                    SearchComplete?.Invoke(searchText, results);
-                });
+                DisplayResults?.Invoke(results);
+                SearchComplete?.Invoke(searchText, results);
             }
         }
     }

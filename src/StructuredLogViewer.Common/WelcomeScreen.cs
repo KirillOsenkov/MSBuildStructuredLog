@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Windows;
 using System.Windows.Input;
 using StructuredLogViewer;
 
@@ -72,7 +71,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 if (!File.Exists(value))
                 {
-                    MessageBox.Show($"File {value} doesn't exist.");
+                    DialogService.ShowMessageBox($"File {value} doesn't exist.");
                     SettingsService.RemoveRecentLogFile(value);
                     recentLogs = null;
                     RaisePropertyChanged(nameof(RecentLogs));
@@ -95,7 +94,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 if (!File.Exists(value))
                 {
-                    MessageBox.Show($"Project {value} doesn't exist.");
+                    DialogService.ShowMessageBox($"Project {value} doesn't exist.");
                     SettingsService.RemoveRecentProject(value);
                     recentProjects = null;
                     RaisePropertyChanged(nameof(RecentProjects));

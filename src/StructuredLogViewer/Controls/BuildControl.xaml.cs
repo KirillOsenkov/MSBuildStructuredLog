@@ -162,7 +162,8 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
             Loaded += BuildControl_Loaded;
 
-            preprocessedFileManager = new PreprocessedFileManager(this, sourceFileResolver);
+            preprocessedFileManager = new PreprocessedFileManager(Build, sourceFileResolver);
+            preprocessedFileManager.DisplayFile += path => DisplayFile(path);
 
             PopulateTimeline();
         }
@@ -340,8 +341,6 @@ Recent:
 
             var root = new Folder();
 
-            // root.Children.Add(new Message { Text = "Elapsed " + Elapsed.ToString() });
-
             if (results != null)
             {
                 foreach (var file in results)
@@ -445,7 +444,6 @@ Recent:
         /// of the chain left in the breadcrumb at the end.
         /// </summary>
         private bool isProcessingBreadcrumbClick = false;
-        internal static TimeSpan Elapsed;
 
         private void BreadCrumb_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -908,8 +906,6 @@ Recent:
             }
 
             var root = new Folder();
-
-            // root.Children.Add(new Message { Text = "Elapsed " + Elapsed.ToString() });
 
             foreach (var result in results)
             {

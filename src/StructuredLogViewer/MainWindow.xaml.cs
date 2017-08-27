@@ -367,6 +367,7 @@ namespace StructuredLogViewer
 
             string customArguments = SettingsService.GetCustomArguments(filePath);
             var parametersScreen = new BuildParametersScreen();
+            parametersScreen.BrowseForMSBuild += BrowseForMSBuildExe;
             parametersScreen.PrefixArguments = HostedBuild.QuoteIfNeeded(filePath);
             parametersScreen.MSBuildArguments = customArguments;
             parametersScreen.PostfixArguments = HostedBuild.GetPostfixArguments();
@@ -555,13 +556,30 @@ namespace StructuredLogViewer
 
         private void SetMSBuild_Click(object sender, RoutedEventArgs e)
         {
-            MSBuildLocator.BrowseForMSBuildExe();
+            BrowseForMSBuildExe();
 
             var buildParametersScreen = mainContent.Content as BuildParametersScreen;
             if (buildParametersScreen != null)
             {
                 buildParametersScreen.UpdateMSBuildLocations();
             }
+        }
+
+        private static void BrowseForMSBuildExe()
+        {
+            var openFileDialog = new OpenFileDialog
+            {
+                Filter = "MSBuild.exe|MSBuild.exe",
+                Title = "Select MSBuild.exe location",
+                CheckFileExists = true
+            };
+
+            if (openFileDialog.ShowDialog() != true)
+            {
+                return;
+            }
+
+            SettingsService.AddRecentMSBuildLocation(openFileDialog.FileName);
         }
 
         private void SaveAs_Click(object sender, RoutedEventArgs e)

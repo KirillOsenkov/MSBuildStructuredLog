@@ -25,6 +25,10 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\StructuredLogViewer.Common\StructuredLogViewer.Common.csproj">
+      <Project>{414b24cc-cc52-4b14-991c-d89a522e2433}</Project>
+      <Name>StructuredLogViewer.Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\StructuredLogger\StructuredLogger.csproj">
       <Project>{a939886e-a191-4a46-a84b-21ad670081b9}</Project>
       <Name>StructuredLogger</Name>
@@ -61,14 +65,9 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Analyzers\ResolveAssemblyReferenceAnalyzer\CopyLocalAnalyzer.cs" />
-    <Compile Include="BuildAnalyzer.cs" />
-    <Compile Include="BuildParametersScreen.cs" />
-    <Compile Include="BuildProgress.cs" />
     <Compile Include="Controls\BuildControl.xaml.cs">
       <DependentUpon>BuildControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\Classifier.cs" />
     <Compile Include="Controls\DocumentWell.xaml.cs">
       <DependentUpon>DocumentWell.xaml</DependentUpon>
     </Compile>
@@ -80,7 +79,6 @@
     <Compile Include="Controls\TextViewerControl.xaml.cs">
       <DependentUpon>TextViewerControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\Command.cs" />
     <Compile Include="Controls\SplitterPanel.cs" />
     <Compile Include="Controls\StringEmptinessToVisibilityConverter.cs" />
     <Compile Include="Controls\TimelineControl.xaml.cs">
@@ -88,34 +86,13 @@
     </Compile>
     <Compile Include="Controls\TreeViewExtensions.cs" />
     <Compile Include="Entrypoint.cs" />
-    <Compile Include="ExceptionHandler.cs" />
     <Compile Include="FileAssociations.cs" />
-    <Compile Include="HighlightedText.cs" />
-    <Compile Include="HostedBuild.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="NodeQueryMarcher.cs" />
-    <Compile Include="MSBuildLocator.cs" />
-    <Compile Include="Note.cs" />
-    <Compile Include="PreprocessedFileManager.cs" />
-    <Compile Include="ProxyNode.cs" />
-    <Compile Include="Search.cs" />
-    <Compile Include="SearchResult.cs" />
-    <Compile Include="SettingsService.cs" />
-    <Compile Include="SourceFiles\ArchiveFileResolver.cs" />
-    <Compile Include="SourceFiles\ISourceFileResolver.cs" />
-    <Compile Include="SourceFiles\LocalSourceFileResolver.cs" />
-    <Compile Include="SourceFiles\SourceFileResolver.cs" />
-    <Compile Include="SourceFiles\SourceText.cs" />
-    <Compile Include="SourceFiles\Span.cs" />
-    <Compile Include="SourceFiles\TextUtilities.cs" />
     <Compile Include="Timeline\Block.cs" />
     <Compile Include="Timeline\Lane.cs" />
     <Compile Include="Timeline\Timeline.cs" />
-    <Compile Include="TypingConcurrentOperation.cs" />
-    <Compile Include="Utilities.cs" />
-    <Compile Include="WelcomeScreen.cs" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="StructuredLogger.ico" />

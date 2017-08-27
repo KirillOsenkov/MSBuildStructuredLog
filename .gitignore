@@ -240,3 +240,6 @@ _Pvt_Extensions
 
 # Visual Studio Code
 .vscode/
+
+# Sample log file
+/msbuild.binlog

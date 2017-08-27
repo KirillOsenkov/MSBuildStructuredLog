@@ -1,7 +1,7 @@
 ﻿{
   "dependencies": {
     "AvalonEdit": "5.0.3",
-    "Microsoft.Language.Xml": "1.0.15",
+    "Microsoft.Language.Xml": "1.1.20",
     "Nerdbank.GitVersioning": {
       "version": "1.5.62",
       "suppressParent": "none"

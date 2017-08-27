@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Windows;
-using System.Windows.Data;
 using System.Windows.Input;
 using StructuredLogViewer;
 
@@ -37,24 +35,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (MSBuildLocations.Count > 0)
             {
-                CollectionViewSource.GetDefaultView(MSBuildLocations).MoveCurrentToFirst();
+                MSBuildLocation = MSBuildLocations[0];
             }
         }
 
-        private readonly ObservableCollection<string> msBuildLocations = new ObservableCollection<string>();
-        public ObservableCollection<string> MSBuildLocations
-        {
-            get
-            {
-                return msBuildLocations;
-            }
-        }
+        public ObservableCollection<string> MSBuildLocations { get; } = new ObservableCollection<string>();
 
         public string MSBuildLocation
         {
-            get
+            get => _msBuildLocation;
+            set
             {
-                return CollectionViewSource.GetDefaultView(MSBuildLocations).CurrentItem as string;
+                _msBuildLocation = value;
+                RaisePropertyChanged();
             }
         }
 
@@ -89,14 +82,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private void Copy()
         {
             string commandLine = $@"{HostedBuild.QuoteIfNeeded(MSBuildLocation)} {PrefixArguments} {MSBuildArguments} {PostfixArguments}";
-            Clipboard.SetText(commandLine);
+            ClipboardService.SetText(commandLine);
         }
 
         private ICommand browseForMSBuildCommand;
-        public ICommand BrowseForMSBuildCommand => browseForMSBuildCommand ?? (browseForMSBuildCommand = new Command(BrowseForMSBuild));
-        private void BrowseForMSBuild()
+        private string _msBuildLocation;
+
+        public ICommand BrowseForMSBuildCommand => browseForMSBuildCommand ?? (browseForMSBuildCommand = new Command(OnBrowseForMSBuild));
+
+        public event Action BrowseForMSBuild;
+
+        private void OnBrowseForMSBuild()
         {
-            MSBuildLocator.BrowseForMSBuildExe();
+            BrowseForMSBuild?.Invoke();
             UpdateMSBuildLocations();
         }
     }
