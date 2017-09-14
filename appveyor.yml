@@ -1,12 +1,12 @@
 version: 1.1.{build}
-branches:
-  only:
-  - master
 image: Visual Studio 2017 Preview
-configuration: Release
-before_build:
-- cmd: dotnet restore
-build:
-  parallel: true
-  verbosity: minimal
-test: off
+build_script:
+- cmd: >-
+    nuget restore
+    
+    msbuild /m /p:Configuration=Release /clp:v=m MSBuildStructuredLog.sln /bl /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+artifacts:
+- path: msbuild.binlog
+  name: MSBuild Log
+on_failure:
+- appveyor PushArtifact msbuild.binlog
