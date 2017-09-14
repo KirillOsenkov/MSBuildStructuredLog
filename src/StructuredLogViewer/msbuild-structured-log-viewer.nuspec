@@ -3,13 +3,13 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
   <metadata>
     <id>msbuild-structured-log-viewer</id>
-    <version>1.1.168</version>
-    <packageSourceUrl>https://github.com/flcdrg/au-packages/msbuild-structured-log-viewer</packageSourceUrl>
-    <owners>flcdrg</owners>
+    <version>$currentVersion$</version>
+    <packageSourceUrl>https://github.com/KirillOsenkov/MSBuildStructuredLog</packageSourceUrl>
+    <owners>flcdrg, KirillOsenkov</owners>
     <title>MSBuild Structured Log Viewer</title>
     <authors>Kirill Osenkov</authors>
     <projectUrl>http://msbuildlog.com/</projectUrl>
-    <iconUrl>http://cdn.rawgit.com/flcdrg/au-packages/master/msbuild-structured-log-viewer/icons/msbuild-structured-log-viewer.png</iconUrl>
+    <iconUrl>http://cdn.rawgit.com/KirillOsenkov/MSBuildStructuredLog/master/src/StructuredLogViewer/icons/msbuild-structured-log-viewer.png</iconUrl>
     <copyright>2016 Kirill Osenkov</copyright>
     <licenseUrl>https://raw.githubusercontent.com/KirillOsenkov/MSBuildStructuredLog/master/LICENSE</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
@@ -31,5 +31,6 @@ Double-click the `.binlog` file to open it in MSBuild Structured Log Viewer:
   </metadata>
   <files>
     <file src="tools\**" target="tools" />
+    <file src="$OutDir$Releases\MSBuildStructuredLogSetup.exe" target="tools"/>
   </files>
 </package>

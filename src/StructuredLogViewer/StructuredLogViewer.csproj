@@ -10,6 +10,7 @@
     <Prefer32Bit Condition="$(Prefer32Bit)==''">false</Prefer32Bit>
     <ApplicationIcon>StructuredLogger.ico</ApplicationIcon>
     <NuspecFileName>MSBuildStructuredLogViewer</NuspecFileName>
+    <ChocolateyFileName>msbuild-structured-log-viewer</ChocolateyFileName>
   </PropertyGroup>
   <Import Project="$(SrcRoot)\Common.props" />
   <ItemGroup>
