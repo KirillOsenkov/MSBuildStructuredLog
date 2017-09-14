@@ -44,11 +44,11 @@
 
   <Target Name="BuildChocolatey"
           AfterTargets="ExtractVersion"
-          Condition="Exists('$(ChocolateyNuspecPath)')"
+          Condition="Exists('$(ChocolateyNuspecPath)') AND Exists('C:\ProgramData\chocolatey\choco.exe')"
           DependsOnTargets="ExtractVersion"
           Inputs="@(ChocolateyInput)"
           Outputs="$(ChocolateyNupkgPath)">
-    <Exec Command="choco.exe Pack $(ChocolateyNuspecPath) -OutputDirectory $(OutDir) -prop currentVersion=$(Version) outdir=$(OutDir)" />
+    <Exec Command='C:\ProgramData\chocolatey\choco.exe Pack "$(ChocolateyNuspecPath)" -OutputDirectory $(OutDir) -prop currentVersion=$(Version) outdir="$(OutDir)"' />
   </Target>
 
   <Target Name="SquirrelReleasify"
