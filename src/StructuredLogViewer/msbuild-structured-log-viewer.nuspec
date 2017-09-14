@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Do not remove this test for UTF-8: if “Ω” doesn’t appear as greek uppercase omega letter enclosed in quotation marks, you should use an editor that supports UTF-8, not this one. -->
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>msbuild-structured-log-viewer</id>
+    <version>$currentVersion$</version>
+    <packageSourceUrl>https://github.com/KirillOsenkov/MSBuildStructuredLog</packageSourceUrl>
+    <owners>flcdrg, KirillOsenkov</owners>
+    <title>MSBuild Structured Log Viewer</title>
+    <authors>Kirill Osenkov</authors>
+    <projectUrl>http://msbuildlog.com/</projectUrl>
+    <iconUrl>http://cdn.rawgit.com/KirillOsenkov/MSBuildStructuredLog/master/src/StructuredLogViewer/icons/msbuild-structured-log-viewer.png</iconUrl>
+    <copyright>2016 Kirill Osenkov</copyright>
+    <licenseUrl>https://raw.githubusercontent.com/KirillOsenkov/MSBuildStructuredLog/master/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <projectSourceUrl>https://github.com/KirillOsenkov/MSBuildStructuredLog</projectSourceUrl>
+    <docsUrl>https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki</docsUrl>
+    <bugTrackerUrl>https://github.com/KirillOsenkov/MSBuildStructuredLog/issues</bugTrackerUrl>
+    <tags>msbuild</tags>
+    <summary>A rich interactive log viewer app for MSBuild logs</summary>
+    <description>MSBuild 15.3 introduces a new command-line switch: `/bl` to record all build events to a structured/binary log file:
+
+Double-click the `.binlog` file to open it in MSBuild Structured Log Viewer:
+
+![Screenshot](http://msbuildlog.com/Screenshot1.png)
+ </description>
+    <releaseNotes>Set the default back to the log tab.</releaseNotes>
+    <dependencies>
+      <dependency id="dotnet4.6" version="4.6.00081.20150925" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+    <file src="$OutDir$Releases\MSBuildStructuredLogSetup.exe" target="tools"/>
+  </files>
+</package>

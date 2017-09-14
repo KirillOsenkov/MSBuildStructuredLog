@@ -4,6 +4,7 @@
   <PropertyGroup>
     <NuGetExePath>$(SrcRoot)NuGet.exe</NuGetExePath>
     <NuspecPath>$(MSBuildProjectDirectory)\$(NuspecFileName).nuspec</NuspecPath>
+    <ChocolateyNuspecPath>$(MSBuildProjectDirectory)\$(ChocolateyFileName).nuspec</ChocolateyNuspecPath>
   </PropertyGroup>
 
   <ItemDefinitionGroup>
@@ -17,12 +18,18 @@
     <NuGetInput Include="$(MSBuildThisFileFullPath)" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(ChocolateyFileName)' != ''">
+    <ChocolateyInput Condition="Exists('$(ChocolateyNuspecPath)')" Include="$(ChocolateyNuspecPath)" />
+    <ChocolateyInput Include="$(MSBuildThisFileFullPath)" />
+  </ItemGroup>
+
   <Target Name="ExtractVersion"
           AfterTargets="CoreBuild"
           Condition="Exists('$(NuspecPath)')"
           DependsOnTargets="PrepareResources;GenerateAssemblyVersionInfo">
     <PropertyGroup>
       <NupkgPath>$(OutDir)$(NuspecFileName).$(Version).nupkg</NupkgPath>
+      <ChocolateyNupkgPath>$(OutDir)$(ChocolateyFileName).$(Version).nupkg</ChocolateyNupkgPath>
     </PropertyGroup>
   </Target>
 
@@ -33,6 +40,15 @@
           Inputs="@(NuGetInput)"
           Outputs="$(NupkgPath)">
     <Exec Command="$(SrcRoot)NuGet.exe Pack $(NuspecFileName).nuspec -BasePath $(OutDir) -OutputDirectory $(OutDir) -prop currentVersion=$(Version)" />
+  </Target>
+
+  <Target Name="BuildChocolatey"
+          AfterTargets="ExtractVersion"
+          Condition="Exists('$(ChocolateyNuspecPath)')"
+          DependsOnTargets="ExtractVersion"
+          Inputs="@(ChocolateyInput)"
+          Outputs="$(ChocolateyNupkgPath)">
+    <Exec Command="choco.exe Pack $(ChocolateyNuspecPath) -OutputDirectory $(OutDir) -prop currentVersion=$(Version) outdir=$(OutDir)" />
   </Target>
 
   <Target Name="SquirrelReleasify"
