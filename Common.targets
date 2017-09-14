@@ -48,7 +48,7 @@
           DependsOnTargets="ExtractVersion"
           Inputs="@(ChocolateyInput)"
           Outputs="$(ChocolateyNupkgPath)">
-    <Exec Command='C:\ProgramData\chocolatey\choco.exe Pack "$(ChocolateyNuspecPath)" -OutputDirectory $(OutDir) -prop currentVersion=$(Version) outdir=$(OutDir)' />
+    <Exec Command="C:\ProgramData\chocolatey\choco.exe Pack $(ChocolateyNuspecPath) -OutputDirectory $(OutDir) -prop currentVersion=$(Version) outdir=$(OutDir)" />
   </Target>
 
   <Target Name="SquirrelReleasify"
