@@ -1,6 +1,8 @@
 version: 1.1.{build}
-image: Visual Studio 2017 Preview
-build_script:
+image: Visual Studio 2017
+install:
+  - choco upgrade chocolatey # Need at least 0.10.8 to avoid packaging error
+build_script: 
 - cmd: >-
     nuget restore
     
@@ -8,5 +10,8 @@ build_script:
 artifacts:
 - path: msbuild.binlog
   name: MSBuild Log
+- path: 'bin\**\msbuild-structured-log-viewer*.nupkg'
+  name: Chocolatey Package
+
 on_failure:
 - appveyor PushArtifact msbuild.binlog
