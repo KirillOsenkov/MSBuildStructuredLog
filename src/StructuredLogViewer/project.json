@@ -2,10 +2,7 @@
   "dependencies": {
     "AvalonEdit": "5.0.3",
     "Microsoft.Language.Xml": "1.0.15",
-    "Nerdbank.GitVersioning": {
-      "version": "1.5.62",
-      "suppressParent": "none"
-    },
+    "Nerdbank.GitVersioning": "2.0.41",
     "squirrel.windows": "1.4.0",
     "System.ValueTuple": "4.4.0-preview1-25305-02"
   },

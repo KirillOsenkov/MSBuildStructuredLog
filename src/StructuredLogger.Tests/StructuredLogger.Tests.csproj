@@ -5,7 +5,7 @@
     <NBGV_DoNotEmitNonVersionCustomAttributes>true</NBGV_DoNotEmitNonVersionCustomAttributes>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Nerdbank.GitVersioning" Version="1.5.62" />
+    <PackageReference Include="Nerdbank.GitVersioning" Version="2.0.41" />
     <PackageReference Include="xunit" Version="2.2.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.2.0" />
   </ItemGroup>
