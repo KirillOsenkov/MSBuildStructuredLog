@@ -2,6 +2,7 @@
 using System.IO;
 using System.IO.Compression;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Shared;
 
 namespace Microsoft.Build.Logging
 {
@@ -77,6 +78,22 @@ namespace Microsoft.Build.Logging
 
             try
             {
+                string logDirectory = null;
+                try
+                {
+                    logDirectory = Path.GetDirectoryName(FilePath);
+                }
+                catch (Exception)
+                {
+                    // Directory creation is best-effort; if finding its path fails don't create the directory
+                    // and possibly let the FileStream constructor below report the failure
+                }
+
+                if (logDirectory != null)
+                {
+                    Directory.CreateDirectory(logDirectory);
+                }
+
                 stream = new FileStream(FilePath, FileMode.Create);
 
                 if (CollectProjectImports != ProjectImportsCollectionMode.None)
@@ -86,9 +103,9 @@ namespace Microsoft.Build.Logging
             }
             catch (Exception e)
             {
-                string errorCode = "";
-                string helpKeyword = "";
-                string message = e.Message;
+                string errorCode;
+                string helpKeyword;
+                string message = ResourceUtilities.FormatResourceString(out errorCode, out helpKeyword, "InvalidFileLoggerFile", FilePath, e.Message);
                 throw new LoggerException(message, e, errorCode, helpKeyword);
             }
 
@@ -168,6 +185,10 @@ namespace Microsoft.Build.Logging
                 return;
             }
 
+            // This is different from the official MSBuild because we want to run on MSBuild 14
+            // and still collect source files mentioned in targets and tasks.
+            // We don't need this in official MSBuild because there we have the ProjectImportedEventArgs
+            // that tells us about all the files.
             projectImportsCollector.IncludeSourceFiles(e);
         }
 
@@ -178,11 +199,9 @@ namespace Microsoft.Build.Logging
         /// </exception>
         private void ProcessParameters()
         {
-            const string invalidParamSpecificationMessage = @"MSB4234: Invalid binary logger parameter(s): ""{0}"". Expected: ProjectImports={{None,Embed,ZipFile}} and/or [LogFile=]filePath.binlog (the log file name or path, must have the "".binlog"" extension).";
-
             if (Parameters == null)
             {
-                throw new LoggerException(string.Format(invalidParamSpecificationMessage, ""));
+                throw new LoggerException(ResourceUtilities.FormatResourceString("InvalidBinaryLoggerParameters", ""));
             }
 
             var parameters = Parameters.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
@@ -212,7 +231,7 @@ namespace Microsoft.Build.Logging
                 }
                 else
                 {
-                    throw new LoggerException(string.Format(invalidParamSpecificationMessage, parameter));
+                    throw new LoggerException(ResourceUtilities.FormatResourceString("InvalidBinaryLoggerParameters", parameter));
                 }
             }
 
@@ -227,9 +246,9 @@ namespace Microsoft.Build.Logging
             }
             catch (Exception e)
             {
-                string errorCode = "";
-                string helpKeyword = "";
-                string message = e.Message;
+                string errorCode;
+                string helpKeyword;
+                string message = ResourceUtilities.FormatResourceString(out errorCode, out helpKeyword, "InvalidFileLoggerFile", FilePath, e.Message);
                 throw new LoggerException(message, e, errorCode, helpKeyword);
             }
         }
