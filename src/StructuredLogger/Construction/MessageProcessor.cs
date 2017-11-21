@@ -407,9 +407,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             var project = construction.GetOrAddProject(args.BuildEventContext.ProjectContextId);
             var target = project.GetTargetById(args.BuildEventContext.TargetId);
-            var task = target.GetTaskById(args.BuildEventContext.TaskId);
 
-            task.CommandLineArguments = stringTable.Intern(args.CommandLine);
+            // task can be null as per https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/136
+            var task = target.GetTaskById(args.BuildEventContext.TaskId);
+            if (task != null)
+            {
+                task.CommandLineArguments = stringTable.Intern(args.CommandLine);
+            }
         }
     }
 }

@@ -25,7 +25,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public Task GetTaskById(int taskId)
         {
-            return Children.OfType<Task>().First(t => t.Id == taskId);
+            return Children.OfType<Task>().FirstOrDefault(t => t.Id == taskId);
         }
 
         public override string ToString()
