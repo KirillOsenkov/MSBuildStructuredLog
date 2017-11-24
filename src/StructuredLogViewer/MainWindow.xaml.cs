@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Win32;
@@ -30,6 +32,40 @@ namespace StructuredLogViewer
 
             Loaded += MainWindow_Loaded;
             Drop += MainWindow_Drop;
+
+            SystemParameters.StaticPropertyChanged += SystemParameters_StaticPropertyChanged;
+            UpdateTheme();
+        }
+
+        private void SystemParameters_StaticPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(SystemParameters.HighContrast))
+            {
+                UpdateTheme();
+            }
+        }
+
+        private void UpdateTheme()
+        {
+            if (SystemParameters.HighContrast)
+            {
+                SetResource("Theme_Background", SystemColors.AppWorkspaceBrush);
+                SetResource("Theme_WhiteBackground", SystemColors.ControlBrush);
+                SetResource("Theme_ToolWindowBackground", SystemColors.ControlBrush);
+            }
+            else
+            {
+                SetResource("Theme_Background", new SolidColorBrush(Color.FromRgb(238, 238, 242)));
+                SetResource("Theme_WhiteBackground", Brushes.White);
+                SetResource("Theme_ToolWindowBackground", Brushes.WhiteSmoke);
+            }
+
+            SetResource("Theme_InfoBarBackground", SystemColors.InfoBrush);
+        }
+
+        private void SetResource(object key, object value)
+        {
+            Application.Current.Resources[key] = value;
         }
 
         private const string ClipboardFileFormat = "FileDrop";

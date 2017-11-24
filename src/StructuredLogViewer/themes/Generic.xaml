@@ -294,7 +294,7 @@
 
   <DataTemplate DataType="{x:Type local:Note}">
     <StackPanel Orientation="Horizontal">
-      <Border BorderBrush="LightGray" BorderThickness="1" Margin="4" Background="LightYellow" Padding="6">
+      <Border BorderBrush="LightGray" BorderThickness="1" Margin="4" Background="{DynamicResource Theme_InfoBarBackground}" Padding="6">
         <TextBlock Text="{Binding Text}"
                    Foreground="Gray"
                    TextWrapping="Wrap"/>
@@ -433,7 +433,7 @@
                             ShadowDepth="40" />
           </Rectangle.Effect>
         </Rectangle>
-        <Grid Background="White">
+        <Grid Background="{DynamicResource Theme_WhiteBackground}">
           <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -551,9 +551,9 @@
                   ToolTip="Browse for custom MSBuild.exe location..."
                   Margin="0,0,8,0">
             <StackPanel Orientation="Horizontal">
-              <Rectangle Width="2" Height="2" Margin="2" Fill="Black" />
-              <Rectangle Width="2" Height="2" Margin="0,2,2,2" Fill="Black" />
-              <Rectangle Width="2" Height="2" Margin="0,2,2,2" Fill="Black" />
+              <Rectangle Width="2" Height="2" Margin="2" Fill="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
+              <Rectangle Width="2" Height="2" Margin="0,2,2,2" Fill="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
+              <Rectangle Width="2" Height="2" Margin="0,2,2,2" Fill="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
             </StackPanel>
           </Button>
           <TextBlock Text="{Binding PrefixArguments}" 

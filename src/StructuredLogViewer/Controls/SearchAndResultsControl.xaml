@@ -39,7 +39,7 @@
                 VirtualizingPanel.IsVirtualizing="True"
                 VirtualizingPanel.VirtualizationMode="Recycling"
                 BorderThickness="0"
-                Background="#F5F5F5"></TreeView>
+                Background="{DynamicResource Theme_ToolWindowBackground}"></TreeView>
       <ContentPresenter x:Name="watermark"
                  Margin="40"
                  HorizontalAlignment="Center"

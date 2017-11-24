@@ -24,7 +24,7 @@
               <TreeView x:Name="filesTree"
                         VirtualizingPanel.IsVirtualizing="True"
                         VirtualizingPanel.VirtualizationMode="Recycling"
-                        Background="#F5F5F5"
+                        Background="{DynamicResource Theme_ToolWindowBackground}"
                         BorderThickness="0">
               </TreeView>
             </TabItem>
@@ -78,7 +78,7 @@
                    BorderBrush="Transparent"
                    ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                    ScrollViewer.CanContentScroll="False"
-                   Background="LightYellow">
+                   Background="{DynamicResource Theme_InfoBarBackground}">
             <ListBox.ItemsPanel>
               <ItemsPanelTemplate>
                 <WrapPanel IsItemsHost="True"/>
@@ -89,7 +89,7 @@
                 <Setter Property="Template">
                   <Setter.Value>
                     <ControlTemplate>
-                      <Polygon Points="0,0 3,3, 0,6" Stroke="Black" Fill="Black" />
+                      <Polygon Points="0,0 3,3, 0,6" Stroke="{DynamicResource {x:Static SystemColors.InfoTextBrushKey}}" Fill="{DynamicResource {x:Static SystemColors.InfoTextBrushKey}}" />
                     </ControlTemplate>
                   </Setter.Value>
                 </Setter>
