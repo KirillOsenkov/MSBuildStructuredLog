@@ -25,6 +25,11 @@ namespace StructuredLogViewer
 
         public void TextChanged(string searchText)
         {
+            if (ExecuteSearch == null)
+            {
+                return;
+            }
+
             latestSearch = searchText;
             TPLTask.Delay(ThrottlingDelayMilliseconds).ContinueWith(_ =>
             {

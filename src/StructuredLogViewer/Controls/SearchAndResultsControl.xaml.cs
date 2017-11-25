@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -24,6 +25,7 @@ namespace StructuredLogViewer.Controls
         public TreeView ResultsList => resultsList;
         public Func<object, IEnumerable> ResultsTreeBuilder { get; set; }
         public event Action WatermarkDisplayed;
+        public event Action<string> TextChanged;
 
         public Func<string, object> ExecuteSearch
         {
@@ -34,10 +36,20 @@ namespace StructuredLogViewer.Controls
         private void searchTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             var searchText = searchTextBox.Text;
+            TextChanged?.Invoke(searchText);
+
             if (string.IsNullOrWhiteSpace(searchText) || searchText.Length < 3)
             {
                 typingConcurrentOperation.Reset();
-                DisplaySearchResults(null);
+
+                // only clear the contents when we have a search function defined.
+                // if the text input is handled externally, don't mess with the 
+                // content
+                if (ExecuteSearch != null)
+                {
+                    DisplaySearchResults(null);
+                }
+
                 return;
             }
 
@@ -46,7 +58,12 @@ namespace StructuredLogViewer.Controls
 
         private void DisplaySearchResults(object results)
         {
-            if (results == null)
+            DisplayItems(ResultsTreeBuilder(results));
+        }
+
+        public void DisplayItems(IEnumerable content)
+        {
+            if ((content == null || !content.OfType<object>().Any()) && WatermarkContent != null)
             {
                 watermark.Visibility = Visibility.Visible;
                 WatermarkDisplayed?.Invoke();
@@ -56,7 +73,7 @@ namespace StructuredLogViewer.Controls
                 watermark.Visibility = Visibility.Collapsed;
             }
 
-            resultsList.ItemsSource = ResultsTreeBuilder(results);
+            resultsList.ItemsSource = content;
         }
 
         public object WatermarkContent

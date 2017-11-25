@@ -41,6 +41,11 @@ namespace StructuredLogViewer
 
         public static void AddRecentSearchText(string searchText, bool discardPrefixes = false)
         {
+            if (string.IsNullOrWhiteSpace(searchText))
+            {
+                return;
+            }
+
             AddRecentItem(searchText, recentSearchesFilePath, discardPrefixes);
         }
 

@@ -57,9 +57,6 @@ namespace StructuredLogViewer.Controls
             searchLogControl.ResultsTreeBuilder = BuildResultTree;
             searchLogControl.WatermarkDisplayed += () => UpdateWatermark();
 
-            findInFilesControl.ExecuteSearch = FindInFiles;
-            findInFilesControl.ResultsTreeBuilder = BuildFindResults;
-
             VirtualizingPanel.SetIsVirtualizing(treeView, SettingsService.EnableTreeViewVirtualization);
 
             DataContext = build;
@@ -136,17 +133,22 @@ namespace StructuredLogViewer.Controls
             searchLogControl.ResultsList.GotFocus += (s, a) => ActiveTreeView = searchLogControl.ResultsList;
             searchLogControl.ResultsList.ContextMenu = sharedTreeContextMenu;
 
-            findInFilesControl.GotFocus += (s, a) => ActiveTreeView = findInFilesControl.ResultsList;
-            findInFilesControl.ResultsList.ItemContainerStyle = treeViewItemStyle;
-            findInFilesControl.ResultsList.GotFocus += (s, a) => ActiveTreeView = findInFilesControl.ResultsList;
-            findInFilesControl.ResultsList.ContextMenu = sharedTreeContextMenu;
-
             if (archiveFile != null)
             {
+                findInFilesControl.ExecuteSearch = FindInFiles;
+                findInFilesControl.ResultsTreeBuilder = BuildFindResults;
+
+                findInFilesControl.GotFocus += (s, a) => ActiveTreeView = findInFilesControl.ResultsList;
+                findInFilesControl.ResultsList.ItemContainerStyle = treeViewItemStyle;
+                findInFilesControl.ResultsList.GotFocus += (s, a) => ActiveTreeView = findInFilesControl.ResultsList;
+                findInFilesControl.ResultsList.ContextMenu = sharedTreeContextMenu;
+
                 filesTab.Visibility = Visibility.Visible;
                 findInFilesTab.Visibility = Visibility.Visible;
                 PopulateFilesTab();
-                filesTree.ItemContainerStyle = treeViewItemStyle;
+                filesTree.ResultsList.ItemContainerStyle = treeViewItemStyle;
+
+                filesTree.TextChanged += FilesTree_SearchTextChanged;
 
                 var filesNote = new TextBlock();
                 var text =
@@ -169,6 +171,50 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             preprocessedFileManager = new PreprocessedFileManager(this, sourceFileResolver);
 
             PopulateTimeline();
+        }
+
+        private void FilesTree_SearchTextChanged(string text)
+        {
+            var list = filesTree.ResultsList.ItemsSource as IEnumerable<object>;
+            if (list != null)
+            {
+                UpdateFileVisibility(list.OfType<NamedNode>(), text);
+            }
+        }
+
+        private bool UpdateFileVisibility(IEnumerable<NamedNode> items, string text)
+        {
+            bool visible = false;
+
+            if (items == null)
+            {
+                return false;
+            }
+
+            foreach (var item in items)
+            {
+                if (item is Folder folder)
+                {
+                    var subItems = folder.Children.OfType<NamedNode>();
+                    var folderVisibility = UpdateFileVisibility(subItems, text);
+                    folder.IsVisible = folderVisibility;
+                    visible |= folderVisibility;
+                }
+                else if (item is SourceFile file)
+                {
+                    if (string.IsNullOrEmpty(text) || file.SourceFilePath.IndexOf(text, StringComparison.OrdinalIgnoreCase) > -1)
+                    {
+                        visible = true;
+                        file.IsVisible = true;
+                    }
+                    else
+                    {
+                        file.IsVisible = false;
+                    }
+                }
+            }
+
+            return visible;
         }
 
         public void SelectTree()
@@ -393,8 +439,8 @@ Recent:
                 CompressTree(subFolder);
             }
 
-            filesTree.ItemsSource = root.Children;
-            filesTree.GotFocus += (s, a) => ActiveTreeView = filesTree;
+            filesTree.DisplayItems(root.Children);
+            filesTree.GotFocus += (s, a) => ActiveTreeView = filesTree.ResultsList;
             filesTree.ContextMenu = sharedTreeContextMenu;
         }
 

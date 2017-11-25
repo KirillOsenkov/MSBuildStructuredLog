@@ -21,12 +21,7 @@
             </TabItem>
 
             <TabItem x:Name="filesTab" Header="Files" Visibility="Collapsed">
-              <TreeView x:Name="filesTree"
-                        VirtualizingPanel.IsVirtualizing="True"
-                        VirtualizingPanel.VirtualizationMode="Recycling"
-                        Background="{DynamicResource Theme_ToolWindowBackground}"
-                        BorderThickness="0">
-              </TreeView>
+              <local:SearchAndResultsControl x:Name="filesTree"></local:SearchAndResultsControl>
             </TabItem>
 
             <TabItem x:Name="findInFilesTab" Header="Find in Files" Visibility="Collapsed">
