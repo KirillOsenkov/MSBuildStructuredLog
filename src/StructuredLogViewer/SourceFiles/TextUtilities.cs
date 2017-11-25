@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace StructuredLogViewer
 {
@@ -63,6 +64,13 @@ namespace StructuredLogViewer
             }
 
             return result.ToArray();
+        }
+
+        public static string[] GetLines(this string text)
+        {
+            return GetLineSpans(text)
+                .Select(span => text.Substring(span.Start, span.Length).TrimEnd('\r', '\n'))
+                .ToArray();
         }
 
         public static bool IsLineBreakChar(this char c)
