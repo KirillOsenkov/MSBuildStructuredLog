@@ -35,8 +35,23 @@ namespace StructuredLogViewer
 
         public static void AddRecentMSBuildLocation(string filePath)
         {
-            EnsureRecentMSBuildLocationsArePopulated();
+            cachedRecentMSBuildLocations = null;
             AddRecentItem(filePath, recentMSBuildLocationsFilePath);
+        }
+
+        private static IEnumerable<string> cachedRecentMSBuildLocations;
+        public static IEnumerable<string> GetRecentMSBuildLocations()
+        {
+            if (cachedRecentMSBuildLocations == null)
+            {
+                cachedRecentMSBuildLocations = GetRecentItems(recentMSBuildLocationsFilePath)
+                    .Where(File.Exists)
+                    .Union(MSBuildLocator.GetMSBuildLocations(), StringComparer.OrdinalIgnoreCase)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToArray();
+            }
+
+            return cachedRecentMSBuildLocations;
         }
 
         public static void AddRecentSearchText(string searchText, bool discardPrefixes = false)
@@ -67,12 +82,6 @@ namespace StructuredLogViewer
         public static void RemoveRecentProject(string filePath)
         {
             RemoveRecentItem(filePath, recentProjectsFilePath);
-        }
-
-        public static IEnumerable<string> GetRecentMSBuildLocations()
-        {
-            EnsureRecentMSBuildLocationsArePopulated();
-            return GetRecentItems(recentMSBuildLocationsFilePath);
         }
 
         public static IEnumerable<string> GetRecentSearchStrings()
@@ -157,14 +166,6 @@ namespace StructuredLogViewer
         public static string GetMSBuildExe()
         {
             return GetRecentMSBuildLocations().FirstOrDefault();
-        }
-
-        private static void EnsureRecentMSBuildLocationsArePopulated()
-        {
-            if (!File.Exists(recentMSBuildLocationsFilePath))
-            {
-                SaveText(recentMSBuildLocationsFilePath, MSBuildLocator.GetMSBuildLocations());
-            }
         }
 
         private const string DefaultArguments = "/t:Rebuild";

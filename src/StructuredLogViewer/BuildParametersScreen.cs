@@ -28,11 +28,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             MSBuildLocations.Clear();
             foreach (var msbuild in SettingsService.GetRecentMSBuildLocations())
             {
-                // our list might have gotten stale, so double-check file existence here
-                if (File.Exists(msbuild))
-                {
-                    MSBuildLocations.Add(msbuild);
-                }
+                MSBuildLocations.Add(msbuild);
             }
 
             if (MSBuildLocations.Count > 0)

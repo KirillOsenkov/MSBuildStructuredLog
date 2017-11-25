@@ -14,7 +14,9 @@ namespace StructuredLogViewer
             var programFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
             var windows = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
 
-            var candidates = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            var candidates = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            var hardcoded = new[]
             {
                 Path.Combine(programFilesX86, @"Microsoft Visual Studio\2017\Enterprise\MSBuild\15.0\Bin\MSBuild.exe"),
                 Path.Combine(programFilesX86, @"Microsoft Visual Studio\2017\Enterprise\MSBuild\15.0\Bin\amd64\MSBuild.exe"),
@@ -33,8 +35,12 @@ namespace StructuredLogViewer
             var vs15Locations = GetVS15Locations();
             candidates.UnionWith(vs15Locations.Select(l => Path.Combine(l, "MSBuild", "15.0", "Bin", "MSBuild.exe")));
             candidates.UnionWith(vs15Locations.Select(l => Path.Combine(l, "MSBuild", "15.0", "Bin", "amd64", "MSBuild.exe")));
+            candidates.UnionWith(hardcoded);
 
-            var finalResults = candidates.Where(File.Exists).OrderBy(s => s, StringComparer.OrdinalIgnoreCase).ToArray();
+            var finalResults = candidates
+                .Where(File.Exists)
+                .ToArray();
+
             return finalResults;
         }
 

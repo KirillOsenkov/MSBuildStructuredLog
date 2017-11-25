@@ -419,6 +419,7 @@ namespace StructuredLogViewer
             };
             parametersScreen.CancelRequested += () =>
             {
+                parametersScreen.SaveSelectedMSBuild();
                 DisplayWelcomeScreen();
             };
             SetContent(parametersScreen);
