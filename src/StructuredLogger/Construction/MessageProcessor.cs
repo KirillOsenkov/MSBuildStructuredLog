@@ -396,6 +396,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 || message.StartsWith("Trying to import")
                 || message.StartsWith("Property reassignment")
                 || message.StartsWith("Importing project")
+                || message.Contains("cannot be imported again.")
                 || (message.StartsWith("Project \"") && message.Contains("was not imported by"));
         }
 

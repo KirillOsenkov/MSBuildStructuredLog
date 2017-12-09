@@ -205,6 +205,7 @@ namespace Microsoft.Build.Logging
             WriteOptionalString(e.ProjectFile);
             WriteOptionalString(e.TargetFile);
             WriteOptionalString(e.ParentTarget);
+            Write((int)0); // e.BuildReason
         }
 
         private void Write(TargetFinishedEventArgs e)
@@ -285,6 +286,12 @@ namespace Microsoft.Build.Logging
                 return;
             }
 
+            if (e is TargetSkippedEventArgs)
+            {
+                Write((TargetSkippedEventArgs)e);
+                return;
+            }
+
             Write(BinaryLogRecordKind.Message);
             WriteMessageFields(e);
         }
@@ -296,6 +303,15 @@ namespace Microsoft.Build.Logging
             Write(false); // e.ImportIgnored;
             WriteOptionalString(e.ImportedProjectFile);
             WriteOptionalString(e.UnexpandedProject);
+        }
+
+        private void Write(TargetSkippedEventArgs e)
+        {
+            Write(BinaryLogRecordKind.TargetSkipped);
+            WriteMessageFields(e);
+            WriteOptionalString(e.TargetFile);
+            WriteOptionalString(e.ParentTarget);
+            Write((int)e.BuildReason);
         }
 
         private void Write(CriticalBuildMessageEventArgs e)
