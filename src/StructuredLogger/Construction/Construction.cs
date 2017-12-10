@@ -191,28 +191,36 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public void TargetStarted(object sender, TargetStartedEventArgs args)
         {
+            AddTargetCore(
+                args,
+                stringTable.Intern(args.TargetName),
+                stringTable.Intern(args.ParentTarget),
+                stringTable.Intern(args.TargetFile));
+        }
+
+        private void AddTargetCore(BuildEventArgs args, string targetName, string parentTargetName, string targetFile)
+        {
             try
             {
                 lock (syncLock)
                 {
                     var project = GetOrAddProject(args.BuildEventContext.ProjectContextId);
-                    var targetName = stringTable.Intern(args.TargetName);
                     var target = project.CreateTarget(targetName, args.BuildEventContext.TargetId);
                     target.NodeId = args.BuildEventContext.NodeId;
                     target.StartTime = args.Timestamp;
 
-                    if (!string.IsNullOrEmpty(args.ParentTarget))
+                    if (!string.IsNullOrEmpty(parentTargetName))
                     {
-                        var parentTarget = project.GetOrAddTargetByName(stringTable.Intern(args.ParentTarget));
+                        var parentTarget = project.GetOrAddTargetByName(parentTargetName);
                         parentTarget.TryAddTarget(target);
-                        project.TryAddTarget(parentTarget);
+                        //project.TryAddTarget(parentTarget);
                     }
                     else
                     {
                         project.TryAddTarget(target);
                     }
 
-                    target.SourceFilePath = stringTable.Intern(args.TargetFile);
+                    target.SourceFilePath = targetFile;
                 }
             }
             catch (Exception ex)
@@ -260,6 +268,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        private void TargetSkipped(TargetSkippedEventArgs args)
+        {
+            AddTargetCore(
+                args,
+                stringTable.Intern(args.TargetName),
+                stringTable.Intern(args.ParentTarget),
+                stringTable.Intern(args.TargetFile));
+        }
+
         public void TaskStarted(object sender, TaskStartedEventArgs args)
         {
             try
@@ -304,6 +321,26 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 lock (syncLock)
                 {
+                    if (args.GetType().Name == "TargetSkippedEventArgs")
+                    {
+                        if (args is TargetSkippedEventArgs targetSkipped)
+                        {
+                            TargetSkipped(targetSkipped);
+                        }
+                        else
+                        {
+                            targetSkipped = new TargetSkippedEventArgs();
+                            targetSkipped.BuildEventContext = args.BuildEventContext;
+                            targetSkipped.TargetName = Reflector.GetTargetNameFromTargetSkipped(args);
+                            targetSkipped.TargetFile = Reflector.GetTargetFileFromTargetSkipped(args);
+                            targetSkipped.ParentTarget = Reflector.GetParentTargetFromTargetSkipped(args);
+                            targetSkipped.BuildReason = Reflector.GetBuildReasonFromTargetSkipped(args);
+                            TargetSkipped(targetSkipped);
+                        }
+
+                        return;
+                    }
+
                     messageProcessor.Process(args);
                 }
             }
