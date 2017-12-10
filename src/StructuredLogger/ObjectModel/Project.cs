@@ -34,8 +34,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public IEnumerable<Target> GetUnparentedTargets()
         {
-            return _targetNameToTargetMap
-                .Values
+            return _targetNameToTargetMap.Values
                 .Union(targetsById.Values)
                 .Where(t => t.Parent == null)
                 .OrderBy(t => t.StartTime)
@@ -50,19 +49,24 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <returns>Target with the given ID</returns>
         public Target GetTargetById(int id)
         {
+            if (id == -1)
+            {
+                throw new ArgumentException("Invalid target id: -1");
+            }
+
             if (targetsById.TryGetValue(id, out var target))
             {
                 return target;
             }
 
-            target = _targetNameToTargetMap.Values.First(t => t.Id == id);
+            target = _targetNameToTargetMap.Values.FirstOrDefault(t => t.Id == id);
+            if (target == null)
+            {
+                target = CreateTargetInstance(null);
+            }
+
             targetsById[id] = target;
             return target;
-        }
-
-        public override string ToString()
-        {
-            return $"Project Name={Name} File={ProjectFile}";
         }
 
         public Target GetOrAddTargetByName(string targetName)
@@ -73,14 +77,51 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public Target CreateTarget(string name, int id)
         {
-            if (!_targetNameToTargetMap.TryGetValue(name, out var target) || (target.Id != -1 && target.Id != id))
+            if (_targetNameToTargetMap.TryGetValue(name, out var target))
             {
-                target = CreateTargetInstance(name);
+                // they require a specific id
+                if (id != -1)
+                {
+                    // existing target doesn't yet have a specific id,
+                    // let's specify it
+                    if (target.Id == -1)
+                    {
+                        target.Id = id;
+                        targetsById[id] = target;
+                    }
+                    // existing target has a different id, it's the case where
+                    // there are multiple targets with the same name.
+                    // We need a completely new target here.
+                    else
+                    {
+                        if (!targetsById.TryGetValue(id, out target))
+                        {
+                            target = CreateTargetInstance(name);
+                            target.Id = id;
+                            targetsById[id] = target;
+                        }
+                        else
+                        {
+                            target.Name = name;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                if (id != -1 && targetsById.TryGetValue(id, out target))
+                {
+                    target.Name = name;
+                }
+                else
+                {
+                    target = CreateTargetInstance(name);
+                    target.Id = id;
+                    targetsById[id] = target;
+                }
+
                 _targetNameToTargetMap.TryAdd(name, target);
             }
-
-            target.Id = id;
-            targetsById[id] = target;
 
             return target;
         }
@@ -89,7 +130,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             return new Target()
             {
-                Name = name
+                Name = name,
+                Id = -1
             };
         }
 
@@ -123,6 +165,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 isLowRelevance = value;
                 RaisePropertyChanged();
             }
+        }
+
+        public override string ToString()
+        {
+            return $"Project Name={Name} File={ProjectFile}";
         }
     }
 }
