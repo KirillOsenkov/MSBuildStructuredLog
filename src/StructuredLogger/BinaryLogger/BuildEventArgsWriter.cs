@@ -28,8 +28,10 @@ namespace Microsoft.Build.Logging
         /// </summary>
         public void Write(BuildEventArgs e)
         {
+            var type = e.GetType().Name;
+
             // the cases are ordered by most used first for performance
-            if (e is BuildMessageEventArgs && e.GetType().Name != "ProjectImportedEventArgs")
+            if (e is BuildMessageEventArgs && type != "ProjectImportedEventArgs" && type != "TargetSkippedEventArgs")
             {
                 Write((BuildMessageEventArgs)e);
             }
@@ -89,21 +91,21 @@ namespace Microsoft.Build.Logging
             // these new events, so use reflection to create our "equivalents" of those
             // and populate them to be binary identical to the originals. Then serialize
             // our copies so that it's impossible to tell what wrote these.
-            else if (e.GetType().Name == "ProjectEvaluationStartedEventArgs")
+            else if (type == "ProjectEvaluationStartedEventArgs")
             {
                 var evaluationStarted = new ProjectEvaluationStartedEventArgs(e.Message);
                 evaluationStarted.BuildEventContext = e.BuildEventContext;
                 evaluationStarted.ProjectFile = Reflector.GetProjectFileFromEvaluationStarted(e);
                 Write(evaluationStarted);
             }
-            else if (e.GetType().Name == "ProjectEvaluationFinishedEventArgs")
+            else if (type == "ProjectEvaluationFinishedEventArgs")
             {
                 var evaluationFinished = new ProjectEvaluationFinishedEventArgs(e.Message);
                 evaluationFinished.BuildEventContext = e.BuildEventContext;
                 evaluationFinished.ProjectFile = Reflector.GetProjectFileFromEvaluationFinished(e);
                 Write(evaluationFinished);
             }
-            else if (e.GetType().Name == "ProjectImportedEventArgs")
+            else if (type == "ProjectImportedEventArgs")
             {
                 var message = e as BuildMessageEventArgs;
                 var projectImported = new ProjectImportedEventArgs(message.LineNumber, message.ColumnNumber, e.Message);
@@ -112,6 +114,18 @@ namespace Microsoft.Build.Logging
                 projectImported.ImportedProjectFile = Reflector.GetImportedProjectFile(e);
                 projectImported.UnexpandedProject = Reflector.GetUnexpandedProject(e);
                 Write(projectImported);
+            }
+            else if (type == "TargetSkippedEventArgs")
+            {
+                var message = e as BuildMessageEventArgs;
+                var targetSkipped = new TargetSkippedEventArgs(e.Message);
+                targetSkipped.BuildEventContext = e.BuildEventContext;
+                targetSkipped.ProjectFile = message.ProjectFile;
+                targetSkipped.TargetName = Reflector.GetTargetNameFromTargetSkipped(e);
+                targetSkipped.TargetFile = Reflector.GetTargetFileFromTargetSkipped(e);
+                targetSkipped.ParentTarget = Reflector.GetParentTargetFromTargetSkipped(e);
+                targetSkipped.BuildReason = Reflector.GetBuildReasonFromTargetSkipped(e);
+                Write(targetSkipped);
             }
             else
             {
@@ -205,7 +219,7 @@ namespace Microsoft.Build.Logging
             WriteOptionalString(e.ProjectFile);
             WriteOptionalString(e.TargetFile);
             WriteOptionalString(e.ParentTarget);
-            Write((int)0); // e.BuildReason
+            Write((int)Reflector.GetBuildReasonFromTargetStarted(e));
         }
 
         private void Write(TargetFinishedEventArgs e)
@@ -300,7 +314,7 @@ namespace Microsoft.Build.Logging
         {
             Write(BinaryLogRecordKind.ProjectImported);
             WriteMessageFields(e);
-            Write(false); // e.ImportIgnored;
+            Write(e.ImportIgnored);
             WriteOptionalString(e.ImportedProjectFile);
             WriteOptionalString(e.UnexpandedProject);
         }
@@ -310,6 +324,7 @@ namespace Microsoft.Build.Logging
             Write(BinaryLogRecordKind.TargetSkipped);
             WriteMessageFields(e);
             WriteOptionalString(e.TargetFile);
+            WriteOptionalString(e.TargetName);
             WriteOptionalString(e.ParentTarget);
             Write((int)e.BuildReason);
         }
@@ -593,9 +608,7 @@ namespace Microsoft.Build.Logging
             Write(buildEventContext.TaskId);
             Write(buildEventContext.SubmissionId);
             Write(buildEventContext.ProjectInstanceId);
-
-            var evaluationId = Reflector.GetEvaluationId(buildEventContext);
-            Write(evaluationId);
+            Write(Reflector.GetEvaluationId(buildEventContext));
         }
 
         private void Write<TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> keyValuePairs)

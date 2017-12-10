@@ -18,6 +18,10 @@ namespace Microsoft.Build.Logging
         private static Func<BuildEventArgs, string> UnexpandedProjectGetter;
         private static Func<BuildEventArgs, string> ImportedProjectFileGetter;
         private static Func<BuildEventContext, int> EvaluationIdGetter;
+        private static Func<BuildEventArgs, string> TargetNameFromTargetSkipped;
+        private static Func<BuildEventArgs, string> TargetFileFromTargetSkipped;
+        private static Func<BuildEventArgs, string> ParentTargetFromTargetSkipped;
+        private static Func<BuildEventArgs, TargetBuiltReason> BuildReasonFromTargetSkipped;
 
         internal static string GetProjectFileFromEvaluationStarted(BuildEventArgs e)
         {
@@ -41,6 +45,73 @@ namespace Microsoft.Build.Logging
             }
 
             return ProjectFileFromEvaluationFinished(e);
+        }
+
+        internal static string GetTargetNameFromTargetSkipped(BuildEventArgs e)
+        {
+            if (TargetNameFromTargetSkipped == null)
+            {
+                var type = e.GetType().GetTypeInfo();
+                var method = type.GetProperty("TargetName").GetGetMethod();
+                TargetNameFromTargetSkipped = b => method.Invoke(b, null) as string;
+            }
+
+            return TargetNameFromTargetSkipped(e);
+        }
+
+        internal static string GetTargetFileFromTargetSkipped(BuildEventArgs e)
+        {
+            if (TargetFileFromTargetSkipped == null)
+            {
+                var type = e.GetType().GetTypeInfo();
+                var method = type.GetProperty("TargetFile").GetGetMethod();
+                TargetFileFromTargetSkipped = b => method.Invoke(b, null) as string;
+            }
+
+            return TargetFileFromTargetSkipped(e);
+        }
+
+        internal static string GetParentTargetFromTargetSkipped(BuildEventArgs e)
+        {
+            if (ParentTargetFromTargetSkipped == null)
+            {
+                var type = e.GetType().GetTypeInfo();
+                var method = type.GetProperty("ParentTarget").GetGetMethod();
+                ParentTargetFromTargetSkipped = b => method.Invoke(b, null) as string;
+            }
+
+            return ParentTargetFromTargetSkipped(e);
+        }
+
+        internal static TargetBuiltReason GetBuildReasonFromTargetStarted(BuildEventArgs e)
+        {
+            var type = e.GetType().GetTypeInfo();
+            var property = type.GetProperty("BuildReason");
+            if (property == null)
+            {
+                return TargetBuiltReason.None;
+            }
+
+            var method = property.GetGetMethod();
+            return (TargetBuiltReason)method.Invoke(e, null);
+        }
+
+        internal static TargetBuiltReason GetBuildReasonFromTargetSkipped(BuildEventArgs e)
+        {
+            if (BuildReasonFromTargetSkipped == null)
+            {
+                var type = e.GetType().GetTypeInfo();
+                var property = type.GetProperty("BuildReason");
+                if (property == null)
+                {
+                    return TargetBuiltReason.None;
+                }
+
+                var method = property.GetGetMethod();
+                BuildReasonFromTargetSkipped = b => (TargetBuiltReason)method.Invoke(b, null);
+            }
+
+            return BuildReasonFromTargetSkipped(e);
         }
 
         internal static string GetUnexpandedProject(BuildEventArgs e)
