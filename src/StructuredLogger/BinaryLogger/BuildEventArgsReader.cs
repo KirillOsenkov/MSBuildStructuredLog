@@ -161,7 +161,7 @@ namespace Microsoft.Build.Logging
 
             e.ImportedProjectFile = importedProjectFile;
             e.UnexpandedProject = unexpandedProject;
-            // e.ImportIgnored = importIgnored;
+            e.ImportIgnored = importIgnored;
             return e;
         }
 
