@@ -141,23 +141,9 @@ namespace StructuredLogViewer
         {
             try
             {
-                var args = Environment.GetCommandLineArgs();
-                if (args.Length > 1 && HandleArguments(args))
+                if (!HandleArguments() && !TryOpenFromClipboard())
                 {
-                    return;
-                }
-
-                if (TryOpenFromClipboard())
-                {
-                    return;
-                }
-
-                DisplayWelcomeScreen();
-
-                // only check for updates if there were no command-line arguments and debugger not attached
-                if (Debugger.IsAttached || SettingsService.DisableUpdates)
-                {
-                    return;
+                    DisplayWelcomeScreen();
                 }
 
                 await UpdateApplicationAsync();
@@ -180,6 +166,12 @@ namespace StructuredLogViewer
 
         private async System.Threading.Tasks.Task UpdateApplicationAsync()
         {
+            // only check for updates if there were no command-line arguments and debugger not attached
+            if (Debugger.IsAttached || SettingsService.DisableUpdates)
+            {
+                return;
+            }
+
             using (var updateManager = await UpdateManager.GitHubUpdateManager("https://github.com/KirillOsenkov/MSBuildStructuredLog"))
             {
                 var result = await updateManager.UpdateApp();
@@ -207,8 +199,15 @@ namespace StructuredLogViewer
             }
         }
 
-        private bool HandleArguments(string[] args)
+        private bool HandleArguments()
         {
+            var args = Environment.GetCommandLineArgs();
+
+            if (args.Length <= 1)
+            {
+                return false;
+            }
+
             if (args.Length > 2)
             {
                 DisplayWelcomeScreen("Structured Log Viewer can only accept a single command-line argument: a full path to an existing log file or MSBuild project/solution.");
