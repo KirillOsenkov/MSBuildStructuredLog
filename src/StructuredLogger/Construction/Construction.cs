@@ -378,6 +378,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     // This happens when we consume args created by us (deserialized)
                     if (e is ProjectEvaluationStartedEventArgs projectEvaluationStarted)
                     {
+                        EvaluationFolder = Build.GetOrCreateNodeWithName<Folder>("Evaluation");
+
                         var projectName = projectEvaluationStarted.ProjectFile;
                         var project = EvaluationFolder.GetOrCreateNodeWithName<Project>(projectName);
                         project.Id = e.BuildEventContext.ProjectContextId;
