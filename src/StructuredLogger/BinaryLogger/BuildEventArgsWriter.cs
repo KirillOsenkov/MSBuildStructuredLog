@@ -652,6 +652,11 @@ namespace Microsoft.Build.Logging
             Write7BitEncodedInt(binaryWriter, value);
         }
 
+        private void Write(long value)
+        {
+            binaryWriter.Write(value);
+        }
+
         private void Write7BitEncodedInt(BinaryWriter writer, int value)
         {
             // Write out an int 7 bits at a time.  The high bit of the byte,
@@ -714,8 +719,8 @@ namespace Microsoft.Build.Logging
         private void Write(EvaluationLocation item)
         {
             WriteOptionalString(item.ElementName);
-            WriteOptionalString(item.Description);
-            WriteOptionalString(item.EvaluationDescription);
+            WriteOptionalString(item.ElementDescription);
+            WriteOptionalString(item.EvaluationPassDescription);
             WriteOptionalString(item.File);
             Write((int)item.Kind);
             Write((int)item.EvaluationPass);
@@ -724,6 +729,13 @@ namespace Microsoft.Build.Logging
             if (item.Line.HasValue)
             {
                 Write(item.Line.Value);
+            }
+
+            Write(item.Id);
+            Write(item.ParentId.HasValue);
+            if (item.ParentId.HasValue)
+            {
+                Write(item.ParentId.Value);
             }
         }
 
