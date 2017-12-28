@@ -588,9 +588,19 @@ Recent:
                     treeView.Focus();
                 }
 
-                searchLogControl.SearchText = "$error";
+                if (InitialSearchText == null)
+                {
+                    InitialSearchText = "$error";
+                }
+            }
+
+            if (InitialSearchText != null)
+            {
+                searchLogControl.SearchText = InitialSearchText;
             }
         }
+
+        public string InitialSearchText { get; set; }
 
         public void SelectItem(ParentedNode item)
         {

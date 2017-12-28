@@ -424,7 +424,7 @@ namespace StructuredLogViewer
             SetContent(parametersScreen);
         }
 
-        private async void BuildCore(string projectFilePath, string customArguments)
+        private async void BuildCore(string projectFilePath, string customArguments, string searchText = null)
         {
             var progress = new BuildProgress();
             progress.ProgressText = $"Building {projectFilePath}...";
@@ -434,6 +434,10 @@ namespace StructuredLogViewer
             progress.ProgressText = "Analyzing build...";
             await System.Threading.Tasks.Task.Run(() => BuildAnalyzer.AnalyzeBuild(result));
             DisplayBuild(result);
+            if (searchText != null && CurrentBuildControl != null)
+            {
+                CurrentBuildControl.InitialSearchText = searchText;
+            }
         }
 
         private void Open_Click(object sender, RoutedEventArgs e)
@@ -481,7 +485,14 @@ namespace StructuredLogViewer
             if (!string.IsNullOrEmpty(projectFilePath))
             {
                 var args = SettingsService.GetCustomArguments(projectFilePath);
-                BuildCore(projectFilePath, args);
+
+                string searchText = null;
+                if (CurrentBuildControl != null)
+                {
+                    searchText = CurrentBuildControl.searchLogControl.SearchText;
+                }
+
+                BuildCore(projectFilePath, args, searchText);
             }
         }
 
