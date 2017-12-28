@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Framework.Profiler;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -386,6 +387,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                     else if (e is ProjectEvaluationFinishedEventArgs projectEvaluationFinished)
                     {
+                        EvaluationFolder = Build.GetOrCreateNodeWithName<Folder>("Evaluation");
+
+                        var projectName = projectEvaluationFinished.ProjectFile;
+                        var profilerResult = projectEvaluationFinished.ProfilerResult;
+                        if (profilerResult != null && projectName != null)
+                        {
+                            var project = EvaluationFolder.GetOrCreateNodeWithName<Project>(projectName);
+                            ConstructProfilerResult(project, profilerResult.Value);
+                        }
                     }
                     // this happens during live build using MSBuild 15.3 or newer
                     else if (e.GetType().Name == "ProjectEvaluationStartedEventArgs")
@@ -400,6 +410,76 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 HandleException(ex);
             }
+        }
+
+        private void ConstructProfilerResult(Project project, ProfilerResult profilerResult)
+        {
+            var nodes = new Dictionary<long, EvaluationProfileEntry>();
+
+            foreach (var kvp in profilerResult.ProfiledLocations)
+            {
+                var location = kvp.Key;
+                var result = kvp.Value;
+
+                if (!nodes.TryGetValue(location.Id, out var node))
+                {
+                    node = new EvaluationProfileEntry();
+                    nodes[location.Id] = node;
+
+                    node.ElementName = location.ElementName;
+                    node.ElementDescription = location.ElementDescription;
+                    node.EvaluationPassDescription = location.EvaluationPassDescription;
+                    node.Kind = location.Kind;
+                    node.SourceFilePath = location.File;
+                    node.LineNumber = location.Line ?? 0;
+
+                    node.AddEntry(result);
+                }
+            }
+
+            foreach (var kvp in profilerResult.ProfiledLocations)
+            {
+                var location = kvp.Key;
+
+                if (nodes.TryGetValue(location.Id, out var node))
+                {
+                    if (location.ParentId.HasValue && nodes.TryGetValue(location.ParentId.Value, out var parentNode))
+                    {
+                        parentNode.AddChild(node);
+
+                        var parentDuration = parentNode.ProfiledLocation.InclusiveTime.TotalMilliseconds;
+                        var duration = node.ProfiledLocation.InclusiveTime.TotalMilliseconds;
+
+                        double ratio = GetRatio(parentDuration, duration);
+
+                        node.Value = ratio;
+                    }
+                    else
+                    {
+                        project.AddChild(node);
+                        node.Value = 100;
+                    }
+                }
+            }
+        }
+
+        private static double GetRatio(double parentDuration, double duration)
+        {
+            double ratio = 100;
+            if (parentDuration != 0)
+            {
+                ratio = 100 * duration / parentDuration;
+                if (ratio < 0)
+                {
+                    ratio = 0;
+                }
+                else if (ratio > 100.0)
+                {
+                    ratio = 100.0;
+                }
+            }
+
+            return ratio;
         }
 
         public void WarningRaised(object sender, BuildWarningEventArgs args)

@@ -235,6 +235,38 @@
     </DataTemplate.Triggers>
   </DataTemplate>
 
+  <HierarchicalDataTemplate DataType="{x:Type l:EvaluationProfileEntry}"
+                            ItemsSource="{Binding Children}">
+    <StackPanel Orientation="Horizontal">
+      <ProgressBar Width="40" 
+                   Height="9" 
+                   Margin="2,1,6,0" 
+                   Minimum="0"
+                   Maximum="100"
+                   Value="{Binding Value}"
+                   VerticalAlignment="Center" />
+      <TextBlock x:Name="label" 
+                 VerticalAlignment="Center"
+                 Text="{Binding Title, Mode=OneTime}" />
+      <TextBlock x:Name="hits" 
+                 VerticalAlignment="Center"
+                 Margin="6,0,0,0"
+                 Text="{Binding DurationText, Mode=OneTime}" />
+      <TextBlock x:Name="code"
+                 Text="{Binding ShortenedElementDescription}" 
+                 VerticalAlignment="Center"
+                 Margin="12,0,0,0"
+                 FontFamily="Consolas" />
+    </StackPanel>
+    <HierarchicalDataTemplate.Triggers>
+      <DataTrigger Binding="{Binding IsSelected}" Value="False">
+        <Setter TargetName="label" Property="Foreground" Value="Black" />
+        <Setter TargetName="hits" Property="Foreground" Value="Blue" />
+        <Setter TargetName="code" Property="Foreground" Value="Gray" />
+      </DataTrigger>
+    </HierarchicalDataTemplate.Triggers>
+  </HierarchicalDataTemplate>
+
   <DataTemplate DataType="{x:Type l:Property}">
     <StackPanel Orientation="Horizontal">
       <Rectangle x:Name="icon" Width="14" Height="11" Stroke="{StaticResource PropertyStroke}" Margin="3,3,6,3" Fill="{StaticResource PropertyBrush}" VerticalAlignment="Top" />

@@ -180,7 +180,7 @@ namespace StructuredLogViewer.Controls
                 //if (block.Length > minimumDurationToInclude)
                 {
                     var textBlock = new TextBlock();
-                    textBlock.Text = $"{block.Text} ({Utilities.DisplayDuration(block.Duration)})";
+                    textBlock.Text = $"{block.Text} ({Microsoft.Build.Logging.StructuredLogger.Utilities.DisplayDuration(block.Duration)})";
                     textBlock.Background = ChooseBackground(block);
 
                     double left = 24 * (block.Indent - 1);

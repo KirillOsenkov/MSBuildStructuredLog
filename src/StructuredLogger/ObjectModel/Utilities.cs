@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -7,14 +8,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public const int MaxDisplayedValueLength = 260;
         private const string TrimPrompt = "... (Space: view, Ctrl+C: copy)";
 
-        public static string ShortenValue(string text, string trimPrompt = TrimPrompt)
+        public static string ShortenValue(string text, string trimPrompt = TrimPrompt, int maxChars = MaxDisplayedValueLength)
         {
             if (text == null)
             {
                 return text;
             }
 
-            int newLength = MaxDisplayedValueLength;
+            int newLength = maxChars;
             int lineBreak = text.IndexOf('\n');
             if (lineBreak == -1)
             {
@@ -83,6 +84,31 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             return text.Substring(firstQuote + 1, secondQuote - firstQuote - 1);
+        }
+
+        public static string DisplayDuration(TimeSpan span)
+        {
+            if (span.TotalMilliseconds < 1)
+            {
+                return "";
+            }
+
+            if (span.TotalSeconds > 3600)
+            {
+                return span.ToString(@"h\:mm\:ss");
+            }
+
+            if (span.TotalSeconds > 60)
+            {
+                return span.ToString(@"m\:ss\.fff");
+            }
+
+            if (span.TotalMilliseconds > 1000)
+            {
+                return span.ToString(@"s\.fff") + " s";
+            }
+
+            return span.Milliseconds + " ms";
         }
     }
 }
