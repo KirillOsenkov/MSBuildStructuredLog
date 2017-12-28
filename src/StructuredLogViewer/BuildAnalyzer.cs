@@ -175,6 +175,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 doubleWritesAnalyzer.AnalyzeFileCopies(copyTask);
             }
+            else if (task.Name == "Message")
+            {
+                MessageTaskAnalyzer.Analyze(task);
+            }
         }
 
         private void AnalyzeTarget(Target target)

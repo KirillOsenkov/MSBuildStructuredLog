@@ -6,9 +6,28 @@
         public string CommandLineArguments { get; set; }
         public string SourceFilePath { get; set; }
 
+        private string title;
+        public string Title
+        {
+            get
+            {
+                if (title == null)
+                {
+                    title = Name;
+                }
+
+                return title;
+            }
+
+            set
+            {
+                title = value;
+            }
+        }
+
         public override string ToString()
         {
-            return $"{Name}";
+            return Title;
         }
     }
 }

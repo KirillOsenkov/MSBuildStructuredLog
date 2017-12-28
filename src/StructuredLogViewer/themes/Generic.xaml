@@ -169,8 +169,8 @@
     <StackPanel Orientation="Horizontal">
       <Rectangle x:Name="icon" Width="14" Height="11" Stroke="{StaticResource TaskStroke}" Margin="3,3,6,3" Fill="{StaticResource TaskBrush}" VerticalAlignment="Top" />
       <TextBlock x:Name="label" Text="Task " />
-      <TextBlock Text="{Binding Name}" />
-      <TextBlock x:Name="duration" Text="{Binding DurationText}" />
+      <TextBlock Text="{Binding Title}" />
+      <TextBlock x:Name="duration" Text="{Binding DurationText}" Margin="6,0,0,0" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
       <DataTrigger Binding="{Binding IsSelected}" Value="False">

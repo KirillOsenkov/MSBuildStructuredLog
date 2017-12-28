@@ -62,6 +62,7 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Analyzers\MessageTaskAnalyzer.cs" />
     <Compile Include="Analyzers\ResolveAssemblyReferenceAnalyzer\CopyLocalAnalyzer.cs" />
     <Compile Include="BuildAnalyzer.cs" />
     <Compile Include="BuildParametersScreen.cs" />
