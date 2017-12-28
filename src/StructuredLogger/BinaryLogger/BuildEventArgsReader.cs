@@ -646,9 +646,12 @@ namespace Microsoft.Build.Logging
             if (fileFormatVersion > 1)
             {
                 evaluationId = ReadInt32();
-                if (projectContextId == -2 && evaluationId >= 0)
+                if (evaluationId >= 0)
                 {
-                    projectContextId = -evaluationId;
+                    if (projectContextId == -2)
+                    {
+                        projectContextId = -evaluationId;
+                    }
                 }
             }
 

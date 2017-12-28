@@ -342,7 +342,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                 }
             }
-            else if (args.BuildEventContext != null && Reflector.GetEvaluationId(args.BuildEventContext) is int evaluationId && evaluationId != int.MinValue)
+            else if (Reflector.GetEvaluationId(args.BuildEventContext) is int evaluationId && evaluationId != -1)
             {
                 var evaluation = construction.EvaluationFolder;
                 var project = evaluation.FindChild<Project>(p => p.Id == evaluationId);

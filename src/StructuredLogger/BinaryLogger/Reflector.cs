@@ -140,6 +140,11 @@ namespace Microsoft.Build.Logging
 
         internal static int GetEvaluationId(BuildEventContext buildEventContext)
         {
+            if (buildEventContext == null)
+            {
+                return -1;
+            }
+
             if (EvaluationIdGetter == null)
             {
                 var type = buildEventContext.GetType();
@@ -150,7 +155,7 @@ namespace Microsoft.Build.Logging
                 }
                 else
                 {
-                    EvaluationIdGetter = b => buildEventContext.ProjectContextId < 0 ? buildEventContext.ProjectContextId : int.MinValue;
+                    EvaluationIdGetter = b => b.ProjectContextId <= 0 ? -b.ProjectContextId : -1;
                 }
             }
 

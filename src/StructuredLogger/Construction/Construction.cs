@@ -456,7 +456,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                     else
                     {
-                        project.AddChild(node);
+                        project.AddChildAtBeginning(node);
                         node.Value = 100;
                     }
                 }
