@@ -64,6 +64,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return result;
         }
 
+        public static int GetNumberOfLeadingSpaces(string text, Span span)
+        {
+            int index = span.Start;
+            while (index < span.End && text[index] == ' ')
+            {
+                index++;
+            }
+
+            return index - span.Start;
+        }
+
         public static string ParseQuotedSubstring(string text)
         {
             int firstQuote = text.IndexOf('"');

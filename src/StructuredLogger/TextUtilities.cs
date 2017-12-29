@@ -130,6 +130,29 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 .ToArray();
         }
 
+        public static string Substring(this string text, Span span)
+        {
+            return text.Substring(span.Start, span.Length);
+        }
+
+        public static bool Contains(this string text, Span span, char ch)
+        {
+            return IndexOf(text, span, ch) != -1;
+        }
+
+        public static int IndexOf(this string text, Span span, char ch)
+        {
+            for (int i = span.Start; i < span.End; i++)
+            {
+                if (text[i] == ch)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
         public static bool IsLineBreakChar(this char c)
         {
             return c == '\r' || c == '\n';

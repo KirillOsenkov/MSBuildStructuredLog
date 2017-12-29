@@ -1,4 +1,6 @@
-﻿namespace Microsoft.Build.Logging.StructuredLogger
+﻿using System;
+
+namespace Microsoft.Build.Logging.StructuredLogger
 {
     public struct Span
     {
@@ -17,6 +19,16 @@
         public override string ToString()
         {
             return $"({Start}, {Length})";
+        }
+
+        public Span Skip(int length)
+        {
+            if (length > Length)
+            {
+                return new Span();
+            }
+
+            return new Span(Start + length, Length - length);
         }
     }
 }
