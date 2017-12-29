@@ -6,7 +6,7 @@ namespace StructuredLogViewer
 {
     public static class TextUtilities
     {
-        public static Span[] GetLineSpans(this string text)
+        public static Span[] GetLineSpans(this string text, bool includeLineBreakInSpan = true)
         {
             if (text == null)
             {
@@ -15,7 +15,7 @@ namespace StructuredLogViewer
 
             if (text.Length == 0)
             {
-                return new Span[0];
+                return Array.Empty<Span>();
             }
 
             var result = new List<Span>();
@@ -30,10 +30,16 @@ namespace StructuredLogViewer
                     if (previousWasCarriageReturn)
                     {
                         currentLineLength++;
-                        result.Add(new Span(currentPosition, currentLineLength));
+                        previousWasCarriageReturn = false;
+                        var lineLength = currentLineLength;
+                        if (!includeLineBreakInSpan)
+                        {
+                            lineLength--;
+                        }
+
+                        result.Add(new Span(currentPosition, lineLength));
                         currentPosition += currentLineLength;
                         currentLineLength = 0;
-                        previousWasCarriageReturn = false;
                     }
                     else
                     {
@@ -43,9 +49,20 @@ namespace StructuredLogViewer
                 }
                 else if (text[i] == '\n')
                 {
-                    previousWasCarriageReturn = false;
+                    var lineLength = currentLineLength;
+                    if (previousWasCarriageReturn)
+                    {
+                        lineLength--;
+                    }
+
                     currentLineLength++;
-                    result.Add(new Span(currentPosition, currentLineLength));
+                    previousWasCarriageReturn = false;
+                    if (includeLineBreakInSpan)
+                    {
+                        lineLength = currentLineLength;
+                    }
+
+                    result.Add(new Span(currentPosition, lineLength));
                     currentPosition += currentLineLength;
                     currentLineLength = 0;
                 }
@@ -68,8 +85,8 @@ namespace StructuredLogViewer
 
         public static string[] GetLines(this string text)
         {
-            return GetLineSpans(text)
-                .Select(span => text.Substring(span.Start, span.Length).TrimEnd('\r', '\n'))
+            return GetLineSpans(text, includeLineBreakInSpan: false)
+                .Select(span => text.Substring(span.Start, span.Length))
                 .ToArray();
         }
 
