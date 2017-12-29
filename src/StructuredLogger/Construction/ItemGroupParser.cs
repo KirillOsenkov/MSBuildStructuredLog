@@ -24,16 +24,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return property;
             }
 
-            message = message.Replace("\r\n", "\n");
-            message = message.Replace('\r', '\n');
-            var lines = message.Split('\n');
+            var lineSpans = message.GetLineSpans(includeLineBreakInSpan: false);
 
             var parameter = new Parameter();
 
-            if (lines[0].Length > prefix.Length)
+            if (lineSpans[0].Length > prefix.Length)
             {
                 // we have a weird case of multi-line value
-                var nameValue = Utilities.ParseNameValue(lines[0].Substring(prefix.Length));
+                var nameValue = Utilities.ParseNameValue(message.Substring(lineSpans[0].Skip(prefix.Length)));
 
                 parameter.Name = stringTable.Intern(nameValue.Key);
 
@@ -42,11 +40,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     Text = stringTable.Intern(nameValue.Value)
                 });
 
-                for (int i = 1; i < lines.Length; i++)
+                for (int i = 1; i < lineSpans.Count; i++)
                 {
                     parameter.AddChild(new Item
                     {
-                        Text = stringTable.Intern(lines[i])
+                        Text = stringTable.Intern(message.Substring(lineSpans[i]))
                     });
                 }
 
@@ -55,21 +53,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             Item currentItem = null;
             Property currentProperty = null;
-            foreach (var line in lines)
+            foreach (var lineSpan in lineSpans)
             {
-                var numberOfLeadingSpaces = Utilities.GetNumberOfLeadingSpaces(line);
+                var numberOfLeadingSpaces = Utilities.GetNumberOfLeadingSpaces(message, lineSpan);
                 switch (numberOfLeadingSpaces)
                 {
                     case 4:
-                        if (line.EndsWith("=", StringComparison.Ordinal))
+                        if (message[lineSpan.End - 1] == '=')
                         {
-                            parameter.Name = stringTable.Intern(line.Substring(4, line.Length - 5));
+                            parameter.Name = stringTable.Intern(message.Substring(lineSpan.Start + 4, lineSpan.Length - 5));
                         }
                         break;
                     case 8:
-                        if (line.IndexOf('=') != -1)
+                        var skip8 = message.Substring(lineSpan.Skip(8));
+                        if (message.Contains(lineSpan, '='))
                         {
-                            var kvp = Utilities.ParseNameValue(line.Substring(8));
+                            var kvp = Utilities.ParseNameValue(skip8);
                             currentProperty = new Property
                             {
                                 Name = stringTable.Intern(kvp.Key),
@@ -82,14 +81,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         {
                             currentItem = new Item
                             {
-                                Text = stringTable.Intern(line.Substring(8))
+                                Text = stringTable.Intern(skip8)
                             };
                             parameter.AddChild(currentItem);
                             currentProperty = null;
                         }
                         break;
                     case 16:
-                        var currentLine = line.Substring(16);
+                        var currentLine = message.Substring(lineSpan.Skip(16));
                         if (currentItem != null)
                         {
                             if (!currentLine.Contains("="))
@@ -117,6 +116,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         }
                         break;
                     default:
+                        var line = message.Substring(lineSpan);
                         if (numberOfLeadingSpaces == 0 && line == prefix)
                         {
                             continue;
