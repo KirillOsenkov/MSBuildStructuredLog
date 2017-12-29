@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Win32;
 
 namespace StructuredLogViewer

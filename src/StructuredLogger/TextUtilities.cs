@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace StructuredLogViewer
+namespace Microsoft.Build.Logging.StructuredLogger
 {
     public static class TextUtilities
     {

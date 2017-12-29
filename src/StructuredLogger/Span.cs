@@ -1,4 +1,4 @@
-﻿namespace StructuredLogViewer
+﻿namespace Microsoft.Build.Logging.StructuredLogger
 {
     public struct Span
     {

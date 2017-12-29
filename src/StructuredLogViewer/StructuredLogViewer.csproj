@@ -110,8 +110,6 @@
     <Compile Include="SourceFiles\LocalSourceFileResolver.cs" />
     <Compile Include="SourceFiles\SourceFileResolver.cs" />
     <Compile Include="SourceFiles\SourceText.cs" />
-    <Compile Include="SourceFiles\Span.cs" />
-    <Compile Include="SourceFiles\TextUtilities.cs" />
     <Compile Include="Timeline\Block.cs" />
     <Compile Include="Timeline\Lane.cs" />
     <Compile Include="Timeline\Timeline.cs" />
