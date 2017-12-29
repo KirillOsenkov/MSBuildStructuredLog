@@ -6,6 +6,8 @@
         public int Length;
         public int End => Start + Length;
 
+        public static readonly Span Empty = new Span();
+
         public Span(int start, int length) : this()
         {
             Start = start;

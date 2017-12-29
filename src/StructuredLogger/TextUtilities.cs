@@ -6,19 +6,25 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public static class TextUtilities
     {
-        public static Span[] GetLineSpans(this string text, bool includeLineBreakInSpan = true)
+        private static readonly IReadOnlyList<Span> Empty = new Span[] { Span.Empty };
+
+        public static void CollectLineSpans(this string text, ICollection<Span> spans, bool includeLineBreakInSpan = true)
         {
             if (text == null)
             {
-                throw new ArgumentNullException();
+                throw new ArgumentNullException(nameof(text));
+            }
+
+            if (spans == null)
+            {
+                throw new ArgumentNullException(nameof(spans));
             }
 
             if (text.Length == 0)
             {
-                return Array.Empty<Span>();
+                return;
             }
 
-            var result = new List<Span>();
             int currentPosition = 0;
             int currentLineLength = 0;
             bool previousWasCarriageReturn = false;
@@ -37,7 +43,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             lineLength--;
                         }
 
-                        result.Add(new Span(currentPosition, lineLength));
+                        spans.Add(new Span(currentPosition, lineLength));
                         currentPosition += currentLineLength;
                         currentLineLength = 0;
                     }
@@ -62,30 +68,64 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         lineLength = currentLineLength;
                     }
 
-                    result.Add(new Span(currentPosition, lineLength));
+                    spans.Add(new Span(currentPosition, lineLength));
                     currentPosition += currentLineLength;
                     currentLineLength = 0;
                 }
                 else
                 {
+                    if (previousWasCarriageReturn)
+                    {
+                        var lineLength = currentLineLength;
+                        if (!includeLineBreakInSpan)
+                        {
+                            lineLength--;
+                        }
+
+                        spans.Add(new Span(currentPosition, lineLength));
+                        currentPosition += currentLineLength;
+                        currentLineLength = 0;
+                    }
+
                     currentLineLength++;
                     previousWasCarriageReturn = false;
                 }
             }
 
-            result.Add(new Span(currentPosition, currentLineLength));
+            var finalLength = currentLineLength;
+            if (previousWasCarriageReturn && !includeLineBreakInSpan)
+            {
+                finalLength--;
+            }
+
+            spans.Add(new Span(currentPosition, finalLength));
 
             if (previousWasCarriageReturn)
             {
-                result.Add(new Span(currentPosition, 0));
+                spans.Add(new Span(currentPosition, 0));
+            }
+        }
+
+        public static IReadOnlyList<Span> GetLineSpans(this string text, bool includeLineBreakInSpan = true)
+        {
+            if (text == null)
+            {
+                throw new ArgumentNullException(nameof(text));
             }
 
+            if (text.Length == 0)
+            {
+                return Empty;
+            }
+
+            var result = new List<Span>();
+            text.CollectLineSpans(result, includeLineBreakInSpan);
             return result.ToArray();
         }
 
-        public static string[] GetLines(this string text)
+        public static IReadOnlyList<string> GetLines(this string text, bool includeLineBreak = false)
         {
-            return GetLineSpans(text, includeLineBreakInSpan: false)
+            return GetLineSpans(text, includeLineBreakInSpan: includeLineBreak)
                 .Select(span => text.Substring(span.Start, span.Length))
                 .ToArray();
         }

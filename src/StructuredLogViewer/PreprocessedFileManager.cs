@@ -111,7 +111,7 @@ namespace StructuredLogViewer
             if (lineText.Contains("<Import"))
             {
                 int lastElementLineNumber = lineNumber;
-                while (!lineText.Contains("/>") && lastElementLineNumber < text.Lines.Length - 1)
+                while (!lineText.Contains("/>") && lastElementLineNumber < text.Lines.Count - 1)
                 {
                     lastElementLineNumber++;
                     lineText = text.GetLineText(lastElementLineNumber);
@@ -189,7 +189,7 @@ namespace StructuredLogViewer
                     sb.AppendLine($"<!-- ======== END OF {import.ProjectPath} ======= -->");
                 }
 
-                for (; line < sourceText.Lines.Length; line++)
+                for (; line < sourceText.Lines.Count; line++)
                 {
                     sb.AppendLine(sourceText.GetLineText(line));
                 }

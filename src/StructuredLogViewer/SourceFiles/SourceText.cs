@@ -14,7 +14,7 @@ namespace StructuredLogViewer
         }
 
         public string Text { get; }
-        public Span[] Lines { get; }
+        public IReadOnlyList<Span> Lines { get; }
 
         private XmlDocumentSyntax xmlRoot;
         public XmlDocumentSyntax XmlRoot
@@ -34,7 +34,7 @@ namespace StructuredLogViewer
         {
             var result = new List<int>();
             var searchTextLength = searchText.Length;
-            for (int i = 0; i < Lines.Length; i++)
+            for (int i = 0; i < Lines.Count; i++)
             {
                 var line = Lines[i];
                 if (line.Length >= searchTextLength)
@@ -74,7 +74,7 @@ namespace StructuredLogViewer
 
         public int GetLineNumberFromPosition(int startPosition)
         {
-            for (int i = 0; i < Lines.Length; i++)
+            for (int i = 0; i < Lines.Count; i++)
             {
                 if (startPosition >= Lines[i].Start && startPosition < Lines[i].End)
                 {
