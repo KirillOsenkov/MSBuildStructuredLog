@@ -383,7 +383,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                         var projectName = projectEvaluationStarted.ProjectFile;
                         var project = EvaluationFolder.GetOrCreateNodeWithName<Project>(projectName);
-                        project.Id = e.BuildEventContext.ProjectContextId;
+
+                        // we stash the evaluation Id as a negative ProjectContextId
+                        project.Id = -e.BuildEventContext.ProjectContextId;
                     }
                     else if (e is ProjectEvaluationFinishedEventArgs projectEvaluationFinished)
                     {
