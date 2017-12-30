@@ -48,6 +48,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return new KeyValuePair<string, string>(largeText.Substring(span), "");
             }
 
+            return ParseNameValueWithEqualsPosition(largeText, span, equals);
+        }
+
+        public static KeyValuePair<string, string> ParseNameValueWithEqualsPosition(string largeText, Span span, int equals)
+        {
             var name = largeText.Substring(span.Start, equals - span.Start);
             var value = largeText.Substring(equals + 1, span.End - equals - 1);
             return new KeyValuePair<string, string>(name, value);

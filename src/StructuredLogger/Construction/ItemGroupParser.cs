@@ -94,10 +94,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         }
                         break;
                     case 16:
-                        var currentLine = message.Substring(lineSpan.Skip(16));
                         if (currentItem != null)
                         {
-                            var equals16 = currentLine.IndexOf('=');
+                            var span16 = lineSpan.Skip(16);
+                            var equals16 = message.IndexOf(span16, '=');
                             if (equals16 == -1)
                             {
                                 // must be a continuation of the metadata value from the previous line
@@ -106,13 +106,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                     var metadata = currentItem.Children[currentItem.Children.Count - 1] as Metadata;
                                     if (metadata != null)
                                     {
-                                        metadata.Value = stringTable.Intern((metadata.Value ?? "") + currentLine);
+                                        var currentLine = message.Substring(span16);
+                                        if (!string.IsNullOrEmpty(metadata.Value))
+                                        {
+                                            metadata.Value = metadata.Value + currentLine;
+                                        }
+                                        else
+                                        {
+                                            metadata.Value = currentLine;
+                                        }
                                     }
                                 }
                             }
                             else
                             {
-                                var nameValue = Utilities.ParseNameValueWithEqualsPosition(currentLine, equals16);
+                                var nameValue = Utilities.ParseNameValueWithEqualsPosition(message, span16, equals16);
                                 var metadata = new Metadata
                                 {
                                     Name = stringTable.Intern(nameValue.Key),

@@ -44,7 +44,7 @@ namespace Microsoft.Build.Logging
                 // Use a producer-consumer queue so that IO can happen on one thread
                 // while processing can happen on another thread decoupled. The speed
                 // up is from 4.65 to 4.15 seconds.
-                var queue = new BlockingCollection<BuildEventArgs>();
+                var queue = new BlockingCollection<BuildEventArgs>(boundedCapacity: 5000);
                 var processingTask = System.Threading.Tasks.Task.Run(() =>
                 {
                     foreach (var args in queue.GetConsumingEnumerable())
@@ -53,6 +53,8 @@ namespace Microsoft.Build.Logging
                     }
                 });
 
+                int recordsRead = 0;
+
                 var reader = new BuildEventArgsReader(binaryReader, fileFormatVersion);
                 reader.OnBlobRead += OnBlobRead;
                 while (true)
@@ -60,6 +62,7 @@ namespace Microsoft.Build.Logging
                     BuildEventArgs instance = null;
 
                     instance = reader.Read();
+                    recordsRead++;
                     if (instance == null)
                     {
                         queue.CompleteAdding();
