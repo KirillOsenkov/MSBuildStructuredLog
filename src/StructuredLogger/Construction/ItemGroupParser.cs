@@ -13,7 +13,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         /// <param name="message">The message output from the logger.</param>
         /// <param name="prefix">The prefix parsed out (e.g. 'Output Item(s): '.).</param>
-        /// <param name="name">Out: The name of the list.</param>
         /// <returns>List of items within the list and all metadata.</returns>
         public static object ParsePropertyOrItemList(string message, string prefix, StringCache stringTable)
         {
