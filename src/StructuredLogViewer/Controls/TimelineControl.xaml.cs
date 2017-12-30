@@ -183,7 +183,7 @@ namespace StructuredLogViewer.Controls
                     textBlock.Text = $"{block.Text} ({Microsoft.Build.Logging.StructuredLogger.Utilities.DisplayDuration(block.Duration)})";
                     textBlock.Background = ChooseBackground(block);
 
-                    double left = 24 * (block.Indent - 1);
+                    double left = 24 * block.Indent;
 
                     double top = (block.Start - start) / totalDuration * preferredTotalHeight;
                     double height = (block.End - block.Start) / totalDuration * preferredTotalHeight;
@@ -236,7 +236,67 @@ namespace StructuredLogViewer.Controls
             canvas.Height = totalHeight;
             canvas.Width = width;
 
+            canvas.MouseMove += Canvas_MouseMove;
+
             return canvas;
+        }
+
+        private void Canvas_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed || 
+                e.RightButton == MouseButtonState.Pressed)
+            {
+                return;
+            }
+
+            Canvas canvas = sender as Canvas;
+            if (canvas == null)
+            {
+                return;
+            }
+
+            var hit = canvas.InputHitTest(e.GetPosition(canvas)) as TextBlock;
+            if (hit != null)
+            {
+                HighlightTextBlock(hit);
+            }
+        }
+
+        private TextBlock activeTextBlock = null;
+        private Border highlight = new Border()
+        {
+            BorderBrush = Brushes.DeepSkyBlue,
+            BorderThickness = new Thickness(1)
+        };
+
+        private void HighlightTextBlock(TextBlock hit)
+        {
+            if (activeTextBlock == hit)
+            {
+                return;
+            }
+
+            if (activeTextBlock != null)
+            {
+                if (highlight.Parent is Panel parent)
+                {
+                    parent.Children.Remove(highlight);
+                }
+            }
+
+            activeTextBlock = hit;
+
+            if (activeTextBlock != null)
+            {
+                if (activeTextBlock.Parent is Panel parent)
+                {
+                    parent.Children.Add(highlight);
+                    Canvas.SetLeft(highlight, Canvas.GetLeft(activeTextBlock));
+                    Canvas.SetTop(highlight, Canvas.GetTop(activeTextBlock));
+                    highlight.Width = activeTextBlock.ActualWidth;
+                    highlight.Height = activeTextBlock.ActualHeight;
+                }
+            }
         }
 
         private void TextBlock_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)

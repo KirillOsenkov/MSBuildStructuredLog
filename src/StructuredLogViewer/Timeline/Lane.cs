@@ -1,9 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogViewer
 {
@@ -14,6 +10,11 @@ namespace StructuredLogViewer
         public void Add(Block block)
         {
             if (block.StartTime == default(DateTime) || block.EndTime == default(DateTime))
+            {
+                return;
+            }
+
+            if (block.EndTime <= block.StartTime)
             {
                 return;
             }
