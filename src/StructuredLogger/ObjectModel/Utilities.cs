@@ -40,6 +40,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return text.IndexOf('\n') != -1;
         }
 
+        public static KeyValuePair<string, string> ParseNameValue(string largeText, Span span)
+        {
+            var equals = largeText.IndexOf(span, '=');
+            if (equals == -1)
+            {
+                return new KeyValuePair<string, string>(largeText.Substring(span), "");
+            }
+
+            var name = largeText.Substring(span.Start, equals - span.Start);
+            var value = largeText.Substring(equals + 1, span.End - equals - 1);
+            return new KeyValuePair<string, string>(name, value);
+        }
+
         public static KeyValuePair<string, string> ParseNameValue(string nameEqualsValue, int trimFromStart = 0)
         {
             var equals = nameEqualsValue.IndexOf('=');
@@ -48,7 +61,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return new KeyValuePair<string, string>(nameEqualsValue, "");
             }
 
+            return ParseNameValue(nameEqualsValue, trimFromStart, equals);
+        }
+
+        public static KeyValuePair<string, string> ParseNameValue(string nameEqualsValue, int trimFromStart, int equals)
+        {
             var name = nameEqualsValue.Substring(trimFromStart, equals - trimFromStart);
+            var value = nameEqualsValue.Substring(equals + 1);
+            return new KeyValuePair<string, string>(name, value);
+        }
+
+        public static KeyValuePair<string, string> ParseNameValueWithEqualsPosition(string nameEqualsValue, int equals)
+        {
+            var name = nameEqualsValue.Substring(0, equals);
             var value = nameEqualsValue.Substring(equals + 1);
             return new KeyValuePair<string, string>(name, value);
         }

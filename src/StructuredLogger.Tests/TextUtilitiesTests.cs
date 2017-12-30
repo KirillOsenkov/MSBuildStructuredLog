@@ -60,6 +60,15 @@ namespace StructuredLogger.Tests
             Assert.Equal(7, text.IndexOf(new Span(7, 4), 'e'));
         }
 
+        [Fact]
+        public void TestParseNameValue()
+        {
+            var text = "abcd1=2hi";
+            var nameValue = Utilities.ParseNameValue(text, new Span(4, 3));
+            Assert.Equal("1", nameValue.Key);
+            Assert.Equal("2", nameValue.Value);
+        }
+
         private static void T(string text, params string[] expectedLines)
         {
             var actualLines = text.GetLines();

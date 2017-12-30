@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
     public static class ItemGroupParser
     {
+        [ThreadStatic]
+        private static readonly List<Span> lineSpans = new List<Span>(10240);
+
         /// <summary>
         /// Parses a log output string to a list of Items (e.g. ItemGroup with metadata or property string).
         /// </summary>
@@ -24,14 +28,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return property;
             }
 
-            var lineSpans = message.GetLineSpans(includeLineBreakInSpan: false);
+            lineSpans.Clear();
+            message.CollectLineSpans(lineSpans, includeLineBreakInSpan: false);
 
             var parameter = new Parameter();
 
             if (lineSpans[0].Length > prefix.Length)
             {
                 // we have a weird case of multi-line value
-                var nameValue = Utilities.ParseNameValue(message.Substring(lineSpans[0].Skip(prefix.Length)));
+                var nameValue = Utilities.ParseNameValue(message, lineSpans[0].Skip(prefix.Length));
 
                 parameter.Name = stringTable.Intern(nameValue.Key);
 
@@ -66,9 +71,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         break;
                     case 8:
                         var skip8 = message.Substring(lineSpan.Skip(8));
-                        if (message.Contains(lineSpan, '='))
+                        var equals = skip8.IndexOf('=');
+                        if (equals != -1)
                         {
-                            var kvp = Utilities.ParseNameValue(skip8);
+                            var kvp = Utilities.ParseNameValueWithEqualsPosition(skip8, equals);
                             currentProperty = new Property
                             {
                                 Name = stringTable.Intern(kvp.Key),
@@ -91,7 +97,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         var currentLine = message.Substring(lineSpan.Skip(16));
                         if (currentItem != null)
                         {
-                            if (!currentLine.Contains("="))
+                            var equals16 = currentLine.IndexOf('=');
+                            if (equals16 == -1)
                             {
                                 // must be a continuation of the metadata value from the previous line
                                 if (currentItem.HasChildren)
@@ -105,7 +112,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             }
                             else
                             {
-                                var nameValue = Utilities.ParseNameValue(currentLine);
+                                var nameValue = Utilities.ParseNameValueWithEqualsPosition(currentLine, equals16);
                                 var metadata = new Metadata
                                 {
                                     Name = stringTable.Intern(nameValue.Key),
