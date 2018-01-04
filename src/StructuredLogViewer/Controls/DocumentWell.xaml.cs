@@ -7,6 +7,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Input;
 
 namespace StructuredLogViewer.Controls
 {
@@ -20,6 +21,19 @@ namespace StructuredLogViewer.Controls
             tabControl.ItemsSource = Tabs;
             tabsView = CollectionViewSource.GetDefaultView(Tabs);
             Tabs.CollectionChanged += Tabs_CollectionChanged;
+
+            var style = new Style();
+            style.Setters.Add(new EventSetter(MouseDownEvent, (MouseButtonEventHandler)OnMouseDownEvent));
+
+            tabControl.ItemContainerStyle = style;
+        }
+
+        private void OnMouseDownEvent(object sender, MouseButtonEventArgs args)
+        {
+            if (args.MiddleButton == MouseButtonState.Pressed && sender is SourceFileTab sourceFileTab)
+            {
+                Tabs.Remove(sourceFileTab);
+            }
         }
 
         private void Tabs_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
