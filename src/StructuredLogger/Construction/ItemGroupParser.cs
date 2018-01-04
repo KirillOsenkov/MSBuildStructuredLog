@@ -6,7 +6,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
     public static class ItemGroupParser
     {
         [ThreadStatic]
-        private static readonly List<Span> lineSpans = new List<Span>(10240);
+        private static List<Span> lineSpans;
 
         /// <summary>
         /// Parses a log output string to a list of Items (e.g. ItemGroup with metadata or property string).
@@ -25,6 +25,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     Value = stringTable.Intern(nameValue.Value)
                 };
                 return property;
+            }
+
+            // Can't use a field initializer with ThreadStatic.
+            if (lineSpans == null)
+            {
+                lineSpans = new List<Span>(10240);
             }
 
             lineSpans.Clear();
