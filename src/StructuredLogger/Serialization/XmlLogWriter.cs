@@ -96,6 +96,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var folder = node as Folder;
             if (folder != null)
             {
+                if (!Serialization.IsValidXmlElementName(folder.Name))
+                {
+                    SetString(nameof(folder.Name), folder.Name);
+                }
+
                 if (folder.IsLowRelevance)
                 {
                     SetString(nameof(folder.IsLowRelevance), "true");

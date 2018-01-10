@@ -160,7 +160,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var folder = node as Folder;
             if (folder != null)
             {
-                folder.Name = name;
+                folder.Name = GetString(AttributeNames.Name) ?? name;
                 folder.IsLowRelevance = GetBoolean(AttributeNames.IsLowRelevance);
                 return folder;
             }
