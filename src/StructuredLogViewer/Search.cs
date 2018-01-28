@@ -18,7 +18,7 @@ namespace StructuredLogViewer
 
         public IEnumerable<SearchResult> FindNodes(string query)
         {
-            var matcher = new NodeQueryMarcher(query, build.StringTable.Instances);
+            var matcher = new NodeQueryMatcher(query, build.StringTable.Instances);
 
             resultSet = new List<SearchResult>();
 
@@ -27,7 +27,7 @@ namespace StructuredLogViewer
 
             if (matcher.Under != null)
             {
-                matcher = new NodeQueryMarcher(matcher.Under, build.StringTable.Instances);
+                matcher = new NodeQueryMatcher(matcher.Under, build.StringTable.Instances);
 
                 for (int i = resultSet.Count - 1; i >= 0; i--)
                 {
@@ -42,7 +42,7 @@ namespace StructuredLogViewer
             return resultSet;
         }
 
-        private bool IsUnder(NodeQueryMarcher matcher, SearchResult result)
+        private bool IsUnder(NodeQueryMatcher matcher, SearchResult result)
         {
             if (!(result.Node is ParentedNode parented))
             {
@@ -60,7 +60,7 @@ namespace StructuredLogViewer
             return false;
         }
 
-        private void Visit(object node, NodeQueryMarcher matcher, CancellationTokenSource cancellationTokenSource)
+        private void Visit(object node, NodeQueryMatcher matcher, CancellationTokenSource cancellationTokenSource)
         {
             if (cancellationTokenSource.IsCancellationRequested)
             {

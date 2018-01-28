@@ -6,7 +6,7 @@ using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogViewer
 {
-    public class NodeQueryMarcher
+    public class NodeQueryMatcher
     {
         public string Query { get; private set; }
         public List<string> Words { get; private set; }
@@ -19,7 +19,7 @@ namespace StructuredLogViewer
 
         private static readonly char[] space = { ' ' };
 
-        public NodeQueryMarcher(string query, IEnumerable<string> stringTable)
+        public NodeQueryMatcher(string query, IEnumerable<string> stringTable)
         {
             this.Query = query;
 
