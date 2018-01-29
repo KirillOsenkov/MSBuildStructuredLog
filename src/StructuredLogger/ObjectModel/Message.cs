@@ -33,6 +33,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         private static readonly Regex propertyReassignment = new Regex(@"^Property reassignment: \$\(\w+\)=.+ \(previous value: .*\) at (?<File>.*) \((?<Line>\d+),(\d+)\)$", RegexOptions.Compiled);
+        private static readonly Regex importingProject = new Regex(@"^Importing project ""[^\""]+"" into project ""(?<File>[^\""]+)"" at \((?<Line>\d+),(\d+)\)\.$", RegexOptions.Compiled);
+        private static readonly Regex projectWasNotImported = new Regex(@"^Project ""[^""]+"" was not imported by ""(?<File>[^""]+)"" at \((?<Line>\d+),\d+\), due to false condition; .+ was evaluated as .+\.$", RegexOptions.Compiled);
 
         public string SourceFilePath
         {
@@ -50,7 +52,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private Match GetSourceFileMatch()
         {
-            return propertyReassignment.Match(Text);
+            var match = propertyReassignment.Match(Text);
+            if (match.Success)
+            {
+                return match;
+            }
+
+            match = importingProject.Match(Text);
+            if (match.Success)
+            {
+                return match;
+            }
+
+            match = projectWasNotImported.Match(Text);
+            return match;
         }
 
         // These are recalculated and not stored because storage in this class is incredibly expensive
