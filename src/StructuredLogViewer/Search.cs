@@ -6,14 +6,16 @@ namespace StructuredLogViewer
 {
     public class Search
     {
-        public const int MaxResults = 1000;
+        public const int DefaultMaxResults = 1000;
 
         private Build build;
+        private int maxResults;
         private List<SearchResult> resultSet;
 
-        public Search(Build build)
+        public Search(Build build, int maxResults = DefaultMaxResults)
         {
             this.build = build;
+            this.maxResults = maxResults;
         }
 
         public IEnumerable<SearchResult> FindNodes(string query)
@@ -35,7 +37,7 @@ namespace StructuredLogViewer
                 return;
             }
 
-            if (resultSet.Count >= MaxResults)
+            if (resultSet.Count >= maxResults)
             {
                 cancellationTokenSource.Cancel();
                 return;

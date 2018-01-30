@@ -9,9 +9,8 @@ namespace StructuredLogViewer
 {
     public class TypingConcurrentOperation
     {
-        public event Action<object> DisplayResults;
-        public Func<string, object> ExecuteSearch;
-
+        public Func<string, int, object> ExecuteSearch;
+        public event Action<object, bool> DisplayResults;
         public event Action<string, object> SearchComplete;
 
         public const int ThrottlingDelayMilliseconds = 300;
@@ -23,7 +22,7 @@ namespace StructuredLogViewer
 
         private string latestSearch;
 
-        public void TextChanged(string searchText)
+        public void TextChanged(string searchText, int maxResults = Search.DefaultMaxResults)
         {
             if (ExecuteSearch == null)
             {
@@ -35,22 +34,23 @@ namespace StructuredLogViewer
             {
                 if (latestSearch == searchText)
                 {
-                    StartOperation(searchText);
+                    StartOperation(searchText, maxResults);
                 }
             });
         }
 
-        private void StartOperation(string searchText)
+        private void StartOperation(string searchText, int maxResults = Search.DefaultMaxResults)
         {
             Stopwatch sw = Stopwatch.StartNew();
-            var results = ExecuteSearch(searchText);
+            var results = ExecuteSearch(searchText, maxResults);
+            bool moreAvailable = results is System.Collections.ICollection collection && collection.Count >= maxResults;
             var elapsed = sw.Elapsed;
             BuildControl.Elapsed = elapsed;
             if (latestSearch == searchText)
             {
                 Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    DisplayResults?.Invoke(results);
+                    DisplayResults?.Invoke(results, moreAvailable);
                     SearchComplete?.Invoke(searchText, results);
                 });
             }

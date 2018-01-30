@@ -13,7 +13,7 @@ namespace StructuredLogViewer.Controls
         public SearchAndResultsControl()
         {
             InitializeComponent();
-            typingConcurrentOperation.DisplayResults += r => DisplaySearchResults(r);
+            typingConcurrentOperation.DisplayResults += (r, moreAvailable) => DisplaySearchResults(r, moreAvailable);
             typingConcurrentOperation.SearchComplete += TypingConcurrentOperation_SearchComplete;
         }
 
@@ -23,14 +23,19 @@ namespace StructuredLogViewer.Controls
         }
 
         public TreeView ResultsList => resultsList;
-        public Func<object, IEnumerable> ResultsTreeBuilder { get; set; }
+        public Func<object, bool, IEnumerable> ResultsTreeBuilder { get; set; }
         public event Action WatermarkDisplayed;
         public event Action<string> TextChanged;
 
-        public Func<string, object> ExecuteSearch
+        public Func<string, int, object> ExecuteSearch
         {
             get => typingConcurrentOperation.ExecuteSearch;
             set => typingConcurrentOperation.ExecuteSearch = value;
+        }
+
+        public void TriggerSearch(string text, int maxResults)
+        {
+            typingConcurrentOperation.TextChanged(text, maxResults);
         }
 
         private void searchTextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -56,9 +61,9 @@ namespace StructuredLogViewer.Controls
             typingConcurrentOperation.TextChanged(searchText);
         }
 
-        private void DisplaySearchResults(object results)
+        private void DisplaySearchResults(object results, bool moreAvailable = false)
         {
-            DisplayItems(ResultsTreeBuilder(results));
+            DisplayItems(ResultsTreeBuilder(results, moreAvailable));
         }
 
         public void DisplayItems(IEnumerable content)

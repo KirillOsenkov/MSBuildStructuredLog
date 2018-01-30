@@ -48,9 +48,9 @@ namespace StructuredLogViewer.Controls
 
             UpdateWatermark();
 
-            searchLogControl.ExecuteSearch = searchText =>
+            searchLogControl.ExecuteSearch = (searchText, maxResults) =>
             {
-                var search = new Search(Build);
+                var search = new Search(Build, maxResults);
                 var results = search.FindNodes(searchText);
                 return results;
             };
@@ -363,7 +363,7 @@ Recent:
             preprocessItem.Visibility = node is Project p && preprocessedFileManager.CanPreprocess(p.SourceFilePath) ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        private object FindInFiles(string searchText)
+        private object FindInFiles(string searchText, int maxResults = int.MaxValue)
         {
             var results = new List<(string, IEnumerable<(int, string)>)>();
 
@@ -380,7 +380,7 @@ Recent:
             return results;
         }
 
-        private IEnumerable BuildFindResults(object resultsObject)
+        private IEnumerable BuildFindResults(object resultsObject, bool moreAvailable = false)
         {
             if (resultsObject == null)
             {
@@ -974,7 +974,7 @@ Recent:
             return node;
         }
 
-        private IEnumerable BuildResultTree(object resultsObject)
+        private IEnumerable BuildResultTree(object resultsObject, bool moreAvailable = false)
         {
             var results = resultsObject as ICollection<SearchResult>;
             if (results == null)
@@ -984,11 +984,12 @@ Recent:
 
             var root = new Folder();
 
-            if (results.Count >= Search.MaxResults)
+            if (moreAvailable)
             {
-                root.Children.Add(new Message
+                root.Children.Add(new ButtonNode
                 {
-                    Text = $"Showing first {results.Count} results. Show all results instead (slow)."
+                    Text = $"Showing first {results.Count} results. Show all results instead (slow).",
+                    OnClick = () => searchLogControl.TriggerSearch(searchLogControl.SearchText, int.MaxValue)
                 });
             }
 

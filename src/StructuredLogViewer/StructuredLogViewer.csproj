@@ -99,6 +99,7 @@
     </Compile>
     <Compile Include="NodeQueryMatcher.cs" />
     <Compile Include="MSBuildLocator.cs" />
+    <Compile Include="ButtonNode.cs" />
     <Compile Include="Note.cs" />
     <Compile Include="PreprocessedFileManager.cs" />
     <Compile Include="ProxyNode.cs" />
