@@ -44,6 +44,11 @@ namespace StructuredLogViewer
                 }
             }
 
+            PrecomputeMatchesInStrings(stringTable);
+        }
+
+        private void PrecomputeMatchesInStrings(IEnumerable<string> stringTable)
+        {
             MatchesInStrings = new HashSet<string>();
 
             foreach (var stringInstance in stringTable)
