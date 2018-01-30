@@ -47,7 +47,7 @@ namespace StructuredLogViewer
             block.StartTime = node.StartTime;
             block.EndTime = node.EndTime;
             block.Text = node.Name;
-            block.Indent = node.GetParentChain().Count();
+            block.Indent = node.GetParentChainIncludingThis().Count();
             block.Node = node;
             return block;
         }

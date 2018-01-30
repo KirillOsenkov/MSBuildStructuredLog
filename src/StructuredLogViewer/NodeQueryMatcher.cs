@@ -11,8 +11,8 @@ namespace StructuredLogViewer
         public string Query { get; private set; }
         public List<string> Words { get; private set; }
         public string TypeKeyword { get; private set; }
-        public string Under { get; private set; }
         public HashSet<string> MatchesInStrings { get; private set; }
+        private NodeQueryMatcher UnderMatcher { get; set; }
 
         // avoid allocating this for every node
         private readonly List<string> searchFields = new List<string>(6);
@@ -39,7 +39,7 @@ namespace StructuredLogViewer
                 {
                     word = word.Substring(6, word.Length - 7);
                     Words.RemoveAt(i);
-                    Under = word;
+                    UnderMatcher = new NodeQueryMatcher(word, stringTable);
                     continue;
                 }
             }
@@ -186,7 +186,7 @@ namespace StructuredLogViewer
                     // this node is of the type that we need, search other fields
                     if (result == null)
                     {
-                        result = new SearchResult();
+                        result = new SearchResult(node);
                     }
 
                     result.AddMatchByNodeType();
@@ -217,7 +217,7 @@ namespace StructuredLogViewer
                     {
                         if (result == null)
                         {
-                            result = new SearchResult();
+                            result = new SearchResult(node);
                         }
 
                         // if matched on the type of the node (always field 0), special case it
@@ -241,7 +241,30 @@ namespace StructuredLogViewer
                 }
             }
 
+            if (UnderMatcher != null && !IsUnder(UnderMatcher, result))
+            {
+                return null;
+            }
+
             return result;
+        }
+
+        private static bool IsUnder(NodeQueryMatcher matcher, SearchResult result)
+        {
+            if (!(result.Node is ParentedNode parented))
+            {
+                return true;
+            }
+
+            foreach (var parent in parented.GetParentChainExcludingThis())
+            {
+                if (matcher.IsMatch(parent) != null)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

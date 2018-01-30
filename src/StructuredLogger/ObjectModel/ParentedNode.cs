@@ -21,7 +21,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        public IEnumerable<ParentedNode> GetParentChain()
+        public IEnumerable<ParentedNode> GetParentChainExcludingThis()
+        {
+            var chain = new List<ParentedNode>();
+            ParentedNode current = this;
+            while (current.Parent != null)
+            {
+                current = current.Parent;
+                chain.Add(current);
+            }
+
+            chain.Reverse();
+            return chain;
+        }
+
+        public IEnumerable<ParentedNode> GetParentChainIncludingThis()
         {
             var chain = new List<ParentedNode>();
             ParentedNode current = this;

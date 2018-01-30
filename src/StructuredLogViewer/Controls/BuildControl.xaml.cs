@@ -418,7 +418,10 @@ Recent:
 
             if (!root.HasChildren && !string.IsNullOrEmpty(findInFilesControl.SearchText))
             {
-                root.Children.Add(new Message { Text = "No results found." });
+                root.Children.Add(new Message
+                {
+                    Text = "No results found."
+                });
             }
 
             return root.Children;
@@ -543,7 +546,7 @@ Recent:
         public void UpdateBreadcrumb(object item)
         {
             var parentedNode = item as ParentedNode;
-            IEnumerable<object> chain = parentedNode?.GetParentChain();
+            IEnumerable<object> chain = parentedNode?.GetParentChainIncludingThis();
             if (chain == null || !chain.Any())
             {
                 chain = new[] { item };
@@ -604,7 +607,7 @@ Recent:
 
         public void SelectItem(ParentedNode item)
         {
-            var parentChain = item.GetParentChain();
+            var parentChain = item.GetParentChainIncludingThis();
             if (!parentChain.Any())
             {
                 return;
@@ -973,7 +976,7 @@ Recent:
 
         private IEnumerable BuildResultTree(object resultsObject)
         {
-            var results = resultsObject as IEnumerable<SearchResult>;
+            var results = resultsObject as ICollection<SearchResult>;
             if (results == null)
             {
                 return results;
@@ -981,7 +984,18 @@ Recent:
 
             var root = new Folder();
 
-            // root.Children.Add(new Message { Text = "Elapsed " + Elapsed.ToString() });
+            if (results.Count >= Search.MaxResults)
+            {
+                root.Children.Add(new Message
+                {
+                    Text = $"Showing first {results.Count} results. Show all results instead (slow)."
+                });
+            }
+
+            root.Children.Add(new Message
+            {
+                Text = $"{results.Count} results. Search took: {Elapsed.ToString()}"
+            });
 
             foreach (var result in results)
             {
@@ -990,7 +1004,7 @@ Recent:
                 var parentedNode = result.Node as ParentedNode;
                 if (parentedNode != null)
                 {
-                    var chain = parentedNode.GetParentChain();
+                    var chain = parentedNode.GetParentChainIncludingThis();
                     var project = parentedNode.GetNearestParent<Project>();
                     if (project != null)
                     {

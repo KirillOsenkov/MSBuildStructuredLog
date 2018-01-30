@@ -13,6 +13,11 @@
         public string After { get; set; }
         public bool MatchedByType { get; private set; }
 
+        public SearchResult(object node)
+        {
+            Node = node;
+        }
+
         public void AddMatch(string field, string word, int index)
         {
             if (Field != null && Word != null)
