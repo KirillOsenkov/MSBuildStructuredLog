@@ -83,7 +83,7 @@ namespace Microsoft.Build.Logging
         /// <remarks>Useful for debugging and analyzing binary logs</remarks>
         public IEnumerable<Record> ReadRecords(string sourceFilePath)
         {
-            using (var stream = new FileStream(sourceFilePath, FileMode.Open))
+            using (var stream = new FileStream(sourceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 var gzipStream = new GZipStream(stream, CompressionMode.Decompress, leaveOpen: true);
                 var memoryStream = new MemoryStream();
