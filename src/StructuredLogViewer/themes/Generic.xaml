@@ -515,6 +515,12 @@
                   Grid.Column="1">
               <StackPanel>
                 <Canvas Width="100" Height="100" Margin="20">
+                  <Canvas.Effect>
+                    <DropShadowEffect BlurRadius="15" Color="Gray" Opacity="0.5" />
+                  </Canvas.Effect>
+                  <Canvas.RenderTransform>
+                    <ScaleTransform ScaleX="1" ScaleY="1" />
+                  </Canvas.RenderTransform>
                   <Rectangle Width="35" Height="35" Canvas.Left="0" Canvas.Top="0" Stroke="{StaticResource TargetStroke}" Fill="{StaticResource TargetBrush}" />
                   <Rectangle Width="35" Height="35" Canvas.Left="25" Canvas.Top="35" Stroke="{StaticResource ParameterStroke}" Fill="{StaticResource ParameterBrush}" />
                   <Rectangle Width="35" Height="35" Canvas.Left="25" Canvas.Top="70" Stroke="{StaticResource TaskStroke}" Fill="{StaticResource TaskBrush}" />
