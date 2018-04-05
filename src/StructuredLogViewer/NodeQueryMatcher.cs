@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Security;
 using System.Text;
+using Cinco.Extensions;
 using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogViewer
@@ -55,11 +58,30 @@ namespace StructuredLogViewer
             {
                 foreach (var word in Words)
                 {
-                    if (stringInstance.IndexOf(word, StringComparison.OrdinalIgnoreCase) != -1)
+                    //if (stringInstance.IndexOf(word, StringComparison.OrdinalIgnoreCase) != -1)
+                    if (IndexOfN(stringInstance, word) != -1)
                     {
                         MatchesInStrings.Add(stringInstance);
                     }
                 }
+            }
+        }
+
+        internal class NativeMethods
+        {
+            [DllImport("Cinco.Native.dll", PreserveSig = true, CallingConvention = CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+            public unsafe static extern int IndexOf(ushort* text, int textLength, ushort* value, int valueLength);
+        }
+
+        public unsafe static int IndexOfN(string text, string value, int fromIndex = 0)
+        {
+            // if (string.IsNullOrEmpty(text) || string.IsNullOrEmpty(value)) return -1;
+
+            fixed (char* textPtr = text)
+            fixed (char* valuePtr = value)
+            {
+                int innerIndex = NativeMethods.IndexOf((ushort*)(textPtr + fromIndex), text.Length - fromIndex, (ushort*)valuePtr, value.Length);
+                return (innerIndex == -1 ? innerIndex : fromIndex + innerIndex);
             }
         }
 
