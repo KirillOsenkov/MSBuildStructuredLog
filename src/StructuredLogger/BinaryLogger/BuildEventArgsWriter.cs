@@ -212,6 +212,16 @@ namespace Microsoft.Build.Logging
             Write(e.TargetNames);
             WriteOptionalString(e.ToolsVersion);
 
+            if (e.GlobalProperties == null)
+            {
+                Write(false);
+            }
+            else
+            {
+                Write(true);
+                Write(e.GlobalProperties);
+            }
+
             WriteProperties(e.Properties);
 
             WriteItems(e.Items);
