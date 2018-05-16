@@ -12,6 +12,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
     public class StructuredLogger : Logger
     {
         private Construction construction;
+        public Construction Construction => construction;
 
         /// <summary>
         /// The path to the log file specified by the user

@@ -29,17 +29,25 @@ namespace StructuredLogViewer
 
         private void ExtractFilesFromStream(Stream stream)
         {
-            using (var zipArchive = new ZipArchive(stream, ZipArchiveMode.Read))
+            try
             {
-                foreach (var entry in zipArchive.Entries)
+                using (var zipArchive = new ZipArchive(stream, ZipArchiveMode.Read))
                 {
-                    using (var contentStream = entry.Open())
-                    using (var reader = new StreamReader(contentStream))
+                    foreach (var entry in zipArchive.Entries)
                     {
-                        var text = reader.ReadToEnd();
-                        AddFile(entry.FullName, text);
+                        using (var contentStream = entry.Open())
+                        using (var reader = new StreamReader(contentStream))
+                        {
+                            var text = reader.ReadToEnd();
+                            AddFile(entry.FullName, text);
+                        }
                     }
                 }
+            }
+            catch
+            {
+                // The archive is likely incomplete (corrupt) because the build crashed.
+                // Tolerate this situation.
             }
         }
 

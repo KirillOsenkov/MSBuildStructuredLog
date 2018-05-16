@@ -11,11 +11,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             byte[] sourceArchive = null;
 
+            Build build = null;
+
             eventSource.OnBlobRead += (kind, bytes) =>
             {
                 if (kind == BinaryLogRecordKind.ProjectImportArchive)
                 {
                     sourceArchive = bytes;
+                }
+            };
+            eventSource.OnException += ex =>
+            {
+                if (build != null)
+                {
+                    build.AddChild(new Error() { Text = "Error when reading the file: " + ex.ToString() });
                 }
             };
 
@@ -25,13 +34,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
             structuredLogger.Parameters = "build.buildlog";
             structuredLogger.Initialize(eventSource);
 
+            build = structuredLogger.Construction.Build;
+
             var sw = Stopwatch.StartNew();
             eventSource.Replay(filePath);
             var elapsed = sw.Elapsed;
 
             structuredLogger.Shutdown();
 
-            var build = StructuredLogger.CurrentBuild;
+            build = StructuredLogger.CurrentBuild;
             StructuredLogger.CurrentBuild = null;
 
             if (build == null)

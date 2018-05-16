@@ -21,6 +21,11 @@ namespace Microsoft.Build.Logging
         public event Action<BinaryLogRecordKind, byte[]> OnBlobRead;
 
         /// <summary>
+        /// Raised when there was an exception reading a record from the file.
+        /// </summary>
+        public event Action<Exception> OnException;
+
+        /// <summary>
         /// Read the provided binary log file and raise corresponding events for each BuildEventArgs
         /// </summary>
         /// <param name="sourceFilePath">The full file path of the binary log file</param>
@@ -61,7 +66,15 @@ namespace Microsoft.Build.Logging
                 {
                     BuildEventArgs instance = null;
 
-                    instance = reader.Read();
+                    try
+                    {
+                        instance = reader.Read();
+                    }
+                    catch (Exception ex)
+                    {
+                        OnException?.Invoke(ex);
+                    }
+
                     recordsRead++;
                     if (instance == null)
                     {
