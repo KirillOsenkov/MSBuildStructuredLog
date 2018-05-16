@@ -894,7 +894,15 @@ Recent:
                 return false;
             }
 
-            Action preprocess = preprocessedFileManager.GetPreprocessAction(sourceFilePath, text);
+            // the zip archive has the ':' stripped from paths
+            // try to restore it to match the original path
+            var preprocessableFilePath = sourceFilePath;
+            if (preprocessableFilePath.Length > 3 && preprocessableFilePath[1] == '\\')
+            {
+                preprocessableFilePath = preprocessableFilePath.Insert(1, ":");
+            }
+
+            Action preprocess = preprocessedFileManager.GetPreprocessAction(preprocessableFilePath, text);
             documentWell.DisplaySource(sourceFilePath, text.Text, lineNumber, column, preprocess);
             return true;
         }
