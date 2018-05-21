@@ -234,6 +234,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             "Copying file from ",
             "Resolved file path is ",
             "There was a conflict",
+            "Encountered conflict between",
             "Building target completely ",
             "is newer than output ",
             "Property reassignment: $(",
