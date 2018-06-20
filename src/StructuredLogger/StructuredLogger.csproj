@@ -4,6 +4,7 @@
     <RootNamespace>Microsoft.Build.Logging.StructuredLogger</RootNamespace>
     <TargetFrameworks>net46;netstandard1.5</TargetFrameworks>
     <NBGV_DoNotEmitNonVersionCustomAttributes>true</NBGV_DoNotEmitNonVersionCustomAttributes>
+    <DebugType>embedded</DebugType>
   </PropertyGroup>
   <PropertyGroup>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
