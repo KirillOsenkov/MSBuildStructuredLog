@@ -99,6 +99,23 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         }
                         break;
                     case 16:
+                        if (currentItem == null && currentProperty != null)
+                        {
+                            // we incorrectly interpreted the previous line as Property, not Item (because it had '=')
+                            // and so we created a property out of name/value.
+                            // Fix this by turning it into an Item.
+                            if (parameter.LastChild == currentProperty)
+                            {
+                                currentItem = new Item
+                                {
+                                    Text = currentProperty.Name + "=" + currentProperty.Value
+                                };
+                                parameter.Children.RemoveAt(parameter.Children.Count - 1);
+                                currentProperty = null;
+                                parameter.AddChild(currentItem);
+                            }
+                        }
+
                         if (currentItem != null)
                         {
                             var span16 = lineSpan.Skip(16);

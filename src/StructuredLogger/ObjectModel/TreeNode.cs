@@ -267,6 +267,32 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return default(T);
         }
 
+        public object FirstChild
+        {
+            get
+            {
+                if (HasChildren)
+                {
+                    return Children[0];
+                }
+
+                return null;
+            }
+        }
+
+        public object LastChild
+        {
+            get
+            {
+                if (HasChildren)
+                {
+                    return Children[Children.Count - 1];
+                }
+
+                return null;
+            }
+        }
+
         public virtual T FindLastDescendant<T>(Predicate<T> predicate = null)
         {
             if (HasChildren)
