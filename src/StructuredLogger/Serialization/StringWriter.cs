@@ -32,12 +32,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var treeNode = rootNode as TreeNode;
             if (treeNode != null && treeNode.HasChildren)
             {
-                if (treeNode.HasChildren)
+                foreach (var child in treeNode.Children)
                 {
-                    foreach (var child in treeNode.Children)
-                    {
-                        WriteNode(child, sb, indent + 1);
-                    }
+                    WriteNode(child, sb, indent + 1);
                 }
             }
         }

@@ -716,6 +716,7 @@ Recent:
         {
             try
             {
+                text = text.Replace("\0", "");
                 Clipboard.SetText(text);
             }
             catch (Exception)
