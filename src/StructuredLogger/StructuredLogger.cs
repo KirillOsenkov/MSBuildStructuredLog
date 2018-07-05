@@ -83,7 +83,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (projectEvaluationFinishedEventArgsType != null)
             {
                 projectEvaluationFinishedProjectFile = projectEvaluationFinishedEventArgsType.GetProperty("ProjectFile", BindingFlags.Public | BindingFlags.Instance);
-                projectEvaluationFinishedProfilerResult = projectImportedEventArgsType.GetProperty("ProfilerResult", BindingFlags.Public | BindingFlags.Instance);
+                projectEvaluationFinishedProfilerResult = projectEvaluationFinishedEventArgsType.GetProperty("ProfilerResult", BindingFlags.Public | BindingFlags.Instance);
             }
         }
 
@@ -115,7 +115,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 else if (type == projectEvaluationFinishedEventArgsType)
                 {
                     string projectFile = (string)projectEvaluationFinishedProjectFile.GetValue(e);
-                    object profilerResult = projectEvaluationFinishedProfilerResult.GetValue(e);
+                    object profilerResult = projectEvaluationFinishedProfilerResult?.GetValue(e);
                     return;
                 }
 
