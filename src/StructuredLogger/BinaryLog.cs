@@ -7,9 +7,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
     {
         public static Build ReadBuild(string filePath)
         {
-            var eventSource = new BinaryLogReplayEventSource();
+            using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                var projectImportsZipFile = Path.ChangeExtension(filePath, ".ProjectImports.zip");
+                byte[] projectImportsArchive = null;
+                if (File.Exists(projectImportsZipFile))
+                {
+                    projectImportsArchive = File.ReadAllBytes(projectImportsZipFile);
+                }
 
-            byte[] sourceArchive = null;
+                return ReadBuild(stream, projectImportsArchive);
+            }
+        }
+
+        public static Build ReadBuild(Stream stream, byte[] projectImportsArchive = null)
+        {
+            var eventSource = new BinaryLogReplayEventSource();
 
             Build build = null;
 
@@ -17,7 +30,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 if (kind == BinaryLogRecordKind.ProjectImportArchive)
                 {
-                    sourceArchive = bytes;
+                    projectImportsArchive = bytes;
                 }
             };
             eventSource.OnException += ex =>
@@ -37,7 +50,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             build = structuredLogger.Construction.Build;
 
             var sw = Stopwatch.StartNew();
-            eventSource.Replay(filePath);
+            eventSource.Replay(stream);
             var elapsed = sw.Elapsed;
 
             structuredLogger.Shutdown();
@@ -48,16 +61,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (build == null)
             {
                 build = new Build() { Succeeded = false };
-                build.AddChild(new Error() { Text = "Error when opening the file: " + filePath });
+                build.AddChild(new Error() { Text = "Error when opening the log file." });
             }
 
-            var projectImportsZip = Path.ChangeExtension(filePath, ".ProjectImports.zip");
-            if (sourceArchive == null && File.Exists(projectImportsZip))
+            if (build.SourceFilesArchive == null && projectImportsArchive != null)
             {
-                sourceArchive = File.ReadAllBytes(projectImportsZip);
+                build.SourceFilesArchive = projectImportsArchive;
             }
 
-            build.SourceFilesArchive = sourceArchive;
             // build.AddChildAtBeginning(new Message { Text = "Elapsed: " + elapsed.ToString() });
 
             return build;

@@ -47,7 +47,7 @@ namespace Microsoft.Build.Logging
 
         public void AddFile(string filePath)
         {
-            if (filePath == null || _fileStream == null)
+            if (string.IsNullOrEmpty(filePath) || _fileStream == null)
             {
                 return;
             }

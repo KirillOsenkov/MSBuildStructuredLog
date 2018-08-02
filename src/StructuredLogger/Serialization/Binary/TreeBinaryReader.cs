@@ -7,17 +7,25 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class TreeBinaryReader : IDisposable
     {
-        private readonly string filePath;
         private BinaryReader binaryReader;
-        private readonly FileStream fileStream;
-        private readonly GZipStream gzipStream;
-        private readonly string[] stringTable;
-        private readonly List<string> attributes = new List<string>(10);
+        private Stream fileStream;
+        private GZipStream gzipStream;
+        private string[] stringTable;
 
         public TreeBinaryReader(string filePath)
         {
-            this.filePath = filePath;
-            this.fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+            this.fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            Initialize(fileStream);
+        }
+
+        public TreeBinaryReader(Stream stream)
+        {
+            Initialize(stream);
+        }
+
+        private void Initialize(Stream stream)
+        { 
+            this.fileStream = stream;
             if (fileStream.Length < 8)
             {
                 // file is too short to be valid
@@ -128,6 +136,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 binaryReader.Dispose();
                 binaryReader = null;
+            }
+
+            if (fileStream != null)
+            {
+                fileStream.Dispose();
+                fileStream = null;
             }
         }
     }

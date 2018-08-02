@@ -11,7 +11,7 @@ namespace StructuredLogger.Tests
             var destination = File.ReadAllText(file2);
             if (source != destination)
             {
-                Process.Start("devenv", $"/diff \"{file1}\" \"{file2}\"");
+                // Process.Start("devenv", $"/diff \"{Path.GetFullPath(file1)}\" \"{Path.GetFullPath(file2)}\"");
                 return true;
             }
             else

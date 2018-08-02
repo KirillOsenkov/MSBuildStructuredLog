@@ -6,7 +6,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class BinaryLogReader : IDisposable
     {
-        private readonly string filePath;
         private TreeBinaryReader reader;
         private readonly Queue<string> attributes = new Queue<string>(10);
 
@@ -17,7 +16,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static Build Read(string filePath)
         {
-            using (var binaryLogReader = new BinaryLogReader(filePath))
+            using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                var projectImportsZipFile = Path.ChangeExtension(filePath, ".ProjectImports.zip");
+                byte[] projectImportsArchive = null;
+                if (File.Exists(projectImportsZipFile))
+                {
+                    projectImportsArchive = File.ReadAllBytes(projectImportsZipFile);
+                }
+
+                return Read(stream, projectImportsArchive);
+            }
+        }
+
+        public static Build Read(Stream stream, byte[] projectImportsArchive = null)
+        {
+            using (var binaryLogReader = new BinaryLogReader(stream))
             {
                 if (!binaryLogReader.formatIsValid)
                 {
@@ -32,10 +46,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     buildStringCache.Intern(stringInstance);
                 }
 
-                var projectImportsZip = Path.ChangeExtension(filePath, ".ProjectImports.zip");
-                if (build.SourceFilesArchive == null && File.Exists(projectImportsZip))
+                if (build.SourceFilesArchive == null && projectImportsArchive != null)
                 {
-                    build.SourceFilesArchive = File.ReadAllBytes(projectImportsZip);
+                    build.SourceFilesArchive = projectImportsArchive;
                 }
 
                 return build;
@@ -44,8 +57,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private BinaryLogReader(string filePath)
         {
-            this.filePath = filePath;
             this.reader = new TreeBinaryReader(filePath);
+            this.formatSupportsSourceFiles = reader.Version > new Version(1, 0, 130);
+            this.formatSupportsEmbeddedProjectImportsArchive = reader.Version > new Version(1, 1, 87);
+            this.formatSupportsTimedNodeId = reader.Version > new Version(1, 1, 153);
+            this.formatIsValid = reader.IsValid();
+        }
+
+        private BinaryLogReader(Stream stream)
+        {
+            this.reader = new TreeBinaryReader(stream);
             this.formatSupportsSourceFiles = reader.Version > new Version(1, 0, 130);
             this.formatSupportsEmbeddedProjectImportsArchive = reader.Version > new Version(1, 1, 87);
             this.formatSupportsTimedNodeId = reader.Version > new Version(1, 1, 153);

@@ -62,8 +62,7 @@ namespace StructuredLogger.Tests
         public void ReadBinaryLogRecords()
         {
             var reader = new BinaryLogReplayEventSource();
-            var records = reader.ReadRecords(@"D:\msbuild.binlog").ToArray();
-            var count = records.Length;
+            var records = reader.ReadRecords(@"C:\temp\msbuild.binlog");
             foreach (var record in records)
             {
                 var t = record.Args;

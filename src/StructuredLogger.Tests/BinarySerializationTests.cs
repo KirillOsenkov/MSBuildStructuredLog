@@ -12,22 +12,22 @@ namespace StructuredLogger.Tests
             Serialization.Write(build, @"D:\1.buildlog");
         }
 
-        //[Fact]
+        [Fact]
         public void SimpleBuild()
         {
             var build = new Build();
             build.Succeeded = true;
             build.AddChild(new Message() { Text = "MessageText" });
             build.AddChild(new Property() { Name = "PropertyName", Value = "PropertyValue" });
-            var file1 = @"D:\1.xml";
-            var file2 = @"D:\2.xml";
-            Serialization.Write(build, file1);
-            var filePath = @"D:\1.buildlog";
-            Serialization.Write(build, filePath);
-            build = Serialization.Read(filePath);
-            Serialization.Write(build, file2);
-            Serialization.Write(build, @"D:\2.buildlog");
-            Differ.AreDifferent(file1, file2);
+            var xmlFile1 = @"1.xml";
+            var xmlFile2 = @"2.xml";
+            Serialization.Write(build, xmlFile1);
+            var buildLogFile = @"1.buildlog";
+            Serialization.Write(build, buildLogFile);
+            build = Serialization.Read(buildLogFile);
+            Serialization.Write(build, xmlFile2);
+            Serialization.Write(build, @"2.buildlog");
+            Differ.AreDifferent(xmlFile1, xmlFile2);
         }
     }
 }

@@ -39,6 +39,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        public static Build ReadXmlLog(Stream stream) => XmlLogReader.ReadFromXml(stream);
+        public static Build ReadBuildLog(Stream stream, byte[] projectImportsArchive = null) => BinaryLogReader.Read(stream, projectImportsArchive);
+        public static Build ReadBinLog(Stream stream, byte[] projectImportsArchive = null) => BinaryLog.ReadBuild(stream, projectImportsArchive);
+
         public static Build Read(string filePath)
         {
             if (filePath.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))

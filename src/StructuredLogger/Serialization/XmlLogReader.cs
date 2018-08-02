@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Xml;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -15,13 +16,28 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return new XmlLogReader().Read(xmlFilePath);
         }
 
+        public static Build ReadFromXml(Stream stream)
+        {
+            return new XmlLogReader().Read(stream);
+        }
+
         public Build Read(string filePath)
+        {
+            using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                return Read(stream);
+            }
+        }
+
+        public Build Read(Stream stream)
         {
             Build build = new Build();
             this.stringTable = build.StringTable;
 
             var stack = new Stack<object>(1024);
             stack.Push(build);
+
+            XmlNodeType previous = XmlNodeType.None;
 
             try
             {
@@ -30,7 +46,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     IgnoreWhitespace = true,
                 };
 
-                using (reader = XmlReader.Create(filePath, xmlReaderSettings))
+                using (reader = XmlReader.Create(stream, xmlReaderSettings))
                 {
                     reader.MoveToContent();
 
@@ -39,6 +55,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     while (reader.Read())
                     {
+                        var nodeType = reader.NodeType;
                         switch (reader.NodeType)
                         {
                             case XmlNodeType.Element:
@@ -54,24 +71,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                                 break;
                             case XmlNodeType.EndElement:
-                                stack.Pop();
-                                break;
+                                {
+                                    // if the element content is an empty string
+                                    if (previous == XmlNodeType.Element)
+                                    {
+                                        var valueNode = stack.Peek();
+                                        SetElementValue(valueNode, "");
+                                    }
+
+                                    stack.Pop();
+                                    break;
+                                }
                             case XmlNodeType.Text:
                                 {
                                     var valueNode = stack.Peek();
-                                    var nameValueNode = valueNode as NameValueNode;
-                                    if (nameValueNode != null)
-                                    {
-                                        nameValueNode.Value = GetCurrentValue();
-                                    }
-                                    else
-                                    {
-                                        var message = valueNode as Message;
-                                        if (message != null)
-                                        {
-                                            message.Text = GetCurrentValue();
-                                        }
-                                    }
+                                    string value = reader.Value;
+                                    SetElementValue(valueNode, stringTable.Intern(value));
 
                                     break;
                                 }
@@ -111,17 +126,31 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             default:
                                 break;
                         }
+
+                        previous = nodeType;
                     }
                 }
             }
             catch (Exception ex)
             {
                 build = new Build() { Succeeded = false };
-                build.AddChild(new Error() { Text = "Error when opening file: " + filePath });
+                build.AddChild(new Error() { Text = "Error when opening XML log file." });
                 build.AddChild(new Error() { Text = ex.ToString() });
             }
 
             return build;
+        }
+
+        private void SetElementValue(object valueNode, string value)
+        {
+            if (valueNode is NameValueNode nameValueNode)
+            {
+                nameValueNode.Value = value;
+            }
+            else if (valueNode is Message message)
+            {
+                message.Text = value;
+            }
         }
 
         private string GetCurrentValue()
