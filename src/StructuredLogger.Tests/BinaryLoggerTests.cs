@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Reflection;
 using Microsoft.Build.Logging;
 using Microsoft.Build.Logging.StructuredLogger;
 using StructuredLogger.Tests;
@@ -32,32 +34,34 @@ namespace Microsoft.Build.UnitTests
         [Fact]
         public void TestBinaryLoggerRoundtrip()
         {
-            var binLog = "1.binlog";
+            var binLog = GetFullPath("1.binlog");
             var binaryLogger = new BinaryLogger();
             binaryLogger.Parameters = binLog;
             MSBuild.BuildProject(s_testProject, binaryLogger);
 
             var build = Serialization.Read(binLog);
-            Assert.Equal("", GetProperty(build));
-            Serialization.Write(build, "1.xml");
+            var xml1 = GetFullPath("1.xml");
+            Serialization.Write(build, xml1);
 
-            Serialization.Write(build, "1.buildlog");
-            build = Serialization.Read("1.buildlog");
-            Assert.Equal("", GetProperty(build));
-            Serialization.Write(build, "2.xml");
+            Serialization.Write(build, GetFullPath("1.buildlog"));
+            build = Serialization.Read(GetFullPath("1.buildlog"));
+            Serialization.Write(build, GetFullPath("2.xml"));
 
-            Assert.False(Differ.AreDifferent("1.xml", "2.xml"));
+            Assert.False(Differ.AreDifferent(xml1, GetFullPath("2.xml")));
 
-            build = XlinqLogReader.ReadFromXml("1.xml");
-            Assert.Equal("", GetProperty(build));
-            Serialization.Write(build, "3.xml");
-            Assert.False(Differ.AreDifferent("1.xml", "3.xml"));
+            build = XlinqLogReader.ReadFromXml(xml1);
+            Serialization.Write(build, GetFullPath("3.xml"));
+            Assert.False(Differ.AreDifferent(xml1, GetFullPath("3.xml")));
 
-            build = Serialization.Read("1.xml");
-            Assert.Equal("", GetProperty(build));
-            Serialization.Write(build, "4.xml");
+            build = Serialization.Read(xml1);
+            Serialization.Write(build, GetFullPath("4.xml"));
 
-            Assert.False(Differ.AreDifferent("1.xml", "4.xml"));
+            Assert.False(Differ.AreDifferent(xml1, GetFullPath("4.xml")));
+        }
+
+        private static string GetFullPath(string fileName)
+        {
+            return Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), fileName);
         }
 
         private static string GetProperty(Logging.StructuredLogger.Build build)
