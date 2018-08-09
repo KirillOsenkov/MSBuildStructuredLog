@@ -51,5 +51,18 @@ namespace StructuredLogViewer
                 return ByteArrayToHexString(hashBytes, digits);
             }
         }
+
+        public static string InsertMissingDriveSeparator(string sourceFilePath)
+        {
+            // the zip archive has the ':' stripped from paths
+            // try to restore it to match the original path
+            var preprocessableFilePath = sourceFilePath;
+            if (preprocessableFilePath.Length > 3 && preprocessableFilePath[1] == '\\')
+            {
+                preprocessableFilePath = preprocessableFilePath.Insert(1, ":");
+            }
+
+            return preprocessableFilePath;
+        }
     }
 }
