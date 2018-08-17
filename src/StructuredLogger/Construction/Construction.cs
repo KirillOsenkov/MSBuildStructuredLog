@@ -154,17 +154,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         parent = GetOrAddProject(parentProjectId);
                     }
 
-
                     var project = GetOrAddProject(args, parent);
 
-                    if (parent != null)
+                    // only parent the project if it's not already in the tree
+                    if (project.Parent == null)
                     {
-                        parent.AddChild(project);
-                    }
-                    else
-                    {
-                        // This is a "Root" project (no parent project).
-                        Build.AddChild(project);
+                        if (parent != null)
+                        {
+                            parent.AddChild(project);
+                        }
+                        else
+                        {
+                            // This is a "Root" project (no parent project).
+                            Build.AddChild(project);
+                        }
                     }
                 }
             }
