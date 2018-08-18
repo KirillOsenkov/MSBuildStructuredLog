@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.Build.Logging.StructuredLogger;
 
-namespace Microsoft.Build.Logging.StructuredLogger
+namespace StructuredLogViewer.Core.Analyzers
 {
     public class DoubleWritesAnalyzer
     {
@@ -49,8 +50,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void ProcessCopy(string source, string destination)
         {
-            HashSet<string> bucket = null;
-            if (!fileCopySourcesForDestination.TryGetValue(destination, out bucket))
+            if (!fileCopySourcesForDestination.TryGetValue(destination, out var bucket))
             {
                 bucket = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 fileCopySourcesForDestination.Add(destination, bucket);
