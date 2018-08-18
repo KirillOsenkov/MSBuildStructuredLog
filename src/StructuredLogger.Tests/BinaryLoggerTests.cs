@@ -3,11 +3,10 @@ using System.IO;
 using System.Reflection;
 using Microsoft.Build.Logging;
 using Microsoft.Build.Logging.StructuredLogger;
-using StructuredLogger.Tests;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Microsoft.Build.UnitTests
+namespace StructuredLogger.Tests
 {
     public class BinaryLoggerTests : IDisposable
     {
@@ -64,7 +63,7 @@ namespace Microsoft.Build.UnitTests
             return Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), fileName);
         }
 
-        private static string GetProperty(Logging.StructuredLogger.Build build)
+        private static string GetProperty(Build build)
         {
             var property = build.FindFirstDescendant<Project>().FindChild<Folder>("Properties").FindChild<Property>(p => p.Name == "FrameworkSDKRoot").Value;
             return property;
