@@ -13,7 +13,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static Build ReadFromXml(string xmlFilePath)
         {
-            return new XmlLogReader().Read(xmlFilePath);
+            var build = new XmlLogReader().Read(xmlFilePath);
+            return build;
         }
 
         public static Build ReadFromXml(Stream stream)
@@ -25,7 +26,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                return Read(stream);
+                var build = Read(stream);
+                build.LogFilePath = filePath;
+                return build;
             }
         }
 

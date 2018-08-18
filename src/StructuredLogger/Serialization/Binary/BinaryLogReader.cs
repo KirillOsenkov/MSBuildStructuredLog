@@ -25,7 +25,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     projectImportsArchive = File.ReadAllBytes(projectImportsZipFile);
                 }
 
-                return Read(stream, projectImportsArchive);
+                var build = Read(stream, projectImportsArchive);
+                build.LogFilePath = filePath;
+                return build;
             }
         }
 
