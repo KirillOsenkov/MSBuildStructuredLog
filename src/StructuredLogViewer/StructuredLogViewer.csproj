@@ -30,6 +30,10 @@
       <Project>{a939886e-a191-4a46-a84b-21ad670081b9}</Project>
       <Name>StructuredLogger</Name>
     </ProjectReference>
+    <ProjectReference Include="..\StructuredLogViewer.Core\StructuredLogViewer.Core.csproj">
+      <Project>{9179c21c-428c-446e-af3f-631e3e08d202}</Project>
+      <Name>StructuredLogViewer.Core</Name>
+    </ProjectReference>
     <ProjectReference Include="..\TaskRunner\TaskRunner.csproj">
       <Project>{b8539a63-8d03-4d16-9945-fe7f8489b56d}</Project>
       <Name>TaskRunner</Name>
@@ -66,11 +70,10 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Analyzers\MessageTaskAnalyzer.cs" />
-    <Compile Include="Analyzers\ResolveAssemblyReferenceAnalyzer\CopyLocalAnalyzer.cs" />
     <Compile Include="BuildAnalyzer.cs" />
     <Compile Include="BuildParametersScreen.cs" />
     <Compile Include="BuildProgress.cs" />
+    <Compile Include="ButtonNode.cs" />
     <Compile Include="Controls\BuildControl.xaml.cs">
       <DependentUpon>BuildControl.xaml</DependentUpon>
     </Compile>
@@ -103,7 +106,6 @@
     </Compile>
     <Compile Include="NodeQueryMatcher.cs" />
     <Compile Include="MSBuildLocator.cs" />
-    <Compile Include="ButtonNode.cs" />
     <Compile Include="Note.cs" />
     <Compile Include="PreprocessedFileManager.cs" />
     <Compile Include="ProxyNode.cs" />

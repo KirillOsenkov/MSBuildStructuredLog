@@ -7,7 +7,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static void Analyze(Task task)
         {
             var message = task.Children.OfType<Message>().FirstOrDefault();
-            if (message != null && message.ShortenedText != null)
+            if (message?.ShortenedText != null)
             {
                 task.Title = "Message: " + message.ShortenedText;
             }
