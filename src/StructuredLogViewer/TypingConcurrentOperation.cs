@@ -1,8 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows;
 using StructuredLogViewer.Controls;
+
+using StructuredLogViewer.Controls;
+using StructuredLogViewer.Core;
+
 using TPLTask = System.Threading.Tasks.Task;
 
 namespace StructuredLogViewer

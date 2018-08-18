@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class Utilities
+    public static class Utilities
     {
         public const int MaxDisplayedValueLength = 260;
         private const string TrimPrompt = "... (Space: view, Ctrl+C: copy)";

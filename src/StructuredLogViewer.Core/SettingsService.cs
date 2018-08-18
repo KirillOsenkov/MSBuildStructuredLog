@@ -2,12 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 
-namespace StructuredLogViewer
+namespace StructuredLogViewer.Core
 {
-    public class SettingsService
+    public static class SettingsService
     {
         private const int maxCount = 10;
 
@@ -40,13 +39,13 @@ namespace StructuredLogViewer
         }
 
         private static IEnumerable<string> cachedRecentMSBuildLocations;
-        public static IEnumerable<string> GetRecentMSBuildLocations()
+        public static IEnumerable<string> GetRecentMSBuildLocations(IMSBuildLocator locator)
         {
             if (cachedRecentMSBuildLocations == null)
             {
                 cachedRecentMSBuildLocations = GetRecentItems(recentMSBuildLocationsFilePath)
                     .Where(File.Exists)
-                    .Union(MSBuildLocator.GetMSBuildLocations(), StringComparer.OrdinalIgnoreCase)
+                    .Union(locator.GetMSBuildLocations(), StringComparer.OrdinalIgnoreCase)
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .ToArray();
             }
@@ -147,7 +146,7 @@ namespace StructuredLogViewer
             }
             else if (discardPrefixes)
             {
-                index = list.FindIndex(i => item.StartsWith(i));
+                index = list.FindIndex(item.StartsWith);
                 if (index >= 0)
                 {
                     list.RemoveAt(index);
@@ -163,9 +162,9 @@ namespace StructuredLogViewer
             return true;
         }
 
-        public static string GetMSBuildExe()
+        public static string GetMSBuildExe(IMSBuildLocator locator)
         {
-            return GetRecentMSBuildLocations().FirstOrDefault();
+            return GetRecentMSBuildLocations(locator).FirstOrDefault();
         }
 
         private const string DefaultArguments = "/t:Rebuild";
@@ -178,9 +177,7 @@ namespace StructuredLogViewer
             }
 
             var lines = File.ReadAllLines(customArgumentsFilePath);
-            string arguments;
-            int index;
-            if (FindArguments(lines, filePath, out arguments, out index))
+            if (FindArguments(lines, filePath, out var arguments, out var index))
             {
                 return arguments;
             }
@@ -234,11 +231,9 @@ namespace StructuredLogViewer
                 {
                     return;
                 }
-                else
-                {
-                    File.WriteAllLines(customArgumentsFilePath, new[] { projectFilePath + "=" + newArguments });
-                    return;
-                }
+
+                File.WriteAllLines(customArgumentsFilePath, new[] { projectFilePath + "=" + newArguments });
+                return;
             }
 
             var list = File.ReadAllLines(customArgumentsFilePath).ToList();

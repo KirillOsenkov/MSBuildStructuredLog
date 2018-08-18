@@ -1,8 +1,10 @@
 ﻿using System.Linq;
 
-namespace Microsoft.Build.Logging.StructuredLogger
+using Microsoft.Build.Logging.StructuredLogger;
+
+namespace StructuredLogViewer.Core.Analyzers
 {
-    public class MessageTaskAnalyzer
+    public static class MessageTaskAnalyzer
     {
         public static void Analyze(Task task)
         {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 
-namespace StructuredLogViewer
+namespace StructuredLogViewer.Core.SourceFiles
 {
     public class ArchiveFileResolver : ISourceFileResolver
     {
@@ -65,8 +65,7 @@ namespace StructuredLogViewer
         public SourceText GetSourceFileText(string filePath)
         {
             filePath = CalculateArchivePath(filePath);
-            SourceText result;
-            fileContents.TryGetValue(filePath, out result);
+            fileContents.TryGetValue(filePath, out var result);
             return result;
         }
 

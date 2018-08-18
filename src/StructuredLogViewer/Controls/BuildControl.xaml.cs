@@ -14,6 +14,10 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Language.Xml;
+using StructuredLogViewer.Core;
+using StructuredLogViewer.Core.SourceFiles;
+using StructuredLogViewer.Core.Timeline;
+using Utilities = Microsoft.Build.Logging.StructuredLogger.Utilities;
 
 namespace StructuredLogViewer.Controls
 {
@@ -58,7 +62,7 @@ namespace StructuredLogViewer.Controls
                 return results;
             };
             searchLogControl.ResultsTreeBuilder = BuildResultTree;
-            searchLogControl.WatermarkDisplayed += () => UpdateWatermark();
+            searchLogControl.WatermarkDisplayed += UpdateWatermark;
 
             VirtualizingPanel.SetIsVirtualizing(treeView, SettingsService.EnableTreeViewVirtualization);
 
@@ -935,7 +939,7 @@ Recent:
                 return false;
             }
 
-            string preprocessableFilePath = Utilities.InsertMissingDriveSeparator(sourceFilePath);
+            string preprocessableFilePath = Core.Utilities.InsertMissingDriveSeparator(sourceFilePath);
 
             Action preprocess = preprocessedFileManager.GetPreprocessAction(preprocessableFilePath, text);
             documentWell.DisplaySource(preprocessableFilePath, text.Text, lineNumber, column, preprocess);
@@ -967,7 +971,7 @@ Recent:
                 return false;
             }
 
-            var xml = text.XmlRoot;
+            var xml = text.XmlRoot.Root;
             IXmlElement root = xml;
             int startPosition = 0;
             int line = 0;
@@ -993,7 +997,7 @@ Recent:
                             var tasks = element.Elements.Where(e => e.Name == taskName).ToArray();
                             if (tasks.Length == 1)
                             {
-                                startPosition = tasks[0].AsSyntaxElement.Name.Start;
+                                startPosition = tasks[0].AsSyntaxElement.NameNode.Start;
                             }
                         }
 

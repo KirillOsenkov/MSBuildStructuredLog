@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
-using StructuredLogViewer;
 
-namespace Microsoft.Build.Logging.StructuredLogger
+using Microsoft.Build.Logging.StructuredLogger;
+
+using StructuredLogViewer.Core;
+
+namespace StructuredLogViewer
 {
     public class BuildParametersScreen : ObservableObject
     {
@@ -26,7 +28,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public void UpdateMSBuildLocations()
         {
             MSBuildLocations.Clear();
-            foreach (var msbuild in SettingsService.GetRecentMSBuildLocations())
+            foreach (var msbuild in SettingsService.GetRecentMSBuildLocations(new MSBuildLocator()))
             {
                 MSBuildLocations.Add(msbuild);
             }
@@ -38,21 +40,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         private readonly ObservableCollection<string> msBuildLocations = new ObservableCollection<string>();
-        public ObservableCollection<string> MSBuildLocations
-        {
-            get
-            {
-                return msBuildLocations;
-            }
-        }
+        public ObservableCollection<string> MSBuildLocations => msBuildLocations;
 
-        public string MSBuildLocation
-        {
-            get
-            {
-                return CollectionViewSource.GetDefaultView(MSBuildLocations).CurrentItem as string;
-            }
-        }
+        public string MSBuildLocation => CollectionViewSource.GetDefaultView(MSBuildLocations).CurrentItem as string;
 
         private string prefixArguments;
         public string PrefixArguments

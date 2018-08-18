@@ -1,4 +1,4 @@
-﻿namespace StructuredLogViewer
+﻿namespace StructuredLogViewer.Core.SourceFiles
 {
     public interface ISourceFileResolver
     {

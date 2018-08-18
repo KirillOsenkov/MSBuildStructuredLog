@@ -3,7 +3,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace StructuredLogViewer
+namespace StructuredLogViewer.Core
 {
     public static class Utilities
     {

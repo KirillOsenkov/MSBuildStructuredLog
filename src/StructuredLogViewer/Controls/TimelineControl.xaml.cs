@@ -5,8 +5,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
+using StructuredLogViewer.Core.Timeline;
 
 namespace StructuredLogViewer.Controls
 {

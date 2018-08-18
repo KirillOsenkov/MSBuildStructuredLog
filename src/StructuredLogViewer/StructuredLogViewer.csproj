@@ -70,9 +70,7 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BuildAnalyzer.cs" />
     <Compile Include="BuildParametersScreen.cs" />
-    <Compile Include="BuildProgress.cs" />
     <Compile Include="ButtonNode.cs" />
     <Compile Include="Controls\BuildControl.xaml.cs">
       <DependentUpon>BuildControl.xaml</DependentUpon>
@@ -97,31 +95,13 @@
     </Compile>
     <Compile Include="Controls\TreeViewExtensions.cs" />
     <Compile Include="Entrypoint.cs" />
-    <Compile Include="ExceptionHandler.cs" />
     <Compile Include="FileAssociations.cs" />
-    <Compile Include="HighlightedText.cs" />
-    <Compile Include="HostedBuild.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="NodeQueryMatcher.cs" />
     <Compile Include="MSBuildLocator.cs" />
-    <Compile Include="Note.cs" />
     <Compile Include="PreprocessedFileManager.cs" />
-    <Compile Include="ProxyNode.cs" />
-    <Compile Include="Search.cs" />
-    <Compile Include="SearchResult.cs" />
-    <Compile Include="SettingsService.cs" />
-    <Compile Include="SourceFiles\ArchiveFileResolver.cs" />
-    <Compile Include="SourceFiles\ISourceFileResolver.cs" />
-    <Compile Include="SourceFiles\LocalSourceFileResolver.cs" />
-    <Compile Include="SourceFiles\SourceFileResolver.cs" />
-    <Compile Include="SourceFiles\SourceText.cs" />
-    <Compile Include="Timeline\Block.cs" />
-    <Compile Include="Timeline\Lane.cs" />
-    <Compile Include="Timeline\Timeline.cs" />
     <Compile Include="TypingConcurrentOperation.cs" />
-    <Compile Include="Utilities.cs" />
     <Compile Include="WelcomeScreen.cs" />
   </ItemGroup>
   <ItemGroup>

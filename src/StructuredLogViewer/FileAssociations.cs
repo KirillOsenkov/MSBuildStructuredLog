@@ -2,17 +2,12 @@
 using System.Diagnostics;
 using Microsoft.Win32;
 
+using StructuredLogViewer.Core;
+
 namespace StructuredLogViewer
 {
-    public class FileAssociation
-    {
-        public string Extension { get; set; }
-        public string ProgId { get; set; }
-        public string FileTypeDescription { get; set; }
-        public string ExecutableFilePath { get; set; }
-    }
 
-    public class FileAssociations
+    public static class FileAssociations
     {
         // needed so that Explorer windows get refreshed after the registry is updated
         [System.Runtime.InteropServices.DllImport("Shell32.dll")]

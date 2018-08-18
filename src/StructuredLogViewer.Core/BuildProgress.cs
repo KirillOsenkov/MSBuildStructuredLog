@@ -1,14 +1,13 @@
-﻿namespace Microsoft.Build.Logging.StructuredLogger
+﻿using Microsoft.Build.Logging.StructuredLogger;
+
+namespace StructuredLogViewer.Core
 {
     public class BuildProgress : ObservableObject
     {
         private string progressText;
         public string ProgressText
         {
-            get
-            {
-                return progressText;
-            }
+            get => progressText;
 
             set
             {
@@ -20,10 +19,7 @@
         private string msbuildCommandLine;
         public string MSBuildCommandLine
         {
-            get
-            {
-                return msbuildCommandLine;
-            }
+            get => msbuildCommandLine;
 
             set
             {

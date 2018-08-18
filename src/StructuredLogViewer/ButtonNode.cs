@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Windows.Input;
+using Microsoft.Build.Logging.StructuredLogger;
 
-namespace Microsoft.Build.Logging.StructuredLogger
+namespace StructuredLogViewer
 {
     public class ButtonNode : TextNode
     {

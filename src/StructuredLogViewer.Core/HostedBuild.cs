@@ -2,9 +2,10 @@
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
+
 using Microsoft.Build.Logging.StructuredLogger;
 
-namespace StructuredLogViewer
+namespace StructuredLogViewer.Core
 {
     public class HostedBuild
     {
@@ -25,9 +26,9 @@ namespace StructuredLogViewer
             return $@"/v:diag /nologo /noconlog /logger:{nameof(StructuredLogger)},""{loggerDll}"";""{logFilePath}""";
         }
 
-        public Task<Build> BuildAndGetResult(BuildProgress progress)
+        public Task<Build> BuildAndGetResult(BuildProgress progress, IMSBuildLocator locator)
         {
-            var msbuildExe = SettingsService.GetMSBuildExe();
+            var msbuildExe = SettingsService.GetMSBuildExe(locator);
             var postfixArguments = GetPostfixArguments();
 
             // the command line we pass to Process.Start doesn't need msbuild.exe
@@ -41,8 +42,9 @@ namespace StructuredLogViewer
                 try
                 {
                     var arguments = commandLine;
-                    var processStartInfo = new ProcessStartInfo(msbuildExe, arguments);
-                    processStartInfo.WorkingDirectory = Path.GetDirectoryName(projectFilePath);
+                    var processStartInfo = new ProcessStartInfo(msbuildExe, arguments) {
+                            WorkingDirectory = Path.GetDirectoryName(projectFilePath)
+                        };
                     var process = Process.Start(processStartInfo);
                     process.WaitForExit();
 
@@ -60,10 +62,11 @@ namespace StructuredLogViewer
                 catch (Exception ex)
                 {
                     ex = ExceptionHandler.Unwrap(ex);
-                    var build = new Build();
-                    build.Succeeded = false;
-                    build.AddChild(new Message() { Text = "Exception occurred during build:" });
-                    build.AddChild(new Error() { Text = ex.ToString() });
+                    var build = new Build {
+                        Succeeded = false
+                    };
+                    build.AddChild(new Message { Text = "Exception occurred during build:" });
+                    build.AddChild(new Error { Text = ex.ToString() });
                     return build;
                 }
             });

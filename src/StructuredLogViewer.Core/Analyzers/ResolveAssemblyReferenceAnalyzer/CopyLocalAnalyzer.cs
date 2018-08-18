@@ -2,14 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Microsoft.Build.Logging.StructuredLogger
+using Microsoft.Build.Logging.StructuredLogger;
+
+namespace StructuredLogViewer.Core.Analyzers
 {
     /// <summary>
     /// Adds the value of Private metadata if present to source items of dependencies output by RAR
     /// (I know, I need a longer explanation here)
     /// TODO: link to article or blog post explaining this
     /// </summary>
-    public class CopyLocalAnalyzer
+    public static class CopyLocalAnalyzer
     {
         public static void AnalyzeResolveAssemblyReference(Task rar)
         {

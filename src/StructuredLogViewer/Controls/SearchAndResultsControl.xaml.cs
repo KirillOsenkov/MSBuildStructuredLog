@@ -3,17 +3,18 @@ using System.Collections;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using StructuredLogViewer.Core;
 
 namespace StructuredLogViewer.Controls
 {
     public partial class SearchAndResultsControl : UserControl
     {
-        private TypingConcurrentOperation typingConcurrentOperation = new TypingConcurrentOperation();
+        private readonly TypingConcurrentOperation typingConcurrentOperation = new TypingConcurrentOperation();
 
         public SearchAndResultsControl()
         {
             InitializeComponent();
-            typingConcurrentOperation.DisplayResults += (r, moreAvailable) => DisplaySearchResults(r, moreAvailable);
+            typingConcurrentOperation.DisplayResults += DisplaySearchResults;
             typingConcurrentOperation.SearchComplete += TypingConcurrentOperation_SearchComplete;
         }
 

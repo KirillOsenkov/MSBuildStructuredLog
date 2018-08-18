@@ -10,6 +10,7 @@ using System.Windows.Threading;
 using ICSharpCode.AvalonEdit.Folding;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Search;
+using StructuredLogViewer.Core;
 
 namespace StructuredLogViewer.Controls
 {

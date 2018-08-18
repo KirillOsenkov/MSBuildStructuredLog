@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Reflection;
+
 using Microsoft.Build.Logging.StructuredLogger;
 
-namespace StructuredLogViewer
+namespace StructuredLogViewer.Core
 {
-    public class ExceptionHandler
+    public static class ExceptionHandler
     {
         public static void Initialize()
         {

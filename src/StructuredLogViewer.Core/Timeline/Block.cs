@@ -2,7 +2,7 @@
 using System.IO;
 using Microsoft.Build.Logging.StructuredLogger;
 
-namespace StructuredLogViewer
+namespace StructuredLogViewer.Core.Timeline
 {
     public class Block
     {
@@ -38,12 +38,5 @@ namespace StructuredLogViewer
 
             return text;
         }
-    }
-
-    public class BlockEndpoint
-    {
-        public Block Block;
-        public long Timestamp;
-        public bool IsStart;
     }
 }

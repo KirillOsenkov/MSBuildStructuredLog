@@ -5,6 +5,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Build.Logging.StructuredLogger;
 using StructuredLogViewer.Controls;
+using StructuredLogViewer.Core;
+using StructuredLogViewer.Core.SourceFiles;
 using Bucket = System.Collections.Generic.HashSet<StructuredLogViewer.PreprocessedFileManager.ProjectImport>;
 
 namespace StructuredLogViewer

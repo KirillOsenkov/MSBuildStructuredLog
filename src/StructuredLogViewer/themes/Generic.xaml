@@ -1,7 +1,7 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:l="clr-namespace:Microsoft.Build.Logging.StructuredLogger;assembly=StructuredLogger"
-                    xmlns:local="clr-namespace:Microsoft.Build.Logging.StructuredLogger"
+                    xmlns:core="clr-namespace:StructuredLogViewer.Core;assembly=StructuredLogViewer.Core"
                     xmlns:s="clr-namespace:StructuredLogViewer">
 
   <Geometry x:Key="SearchGeometry">F1 M 8.5,7.0 C 7.12,7.00 6.0,5.88 6.0,4.5 C 6.0,3.12 7.12,2.0 8.5,2.0 C 9.88,2.0 11.0,3.12 11.0,4.5 C 11.0,5.88 9.88,7.0 8.5,7.0 Z M 8.5,0.0 C 6.02,0.0 4.0,2.02 4.0,4.500 C 4.0,5.23 4.19,5.9 4.49,6.5 L 0.0,11.0 L 2.0,13.0 L 6.49,8.51 C 7.1,8.81 7.77,9.0 8.5,9.0 C 11.0,9.0 13.0,7.0 13.0,4.5 C 13.0,2.02 11.0,0.0 8.5,0.0 Z</Geometry>
@@ -305,7 +305,7 @@
     </DataTemplate.Triggers>
   </DataTemplate>
 
-  <DataTemplate DataType="{x:Type local:ButtonNode}">
+  <DataTemplate DataType="{x:Type s:ButtonNode}">
     <StackPanel Orientation="Horizontal">
       <Button x:Name="button" 
               Content="{Binding Text}" 
@@ -333,7 +333,7 @@
     </StackPanel>
   </DataTemplate>
 
-  <DataTemplate DataType="{x:Type local:Note}">
+  <DataTemplate DataType="{x:Type core:Note}">
     <StackPanel Orientation="Horizontal">
       <Border BorderBrush="LightGray" BorderThickness="1" Margin="4" Background="{DynamicResource Theme_InfoBarBackground}" Padding="6">
         <TextBlock Text="{Binding Text}"
@@ -363,13 +363,13 @@
     </DataTemplate.Triggers>
   </DataTemplate>
 
-  <HierarchicalDataTemplate DataType="{x:Type local:ProxyNode}"
+  <HierarchicalDataTemplate DataType="{x:Type core:ProxyNode}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
       <Rectangle x:Name="icon" Width="14" Height="11" Stroke="{StaticResource ParameterStroke}" Margin="3,3,6,3" Fill="{StaticResource ParameterBrush}" VerticalAlignment="Top" />
       <ItemsControl ItemsSource="{Binding Highlights}" Focusable="False">
         <ItemsControl.Resources>
-          <DataTemplate DataType="{x:Type local:HighlightedText}">
+          <DataTemplate DataType="{x:Type core:HighlightedText}">
             <TextBlock Foreground="Black" Background="Yellow" Text="{Binding Text}" />
           </DataTemplate>
         </ItemsControl.Resources>
@@ -453,7 +453,7 @@
     </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
 
-  <DataTemplate DataType="{x:Type local:WelcomeScreen}">
+  <DataTemplate DataType="{x:Type s:WelcomeScreen}">
     <Grid x:Name="welcomeScreen">
       <TextBlock Text="{Binding Version}" 
                  Foreground="Gray" 
@@ -573,7 +573,7 @@
     </Grid>
   </DataTemplate>
 
-  <DataTemplate DataType="{x:Type local:BuildParametersScreen}">
+  <DataTemplate DataType="{x:Type s:BuildParametersScreen}">
     <Grid x:Name="buildParameters" 
           HorizontalAlignment="Center"
           VerticalAlignment="Center"
@@ -638,7 +638,7 @@
     </Grid>
   </DataTemplate>
 
-  <DataTemplate DataType="{x:Type local:BuildProgress}">
+  <DataTemplate DataType="{x:Type core:BuildProgress}">
     <Grid x:Name="buildProgress" 
           HorizontalAlignment="Center"
           VerticalAlignment="Center"

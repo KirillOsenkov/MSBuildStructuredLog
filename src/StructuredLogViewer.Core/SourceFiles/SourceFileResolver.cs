@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace StructuredLogViewer
+namespace StructuredLogViewer.Core.SourceFiles
 {
     public class SourceFileResolver : ISourceFileResolver
     {

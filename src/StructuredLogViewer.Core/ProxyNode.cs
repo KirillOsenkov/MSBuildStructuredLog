@@ -1,23 +1,13 @@
 ﻿using System.Collections.Generic;
-using StructuredLogViewer;
 
-namespace Microsoft.Build.Logging.StructuredLogger
+using Microsoft.Build.Logging.StructuredLogger;
+using NodeUtils = Microsoft.Build.Logging.StructuredLogger;
+
+namespace StructuredLogViewer.Core
 {
     public class ProxyNode : TextNode
     {
-        private object original;
-        public object Original
-        {
-            get
-            {
-                return original;
-            }
-
-            set
-            {
-                original = value;
-            }
-        }
+        public object Original { get; set; }
 
         public List<object> Highlights { get; set; } = new List<object>();
 
@@ -26,7 +16,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (result.MatchedByType && result.Before == null)
             {
                 Highlights.Add(new HighlightedText { Text = OriginalType });
-                Highlights.Add(" " + Utilities.ShortenValue(result.Node.ToString(), "..."));
+                Highlights.Add(" " + NodeUtils.Utilities.ShortenValue(result.Node.ToString(), "..."));
                 return;
             }
 

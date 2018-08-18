@@ -8,12 +8,12 @@ using System.Windows;
 
 namespace StructuredLogViewer
 {
-    public class Entrypoint
+    public static class Entrypoint
     {
         [STAThread]
         public static void Main(string[] args)
         {
-            ExceptionHandler.Initialize();
+            Core.ExceptionHandler.Initialize();
 
             var app = new Application();
             var window = new MainWindow();

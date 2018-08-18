@@ -12,6 +12,7 @@ using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Win32;
 using Squirrel;
 using StructuredLogViewer.Controls;
+using StructuredLogViewer.Core;
 
 namespace StructuredLogViewer
 {
@@ -430,7 +431,7 @@ namespace StructuredLogViewer
             progress.ProgressText = $"Building {projectFilePath}...";
             SetContent(progress);
             var buildHost = new HostedBuild(projectFilePath, customArguments);
-            Build result = await buildHost.BuildAndGetResult(progress);
+            Build result = await buildHost.BuildAndGetResult(progress, new MSBuildLocator());
             progress.ProgressText = "Analyzing build...";
             await System.Threading.Tasks.Task.Run(() => BuildAnalyzer.AnalyzeBuild(result));
             DisplayBuild(result);

@@ -5,9 +5,12 @@ using System.Linq;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Input;
-using StructuredLogViewer;
 
-namespace Microsoft.Build.Logging.StructuredLogger
+using Microsoft.Build.Logging.StructuredLogger;
+
+using StructuredLogViewer.Core;
+
+namespace StructuredLogViewer
 {
     public class WelcomeScreen : ObservableObject
     {
@@ -28,10 +31,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private string version = GetVersion();
         public string Version
         {
-            get
-            {
-                return version;
-            }
+            get => version;
 
             set
             {
@@ -43,10 +43,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private string message;
         public string Message
         {
-            get
-            {
-                return message;
-            }
+            get => message;
 
             set
             {
@@ -119,10 +116,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             get => SettingsService.EnableTreeViewVirtualization;
 
-            set
-            {
-                SettingsService.EnableTreeViewVirtualization = value;
-            }
+            set => SettingsService.EnableTreeViewVirtualization = value;
         }
     }
 }

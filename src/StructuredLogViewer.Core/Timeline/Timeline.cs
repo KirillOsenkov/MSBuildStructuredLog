@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 using Microsoft.Build.Logging.StructuredLogger;
 
-namespace StructuredLogViewer
+namespace StructuredLogViewer.Core.Timeline
 {
     public class Timeline
     {
@@ -43,12 +41,14 @@ namespace StructuredLogViewer
 
         private Block CreateBlock(TimedNode node)
         {
-            var block = new Block();
-            block.StartTime = node.StartTime;
-            block.EndTime = node.EndTime;
-            block.Text = node.Name;
-            block.Indent = node.GetParentChainIncludingThis().Count();
-            block.Node = node;
+            var block = new Block
+            {
+                StartTime = node.StartTime,
+                EndTime = node.EndTime,
+                Text = node.Name,
+                Indent = node.GetParentChainIncludingThis().Count(),
+                Node = node
+            };
             return block;
         }
     }

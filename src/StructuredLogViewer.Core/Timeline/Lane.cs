@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace StructuredLogViewer
+namespace StructuredLogViewer.Core.Timeline
 {
     public class Lane
     {
