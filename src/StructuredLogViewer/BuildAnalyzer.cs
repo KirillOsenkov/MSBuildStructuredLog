@@ -9,6 +9,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
     {
         private Build build;
         private DoubleWritesAnalyzer doubleWritesAnalyzer;
+        private int index;
 
         public BuildAnalyzer(Build build)
         {
@@ -73,6 +74,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void ProcessBeforeChildrenVisited(TreeNode node)
         {
+            if (node is TimedNode timedNode)
+            {
+                timedNode.Index = index;
+                index++;
+            }
+
             if (node is Task task)
             {
                 AnalyzeTask(task);
@@ -119,6 +126,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             doubleWritesAnalyzer.AppendDoubleWritesFolder(build);
+
+            if (build.LogFilePath != null)
+            {
+                build.AddChildAtBeginning(new Item { Text = build.LogFilePath });
+            }
         }
 
         private void PostAnalyzeProject(Project project)
