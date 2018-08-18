@@ -30,6 +30,10 @@
       <Project>{a939886e-a191-4a46-a84b-21ad670081b9}</Project>
       <Name>StructuredLogger</Name>
     </ProjectReference>
+    <ProjectReference Include="..\TaskRunner\TaskRunner.csproj">
+      <Project>{b8539a63-8d03-4d16-9945-fe7f8489b56d}</Project>
+      <Name>TaskRunner</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Page Include="Controls\BuildControl.xaml">

@@ -9,7 +9,7 @@ namespace TaskRunner
     {
         static void Main(string[] args)
         {
-            if (args.Length < 2 || args.Length > 3)
+            if (args.Length < 2 || args.Length > 4)
             {
                 PrintHelp();
                 return;
@@ -29,7 +29,27 @@ namespace TaskRunner
                 index = -1;
             }
 
-            if (args.Length == 3 && args[2] == "debug")
+            bool debug = false;
+            bool pause = false;
+
+            for (int i = 2; i < args.Length; i++)
+            {
+                if (args[i] == "debug")
+                {
+                    debug = true;
+                }
+                else if (args[i] == "pause")
+                {
+                    pause = true;
+                }
+                else
+                {
+                    Console.Error.WriteLine("Unknown argument: " + args[i]);
+                    return;
+                }
+            }
+
+            if (debug)
             {
                 Debugger.Launch();
             }
@@ -37,6 +57,12 @@ namespace TaskRunner
             Microsoft.Build.Locator.MSBuildLocator.RegisterDefaults();
 
             new Program().Run(binlog, index, taskName);
+
+            if (pause)
+            {
+                Console.WriteLine("Press any key to continue...");
+                Console.ReadKey();
+            }
         }
 
         private static void PrintHelp()

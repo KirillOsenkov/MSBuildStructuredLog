@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -36,6 +37,8 @@ namespace StructuredLogViewer.Controls
         private MenuItem copyValueItem;
         private MenuItem viewItem;
         private MenuItem preprocessItem;
+        private MenuItem runItem;
+        private MenuItem debugItem;
         private MenuItem hideItem;
         private MenuItem copyAllItem;
         private ContextMenu sharedTreeContextMenu;
@@ -91,6 +94,8 @@ namespace StructuredLogViewer.Controls
             viewItem = new MenuItem() { Header = "View" };
             preprocessItem = new MenuItem() { Header = "Preprocess" };
             hideItem = new MenuItem() { Header = "Hide" };
+            runItem = new MenuItem() { Header = "Run" };
+            debugItem = new MenuItem() { Header = "Debug" };
             copyItem.Click += (s, a) => Copy();
             copySubtreeItem.Click += (s, a) => CopySubtree();
             copyChildrenItem.Click += (s, a) => CopyChildren();
@@ -99,7 +104,12 @@ namespace StructuredLogViewer.Controls
             copyValueItem.Click += (s, a) => CopyValue();
             viewItem.Click += (s, a) => Invoke(treeView.SelectedItem as ParentedNode);
             preprocessItem.Click += (s, a) => Preprocess(treeView.SelectedItem as Project);
+            runItem.Click += (s, a) => Run(treeView.SelectedItem as Task, debug: false);
+            debugItem.Click += (s, a) => Run(treeView.SelectedItem as Task, debug: true);
             hideItem.Click += (s, a) => Delete();
+
+            contextMenu.Items.Add(runItem);
+            contextMenu.Items.Add(debugItem);
             contextMenu.Items.Add(viewItem);
             contextMenu.Items.Add(preprocessItem);
             contextMenu.Items.Add(copyItem);
@@ -350,6 +360,17 @@ Recent:
             preprocessedFileManager.ShowPreprocessed(project.SourceFilePath);
         }
 
+        private void Run(Task task, bool debug = false)
+        {
+            var logFilePath = Build.LogFilePath;
+            if (!File.Exists(logFilePath))
+            {
+                return;
+            }
+
+            Process.Start("TaskRunner.exe", $"{logFilePath} {task.Index} pause{(debug ? " debug" : "")}");
+        }
+
         private void ContextMenu_Opened(object sender, RoutedEventArgs e)
         {
             var node = treeView.SelectedItem as ParentedNode;
@@ -362,6 +383,9 @@ Recent:
             copyChildrenItem.Visibility = hasChildren ? Visibility.Visible : Visibility.Collapsed;
             sortChildrenItem.Visibility = hasChildren ? Visibility.Visible : Visibility.Collapsed;
             preprocessItem.Visibility = node is Project p && preprocessedFileManager.CanPreprocess(p.SourceFilePath) ? Visibility.Visible : Visibility.Collapsed;
+            Visibility canRun = Build?.LogFilePath != null && node is Task ? Visibility.Visible : Visibility.Collapsed;
+            runItem.Visibility = canRun;
+            debugItem.Visibility = canRun;
         }
 
         private object FindInFiles(string searchText, int maxResults = int.MaxValue)
