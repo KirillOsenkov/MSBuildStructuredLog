@@ -1,0 +1,165 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using Microsoft.Build.Framework;
+using Microsoft.Build.Logging;
+using Microsoft.Build.Logging.StructuredLogger;
+
+namespace TaskRunner
+{
+    public class Executor
+    {
+        public static void Execute(Task task)
+        {
+            var assemblyFilePath = task.FromAssembly;
+            Assembly assembly = null;
+            if (File.Exists(assemblyFilePath))
+            {
+                assembly = Assembly.LoadFrom(assemblyFilePath);
+            }
+            else
+            {
+                assembly = Assembly.Load(assemblyFilePath);
+            }
+
+            var type = assembly.GetTypes().FirstOrDefault(t => t.Name == task.Name);
+            if (type == null)
+            {
+                throw new ArgumentException($"Type {task.Name} not found in assembly {assembly}");
+            }
+
+            // need to set current directory before we activate the task instance
+            var project = task.GetNearestParent<Project>();
+            var projectDirectory = project.ProjectDirectory;
+            if (Directory.Exists(projectDirectory))
+            {
+                Environment.CurrentDirectory = projectDirectory;
+            }
+
+            var instance = Activator.CreateInstance(type) as ITask;
+            PopulateParameters(task, instance);
+
+            instance.BuildEngine = new BuildEngine();
+
+            Run(instance);
+        }
+
+        private static bool Run(object instance)
+        {
+            var executeMethod = instance.GetType().GetMethod("Execute");
+            bool result = (bool)executeMethod.Invoke(instance, null);
+            return result;
+        }
+
+        private static void PopulateParameters(Task task, object instance)
+        {
+            var parametersNode = task.FindChild<Folder>("Parameters");
+            if (parametersNode == null)
+            {
+                throw new ArgumentException("Parameters node not found under task " + task.Name);
+            }
+
+            foreach (var parameter in parametersNode.Children)
+            {
+                SetParameter(parameter, instance);
+            }
+        }
+
+        private static void SetParameter(object propertyOrParameter, object instance)
+        {
+            if (propertyOrParameter is Property property)
+            {
+                var propertyInfo = FindPropertyInfo(instance, property.Name, out var flags, out var type);
+                object value = property.Value;
+                if (propertyInfo.PropertyType == typeof(bool))
+                {
+                    value = Convert.ToBoolean(property.Value);
+                }
+
+                SetPropertyValue(instance, property.Name, value);
+            }
+            else if (propertyOrParameter is Parameter parameter)
+            {
+                var taskItems = GetTaskItems(parameter);
+
+                var propertyInfo = FindPropertyInfo(instance, parameter.Name, out var flags, out var type);
+                object value = null;
+                if (propertyInfo.PropertyType == typeof(string))
+                {
+                    value = string.Join(";", taskItems.Select(t => t.ItemSpec));
+                }
+                else if (propertyInfo.PropertyType == typeof(string[]))
+                {
+                    value = taskItems.Select(t => t.ItemSpec).ToArray();
+                }
+                else
+                {
+                    value = taskItems;
+                }
+
+                SetPropertyValue(instance, propertyInfo.Name, value);
+            }
+            else
+            {
+                throw new NotSupportedException(propertyOrParameter.ToString());
+            }
+        }
+
+        private static ITaskItem[] GetTaskItems(Parameter parameter)
+        {
+            var list = new List<ITaskItem>();
+            foreach (var item in parameter.Children)
+            {
+                var taskItem = GetTaskItem(item);
+                list.Add(taskItem);
+            }
+
+            return list.ToArray();
+        }
+
+        private static TaskItem GetTaskItem(object itemOrProperty)
+        {
+            if (itemOrProperty is Item item)
+            {
+                var taskItem = new TaskItem();
+                taskItem.ItemSpec = item.Text;
+                foreach (var metadata in item.Children.OfType<Metadata>())
+                {
+                    taskItem.SetMetadata(metadata.Name, metadata.Value);
+                }
+
+                return taskItem;
+            }
+
+            throw new InvalidOperationException("Unsupported " + itemOrProperty.ToString());
+        }
+
+        public static void SetPropertyValue<T>(object instance, string propertyName, T value)
+        {
+            var propertyInfo = FindPropertyInfo(instance, propertyName, out var flags, out var type);
+            if (propertyInfo == null)
+            {
+                throw new ArgumentException("Property " + propertyName + " was not found on type " + type.ToString());
+            }
+
+            // Workaround for Reflection bug 791391
+            if (propertyInfo.DeclaringType != type)
+            {
+                type = propertyInfo.DeclaringType;
+                propertyInfo = type.GetProperty(propertyName, flags);
+            }
+
+            propertyInfo.SetValue(instance, value, flags, null, null, null);
+        }
+
+        private static PropertyInfo FindPropertyInfo(object instance, string propertyName, out BindingFlags flags, out Type type)
+        {
+            flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+            type = instance.GetType();
+            var propertyInfo = type.GetProperty(propertyName, flags);
+            return propertyInfo;
+        }
+    }
+}
