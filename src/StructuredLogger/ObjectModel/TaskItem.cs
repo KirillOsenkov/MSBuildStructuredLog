@@ -14,6 +14,15 @@ namespace Microsoft.Build.Logging
         public int MetadataCount => Metadata.Count;
         public ICollection MetadataNames => Metadata.Keys;
 
+        public TaskItem()
+        {
+        }
+
+        public TaskItem(string itemSpec)
+        {
+            ItemSpec = itemSpec;
+        }
+
         public IDictionary CloneCustomMetadata()
         {
             return Metadata;
@@ -54,5 +63,7 @@ namespace Microsoft.Build.Logging
         {
             throw new NotImplementedException();
         }
+
+        public override string ToString() => ItemSpec;
     }
 }

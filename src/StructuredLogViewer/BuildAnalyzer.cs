@@ -23,7 +23,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 if (build.IsAnalyzed)
                 {
-                    Seal(build);
+                    SealAndCalculateIndices(build);
                     return;
                 }
 
@@ -38,9 +38,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private static void Seal(Build build)
+        private static void SealAndCalculateIndices(Build build)
         {
-            build.VisitAllChildren<TreeNode>(t => t.Seal());
+            int index = 0;
+            build.VisitAllChildren<TreeNode>(t =>
+            {
+                t.Seal();
+                if (t is TimedNode timedNode)
+                {
+                    timedNode.Index = index;
+                    index++;
+                }
+            });
         }
 
         private void Analyze()

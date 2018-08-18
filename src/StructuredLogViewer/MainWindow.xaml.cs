@@ -528,6 +528,8 @@ namespace StructuredLogViewer
                 logFilePath = saveFileDialog.FileName;
                 System.Threading.Tasks.Task.Run(() =>
                 {
+                    currentBuild.LogFilePath = logFilePath;
+                    currentBuild.Build.LogFilePath = logFilePath;
                     Serialization.Write(currentBuild.Build, logFilePath);
                     Dispatcher.InvokeAsync(() =>
                     {

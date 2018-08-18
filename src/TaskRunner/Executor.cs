@@ -67,15 +67,55 @@ namespace TaskRunner
             }
         }
 
+        private static readonly char[] semicolon = { ';' };
+
         private static void SetParameter(object propertyOrParameter, object instance)
         {
             if (propertyOrParameter is Property property)
             {
                 var propertyInfo = FindPropertyInfo(instance, property.Name, out var flags, out var type);
-                object value = property.Value;
+                var stringValue = property.Value;
+
+                object value = stringValue;
                 if (propertyInfo.PropertyType == typeof(bool))
                 {
-                    value = Convert.ToBoolean(property.Value);
+                    value = Convert.ToBoolean(stringValue);
+                }
+                else if (propertyInfo.PropertyType == typeof(string[]))
+                {
+                    if (string.IsNullOrEmpty(stringValue))
+                    {
+                        value = Array.Empty<string>();
+                    }
+                    else
+                    {
+                        value = stringValue.Split(semicolon, StringSplitOptions.RemoveEmptyEntries);
+                    }
+                }
+                else if (propertyInfo.PropertyType == typeof(ITaskItem))
+                {
+                    value = new TaskItem(stringValue);
+                }
+                else if (propertyInfo.PropertyType == typeof(ITaskItem[]))
+                {
+                    if (string.IsNullOrEmpty(stringValue))
+                    {
+                        value = Array.Empty<ITaskItem>();
+                    }
+                    else
+                    {
+                        value = stringValue
+                            .Split(semicolon, StringSplitOptions.RemoveEmptyEntries)
+                            .Select(s => new TaskItem(s))
+                            .ToArray();
+                    }
+                }
+                else if (propertyInfo.PropertyType == typeof(int))
+                {
+                    if (int.TryParse(stringValue, out int intValue))
+                    {
+                        value = intValue;
+                    }
                 }
 
                 SetPropertyValue(instance, property.Name, value);
@@ -123,13 +163,17 @@ namespace TaskRunner
         {
             if (itemOrProperty is Item item)
             {
-                var taskItem = new TaskItem();
-                taskItem.ItemSpec = item.Text;
+                var taskItem = new TaskItem(item.Text);
                 foreach (var metadata in item.Children.OfType<Metadata>())
                 {
                     taskItem.SetMetadata(metadata.Name, metadata.Value);
                 }
 
+                return taskItem;
+            }
+            else if (itemOrProperty is Property property)
+            {
+                var taskItem = new TaskItem(property.Name + "=" + property.Value);
                 return taskItem;
             }
 

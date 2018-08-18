@@ -21,7 +21,7 @@ namespace StructuredLogViewer.Controls
     {
         public Build Build { get; set; }
         public TreeViewItem SelectedTreeViewItem { get; private set; }
-        public string LogFilePath { get; private set; }
+        public string LogFilePath { get; set; }
 
         private ScrollViewer scrollViewer;
 
@@ -365,6 +365,7 @@ Recent:
             var logFilePath = Build.LogFilePath;
             if (!File.Exists(logFilePath))
             {
+                MessageBox.Show($"The log file {logFilePath} doesn't exist on disk. Please save the log to disk and reopen it from disk.");
                 return;
             }
 
