@@ -13,7 +13,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         public string ProjectFile { get; set; }
 
-        public string ProjectFileExtension => ProjectFile != null ? Path.GetExtension(ProjectFile).ToLowerInvariant() : "";
+        public string ProjectFileExtension => ProjectFile != null 
+            ? Path.GetExtension(ProjectFile).ToLowerInvariant() 
+            : "";
+
+        public string ProjectDirectory => !string.IsNullOrEmpty(ProjectFile)
+            ? Path.GetDirectoryName(ProjectFile)
+            : null;
 
         public string SourceFilePath => ProjectFile;
 
