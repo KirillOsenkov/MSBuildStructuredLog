@@ -240,3 +240,4 @@ _Pvt_Extensions
 
 # Visual Studio Code
 .vscode/
+launchSettings.json
