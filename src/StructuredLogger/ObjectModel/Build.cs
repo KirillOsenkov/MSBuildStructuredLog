@@ -1,4 +1,6 @@
-﻿namespace Microsoft.Build.Logging.StructuredLogger
+﻿using System.Threading;
+
+namespace Microsoft.Build.Logging.StructuredLogger
 {
     /// <summary>
     /// Class representation of an MSBuild overall build execution.
@@ -10,8 +12,27 @@
         public bool IsAnalyzed { get; set; }
         public bool Succeeded { get; set; }
 
+        public string LogFilePath { get; set; }
         public byte[] SourceFilesArchive { get; set; }
 
         public override string ToString() => "Build " + (Succeeded ? "succeeded" : "failed");
+
+        public TreeNode FindDescendant(int index)
+        {
+            int current = 0;
+            var cts = new CancellationTokenSource();
+            TreeNode found = default;
+            VisitAllChildren<TimedNode>(node =>
+            {
+                if (current == index)
+                {
+                    found = node;
+                    cts.Cancel();
+                }
+                current++;
+            }, cts.Token);
+
+            return found;
+        }
     }
 }
