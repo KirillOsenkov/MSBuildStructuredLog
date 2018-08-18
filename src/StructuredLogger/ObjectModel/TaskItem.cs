@@ -35,13 +35,16 @@ namespace Microsoft.Build.Logging
 
         public void CopyMetadataTo(ITaskItem destinationItem)
         {
-            throw new NotImplementedException();
+            foreach (var kvp in Metadata)
+            {
+                destinationItem.SetMetadata(kvp.Key, kvp.Value);
+            }
         }
 
         public string GetMetadata(string metadataName)
         {
             Metadata.TryGetValue(metadataName, out var result);
-            return result;
+            return result ?? "";
         }
 
         public string GetMetadataValueEscaped(string metadataName)
