@@ -5,8 +5,23 @@ using System.Text;
 
 namespace StructuredLogViewer
 {
-    public class Utilities
+    public static class Utilities
     {
+        public static string QuoteIfNeeded(this string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return text;
+            }
+
+            if (text.Contains(" "))
+            {
+                text = "\"" + text + "\"";
+            }
+
+            return text;
+        }
+
         public static string ByteArrayToHexString(byte[] bytes, int digits = 0)
         {
             if (digits == 0)

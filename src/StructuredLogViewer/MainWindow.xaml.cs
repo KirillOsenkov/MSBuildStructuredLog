@@ -407,7 +407,7 @@ namespace StructuredLogViewer
 
             string customArguments = SettingsService.GetCustomArguments(filePath);
             var parametersScreen = new BuildParametersScreen();
-            parametersScreen.PrefixArguments = HostedBuild.QuoteIfNeeded(filePath);
+            parametersScreen.PrefixArguments = filePath.QuoteIfNeeded();
             parametersScreen.MSBuildArguments = customArguments;
             parametersScreen.PostfixArguments = HostedBuild.GetPostfixArguments();
             parametersScreen.BuildRequested += () =>

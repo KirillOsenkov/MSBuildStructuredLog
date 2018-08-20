@@ -84,7 +84,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public ICommand CopyCommand => copyCommand ?? (copyCommand = new Command(Copy));
         private void Copy()
         {
-            string commandLine = $@"{HostedBuild.QuoteIfNeeded(MSBuildLocation)} {PrefixArguments} {MSBuildArguments} {PostfixArguments}";
+            string commandLine = $@"{MSBuildLocation.QuoteIfNeeded()} {PrefixArguments} {MSBuildArguments} {PostfixArguments}";
             Clipboard.SetText(commandLine);
         }
 

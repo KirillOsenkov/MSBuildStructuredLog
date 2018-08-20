@@ -369,7 +369,21 @@ Recent:
                 return;
             }
 
-            Process.Start("TaskRunner.exe", $"{logFilePath} {task.Index} pause{(debug ? " debug" : "")}");
+            var taskRunner = Path.Combine(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName), "TaskRunner.exe");
+            if (!File.Exists(taskRunner))
+            {
+                MessageBox.Show("File not found: " + taskRunner);
+                return;
+            }
+
+            try
+            {
+                Process.Start(taskRunner.QuoteIfNeeded(), $"{logFilePath} {task.Index} pause{(debug ? " debug" : "")}");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
+            }
         }
 
         private void ContextMenu_Opened(object sender, RoutedEventArgs e)
