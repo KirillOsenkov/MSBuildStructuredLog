@@ -56,7 +56,7 @@ namespace StructuredLogger.Tests
         {
             var text = "abcd   efghi";
             Assert.Equal("   efg", text.Substring(new Span(4, 6)));
-            Assert.Equal(true, text.Contains(new Span(7, 4), 'e'));
+            Assert.True(text.Contains(new Span(7, 4), 'e'));
             Assert.Equal(7, text.IndexOf(new Span(7, 4), 'e'));
         }
 
