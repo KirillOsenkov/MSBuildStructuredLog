@@ -2,10 +2,12 @@
 A logger for MSBuild that records a structured representation of executed targets, tasks, property and item values. It can greatly simplify build investigations and providers a portable log interchange format and a rich interactive log viewer app.
 
 [![Build status](https://ci.appveyor.com/api/projects/status/v7vwgphs239i14ya?svg=true)](https://ci.appveyor.com/project/KirillOsenkov/msbuildstructuredlog)
-[![NuGet package](https://img.shields.io/nuget/v/Microsoft.Build.Logging.StructuredLogger.svg)](https://nuget.org/packages/Microsoft.Build.Logging.StructuredLogger)
+[![NuGet package](https://img.shields.io/nuget/v/MSBuild.StructuredLogger.svg)](https://nuget.org/packages/MSBuild.StructuredLogger)
 [![Chocolatey](https://img.shields.io/chocolatey/v/msbuild-structured-log-viewer.svg)](https://chocolatey.org/packages/msbuild-structured-log-viewer)
 
 Homepage: http://msbuildlog.com
+
+Important: the NuGet package is now being published to https://nuget.org/packages/MSBuild.StructuredLogger (old location: https://nuget.org/packages/Microsoft.Build.Logging.StructuredLogger). Please update to use the new Package Id.
 
 ## Install:
 https://github.com/KirillOsenkov/MSBuildStructuredLog/releases/download/v1.2.44/MSBuildStructuredLogSetup.exe
@@ -30,7 +32,7 @@ or you can build the solution or open an existing log file through the viewer ap
 ![Screenshot2](/docs/Screenshot2.png)
 
 Alternatively (useful for older versions of MSBuild) you can attach the logger to any MSBuild-based build using the logger library: `StructuredLogger.dll`. It is available in a NuGet package:
-https://www.nuget.org/packages/Microsoft.Build.Logging.StructuredLogger
+https://www.nuget.org/packages/MSBuild.StructuredLogger
 
 ```
 msbuild solution.sln /t:Rebuild /v:diag /noconlog /logger:BinaryLogger,%localappdata%\MSBuildStructuredLogViewer\app-1.2.44\StructuredLogger.dll;1.binlog
@@ -38,10 +40,10 @@ msbuild solution.sln /t:Rebuild /v:diag /noconlog /logger:BinaryLogger,%localapp
 
 To use a portable version of the logger (e.g. with the `dotnet msbuild` command) you need a .NET Standard version of `StructuredLogger.dll`, not the .NET Framework (Desktop) version.
 
-Download this NuGet package: https://www.nuget.org/packages/Microsoft.Build.Logging.StructuredLogger/1.1.224
-and inside it there's the `lib\netstandard1.5\StructuredLogger.dll`. Try passing that to `dotnet build` like this:
+Download this NuGet package: https://www.nuget.org/packages/MSBuild.StructuredLogger/1.2.48
+and inside it there's the `lib\netstandard2.0\StructuredLogger.dll`. Try passing that to `dotnet build` like this:
 ```
-dotnet msbuild Some.sln /v:diag /nologo /logger:BinaryLogger,"packages\Microsoft.Build.Logging.StructuredLogger.1.1.224\lib\netstandard1.5\StructuredLogger.dll";"C:\Users\SomeUser\Desktop\binarylog.binlog"
+dotnet msbuild Some.sln /v:diag /nologo /logger:BinaryLogger,"packages\MSBuild.StructuredLogger.1.2.48\lib\netstandard2.0\StructuredLogger.dll";"C:\Users\SomeUser\Desktop\binarylog.binlog"
 ```
 
 The logger supports three file formats:
