@@ -20,7 +20,7 @@
     <PackageTags>MSBuild Log Logger Structure Structured</PackageTags>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Nerdbank.GitVersioning" Version="2.0.41" />
+    <PackageReference Include="Nerdbank.GitVersioning" Version="2.0.41" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.IO.Compression" />
