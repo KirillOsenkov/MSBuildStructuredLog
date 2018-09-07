@@ -2,7 +2,7 @@
   <PropertyGroup>
     <AssemblyName>StructuredLogger</AssemblyName>
     <RootNamespace>Microsoft.Build.Logging.StructuredLogger</RootNamespace>
-    <TargetFrameworks>net46;netstandard1.5</TargetFrameworks>
+    <TargetFrameworks>net46;netstandard2.0</TargetFrameworks>
     <NBGV_DoNotEmitNonVersionCustomAttributes>true</NBGV_DoNotEmitNonVersionCustomAttributes>
     <DebugType>embedded</DebugType>
     <LangVersion>latest</LangVersion>
@@ -25,14 +25,14 @@
   <ItemGroup>
     <Reference Include="System.IO.Compression" />
   </ItemGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.5'">
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0'">
     <DefineConstants>$(DefineConstants);NETCORE</DefineConstants>
   </PropertyGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.5' ">
-    <PackageReference Include="Microsoft.Build" Version="15.1.1012" />
-    <PackageReference Include="Microsoft.Build.Framework" Version="15.1.1012" />
-    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="15.1.1012" />
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="15.1.1012" />
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <PackageReference Include="Microsoft.Build" Version="15.8.166" />
+    <PackageReference Include="Microsoft.Build.Framework" Version="15.8.166" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="15.8.166" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="15.8.166" />
   </ItemGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'net46' ">
     <Reference Include="System" />
