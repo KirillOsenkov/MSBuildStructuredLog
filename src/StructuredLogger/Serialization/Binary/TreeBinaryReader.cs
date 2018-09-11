@@ -39,7 +39,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             int build = fileStream.ReadByte();
             Version = new Version(major, minor, build, 0);
 
-            if (major != 1)
+            if (major < 1 || major > 2)
             {
                 // invalid or unsupported file format
                 fileStream.Dispose();
