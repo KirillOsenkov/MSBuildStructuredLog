@@ -8,7 +8,7 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 
-namespace Microsoft.Build.Framework.Profiler
+namespace Microsoft.Build.Logging.StructuredLogger
 {
     /// <summary>
     /// Assigns unique evaluation ids. Thread safe.

@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 
-namespace Microsoft.Build.Framework.Profiler
+namespace Microsoft.Build.Logging.StructuredLogger
 {
     /// <summary>
     /// Result of profiling an evaluation

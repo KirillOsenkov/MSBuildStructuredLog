@@ -1,6 +1,6 @@
 ﻿using Microsoft.Build.Framework;
 
-namespace Microsoft.Build.Logging
+namespace Microsoft.Build.Logging.StructuredLogger
 {
     /// <summary>
     /// An implementation of IEventSource that raises appropriate events for a provided BuildEventArgs object.

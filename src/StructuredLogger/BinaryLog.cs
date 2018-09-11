@@ -24,7 +24,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static Build ReadBuild(Stream stream, byte[] projectImportsArchive = null)
         {
-            var eventSource = new BinaryLogReplayEventSource();
+            var eventSource = new BinLogReader();
 
             Build build = null;
 
