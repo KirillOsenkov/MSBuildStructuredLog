@@ -40,7 +40,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         public static Build ReadXmlLog(Stream stream) => XmlLogReader.ReadFromXml(stream);
-        public static Build ReadBuildLog(Stream stream, byte[] projectImportsArchive = null) => BinaryLogReader.Read(stream, projectImportsArchive);
+        public static Build ReadBuildLog(Stream stream, byte[] projectImportsArchive = null) => BuildLogReader.Read(stream, projectImportsArchive);
         public static Build ReadBinLog(Stream stream, byte[] projectImportsArchive = null) => BinaryLog.ReadBuild(stream, projectImportsArchive);
 
         public static Build Read(string filePath)
@@ -59,7 +59,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     if (DetectLogFormat(filePath) == ".buildlog")
                     {
-                        return BinaryLogReader.Read(filePath);
+                        return BuildLogReader.Read(filePath);
                     }
                     else
                     {
@@ -71,7 +71,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 try
                 {
-                    return BinaryLogReader.Read(filePath);
+                    return BuildLogReader.Read(filePath);
                 }
                 catch (Exception)
                 {
@@ -122,7 +122,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
             else
             {
-                BinaryLogWriter.Write(build, filePath);
+                BuildLogWriter.Write(build, filePath);
             }
         }
 

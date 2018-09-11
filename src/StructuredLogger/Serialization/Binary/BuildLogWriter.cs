@@ -2,20 +2,20 @@
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class BinaryLogWriter : IDisposable
+    public class BuildLogWriter : IDisposable
     {
         private readonly string filePath;
         private TreeBinaryWriter writer;
 
         public static void Write(Build build, string filePath)
         {
-            using (var binaryLogWriter = new BinaryLogWriter(filePath))
+            using (var binaryLogWriter = new BuildLogWriter(filePath))
             {
                 binaryLogWriter.WriteNode(build);
             }
         }
 
-        private BinaryLogWriter(string filePath)
+        private BuildLogWriter(string filePath)
         {
             this.filePath = filePath;
             this.writer = new TreeBinaryWriter(filePath);

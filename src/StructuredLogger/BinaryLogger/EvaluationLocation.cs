@@ -8,7 +8,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Microsoft.Build.Framework.Profiler
+namespace Microsoft.Build.Logging.StructuredLogger
 {
     /// <summary>
     /// Evaluation main phases used by the profiler

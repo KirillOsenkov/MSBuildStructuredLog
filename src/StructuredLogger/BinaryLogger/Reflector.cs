@@ -2,7 +2,7 @@
 using System.Reflection;
 using Microsoft.Build.Framework;
 
-namespace Microsoft.Build.Logging
+namespace Microsoft.Build.Logging.StructuredLogger
 {
     /// <summary>
     /// This class accesses the properties on event args that were added in MSBuild 15.3.

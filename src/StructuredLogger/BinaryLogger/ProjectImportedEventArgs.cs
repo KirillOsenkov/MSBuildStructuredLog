@@ -2,8 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using Microsoft.Build.Framework;
 
-namespace Microsoft.Build.Framework
+namespace Microsoft.Build.Logging.StructuredLogger
 {
     /// <summary>
     /// Arguments for the project imported event.

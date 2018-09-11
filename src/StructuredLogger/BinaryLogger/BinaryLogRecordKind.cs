@@ -1,4 +1,4 @@
-﻿namespace Microsoft.Build.Logging
+﻿namespace Microsoft.Build.Logging.StructuredLogger
 {
     public enum BinaryLogRecordKind
     {

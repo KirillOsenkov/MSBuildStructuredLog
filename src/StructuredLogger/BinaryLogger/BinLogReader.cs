@@ -6,14 +6,14 @@ using System.IO;
 using System.IO.Compression;
 using Microsoft.Build.Framework;
 
-namespace Microsoft.Build.Logging
+namespace Microsoft.Build.Logging.StructuredLogger
 {
     /// <summary>
     /// Provides a method to read a binary log file (*.binlog) and replay all stored BuildEventArgs
     /// by implementing IEventSource and raising corresponding events.
     /// </summary>
     /// <remarks>The class is public so that we can call it from MSBuild.exe when replaying a log file.</remarks>
-    public sealed class BinaryLogReplayEventSource : EventArgsDispatcher
+    public sealed class BinLogReader : EventArgsDispatcher
     {
         /// <summary>
         /// Raised when the log reader encounters a binary blob embedded in the stream.

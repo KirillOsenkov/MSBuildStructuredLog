@@ -1,6 +1,7 @@
 ﻿using System;
+using Microsoft.Build.Framework;
 
-namespace Microsoft.Build.Framework
+namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class TargetStartedEventArgs2 : TargetStartedEventArgs
     {

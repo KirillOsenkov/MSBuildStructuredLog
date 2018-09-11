@@ -4,7 +4,7 @@ using System.IO.Compression;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
 
-namespace Microsoft.Build.Logging
+namespace Microsoft.Build.Logging.StructuredLogger
 {
     /// <summary>
     /// A logger that serializes all incoming BuildEventArgs in a compressed binary file (*.binlog). The file
