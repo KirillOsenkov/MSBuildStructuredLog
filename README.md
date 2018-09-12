@@ -40,10 +40,10 @@ msbuild solution.sln /t:Rebuild /v:diag /noconlog /logger:BinaryLogger,%localapp
 
 To use a portable version of the logger (e.g. with the `dotnet msbuild` command) you need a .NET Standard version of `StructuredLogger.dll`, not the .NET Framework (Desktop) version.
 
-Download this NuGet package: https://www.nuget.org/packages/MSBuild.StructuredLogger/1.2.48
+Download this NuGet package: https://www.nuget.org/packages/MSBuild.StructuredLogger/2.0.4
 and inside it there's the `lib\netstandard2.0\StructuredLogger.dll`. Try passing that to `dotnet build` like this:
 ```
-dotnet msbuild Some.sln /v:diag /nologo /logger:BinaryLogger,"packages\MSBuild.StructuredLogger.1.2.48\lib\netstandard2.0\StructuredLogger.dll";"C:\Users\SomeUser\Desktop\binarylog.binlog"
+dotnet msbuild Some.sln /v:diag /nologo /logger:BinaryLogger,"packages\MSBuild.StructuredLogger.2.0.4\lib\netstandard2.0\StructuredLogger.dll";"C:\Users\SomeUser\Desktop\binarylog.binlog"
 ```
 
 The logger supports three file formats:
