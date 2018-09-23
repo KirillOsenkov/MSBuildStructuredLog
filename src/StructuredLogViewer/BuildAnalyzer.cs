@@ -9,12 +9,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
     {
         private Build build;
         private DoubleWritesAnalyzer doubleWritesAnalyzer;
+        private ResolveAssemblyReferenceAnalyzer resolveAssemblyReferenceAnalyzer;
         private int index;
 
         public BuildAnalyzer(Build build)
         {
             this.build = build;
             doubleWritesAnalyzer = new DoubleWritesAnalyzer();
+            resolveAssemblyReferenceAnalyzer = new ResolveAssemblyReferenceAnalyzer();
         }
 
         public static void AnalyzeBuild(Build build)
@@ -135,6 +137,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             doubleWritesAnalyzer.AppendDoubleWritesFolder(build);
+            resolveAssemblyReferenceAnalyzer.AppendFinalReport(build);
 
             if (build.LogFilePath != null)
             {
@@ -190,7 +193,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (task.Name == "ResolveAssemblyReference")
             {
-                CopyLocalAnalyzer.AnalyzeResolveAssemblyReference(task);
+                resolveAssemblyReferenceAnalyzer.AnalyzeResolveAssemblyReference(task);
             }
             else if (task is CopyTask copyTask)
             {

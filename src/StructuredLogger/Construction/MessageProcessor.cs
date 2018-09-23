@@ -222,7 +222,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                         var lastItem = parameter.FindLastChild<Item>();
 
                                         // only indent if it's not a "For SearchPath..." message - that one needs to be directly under parameter
-                                        if (lastItem != null && !message.StartsWith("For SearchPath"))
+                                        // also don't indent if it's under AssemblyFoldersEx in Results
+                                        if (lastItem != null && 
+                                            !message.StartsWith("For SearchPath") && 
+                                            !parameter.Name.StartsWith("AssemblyFoldersEx"))
                                         {
                                             node = lastItem;
                                         }
@@ -259,7 +262,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                 bool isResult = message.StartsWith("Unified primary reference ") ||
                                     message.StartsWith("Primary reference ") ||
                                     message.StartsWith("Dependency ") ||
-                                    message.StartsWith("Unified Dependency ");
+                                    message.StartsWith("Unified Dependency ") ||
+                                    message.StartsWith("AssemblyFoldersEx location");
 
                                 if (isResult)
                                 {

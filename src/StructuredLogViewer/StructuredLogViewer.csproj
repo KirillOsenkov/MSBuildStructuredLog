@@ -67,7 +67,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Analyzers\MessageTaskAnalyzer.cs" />
-    <Compile Include="Analyzers\ResolveAssemblyReferenceAnalyzer\CopyLocalAnalyzer.cs" />
+    <Compile Include="Analyzers\ResolveAssemblyReferenceAnalyzer\ResolveAssemblyReferenceAnalyzer.cs" />
     <Compile Include="BuildAnalyzer.cs" />
     <Compile Include="BuildParametersScreen.cs" />
     <Compile Include="BuildProgress.cs" />
