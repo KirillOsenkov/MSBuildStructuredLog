@@ -11,6 +11,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private DoubleWritesAnalyzer doubleWritesAnalyzer;
         private ResolveAssemblyReferenceAnalyzer resolveAssemblyReferenceAnalyzer;
         private int index;
+        private Dictionary<string, TimeSpan> taskDurations = new Dictionary<string, TimeSpan>();
 
         public BuildAnalyzer(Build build)
         {
@@ -143,6 +144,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 build.AddChildAtBeginning(new Item { Text = build.LogFilePath });
             }
+
+            var durations = taskDurations
+                .OrderByDescending(kvp => kvp.Value)
+                .Where(kvp => !string.Equals(kvp.Key, "MSBuild", StringComparison.OrdinalIgnoreCase)) // no need to include MSBuild task as it's not a "terminal leaf" task
+                .Take(10)
+                .ToArray();
+
+            var top10Tasks = build.GetOrCreateNodeWithName<Folder>($"Top {durations.Count()} most expensive tasks");
+            foreach (var kvp in durations)
+            {
+                top10Tasks.AddChild(new Item { Name = kvp.Key, Text = Utilities.DisplayDuration(kvp.Value) });
+            }
         }
 
         private void PostAnalyzeProject(Project project)
@@ -190,6 +203,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 task.AddChildAtBeginning(new Property { Name = "Assembly", Value = task.FromAssembly });
             }
+
+            taskDurations.TryGetValue(task.Name, out var duration);
+            duration += task.Duration;
+            taskDurations[task.Name] = duration;
 
             if (task.Name == "ResolveAssemblyReference")
             {
