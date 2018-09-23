@@ -65,10 +65,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         }
                     }
 
+                    var thisReferenceName = ParseReferenceName(reference.Name);
+
                     if (reference.Name.StartsWith("Dependency ") || reference.Name.StartsWith("Unified Dependency "))
                     {
                         bool foundNotCopyLocalBecauseMetadata = false;
                         var requiredBy = new List<Item>();
+                        Item notCopyLocalMessage = null;
+
                         foreach (var message in reference.Children.OfType<Item>())
                         {
                             string text = message.Text;
@@ -79,6 +83,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             else if (text == @"This reference is not ""CopyLocal"" because at least one source item had ""Private"" set to ""false"" and no source items had ""Private"" set to ""true"".")
                             {
                                 foundNotCopyLocalBecauseMetadata = true;
+                                notCopyLocalMessage = message;
                             }
                         }
 
@@ -105,6 +110,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                             if (metadata.Name == "Private")
                                             {
                                                 sourceItem.AddChild(new Metadata() { Name = metadata.Name, Value = metadata.Value });
+                                                if (notCopyLocalMessage != null)
+                                                {
+                                                    notCopyLocalMessage.AddChild(new Message { Text = $"{foundSourceItem.ToString()} has {metadata.Name} set to {metadata.Value}" });
+                                                }
                                             }
                                         }
                                     }
@@ -140,6 +149,30 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                 }
             }
+        }
+
+        private string ParseReferenceName(string name)
+        {
+            var quote = name.IndexOf('"');
+            if (quote == -1)
+            {
+                return null;
+            }
+
+            name = name.Substring(quote + 1);
+            var comma = name.IndexOf(',');
+            if (comma == -1)
+            {
+                quote = name.IndexOf('"');
+                if (quote == -1)
+                {
+                    return null;
+                }
+
+                return name.Substring(0, quote);
+            }
+
+            return name.Substring(0, comma);
         }
 
         public void AppendFinalReport(Build build)
