@@ -43,5 +43,50 @@ namespace StructuredLogger.Tests
             Assert.Equal("MaxVersion", metadata.Name);
             Assert.Equal("15.1.0.0", metadata.Value);
         }
+
+        [Fact]
+        public void ParseThereWasAConflict()
+        {
+            var lines = @"""System.IO.Compression, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"" was chosen because it was primary and ""System.IO.Compression, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"" was not.
+References which depend on ""System.IO.Compression, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"" [C:\Program Files (x86)\System.IO.Compression.dll].
+    C:\Program Files (x86)\System.IO.Compression.dll
+      Project file item includes which caused reference ""C:\Program Files (x86)\System.IO.Compression.dll"".
+        System.IO.Compression
+References which depend on ""System.IO.Compression, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"" [].
+    C:\A\\A.dll
+      Project file item includes which caused reference ""C:\A\\A.dll"".
+        C:\A\bin\Debug\C.dll
+    C:\A\\B.dll
+      Project file item includes which caused reference ""C:\A\\B.dll"".
+        C:\A\\B\D.dll
+        C:\A\\C.dll".GetLines();
+            var parameter = new Parameter()
+            {
+                Name = "There was a conflict"
+            };
+            var stringCache = new StringCache();
+            foreach (var line in lines)
+            {
+                MessageProcessor.HandleThereWasAConflict(parameter, line, stringCache);
+            }
+
+            Assert.True(parameter.Children.Count == 3);
+            var text = StringWriter.GetString(parameter);
+            Assert.Equal(@"There was a conflict
+    ""System.IO.Compression, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"" was chosen because it was primary and ""System.IO.Compression, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"" was not.
+    References which depend on ""System.IO.Compression, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"" [C:\Program Files (x86)\System.IO.Compression.dll].
+        C:\Program Files (x86)\System.IO.Compression.dll
+            Project file item includes which caused reference ""C:\Program Files (x86)\System.IO.Compression.dll"".
+                System.IO.Compression
+    References which depend on ""System.IO.Compression, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"" [].
+        C:\A\\A.dll
+            Project file item includes which caused reference ""C:\A\\A.dll"".
+                C:\A\bin\Debug\C.dll
+        C:\A\\B.dll
+            Project file item includes which caused reference ""C:\A\\B.dll"".
+                C:\A\\B\D.dll
+                C:\A\\C.dll
+", text);
+        }
     }
 }

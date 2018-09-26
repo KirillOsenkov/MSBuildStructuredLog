@@ -211,6 +211,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             var parameter = node.FindLastChild<Parameter>();
                             if (parameter != null)
                             {
+                                bool thereWasAConflict = parameter.ToString().StartsWith("There was a conflict");
+                                if (thereWasAConflict)
+                                {
+                                    HandleThereWasAConflict(parameter, message, stringTable);
+                                    return;
+                                }
+
                                 if (!string.IsNullOrWhiteSpace(message))
                                 {
                                     node = parameter;
@@ -233,7 +240,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                                     if (!string.IsNullOrEmpty(message))
                                     {
-                                        if (message.IndexOf('=') != -1)
+                                        var equals = message.IndexOf('=');
+                                        if (equals != -1)
                                         {
                                             var kvp = Utilities.ParseNameValue(message);
                                             node.AddChild(new Metadata
@@ -263,7 +271,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                     message.StartsWith("Primary reference ") ||
                                     message.StartsWith("Dependency ") ||
                                     message.StartsWith("Unified Dependency ") ||
-                                    message.StartsWith("AssemblyFoldersEx location");
+                                    message.StartsWith("AssemblyFoldersEx location") ||
+                                    message.StartsWith("There was a conflict");
 
                                 if (isResult)
                                 {
@@ -391,6 +400,67 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             node.AddChild(nodeToAdd);
+        }
+
+        public static void HandleThereWasAConflict(Parameter parameter, string message, StringCache stringTable)
+        {
+            var numberOfLeadingSpaces = Utilities.GetNumberOfLeadingSpaces(message);
+            TreeNode node = parameter;
+            switch (numberOfLeadingSpaces)
+            {
+                case 0:
+                    parameter.AddChild(new Item()
+                    {
+                        Text = stringTable.Intern(message)
+                    });
+                    break;
+                case 4:
+                    node = parameter.LastChild as TreeNode ?? node;
+                    Add(node, message, 4);
+                    break;
+                case 6:
+                    {
+                        if (parameter.LastChild is TreeNode item)
+                        {
+                            node = item;
+                            if (item.LastChild is TreeNode item2)
+                            {
+                                node = item2;
+                            }
+                        }
+                        Add(node, message, 6);
+                    }
+                    break;
+                case 8:
+                    {
+                        if (parameter.LastChild is TreeNode item)
+                        {
+                            node = item;
+                            if (item.LastChild is TreeNode item2)
+                            {
+                                node = item2;
+                                if (item2.LastChild is TreeNode item3)
+                                {
+                                    node = item3;
+                                }
+                            }
+                        }
+                        Add(node, message, 8);
+                    }
+                    break;
+                default:
+                    Add(node, message, 0);
+                    break;
+            }
+
+            void Add(TreeNode parent, string text, int spaces)
+            {
+                text = text.Substring(spaces);
+                parent.AddChild(new Item
+                {
+                    Text = stringTable.Intern(text)
+                });
+            }
         }
 
         private bool IsEvaluationMessage(string message)
