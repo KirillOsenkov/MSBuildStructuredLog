@@ -130,13 +130,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     if (currentUsedLocations.Contains(searchPath))
                     {
-                        var usedLocations = rar.GetOrCreateNodeWithName<Folder>("Used locations");
+                        var usedLocations = rar.GetOrCreateNodeWithName<Folder>(Strings.UsedLocations);
                         usedLocations.AddChild(new Item { Text = searchPath });
                         UnusedLocations.Remove(searchPath);
                     }
                     else
                     {
-                        var unusedLocations = rar.GetOrCreateNodeWithName<Folder>("Unused locations");
+                        var unusedLocations = rar.GetOrCreateNodeWithName<Folder>(Strings.UnusedLocations);
                         unusedLocations.AddChild(new Item { Text = searchPath });
                         if (!UsedLocations.Contains(searchPath))
                         {
@@ -179,7 +179,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             if (UsedLocations.Any())
             {
-                var usedLocationsNode = build.GetOrCreateNodeWithName<Folder>("Used AssemblySearchPaths locations");
+                var usedLocationsNode = build.GetOrCreateNodeWithName<Folder>(Strings.UsedAssemblySearchPathsLocations);
                 foreach (var location in UsedLocations.OrderBy(s => s))
                 {
                     usedLocationsNode.AddChild(new Item { Text = location });
@@ -188,7 +188,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (UnusedLocations.Any())
             {
-                var unusedLocationsNode = build.GetOrCreateNodeWithName<Folder>("Unused AssemblySearchPaths locations");
+                var unusedLocationsNode = build.GetOrCreateNodeWithName<Folder>(Strings.UnusedAssemblySearchPathsLocations);
                 foreach (var location in UnusedLocations.OrderBy(s => s))
                 {
                     unusedLocationsNode.AddChild(new Item { Text = location });

@@ -58,6 +58,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private void Analyze()
         {
             Visit(build);
+            foreach (var property in typeof(Strings)
+                .GetProperties()
+                .Where(p => p.PropertyType == typeof(string))
+                .Select(p => p.GetValue(null) as string))
+            {
+                build.StringTable.Intern(property);
+            }
         }
 
         private void Visit(TreeNode node)
