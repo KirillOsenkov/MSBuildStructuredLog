@@ -72,7 +72,7 @@ namespace StructuredLogViewer.Controls
                 wordWrap.IsChecked = true;
             }
 
-            bool looksLikeXml = Classifier.LooksLikeXml(text);
+            bool looksLikeXml = Utilities.LooksLikeXml(text);
             if (looksLikeXml && !IsXml)
             {
                 IsXml = true;
