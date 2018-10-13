@@ -1,0 +1,234 @@
+﻿<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:l="clr-namespace:Microsoft.Build.Logging.StructuredLogger;assembly=StructuredLogger"
+        xmlns:s="clr-namespace:StructuredLogViewer.Avalonia.Controls;assembly=StructuredLogViewer.Avalonia"
+        xmlns:common="clr-namespace:Microsoft.Build.Logging.StructuredLogger;assembly=StructuredLogViewer.Core">
+    <Style>
+        <Style.Resources>
+            <Geometry x:Key="SearchGeometry">F1 M 8.5,7.0 C 7.12,7.00 6.0,5.88 6.0,4.5 C 6.0,3.12 7.12,2.0 8.5,2.0 C 9.88,2.0 11.0,3.12 11.0,4.5 C 11.0,5.88 9.88,7.0 8.5,7.0 Z M 8.5,0.0 C 6.02,0.0 4.0,2.02 4.0,4.500 C 4.0,5.23 4.19,5.9 4.49,6.5 L 0.0,11.0 L 2.0,13.0 L 6.49,8.51 C 7.1,8.81 7.77,9.0 8.5,9.0 C 11.0,9.0 13.0,7.0 13.0,4.5 C 13.0,2.02 11.0,0.0 8.5,0.0 Z</Geometry>
+
+            <SolidColorBrush x:Key="FolderStroke"
+                             Color="Goldenrod" />
+            <SolidColorBrush x:Key="TargetStroke"
+                             Color="MediumPurple" />
+            <SolidColorBrush x:Key="TaskStroke"
+                             Color="DodgerBlue" />
+            <SolidColorBrush x:Key="ParameterStroke"
+                             Color="DodgerBlue" />
+            <SolidColorBrush x:Key="PropertyStroke"
+                             Color="DodgerBlue" />
+            <SolidColorBrush x:Key="ItemStroke"
+                             Color="MediumAquamarine" />
+            <SolidColorBrush x:Key="MetadataStroke"
+                             Color="MediumAquamarine" />
+            <SolidColorBrush x:Key="MessageStroke"
+                             Color="LightGray" />
+            <SolidColorBrush x:Key="ErrorStroke"
+                             Color="Red" />
+            <SolidColorBrush x:Key="WarningStroke"
+                             Color="Gold" />
+
+            <LinearGradientBrush x:Key="ClosedFolderBrush"
+                                 StartPoint="0,0"
+                                 EndPoint="1,1">
+                <GradientStop Color="FloralWhite"
+                              Offset="0" />
+                <GradientStop Color="NavajoWhite"
+                              Offset="1" />
+            </LinearGradientBrush>
+
+            <LinearGradientBrush x:Key="TargetBrush"
+                                 StartPoint="0,0"
+                                 EndPoint="1,1">
+                <GradientStop Color="LavenderBlush"
+                              Offset="0" />
+                <GradientStop Color="Thistle"
+                              Offset="1" />
+            </LinearGradientBrush>
+
+            <LinearGradientBrush x:Key="TaskBrush"
+                                 StartPoint="0,0"
+                                 EndPoint="1,1">
+                <GradientStop Color="Cyan"
+                              Offset="0" />
+                <GradientStop Color="DeepSkyBlue"
+                              Offset="1" />
+            </LinearGradientBrush>
+
+            <LinearGradientBrush x:Key="ParameterBrush"
+                                 StartPoint="0,0"
+                                 EndPoint="1,1">
+                <GradientStop Color="AliceBlue"
+                              Offset="0" />
+                <GradientStop Color="LightSkyBlue"
+                              Offset="1" />
+            </LinearGradientBrush>
+
+            <LinearGradientBrush x:Key="ItemBrush"
+                                 StartPoint="0,0"
+                                 EndPoint="1,1">
+                <GradientStop Color="Honeydew"
+                              Offset="0" />
+                <GradientStop Color="LightGreen"
+                              Offset="1" />
+            </LinearGradientBrush>
+
+            <LinearGradientBrush x:Key="PropertyBrush"
+                                 StartPoint="0,0"
+                                 EndPoint="1,1">
+                <GradientStop Color="AliceBlue"
+                              Offset="0" />
+                <GradientStop Color="LightSkyBlue"
+                              Offset="1" />
+            </LinearGradientBrush>
+
+            <LinearGradientBrush x:Key="MessageBrush"
+                                 StartPoint="0,0"
+                                 EndPoint="1,1">
+                <GradientStop Color="White"
+                              Offset="0" />
+                <GradientStop Color="LightGray"
+                              Offset="1" />
+            </LinearGradientBrush>
+
+            <LinearGradientBrush x:Key="ErrorBrush"
+                                 StartPoint="0,0"
+                                 EndPoint="1,1">
+                <GradientStop Color="MistyRose"
+                              Offset="0" />
+                <GradientStop Color="LightCoral"
+                              Offset="1" />
+            </LinearGradientBrush>
+
+            <LinearGradientBrush x:Key="WarningBrush"
+                                 StartPoint="0,0"
+                                 EndPoint="1,1">
+                <GradientStop Color="LightYellow"
+                              Offset="0" />
+                <GradientStop Color="Yellow"
+                              Offset="1" />
+            </LinearGradientBrush>
+
+            <!--<DrawingBrush x:Key="SlnIcon">
+            <DrawingBrush.Drawing>
+                <DrawingGroup>
+                    <DrawingGroup.Children>
+                        <GeometryDrawing Brush="#00FFFFFF"
+                                         Geometry="F1M16,16L0,16 0,0 16,0z" />
+                        <GeometryDrawing Brush="#FFF6F6F6"
+                                         Geometry="F1M0,-0.000199999999999534L0,8.5858 0,13.4148 0,13.9998 0.586,13.9998 2,15.4138 3.414,13.9998 4.585,13.9998 6.586,15.9998 7.236,15.9998 10,14.6188 10,13.9998 16,13.9998 16,-0.000199999999999534z" />
+                        <GeometryDrawing Brush="#FF414141"
+                                         Geometry="F1M15,1L15,13 10,13 10,12 14,12 14,4 2,4 2,6.586 1,7.586 1,1z" />
+                        <GeometryDrawing Brush="#FF672079"
+                                         Geometry="F1M5,11L7,9 7,13z M2,12L2,10 3,11z M7,7L4,10 2,8 1,9 1,13 2,14 4,12 7,15 9,14 9,8z" />
+                        <GeometryDrawing Brush="#FFF0EFF1"
+                                         Geometry="F1M1.9998,12.0004L2.9998,10.9994 1.9998,9.9994z" />
+                        <GeometryDrawing Brush="#FFF0EFF1"
+                                         Geometry="F1M7,13L7,9 5,11z" />
+                        <GeometryDrawing Brush="#FFF0EFF1"
+                                         Geometry="F1M2,4L2,6.586 4,8.586 6.803,5.783 10,7.382 10,12 14,12 14,4z" />
+                    </DrawingGroup.Children>
+                </DrawingGroup>
+            </DrawingBrush.Drawing>
+        </DrawingBrush>
+
+        <DrawingBrush x:Key="CSProjIcon">
+            <DrawingBrush.Drawing>
+                <DrawingGroup>
+                    <DrawingGroup.Children>
+                        <GeometryDrawing Brush="#00FFFFFF"
+                                         Geometry="F1M16,16L0,16 0,0 16,0z" />
+                        <GeometryDrawing Brush="#FFF6F6F6"
+                                         Geometry="F1M0,15L16,15 16,1 0,1z" />
+                        <GeometryDrawing Brush="#FF414141"
+                                         Geometry="F1M10,7L11,7 11,8 10,8z M9,10L10,10 10,9 11,9 11,10 12,10 12,9 13,9 13,8 12,8 12,7 13,7 13,6 12,6 12,5 11,5 11,6 10,6 10,5 9,5 9,6 8,6 8,7 9,7 9,8 8,8 8,9 9,9z" />
+                        <GeometryDrawing Brush="#FF414141"
+                                         Geometry="F1M5.8496,11C6.5296,11,7.0786,10.898,7.4996,10.692L7.4996,9.499C7.0786,9.747 6.6156,9.871 6.1076,9.871 5.5766,9.871 5.1546,9.705 4.8396,9.372 4.5256,9.039 4.3696,8.592 4.3696,8.031 4.3696,7.445 4.5356,6.981 4.8686,6.639 5.2016,6.297 5.6386,6.125 6.1796,6.125 6.6736,6.125 7.1146,6.241 7.4996,6.473L7.4996,5.215C7.1146,5.072 6.6386,5 6.0766,5 5.1656,5 4.4256,5.289 3.8556,5.866 3.2856,6.443 2.9996,7.195 2.9996,8.124 2.9996,8.995 3.2536,9.692 3.7616,10.216 4.2676,10.739 4.9646,11 5.8496,11" />
+                        <GeometryDrawing Brush="#FFF0EFF1"
+                                         Geometry="F1M10,8L11,8 11,7 10,7z" />
+                        <GeometryDrawing Brush="#FFF0EFF1"
+                                         Geometry="F1M13,7L12,7 12,8 13,8 13,9 12,9 12,10 11,10 11,9 10,9 10,10 9,10 9,9 8,9 8,8 9,8 9,7 8,7 8,6 9,6 9,5 10,5 10,6 11,6 11,5 12,5 12,6 13,6z M7.5,6.473C7.114,6.241 6.674,6.125 6.18,6.125 5.639,6.125 5.201,6.297 4.868,6.639 4.535,6.981 4.369,7.445 4.369,8.031 4.369,8.592 4.525,9.039 4.84,9.372 5.154,9.705 5.576,9.871 6.107,9.871 6.615,9.871 7.079,9.747 7.5,9.499L7.5,10.692C7.079,10.898 6.529,11 5.85,11 4.965,11 4.268,10.739 3.762,10.216 3.254,9.692 3,8.995 3,8.124 3,7.195 3.285,6.443 3.855,5.866 4.426,5.289 5.166,5 6.076,5 6.639,5 7.114,5.072 7.5,5.215z M2,13L14,13 14,3 2,3z" />
+                        <GeometryDrawing Brush="#FF378A33"
+                                         Geometry="F1M14,13L2,13 2,3 14,3z M1,14L15,14 15,2 1,2z" />
+                    </DrawingGroup.Children>
+                </DrawingGroup>
+            </DrawingBrush.Drawing>
+        </DrawingBrush>
+
+        <DrawingBrush x:Key="GenericProjectIcon">
+            <DrawingBrush.Drawing>
+                <DrawingGroup>
+                    <DrawingGroup.Children>
+                        <GeometryDrawing Brush="#FFF6F6F6"
+                                         Geometry="F1M13.5469,0L7.9999,0C7.0309,0,5.9999,0.701,5.9999,2L1.9999,2C1.0309,2,-9.99999999997669E-05,2.701,-9.99999999997669E-05,4L-9.99999999997669E-05,12C-9.99999999997669E-05,13.299,1.0309,14,1.9999,14L3.9999,14C3.9999,15.299,5.0309,16,5.9999,16L11.9999,16C13.2989,16,13.9999,14.97,13.9999,14L13.9999,12C15.2989,12,15.9999,10.97,15.9999,10L15.9999,2.062z" />
+                        <GeometryDrawing Brush="#FF414141"
+                                         Geometry="F1M12,9L12,10 12,14 6,14 6,6 10,6 10,8 12,8z M10.625,5L5.965,5C5.965,5,5,5,5,6L5,14C5,15,5.965,15,5.965,15L11.965,15C12.965,15,13,14,13,14L13,7.137z" />
+                        <GeometryDrawing Brush="#FF414141"
+                                         Geometry="F1M4,12L2,12 2,4 6,4 7.736,4 6.625,3 1.965,3C1.965,3,1,3,1,4L1,12C1,13,1.965,13,1.965,13L4,13z" />
+                        <GeometryDrawing Brush="#FF414141"
+                                         Geometry="F1M12.625,1L7.965,1C7.965,1,7,1,7,2L7.547,2 8,2.381 8,2 12,2 12,4 14,4 14,5 14,6 14,6.062 14,10 14,10.995C14.962,10.97,15,10,15,10L15,3.137z" />
+                        <GeometryDrawing Brush="#FFF0EFF1"
+                                         Geometry="F1M6,6L10,6 10,7.96 12,7.996 12,14 6,14z" />
+                        <GeometryDrawing Brush="#FFF0EFF1"
+                                         Geometry="F1M4,6C4,4.701,5.031,4,6,4L2,4 2,12 4,12z" />
+                        <GeometryDrawing Brush="#FFF0EFF1"
+                                         Geometry="F1M12,3.96L12,2 8,2 8,2.381 9.927,4 11.547,4 14,6.062 14,3.996z" />
+                    </DrawingGroup.Children>
+                </DrawingGroup>
+            </DrawingBrush.Drawing>
+        </DrawingBrush>-->
+
+            <DataTemplate x:Key="SourceFileTabHeaderTemplate">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Button Name="HideButton"
+                            Width="16"
+                            Height="16"
+                            Classes="close"
+                            Grid.Column="1"
+                            Command="{Binding Close}"
+                            VerticalAlignment="Center"
+                            Margin="4,2,-2,0"
+                            ToolTip.Tip="Close">
+                    </Button>
+                    <TextBlock MinWidth="50"
+                               Text="{Binding Header}"
+                               VerticalAlignment="Center" />
+                </Grid>
+            </DataTemplate>
+
+            <s:StringEmptinessToVisibilityConverter x:Key="StringEmptinessToVisibilityConverter" />
+        </Style.Resources>
+    </Style>
+
+    <Style Selector="Button.close">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Name="border"
+                        Background="Transparent"
+                        IsVisible="{TemplateBinding IsVisible}">
+                    <Path Width="10"
+                          Height="8"
+                          VerticalAlignment="Center"
+                          HorizontalAlignment="Center"
+                          Fill="{TemplateBinding TextBlock.Foreground}"
+                          Stretch="Uniform"
+                          Data="F1 M 0,0L 2,0L 5,3L 8,0L 10,0L 6,4L 10,8L 8,8L 5,5L 2,8L 0,8L 4,4L 0,0 Z" />
+                </Border>
+                <!--<ControlTemplate.Triggers>
+                    <Trigger SourceName="border"
+                             Property="IsMouseOver"
+                             Value="true">
+                        <Setter TargetName="border"
+                                Property="Background"
+                                Value="LightBlue" />
+                    </Trigger>
+                </ControlTemplate.Triggers>-->
+            </ControlTemplate>
+        </Setter>
+    </Style>
+
+</Styles>

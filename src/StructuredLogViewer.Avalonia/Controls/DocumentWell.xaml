@@ -1,0 +1,15 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:StructuredLogViewer.Avalonia.Controls;assembly=StructuredLogViewer.Avalonia">
+    <Grid>
+        <local:TabItemsControl Name="tabControl" />
+        <Button Name="closeButton"
+                Classes="close"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Width="16"
+                Height="16"
+                ToolTip.Tip="Close the source code view" />
+
+    </Grid>
+</UserControl>
