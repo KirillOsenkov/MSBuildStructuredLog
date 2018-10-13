@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
@@ -36,37 +35,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 CollectionViewSource.GetDefaultView(MSBuildLocations).MoveCurrentToFirst();
             }
         }
+        public ObservableCollection<string> MSBuildLocations { get; } = new ObservableCollection<string>();
 
-        private readonly ObservableCollection<string> msBuildLocations = new ObservableCollection<string>();
-        public ObservableCollection<string> MSBuildLocations
-        {
-            get
-            {
-                return msBuildLocations;
-            }
-        }
-
-        public string MSBuildLocation
-        {
-            get
-            {
-                return CollectionViewSource.GetDefaultView(MSBuildLocations).CurrentItem as string;
-            }
-        }
+        public string MSBuildLocation => CollectionViewSource.GetDefaultView(MSBuildLocations).CurrentItem as string;
 
         private string prefixArguments;
         public string PrefixArguments
         {
-            get
-            {
-                return prefixArguments;
-            }
-
-            set
-            {
-                prefixArguments = value;
-                RaisePropertyChanged();
-            }
+            get => prefixArguments;
+            set => SetField(ref prefixArguments, value);
         }
 
         public string MSBuildArguments { get; set; }

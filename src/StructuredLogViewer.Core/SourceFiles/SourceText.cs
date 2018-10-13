@@ -10,7 +10,7 @@ namespace StructuredLogViewer
         public SourceText(string text)
         {
             Text = text;
-            Lines = TextUtilities.GetLineSpans(text);
+            Lines = text.GetLineSpans();
         }
 
         public string Text { get; }
@@ -59,7 +59,7 @@ namespace StructuredLogViewer
             }
 
             var end = line.End - 1;
-            while (end >= line.Start && TextUtilities.IsLineBreakChar(Text[end]))
+            while (end >= line.Start && Text[end].IsLineBreakChar())
             {
                 end--;
             }

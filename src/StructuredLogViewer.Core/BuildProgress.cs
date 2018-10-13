@@ -5,31 +5,20 @@
         private string progressText;
         public string ProgressText
         {
-            get
-            {
-                return progressText;
-            }
-
-            set
-            {
-                progressText = value;
-                RaisePropertyChanged();
-            }
+            get => progressText;
+            set => SetField(ref progressText, value);
         }
 
         private string msbuildCommandLine;
         public string MSBuildCommandLine
         {
-            get
-            {
-                return msbuildCommandLine;
-            }
-
+            get => msbuildCommandLine;
             set
             {
-                msbuildCommandLine = value;
-                RaisePropertyChanged();
-                RaisePropertyChanged(nameof(ShowCommandLine));
+                if (SetField(ref msbuildCommandLine, value))
+                {
+                    RaisePropertyChanged(nameof(ShowCommandLine));
+                }
             }
         }
 

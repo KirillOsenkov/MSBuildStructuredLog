@@ -75,8 +75,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 foreach (var child in node.Children)
                 {
-                    var childNode = child as TreeNode;
-                    if (childNode != null)
+                    if (child is TreeNode childNode)
                     {
                         Visit(childNode);
                     }

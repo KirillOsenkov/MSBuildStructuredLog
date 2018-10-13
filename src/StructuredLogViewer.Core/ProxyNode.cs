@@ -5,19 +5,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class ProxyNode : TextNode
     {
-        private object original;
-        public object Original
-        {
-            get
-            {
-                return original;
-            }
-
-            set
-            {
-                original = value;
-            }
-        }
+        public object Original { get; set; }
 
         public List<object> Highlights { get; set; } = new List<object>();
 

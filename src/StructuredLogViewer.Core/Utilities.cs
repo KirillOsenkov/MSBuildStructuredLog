@@ -50,7 +50,7 @@ namespace StructuredLogViewer
         public static string GetSHA1HashOfFileContents(string filePath)
         {
             using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
-            using (var hash = new SHA1Managed())
+            using (var hash = SHA1.Create())
             {
                 var result = hash.ComputeHash(stream);
                 return ByteArrayToHexString(result);

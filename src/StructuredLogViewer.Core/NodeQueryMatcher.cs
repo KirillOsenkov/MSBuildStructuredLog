@@ -126,20 +126,17 @@ namespace StructuredLogViewer
                 searchFields.Add("Task");
             }
 
-            var named = node as NamedNode;
-            if (named != null && !string.IsNullOrEmpty(named.Name))
+            if (node is NamedNode named && !string.IsNullOrEmpty(named.Name))
             {
                 searchFields.Add(named.Name);
             }
 
-            var textNode = node as TextNode;
-            if (textNode != null && !string.IsNullOrEmpty(textNode.Text))
+            if (node is TextNode textNode && !string.IsNullOrEmpty(textNode.Text))
             {
                 searchFields.Add(textNode.Text);
             }
 
-            var nameValueNode = node as NameValueNode;
-            if (nameValueNode != null)
+            if (node is NameValueNode nameValueNode)
             {
                 if (!string.IsNullOrEmpty(nameValueNode.Name))
                 {
@@ -152,8 +149,7 @@ namespace StructuredLogViewer
                 }
             }
 
-            var diagnostic = node as AbstractDiagnostic;
-            if (diagnostic != null)
+            if (node is AbstractDiagnostic diagnostic)
             {
                 if (!string.IsNullOrEmpty(diagnostic.Code))
                 {

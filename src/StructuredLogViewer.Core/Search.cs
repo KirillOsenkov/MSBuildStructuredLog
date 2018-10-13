@@ -8,8 +8,8 @@ namespace StructuredLogViewer
     {
         public const int DefaultMaxResults = 1000;
 
-        private Build build;
-        private int maxResults;
+        private readonly Build build;
+        private readonly int maxResults;
         private List<SearchResult> resultSet;
 
         public Search(Build build, int maxResults = DefaultMaxResults)

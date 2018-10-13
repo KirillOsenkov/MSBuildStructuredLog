@@ -49,8 +49,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void ProcessCopy(string source, string destination)
         {
-            HashSet<string> bucket = null;
-            if (!fileCopySourcesForDestination.TryGetValue(destination, out bucket))
+            if (!fileCopySourcesForDestination.TryGetValue(destination, out var bucket))
             {
                 bucket = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 fileCopySourcesForDestination.Add(destination, bucket);

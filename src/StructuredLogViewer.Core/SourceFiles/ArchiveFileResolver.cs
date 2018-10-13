@@ -65,8 +65,7 @@ namespace StructuredLogViewer
         public SourceText GetSourceFileText(string filePath)
         {
             filePath = CalculateArchivePath(filePath);
-            SourceText result;
-            fileContents.TryGetValue(filePath, out result);
+            fileContents.TryGetValue(filePath, out SourceText result);
             return result;
         }
 

@@ -28,31 +28,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private string version = GetVersion();
         public string Version
         {
-            get
-            {
-                return version;
-            }
-
-            set
-            {
-                version = value;
-                RaisePropertyChanged();
-            }
+            get => version;
+            set => SetField(ref version, value);
         }
 
         private string message;
         public string Message
         {
-            get
-            {
-                return message;
-            }
-
-            set
-            {
-                message = value;
-                RaisePropertyChanged();
-            }
+            get => message;
+            set => SetField(ref message, value);
         }
 
         private static string GetVersion()
@@ -118,11 +102,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public bool EnableVirtualization
         {
             get => SettingsService.EnableTreeViewVirtualization;
-
-            set
-            {
-                SettingsService.EnableTreeViewVirtualization = value;
-            }
+            set => SettingsService.EnableTreeViewVirtualization = value;
         }
     }
 }
