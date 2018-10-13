@@ -26,7 +26,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public void UpdateMSBuildLocations()
         {
             MSBuildLocations.Clear();
-            foreach (var msbuild in SettingsService.GetRecentMSBuildLocations())
+            foreach (var msbuild in SettingsService.GetRecentMSBuildLocations(MSBuildLocator.GetMSBuildLocations()))
             {
                 MSBuildLocations.Add(msbuild);
             }

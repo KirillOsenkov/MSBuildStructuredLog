@@ -967,7 +967,7 @@ Recent:
                 return false;
             }
 
-            var xml = text.XmlRoot;
+            var xml = text.XmlRoot.Root;
             IXmlElement root = xml;
             int startPosition = 0;
             int line = 0;
@@ -993,7 +993,7 @@ Recent:
                             var tasks = element.Elements.Where(e => e.Name == taskName).ToArray();
                             if (tasks.Length == 1)
                             {
-                                startPosition = tasks[0].AsSyntaxElement.Name.Start;
+                                startPosition = tasks[0].AsSyntaxElement.NameNode.Start;
                             }
                         }
 

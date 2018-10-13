@@ -40,13 +40,15 @@ namespace StructuredLogViewer
         }
 
         private static IEnumerable<string> cachedRecentMSBuildLocations;
-        public static IEnumerable<string> GetRecentMSBuildLocations()
+        public static IEnumerable<string> GetRecentMSBuildLocations(IEnumerable<string> extraLocations = null)
         {
+            extraLocations = extraLocations ?? Enumerable.Empty<string>();
+
             if (cachedRecentMSBuildLocations == null)
             {
                 cachedRecentMSBuildLocations = GetRecentItems(recentMSBuildLocationsFilePath)
                     .Where(File.Exists)
-                    .Union(MSBuildLocator.GetMSBuildLocations(), StringComparer.OrdinalIgnoreCase)
+                    .Union(extraLocations, StringComparer.OrdinalIgnoreCase)
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .ToArray();
             }
