@@ -35,6 +35,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 CollectionViewSource.GetDefaultView(MSBuildLocations).MoveCurrentToFirst();
             }
         }
+
         public ObservableCollection<string> MSBuildLocations { get; } = new ObservableCollection<string>();
 
         public string MSBuildLocation => CollectionViewSource.GetDefaultView(MSBuildLocations).CurrentItem as string;
