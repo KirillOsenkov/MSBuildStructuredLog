@@ -99,7 +99,6 @@
     </Compile>
     <Compile Include="MSBuildLocator.cs" />
     <Compile Include="ButtonNode.cs" />
-    <Compile Include="PreprocessedFileManager.cs" />
     <Compile Include="TypingConcurrentOperation.cs" />
     <Compile Include="WelcomeScreen.cs" />
   </ItemGroup>

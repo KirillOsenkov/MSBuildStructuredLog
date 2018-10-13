@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Build.Logging.StructuredLogger;
-using StructuredLogViewer.Controls;
 using Bucket = System.Collections.Generic.HashSet<StructuredLogViewer.PreprocessedFileManager.ProjectImport>;
 
 namespace StructuredLogViewer
@@ -13,18 +12,18 @@ namespace StructuredLogViewer
     {
         private readonly Build build;
         private readonly SourceFileResolver sourceFileResolver;
-        private readonly BuildControl buildControl;
         private readonly Dictionary<string, Bucket> importMap = new Dictionary<string, Bucket>(
             StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, string> preprocessedFileCache = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-        public PreprocessedFileManager(BuildControl buildControl, SourceFileResolver sourceFileResolver)
+        public PreprocessedFileManager(Build build, SourceFileResolver sourceFileResolver)
         {
-            this.build = buildControl.Build;
-            this.buildControl = buildControl;
+            this.build = build;
             this.sourceFileResolver = sourceFileResolver;
             BuildImportMap();
         }
+
+        public event Action<string> DisplayFile;
 
         private static readonly Regex importingProjectRegex = new Regex(
             @"Importing project ""([^""]+)"" into project ""([^""]+)"" at \((\d+),(\d+)\)\.", RegexOptions.Compiled);
@@ -223,7 +222,7 @@ namespace StructuredLogViewer
             }
 
             var filePath = SettingsService.WriteContentToTempFileAndGetPath(preprocessedText, ".xml");
-            buildControl.DisplayFile(filePath);
+            DisplayFile?.Invoke(filePath);
         }
 
         public bool CanPreprocess(string sourceFilePath)

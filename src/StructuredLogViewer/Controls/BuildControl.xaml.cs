@@ -178,7 +178,8 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
             Loaded += BuildControl_Loaded;
 
-            preprocessedFileManager = new PreprocessedFileManager(this, sourceFileResolver);
+            preprocessedFileManager = new PreprocessedFileManager(this.Build, sourceFileResolver);
+            preprocessedFileManager.DisplayFile += filePath => DisplayFile(filePath);
 
             PopulateTimeline();
         }
