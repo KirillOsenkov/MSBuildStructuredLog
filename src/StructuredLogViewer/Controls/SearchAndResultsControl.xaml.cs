@@ -17,8 +17,9 @@ namespace StructuredLogViewer.Controls
             typingConcurrentOperation.SearchComplete += TypingConcurrentOperation_SearchComplete;
         }
 
-        private void TypingConcurrentOperation_SearchComplete(string searchText, object arg2)
+        private void TypingConcurrentOperation_SearchComplete(string searchText, object arg2, TimeSpan elapsed)
         {
+            BuildControl.Elapsed = elapsed;
             SettingsService.AddRecentSearchText(searchText, discardPrefixes: true);
         }
 
@@ -63,7 +64,10 @@ namespace StructuredLogViewer.Controls
 
         private void DisplaySearchResults(object results, bool moreAvailable = false)
         {
-            DisplayItems(ResultsTreeBuilder(results, moreAvailable));
+            Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                DisplayItems(ResultsTreeBuilder(results, moreAvailable));
+            });
         }
 
         public void DisplayItems(IEnumerable content)

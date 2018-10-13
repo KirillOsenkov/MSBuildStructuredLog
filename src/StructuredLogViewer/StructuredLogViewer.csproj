@@ -99,7 +99,6 @@
     </Compile>
     <Compile Include="MSBuildLocator.cs" />
     <Compile Include="ButtonNode.cs" />
-    <Compile Include="TypingConcurrentOperation.cs" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="StructuredLogger.ico" />
