@@ -86,7 +86,6 @@
     <Compile Include="Controls\TextViewerControl.xaml.cs">
       <DependentUpon>TextViewerControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\Command.cs" />
     <Compile Include="Controls\SplitterPanel.cs" />
     <Compile Include="Controls\StringEmptinessToVisibilityConverter.cs" />
     <Compile Include="Controls\TimelineControl.xaml.cs">
