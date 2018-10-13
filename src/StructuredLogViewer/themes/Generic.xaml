@@ -306,7 +306,7 @@
     </DataTemplate.Triggers>
   </DataTemplate>
 
-  <DataTemplate DataType="{x:Type local:ButtonNode}">
+  <DataTemplate DataType="{x:Type core:ButtonNode}">
     <StackPanel Orientation="Horizontal">
       <Button x:Name="button" 
               Content="{Binding Text}" 

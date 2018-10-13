@@ -98,7 +98,6 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="MSBuildLocator.cs" />
-    <Compile Include="ButtonNode.cs" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="StructuredLogger.ico" />
