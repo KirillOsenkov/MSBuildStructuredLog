@@ -454,7 +454,7 @@
     </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
 
-  <DataTemplate DataType="{x:Type local:WelcomeScreen}">
+  <DataTemplate DataType="{x:Type core:WelcomeScreen}">
     <Grid x:Name="welcomeScreen">
       <TextBlock Text="{Binding Version}" 
                  Foreground="Gray" 
