@@ -40,6 +40,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             this.messageProcessor = new MessageProcessor(this, stringTable);
         }
 
+        private string Intern(string text) => stringTable.Intern(text);
+
         public void BuildStarted(object sender, BuildStartedEventArgs args)
         {
             try
@@ -55,10 +57,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     Build.AddChild(new Property { Name = "Current Directory", Value = Environment.CurrentDirectory });
 #endif
 
-                    var properties = Build.GetOrCreateNodeWithName<Folder>("Environment");
+                    var properties = Build.GetOrCreateNodeWithName<Folder>(Intern("Environment"));
                     AddProperties(properties, args.BuildEnvironment);
 
-                    EvaluationFolder = Build.GetOrCreateNodeWithName<Folder>("Evaluation");
+                    EvaluationFolder = Build.GetOrCreateNodeWithName<Folder>(Intern("Evaluation"));
                 }
             }
             catch (Exception ex)
@@ -133,7 +135,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     var dependencies = targetGraph.GetDependencies(t.Name);
                     if (dependencies != null && dependencies.Any())
                     {
-                        t.DependsOnTargets = stringTable.Intern(string.Join(",", dependencies));
+                        t.DependsOnTargets = Intern(string.Join(",", dependencies));
                     }
                 }
             });
@@ -196,9 +198,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             AddTargetCore(
                 args,
-                stringTable.Intern(args.TargetName),
-                stringTable.Intern(args.ParentTarget),
-                stringTable.Intern(args.TargetFile));
+                Intern(args.TargetName),
+                Intern(args.ParentTarget),
+                Intern(args.TargetFile));
         }
 
         private void AddTargetCore(BuildEventArgs args, string targetName, string parentTargetName, string targetFile)
@@ -246,17 +248,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     if (args.TargetOutputs != null)
                     {
-                        var targetOutputsFolder = target.GetOrCreateNodeWithName<Folder>("TargetOutputs");
+                        var targetOutputsFolder = target.GetOrCreateNodeWithName<Folder>(Intern("TargetOutputs"));
 
                         foreach (ITaskItem targetOutput in args.TargetOutputs)
                         {
                             var item = new Item();
-                            item.Text = stringTable.Intern(targetOutput.ItemSpec);
+                            item.Text = Intern(targetOutput.ItemSpec);
                             foreach (DictionaryEntry metadata in targetOutput.CloneCustomMetadata())
                             {
                                 var metadataNode = new Metadata();
-                                metadataNode.Name = stringTable.Intern(Convert.ToString(metadata.Key));
-                                metadataNode.Value = stringTable.Intern(Convert.ToString(metadata.Value));
+                                metadataNode.Name = Intern(Convert.ToString(metadata.Key));
+                                metadataNode.Value = Intern(Convert.ToString(metadata.Value));
                                 item.AddChild(metadataNode);
                             }
 
@@ -275,9 +277,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             AddTargetCore(
                 args,
-                stringTable.Intern(args.TargetName),
-                stringTable.Intern(args.ParentTarget),
-                stringTable.Intern(args.TargetFile));
+                Intern(args.TargetName),
+                Intern(args.ParentTarget),
+                Intern(args.TargetFile));
         }
 
         public void TaskStarted(object sender, TaskStartedEventArgs args)
@@ -334,9 +336,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         {
                             targetSkipped = new TargetSkippedEventArgs();
                             targetSkipped.BuildEventContext = args.BuildEventContext;
-                            targetSkipped.TargetName = Reflector.GetTargetNameFromTargetSkipped(args);
-                            targetSkipped.TargetFile = Reflector.GetTargetFileFromTargetSkipped(args);
-                            targetSkipped.ParentTarget = Reflector.GetParentTargetFromTargetSkipped(args);
+                            targetSkipped.TargetName = Intern(Reflector.GetTargetNameFromTargetSkipped(args));
+                            targetSkipped.TargetFile = Intern(Reflector.GetTargetFileFromTargetSkipped(args));
+                            targetSkipped.ParentTarget = Intern(Reflector.GetParentTargetFromTargetSkipped(args));
                             targetSkipped.BuildReason = Reflector.GetBuildReasonFromTargetSkipped(args);
                             TargetSkipped(targetSkipped);
                         }
@@ -360,10 +362,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 lock (syncLock)
                 {
                     messageProcessor.Process(new BuildMessageEventArgs(
-                            stringTable.Intern(args.Message),
-                            stringTable.Intern(args.HelpKeyword),
-                            stringTable.Intern(args.SenderName),
-                            MessageImportance.Low));
+                        Intern(args.Message),
+                        Intern(args.HelpKeyword),
+                        Intern(args.SenderName),
+                        MessageImportance.Low));
                 }
             }
             catch (Exception ex)
@@ -381,10 +383,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     // This happens when we consume args created by us (deserialized)
                     if (e is ProjectEvaluationStartedEventArgs projectEvaluationStarted)
                     {
-                        EvaluationFolder = Build.GetOrCreateNodeWithName<Folder>("Evaluation");
+                        EvaluationFolder = Build.GetOrCreateNodeWithName<Folder>(Intern("Evaluation"));
 
                         var projectName = projectEvaluationStarted.ProjectFile;
-                        var project = EvaluationFolder.GetOrCreateNodeWithName<Project>(projectName);
+                        var project = EvaluationFolder.GetOrCreateNodeWithName<Project>(Intern(projectName));
 
                         // we stash the evaluation Id as a negative ProjectContextId
                         project.Id = -e.BuildEventContext.ProjectContextId;
@@ -397,7 +399,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         var profilerResult = projectEvaluationFinished.ProfilerResult;
                         if (profilerResult != null && projectName != null)
                         {
-                            var project = EvaluationFolder.GetOrCreateNodeWithName<Project>(projectName);
+                            var project = EvaluationFolder.GetOrCreateNodeWithName<Project>(Intern(projectName));
                             ConstructProfilerResult(project, profilerResult.Value);
                         }
                     }
@@ -498,7 +500,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         parent = Build;
                     }
 
-                    var warnings = parent.GetOrCreateNodeWithName<Folder>("Warnings");
+                    var warnings = parent.GetOrCreateNodeWithName<Folder>(Intern("Warnings"));
                     var warning = new Warning();
                     Populate(warning, args);
                     warnings.AddChild(warning);
@@ -546,7 +548,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         parent = Build;
                     }
 
-                    var errors = parent.GetOrCreateNodeWithName<Folder>("Errors");
+                    var errors = parent.GetOrCreateNodeWithName<Folder>(Intern("Errors"));
                     var error = new Error();
                     Populate(error, args);
                     errors.AddChild(error);
@@ -560,30 +562,30 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void Populate(AbstractDiagnostic message, BuildWarningEventArgs args)
         {
-            message.Text = stringTable.Intern(args.Message);
+            message.Text = Intern(args.Message);
             message.Timestamp = args.Timestamp;
-            message.Code = stringTable.Intern(args.Code);
+            message.Code = Intern(args.Code);
             message.ColumnNumber = args.ColumnNumber;
             message.EndColumnNumber = args.EndColumnNumber;
             message.EndLineNumber = args.EndLineNumber;
             message.LineNumber = args.LineNumber;
-            message.File = stringTable.Intern(args.File);
-            message.ProjectFile = stringTable.Intern(args.ProjectFile);
-            message.Subcategory = stringTable.Intern(args.Subcategory);
+            message.File = Intern(args.File);
+            message.ProjectFile = Intern(args.ProjectFile);
+            message.Subcategory = Intern(args.Subcategory);
         }
 
         private void Populate(AbstractDiagnostic message, BuildErrorEventArgs args)
         {
-            message.Text = stringTable.Intern(args.Message);
+            message.Text = Intern(args.Message);
             message.Timestamp = args.Timestamp;
-            message.Code = stringTable.Intern(args.Code);
+            message.Code = Intern(args.Code);
             message.ColumnNumber = args.ColumnNumber;
             message.EndColumnNumber = args.EndColumnNumber;
             message.EndLineNumber = args.EndLineNumber;
             message.LineNumber = args.LineNumber;
-            message.File = stringTable.Intern(args.File);
-            message.ProjectFile = stringTable.Intern(args.ProjectFile);
-            message.Subcategory = stringTable.Intern(args.Subcategory);
+            message.File = Intern(args.File);
+            message.ProjectFile = Intern(args.ProjectFile);
+            message.Subcategory = Intern(args.Subcategory);
         }
 
         private void HandleException(Exception ex)
@@ -646,8 +648,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (project.Name == null && args != null)
             {
                 project.StartTime = args.Timestamp;
-                project.Name = stringTable.Intern(args.Message);
-                project.ProjectFile = stringTable.Intern(args.ProjectFile);
+                project.Name = Intern(args.Message);
+                project.ProjectFile = Intern(args.ProjectFile);
 
                 if (args.GlobalProperties != null)
                 {
@@ -656,14 +658,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 if (args.Properties != null)
                 {
-                    var properties = project.GetOrCreateNodeWithName<Folder>("Properties");
+                    var properties = project.GetOrCreateNodeWithName<Folder>(Intern("Properties"));
                     AddProperties(properties, args
                         .Properties
                         .Cast<DictionaryEntry>()
                         .OrderBy(d => d.Key)
                         .Select(d => new KeyValuePair<string, string>(
-                            stringTable.Intern(Convert.ToString(d.Key)),
-                            stringTable.Intern(Convert.ToString(d.Value)))));
+                            Intern(Convert.ToString(d.Key)),
+                            Intern(Convert.ToString(d.Value)))));
                 }
 
                 if (args.Items != null)
@@ -673,7 +675,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     var items = project.GetOrCreateNodeWithName<Folder>("Items");
                     foreach (DictionaryEntry kvp in args.Items)
                     {
-                        var itemName = stringTable.Intern(Convert.ToString(kvp.Key));
+                        var itemName = Intern(Convert.ToString(kvp.Key));
                         var itemGroup = items.GetOrCreateNodeWithName<Folder>(itemName);
 
                         var item = new Item();
@@ -681,13 +683,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         var taskItem = kvp.Value as ITaskItem;
                         if (taskItem != null)
                         {
-                            item.Text = stringTable.Intern(taskItem.ItemSpec);
+                            item.Text = Intern(taskItem.ItemSpec);
                             foreach (DictionaryEntry metadataName in taskItem.CloneCustomMetadata())
                             {
                                 item.AddChild(new Metadata
                                 {
-                                    Name = stringTable.Intern(Convert.ToString(metadataName.Key)),
-                                    Value = stringTable.Intern(Convert.ToString(metadataName.Value))
+                                    Name = Intern(Convert.ToString(metadataName.Key)),
+                                    Value = Intern(Convert.ToString(metadataName.Value))
                                 });
                             }
 
@@ -756,8 +758,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private Task CreateTask(TaskStartedEventArgs taskStartedEventArgs)
         {
-            var taskName = stringTable.Intern(taskStartedEventArgs.TaskName);
-            var assembly = stringTable.Intern(GetTaskAssembly(taskName));
+            var taskName = Intern(taskStartedEventArgs.TaskName);
+            var assembly = Intern(GetTaskAssembly(taskName));
             var taskId = taskStartedEventArgs.BuildEventContext.TaskId;
             var startTime = taskStartedEventArgs.Timestamp;
 
@@ -776,7 +778,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             result.NodeId = taskStartedEventArgs.BuildEventContext.NodeId;
             result.StartTime = startTime;
             result.FromAssembly = assembly;
-            result.SourceFilePath = stringTable.Intern(taskStartedEventArgs.TaskFile);
+            result.SourceFilePath = Intern(taskStartedEventArgs.TaskFile);
 
             return result;
         }
@@ -823,8 +825,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 var property = new Property
                 {
-                    Name = stringTable.Intern(kvp.Key),
-                    Value = stringTable.Intern(kvp.Value)
+                    Name = Intern(kvp.Key),
+                    Value = Intern(kvp.Value)
                 };
                 parent.AddChild(property);
             }
