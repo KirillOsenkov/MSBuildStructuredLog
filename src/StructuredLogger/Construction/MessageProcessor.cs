@@ -7,12 +7,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class MessageProcessor
     {
-        public const string TaskParameterMessagePrefix = @"Task Parameter:";
-        public const string OutputItemsMessagePrefix = @"Output Item(s): ";
-        public const string OutputPropertyMessagePrefix = @"Output Property: ";
-        public const string PropertyGroupMessagePrefix = @"Set Property: ";
-        public const string ItemGroupIncludeMessagePrefix = @"Added Item(s): ";
-        public const string ItemGroupRemoveMessagePrefix = @"Removed Item(s): ";
+        public static string TaskParameterMessagePrefix = Strings.TaskParameterMessagePrefix;
+        public static string OutputItemsMessagePrefix = Strings.OutputItemsMessagePrefix;
+        public static string OutputPropertyMessagePrefix = Strings.OutputPropertyMessagePrefix;
+        public static string PropertyGroupMessagePrefix = Strings.PropertyGroupMessagePrefix;
+        public static string ItemGroupIncludeMessagePrefix = Strings.ItemGroupIncludeMessagePrefix;
+        public static string ItemGroupRemoveMessagePrefix = Strings.ItemGroupRemoveMessagePrefix;
 
         private readonly Construction construction;
         private readonly StringCache stringTable;
@@ -23,7 +23,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             this.stringTable = stringTable;
         }
 
-        private static Regex usingTaskRegex = new Regex("Using \"(?<task>.+)\" task from (assembly|the task factory) \"(?<assembly>.+)\"\\.", RegexOptions.Compiled);
+        private static Regex usingTaskRegex = Strings.UsingTaskRegex;
 
         public void Process(BuildMessageEventArgs args)
         {
@@ -211,7 +211,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             var parameter = node.FindLastChild<Parameter>();
                             if (parameter != null)
                             {
-                                bool thereWasAConflict = parameter.ToString().StartsWith("There was a conflict");
+                                bool thereWasAConflict = parameter.ToString().StartsWith(Strings.ThereWasAConflictPrefix);
                                 if (thereWasAConflict)
                                 {
                                     HandleThereWasAConflict(parameter, message, stringTable);
@@ -230,8 +230,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                                         // only indent if it's not a "For SearchPath..." message - that one needs to be directly under parameter
                                         // also don't indent if it's under AssemblyFoldersEx in Results
-                                        if (lastItem != null && 
-                                            !message.StartsWith("For SearchPath") && 
+                                        if (lastItem != null &&
+                                            !message.StartsWith(Strings.ForSearchPathPrefix) &&
                                             !parameter.Name.StartsWith("AssemblyFoldersEx"))
                                         {
                                             node = lastItem;
@@ -267,12 +267,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         {
                             if (results == null)
                             {
-                                bool isResult = message.StartsWith("Unified primary reference ") ||
-                                    message.StartsWith("Primary reference ") ||
-                                    message.StartsWith("Dependency ") ||
-                                    message.StartsWith("Unified Dependency ") ||
-                                    message.StartsWith("AssemblyFoldersEx location") ||
-                                    message.StartsWith("There was a conflict");
+                                bool isResult = message.StartsWith(Strings.UnifiedPrimaryReferencePrefix) ||
+                                    message.StartsWith(Strings.PrimaryReferencePrefix) ||
+                                    message.StartsWith(Strings.DependencyPrefix) ||
+                                    message.StartsWith(Strings.UnifiedDependencyPrefix) ||
+                                    message.StartsWith(Strings.AssemblyFoldersExLocation) ||
+                                    message.StartsWith(Strings.ThereWasAConflictPrefix);
 
                                 if (isResult)
                                 {
@@ -295,10 +295,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                     else if (task.Name == "MSBuild")
                     {
-                        if (message.StartsWith("Global Properties") ||
-                            message.StartsWith("Additional Properties") ||
-                            message.StartsWith("Overriding Global Properties") ||
-                            message.StartsWith("Removing Properties"))
+                        if (message.StartsWith(Strings.GlobalPropertiesPrefix) ||
+                            message.StartsWith(Strings.AdditionalPropertiesPrefix) ||
+                            message.StartsWith(Strings.OverridingGlobalPropertiesPrefix) ||
+                            message.StartsWith(Strings.RemovingPropertiesPrefix))
                         {
                             node.GetOrCreateNodeWithName<Folder>(message);
                             return;
@@ -335,7 +335,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     .GetOrAddProject(args.BuildEventContext.ProjectContextId)
                     .GetTargetById(args.BuildEventContext.TargetId);
 
-                if (message.StartsWith("Task") && message.Contains("skipped"))
+                if (Strings.IsTaskSkipped(message))
                 {
                     messageNode.IsLowRelevance = true;
                 }
@@ -345,7 +345,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 var project = construction.GetOrAddProject(args.BuildEventContext.ProjectContextId);
                 node = project;
 
-                if (message.StartsWith("Target") && message.Contains("skipped"))
+                if (Strings.IsTargetSkipped(message))
                 {
                     var targetName = stringTable.Intern(Utilities.ParseQuotedSubstring(message));
                     if (targetName != null)
@@ -372,7 +372,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 node = construction.Build;
 
-                if (IsEvaluationMessage(message))
+                if (Strings.IsEvaluationMessage(message))
                 {
                     if (!evaluationMessagesAlreadySeen.Add(message))
                     {
@@ -381,7 +381,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     node = construction.EvaluationFolder;
                 }
-                else if (message.StartsWith("The target") && message.Contains("does not exist in the project, and will be ignored"))
+                else if (Strings.IsTargetDoesNotExistAndWillBeSkipped(message))
                 {
                     var folder = construction.EvaluationFolder;
                     node = folder;
@@ -461,17 +461,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     Text = stringTable.Intern(text)
                 });
             }
-        }
-
-        private bool IsEvaluationMessage(string message)
-        {
-            return message.StartsWith("Search paths being used")
-                || message.StartsWith("Overriding target")
-                || message.StartsWith("Trying to import")
-                || message.StartsWith("Property reassignment")
-                || message.StartsWith("Importing project")
-                || message.Contains("cannot be imported again.")
-                || (message.StartsWith("Project \"") && message.Contains("was not imported by"));
         }
 
         /// <summary>
