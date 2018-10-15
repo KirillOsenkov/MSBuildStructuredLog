@@ -41,11 +41,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return list;
         }
 
-        private static readonly string copyingFileFrom = "Copying file from \"";
-        private static readonly string creatingHardLink = "Creating hard link to copy \"";
-        private static readonly string didNotCopy = "Did not copy from file \"";
-        private static readonly string to = "\" to \"";
-        private static readonly string toFile = "\" to file \"";
+        private static readonly string copyingFileFrom = Strings.CopyingFileFrom;
+        private static readonly string creatingHardLink = Strings.CreatingHardLink;
+        private static readonly string didNotCopy = Strings.DidNotCopy;
+        private static readonly string to = Strings.To;
+        private static readonly string toFile = Strings.ToFile;
 
         private static FileCopyOperation ParseCopyingFileFrom(string text, string prefix, string infix)
         {

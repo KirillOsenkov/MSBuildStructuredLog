@@ -29,7 +29,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string OverridingGlobalPropertiesPrefix => "Overriding Global Properties";
         public static string RemovingPropertiesPrefix => "Removing Properties";
 
+        public static string CopyingFileFrom => "Copying file from \"";
+        public static string CreatingHardLink => "Creating hard link to copy \"";
+        public static string DidNotCopy => "Did not copy from file \"";
+        public static string To => "\" to \"";
+        public static string ToFile => "\" to file \"";
+
         public static Regex UsingTaskRegex = new Regex("Using \"(?<task>.+)\" task from (assembly|the task factory) \"(?<assembly>.+)\"\\.", RegexOptions.Compiled);
+
+        public static Regex PropertyReassignmentRegex = new Regex(@"^Property reassignment: \$\(\w+\)=.+ \(previous value: .*\) at (?<File>.*) \((?<Line>\d+),(\d+)\)$", RegexOptions.Compiled);
+        public static Regex ImportingProjectRegex = new Regex(@"^Importing project ""[^\""]+"" into project ""(?<File>[^\""]+)"" at \((?<Line>\d+),(\d+)\)\.$", RegexOptions.Compiled);
+        public static Regex ProjectWasNotImportedRegex = new Regex(@"^Project ""[^""]+"" was not imported by ""(?<File>[^""]+)"" at \((?<Line>\d+),\d+\), due to false condition; .+ was evaluated as .+\.$", RegexOptions.Compiled);
 
         public static bool IsTaskSkipped(string message) => message.StartsWith("Task") && message.Contains("skipped");
         public static bool IsTargetSkipped(string message) => message.StartsWith("Target") && message.Contains("skipped");
