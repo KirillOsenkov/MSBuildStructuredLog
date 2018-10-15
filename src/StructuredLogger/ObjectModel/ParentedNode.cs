@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -62,6 +63,33 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             return null;
+        }
+
+        public IEnumerable<ParentedNode> EnumerateSiblingsCycle()
+        {
+            var parent = this.Parent;
+            if (parent == null)
+            {
+                yield return this;
+                yield break;
+            }
+
+            var index = parent.FindChildIndex(this);
+            for (int i = index; i < parent.Children.Count; i++)
+            {
+                if (parent.Children[i] is ParentedNode child)
+                {
+                    yield return child;
+                }
+            }
+
+            for (int i = 0; i < index; i++)
+            {
+                if (parent.Children[i] is ParentedNode child)
+                {
+                    yield return child;
+                }
+            }
         }
     }
 }

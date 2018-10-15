@@ -297,7 +297,7 @@ Examples:
                 {
                     span.Inlines.Add(new Run(before));
                 }
-                
+
                 span.Inlines.Add(hyperlink);
 
                 if (after != null)
@@ -311,7 +311,7 @@ Examples:
                         span.Inlines.Add(new Run(after));
                     }
                 }
-                
+
                 return span;
             }
 
@@ -334,7 +334,7 @@ Examples:
             watermark.Inlines.Add(new LineBreak());
 
             watermark.Inlines.Add(watermarkText2);
-            
+
             foreach (var example in searchExamples)
             {
                 watermark.Inlines.Add(MakeLink(example));
@@ -669,6 +669,58 @@ Recent:
             {
                 CopySubtree();
                 args.Handled = true;
+            }
+            else if (args.Key >= Key.A && args.Key <= Key.Z && args.KeyboardDevice.Modifiers == ModifierKeys.None)
+            {
+                SelectItemByKey((char)('A' + args.Key - Key.A));
+                args.Handled = true;
+            }
+        }
+
+        private int characterMatchPrefixLength = 0;
+
+        private void SelectItemByKey(char ch)
+        {
+            ch = char.ToLowerInvariant(ch);
+
+            var selectedItem = treeView.SelectedItem as ParentedNode;
+            if (selectedItem == null)
+            {
+                return;
+            }
+
+            var parent = selectedItem.Parent;
+            if (parent == null)
+            {
+                return;
+            }
+
+            var selectedText = selectedItem.ToString();
+            var prefix = selectedText.Substring(0, Math.Min(characterMatchPrefixLength, selectedText.Length));
+
+            var items = selectedItem.EnumerateSiblingsCycle();
+
+            search:
+            foreach (var item in items)
+            {
+                var text = item.ToString();
+                if (characterMatchPrefixLength < text.Length && text.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    var character = text[characterMatchPrefixLength];
+                    if (char.ToLowerInvariant(character) == ch)
+                    {
+                        characterMatchPrefixLength++;
+                        item.IsSelected = true;
+                        return;
+                    }
+                }
+            }
+
+            if (characterMatchPrefixLength > 0)
+            {
+                characterMatchPrefixLength = 0;
+                prefix = "";
+                goto search;
             }
         }
 

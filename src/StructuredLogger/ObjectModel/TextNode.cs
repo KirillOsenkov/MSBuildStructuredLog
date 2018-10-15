@@ -8,7 +8,13 @@
 
         public override string ToString()
         {
-            return base.ToString() + " " + Text;
+            var baseText = base.ToString();
+            if (string.IsNullOrEmpty(baseText))
+            {
+                return Text;
+            }
+
+            return baseText + " " + Text;
         }
     }
 }
