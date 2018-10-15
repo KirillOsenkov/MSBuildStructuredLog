@@ -1,6 +1,6 @@
 ﻿namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class NameValueNode : ParentedNode
+    public class NameValueNode : ParentedNode, IHasTitle
     {
         public string Name { get; set; }
         public string Value { get; set; }
@@ -11,5 +11,7 @@
         public override string ToString() => Name + " = " + Value;
         public bool IsVisible { get { return true; } set { } }
         public bool IsExpanded { get { return true; } set { } }
+
+        string IHasTitle.Title => Name;
     }
 }

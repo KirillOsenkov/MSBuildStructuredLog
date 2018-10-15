@@ -700,7 +700,7 @@ Recent:
                 return;
             }
 
-            var selectedText = selectedItem.ToString();
+            var selectedText = GetText(selectedItem);
             var prefix = selectedText.Substring(0, Math.Min(characterMatchPrefixLength, selectedText.Length));
 
             var items = selectedItem.EnumerateSiblingsCycle();
@@ -708,7 +708,7 @@ Recent:
             search:
             foreach (var item in items)
             {
-                var text = item.ToString();
+                var text = GetText(item);
                 if (characterMatchPrefixLength < text.Length && text.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
                 {
                     var character = text[characterMatchPrefixLength];
@@ -725,7 +725,20 @@ Recent:
             {
                 characterMatchPrefixLength = 0;
                 prefix = "";
+                items = items.Skip(1).Concat(items.Take(1));
                 goto search;
+            }
+
+            string GetText(ParentedNode node)
+            {
+                if (node is IHasTitle hasTitle)
+                {
+                    return hasTitle.Title;
+                }
+                else
+                {
+                    return node.ToString();
+                }
             }
         }
 
