@@ -143,6 +143,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 build.AddChild(new Item { Text = "Build succeeded." });
             }
 
+            build.AddChild(new Property { Name = "Duration", Value = build.DurationText });
+
             doubleWritesAnalyzer.AppendDoubleWritesFolder(build);
             resolveAssemblyReferenceAnalyzer.AppendFinalReport(build);
 
@@ -157,10 +159,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 .Take(10)
                 .ToArray();
 
-            var top10Tasks = build.GetOrCreateNodeWithName<Folder>($"Top {durations.Count()} most expensive tasks");
-            foreach (var kvp in durations)
+            if (durations.Length > 0)
             {
-                top10Tasks.AddChild(new Item { Name = kvp.Key, Text = Utilities.DisplayDuration(kvp.Value) });
+                var top10Tasks = build.GetOrCreateNodeWithName<Folder>($"Top {durations.Count()} most expensive tasks");
+                foreach (var kvp in durations)
+                {
+                    top10Tasks.AddChild(new Item { Name = kvp.Key, Text = Utilities.DisplayDuration(kvp.Value) });
+                }
             }
         }
 
