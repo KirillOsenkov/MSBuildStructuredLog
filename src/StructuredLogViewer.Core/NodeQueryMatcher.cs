@@ -228,7 +228,13 @@ namespace StructuredLogViewer
                         }
                         else
                         {
-                            result.AddMatch(field, word, index);
+                            string fullText = field;
+                            if (node is NameValueNode named && fullText == named.Name)
+                            {
+                                fullText = named.ToString();
+                            }
+
+                            result.AddMatch(fullText, word, index);
                         }
 
                         anyFieldMatched = true;
