@@ -153,19 +153,41 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             var project = construction.GetOrAddProject(args.BuildEventContext.ProjectContextId);
             var target = project.GetTargetById(args.BuildEventContext.TargetId);
+
             var itemGroup = ItemGroupParser.ParsePropertyOrItemList(args.Message, prefix, stringTable);
-            var property = itemGroup as Property;
-            if (property != null)
+            if (itemGroup is Property property)
             {
                 itemGroup = new Item
                 {
                     Name = property.Name,
                     Text = property.Value
                 };
-                containerNode.Name = stringTable.Intern(property.Name);
+                containerNode.Name = property.Name;
+                containerNode.AddChild(itemGroup);
+            }
+            else if (itemGroup is Parameter parameter)
+            {
+                containerNode.Name = parameter.Name;
+                foreach (ParentedNode child in parameter.Children)
+                {
+                    child.Parent = null;
+                    containerNode.AddChild(child);
+                }
             }
 
-            containerNode.AddChild(itemGroup);
+            if (target.LastChild is NamedNode last &&
+                last.GetType() == containerNode.GetType() &&
+                last.Name == containerNode.Name)
+            {
+                foreach (ParentedNode child in containerNode.Children)
+                {
+                    child.Parent = null;
+                    last.AddChild(child);
+                }
+
+                return;
+            }
+
             target.AddChild(containerNode);
         }
 

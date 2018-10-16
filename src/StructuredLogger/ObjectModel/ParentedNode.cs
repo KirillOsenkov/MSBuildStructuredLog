@@ -12,7 +12,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             set
             {
 #if DEBUG
-                if (parent != null)
+                if (parent != null && value != null)
                 {
                     throw new System.InvalidOperationException("A node is being reparented");
                 }
