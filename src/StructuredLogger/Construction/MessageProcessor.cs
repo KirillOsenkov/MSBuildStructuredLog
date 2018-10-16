@@ -159,7 +159,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 itemGroup = new Item
                 {
-                    Name = property.Name,
                     Text = property.Value
                 };
                 containerNode.Name = property.Name;
