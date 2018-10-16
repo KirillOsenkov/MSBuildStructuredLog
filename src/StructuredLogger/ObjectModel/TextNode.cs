@@ -6,6 +6,8 @@
         public string ShortenedText => Utilities.ShortenValue(Text);
         public bool IsTextShortened => Text != ShortenedText;
 
+        protected override string GetTitle() => base.GetTitle() ?? Text;
+
         public override string ToString()
         {
             var baseText = base.ToString();

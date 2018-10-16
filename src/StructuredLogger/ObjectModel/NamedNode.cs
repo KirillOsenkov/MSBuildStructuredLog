@@ -5,7 +5,8 @@
         public string Name { get; set; }
 
         public virtual string LookupKey => Name;
-        string IHasTitle.Title => Name;
+        string IHasTitle.Title => GetTitle();
+        protected virtual string GetTitle() => Name;
 
         public override string ToString() => Name;
     }
