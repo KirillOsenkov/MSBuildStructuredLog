@@ -32,6 +32,7 @@ namespace StructuredLogViewer.Controls
         private MenuItem copyItem;
         private MenuItem copySubtreeItem;
         private MenuItem viewSubtreeTextItem;
+        private MenuItem searchInSubtreeItem;
         private MenuItem copyChildrenItem;
         private MenuItem sortChildrenItem;
         private MenuItem copyNameItem;
@@ -89,6 +90,7 @@ namespace StructuredLogViewer.Controls
             copyItem = new MenuItem() { Header = "Copy" };
             copySubtreeItem = new MenuItem() { Header = "Copy subtree" };
             viewSubtreeTextItem = new MenuItem() { Header = "View subtree text" };
+            searchInSubtreeItem = new MenuItem() { Header = "Search in subtree" };
             copyChildrenItem = new MenuItem() { Header = "Copy children" };
             sortChildrenItem = new MenuItem() { Header = "Sort children" };
             copyNameItem = new MenuItem() { Header = "Copy name" };
@@ -101,6 +103,7 @@ namespace StructuredLogViewer.Controls
             copyItem.Click += (s, a) => Copy();
             copySubtreeItem.Click += (s, a) => CopySubtree();
             viewSubtreeTextItem.Click += (s, a) => ViewSubtreeText();
+            searchInSubtreeItem.Click += (s, a) => SearchInSubtree();
             copyChildrenItem.Click += (s, a) => CopyChildren();
             sortChildrenItem.Click += (s, a) => SortChildren();
             copyNameItem.Click += (s, a) => CopyName();
@@ -115,6 +118,7 @@ namespace StructuredLogViewer.Controls
             contextMenu.Items.Add(debugItem);
             contextMenu.Items.Add(viewItem);
             contextMenu.Items.Add(preprocessItem);
+            contextMenu.Items.Add(searchInSubtreeItem);
             contextMenu.Items.Add(copyItem);
             contextMenu.Items.Add(copySubtreeItem);
             contextMenu.Items.Add(viewSubtreeTextItem);
@@ -401,6 +405,7 @@ Recent:
             var hasChildren = node is TreeNode t && t.HasChildren;
             copySubtreeItem.Visibility = hasChildren ? Visibility.Visible : Visibility.Collapsed;
             viewSubtreeTextItem.Visibility = copySubtreeItem.Visibility;
+            searchInSubtreeItem.Visibility = hasChildren && node is TimedNode ? Visibility.Visible : Visibility.Collapsed;
             copyChildrenItem.Visibility = copySubtreeItem.Visibility;
             sortChildrenItem.Visibility = copySubtreeItem.Visibility;
             preprocessItem.Visibility = node is Project p && preprocessedFileManager.CanPreprocess(p.SourceFilePath) ? Visibility.Visible : Visibility.Collapsed;
@@ -791,6 +796,15 @@ Recent:
             {
                 var text = Microsoft.Build.Logging.StructuredLogger.StringWriter.GetString(treeNode);
                 DisplayText(text, "Subtree of " + treeNode.ToString());
+            }
+        }
+
+        public void SearchInSubtree()
+        {
+            var treeNode = treeView.SelectedItem as TimedNode;
+            if (treeNode != null)
+            {
+                searchLogControl.SearchText += $" under(${treeNode.Index})";
             }
         }
 

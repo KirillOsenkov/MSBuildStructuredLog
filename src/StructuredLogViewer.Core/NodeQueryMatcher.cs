@@ -11,6 +11,7 @@ namespace StructuredLogViewer
         public string Query { get; private set; }
         public List<string> Words { get; private set; }
         public string TypeKeyword { get; private set; }
+        public int NodeIndex { get; private set; } = -1;
         public HashSet<string> MatchesInStrings { get; private set; }
         private NodeQueryMatcher UnderMatcher { get; set; }
 
@@ -24,6 +25,20 @@ namespace StructuredLogViewer
             this.Query = query;
 
             this.Words = ParseIntoWords(query);
+
+            if (Words.Count == 1 &&
+                Words[0] is string potentialNodeIndex &&
+                potentialNodeIndex.Length > 1 &&
+                potentialNodeIndex[0] == '$')
+            {
+                var nodeIndexText = potentialNodeIndex.Substring(1);
+                if (int.TryParse(nodeIndexText, out var nodeIndex))
+                {
+                    NodeIndex = nodeIndex;
+                    Words.RemoveAt(0);
+                    return;
+                }
+            }
 
             for (int i = Words.Count - 1; i >= 0; i--)
             {
@@ -174,6 +189,17 @@ namespace StructuredLogViewer
         public SearchResult IsMatch(object node)
         {
             SearchResult result = null;
+
+            if (NodeIndex > -1)
+            {
+                if (node is TimedNode timedNode && timedNode.Index == NodeIndex)
+                {
+                    result = new SearchResult(node);
+                    var prefix = "Node id: ";
+                    result.AddMatch(prefix + NodeIndex.ToString(), NodeIndex.ToString(), prefix.Length);
+                    return result;
+                }
+            }
 
             PopulateSearchFields(node);
 
