@@ -10,7 +10,7 @@ Homepage: http://msbuildlog.com
 Important: the NuGet package is now being published to https://nuget.org/packages/MSBuild.StructuredLogger (old location: https://nuget.org/packages/Microsoft.Build.Logging.StructuredLogger). Please update to use the new Package Id.
 
 ## Install:
-https://github.com/KirillOsenkov/MSBuildStructuredLog/releases/download/v2.0.11/MSBuildStructuredLogSetup.exe
+https://github.com/KirillOsenkov/MSBuildStructuredLog/releases/download/v2.0.40/MSBuildStructuredLogSetup.exe
 
 The app updates automatically via [Squirrel](https://github.com/Squirrel/Squirrel.Windows) (after launch it checks for updates in background), next launch starts the newly downloaded latest version.
 
@@ -35,7 +35,7 @@ Alternatively (useful for older versions of MSBuild) you can attach the logger t
 https://www.nuget.org/packages/MSBuild.StructuredLogger
 
 ```
-msbuild solution.sln /t:Rebuild /v:diag /noconlog /logger:BinaryLogger,%localappdata%\MSBuildStructuredLogViewer\app-2.0.11\StructuredLogger.dll;1.binlog
+msbuild solution.sln /t:Rebuild /v:diag /noconlog /logger:BinaryLogger,%localappdata%\MSBuildStructuredLogViewer\app-2.0.40\StructuredLogger.dll;1.binlog
 ```
 
 To use a portable version of the logger (e.g. with the `dotnet msbuild` command) you need a .NET Standard version of `StructuredLogger.dll`, not the .NET Framework (Desktop) version.
