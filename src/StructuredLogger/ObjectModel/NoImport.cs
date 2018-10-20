@@ -33,5 +33,7 @@
 
         string IHasSourceFile.SourceFilePath => ProjectFilePath;
         int? IHasLineNumber.LineNumber => Line;
+
+        public override string ToString() => $"NoImport: {Name}{Location} {Text}";
     }
 }

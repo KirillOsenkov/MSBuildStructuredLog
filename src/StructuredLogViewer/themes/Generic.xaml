@@ -329,8 +329,8 @@
                  Fill="{StaticResource ImportBrush}" 
                  VerticalAlignment="Top" />
       <TextBlock x:Name="label" Text="Import" Margin="0,0,6,0" />
-      <TextBlock x:Name="name" Text="{Binding Name}" Margin="0,0,4,0" />
-      <TextBlock x:Name="location" Text="{Binding Location}" Margin="0,0,6,0" />
+      <TextBlock x:Name="name" Text="{Binding Name}" />
+      <TextBlock x:Name="location" Text="{Binding Location}" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
       <DataTrigger Binding="{Binding IsLowRelevance}" Value="True">
@@ -353,9 +353,9 @@
                  Fill="{StaticResource NoImportBrush}"
                  VerticalAlignment="Top" />
       <TextBlock x:Name="label" Text="NoImport" Margin="0,0,6,0" />
-      <TextBlock x:Name="name" Text="{Binding Name}" Margin="0,0,4,0" />
+      <TextBlock x:Name="name" Text="{Binding Name}" />
       <TextBlock x:Name="location" Text="{Binding Location}" Margin="0,0,6,0" />
-      <TextBlock x:Name="reason" Text="{Binding Text}" Margin="0,0,6,0" />
+      <TextBlock x:Name="reason" Text="{Binding Text}" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
       <DataTrigger Binding="{Binding IsLowRelevance}" Value="True">
