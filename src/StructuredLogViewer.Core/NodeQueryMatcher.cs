@@ -274,6 +274,11 @@ namespace StructuredLogViewer
                 }
             }
 
+            if (result == null)
+            {
+                return null;
+            }
+
             if (UnderMatcher != null && !IsUnder(UnderMatcher, result))
             {
                 return null;
