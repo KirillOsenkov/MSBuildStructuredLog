@@ -68,14 +68,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             string reason = null)
         {
             var rootProjectNode = (Project)message.Parent as Project;
-            if (rootProjectNode.Children.First() is Folder importsFolder && importsFolder.Name == "Imports")
+            if (rootProjectNode.Children.First() is Folder importsFolder && importsFolder.Name == Strings.Imports)
             {
             }
             else
             {
                 importsFolder = new Folder()
                 {
-                    Name = "Imports"
+                    Name = Strings.Imports
                 };
                 rootProjectNode.AddChildAtBeginning(importsFolder);
             }

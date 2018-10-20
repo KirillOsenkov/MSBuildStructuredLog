@@ -36,6 +36,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string ToFile => "\" to file \"";
         public static string BuildingWithToolsVersionPrefix => "Building with tools version";
 
+        public static string Imports => "Imports";
+
         public static Regex UsingTaskRegex = new Regex("Using \"(?<task>.+)\" task from (assembly|the task factory) \"(?<assembly>.+)\"\\.", RegexOptions.Compiled);
 
         public static Regex PropertyReassignmentRegex = new Regex(@"^Property reassignment: \$\(\w+\)=.+ \(previous value: .*\) at (?<File>.*) \((?<Line>\d+),(\d+)\)$", RegexOptions.Compiled);
