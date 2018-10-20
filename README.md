@@ -10,7 +10,7 @@ Homepage: http://msbuildlog.com
 Important: the NuGet package is now being published to https://nuget.org/packages/MSBuild.StructuredLogger (old location: https://nuget.org/packages/Microsoft.Build.Logging.StructuredLogger). Please update to use the new Package Id.
 
 ## Install:
-https://github.com/KirillOsenkov/MSBuildStructuredLog/releases/download/v2.0.40/MSBuildStructuredLogSetup.exe
+https://github.com/KirillOsenkov/MSBuildStructuredLog/releases/download/v2.0.46/MSBuildStructuredLogSetup.exe
 
 The app updates automatically via [Squirrel](https://github.com/Squirrel/Squirrel.Windows) (after launch it checks for updates in background), next launch starts the newly downloaded latest version.
 
