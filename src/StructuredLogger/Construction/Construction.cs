@@ -385,8 +385,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     {
                         EvaluationFolder = Build.GetOrCreateNodeWithName<Folder>(Intern("Evaluation"));
 
-                        var projectName = projectEvaluationStarted.ProjectFile;
-                        var project = EvaluationFolder.GetOrCreateNodeWithName<Project>(Intern(projectName));
+                        var projectName = Intern(projectEvaluationStarted.ProjectFile);
+                        var project = EvaluationFolder.GetOrCreateNodeWithName<Project>(projectName);
+                        if (project.ProjectFile == null)
+                        {
+                            project.ProjectFile = projectName;
+                        }
 
                         // we stash the evaluation Id as a negative ProjectContextId
                         project.Id = -e.BuildEventContext.ProjectContextId;
@@ -395,20 +399,24 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     {
                         EvaluationFolder = Build.GetOrCreateNodeWithName<Folder>("Evaluation");
 
-                        var projectName = projectEvaluationFinished.ProjectFile;
+                        var projectName = Intern(projectEvaluationFinished.ProjectFile);
                         var profilerResult = projectEvaluationFinished.ProfilerResult;
                         if (profilerResult != null && projectName != null)
                         {
-                            var project = EvaluationFolder.GetOrCreateNodeWithName<Project>(Intern(projectName));
+                            var project = EvaluationFolder.GetOrCreateNodeWithName<Project>(projectName);
                             ConstructProfilerResult(project, profilerResult.Value);
                         }
                     }
                     // this happens during live build using MSBuild 15.3 or newer
                     else if (e.GetType().Name == "ProjectEvaluationStartedEventArgs")
                     {
-                        var projectName = Utilities.ParseQuotedSubstring(e.Message);
+                        var projectName = Intern(Utilities.ParseQuotedSubstring(e.Message));
                         var project = EvaluationFolder.GetOrCreateNodeWithName<Project>(projectName);
                         project.Id = Reflector.GetEvaluationId(e.BuildEventContext);
+                        if (project.ProjectFile == null)
+                        {
+                            project.ProjectFile = projectName;
+                        }
                     }
                 }
             }

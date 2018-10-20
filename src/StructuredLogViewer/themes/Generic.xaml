@@ -16,6 +16,8 @@
   <SolidColorBrush x:Key="ItemStroke" Color="MediumAquamarine" />
   <SolidColorBrush x:Key="MetadataStroke" Color="MediumAquamarine" />
   <SolidColorBrush x:Key="MessageStroke" Color="LightGray" />
+  <SolidColorBrush x:Key="ImportStroke" Color="Sienna" />
+  <SolidColorBrush x:Key="NoImportStroke" Color="Red" />
   <SolidColorBrush x:Key="ErrorStroke" Color="Red" />
   <SolidColorBrush x:Key="WarningStroke" Color="Gold" />
 
@@ -47,6 +49,16 @@
   <LinearGradientBrush x:Key="PropertyBrush" StartPoint="0,0" EndPoint="1,1">
     <GradientStop Color="AliceBlue" Offset="0" />
     <GradientStop Color="LightSkyBlue" Offset="1" />
+  </LinearGradientBrush>
+
+  <LinearGradientBrush x:Key="ImportBrush" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="Bisque" Offset="0" />
+    <GradientStop Color="Tan" Offset="1" />
+  </LinearGradientBrush>
+
+  <LinearGradientBrush x:Key="NoImportBrush" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="Bisque" Offset="0" />
+    <GradientStop Color="Tomato" Offset="1" />
   </LinearGradientBrush>
 
   <LinearGradientBrush x:Key="MessageBrush" StartPoint="0,0" EndPoint="1,1">
@@ -306,6 +318,56 @@
     </DataTemplate.Triggers>
   </DataTemplate>
 
+  <HierarchicalDataTemplate DataType="{x:Type l:Import}"
+                            ItemsSource="{Binding Children}">
+    <StackPanel Orientation="Horizontal" x:Name="importPanel">
+      <Rectangle x:Name="icon" 
+                 Width="14" 
+                 Height="11" 
+                 Stroke="{StaticResource ImportStroke}" 
+                 Margin="3,3,6,3" 
+                 Fill="{StaticResource ImportBrush}" 
+                 VerticalAlignment="Top" />
+      <TextBlock x:Name="label" Text="Import" Margin="0,0,6,0" />
+      <TextBlock x:Name="name" Text="{Binding Name}" Margin="0,0,4,0" />
+      <TextBlock x:Name="location" Text="{Binding Location}" Margin="0,0,6,0" />
+    </StackPanel>
+    <HierarchicalDataTemplate.Triggers>
+      <DataTrigger Binding="{Binding IsLowRelevance}" Value="True">
+        <Setter TargetName="importPanel" Property="Opacity" Value="0.25" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding IsSelected}" Value="False">
+        <Setter TargetName="label" Property="Foreground" Value="{StaticResource ImportStroke}" />
+      </DataTrigger>
+    </HierarchicalDataTemplate.Triggers>
+  </HierarchicalDataTemplate>
+
+  <HierarchicalDataTemplate DataType="{x:Type l:NoImport}"
+                            ItemsSource="{Binding Children}">
+    <StackPanel Orientation="Horizontal" x:Name="importPanel">
+      <Rectangle x:Name="icon"
+                 Width="14"
+                 Height="11"
+                 Stroke="{StaticResource NoImportStroke}"
+                 Margin="3,3,6,3"
+                 Fill="{StaticResource NoImportBrush}"
+                 VerticalAlignment="Top" />
+      <TextBlock x:Name="label" Text="NoImport" Margin="0,0,6,0" />
+      <TextBlock x:Name="name" Text="{Binding Name}" Margin="0,0,4,0" />
+      <TextBlock x:Name="location" Text="{Binding Location}" Margin="0,0,6,0" />
+      <TextBlock x:Name="reason" Text="{Binding Text}" Margin="0,0,6,0" />
+    </StackPanel>
+    <HierarchicalDataTemplate.Triggers>
+      <DataTrigger Binding="{Binding IsLowRelevance}" Value="True">
+        <Setter TargetName="importPanel" Property="Opacity" Value="0.3" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding IsSelected}" Value="False">
+        <Setter TargetName="label" Property="Foreground" Value="{StaticResource NoImportStroke}" />
+        <Setter TargetName="reason" Property="Background" Value="BlanchedAlmond" />
+      </DataTrigger>
+    </HierarchicalDataTemplate.Triggers>
+  </HierarchicalDataTemplate>
+
   <DataTemplate DataType="{x:Type core:ButtonNode}">
     <StackPanel Orientation="Horizontal">
       <Button x:Name="button" 
@@ -429,6 +491,14 @@
       <DataTrigger Binding="{Binding OriginalType}" Value="Warning">
         <Setter TargetName="icon" Property="Stroke" Value="{StaticResource WarningStroke}" />
         <Setter TargetName="icon" Property="Fill" Value="{StaticResource WarningBrush}" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding OriginalType}" Value="Import">
+        <Setter TargetName="icon" Property="Stroke" Value="{StaticResource ImportStroke}" />
+        <Setter TargetName="icon" Property="Fill" Value="{StaticResource ImportBrush}" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding OriginalType}" Value="NoImport">
+        <Setter TargetName="icon" Property="Stroke" Value="{StaticResource NoImportStroke}" />
+        <Setter TargetName="icon" Property="Fill" Value="{StaticResource NoImportBrush}" />
       </DataTrigger>
       <DataTrigger Binding="{Binding ProjectExtension}" Value=".sln">
         <Setter TargetName="icon" Property="Fill" Value="{StaticResource SlnIcon}" />

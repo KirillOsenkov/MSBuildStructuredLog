@@ -156,26 +156,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private bool isLowRelevance = false;
         public bool IsLowRelevance
         {
-            get
-            {
-                return isLowRelevance && !IsSelected;
-            }
-
-            set
-            {
-                if (isLowRelevance == value)
-                {
-                    return;
-                }
-
-                isLowRelevance = value;
-                RaisePropertyChanged();
-            }
+            get => isLowRelevance && !IsSelected;
+            set => SetField(ref isLowRelevance, value);
         }
 
-        public override string ToString()
-        {
-            return $"Project Name={Name} File={ProjectFile}";
-        }
+        public override string ToString() => $"Project Name={Name} File={ProjectFile}";
     }
 }

@@ -110,11 +110,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 AnalyzeMessage(message);
             }
+            else if (node is Folder folder)
+            {
+                if (folder.Name == "Evaluation")
+                {
+                    ImportTreeAnalyzer.Analyze(folder, build.StringTable);
+                }
+            }
         }
 
         private void AnalyzeMessage(Message message)
         {
-            if (message.Text != null && message.Text.StartsWith("Building with tools version"))
+            if (message.Text != null && message.Text.StartsWith(Strings.BuildingWithToolsVersionPrefix))
             {
                 message.IsLowRelevance = true;
             }

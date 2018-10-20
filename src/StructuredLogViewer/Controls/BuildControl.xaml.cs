@@ -257,8 +257,6 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             "Building target completely ",
             "is newer than output ",
             "Property reassignment: $(",
-            "Importing project ",
-            "was not imported by ",
             "out-of-date",
             "csc $task",
             "ResolveAssemblyReference $task"
@@ -277,7 +275,9 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             "$additem",
             "$removeitem",
             "$metadata",
-            "$copytask"
+            "$copytask",
+            "$import",
+            "$noimport"
         };
 
         private void UpdateWatermark()

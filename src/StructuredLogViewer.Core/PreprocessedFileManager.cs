@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using Microsoft.Build.Logging.StructuredLogger;
-using Bucket = System.Collections.Generic.HashSet<StructuredLogViewer.PreprocessedFileManager.ProjectImport>;
+using Bucket = System.Collections.Generic.HashSet<StructuredLogViewer.ProjectImport>;
 
 namespace StructuredLogViewer
 {
@@ -25,54 +24,6 @@ namespace StructuredLogViewer
 
         public event Action<string> DisplayFile;
 
-        private static readonly Regex importingProjectRegex = new Regex(
-            @"Importing project ""([^""]+)"" into project ""([^""]+)"" at \((\d+),(\d+)\)\.", RegexOptions.Compiled);
-
-        public struct ProjectImport : IEquatable<ProjectImport>
-        {
-            public ProjectImport(string importedProject, int line, int column)
-            {
-                ProjectPath = importedProject;
-                Line = line;
-                Column = column;
-            }
-
-            public string ProjectPath { get; set; }
-
-            /// <summary>
-            /// 0-based
-            /// </summary>
-            public int Line { get; set; }
-            public int Column { get; set; }
-
-            public bool Equals(ProjectImport other)
-            {
-                return ProjectPath == other.ProjectPath
-                    && Line == other.Line
-                    && Column == other.Column;
-            }
-
-            public override bool Equals(object obj)
-            {
-                if (obj is ProjectImport other)
-                {
-                    return Equals(other);
-                }
-
-                return false;
-            }
-
-            public override int GetHashCode()
-            {
-                return ProjectPath.GetHashCode() ^ Line.GetHashCode() ^ Column.GetHashCode();
-            }
-
-            public override string ToString()
-            {
-                return $"{ProjectPath} ({Line},{Column})";
-            }
-        }
-
         public void BuildImportMap()
         {
             var evaluation = build.FindChild<Folder>("Evaluation");
@@ -81,26 +32,15 @@ namespace StructuredLogViewer
                 return;
             }
 
-            evaluation.VisitAllChildren<Message>(message =>
-            {
-                var match = importingProjectRegex.Match(message.Text);
-                if (match.Success && match.Groups.Count == 5)
-                {
-                    var project = match.Groups[2].Value;
-                    var importedProject = match.Groups[1].Value;
-                    if (sourceFileResolver.HasFile(project) && sourceFileResolver.HasFile(importedProject))
-                    {
-                        var line = int.Parse(match.Groups[3].Value);
-                        var column = int.Parse(match.Groups[4].Value);
-                        if (line > 0)
-                        {
-                            line = line - 1; // should be 0-based 
-                        }
+            evaluation.VisitAllChildren<Import>(VisitImport);
+        }
 
-                        AddImport(importMap, project, importedProject, line, column);
-                    }
-                }
-            });
+        private void VisitImport(Import import)
+        {
+            if (sourceFileResolver.HasFile(import.ProjectFilePath) && sourceFileResolver.HasFile(import.ImportedProjectFilePath))
+            {
+                AddImport(importMap, import.ProjectFilePath, import.ImportedProjectFilePath, import.Line, import.Column);
+            }
         }
 
         private int CorrectForMultilineImportElement(SourceText text, int lineNumber)
@@ -124,6 +64,12 @@ namespace StructuredLogViewer
 
         private static void AddImport(Dictionary<string, Bucket> importMap, string project, string importedProject, int line, int column)
         {
+            if (line > 0)
+            {
+                // convert to 0-based from 1-based
+                line--;
+            }
+
             if (!importMap.TryGetValue(project, out var bucket))
             {
                 bucket = new Bucket();
