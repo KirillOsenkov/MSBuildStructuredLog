@@ -181,7 +181,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
-            return default(T);
+            return default;
         }
 
         public virtual T FindFirstInSubtreeIncludingSelf<T>(Predicate<T> predicate = null)
@@ -207,7 +207,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
-            return default(T);
+            return default;
         }
 
         public virtual T FindFirstDescendant<T>(Predicate<T> predicate = null)
@@ -232,7 +232,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
-            return default(T);
+            return default;
         }
 
         public virtual T FindLastInSubtreeIncludingSelf<T>(Predicate<T> predicate = null)
@@ -248,7 +248,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return (T)(object)this;
             }
 
-            return default(T);
+            return default;
         }
 
         public virtual T FindLastChild<T>()
@@ -264,7 +264,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
-            return default(T);
+            return default;
         }
 
         public object FirstChild
@@ -315,7 +315,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
-            return default(T);
+            return default;
         }
 
         public int FindChildIndex(object child)
@@ -339,7 +339,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var i = FindChildIndex(currentChild);
             if (i == -1)
             {
-                return default(T);
+                return default;
             }
 
             for (int j = i - 1; j >= 0; j--)
@@ -350,7 +350,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
-            return default(T);
+            return default;
         }
 
         public T FindNextChild<T>(object currentChild, Predicate<T> predicate = null)
@@ -358,7 +358,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var i = FindChildIndex(currentChild);
             if (i == -1)
             {
-                return default(T);
+                return default;
             }
 
             for (int j = i + 1; j < Children.Count; j++)
@@ -369,14 +369,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
-            return default(T);
+            return default;
         }
 
         public T FindPreviousInTraversalOrder<T>(Predicate<T> predicate = null)
         {
             if (Parent == null)
             {
-                return default(T);
+                return default;
             }
 
             var current = Parent.FindPreviousChild<T>(this);
@@ -403,7 +403,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 else
                 {
                     // no parent and no previous; we must be at the top
-                    return default(T);
+                    return default;
                 }
             }
 
@@ -412,14 +412,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return (T)(object)Parent;
             }
 
-            return Parent.FindPreviousInTraversalOrder<T>(predicate);
+            return Parent.FindPreviousInTraversalOrder(predicate);
         }
 
         public T FindNextInTraversalOrder<T>(Predicate<T> predicate = null)
         {
             if (Parent == null)
             {
-                return default(T);
+                return default;
             }
 
             var current = Parent.FindNextChild<T>(this);
@@ -431,7 +431,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 var treeNode = current as TreeNode;
                 if (treeNode != null)
                 {
-                    first = treeNode.FindFirstInSubtreeIncludingSelf<T>(predicate);
+                    first = treeNode.FindFirstInSubtreeIncludingSelf(predicate);
                 }
 
                 if (first != null)
@@ -445,19 +445,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
                 else
                 {
-                    return default(T);
+                    return default;
                 }
             }
 
             if (Parent != null)
             {
-                return Parent.FindNextInTraversalOrder<T>(predicate);
+                return Parent.FindNextInTraversalOrder(predicate);
             }
 
-            return default(T);
+            return default;
         }
 
-        public void VisitAllChildren<T>(Action<T> processor, CancellationToken cancellationToken = default(CancellationToken))
+        public void VisitAllChildren<T>(Action<T> processor, CancellationToken cancellationToken = default, bool takeChildrenSnapshot = false)
         {
             if (cancellationToken.IsCancellationRequested)
             {
@@ -471,7 +471,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (HasChildren)
             {
-                foreach (var child in Children)
+                var list = Children;
+                if (takeChildrenSnapshot)
+                {
+                    list = list.ToArray();
+                }
+
+                foreach (var child in list)
                 {
                     if (cancellationToken.IsCancellationRequested)
                     {
@@ -481,7 +487,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     var node = child as TreeNode;
                     if (node != null)
                     {
-                        node.VisitAllChildren<T>(processor, cancellationToken);
+                        node.VisitAllChildren(processor, cancellationToken, takeChildrenSnapshot);
                     }
                     else if (child is T)
                     {
