@@ -109,7 +109,7 @@ namespace StructuredLogViewer.Controls
             copyNameItem.Click += (s, a) => CopyName();
             copyValueItem.Click += (s, a) => CopyValue();
             viewItem.Click += (s, a) => Invoke(treeView.SelectedItem as ParentedNode);
-            preprocessItem.Click += (s, a) => Preprocess(treeView.SelectedItem as Project);
+            preprocessItem.Click += (s, a) => Preprocess(treeView.SelectedItem as IPreprocessable);
             runItem.Click += (s, a) => Run(treeView.SelectedItem as Task, debug: false);
             debugItem.Click += (s, a) => Run(treeView.SelectedItem as Task, debug: true);
             hideItem.Click += (s, a) => Delete();
@@ -364,9 +364,9 @@ Recent:
             searchLogControl.WatermarkContent = watermark;
         }
 
-        private void Preprocess(Project project)
+        private void Preprocess(IPreprocessable project)
         {
-            preprocessedFileManager.ShowPreprocessed(project.SourceFilePath);
+            preprocessedFileManager.ShowPreprocessed(project.RootFilePath);
         }
 
         private void Run(Task task, bool debug = false)
@@ -408,7 +408,7 @@ Recent:
             searchInSubtreeItem.Visibility = hasChildren && node is TimedNode ? Visibility.Visible : Visibility.Collapsed;
             copyChildrenItem.Visibility = copySubtreeItem.Visibility;
             sortChildrenItem.Visibility = copySubtreeItem.Visibility;
-            preprocessItem.Visibility = node is Project p && preprocessedFileManager.CanPreprocess(p.SourceFilePath) ? Visibility.Visible : Visibility.Collapsed;
+            preprocessItem.Visibility = node is IPreprocessable p && preprocessedFileManager.CanPreprocess(p.RootFilePath) ? Visibility.Visible : Visibility.Collapsed;
             Visibility canRun = Build?.LogFilePath != null && node is Task ? Visibility.Visible : Visibility.Collapsed;
             runItem.Visibility = canRun;
             debugItem.Visibility = canRun;

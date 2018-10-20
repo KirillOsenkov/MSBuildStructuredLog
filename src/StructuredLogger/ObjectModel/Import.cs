@@ -1,6 +1,6 @@
 ﻿namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class Import : TextNode, IHasRelevance, IHasSourceFile, IHasLineNumber
+    public class Import : TextNode, IHasRelevance, IPreprocessable, IHasSourceFile, IHasLineNumber
     {
         public string ProjectFilePath { get; private set; }
         public string ImportedProjectFilePath { get; private set; }
@@ -30,6 +30,8 @@
             get => isLowRelevance && !IsSelected;
             set => SetField(ref isLowRelevance, value);
         }
+
+        string IPreprocessable.RootFilePath => ImportedProjectFilePath;
 
         string IHasSourceFile.SourceFilePath => ProjectFilePath;
         int? IHasLineNumber.LineNumber => Line;
