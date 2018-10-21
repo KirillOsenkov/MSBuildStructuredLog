@@ -38,6 +38,7 @@ namespace StructuredLogViewer.Controls
         private MenuItem copyNameItem;
         private MenuItem copyValueItem;
         private MenuItem viewItem;
+        private MenuItem openFileItem;
         private MenuItem preprocessItem;
         private MenuItem runItem;
         private MenuItem debugItem;
@@ -96,6 +97,7 @@ namespace StructuredLogViewer.Controls
             copyNameItem = new MenuItem() { Header = "Copy name" };
             copyValueItem = new MenuItem() { Header = "Copy value" };
             viewItem = new MenuItem() { Header = "View" };
+            openFileItem = new MenuItem() { Header = "Open File" };
             preprocessItem = new MenuItem() { Header = "Preprocess" };
             hideItem = new MenuItem() { Header = "Hide" };
             runItem = new MenuItem() { Header = "Run" };
@@ -109,6 +111,7 @@ namespace StructuredLogViewer.Controls
             copyNameItem.Click += (s, a) => CopyName();
             copyValueItem.Click += (s, a) => CopyValue();
             viewItem.Click += (s, a) => Invoke(treeView.SelectedItem as ParentedNode);
+            openFileItem.Click += (s, a) => OpenFile();
             preprocessItem.Click += (s, a) => Preprocess(treeView.SelectedItem as IPreprocessable);
             runItem.Click += (s, a) => Run(treeView.SelectedItem as Task, debug: false);
             debugItem.Click += (s, a) => Run(treeView.SelectedItem as Task, debug: true);
@@ -117,6 +120,7 @@ namespace StructuredLogViewer.Controls
             contextMenu.Items.Add(runItem);
             contextMenu.Items.Add(debugItem);
             contextMenu.Items.Add(viewItem);
+            contextMenu.Items.Add(openFileItem);
             contextMenu.Items.Add(preprocessItem);
             contextMenu.Items.Add(searchInSubtreeItem);
             contextMenu.Items.Add(copyItem);
@@ -402,6 +406,7 @@ Recent:
             copyNameItem.Visibility = visibility;
             copyValueItem.Visibility = visibility;
             viewItem.Visibility = CanView(node) ? Visibility.Visible : Visibility.Collapsed;
+            openFileItem.Visibility = CanOpenFile(node) ? Visibility.Visible : Visibility.Collapsed;
             var hasChildren = node is TreeNode t && t.HasChildren;
             copySubtreeItem.Visibility = hasChildren ? Visibility.Visible : Visibility.Collapsed;
             viewSubtreeTextItem.Visibility = copySubtreeItem.Visibility;
@@ -799,6 +804,15 @@ Recent:
             }
         }
 
+        public void OpenFile()
+        {
+            var treeNode = treeView.SelectedItem;
+            if (treeNode != null && treeNode is Import import)
+            {
+                DisplayFile(import.ImportedProjectFilePath);
+            }
+        }
+
         public void SearchInSubtree()
         {
             var treeNode = treeView.SelectedItem as TimedNode;
@@ -960,6 +974,11 @@ Recent:
                 || (node is IHasSourceFile ihsf && ihsf.SourceFilePath != null && sourceFileResolver.HasFile(ihsf.SourceFilePath))
                 || (node is NameValueNode nvn && nvn.IsValueShortened)
                 || (node is TextNode tn && tn.IsTextShortened);
+        }
+
+        private bool CanOpenFile(ParentedNode node)
+        {
+            return node is Import i && sourceFileResolver.HasFile(i.ImportedProjectFilePath);
         }
 
         private bool Invoke(ParentedNode treeNode)
