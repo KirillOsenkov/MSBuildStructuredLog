@@ -385,15 +385,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     {
                         EvaluationFolder = Build.GetOrCreateNodeWithName<Folder>(Intern("Evaluation"));
 
+                        var evaluationId = -e.BuildEventContext.ProjectContextId;
                         var projectName = Intern(projectEvaluationStarted.ProjectFile);
-                        var project = EvaluationFolder.GetOrCreateNodeWithName<Project>(projectName);
+                        var nodeName = Intern(GetEvaluationProjectName(evaluationId, projectName));
+                        var project = EvaluationFolder.GetOrCreateNodeWithName<Project>(nodeName);
                         if (project.ProjectFile == null)
                         {
                             project.ProjectFile = projectName;
                         }
 
                         // we stash the evaluation Id as a negative ProjectContextId
-                        project.Id = -e.BuildEventContext.ProjectContextId;
+                        project.Id = evaluationId;
                     }
                     else if (e is ProjectEvaluationFinishedEventArgs projectEvaluationFinished)
                     {
@@ -403,7 +405,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         var profilerResult = projectEvaluationFinished.ProfilerResult;
                         if (profilerResult != null && projectName != null)
                         {
-                            var project = EvaluationFolder.GetOrCreateNodeWithName<Project>(projectName);
+                            var nodeName = Intern(GetEvaluationProjectName(-projectEvaluationFinished.BuildEventContext.ProjectContextId, projectName));
+                            var project = EvaluationFolder.GetOrCreateNodeWithName<Project>(nodeName);
                             ConstructProfilerResult(project, profilerResult.Value);
                         }
                     }
@@ -411,7 +414,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     else if (e.GetType().Name == "ProjectEvaluationStartedEventArgs")
                     {
                         var projectName = Intern(Utilities.ParseQuotedSubstring(e.Message));
-                        var project = EvaluationFolder.GetOrCreateNodeWithName<Project>(projectName);
+                        var nodeName = Intern(GetEvaluationProjectName(-e.BuildEventContext.ProjectContextId, projectName));
+                        var project = EvaluationFolder.GetOrCreateNodeWithName<Project>(nodeName);
                         project.Id = Reflector.GetEvaluationId(e.BuildEventContext);
                         if (project.ProjectFile == null)
                         {
@@ -424,6 +428,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 HandleException(ex);
             }
+        }
+
+        private static string GetEvaluationProjectName(int evaluationId, string projectName)
+        {
+            return projectName + " id:" + evaluationId;
         }
 
         private void ConstructProfilerResult(Project project, ProfilerResult profilerResult)
