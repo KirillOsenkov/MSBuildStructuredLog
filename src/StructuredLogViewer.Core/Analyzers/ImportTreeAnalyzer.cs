@@ -67,7 +67,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
             bool imported,
             string reason = null)
         {
-            var rootProjectNode = (Project)message.Parent as Project;
+            var rootProjectNode = message.Parent as Project;
+            if (rootProjectNode == null)
+            {
+                // possible with localized logs
+                return;
+            }
+
             if (rootProjectNode.Children.First() is Folder importsFolder && importsFolder.Name == Strings.Imports)
             {
             }
