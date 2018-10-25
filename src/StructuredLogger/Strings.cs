@@ -38,6 +38,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static string Imports => "Imports";
 
+        public static string DetailedSummary => "Detailed summary";
+
         public static Regex UsingTaskRegex = new Regex("Using \"(?<task>.+)\" task from (assembly|the task factory) \"(?<assembly>.+)\"\\.", RegexOptions.Compiled);
 
         public static Regex PropertyReassignmentRegex = new Regex(@"^Property reassignment: \$\(\w+\)=.+ \(previous value: .*\) at (?<File>.*) \((?<Line>\d+),(\d+)\)$", RegexOptions.Compiled);

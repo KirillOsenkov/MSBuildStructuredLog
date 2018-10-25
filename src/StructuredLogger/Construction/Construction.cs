@@ -78,6 +78,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     Build.EndTime = args.Timestamp;
                     Build.Succeeded = args.Succeeded;
 
+                    if (messageProcessor.DetailedSummary.Length > 0)
+                    {
+                        var summary = Build.GetOrCreateNodeWithName<Message>(stringTable.Intern(Strings.DetailedSummary));
+                        if (messageProcessor.DetailedSummary[0] == '\n')
+                        {
+                            messageProcessor.DetailedSummary.Remove(0, 1);
+                        }
+
+                        summary.Text = messageProcessor.DetailedSummary.ToString();
+                    }
+
                     Build.VisitAllChildren<Project>(p => CalculateTargetGraph(p));
                 }
             }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
 
@@ -16,6 +17,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private readonly Construction construction;
         private readonly StringCache stringTable;
+
+        public StringBuilder DetailedSummary { get; } = new StringBuilder();
 
         public MessageProcessor(Construction construction, StringCache stringTable)
         {
@@ -416,7 +419,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     // must be Detailed Build Summary
                     // https://github.com/Microsoft/msbuild/blob/master/src/XMakeBuildEngine/BackEnd/Components/Scheduler/Scheduler.cs#L509
-                    node = construction.Build.GetOrCreateNodeWithName<Folder>("DetailedSummary");
+                    DetailedSummary.AppendLine(message);
+                    return;
                 }
             }
 
