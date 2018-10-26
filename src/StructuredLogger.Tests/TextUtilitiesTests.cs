@@ -1,4 +1,7 @@
-﻿using Microsoft.Build.Logging.StructuredLogger;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.Build.Logging.StructuredLogger;
 using Xunit;
 
 namespace StructuredLogger.Tests
@@ -19,19 +22,30 @@ namespace StructuredLogger.Tests
             T("a\rb", "a", "b");
             T2("a\rb", "a\r", "b");
             T("\r", "", "");
+            T("\r\r", "", "", "");
+            T("\r\r\r", "", "", "", "");
             T2("\r", "\r", "");
+            T2("\r\r", "\r", "\r", "");
+            T2("\r\r\r", "\r", "\r", "\r", "");
             T("\n", "", "");
+            T("\n\n", "", "", "");
+            T("\n\n\n", "", "", "", "");
             T2("\n", "\n", "");
+            T2("\n\n", "\n", "\n", "");
+            T2("\n\n\n", "\n", "\n", "\n", "");
             T("\n\r", "", "", "");
             T2("\n\r", "\n", "\r", "");
             T("\r\n", "", "");
             T2("\r\n", "\r\n", "");
             T("\r\n\r", "", "", "");
             T2("\r\n\r", "\r\n", "\r", "");
+            T("\r\r\n", "", "", "");
+            T2("\r\r\n", "\r", "\r\n", "");
             T("a\r\na\r\na", "a", "a", "a");
             T2("a\r\na\r\na", "a\r\n", "a\r\n", "a");
             T("a\r\nb\nc\rd", "a", "b", "c", "d");
             T2("a\r\nb\nc\rd", "a\r\n", "b\n", "c\r", "d");
+            T2("a\r\rb", "a\r", "\r", "b");
         }
 
         [Fact]
@@ -72,13 +86,27 @@ namespace StructuredLogger.Tests
         private static void T(string text, params string[] expectedLines)
         {
             var actualLines = text.GetLines();
-            Assert.Equal(expectedLines, actualLines);
+            AssertEqual(expectedLines, actualLines, text);
         }
 
         private static void T2(string text, params string[] expectedLines)
         {
             var actualLines = text.GetLines(includeLineBreak: true);
-            Assert.Equal(expectedLines, actualLines);
+            AssertEqual(expectedLines, actualLines, text);
+        }
+
+        private static void AssertEqual(IEnumerable<string> expectedLines, IEnumerable<string> actualLines, string message = "")
+        {
+            if (!expectedLines.SequenceEqual(actualLines))
+            {
+                message = $"{Escape(message)}\r\nExpected: {string.Join(", ", expectedLines.Select(Escape))}\r\nActual  : {string.Join(", ", actualLines.Select(Escape))}";
+                throw new Exception(message);
+            }
+        }
+
+        private static string Escape(string text)
+        {
+            return "\"" + text.Replace("\r", "\\r").Replace("\n", "\\n") + "\"";
         }
     }
 }

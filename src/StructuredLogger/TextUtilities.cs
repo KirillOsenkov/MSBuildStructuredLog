@@ -35,17 +35,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     if (previousWasCarriageReturn)
                     {
-                        currentLineLength++;
-                        previousWasCarriageReturn = false;
-                        var lineLength = currentLineLength;
+                        int lineLengthIncludingLineBreak = currentLineLength;
                         if (!includeLineBreakInSpan)
                         {
-                            lineLength--;
+                            currentLineLength--;
                         }
 
-                        spans.Add(new Span(currentPosition, lineLength));
-                        currentPosition += currentLineLength;
-                        currentLineLength = 0;
+                        spans.Add(new Span(currentPosition, currentLineLength));
+
+                        currentPosition += lineLengthIncludingLineBreak;
+                        currentLineLength = 1;
                     }
                     else
                     {
