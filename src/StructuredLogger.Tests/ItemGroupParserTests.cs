@@ -88,5 +88,29 @@ References which depend on ""System.IO.Compression, Version=4.1.1.0, Culture=neu
                 C:\A\\C.dll
 ", text);
         }
+
+        [Fact]
+        public void ParseMultilineMetadata()
+        {
+            var parameter = ItemGroupParser.ParsePropertyOrItemList(@"Added Item(s): 
+    _ProjectsFiles=
+        Project1
+                AdditionalProperties=
+        AutoParameterizationWebConfigConnectionStrings=false;
+        _PackageTempDir=Out\Dir;
+        
+        Project2
+                AdditionalProperties=
+        AutoParameterizationWebConfigConnectionStrings=false;
+        _PackageTempDir=Out\Dir;
+        
+        Project3
+                AdditionalProperties=
+        AutoParameterizationWebConfigConnectionStrings=false;
+        _PackageTempDir=Out\Dir;
+        ", MessageProcessor.ItemGroupIncludeMessagePrefix, new StringCache()) as Parameter;
+
+            //Assert.Equal(3, parameter.Children.Count);
+        }
     }
 }
