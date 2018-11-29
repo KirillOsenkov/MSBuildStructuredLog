@@ -52,10 +52,10 @@ namespace StructuredLogger.Tests
         public void TestGetNumberOfLeadingSpaces()
         {
             var text = "abcd   efghi";
-            Assert.Equal(3, Utilities.GetNumberOfLeadingSpaces(text, new Span(4, 6)));
-            Assert.Equal(2, Utilities.GetNumberOfLeadingSpaces(text, new Span(4, 2)));
-            Assert.Equal(1, Utilities.GetNumberOfLeadingSpaces(text, new Span(5, 1)));
-            Assert.Equal(0, Utilities.GetNumberOfLeadingSpaces(text, new Span(1, 3)));
+            Assert.Equal(3, TextUtilities.GetNumberOfLeadingSpaces(text, new Span(4, 6)));
+            Assert.Equal(2, TextUtilities.GetNumberOfLeadingSpaces(text, new Span(4, 2)));
+            Assert.Equal(1, TextUtilities.GetNumberOfLeadingSpaces(text, new Span(5, 1)));
+            Assert.Equal(0, TextUtilities.GetNumberOfLeadingSpaces(text, new Span(1, 3)));
         }
 
         [Fact]
@@ -78,7 +78,7 @@ namespace StructuredLogger.Tests
         public void TestParseNameValue()
         {
             var text = "abcd1=2hi";
-            var nameValue = Utilities.ParseNameValue(text, new Span(4, 3));
+            var nameValue = TextUtilities.ParseNameValue(text, new Span(4, 3));
             Assert.Equal("1", nameValue.Key);
             Assert.Equal("2", nameValue.Value);
         }

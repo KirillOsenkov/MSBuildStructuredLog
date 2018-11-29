@@ -14,7 +14,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (result.MatchedByType && result.Before == null)
             {
                 Highlights.Add(new HighlightedText { Text = OriginalType });
-                Highlights.Add(" " + Utilities.ShortenValue(result.Node.ToString(), "..."));
+                Highlights.Add(" " + TextUtilities.ShortenValue(result.Node.ToString(), "..."));
                 return;
             }
 

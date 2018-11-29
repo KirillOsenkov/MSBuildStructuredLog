@@ -171,7 +171,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 var top10Tasks = build.GetOrCreateNodeWithName<Folder>($"Top {durations.Count()} most expensive tasks");
                 foreach (var kvp in durations)
                 {
-                    top10Tasks.AddChild(new Item { Name = kvp.Key, Text = Utilities.DisplayDuration(kvp.Value) });
+                    top10Tasks.AddChild(new Item { Name = kvp.Key, Text = TextUtilities.DisplayDuration(kvp.Value) });
                 }
             }
         }

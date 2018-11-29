@@ -3,7 +3,7 @@
     public class TextNode : NamedNode
     {
         public string Text { get; set; }
-        public string ShortenedText => Utilities.ShortenValue(Text);
+        public string ShortenedText => TextUtilities.ShortenValue(Text);
         public bool IsTextShortened => Text != ShortenedText;
 
         protected override string GetTitle() => base.GetTitle() ?? Text;

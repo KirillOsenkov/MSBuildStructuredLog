@@ -29,9 +29,9 @@
             Word = word;
             Index = index;
 
-            if (Field.Length > Microsoft.Build.Logging.StructuredLogger.Utilities.MaxDisplayedValueLength || Field.Contains("\n"))
+            if (Field.Length > Microsoft.Build.Logging.StructuredLogger.TextUtilities.MaxDisplayedValueLength || Field.Contains("\n"))
             {
-                field = Microsoft.Build.Logging.StructuredLogger.Utilities.ShortenValue(field, "...");
+                field = Microsoft.Build.Logging.StructuredLogger.TextUtilities.ShortenValue(field, "...");
                 if (index + word.Length < field.Length)
                 {
                     Before = field.Substring(0, index);

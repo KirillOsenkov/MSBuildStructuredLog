@@ -424,7 +424,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     // this happens during live build using MSBuild 15.3 or newer
                     else if (e.GetType().Name == "ProjectEvaluationStartedEventArgs")
                     {
-                        var projectName = Intern(Utilities.ParseQuotedSubstring(e.Message));
+                        var projectName = Intern(TextUtilities.ParseQuotedSubstring(e.Message));
                         var nodeName = Intern(GetEvaluationProjectName(-e.BuildEventContext.ProjectContextId, projectName));
                         var project = EvaluationFolder.GetOrCreateNodeWithName<Project>(nodeName);
                         project.Id = Reflector.GetEvaluationId(e.BuildEventContext);

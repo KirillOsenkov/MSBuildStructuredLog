@@ -139,7 +139,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var project = construction.GetOrAddProject(args.BuildEventContext.ProjectContextId);
             var target = project.GetTargetById(args.BuildEventContext.TargetId);
 
-            var kvp = Utilities.ParseNameValue(message);
+            var kvp = TextUtilities.ParseNameValue(message);
             target.AddChild(new Property
             {
                 Name = stringTable.Intern(kvp.Key),
@@ -267,7 +267,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                         var equals = message.IndexOf('=');
                                         if (equals != -1)
                                         {
-                                            var kvp = Utilities.ParseNameValue(message);
+                                            var kvp = TextUtilities.ParseNameValue(message);
                                             node.AddChild(new Metadata
                                             {
                                                 Name = stringTable.Intern(kvp.Key.TrimEnd(space)),
@@ -334,7 +334,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             message = message.Substring(2);
                         }
 
-                        var kvp = Utilities.ParseNameValue(message);
+                        var kvp = TextUtilities.ParseNameValue(message);
                         if (kvp.Value == "")
                         {
                             nodeToAdd = new Item
@@ -371,7 +371,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 if (Strings.IsTargetSkipped(message))
                 {
-                    var targetName = stringTable.Intern(Utilities.ParseQuotedSubstring(message));
+                    var targetName = stringTable.Intern(TextUtilities.ParseQuotedSubstring(message));
                     if (targetName != null)
                     {
                         node = project.GetOrAddTargetByName(targetName);
@@ -429,7 +429,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static void HandleThereWasAConflict(Parameter parameter, string message, StringCache stringTable)
         {
-            var numberOfLeadingSpaces = Utilities.GetNumberOfLeadingSpaces(message);
+            var numberOfLeadingSpaces = TextUtilities.GetNumberOfLeadingSpaces(message);
             TreeNode node = parameter;
             switch (numberOfLeadingSpaces)
             {

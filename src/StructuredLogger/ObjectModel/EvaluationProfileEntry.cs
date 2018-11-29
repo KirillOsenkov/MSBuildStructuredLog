@@ -28,7 +28,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     return "";
                 }
 
-                var result = Utilities.DisplayDuration(ProfiledLocation.InclusiveTime);
+                var result = TextUtilities.DisplayDuration(ProfiledLocation.InclusiveTime);
 
                 var hits = ProfiledLocation.NumberOfHits;
                 if (hits == 1)
@@ -64,7 +64,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        public string ShortenedElementDescription => Utilities.ShortenValue(ElementDescription, "...", maxChars: 80);
+        public string ShortenedElementDescription => TextUtilities.ShortenValue(ElementDescription, "...", maxChars: 80);
 
         public double Value { get; set; }
 

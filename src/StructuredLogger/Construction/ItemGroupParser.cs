@@ -16,9 +16,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <returns>List of items within the list and all metadata.</returns>
         public static object ParsePropertyOrItemList(string message, string prefix, StringCache stringTable)
         {
-            if (!Utilities.ContainsLineBreak(message))
+            if (!TextUtilities.ContainsLineBreak(message))
             {
-                var nameValue = Utilities.ParseNameValue(message, trimFromStart: prefix.Length);
+                var nameValue = TextUtilities.ParseNameValue(message, trimFromStart: prefix.Length);
                 var property = new Property
                 {
                     Name = stringTable.Intern(nameValue.Key),
@@ -41,7 +41,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (lineSpans[0].Length > prefix.Length)
             {
                 // we have a weird case of multi-line value
-                var nameValue = Utilities.ParseNameValue(message, lineSpans[0].Skip(prefix.Length));
+                var nameValue = TextUtilities.ParseNameValue(message, lineSpans[0].Skip(prefix.Length));
 
                 parameter.Name = stringTable.Intern(nameValue.Key);
 
@@ -65,7 +65,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Property currentProperty = null;
             foreach (var lineSpan in lineSpans)
             {
-                var numberOfLeadingSpaces = Utilities.GetNumberOfLeadingSpaces(message, lineSpan);
+                if (TextUtilities.IsWhitespace(message, lineSpan))
+                {
+                    continue;
+                }
+
+                var numberOfLeadingSpaces = TextUtilities.GetNumberOfLeadingSpaces(message, lineSpan);
                 switch (numberOfLeadingSpaces)
                 {
                     case 4:
@@ -79,7 +84,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         var equals = skip8.IndexOf('=');
                         if (equals != -1)
                         {
-                            var kvp = Utilities.ParseNameValueWithEqualsPosition(skip8, equals);
+                            var kvp = TextUtilities.ParseNameValueWithEqualsPosition(skip8, equals);
                             currentProperty = new Property
                             {
                                 Name = stringTable.Intern(kvp.Key),
@@ -142,7 +147,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             }
                             else
                             {
-                                var nameValue = Utilities.ParseNameValueWithEqualsPosition(message, span16, equals16);
+                                var nameValue = TextUtilities.ParseNameValueWithEqualsPosition(message, span16, equals16);
                                 var metadata = new Metadata
                                 {
                                     Name = stringTable.Intern(nameValue.Key),
