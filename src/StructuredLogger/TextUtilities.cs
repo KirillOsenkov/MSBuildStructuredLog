@@ -253,7 +253,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return true;
             }
 
-            for (int i = span.Start; i < span.Length; i++)
+            for (int i = span.Start; i < span.End; i++)
             {
                 if (!char.IsWhiteSpace(text[i]))
                 {
