@@ -230,14 +230,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 resolveAssemblyReferenceAnalyzer.AnalyzeResolveAssemblyReference(task);
             }
-            else if (task is CopyTask copyTask)
-            {
-                doubleWritesAnalyzer.AnalyzeFileCopies(copyTask);
-            }
             else if (task.Name == "Message")
             {
                 MessageTaskAnalyzer.Analyze(task);
             }
+
+            doubleWritesAnalyzer.AnalyzeTask(task);
         }
 
         private void AnalyzeTarget(Target target)

@@ -792,13 +792,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var startTime = taskStartedEventArgs.Timestamp;
 
             Task result;
-            if (taskName == "Copy")
+            switch (taskName)
             {
-                result = new CopyTask();
-            }
-            else
-            {
-                result = new Task();
+                case "Copy":
+                    result = new CopyTask();
+                    break;
+                case "Csc":
+                    result = new CscTask();
+                    break;
+                default:
+                    result = new Task();
+                    break;
             }
 
             result.Name = taskName;

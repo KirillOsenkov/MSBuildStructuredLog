@@ -12,7 +12,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static IEnumerable<KeyValuePair<string, HashSet<string>>> GetDoubleWrites(Build build)
         {
             var analyzer = new DoubleWritesAnalyzer();
-            build.VisitAllChildren<CopyTask>(copyTask => analyzer.AnalyzeFileCopies(copyTask));
+            build.VisitAllChildren<Task>(task => analyzer.AnalyzeTask(task));
             return analyzer.GetDoubleWrites();
         }
 
@@ -36,13 +36,47 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        public void AnalyzeFileCopies(CopyTask copyTask)
+        public void AnalyzeTask(Task task)
+        {
+            if (task is CopyTask copyTask)
+            {
+                AnalyzeCopyTask(copyTask);
+            }
+            else if (task is CscTask cscTask)
+            {
+                AnalyzeCscTask(cscTask);
+            }
+        }
+
+        private void AnalyzeCopyTask(CopyTask copyTask)
         {
             foreach (var copyOperation in copyTask.FileCopyOperations)
             {
                 if (copyOperation.Copied)
                 {
                     ProcessCopy(copyOperation.Source, copyOperation.Destination);
+                }
+            }
+        }
+
+        private void AnalyzeCscTask(CscTask cscTask)
+        {
+            if (cscTask.CompilationWrites.HasValue)
+            {
+                var writes = cscTask.CompilationWrites.Value;
+                var source = writes.AssemblyOrRefAssembly;
+                process(writes.Assembly);
+                process(writes.RefAssembly);
+                process(writes.Pdb);
+                process(writes.XmlDocumentation);
+                process(writes.SourceLink);
+
+                void process(string destination)
+                {
+                    if (!string.IsNullOrEmpty(destination))
+                    {
+                        ProcessCopy(source, destination);
+                    }
                 }
             }
         }
