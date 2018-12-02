@@ -803,6 +803,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 case "Vbc":
                     result = new VbcTask();
                     break;
+                case "Fsc":
+                    result = new FscTask();
+                    break;
                 default:
                     result = new Task();
                     break;

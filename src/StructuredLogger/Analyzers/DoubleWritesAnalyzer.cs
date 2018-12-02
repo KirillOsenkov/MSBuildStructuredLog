@@ -50,6 +50,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 AnalyzeCompilationWrites(vbcTask.CompilationWrites.Value);
             }
+            else if (task is FscTask fscTask && fscTask.CompilationWrites.HasValue)
+            {
+                AnalyzeCompilationWrites(fscTask.CompilationWrites.Value);
+            }
         }
 
         private void AnalyzeCopyTask(CopyTask copyTask)
