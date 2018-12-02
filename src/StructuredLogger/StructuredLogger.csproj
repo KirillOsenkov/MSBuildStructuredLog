@@ -19,7 +19,7 @@
     <RepositoryUrl>https://github.com/KirillOsenkov/MSBuildStructuredLog</RepositoryUrl>
     <PackageTags>MSBuild Log Logger Structure Structured</PackageTags>
   </PropertyGroup>
-  <ItemGroup Condition=" '$(OS)' == 'Windows' ">
+  <ItemGroup Condition=" '$(OS)' == 'Windows_NT' ">
     <PackageReference Include="Nerdbank.GitVersioning" Version="2.0.41" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
@@ -44,7 +44,7 @@
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="14.3.0" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="14.3.0" />
   </ItemGroup>
-  <PropertyGroup Condition=" '$(OS)' == 'Windows' ">
+  <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
     <StartAction>Program</StartAction>
     <StartProgram>$(MSBuildToolsPath)\MSBuild.exe</StartProgram>
     <StartArguments>$(SolutionPath) /p:Configuration=Release /t:Rebuild /v:diag /noconlog /logger:StructuredLogger,$(TargetPath);log.buildlog</StartArguments>
