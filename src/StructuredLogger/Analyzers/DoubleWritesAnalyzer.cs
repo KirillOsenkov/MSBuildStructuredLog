@@ -12,7 +12,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static IEnumerable<KeyValuePair<string, HashSet<string>>> GetDoubleWrites(Build build)
         {
             var analyzer = new DoubleWritesAnalyzer();
-            build.VisitAllChildren<CopyTask>(copyTask => analyzer.AnalyzeFileCopies(copyTask));
+            build.VisitAllChildren<Task>(task => analyzer.AnalyzeTask(task));
             return analyzer.GetDoubleWrites();
         }
 
@@ -36,13 +36,51 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        public void AnalyzeFileCopies(CopyTask copyTask)
+        public void AnalyzeTask(Task task)
+        {
+            if (task is CopyTask copyTask)
+            {
+                AnalyzeCopyTask(copyTask);
+            }
+            else if (task is CscTask cscTask && cscTask.CompilationWrites.HasValue)
+            {
+                AnalyzeCompilationWrites(cscTask.CompilationWrites.Value);
+            }
+            else if (task is VbcTask vbcTask && vbcTask.CompilationWrites.HasValue)
+            {
+                AnalyzeCompilationWrites(vbcTask.CompilationWrites.Value);
+            }
+            else if (task is FscTask fscTask && fscTask.CompilationWrites.HasValue)
+            {
+                AnalyzeCompilationWrites(fscTask.CompilationWrites.Value);
+            }
+        }
+
+        private void AnalyzeCopyTask(CopyTask copyTask)
         {
             foreach (var copyOperation in copyTask.FileCopyOperations)
             {
                 if (copyOperation.Copied)
                 {
                     ProcessCopy(copyOperation.Source, copyOperation.Destination);
+                }
+            }
+        }
+
+        private void AnalyzeCompilationWrites(CompilationWrites writes)
+        {
+            var source = writes.AssemblyOrRefAssembly;
+            process(writes.Assembly);
+            process(writes.RefAssembly);
+            process(writes.Pdb);
+            process(writes.XmlDocumentation);
+            process(writes.SourceLink);
+
+            void process(string destination)
+            {
+                if (!string.IsNullOrEmpty(destination))
+                {
+                    ProcessCopy(source, destination);
                 }
             }
         }
