@@ -800,6 +800,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 case "Csc":
                     result = new CscTask();
                     break;
+                case "Vbc":
+                    result = new VbcTask();
+                    break;
                 default:
                     result = new Task();
                     break;

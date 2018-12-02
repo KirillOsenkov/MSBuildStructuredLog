@@ -42,9 +42,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 AnalyzeCopyTask(copyTask);
             }
-            else if (task is CscTask cscTask)
+            else if (task is CscTask cscTask && cscTask.CompilationWrites.HasValue)
             {
-                AnalyzeCscTask(cscTask);
+                AnalyzeCompilationWrites(cscTask.CompilationWrites.Value);
+            }
+            else if (task is VbcTask vbcTask && vbcTask.CompilationWrites.HasValue)
+            {
+                AnalyzeCompilationWrites(vbcTask.CompilationWrites.Value);
             }
         }
 
@@ -59,24 +63,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private void AnalyzeCscTask(CscTask cscTask)
+        private void AnalyzeCompilationWrites(CompilationWrites writes)
         {
-            if (cscTask.CompilationWrites.HasValue)
-            {
-                var writes = cscTask.CompilationWrites.Value;
-                var source = writes.AssemblyOrRefAssembly;
-                process(writes.Assembly);
-                process(writes.RefAssembly);
-                process(writes.Pdb);
-                process(writes.XmlDocumentation);
-                process(writes.SourceLink);
+            var source = writes.AssemblyOrRefAssembly;
+            process(writes.Assembly);
+            process(writes.RefAssembly);
+            process(writes.Pdb);
+            process(writes.XmlDocumentation);
+            process(writes.SourceLink);
 
-                void process(string destination)
+            void process(string destination)
+            {
+                if (!string.IsNullOrEmpty(destination))
                 {
-                    if (!string.IsNullOrEmpty(destination))
-                    {
-                        ProcessCopy(source, destination);
-                    }
+                    ProcessCopy(source, destination);
                 }
             }
         }
