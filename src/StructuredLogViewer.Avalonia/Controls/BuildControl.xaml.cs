@@ -282,7 +282,10 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             "$additem",
             "$removeitem",
             "$metadata",
-            "$copytask"
+            "$copytask",
+            "$csctask",
+            "$vbctask",
+            "$fsctask"
         };
 
         private void UpdateWatermark()
