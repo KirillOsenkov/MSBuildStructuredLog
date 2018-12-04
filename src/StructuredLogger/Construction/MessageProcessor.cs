@@ -87,7 +87,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     if (message.StartsWith(TaskParameterMessagePrefix))
                     {
                         var task = GetTask(args);
-                        var folder = task.GetOrCreateNodeWithName<Folder>("Parameters");
+                        var folder = task.GetOrCreateNodeWithName<Folder>(Strings.Parameters);
                         var parameter = ItemGroupParser.ParsePropertyOrItemList(message, TaskParameterMessagePrefix, stringTable);
                         folder.AddChild(parameter);
                         return;

@@ -55,7 +55,7 @@ namespace TaskRunner
 
         private static void PopulateParameters(Task task, object instance)
         {
-            var parametersNode = task.FindChild<Folder>("Parameters");
+            var parametersNode = task.FindChild<Folder>(Strings.Parameters);
             if (parametersNode == null)
             {
                 throw new ArgumentException("Parameters node not found under task " + task.Name);

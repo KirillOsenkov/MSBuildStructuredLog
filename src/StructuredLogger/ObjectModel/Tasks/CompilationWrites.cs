@@ -33,7 +33,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         internal static CompilationWrites? TryParse(Task task)
         {
-            var parameters = task.FindChild<Folder>(c => c.Name == "Parameters");
+            var parameters = task.FindChild<Folder>(c => c.Name == Strings.Parameters);
+            if (parameters == null)
+            {
+                // Probably localized MSBuild that we don't yet support
+                return null;
+            }
+
             string assembly = null;
             string refAssembly = null;
             string xmlDocumentation = null;

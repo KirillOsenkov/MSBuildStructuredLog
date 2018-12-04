@@ -19,15 +19,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             currentUsedLocations.Clear();
 
-            var results = rar.FindChild<Folder>(c => c.Name == "Results");
-            var parameters = rar.FindChild<Folder>(c => c.Name == "Parameters");
+            var results = rar.FindChild<Folder>(c => c.Name == Strings.Results);
+            var parameters = rar.FindChild<Folder>(c => c.Name == Strings.Parameters);
 
             TotalRARDuration += rar.Duration;
 
             IList<string> searchPaths = null;
             if (parameters != null)
             {
-                var searchPathsNode = parameters.FindChild<NamedNode>(c => c.Name == "SearchPaths");
+                var searchPathsNode = parameters.FindChild<NamedNode>(c => c.Name == Strings.SearchPaths);
                 if (searchPathsNode != null)
                 {
                     searchPaths = searchPathsNode.Children.Select(c => c.ToString()).ToArray();
@@ -89,7 +89,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                         if (foundNotCopyLocalBecauseMetadata)
                         {
-                            var assemblies = rar.FindChild<Folder>("Parameters")?.FindChild<Parameter>("Assemblies");
+                            var assemblies = rar.FindChild<Folder>(Strings.Parameters)?.FindChild<Parameter>(Strings.Assemblies);
                             if (assemblies != null)
                             {
                                 var dictionary = assemblies.Children
