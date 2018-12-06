@@ -15,6 +15,10 @@
                 if (!compilationWrites.HasValue)
                 {
                     compilationWrites = Logging.StructuredLogger.CompilationWrites.TryParse(this);
+                    if (compilationWrites == null)
+                    {
+                        return null;
+                    }
                 }
 
                 return compilationWrites.Value;
