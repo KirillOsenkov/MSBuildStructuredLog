@@ -148,6 +148,28 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 SetString(nameof(Build.IsAnalyzed), build.IsAnalyzed.ToString());
                 return;
             }
+
+            var import = node as Import;
+            if (import != null)
+            {
+                SetString(nameof(Import.ProjectFilePath), import.ProjectFilePath);
+                SetString(nameof(Import.ImportedProjectFilePath), import.ImportedProjectFilePath);
+                SetString(nameof(Import.Line), import.Line.ToString());
+                SetString(nameof(Import.Column), import.Column.ToString());
+                SetString(nameof(Import.IsLowRelevance), import.IsLowRelevance.ToString());
+                return;
+            }
+
+            var noImport = node as NoImport;
+            if (noImport != null)
+            {
+                SetString(nameof(Import.ProjectFilePath), noImport.ProjectFilePath);
+                SetString(nameof(Import.ImportedProjectFilePath), noImport.ImportedFileSpec);
+                SetString(nameof(Import.Line), noImport.Line.ToString());
+                SetString(nameof(Import.Column), noImport.Column.ToString());
+                SetString(nameof(Import.IsLowRelevance), noImport.IsLowRelevance.ToString());
+                return;
+            }
         }
 
         private void SetString(string name, string value)

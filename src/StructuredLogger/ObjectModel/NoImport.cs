@@ -2,10 +2,14 @@
 {
     public class NoImport : TextNode, IHasRelevance, IHasSourceFile, IHasLineNumber
     {
-        public string ProjectFilePath { get; private set; }
-        public string ImportedFileSpec { get; private set; }
-        public int Line { get; private set; }
-        public int Column { get; private set; }
+        public string ProjectFilePath { get; set; }
+        public string ImportedFileSpec { get; set; }
+        public int Line { get; set; }
+        public int Column { get; set; }
+
+        public NoImport()
+        {
+        }
 
         public NoImport(
             string projectFilePath,
@@ -16,13 +20,12 @@
         {
             ProjectFilePath = projectFilePath;
             Name = importedFileSpec;
-            Location = $" at ({line};{column})";
             Line = line;
             Column = column;
             Text = reason;
         }
 
-        public string Location { get; set; }
+        public string Location => $" at ({Line};{Column})";
 
         private bool isLowRelevance = true;
         public bool IsLowRelevance

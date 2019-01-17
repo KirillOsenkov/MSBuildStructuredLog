@@ -2,10 +2,14 @@
 {
     public class Import : TextNode, IHasRelevance, IPreprocessable, IHasSourceFile, IHasLineNumber
     {
-        public string ProjectFilePath { get; private set; }
-        public string ImportedProjectFilePath { get; private set; }
-        public int Line { get; private set; }
-        public int Column { get; private set; }
+        public string ProjectFilePath { get; set; }
+        public string ImportedProjectFilePath { get; set; }
+        public int Line { get; set; }
+        public int Column { get; set; }
+
+        public Import()
+        {
+        }
 
         public Import(
             string projectFilePath,
@@ -19,10 +23,9 @@
             Column = column;
 
             Name = importedProjectFilePath;
-            Location = $" at ({line};{column})";
         }
 
-        public string Location { get; set; }
+        public string Location => $" at ({Line};{Column})";
 
         private bool isLowRelevance = false;
         public bool IsLowRelevance
