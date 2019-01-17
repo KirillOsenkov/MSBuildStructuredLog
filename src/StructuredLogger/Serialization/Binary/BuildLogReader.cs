@@ -226,6 +226,28 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 build.IsAnalyzed = Serialization.GetBoolean(Dequeue());
                 return;
             }
+
+            var import = node as Import;
+            if (import != null)
+            {
+                import.ProjectFilePath = Dequeue();
+                import.ImportedProjectFilePath = Dequeue();
+                import.Line = Serialization.GetInteger(Dequeue());
+                import.Column = Serialization.GetInteger(Dequeue());
+                import.IsLowRelevance = Serialization.GetBoolean(Dequeue());
+                return;
+            }
+
+            var noImport = node as NoImport;
+            if (noImport != null)
+            {
+                noImport.ProjectFilePath = Dequeue();
+                noImport.ImportedFileSpec = Dequeue();
+                noImport.Line = Serialization.GetInteger(Dequeue());
+                noImport.Column = Serialization.GetInteger(Dequeue());
+                noImport.IsLowRelevance = Serialization.GetBoolean(Dequeue());
+                return;
+            }
         }
 
         public void Dispose()
