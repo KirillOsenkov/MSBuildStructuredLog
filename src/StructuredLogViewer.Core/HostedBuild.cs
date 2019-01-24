@@ -22,7 +22,7 @@ namespace StructuredLogViewer
         public static string GetPostfixArguments()
         {
             var loggerDll = typeof(StructuredLogger).Assembly.Location;
-            return $@"/v:diag /nologo /noconlog /logger:{nameof(StructuredLogger)},""{loggerDll}"";""{logFilePath}""";
+            return $@"/v:diag /nologo /clp:NoSummary;Verbosity=minimal /logger:{nameof(StructuredLogger)},""{loggerDll}"";""{logFilePath}""";
         }
 
         public Task<Build> BuildAndGetResult(BuildProgress progress)
