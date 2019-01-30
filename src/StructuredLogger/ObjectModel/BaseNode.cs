@@ -34,6 +34,38 @@
             }
         }
 
+        public bool IsSearchResult
+        {
+            get => HasFlag(NodeFlags.SearchResult);
+
+            set
+            {
+                if (IsSearchResult == value)
+                {
+                    return;
+                }
+
+                SetFlag(NodeFlags.SearchResult, value);
+                RaisePropertyChanged();
+            }
+        }
+
+        public bool ContainsSearchResult
+        {
+            get => HasFlag(NodeFlags.ContainsSearchResult);
+
+            set
+            {
+                if (ContainsSearchResult == value)
+                {
+                    return;
+                }
+
+                SetFlag(NodeFlags.ContainsSearchResult, value);
+                RaisePropertyChanged();
+            }
+        }
+
         private protected bool HasFlag(NodeFlags flag) => (Flags & flag) == flag;
 
         private protected void SetFlag(NodeFlags flag, bool value)

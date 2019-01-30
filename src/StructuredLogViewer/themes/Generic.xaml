@@ -20,6 +20,8 @@
   <SolidColorBrush x:Key="NoImportStroke" Color="Red" />
   <SolidColorBrush x:Key="ErrorStroke" Color="Red" />
   <SolidColorBrush x:Key="WarningStroke" Color="Gold" />
+  <SolidColorBrush x:Key="SearchResultStroke" Color="OrangeRed" />
+  <SolidColorBrush x:Key="ContainsSearchResultStroke" Color="LightCoral" />
 
   <LinearGradientBrush x:Key="ClosedFolderBrush" StartPoint="0,0" EndPoint="1,1">
     <GradientStop Color="FloralWhite" Offset="0" />
@@ -75,6 +77,9 @@
     <GradientStop Color="LightYellow" Offset="0" />
     <GradientStop Color="Yellow" Offset="1" />
   </LinearGradientBrush>
+
+  <SolidColorBrush x:Key="SearchResultBrush" Color="DarkOrange" />
+  <SolidColorBrush x:Key="ContainsSearchResultBrush" Color="Bisque" />
 
   <DrawingBrush x:Key="SlnIcon">
     <DrawingBrush.Drawing>
@@ -873,6 +878,11 @@
                                 SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
             </Border>
             <ItemsPresenter x:Name="ItemsHost" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"/>
+            <Ellipse x:Name="SearchResult"
+                     Grid.Column="1"
+                     Width="6" Height="6" Margin="1,1,0,0" StrokeThickness="1"
+                     HorizontalAlignment="Left" VerticalAlignment="Top"
+                     Visibility="Collapsed" />
           </Grid>
           <ControlTemplate.Triggers>
             <Trigger Property="IsExpanded" Value="false">
@@ -885,6 +895,16 @@
               <Setter TargetName="Bd" Property="Background" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
               <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"/>
             </Trigger>
+            <DataTrigger Binding="{Binding ContainsSearchResult}" Value="True">
+              <Setter TargetName="SearchResult" Property="Visibility" Value="Visible" />
+              <Setter TargetName="SearchResult" Property="Fill" Value="{StaticResource ContainsSearchResultBrush}" />
+              <Setter TargetName="SearchResult" Property="Stroke" Value="{StaticResource ContainsSearchResultStroke}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding IsSearchResult}" Value="True">
+              <Setter TargetName="SearchResult" Property="Visibility" Value="Visible" />
+              <Setter TargetName="SearchResult" Property="Fill" Value="{StaticResource SearchResultBrush}" />
+              <Setter TargetName="SearchResult" Property="Stroke" Value="{StaticResource SearchResultStroke}" />
+            </DataTrigger>
             <MultiTrigger>
               <MultiTrigger.Conditions>
                 <Condition Property="IsSelected" Value="true"/>

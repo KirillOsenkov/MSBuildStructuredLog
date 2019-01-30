@@ -7,6 +7,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
     {
         None = 0,
         Hidden = 1 << 0,
-        Expanded = 1 << 1
+        Expanded = 1 << 1,
+        SearchResult = 1 << 2,
+        ContainsSearchResult = 1 << 3
     }
 }
