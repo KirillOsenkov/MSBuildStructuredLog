@@ -20,6 +20,8 @@ namespace StructuredLogViewer
 
         public IEnumerable<SearchResult> FindNodes(string query)
         {
+            ClearSearchResults(build);
+
             var matcher = new NodeQueryMatcher(query, build.StringTable.Instances);
 
             resultSet = new List<SearchResult>();
@@ -28,6 +30,15 @@ namespace StructuredLogViewer
             build.VisitAllChildren<object>(node => Visit(node, matcher, cts), cts.Token);
 
             return resultSet;
+        }
+
+        public static void ClearSearchResults(Build build)
+        {
+            build.VisitAllChildren<BaseNode>(node =>
+            {
+                node.IsSearchResult = false;
+                node.ContainsSearchResult = false;
+            });
         }
 
         private void Visit(object node, NodeQueryMatcher matcher, CancellationTokenSource cancellationTokenSource)
@@ -47,6 +58,22 @@ namespace StructuredLogViewer
             if (result != null)
             {
                 resultSet.Add(result);
+                MarkAsSearchResult(node);
+            }
+        }
+
+        private static void MarkAsSearchResult(object node)
+        {
+            if (node is BaseNode baseNode)
+            {
+                baseNode.IsSearchResult = true;
+
+                var current = (baseNode as ParentedNode)?.Parent;
+                while (current?.ContainsSearchResult == false)
+                {
+                    current.ContainsSearchResult = true;
+                    current = current.Parent;
+                }
             }
         }
     }

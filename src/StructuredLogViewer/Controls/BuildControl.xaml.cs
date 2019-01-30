@@ -61,7 +61,11 @@ namespace StructuredLogViewer.Controls
                 return results;
             };
             searchLogControl.ResultsTreeBuilder = BuildResultTree;
-            searchLogControl.WatermarkDisplayed += () => UpdateWatermark();
+            searchLogControl.WatermarkDisplayed += () =>
+            {
+                Search.ClearSearchResults(Build);
+                UpdateWatermark();
+            };
 
             VirtualizingPanel.SetIsVirtualizing(treeView, SettingsService.EnableTreeViewVirtualization);
 

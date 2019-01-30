@@ -7,42 +7,34 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public abstract class TreeNode : ParentedNode
     {
-        private bool isVisible = true;
         public bool IsVisible
         {
-            get
-            {
-                return isVisible;
-            }
+            get => !HasFlag(NodeFlags.Hidden);
 
             set
             {
-                if (isVisible == value)
+                if (IsVisible == value)
                 {
                     return;
                 }
 
-                isVisible = value;
+                SetFlag(NodeFlags.Hidden, !value);
                 RaisePropertyChanged();
             }
         }
 
-        private bool isExpanded = false;
         public bool IsExpanded
         {
-            get
-            {
-                return isExpanded;
-            }
+            get => HasFlag(NodeFlags.Expanded);
 
             set
             {
-                if (isExpanded == value)
+                if (IsExpanded == value)
                 {
                     return;
                 }
 
-                isExpanded = value;
+                SetFlag(NodeFlags.Expanded, value);
                 RaisePropertyChanged();
             }
         }
