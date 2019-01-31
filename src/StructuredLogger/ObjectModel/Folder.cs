@@ -2,24 +2,10 @@
 {
     public class Folder : NamedNode, IHasRelevance
     {
-        private bool isLowRelevance = false;
         public bool IsLowRelevance
         {
-            get
-            {
-                return isLowRelevance && !IsSelected;
-            }
-
-            set
-            {
-                if (isLowRelevance == value)
-                {
-                    return;
-                }
-
-                isLowRelevance = value;
-                RaisePropertyChanged();
-            }
+            get => HasFlag(NodeFlags.LowRelevance) && !IsSelected;
+            set => SetFlag(NodeFlags.LowRelevance, value);
         }
     }
 }

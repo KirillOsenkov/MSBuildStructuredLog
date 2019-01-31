@@ -154,11 +154,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return result;
         }
 
-        private bool isLowRelevance = false;
         public bool IsLowRelevance
         {
-            get => isLowRelevance && !IsSelected;
-            set => SetField(ref isLowRelevance, value);
+            get => HasFlag(NodeFlags.LowRelevance) && !IsSelected;
+            set => SetFlag(NodeFlags.LowRelevance, value);
         }
 
         public override string ToString() => $"Project Name={Name} File={ProjectFile}";

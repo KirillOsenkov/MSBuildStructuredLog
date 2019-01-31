@@ -12,11 +12,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public override string LookupKey => Text;
 
-        private bool isLowRelevance = false;
         public bool IsLowRelevance
         {
-            get => isLowRelevance && !IsSelected;
-            set => SetField(ref isLowRelevance, value);
+            get => HasFlag(NodeFlags.LowRelevance) && !IsSelected;
+            set => SetFlag(NodeFlags.LowRelevance, value);
         }
 
         public string SourceFilePath

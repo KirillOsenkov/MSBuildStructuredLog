@@ -9,6 +9,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         Hidden = 1 << 0,
         Expanded = 1 << 1,
         SearchResult = 1 << 2,
-        ContainsSearchResult = 1 << 3
+        ContainsSearchResult = 1 << 3,
+        LowRelevance = 1 << 4
     }
 }
