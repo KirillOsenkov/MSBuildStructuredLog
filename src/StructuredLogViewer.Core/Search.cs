@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
 
@@ -20,14 +21,14 @@ namespace StructuredLogViewer
 
         public IEnumerable<SearchResult> FindNodes(string query)
         {
-            ClearSearchResults(build);
-
             var matcher = new NodeQueryMatcher(query, build.StringTable.Instances);
 
             resultSet = new List<SearchResult>();
 
             var cts = new CancellationTokenSource();
             build.VisitAllChildren<object>(node => Visit(node, matcher, cts), cts.Token);
+
+            MarkSearchResults(build, resultSet.Select(i => i.Node).OfType<BaseNode>());
 
             return resultSet;
         }
@@ -58,23 +59,28 @@ namespace StructuredLogViewer
             if (result != null)
             {
                 resultSet.Add(result);
-                MarkAsSearchResult(node);
             }
         }
 
-        private static void MarkAsSearchResult(object node)
+        private static void MarkSearchResults(Build build, IEnumerable<BaseNode> searchResults)
         {
-            if (node is BaseNode baseNode)
-            {
-                baseNode.IsSearchResult = true;
+            var resultSet = new HashSet<BaseNode>(searchResults);
+            var ancestorNodes = new HashSet<BaseNode>();
 
-                var current = (baseNode as ParentedNode)?.Parent;
-                while (current?.ContainsSearchResult == false)
+            foreach (var node in resultSet)
+            {
+                var current = (node as ParentedNode)?.Parent;
+                while (current != null && ancestorNodes.Add(current))
                 {
-                    current.ContainsSearchResult = true;
                     current = current.Parent;
                 }
             }
+
+            build.VisitAllChildren<BaseNode>(node =>
+            {
+                node.IsSearchResult = resultSet.Contains(node);
+                node.ContainsSearchResult = ancestorNodes.Contains(node);
+            });
         }
     }
 }

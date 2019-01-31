@@ -9,6 +9,7 @@
 
         public NoImport()
         {
+            IsLowRelevance = true;
         }
 
         public NoImport(
@@ -17,6 +18,7 @@
             int line,
             int column,
             string reason)
+            : this()
         {
             ProjectFilePath = projectFilePath;
             Name = importedFileSpec;
@@ -27,11 +29,10 @@
 
         public string Location => $" at ({Line};{Column})";
 
-        private bool isLowRelevance = true;
         public bool IsLowRelevance
         {
-            get => isLowRelevance && !IsSelected;
-            set => SetField(ref isLowRelevance, value);
+            get => HasFlag(NodeFlags.LowRelevance) && !IsSelected;
+            set => SetFlag(NodeFlags.LowRelevance, value);
         }
 
         string IHasSourceFile.SourceFilePath => ProjectFilePath;

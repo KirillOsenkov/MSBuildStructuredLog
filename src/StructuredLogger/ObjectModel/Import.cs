@@ -27,11 +27,10 @@
 
         public string Location => $" at ({Line};{Column})";
 
-        private bool isLowRelevance = false;
         public bool IsLowRelevance
         {
-            get => isLowRelevance && !IsSelected;
-            set => SetField(ref isLowRelevance, value);
+            get => HasFlag(NodeFlags.LowRelevance) && !IsSelected;
+            set => SetFlag(NodeFlags.LowRelevance, value);
         }
 
         string IPreprocessable.RootFilePath => ImportedProjectFilePath;
