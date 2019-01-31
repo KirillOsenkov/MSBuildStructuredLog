@@ -10,33 +10,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public bool IsVisible
         {
             get => !HasFlag(NodeFlags.Hidden);
-
-            set
-            {
-                if (IsVisible == value)
-                {
-                    return;
-                }
-
-                SetFlag(NodeFlags.Hidden, !value);
-                RaisePropertyChanged();
-            }
+            set => SetFlag(NodeFlags.Hidden, !value);
         }
 
         public bool IsExpanded
         {
             get => HasFlag(NodeFlags.Expanded);
-
-            set
-            {
-                if (IsExpanded == value)
-                {
-                    return;
-                }
-
-                SetFlag(NodeFlags.Expanded, value);
-                RaisePropertyChanged();
-            }
+            set => SetFlag(NodeFlags.Expanded, value);
         }
 
         private IList<object> children;

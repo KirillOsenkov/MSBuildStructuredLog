@@ -1,8 +1,10 @@
-﻿namespace Microsoft.Build.Logging.StructuredLogger
+﻿using System.Runtime.CompilerServices;
+
+namespace Microsoft.Build.Logging.StructuredLogger
 {
     public abstract class BaseNode : ObservableObject
     {
-        private protected NodeFlags Flags { get; private set; }
+        private NodeFlags flags;
 
         /// <summary>
         /// Since there can only be 1 selected node at a time, don't waste an instance field
@@ -37,47 +39,30 @@
         public bool IsSearchResult
         {
             get => HasFlag(NodeFlags.SearchResult);
-
-            set
-            {
-                if (IsSearchResult == value)
-                {
-                    return;
-                }
-
-                SetFlag(NodeFlags.SearchResult, value);
-                RaisePropertyChanged();
-            }
+            set => SetFlag(NodeFlags.SearchResult, value);
         }
 
         public bool ContainsSearchResult
         {
             get => HasFlag(NodeFlags.ContainsSearchResult);
-
-            set
-            {
-                if (ContainsSearchResult == value)
-                {
-                    return;
-                }
-
-                SetFlag(NodeFlags.ContainsSearchResult, value);
-                RaisePropertyChanged();
-            }
+            set => SetFlag(NodeFlags.ContainsSearchResult, value);
         }
 
-        private protected bool HasFlag(NodeFlags flag) => (Flags & flag) == flag;
+        private protected bool HasFlag(NodeFlags flag) => (flags & flag) == flag;
 
-        private protected void SetFlag(NodeFlags flag, bool value)
+        private protected void SetFlag(NodeFlags flag, bool isSet, [CallerMemberName] string propertyName = null)
         {
-            if (value)
+            var newFlags = isSet
+                ? flags | flag
+                : flags & ~flag;
+
+            if (flags == newFlags)
             {
-                Flags = Flags | flag;
+                return;
             }
-            else
-            {
-                Flags = Flags & ~flag;
-            }
+
+            flags = newFlags;
+            RaisePropertyChanged(propertyName);
         }
     }
 }
