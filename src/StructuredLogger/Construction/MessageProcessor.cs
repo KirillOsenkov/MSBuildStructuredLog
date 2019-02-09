@@ -111,8 +111,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (args is TaskCommandLineEventArgs taskArgs)
             {
-                AddCommandLine(taskArgs);
-                return;
+                if (AddCommandLine(taskArgs))
+                {
+                    return;
+                }
             }
 
             // Just the generic log message or something we currently don't handle in the object model.
@@ -492,8 +494,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// Handler for a TaskCommandLine log event. Sets the command line arguments on the appropriate task. 
         /// </summary>
         /// <param name="args">The <see cref="TaskCommandLineEventArgs"/> instance containing the event data.</param>
-        public void AddCommandLine(TaskCommandLineEventArgs args)
+        public bool AddCommandLine(TaskCommandLineEventArgs args)
         {
+            var buildEventContext = args.BuildEventContext;
+            if (buildEventContext.ProjectContextId == BuildEventContext.InvalidProjectContextId ||
+                buildEventContext.TargetId == BuildEventContext.InvalidTargetId ||
+                buildEventContext.TaskId == BuildEventContext.InvalidTaskId)
+            {
+                return false;
+            }
+
             var project = construction.GetOrAddProject(args.BuildEventContext.ProjectContextId);
             var target = project.GetTargetById(args.BuildEventContext.TargetId);
 
@@ -502,7 +512,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (task != null)
             {
                 task.CommandLineArguments = stringTable.Intern(args.CommandLine);
+                return true;
             }
+
+            return false;
         }
     }
 }
