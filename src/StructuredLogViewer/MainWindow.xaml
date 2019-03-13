@@ -17,6 +17,9 @@
         SnapsToDevicePixels="True"
         Height="800" Width="1000">
   <DockPanel>
+    <DockPanel.LayoutTransform>
+      <ScaleTransform x:Name="scaleTransform" CenterX="0" CenterY="0" ScaleX="1" ScaleY="1" />
+    </DockPanel.LayoutTransform>    
     <Menu x:Name="mainMenu" DockPanel.Dock="Top">
       <MenuItem Header="_File">
         <MenuItem Header="Start Page" Click="StartPage_Click" />
