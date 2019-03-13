@@ -20,6 +20,7 @@ namespace StructuredLogViewer
         private string logFilePath;
         private string projectFilePath;
         private BuildControl currentBuild;
+        private double scale = 1.0;
 
         public const string DefaultTitle = "MSBuild Structured Log Viewer";
 
@@ -35,6 +36,32 @@ namespace StructuredLogViewer
 
             SystemParameters.StaticPropertyChanged += SystemParameters_StaticPropertyChanged;
             UpdateTheme();
+        }
+
+        protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
+        {
+            if (Keyboard.Modifiers == ModifierKeys.Control)
+            {
+                const double min = 1;
+                const double max = 4;
+                const double step = 0.1;
+
+                if (e.Delta > 0 && scale < max)
+                {
+                    scale = Math.Min(max, scale + step);
+                    scaleTransform.ScaleX = scaleTransform.ScaleY = scale;
+                }
+                else if (e.Delta < 0 && scale > min)
+                {
+                    scale = Math.Max(min, scale - step);
+                    scaleTransform.ScaleX = scaleTransform.ScaleY = scale;
+                }
+
+                e.Handled = true;
+                return;
+            }
+
+            base.OnPreviewMouseWheel(e);
         }
 
         private void SystemParameters_StaticPropertyChanged(object sender, PropertyChangedEventArgs e)
