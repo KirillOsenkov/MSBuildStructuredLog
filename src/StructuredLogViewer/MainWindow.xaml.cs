@@ -49,12 +49,12 @@ namespace StructuredLogViewer
                 if (e.Delta > 0 && scale < max)
                 {
                     scale = Math.Min(max, scale + step);
-                    scaleTransform.ScaleX = scaleTransform.ScaleY = scale;
+                    UpdateZoomLevel();
                 }
                 else if (e.Delta < 0 && scale > min)
                 {
                     scale = Math.Max(min, scale - step);
-                    scaleTransform.ScaleX = scaleTransform.ScaleY = scale;
+                    UpdateZoomLevel();
                 }
 
                 e.Handled = true;
@@ -62,6 +62,16 @@ namespace StructuredLogViewer
             }
 
             base.OnPreviewMouseWheel(e);
+        }
+
+        private void UpdateZoomLevel(double zoom = double.NaN)
+        {
+            if (double.IsNaN(zoom))
+            {
+                zoom = scale;
+            }
+
+            scaleTransform.ScaleX = scaleTransform.ScaleY = zoom;
         }
 
         private void SystemParameters_StaticPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -600,6 +610,11 @@ namespace StructuredLogViewer
             else if (e.Key == Key.S && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
             {
                 SaveAs();
+            }
+            else if (e.Key == Key.D0 && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
+            {
+                UpdateZoomLevel(1.0);
+                e.Handled = true;
             }
         }
 
