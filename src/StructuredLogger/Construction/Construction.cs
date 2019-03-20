@@ -30,7 +30,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private readonly MessageProcessor messageProcessor;
         private readonly StringCache stringTable;
 
-        public Folder EvaluationFolder;
+        private Folder evaluationFolder;
+
+        public Folder EvaluationFolder
+        {
+            get
+            {
+                if (evaluationFolder == null)
+                {
+                    evaluationFolder = Build.GetOrCreateNodeWithName<Folder>(Intern("Evaluation"));
+                }
+                return evaluationFolder;
+            }
+        }
 
         public Construction()
         {
@@ -59,8 +71,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     var properties = Build.GetOrCreateNodeWithName<Folder>(Intern("Environment"));
                     AddProperties(properties, args.BuildEnvironment);
-
-                    EvaluationFolder = Build.GetOrCreateNodeWithName<Folder>(Intern("Evaluation"));
                 }
             }
             catch (Exception ex)
@@ -394,8 +404,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     // This happens when we consume args created by us (deserialized)
                     if (e is ProjectEvaluationStartedEventArgs projectEvaluationStarted)
                     {
-                        EvaluationFolder = Build.GetOrCreateNodeWithName<Folder>(Intern("Evaluation"));
-
                         var evaluationId = -e.BuildEventContext.ProjectContextId;
                         var projectName = Intern(projectEvaluationStarted.ProjectFile);
                         var nodeName = Intern(GetEvaluationProjectName(evaluationId, projectName));
@@ -410,8 +418,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                     else if (e is ProjectEvaluationFinishedEventArgs projectEvaluationFinished)
                     {
-                        EvaluationFolder = Build.GetOrCreateNodeWithName<Folder>("Evaluation");
-
                         var projectName = Intern(projectEvaluationFinished.ProjectFile);
                         var profilerResult = projectEvaluationFinished.ProfilerResult;
                         if (profilerResult != null && projectName != null)
