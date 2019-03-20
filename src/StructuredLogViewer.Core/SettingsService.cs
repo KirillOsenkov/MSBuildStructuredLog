@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogViewer
 {
@@ -180,14 +180,13 @@ namespace StructuredLogViewer
             }
 
             var lines = File.ReadAllLines(customArgumentsFilePath);
-            string arguments;
-            int index;
-            if (FindArguments(lines, filePath, out arguments, out index))
+            if (FindArguments(lines, filePath, out string arguments, out int index))
             {
                 return arguments;
             }
 
-            return DefaultArguments;
+            var mostRecentArguments = TextUtilities.ParseNameValue(lines[0]);
+            return mostRecentArguments.Value;
         }
 
         private const int MaximumProjectsInRecentArgumentsList = 100;
