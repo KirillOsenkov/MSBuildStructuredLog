@@ -804,7 +804,7 @@ Recent:
             if (treeNode != null)
             {
                 var text = Microsoft.Build.Logging.StructuredLogger.StringWriter.GetString(treeNode);
-                DisplayText(text, "Subtree of " + treeNode.ToString());
+                DisplayText(text, treeNode.ToString());
             }
         }
 
@@ -1062,6 +1062,7 @@ Recent:
 
         public bool DisplayText(string text, string caption = null)
         {
+            caption = TextUtilities.SanitizeFileName(caption);
             documentWell.DisplaySource(caption ?? "Text", text, displayPath: false);
             return true;
         }

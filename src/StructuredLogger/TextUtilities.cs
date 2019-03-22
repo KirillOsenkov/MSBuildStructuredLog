@@ -1,6 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -320,6 +322,37 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             return span.Milliseconds + " ms";
+        }
+
+        private static char[] invalidFileNameChars = Path.GetInvalidFileNameChars();
+
+        public static string SanitizeFileName(string text)
+        {
+            const int maxLength = 40;
+
+            if (string.IsNullOrEmpty(text))
+            {
+                return text;
+            }
+
+            if (text.Length > maxLength)
+            {
+                text = text.Substring(0, maxLength);
+            }
+
+            var sb = new StringBuilder();
+            for (int i = 0; i < text.Length; i++)
+            {
+                char ch = text[i];
+                if (invalidFileNameChars.Contains(ch))
+                {
+                    ch = '_';
+                }
+
+                sb.Append(ch);
+            }
+
+            return sb.ToString();
         }
     }
 }
