@@ -404,7 +404,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     // This happens when we consume args created by us (deserialized)
                     if (e is ProjectEvaluationStartedEventArgs projectEvaluationStarted)
                     {
-                        var evaluationId = -e.BuildEventContext.ProjectContextId;
+                        var evaluationId = Reflector.GetEvaluationId(projectEvaluationStarted.BuildEventContext);
                         var projectName = Intern(projectEvaluationStarted.ProjectFile);
                         var nodeName = Intern(GetEvaluationProjectName(evaluationId, projectName));
                         var project = EvaluationFolder.GetOrCreateNodeWithName<Project>(nodeName);
@@ -422,7 +422,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         var profilerResult = projectEvaluationFinished.ProfilerResult;
                         if (profilerResult != null && projectName != null)
                         {
-                            var nodeName = Intern(GetEvaluationProjectName(-projectEvaluationFinished.BuildEventContext.ProjectContextId, projectName));
+                            var evaluationId = Reflector.GetEvaluationId(projectEvaluationFinished.BuildEventContext);
+                            var nodeName = Intern(GetEvaluationProjectName(evaluationId, projectName));
                             var project = EvaluationFolder.GetOrCreateNodeWithName<Project>(nodeName);
                             ConstructProfilerResult(project, profilerResult.Value);
                         }
@@ -431,7 +432,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     else if (e.GetType().Name == "ProjectEvaluationStartedEventArgs")
                     {
                         var projectName = Intern(TextUtilities.ParseQuotedSubstring(e.Message));
-                        var nodeName = Intern(GetEvaluationProjectName(-e.BuildEventContext.ProjectContextId, projectName));
+                        var evaluationId = Reflector.GetEvaluationId(e.BuildEventContext);
+                        var nodeName = Intern(GetEvaluationProjectName(evaluationId, projectName));
                         var project = EvaluationFolder.GetOrCreateNodeWithName<Project>(nodeName);
                         project.Id = Reflector.GetEvaluationId(e.BuildEventContext);
                         if (project.ProjectFile == null)

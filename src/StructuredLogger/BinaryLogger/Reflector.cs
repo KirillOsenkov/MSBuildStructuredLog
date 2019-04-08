@@ -145,6 +145,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return -1;
             }
 
+            if (buildEventContext is BuildEventContextWithEvaluationId withEvaluationId)
+            {
+                return withEvaluationId.EvaluationId;
+            }
+
             if (EvaluationIdGetter == null)
             {
                 var type = buildEventContext.GetType();

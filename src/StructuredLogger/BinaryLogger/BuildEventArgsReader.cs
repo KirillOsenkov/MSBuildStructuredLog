@@ -656,22 +656,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (fileFormatVersion > 1)
             {
                 evaluationId = ReadInt32();
-                if (evaluationId >= 0)
-                {
-                    if (projectContextId == -2)
-                    {
-                        projectContextId = -evaluationId;
-                    }
-                }
             }
 
-            var result = new BuildEventContext(
+            var result = new BuildEventContextWithEvaluationId(
                 submissionId,
                 nodeId,
                 projectInstanceId,
                 projectContextId,
                 targetId,
-                taskId);
+                taskId,
+                evaluationId);
             return result;
         }
 
