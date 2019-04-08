@@ -5,6 +5,7 @@
     <TargetFramework>net46</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Prefer32Bit>true</Prefer32Bit>
+    <DebugType>embedded</DebugType>
   </PropertyGroup>
 
   <ItemGroup>

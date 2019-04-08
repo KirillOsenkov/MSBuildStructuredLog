@@ -11,6 +11,7 @@
     <ApplicationIcon>StructuredLogger.ico</ApplicationIcon>
     <NuspecFileName>MSBuildStructuredLogViewer</NuspecFileName>
     <ChocolateyFileName>msbuild-structured-log-viewer</ChocolateyFileName>
+    <DebugType>embedded</DebugType>
   </PropertyGroup>
   <Import Project="$(SrcRoot)\Common.props" />
   <ItemGroup>
