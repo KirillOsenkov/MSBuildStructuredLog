@@ -285,7 +285,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             var propertyList = ReadPropertyList();
-            var itemList = ReadItems();
+            var itemList = ReadItems(skip: false);
 
             var e = new ProjectStartedEventArgs(
                 projectId,
@@ -689,23 +689,26 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return result;
         }
 
-        private ITaskItem ReadItem()
+        private ITaskItem ReadItem(bool skip = false)
         {
             var item = new TaskItem();
-            item.ItemSpec = ReadString();
+            item.ItemSpec = ReadString(skip);
 
             int count = ReadInt32();
             for (int i = 0; i < count; i++)
             {
-                string name = ReadString();
-                string value = ReadString();
-                item.Metadata[name] = value;
+                string name = ReadString(skip);
+                string value = ReadString(skip);
+                if (!skip)
+                {
+                    item.Metadata[name] = value;
+                }
             }
 
             return item;
         }
 
-        private IEnumerable ReadItems()
+        private IEnumerable ReadItems(bool skip = false)
         {
             int count = ReadInt32();
             if (count == 0)
@@ -717,9 +720,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             for (int i = 0; i < count; i++)
             {
-                string key = ReadString();
-                ITaskItem item = ReadItem();
-                list.Add(new DictionaryEntry(key, item));
+                string key = ReadString(skip);
+                ITaskItem item = ReadItem(skip);
+                if (!skip)
+                {
+                    list.Add(new DictionaryEntry(key, item));
+                }
             }
 
             return list;
@@ -756,9 +762,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private string ReadString()
+        private string ReadString(bool skip = false)
         {
+            if (skip)
+            {
+                var length = Read7BitEncodedInt(binaryReader);
+                SkipBytes(binaryReader, length);
+                return null;
+            }
+
             return binaryReader.ReadString();
+        }
+
+        private void SkipBytes(BinaryReader binaryReader, int count)
+        {
+            binaryReader.BaseStream.Seek(count, SeekOrigin.Current);
         }
 
         private int ReadInt32()
