@@ -113,6 +113,29 @@
     </DrawingBrush.Drawing>
   </DrawingBrush>
 
+  <DrawingBrush x:Key="FSProjIcon">
+    <DrawingBrush.Drawing>
+      <DrawingGroup>
+        <GeometryDrawing Brush="#00FFFFFF" Geometry="F1M16,16L0,16 0,0 16,0z" />
+        <GeometryDrawing Brush="#FFF6F6F6" Geometry="F1M0,15L16,15 16,1 0,1z" />
+        <GeometryDrawing Brush="#FF414141" Geometry="M10 7L11 7 11 8 10 8z M9 10L10 10 10 9 11 9 11 10 12 10 12 9 13 9 13 8 12 8 12 7 13 7 13 6 12 6 12 5 11 5 11 6 10 6 10 5 9 5 9 6 8 6 8 7 9 7 9 8 8 8 8 9 9 9z" />
+        <GeometryDrawing Brush="#FF414141" Geometry="m 3.2120982 10.993424 h 1.667074 V 8.6677313 H 7.2784249 V 7.5728855 H 4.8791722 V 6.1033972 H 7.4888409 V 5.0059849 H 3.2120982 Z" />
+        <GeometryDrawing Brush="#FF682878" Geometry="F1M14,13L2,13 2,3 14,3z M1,14L15,14 15,2 1,2z" />
+      </DrawingGroup>
+    </DrawingBrush.Drawing>
+  </DrawingBrush>
+
+  <DrawingBrush x:Key="VBProjIcon">
+    <DrawingBrush.Drawing>
+      <DrawingGroup>
+        <GeometryDrawing Brush="#00FFFFFF" Geometry="F1M16,16L0,16 0,0 16,0z" />
+        <GeometryDrawing Brush="#FFF6F6F6" Geometry="F1M0,15L16,15 16,1 0,1z" />
+        <GeometryDrawing Brush="#FF414141" Geometry="M 6.9070592 5.4578905 H 8.0003989 L 6.4028881 10.54319 H 5.2194666 L 3.6415708 5.4578905 H 4.7668747 L 5.7330818 8.997259 c 0.052305 0.1910611 0.083543 0.3603303 0.093715 0.5070777 h 0.01961 c 0.015275 -0.1583708 0.047948 -0.3327243 0.100979 -0.5216069 z m 5.4521678 3.5669751 c 0 0.4663945 -0.190335 0.8354421 -0.57028 1.1078674 -0.380671 0.274606 -0.899371 0.410457 -1.558281 0.410457 H 8.0003989 V 5.4578905 h 2.1125781 c 0.647286 0 1.144919 0.1046132 1.493626 0.3123827 0.348706 0.2077717 0.522333 0.5012653 0.522333 0.8797571 0 0.2738809 -0.106065 0.5136153 -0.318195 0.719207 -0.212129 0.205591 -0.48165 0.3487061 -0.810742 0.4293444 v 0.014511 c 0.411183 0.045039 0.742454 0.1787117 0.988727 0.4017385 0.246998 0.2215742 0.370501 0.4918219 0.370501 0.8100162 z M 9.3073212 7.5072665 h 0.5746387 c 0.2695191 0 0.4823771 -0.057389 0.6378421 -0.1714475 C 10.675267 7.2210365 10.753 7.0626663 10.753 6.8628863 10.753 6.4880269 10.434079 6.3027768 9.7976898 6.3027768 H 9.3073212 Z M 10.98329 9.0110623 c 0 -0.2026866 -0.08354 -0.3617826 -0.252811 -0.4787443 C 10.561937 8.4175353 10.325834 8.3594185 10.023621 8.3594185 H 9.3073212 v 1.3403398 h 0.7083098 c 0.303665 0 0.539041 -0.061026 0.711215 -0.1845219 0.170719 -0.1235 0.256444 -0.2913151 0.256444 -0.5041741 z" />
+        <GeometryDrawing Brush="#FF00539C" Geometry="F1M14,13L2,13 2,3 14,3z M1,14L15,14 15,2 1,2z" />
+      </DrawingGroup>
+    </DrawingBrush.Drawing>
+  </DrawingBrush>
+
   <DrawingBrush x:Key="GenericProjectIcon">
     <DrawingBrush.Drawing>
       <DrawingGroup>
@@ -161,6 +184,12 @@
       </DataTrigger>
       <DataTrigger Binding="{Binding ProjectFileExtension}" Value=".csproj">
         <Setter TargetName="icon" Property="Fill" Value="{StaticResource CSProjIcon}" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding ProjectFileExtension}" Value=".vbproj">
+        <Setter TargetName="icon" Property="Fill" Value="{StaticResource VBProjIcon}" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding ProjectFileExtension}" Value=".fsproj">
+        <Setter TargetName="icon" Property="Fill" Value="{StaticResource FSProjIcon}" />
       </DataTrigger>
     </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
