@@ -2,19 +2,25 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using System.Xml;
 using ICSharpCode.AvalonEdit.Folding;
 using ICSharpCode.AvalonEdit.Highlighting;
+using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 using ICSharpCode.AvalonEdit.Search;
 
 namespace StructuredLogViewer.Controls
 {
     public partial class TextViewerControl : UserControl
     {
+        private static readonly Regex solutionFileRegex = new Regex(@"^\s*Microsoft Visual Studio Solution File", RegexOptions.Compiled | RegexOptions.Singleline);
+
         public string FilePath { get; private set; }
         public string Text { get; private set; }
         public Action Preprocess { get; private set; }
@@ -70,6 +76,19 @@ namespace StructuredLogViewer.Controls
             if (text.Length > 200 && !text.Contains("\n"))
             {
                 wordWrap.IsChecked = true;
+            }
+
+            if (solutionFileRegex.IsMatch(text))
+            {
+                IsXml = false;
+
+                using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("StructuredLogViewer.Resources.SolutionFile.xshd"))
+                using (var reader = XmlReader.Create(stream))
+                {
+                    textEditor.SyntaxHighlighting = HighlightingLoader.Load(reader, HighlightingManager.Instance);
+                }
+
+                return;
             }
 
             bool looksLikeXml = Utilities.LooksLikeXml(text);

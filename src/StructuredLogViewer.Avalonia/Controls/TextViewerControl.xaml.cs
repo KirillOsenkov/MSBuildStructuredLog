@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using Avalonia;
 using AvaloniaEdit.Folding;
 using AvaloniaEdit.Highlighting;
@@ -12,12 +13,17 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.Interactivity;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
+using System.Xml;
 using AvaloniaEdit.Editing;
+using AvaloniaEdit.Highlighting.Xshd;
 
 namespace StructuredLogViewer.Avalonia.Controls
 {
     public partial class TextViewerControl : UserControl
     {
+        private static readonly Regex solutionFileRegex = new Regex(@"^\s*Microsoft Visual Studio Solution File", RegexOptions.Compiled | RegexOptions.Singleline);
+
         private TextEditor textEditor;
         private Button preprocess;
         private TextBox filePathText;
@@ -121,6 +127,19 @@ namespace StructuredLogViewer.Avalonia.Controls
             if (text.Length > 200 && !text.Contains("\n"))
             {
                 wordWrap.IsChecked = true;
+            }
+
+            if (solutionFileRegex.IsMatch(text))
+            {
+                IsXml = false;
+
+                using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("StructuredLogViewer.Avalonia.Resources.SolutionFile.xshd"))
+                using (var reader = XmlReader.Create(stream))
+                {
+                    textEditor.SyntaxHighlighting = HighlightingLoader.Load(reader, HighlightingManager.Instance);
+                }
+
+                return;
             }
 
             bool looksLikeXml = Utilities.LooksLikeXml(text);

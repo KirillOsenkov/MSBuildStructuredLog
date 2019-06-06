@@ -1,0 +1,34 @@
+﻿<SyntaxDefinition name="Solution File" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+  
+  <RuleSet>
+    <!-- Comments -->
+    <Span foreground="#008000" begin="^\s*#" />
+
+    <Keywords fontWeight="bold" foreground="#a31544">
+      <Word>VisualStudioVersion</Word>
+      <Word>MinimumVisualStudioVersion</Word>
+      <Word>Project</Word>
+      <Word>EndProject</Word>
+      <Word>ProjectSection</Word>
+      <Word>EndProjectSection</Word>
+      <Word>Global</Word>
+      <Word>EndGlobal</Word>
+      <Word>GlobalSection</Word>
+      <Word>EndGlobalSection</Word>
+      <Word>HideSolutionNode</Word>
+      <Word>SolutionGuid</Word>
+    </Keywords>
+
+    <!-- GUIDs -->
+    <Rule foreground="#0000ff">
+      \{[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\}
+    </Rule>
+
+    <!-- Punctuation -->
+    <Rule foreground="#888888">
+      [=()"]+
+    </Rule>
+
+  </RuleSet>
+
+</SyntaxDefinition>

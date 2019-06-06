@@ -107,6 +107,7 @@
     <None Include="App.config" />
     <None Include="MSBuildStructuredLogViewer.nuspec" />
     <None Include="project.json" />
+    <EmbeddedResource Include="Resources\SolutionFile.xshd" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SrcRoot)\Common.targets" />

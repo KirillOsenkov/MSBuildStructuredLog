@@ -23,4 +23,12 @@
     <ProjectReference Include="..\StructuredLogViewer.Core\StructuredLogViewer.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Resources\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\StructuredLogViewer\Resources\SolutionFile.xshd" Link="Resources\SolutionFile.xshd" />
+  </ItemGroup>
+
 </Project>
