@@ -24,7 +24,7 @@ namespace TaskRunner
                 assembly = Assembly.Load(assemblyFilePath);
             }
 
-            var type = assembly.GetTypes().FirstOrDefault(t => t.Name == task.Name);
+            var type = assembly.GetTypes().FirstOrDefault(t => t.Name == task.Name || t.FullName == task.Name);
             if (type == null)
             {
                 throw new ArgumentException($"Type {task.Name} not found in assembly {assembly}");
