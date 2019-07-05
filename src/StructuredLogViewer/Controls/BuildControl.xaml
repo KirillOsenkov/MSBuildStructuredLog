@@ -6,9 +6,6 @@
              xmlns:local="clr-namespace:StructuredLogViewer.Controls"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300">
-  <UserControl.Resources>
-    <BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter" />
-  </UserControl.Resources>
 
   <local:SplitterPanel Orientation="Vertical" FirstChildRelativeSize="*" SecondChildRelativeSize="50">
 
