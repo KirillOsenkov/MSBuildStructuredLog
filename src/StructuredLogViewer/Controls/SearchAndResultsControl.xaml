@@ -39,7 +39,8 @@
                 VirtualizingPanel.IsVirtualizing="True"
                 VirtualizingPanel.VirtualizationMode="Recycling"
                 BorderThickness="0"
-                Background="{DynamicResource Theme_ToolWindowBackground}"></TreeView>
+                Background="{DynamicResource Theme_ToolWindowBackground}"
+                local:ScrollViewerHelper.ShiftWheelScrollsHorizontally="True" />
       <ContentPresenter x:Name="watermark"
                  Margin="40"
                  HorizontalAlignment="Center"

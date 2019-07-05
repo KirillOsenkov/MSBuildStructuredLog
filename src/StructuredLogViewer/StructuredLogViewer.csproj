@@ -99,6 +99,7 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="MSBuildLocator.cs" />
+    <Compile Include="ScrollViewerHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="StructuredLogger.ico" />
