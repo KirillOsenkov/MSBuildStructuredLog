@@ -20,6 +20,7 @@ namespace StructuredLogViewer
         private string logFilePath;
         private string projectFilePath;
         private BuildControl currentBuild;
+        private BuildControl secondToLastBuild;
         private double scale = 1.0;
 
         public const string DefaultTitle = "MSBuild Structured Log Viewer";
@@ -338,7 +339,14 @@ namespace StructuredLogViewer
 
         private void SetContent(object content)
         {
+            // We save build control to allow to bring back states to new one
+            if (mainContent.Content is BuildControl current)
+            {
+                secondToLastBuild = current;
+            }
+
             mainContent.Content = content;
+
             if (content == null)
             {
                 logFilePath = null;
@@ -355,6 +363,12 @@ namespace StructuredLogViewer
             {
                 ReloadMenu.Visibility = Visibility.Collapsed;
                 SaveAsMenu.Visibility = Visibility.Collapsed;
+            }
+
+            // If we had text inside search log control bring it back
+            if (mainContent.Content != null && secondToLastBuild != null && mainContent.Content is BuildControl currentContent && currentContent != secondToLastBuild && !string.IsNullOrEmpty(secondToLastBuild.searchLogControl.SearchText))
+            {
+                currentContent.searchLogControl.searchTextBox.SelectedText = secondToLastBuild.searchLogControl.SearchText;
             }
         }
 
