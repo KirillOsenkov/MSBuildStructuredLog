@@ -328,6 +328,29 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 Write((TargetSkippedEventArgs)e);
                 return;
             }
+            if (e is PropertyReassignmentEventArgs)
+            {
+                Write((PropertyReassignmentEventArgs)e);
+                return;
+            }
+
+            if (e is UninitializedPropertyReadEventArgs)
+            {
+                Write((UninitializedPropertyReadEventArgs)e);
+                return;
+            }
+
+            if (e is EnvironmentVariableReadEventArgs)
+            {
+                Write((EnvironmentVariableReadEventArgs)e);
+                return;
+            }
+
+            if (e is PropertyInitialValueSetEventArgs)
+            {
+                Write((PropertyInitialValueSetEventArgs)e);
+                return;
+            }
 
             Write(BinaryLogRecordKind.Message);
             WriteMessageFields(e);
@@ -350,6 +373,38 @@ namespace Microsoft.Build.Logging.StructuredLogger
             WriteOptionalString(e.TargetName);
             WriteOptionalString(e.ParentTarget);
             Write((int)e.BuildReason);
+        }
+
+        private void Write(PropertyReassignmentEventArgs e)
+        {
+            Write(BinaryLogRecordKind.PropertyReassignment);
+            WriteMessageFields(e);
+            Write(e.PropertyName);
+            Write(e.PreviousValue);
+            Write(e.NewValue);
+            Write(e.Location);
+        }
+        private void Write(UninitializedPropertyReadEventArgs e)
+        {
+            Write(BinaryLogRecordKind.UninitializedPropertyRead);
+            WriteMessageFields(e);
+            Write(e.PropertyName);
+        }
+
+        private void Write(PropertyInitialValueSetEventArgs e)
+        {
+            Write(BinaryLogRecordKind.PropertyInitialValueSet);
+            WriteMessageFields(e);
+            Write(e.PropertyName);
+            Write(e.PropertyValue);
+            Write(e.PropertySource);
+        }
+
+        private void Write(EnvironmentVariableReadEventArgs e)
+        {
+            Write(BinaryLogRecordKind.EnvironmentVariableRead);
+            WriteMessageFields(e);
+            Write(e.EnvironmentVariableName);
         }
 
         private void Write(CriticalBuildMessageEventArgs e)

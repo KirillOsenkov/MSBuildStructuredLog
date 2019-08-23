@@ -30,7 +30,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
         //   -  Ids and parent ids for the evaluation locations
         // version 7:
         //   -  Include ProjectStartedEventArgs.GlobalProperties
-        internal const int FileFormatVersion = 7;
+        // version 8
+        // - New record kinds: 
+        // - EnvironmentVariableRead
+        // - PropertyInitialValueSet
+        // - PropertyReassignment
+        // - UninitializedPropertyRead
+        internal const int FileFormatVersion = 8;
 
         private Stream stream;
         private BinaryWriter binaryWriter;
