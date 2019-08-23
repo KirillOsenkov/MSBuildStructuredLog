@@ -213,7 +213,7 @@
 
   <HierarchicalDataTemplate DataType="{x:Type l:Task}"
                             ItemsSource="{Binding Children}">
-    <StackPanel Orientation="Horizontal">
+    <StackPanel Orientation="Horizontal" ToolTip="{Binding ToolTip}">
       <Rectangle x:Name="icon" Width="14" Height="11" Stroke="{StaticResource TaskStroke}" Margin="3,3,6,3" Fill="{StaticResource TaskBrush}" VerticalAlignment="Top" />
       <TextBlock x:Name="label" Text="Task " />
       <TextBlock Text="{Binding Title}" />

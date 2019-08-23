@@ -19,6 +19,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             set => SetFlag(NodeFlags.Expanded, value);
         }
 
+        public virtual string ToolTip
+        {
+            get => null;
+        }
+
         private IList<object> children;
         public bool HasChildren => children != null && children.Count > 0;
 
