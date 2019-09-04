@@ -45,6 +45,13 @@ namespace StructuredLogViewer
 
         private int CorrectForMultilineImportElement(SourceText text, int lineNumber)
         {
+            // can happen for corrupt binlogs where some files have no text
+            // see https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/258
+            if (lineNumber < 0 || lineNumber >= text.Lines.Count)
+            {
+                return 0;
+            }
+
             var line = text.Lines[lineNumber];
             var lineText = text.GetLineText(lineNumber);
             if (lineText.Contains("<Import"))
@@ -109,7 +116,9 @@ namespace StructuredLogViewer
 
             var sourceText = sourceFileResolver.GetSourceFileText(sourceFilePath);
 
-            if (importMap.TryGetValue(sourceFilePath, out var imports) && imports.Count > 0)
+            if (importMap.TryGetValue(sourceFilePath, out var imports) &&
+                imports.Count > 0 &&
+                !string.IsNullOrWhiteSpace(sourceText.Text))
             {
                 var sb = new StringBuilder();
                 int line = 0;
