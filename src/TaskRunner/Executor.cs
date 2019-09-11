@@ -128,7 +128,13 @@ namespace TaskRunner
                 object value = null;
                 if (propertyInfo.PropertyType == typeof(string))
                 {
-                    value = string.Join(";", taskItems.Select(t => t.ItemSpec));
+                    string separator = ";";
+                    if (propertyInfo.Name == "SolutionConfigurationContents")
+                    {
+                        separator = Environment.NewLine;
+                    }
+
+                    value = string.Join(separator, taskItems.Select(t => t.ItemSpec));
                 }
                 else if (propertyInfo.PropertyType == typeof(string[]))
                 {

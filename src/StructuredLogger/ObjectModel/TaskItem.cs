@@ -43,7 +43,14 @@ namespace Microsoft.Build.Logging
 
         public string GetMetadata(string metadataName)
         {
-            Metadata.TryGetValue(metadataName, out var result);
+            if (!Metadata.TryGetValue(metadataName, out var result))
+            {
+                if (metadataName == "FullPath")
+                {
+                    return ItemSpec;
+                }
+            }
+
             return result ?? "";
         }
 
@@ -64,7 +71,7 @@ namespace Microsoft.Build.Logging
 
         public void SetMetadataValueLiteral(string metadataName, string metadataValue)
         {
-            throw new NotImplementedException();
+            SetMetadata(metadataName, metadataValue);
         }
 
         public override string ToString() => ItemSpec;
