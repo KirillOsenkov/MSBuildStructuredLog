@@ -14,9 +14,7 @@ using Avalonia.Threading;
 using Avalonia.Input;
 using Avalonia;
 using Avalonia.Styling;
-using Avalonia.Markup.Xaml.Data;
 using Avalonia.Data;
-using Avalonia.Controls.Generators;
 
 namespace StructuredLogViewer.Avalonia.Controls
 {
@@ -71,7 +69,11 @@ namespace StructuredLogViewer.Avalonia.Controls
                 return results;
             };
             searchLogControl.ResultsTreeBuilder = BuildResultTree;
-            searchLogControl.WatermarkDisplayed += () => UpdateWatermark();
+            searchLogControl.WatermarkDisplayed += () =>
+            {
+                Search.ClearSearchResults(Build);
+                UpdateWatermark();
+            };
 
             findInFilesControl.ExecuteSearch = FindInFiles;
             findInFilesControl.ResultsTreeBuilder = BuildFindResults;

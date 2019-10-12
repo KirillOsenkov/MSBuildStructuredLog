@@ -50,7 +50,8 @@
                                     <TreeView Name="treeView"
                                               BorderBrush="Transparent"
                                               BorderThickness="0"
-                                              Items="{Binding Children}" />
+                                              Classes="searchable"
+                                              Items="{Binding Children}"/>
                                 </TabItem>
 
                                 <!--<TabItem Name="timelineTab"
@@ -78,7 +79,7 @@
                              BorderBrush="Transparent"
                              Background="LightYellow">
                         <ListBox.Template>
-                            <ControlTemplate>
+                            <ControlTemplate TargetType="{x:Type ListBox}">
                                 <Border BorderBrush="{TemplateBinding BorderBrush}"
                                         BorderThickness="{TemplateBinding BorderThickness}">
                                     <ItemsPresenter Name="PART_ItemsPresenter"
