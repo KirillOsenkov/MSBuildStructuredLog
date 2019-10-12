@@ -80,6 +80,24 @@
                 <GradientStop Color="LightSkyBlue"
                               Offset="1" />
             </LinearGradientBrush>
+            
+            <LinearGradientBrush x:Key="ImportBrush"
+                                 StartPoint="0,0"
+                                 EndPoint="1,1">
+                <GradientStop Color="Bisque"
+                              Offset="0" />
+                <GradientStop Color="Tan"
+                              Offset="1" />
+            </LinearGradientBrush>
+
+            <LinearGradientBrush x:Key="NoImportBrush"
+                                 StartPoint="0,0"
+                                 EndPoint="1,1">
+                <GradientStop Color="Bisque"
+                              Offset="0" />
+                <GradientStop Color="Tomato"
+                              Offset="1" />
+            </LinearGradientBrush>
 
             <LinearGradientBrush x:Key="MessageBrush"
                                  StartPoint="0,0"

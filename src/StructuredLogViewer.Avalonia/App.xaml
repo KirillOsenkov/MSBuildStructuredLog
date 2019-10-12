@@ -325,7 +325,50 @@
                 </DataTrigger>
             </DataTemplate.Triggers>-->
         </DataTemplate>
+        
+        <TreeDataTemplate DataType="{x:Type l:Import}"
+                          ItemsSource="{Binding Children}">
+            <StackPanel Orientation="Horizontal">
+                <Rectangle Name="icon"
+                           Width="14"
+                           Height="11"
+                           Stroke="{DynamicResource ImportStroke}"
+                           Margin="3,5,6,3"
+                           Fill="{DynamicResource ImportBrush}"
+                           VerticalAlignment="Top" />
+                <TextBlock x:Name="label"
+                           Text="Import"
+                           Margin="0,0,6,0" />
+                <TextBlock x:Name="name"
+                           Text="{Binding Name}" />
+                <TextBlock x:Name="location"
+                           Text="{Binding Location}" />
+            </StackPanel>
+        </TreeDataTemplate>
 
+        <TreeDataTemplate DataType="{x:Type l:NoImport}"
+                          ItemsSource="{Binding Children}">
+            <StackPanel Orientation="Horizontal">
+                <Rectangle Name="icon"
+                           Width="14"
+                           Height="11"
+                           Stroke="{DynamicResource NoImportStroke}"
+                           Margin="3,5,6,3"
+                           Fill="{DynamicResource NoImportBrush}"
+                           VerticalAlignment="Top" />
+                <TextBlock x:Name="label"
+                           Text="NoImport"
+                           Margin="0,0,6,0" />
+                <TextBlock x:Name="name"
+                           Text="{Binding Name}" />
+                <TextBlock x:Name="location"
+                           Text="{Binding Location}"
+                           Margin="0,0,6,0" />
+                <TextBlock x:Name="reason"
+                           Text="{Binding Text}" />
+            </StackPanel>
+        </TreeDataTemplate>
+        
         <DataTemplate DataType="{x:Type l:Error}">
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
