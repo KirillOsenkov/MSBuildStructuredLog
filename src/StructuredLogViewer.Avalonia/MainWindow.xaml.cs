@@ -112,9 +112,8 @@ namespace StructuredLogViewer.Avalonia
             var welcomeScreen = new WelcomeScreen();
             welcomeScreen.Message = message;
             SetContent(welcomeScreen);
-            // TODO:
-            //welcomeScreen.RecentLogSelected += log => OpenLogFile(log);
-            welcomeScreen.RecentProjectSelected += project => BuildProject(project);
+            welcomeScreen.RecentLogSelected += log => Dispatcher.UIThread.Post(() => OpenLogFile(log));
+            welcomeScreen.RecentProjectSelected += project => Dispatcher.UIThread.Post(() => BuildProject(project));
             welcomeScreen.OpenProjectRequested += async () => await OpenProjectOrSolution();
             welcomeScreen.OpenLogFileRequested += async () => await OpenLogFile();
             UpdateRecentItemsMenu();
