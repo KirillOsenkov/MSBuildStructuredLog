@@ -3,6 +3,17 @@
              xmlns:l="clr-namespace:Microsoft.Build.Logging.StructuredLogger;assembly=StructuredLogger"
              xmlns:common="clr-namespace:Microsoft.Build.Logging.StructuredLogger;assembly=StructuredLogViewer.Core"
              xmlns:s="clr-namespace:StructuredLogViewer.Avalonia.Controls;assembly=StructuredLogViewer.Avalonia">
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="resm:StructuredLogViewer.Avalonia.Resources.xaml?assembly=StructuredLogViewer.Avalonia" />
+            </ResourceDictionary.MergedDictionaries>
+            
+            <s:ProjectIconConverter x:Key="ProjectIconConverter" />
+        </ResourceDictionary>
+    </Application.Resources>
+    
     <Application.Styles>
         <StyleInclude Source="resm:Avalonia.Themes.Default.DefaultTheme.xaml?assembly=Avalonia.Themes.Default" />
         <StyleInclude Source="resm:Avalonia.Themes.Default.Accents.BaseLight.xaml?assembly=Avalonia.Themes.Default" />
@@ -69,38 +80,14 @@
                           ItemsSource="{Binding Children}">
             <StackPanel Orientation="Horizontal"
                         Name="projectRoot">
-                <Rectangle Name="icon"
-                           Width="16"
-                           Height="16"
-                           Margin="2,2,6,2"
-                           VerticalAlignment="Top" />
-                <!-- 
-                           Fill="{DynamicResource GenericProjectIcon}"
-                
-                -->
+                <DrawingPresenter Width="16"
+                                  Height="16"
+                                  Margin="2,4,6,2"
+                                  VerticalAlignment="Top"
+                                  Drawing="{Binding ProjectFileExtension, Converter={StaticResource ProjectIconConverter}}" />
                 <TextBlock Text="{Binding Name}"
                            Margin="0,1,0,0" />
             </StackPanel>
-            <!--<TreeDataTemplate.Triggers>
-                <DataTrigger Binding="{Binding IsLowRelevance}"
-                             Value="True">
-                    <Setter TargetName="projectRoot"
-                            Property="Opacity"
-                            Value="0.25" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding ProjectFileExtension}"
-                             Value=".sln">
-                    <Setter TargetName="icon"
-                            Property="Fill"
-                            Value="{DynamicResource SlnIcon}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding ProjectFileExtension}"
-                             Value=".csproj">
-                    <Setter TargetName="icon"
-                            Property="Fill"
-                            Value="{DynamicResource CSProjIcon}" />
-                </DataTrigger>
-            </TreeDataTemplate.Triggers>-->
         </TreeDataTemplate>
 
         <TreeDataTemplate DataType="{x:Type l:Target}"
@@ -686,12 +673,10 @@
                                     MinHeight="200"
                                     Command="{Binding OpenProjectCommand}">
                                 <StackPanel>
-                                    <Rectangle Width="100"
-                                               Height="100"
-                                               Margin="20" />
-                                    <!--
-                                               Fill="{DynamicResource SlnIcon}"
-                                    -->
+                                    <DrawingPresenter Width="100"
+                                                      Height="100"
+                                                      Margin="20" 
+                                                      Drawing="{DynamicResource SlnIcon}" />
                                     <TextBlock Text="Open Project/Solution"
                                                FontSize="16"
                                                Margin="10"
