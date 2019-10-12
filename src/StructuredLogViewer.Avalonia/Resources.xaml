@@ -13,60 +13,62 @@
     <SolidColorBrush x:Key="ItemStroke" Color="MediumAquamarine" />
     <SolidColorBrush x:Key="MetadataStroke" Color="MediumAquamarine" />
     <SolidColorBrush x:Key="MessageStroke" Color="LightGray" />
+    <SolidColorBrush x:Key="ImportStroke" Color="Sienna" />
+    <SolidColorBrush x:Key="NoImportStroke" Color="Red" />
     <SolidColorBrush x:Key="ErrorStroke" Color="Red" />
     <SolidColorBrush x:Key="WarningStroke" Color="Gold" />
 
-    <LinearGradientBrush x:Key="ClosedFolderBrush" StartPoint="0,0" EndPoint="1,1">
+    <LinearGradientBrush x:Key="ClosedFolderBrush" StartPoint="0%,0%" EndPoint="100%,100%">
         <GradientStop Color="FloralWhite" Offset="0" />
         <GradientStop Color="NavajoWhite" Offset="1" />
     </LinearGradientBrush>
 
-    <LinearGradientBrush x:Key="TargetBrush" StartPoint="0,0" EndPoint="1,1">
+    <LinearGradientBrush x:Key="TargetBrush" StartPoint="0%,0%" EndPoint="100%,100%">
         <GradientStop Color="LavenderBlush" Offset="0" />
         <GradientStop Color="Thistle" Offset="1" />
     </LinearGradientBrush>
 
-    <LinearGradientBrush x:Key="TaskBrush" StartPoint="0,0" EndPoint="1,1">
+    <LinearGradientBrush x:Key="TaskBrush" StartPoint="0%,0%" EndPoint="100%,100%">
         <GradientStop Color="Cyan" Offset="0" />
         <GradientStop Color="DeepSkyBlue" Offset="1" />
     </LinearGradientBrush>
 
-    <LinearGradientBrush x:Key="ParameterBrush" StartPoint="0,0" EndPoint="1,1">
+    <LinearGradientBrush x:Key="ParameterBrush" StartPoint="0%,0%" EndPoint="100%,100%">
         <GradientStop Color="AliceBlue" Offset="0" />
         <GradientStop Color="LightSkyBlue" Offset="1" />
     </LinearGradientBrush>
 
-    <LinearGradientBrush x:Key="ItemBrush" StartPoint="0,0" EndPoint="1,1">
+    <LinearGradientBrush x:Key="ItemBrush" StartPoint="0%,0%" EndPoint="100%,100%">
         <GradientStop Color="Honeydew" Offset="0" />
         <GradientStop Color="LightGreen" Offset="1" />
     </LinearGradientBrush>
 
-    <LinearGradientBrush x:Key="PropertyBrush" StartPoint="0,0" EndPoint="1,1">
+    <LinearGradientBrush x:Key="PropertyBrush" StartPoint="0%,0%" EndPoint="100%,100%">
         <GradientStop Color="AliceBlue" Offset="0" />
         <GradientStop Color="LightSkyBlue" Offset="1" />
     </LinearGradientBrush>
 
-    <LinearGradientBrush x:Key="ImportBrush" StartPoint="0,0" EndPoint="1,1">
+    <LinearGradientBrush x:Key="ImportBrush" StartPoint="0%,0%" EndPoint="100%,100%">
         <GradientStop Color="Bisque" Offset="0" />
         <GradientStop Color="Tan" Offset="1" />
     </LinearGradientBrush>
 
-    <LinearGradientBrush x:Key="NoImportBrush" StartPoint="0,0" EndPoint="1,1">
+    <LinearGradientBrush x:Key="NoImportBrush" StartPoint="0%,0%" EndPoint="100%,100%">
         <GradientStop Color="Bisque" Offset="0" />
         <GradientStop Color="Tomato" Offset="1" />
     </LinearGradientBrush>
 
-    <LinearGradientBrush x:Key="MessageBrush" StartPoint="0,0" EndPoint="1,1">
+    <LinearGradientBrush x:Key="MessageBrush" StartPoint="0%,0%" EndPoint="100%,100%">
         <GradientStop Color="White" Offset="0" />
         <GradientStop Color="LightGray" Offset="1" />
     </LinearGradientBrush>
 
-    <LinearGradientBrush x:Key="ErrorBrush" StartPoint="0,0" EndPoint="1,1">
+    <LinearGradientBrush x:Key="ErrorBrush" StartPoint="0%,0%" EndPoint="100%,100%">
         <GradientStop Color="MistyRose" Offset="0" />
         <GradientStop Color="LightCoral" Offset="1" />
     </LinearGradientBrush>
 
-    <LinearGradientBrush x:Key="WarningBrush" StartPoint="0,0" EndPoint="1,1">
+    <LinearGradientBrush x:Key="WarningBrush" StartPoint="0%,0%" EndPoint="100%,100%">
         <GradientStop Color="LightYellow" Offset="0" />
         <GradientStop Color="Yellow" Offset="1" />
     </LinearGradientBrush>
