@@ -1,8 +1,7 @@
-<Styles xmlns="https://github.com/avaloniaui"
+﻿<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:l="clr-namespace:Microsoft.Build.Logging.StructuredLogger;assembly=StructuredLogger"
         xmlns:s="clr-namespace:StructuredLogViewer.Avalonia.Controls;assembly=StructuredLogViewer.Avalonia"
-        xmlns:common="clr-namespace:Microsoft.Build.Logging.StructuredLogger;assembly=StructuredLogViewer.Core">
+        xmlns:converters="clr-namespace:Avalonia.Controls.Converters;assembly=Avalonia.Controls">
     <Style>
         <Style.Resources>
             <Geometry x:Key="SearchGeometry">F1 M 8.5,7.0 C 7.12,7.00 6.0,5.88 6.0,4.5 C 6.0,3.12 7.12,2.0 8.5,2.0 C 9.88,2.0 11.0,3.12 11.0,4.5 C 11.0,5.88 9.88,7.0 8.5,7.0 Z M 8.5,0.0 C 6.02,0.0 4.0,2.02 4.0,4.500 C 4.0,5.23 4.19,5.9 4.49,6.5 L 0.0,11.0 L 2.0,13.0 L 6.49,8.51 C 7.1,8.81 7.77,9.0 8.5,9.0 C 11.0,9.0 13.0,7.0 13.0,4.5 C 13.0,2.02 11.0,0.0 8.5,0.0 Z</Geometry>
@@ -230,5 +229,62 @@
             </ControlTemplate>
         </Setter>
     </Style>
-
+    
+    <Style Selector="TreeView.searchable TreeViewItem">
+        <Style.Resources>
+            <converters:MarginMultiplierConverter Indent="16" Left="True" x:Key="LeftMarginConverter" />
+            <SolidColorBrush x:Key="SearchResultStroke"
+                             Color="OrangeRed" />
+            <SolidColorBrush x:Key="ContainsSearchResultStroke"
+                             Color="LightCoral" />
+            <SolidColorBrush x:Key="SearchResultBrush"
+                             Color="DarkOrange" />
+            <SolidColorBrush x:Key="ContainsSearchResultBrush"
+                             Color="Bisque" />
+        </Style.Resources>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <StackPanel>
+                    <Border Name="SelectionBorder"
+                            Focusable="True"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            TemplatedControl.IsTemplateFocusTarget="True">
+                        <Grid Name="PART_Header"
+                              ColumnDefinitions="16, Auto"
+                              HorizontalAlignment="Left"
+                              Margin="{TemplateBinding Level, Mode=OneWay, Converter={StaticResource LeftMarginConverter}}" >
+                            <ToggleButton Name="expander"
+                                          Focusable="False"
+                                          IsChecked="{TemplateBinding IsExpanded, Mode=TwoWay}"/>
+                            <ContentPresenter Name="PART_HeaderPresenter"
+                                              Focusable="False"
+                                              Content="{TemplateBinding Header}"
+                                              HorizontalContentAlignment="{TemplateBinding HorizontalAlignment}"
+                                              Padding="{TemplateBinding Padding}"
+                                              Grid.Column="1"/>
+                            <Ellipse Grid.Column="1"
+                                     Width="6" Height="6" Margin="2,2,0,0" StrokeThickness="1"
+                                     HorizontalAlignment="Left" VerticalAlignment="Top"
+                                     Fill="{StaticResource ContainsSearchResultBrush}"
+                                     Stroke="{StaticResource ContainsSearchResultStroke}"
+                                     IsVisible="{Binding ContainsSearchResult}"/>
+                            <Ellipse Grid.Column="1"
+                                     Width="6" Height="6" Margin="2,2,0,0" StrokeThickness="1"
+                                     HorizontalAlignment="Left" VerticalAlignment="Top"
+                                     Fill="{StaticResource SearchResultBrush}"
+                                     Stroke="{StaticResource SearchResultStroke}"
+                                     IsVisible="{Binding IsSearchResult}"/>
+                        </Grid>
+                    </Border>
+                    <ItemsPresenter Name="PART_ItemsPresenter"
+                                    IsVisible="{TemplateBinding IsExpanded}"
+                                    Items="{TemplateBinding Items}"
+                                    ItemsPanel="{TemplateBinding ItemsPanel}"/>
+                </StackPanel>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    
 </Styles>

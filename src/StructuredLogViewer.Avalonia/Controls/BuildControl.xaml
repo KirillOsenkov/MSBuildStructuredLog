@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:StructuredLogViewer.Avalonia.Controls;assembly=StructuredLogViewer.Avalonia">
 
@@ -50,7 +50,8 @@
                                     <TreeView Name="treeView"
                                               BorderBrush="Transparent"
                                               BorderThickness="0"
-                                              Items="{Binding Children}" />
+                                              Classes="searchable"
+                                              Items="{Binding Children}"/>
                                 </TabItem>
 
                                 <!--<TabItem Name="timelineTab"

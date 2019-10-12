@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -69,7 +69,11 @@ namespace StructuredLogViewer.Avalonia.Controls
                 return results;
             };
             searchLogControl.ResultsTreeBuilder = BuildResultTree;
-            searchLogControl.WatermarkDisplayed += () => UpdateWatermark();
+            searchLogControl.WatermarkDisplayed += () =>
+            {
+                Search.ClearSearchResults(Build);
+                UpdateWatermark();
+            };
 
             findInFilesControl.ExecuteSearch = FindInFiles;
             findInFilesControl.ResultsTreeBuilder = BuildFindResults;
