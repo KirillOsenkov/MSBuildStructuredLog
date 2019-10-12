@@ -215,7 +215,7 @@ namespace StructuredLogViewer.Avalonia.Controls
         {
             if (e.Property == CheckBox.IsCheckedProperty)
             {
-                textEditor.WordWrap = wordWrap.IsChecked;
+                textEditor.WordWrap = wordWrap.IsChecked.GetValueOrDefault();
             }
         }
 

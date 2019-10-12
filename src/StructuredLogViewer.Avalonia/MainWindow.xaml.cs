@@ -332,7 +332,7 @@ namespace StructuredLogViewer.Avalonia
             }
 
             progress.ProgressText = "Rendering tree...";
-            await Dispatcher.UIThread.InvokeTaskAsync(() => { }, DispatcherPriority.Loaded); // let the progress message be rendered before we block the UI again
+            await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Loaded); // let the progress message be rendered before we block the UI again
 
             DisplayBuild(build);
         }

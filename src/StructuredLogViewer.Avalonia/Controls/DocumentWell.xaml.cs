@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
 using Avalonia.Markup.Xaml;
-using Avalonia.Markup.Xaml.Data;
 using Avalonia.Interactivity;
 
 namespace StructuredLogViewer.Avalonia.Controls

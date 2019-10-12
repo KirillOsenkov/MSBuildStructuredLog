@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -14,9 +14,7 @@ using Avalonia.Threading;
 using Avalonia.Input;
 using Avalonia;
 using Avalonia.Styling;
-using Avalonia.Markup.Xaml.Data;
 using Avalonia.Data;
-using Avalonia.Controls.Generators;
 
 namespace StructuredLogViewer.Avalonia.Controls
 {

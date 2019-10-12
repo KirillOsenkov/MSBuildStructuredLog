@@ -7,7 +7,7 @@
                      MinHeight="23"
                      BorderThickness="0,0,0,1" />
             <Path Name="magnifyingGlass"
-                  Data="{StyleResource SearchGeometry}"
+                  Data="{DynamicResource SearchGeometry}"
                   Fill="#717171"
                   HorizontalAlignment="Right"
                   VerticalAlignment="Center"
@@ -21,8 +21,8 @@
                      />
             <!--TODO
             
-                IsVisible="{Binding ElementName=searchTextBox, Path=Text, Converter={StyleResource StringEmptinessToVisibilityConverter}, ConverterParameter=Invert }"
-                IsVisible="{Binding ElementName=searchTextBox, Path=Text, Converter={StyleResource StringEmptinessToVisibilityConverter} }"
+                IsVisible="{Binding ElementName=searchTextBox, Path=Text, Converter={DynamicResource StringEmptinessToVisibilityConverter}, ConverterParameter=Invert }"
+                IsVisible="{Binding ElementName=searchTextBox, Path=Text, Converter={DynamicResource StringEmptinessToVisibilityConverter} }"
             -->
         </Grid>
 

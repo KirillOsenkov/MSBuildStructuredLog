@@ -20,7 +20,7 @@
                         <DockPanel>
                             <TabStrip Items="{TemplateBinding Headers}"
                                       DockPanel.Dock="{TemplateBinding TabStripPlacement}"
-                                      SelectedIndex="{TemplateBinding Path=SelectedIndex, Mode=TwoWay}" />
+                                      SelectedIndex="{TemplateBinding SelectedIndex, Mode=TwoWay}" />
                             <Carousel Items="{TemplateBinding Tabs}"
                                       MemberSelector="Content"
                                       SelectedIndex="{TemplateBinding SelectedIndex}" />
@@ -39,9 +39,9 @@
                 <Rectangle Name="icon"
                            Width="14"
                            Height="11"
-                           Stroke="{StyleResource FolderStroke}"
+                           Stroke="{DynamicResource FolderStroke}"
                            Margin="3,3,6,3"
-                           Fill="{StyleResource ClosedFolderBrush}" />
+                           Fill="{DynamicResource ClosedFolderBrush}" />
                 <TextBlock Name="nameText"
                            Text="{Binding Name}" />
             </StackPanel>
@@ -59,7 +59,7 @@
                             Value="Red" />
                     <Setter TargetName="icon"
                             Property="Fill"
-                            Value="{StyleResource ErrorBrush}" />
+                            Value="{DynamicResource ErrorBrush}" />
                 </DataTrigger>
             </TreeDataTemplate.Triggers>-->
         </TreeDataTemplate>
@@ -74,7 +74,7 @@
                            Margin="2,2,6,2"
                            VerticalAlignment="Top" />
                 <!-- 
-                           Fill="{StyleResource GenericProjectIcon}"
+                           Fill="{DynamicResource GenericProjectIcon}"
                 
                 -->
                 <TextBlock Text="{Binding Name}"
@@ -91,13 +91,13 @@
                              Value=".sln">
                     <Setter TargetName="icon"
                             Property="Fill"
-                            Value="{StyleResource SlnIcon}" />
+                            Value="{DynamicResource SlnIcon}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding ProjectFileExtension}"
                              Value=".csproj">
                     <Setter TargetName="icon"
                             Property="Fill"
-                            Value="{StyleResource CSProjIcon}" />
+                            Value="{DynamicResource CSProjIcon}" />
                 </DataTrigger>
             </TreeDataTemplate.Triggers>-->
         </TreeDataTemplate>
@@ -109,9 +109,9 @@
                 <Rectangle Name="icon"
                            Width="14"
                            Height="11"
-                           Stroke="{StyleResource TargetStroke}"
+                           Stroke="{DynamicResource TargetStroke}"
                            Margin="3,3,6,3"
-                           Fill="{StyleResource TargetBrush}"
+                           Fill="{DynamicResource TargetBrush}"
                            VerticalAlignment="Top" />
                 <TextBlock Name="label"
                            Text="Target " />
@@ -128,7 +128,7 @@
                              Value="False">
                     <Setter TargetName="label"
                             Property="Foreground"
-                            Value="{StyleResource TargetStroke}" />
+                            Value="{DynamicResource TargetStroke}" />
                 </DataTrigger>
             </TreeDataTemplate.Triggers>-->
         </TreeDataTemplate>
@@ -139,9 +139,9 @@
                 <Rectangle Name="icon"
                            Width="14"
                            Height="11"
-                           Stroke="{StyleResource TaskStroke}"
+                           Stroke="{DynamicResource TaskStroke}"
                            Margin="3,3,6,3"
-                           Fill="{StyleResource TaskBrush}"
+                           Fill="{DynamicResource TaskBrush}"
                            VerticalAlignment="Top" />
                 <TextBlock Name="label"
                            Text="Task " />
@@ -154,7 +154,7 @@
                              Value="False">
                     <Setter TargetName="label"
                             Property="Foreground"
-                            Value="{StyleResource TaskStroke}" />
+                            Value="{DynamicResource TaskStroke}" />
                     <Setter TargetName="duration"
                             Property="Foreground"
                             Value="LightGray" />
@@ -168,9 +168,9 @@
                 <Rectangle Name="icon"
                            Width="14"
                            Height="11"
-                           Stroke="{StyleResource ItemStroke}"
+                           Stroke="{DynamicResource ItemStroke}"
                            Margin="3,3,6,3"
-                           Fill="{StyleResource ItemBrush}"
+                           Fill="{DynamicResource ItemBrush}"
                            VerticalAlignment="Top" />
                 <TextBlock Name="label"
                            Text="Add Item " />
@@ -192,9 +192,9 @@
                 <Rectangle Name="icon"
                            Width="14"
                            Height="11"
-                           Stroke="{StyleResource ItemStroke}"
+                           Stroke="{DynamicResource ItemStroke}"
                            Margin="3,3,6,3"
-                           Fill="{StyleResource ItemBrush}"
+                           Fill="{DynamicResource ItemBrush}"
                            VerticalAlignment="Top" />
                 <TextBlock Name="label"
                            Text="Remove Item " />
@@ -216,9 +216,9 @@
                 <Rectangle Name="icon"
                            Width="14"
                            Height="11"
-                           Stroke="{StyleResource ItemStroke}"
+                           Stroke="{DynamicResource ItemStroke}"
                            Margin="3,3,6,3"
-                           Fill="{StyleResource ItemBrush}"
+                           Fill="{DynamicResource ItemBrush}"
                            VerticalAlignment="Top" />
                 <TextBlock Name="nameAndEquals"
                            Text="{Binding NameAndEquals}" />
@@ -239,9 +239,9 @@
                 <Rectangle Name="icon"
                            Width="14"
                            Height="11"
-                           Stroke="{StyleResource MetadataStroke}"
+                           Stroke="{DynamicResource MetadataStroke}"
                            Margin="3,3,6,3"
-                           Fill="{StyleResource ItemBrush}"
+                           Fill="{DynamicResource ItemBrush}"
                            VerticalAlignment="Top" />
                 <TextBlock Name="label"
                            Text="{Binding NameAndEquals, Mode=OneTime}" />
@@ -262,9 +262,9 @@
                 <Rectangle Name="icon"
                            Width="14"
                            Height="11"
-                           Stroke="{StyleResource PropertyStroke}"
+                           Stroke="{DynamicResource PropertyStroke}"
                            Margin="3,3,6,3"
-                           Fill="{StyleResource PropertyBrush}"
+                           Fill="{DynamicResource PropertyBrush}"
                            VerticalAlignment="Top" />
                 <TextBlock Name="label"
                            Text="{Binding NameAndEquals, Mode=OneTime}" />
@@ -275,7 +275,7 @@
                              Value="False">
                     <Setter TargetName="label"
                             Property="Foreground"
-                            Value="{StyleResource PropertyStroke}" />
+                            Value="{DynamicResource PropertyStroke}" />
                 </DataTrigger>
             </DataTemplate.Triggers>-->
         </DataTemplate>
@@ -286,9 +286,9 @@
                 <Rectangle Name="icon"
                            Width="14"
                            Height="11"
-                           Stroke="{StyleResource ParameterStroke}"
+                           Stroke="{DynamicResource ParameterStroke}"
                            Margin="3,3,6,3"
-                           Fill="{StyleResource ParameterBrush}"
+                           Fill="{DynamicResource ParameterBrush}"
                            VerticalAlignment="Top" />
                 <TextBlock Name="name"
                            Text="{Binding Name}" />
@@ -298,7 +298,7 @@
                              Value="False">
                     <Setter TargetName="name"
                             Property="Foreground"
-                            Value="{StyleResource ParameterStroke}" />
+                            Value="{DynamicResource ParameterStroke}" />
                 </DataTrigger>
             </TreeDataTemplate.Triggers>-->
         </TreeDataTemplate>
@@ -308,9 +308,9 @@
                 <Rectangle Name="icon"
                            Width="14"
                            Height="11"
-                           Stroke="{StyleResource MessageStroke}"
+                           Stroke="{DynamicResource MessageStroke}"
                            Margin="3,3,6,3"
-                           Fill="{StyleResource MessageBrush}"
+                           Fill="{DynamicResource MessageBrush}"
                            VerticalAlignment="Top" />
                 <TextBlock Name="messageText"
                            Text="{Binding ShortenedText}" />
@@ -330,9 +330,9 @@
                 <Rectangle Name="icon"
                            Width="14"
                            Height="11"
-                           Stroke="{StyleResource ErrorStroke}"
+                           Stroke="{DynamicResource ErrorStroke}"
                            Margin="3,3,6,3"
-                           Fill="{StyleResource ErrorBrush}"
+                           Fill="{DynamicResource ErrorBrush}"
                            VerticalAlignment="Top" />
                 <TextBlock Name="text"
                            Text="{Binding}" />
@@ -342,7 +342,7 @@
                              Value="False">
                     <Setter TargetName="text"
                             Property="Foreground"
-                            Value="{StyleResource ErrorStroke}" />
+                            Value="{DynamicResource ErrorStroke}" />
                 </DataTrigger>
             </DataTemplate.Triggers>-->
         </DataTemplate>
@@ -352,9 +352,9 @@
                 <Rectangle Name="icon"
                            Width="14"
                            Height="11"
-                           Stroke="{StyleResource WarningStroke}"
+                           Stroke="{DynamicResource WarningStroke}"
                            Margin="3,3,6,3"
-                           Fill="{StyleResource WarningBrush}"
+                           Fill="{DynamicResource WarningBrush}"
                            VerticalAlignment="Top" />
                 <TextBlock Text="{Binding}" />
             </StackPanel>
@@ -380,9 +380,9 @@
                 <Rectangle Name="icon"
                            Width="14"
                            Height="11"
-                           Stroke="{StyleResource MessageStroke}"
+                           Stroke="{DynamicResource MessageStroke}"
                            Margin="3,3,6,3"
-                           Fill="{StyleResource MessageBrush}"
+                           Fill="{DynamicResource MessageBrush}"
                            VerticalAlignment="Top" />
                 <TextBlock Name="messageText"
                            Text="{Binding Name}" />
@@ -416,9 +416,9 @@
                 <Rectangle Name="icon"
                            Width="14"
                            Height="11"
-                           Stroke="{StyleResource ParameterStroke}"
+                           Stroke="{DynamicResource ParameterStroke}"
                            Margin="3,3,6,3"
-                           Fill="{StyleResource ParameterBrush}"
+                           Fill="{DynamicResource ParameterBrush}"
                            VerticalAlignment="Top" />
                 <ItemsControl Items="{Binding Highlights}"
                               Focusable="False">
@@ -441,115 +441,115 @@
                              Value="Folder">
                     <Setter TargetName="icon"
                             Property="Stroke"
-                            Value="{StyleResource FolderStroke}" />
+                            Value="{DynamicResource FolderStroke}" />
                     <Setter TargetName="icon"
                             Property="Fill"
-                            Value="{StyleResource ClosedFolderBrush}" />
+                            Value="{DynamicResource ClosedFolderBrush}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding OriginalType}"
                              Value="Target">
                     <Setter TargetName="icon"
                             Property="Stroke"
-                            Value="{StyleResource TargetStroke}" />
+                            Value="{DynamicResource TargetStroke}" />
                     <Setter TargetName="icon"
                             Property="Fill"
-                            Value="{StyleResource TargetBrush}" />
+                            Value="{DynamicResource TargetBrush}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding OriginalType}"
                              Value="Task">
                     <Setter TargetName="icon"
                             Property="Stroke"
-                            Value="{StyleResource TaskStroke}" />
+                            Value="{DynamicResource TaskStroke}" />
                     <Setter TargetName="icon"
                             Property="Fill"
-                            Value="{StyleResource TaskBrush}" />
+                            Value="{DynamicResource TaskBrush}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding OriginalType}"
                              Value="AddItem">
                     <Setter TargetName="icon"
                             Property="Stroke"
-                            Value="{StyleResource ItemStroke}" />
+                            Value="{DynamicResource ItemStroke}" />
                     <Setter TargetName="icon"
                             Property="Fill"
-                            Value="{StyleResource ItemBrush}" />
+                            Value="{DynamicResource ItemBrush}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding OriginalType}"
                              Value="RemoveItem">
                     <Setter TargetName="icon"
                             Property="Stroke"
-                            Value="{StyleResource ItemStroke}" />
+                            Value="{DynamicResource ItemStroke}" />
                     <Setter TargetName="icon"
                             Property="Fill"
-                            Value="{StyleResource ItemBrush}" />
+                            Value="{DynamicResource ItemBrush}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding OriginalType}"
                              Value="Item">
                     <Setter TargetName="icon"
                             Property="Stroke"
-                            Value="{StyleResource ItemStroke}" />
+                            Value="{DynamicResource ItemStroke}" />
                     <Setter TargetName="icon"
                             Property="Fill"
-                            Value="{StyleResource ItemBrush}" />
+                            Value="{DynamicResource ItemBrush}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding OriginalType}"
                              Value="Metadata">
                     <Setter TargetName="icon"
                             Property="Stroke"
-                            Value="{StyleResource MetadataStroke}" />
+                            Value="{DynamicResource MetadataStroke}" />
                     <Setter TargetName="icon"
                             Property="Fill"
-                            Value="{StyleResource ItemBrush}" />
+                            Value="{DynamicResource ItemBrush}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding OriginalType}"
                              Value="Property">
                     <Setter TargetName="icon"
                             Property="Stroke"
-                            Value="{StyleResource PropertyStroke}" />
+                            Value="{DynamicResource PropertyStroke}" />
                     <Setter TargetName="icon"
                             Property="Fill"
-                            Value="{StyleResource PropertyBrush}" />
+                            Value="{DynamicResource PropertyBrush}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding OriginalType}"
                              Value="Parameter">
                     <Setter TargetName="icon"
                             Property="Stroke"
-                            Value="{StyleResource ParameterStroke}" />
+                            Value="{DynamicResource ParameterStroke}" />
                     <Setter TargetName="icon"
                             Property="Fill"
-                            Value="{StyleResource ParameterBrush}" />
+                            Value="{DynamicResource ParameterBrush}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding OriginalType}"
                              Value="Message">
                     <Setter TargetName="icon"
                             Property="Stroke"
-                            Value="{StyleResource MessageStroke}" />
+                            Value="{DynamicResource MessageStroke}" />
                     <Setter TargetName="icon"
                             Property="Fill"
-                            Value="{StyleResource MessageBrush}" />
+                            Value="{DynamicResource MessageBrush}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding OriginalType}"
                              Value="Error">
                     <Setter TargetName="icon"
                             Property="Stroke"
-                            Value="{StyleResource ErrorStroke}" />
+                            Value="{DynamicResource ErrorStroke}" />
                     <Setter TargetName="icon"
                             Property="Fill"
-                            Value="{StyleResource ErrorBrush}" />
+                            Value="{DynamicResource ErrorBrush}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding OriginalType}"
                              Value="Warning">
                     <Setter TargetName="icon"
                             Property="Stroke"
-                            Value="{StyleResource WarningStroke}" />
+                            Value="{DynamicResource WarningStroke}" />
                     <Setter TargetName="icon"
                             Property="Fill"
-                            Value="{StyleResource WarningBrush}" />
+                            Value="{DynamicResource WarningBrush}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding ProjectExtension}"
                              Value=".sln">
                     <Setter TargetName="icon"
                             Property="Fill"
-                            Value="{StyleResource SlnIcon}" />
+                            Value="{DynamicResource SlnIcon}" />
                     <Setter TargetName="icon"
                             Property="Height"
                             Value="16" />
@@ -567,7 +567,7 @@
                              Value=".csproj">
                     <Setter TargetName="icon"
                             Property="Fill"
-                            Value="{StyleResource CSProjIcon}" />
+                            Value="{DynamicResource CSProjIcon}" />
                     <Setter TargetName="icon"
                             Property="Height"
                             Value="16" />
@@ -585,7 +585,7 @@
                              Value="other">
                     <Setter TargetName="icon"
                             Property="Fill"
-                            Value="{StyleResource GenericProjectIcon}" />
+                            Value="{DynamicResource GenericProjectIcon}" />
                     <Setter TargetName="icon"
                             Property="Height"
                             Value="16" />
@@ -629,7 +629,7 @@
                                    TextWrapping="Wrap"
                                    Text="{Binding Message}" />
                         <!--
-                                   IsVisible="{Binding Message, Converter={StyleResource StringEmptinessToVisibilityConverter}}"
+                                   IsVisible="{Binding Message, Converter={DynamicResource StringEmptinessToVisibilityConverter}}"
                         -->
                         <Grid Name="openLogOrProjectCompartment"
                               Grid.Row="1">
@@ -646,7 +646,7 @@
                                                Height="100"
                                                Margin="20" />
                                     <!--
-                                               Fill="{StyleResource SlnIcon}"
+                                               Fill="{DynamicResource SlnIcon}"
                                     -->
                                     <TextBlock Text="Open Project/Solution"
                                                FontSize="16"
@@ -667,32 +667,32 @@
                                                    Height="35"
                                                    Canvas.Left="0"
                                                    Canvas.Top="0"
-                                                   Stroke="{StyleResource TargetStroke}"
-                                                   Fill="{StyleResource TargetBrush}" />
+                                                   Stroke="{DynamicResource TargetStroke}"
+                                                   Fill="{DynamicResource TargetBrush}" />
                                         <Rectangle Width="35"
                                                    Height="35"
                                                    Canvas.Left="25"
                                                    Canvas.Top="35"
-                                                   Stroke="{StyleResource ParameterStroke}"
-                                                   Fill="{StyleResource ParameterBrush}" />
+                                                   Stroke="{DynamicResource ParameterStroke}"
+                                                   Fill="{DynamicResource ParameterBrush}" />
                                         <Rectangle Width="35"
                                                    Height="35"
                                                    Canvas.Left="25"
                                                    Canvas.Top="70"
-                                                   Stroke="{StyleResource TaskStroke}"
-                                                   Fill="{StyleResource TaskBrush}" />
+                                                   Stroke="{DynamicResource TaskStroke}"
+                                                   Fill="{DynamicResource TaskBrush}" />
                                         <Rectangle Width="35"
                                                    Height="35"
                                                    Canvas.Left="60"
                                                    Canvas.Top="35"
-                                                   Stroke="{StyleResource ItemStroke}"
-                                                   Fill="{StyleResource ItemBrush}" />
+                                                   Stroke="{DynamicResource ItemStroke}"
+                                                   Fill="{DynamicResource ItemBrush}" />
                                         <Rectangle Width="35"
                                                    Height="35"
                                                    Canvas.Left="60"
                                                    Canvas.Top="70"
-                                                   Stroke="{StyleResource FolderStroke}"
-                                                   Fill="{StyleResource ClosedFolderBrush}" />
+                                                   Stroke="{DynamicResource FolderStroke}"
+                                                   Fill="{DynamicResource ClosedFolderBrush}" />
                                         <Line StartPoint="16,35"
                                               EndPoint="16,87"
                                               Stroke="Black" />
