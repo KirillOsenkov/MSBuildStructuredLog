@@ -20,8 +20,8 @@ namespace StructuredLogViewer.Avalonia.Controls
         public SearchAndResultsControl()
         {
             InitializeComponent();
-            typingConcurrentOperation.DisplayResults += (r, more) => Dispatcher.UIThread.InvokeAsync(() => DisplaySearchResults(r));
-            typingConcurrentOperation.SearchComplete += (text, arg, elapsed) => Dispatcher.UIThread.InvokeAsync(() => TypingConcurrentOperation_SearchComplete(text, arg));
+            typingConcurrentOperation.DisplayResults += (r, moreAvailable) => Dispatcher.UIThread.InvokeAsync(() => DisplaySearchResults(r, moreAvailable));
+            typingConcurrentOperation.SearchComplete += (text, arg, elapsed) => Dispatcher.UIThread.InvokeAsync(() => TypingConcurrentOperation_SearchComplete(text, arg, elapsed));
         }
 
         private void InitializeComponent()
@@ -37,13 +37,14 @@ namespace StructuredLogViewer.Avalonia.Controls
             clearSearchButton.Click += clearSearchButton_Click;
         }
 
-        private void TypingConcurrentOperation_SearchComplete(string searchText, object arg2)
+        private void TypingConcurrentOperation_SearchComplete(string searchText, object arg2, TimeSpan elapsed)
         {
+            BuildControl.Elapsed = elapsed;
             SettingsService.AddRecentSearchText(searchText, discardPrefixes: true);
         }
 
         public TreeView ResultsList => resultsList;
-        public Func<object, IEnumerable> ResultsTreeBuilder { get; set; }
+        public Func<object, bool, IEnumerable> ResultsTreeBuilder { get; set; }
         public event Action WatermarkDisplayed;
 
         public Func<string, int, object> ExecuteSearch
@@ -51,7 +52,12 @@ namespace StructuredLogViewer.Avalonia.Controls
             get => typingConcurrentOperation.ExecuteSearch;
             set => typingConcurrentOperation.ExecuteSearch = value;
         }
-
+        
+        public void TriggerSearch(string text, int maxResults)
+        {
+            typingConcurrentOperation.TextChanged(text, maxResults);
+        }
+        
         private void searchTextBox_TextChanged(object sender, AvaloniaPropertyChangedEventArgs e)
         {
             if (e.Property != TextBox.TextProperty) return;
@@ -67,7 +73,7 @@ namespace StructuredLogViewer.Avalonia.Controls
             typingConcurrentOperation.TextChanged(searchText);
         }
 
-        private void DisplaySearchResults(object results)
+        private void DisplaySearchResults(object results, bool moreAvailable = false)
         {
             if (results == null)
             {
@@ -79,7 +85,7 @@ namespace StructuredLogViewer.Avalonia.Controls
                 watermark.IsVisible = false;
             }
 
-            resultsList.Items = ResultsTreeBuilder(results);
+            resultsList.Items = ResultsTreeBuilder(results, moreAvailable);
         }
 
         public object WatermarkContent

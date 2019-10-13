@@ -1,4 +1,8 @@
-﻿<Window xmlns="https://github.com/avaloniaui">
+﻿<Window xmlns="https://github.com/avaloniaui"
+        WindowState="Maximized"
+        WindowStartupLocation="CenterScreen"
+        KeyUp="Window_KeyUp">
+    
     <DockPanel>
         <Menu Name="mainMenu"
               DockPanel.Dock="Top">

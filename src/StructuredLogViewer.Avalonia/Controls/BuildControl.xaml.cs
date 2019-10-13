@@ -15,6 +15,7 @@ using Avalonia.Input;
 using Avalonia;
 using Avalonia.Styling;
 using Avalonia.Data;
+using Avalonia.Layout;
 
 namespace StructuredLogViewer.Avalonia.Controls
 {
@@ -62,9 +63,9 @@ namespace StructuredLogViewer.Avalonia.Controls
 
             UpdateWatermark();
 
-            searchLogControl.ExecuteSearch = (searchText, num) =>
+            searchLogControl.ExecuteSearch = (searchText, maxResults) =>
             {
-                var search = new Search(Build);
+                var search = new Search(Build, maxResults);
                 var results = search.FindNodes(searchText);
                 return results;
             };
@@ -147,7 +148,7 @@ namespace StructuredLogViewer.Avalonia.Controls
 
             searchLogControl.ResultsList.Styles.Add(treeViewItemStyle);
             RegisterTreeViewHandlers(searchLogControl.ResultsList);
-            searchLogControl.ResultsList.PropertyChanged += ResultsList_SelectionChanged;
+            searchLogControl.ResultsList.SelectionChanged += ResultsList_SelectionChanged;
             searchLogControl.ResultsList.GotFocus += (s, a) => ActiveTreeView = searchLogControl.ResultsList;
             searchLogControl.ResultsList.ContextMenu = sharedTreeContextMenu;
 
@@ -410,7 +411,7 @@ Recent:
             return results;
         }
 
-        private IEnumerable BuildFindResults(object resultsObject)
+        private IEnumerable BuildFindResults(object resultsObject, bool moreAvailable)
         {
             if (resultsObject == null)
             {
@@ -425,11 +426,10 @@ Recent:
             {
                 foreach (var file in results)
                 {
-                    var folder = new SourceFile()
+                    var folder = new SourceFile
                     {
                         Name = Path.GetFileName(file.Item1),
                         SourceFilePath = file.Item1,
-                        IsExpanded = true
                     };
                     root.AddChild(folder);
                     foreach (var line in file.Item2)
@@ -524,6 +524,7 @@ Recent:
         /// of the chain left in the breadcrumb at the end.
         /// </summary>
         private bool isProcessingBreadcrumbClick = false;
+        internal static TimeSpan Elapsed;
 
         private void BreadCrumb_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -556,10 +557,8 @@ Recent:
             }
         }
 
-        private void ResultsList_SelectionChanged(object sender, AvaloniaPropertyChangedEventArgs e)
+        private void ResultsList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (e.Property != TreeView.SelectedItemProperty) return;
-
             var proxy = searchLogControl.ResultsList.SelectedItem as ProxyNode;
             if (proxy != null)
             {
@@ -625,14 +624,16 @@ Recent:
 
         public void SelectItem(ParentedNode item)
         {
-            var parentChain = item.GetParentChainIncludingThis();
-            if (!parentChain.Any())
+            var parentChain = item.GetParentChainExcludingThis();
+            
+            foreach (var node in parentChain)
             {
-                return;
+                if (node is TreeNode treeNode)
+                    treeNode.IsExpanded = true;
             }
 
             SelectTree();
-            treeView.SelectedItem = parentChain;
+            treeView.SelectedItem = item;
         }
 
         private void TreeView_KeyDown(object sender, KeyEventArgs args)
@@ -975,24 +976,36 @@ Recent:
             return node;
         }
 
-        private IEnumerable BuildResultTree(object resultsObject)
+        private IEnumerable BuildResultTree(object resultsObject, bool moreAvailable)
         {
-            var results = resultsObject as IEnumerable<SearchResult>;
+            var results = resultsObject as ICollection<SearchResult>;
             if (results == null)
             {
                 return results;
             }
 
             var root = new Folder();
+            
+            if (moreAvailable)
+            {
+                root.Children.Add(new ButtonNode
+                {
+                    Text = $"Showing first {results.Count} results. Show all results instead (slow).",
+                    OnClick = () => searchLogControl.TriggerSearch(searchLogControl.SearchText, int.MaxValue)
+                });
+            }
+            
+            root.Children.Add(new Message
+            {
+                Text = $"{results.Count} results. Search took: {Elapsed.ToString()}"
+            });
 
             foreach (var result in results)
             {
                 TreeNode parent = root;
 
-                var parentedNode = result.Node as ParentedNode;
-                if (parentedNode != null)
+                if (result.Node is ParentedNode parentedNode)
                 {
-                    var chain = parentedNode.GetParentChainIncludingThis();
                     var project = parentedNode.GetNearestParent<Project>();
                     if (project != null)
                     {
@@ -1004,7 +1017,6 @@ Recent:
                         }
 
                         parent = projectProxy;
-                        parent.IsExpanded = true;
                     }
                 }
 

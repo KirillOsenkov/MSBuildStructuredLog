@@ -151,11 +151,20 @@
       </DrawingGroup>
     </DrawingBrush.Drawing>
   </DrawingBrush>
+  
+  <Style x:Key="NodeIcon" TargetType="{x:Type Rectangle}">
+    <Setter Property="Width" Value="14" />
+    <Setter Property="Height" Value="11" />
+    <Setter Property="Margin" Value="3,3,6,3" />
+    <Setter Property="StrokeThickness" Value="1" />
+    <Setter Property="VerticalAlignment" Value="Top" />
+    <Setter Property="SnapsToDevicePixels" Value="True" />
+  </Style>
 
   <HierarchicalDataTemplate DataType="{x:Type l:Folder}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
-      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="{StaticResource FolderStroke}" Margin="3,3,6,3" Fill="{StaticResource ClosedFolderBrush}" />
+      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource FolderStroke}" Fill="{StaticResource ClosedFolderBrush}" />
       <TextBlock x:Name="nameText" Text="{Binding Name}" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
@@ -172,8 +181,10 @@
   <HierarchicalDataTemplate DataType="{x:Type l:Project}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal" x:Name="projectRoot">
-      <Rectangle x:Name="icon" Width="16" Height="16" Margin="2,2,6,2" Fill="{StaticResource GenericProjectIcon}" VerticalAlignment="Top" />
-      <TextBlock Text="{Binding Name}" Margin="0,1,0,0" />
+      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}"
+                 Width="16" Height="16" Margin="2,2,6,2" StrokeThickness="0"
+                 Fill="{StaticResource GenericProjectIcon}" />
+      <TextBlock Text="{Binding Name}" Margin="0,2,0,0" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
       <DataTrigger Binding="{Binding IsLowRelevance}" Value="True">
@@ -197,7 +208,7 @@
   <HierarchicalDataTemplate DataType="{x:Type l:Target}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal" x:Name="targetRoot">
-      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="{StaticResource TargetStroke}" Margin="3,3,6,3" Fill="{StaticResource TargetBrush}" VerticalAlignment="Top" />
+      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource TargetStroke}" Fill="{StaticResource TargetBrush}" />
       <TextBlock x:Name="label" Text="Target " />
       <TextBlock Text="{Binding Name}" />
     </StackPanel>
@@ -214,7 +225,7 @@
   <HierarchicalDataTemplate DataType="{x:Type l:Task}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
-      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="{StaticResource TaskStroke}" Margin="3,3,6,3" Fill="{StaticResource TaskBrush}" VerticalAlignment="Top" />
+      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource TaskStroke}" Fill="{StaticResource TaskBrush}" />
       <TextBlock x:Name="label" Text="Task " />
       <TextBlock Text="{Binding Title}" />
       <TextBlock x:Name="duration" Text="{Binding DurationText}" Margin="6,0,0,0" />
@@ -230,7 +241,7 @@
   <HierarchicalDataTemplate DataType="{x:Type l:AddItem}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
-      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="{StaticResource ItemStroke}" Margin="3,3,6,3" Fill="{StaticResource ItemBrush}" VerticalAlignment="Top" />
+      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource ItemStroke}" Fill="{StaticResource ItemBrush}" />
       <TextBlock x:Name="label" Text="Add Item " />
       <TextBlock Text="{Binding Name}" />
     </StackPanel>
@@ -244,7 +255,7 @@
   <HierarchicalDataTemplate DataType="{x:Type l:RemoveItem}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
-      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="{StaticResource ItemStroke}" Margin="3,3,6,3" Fill="{StaticResource ItemBrush}" VerticalAlignment="Top" />
+      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource ItemStroke}" Fill="{StaticResource ItemBrush}" />
       <TextBlock x:Name="label" Text="Remove Item " />
       <TextBlock Text="{Binding Name}" />
     </StackPanel>
@@ -258,7 +269,7 @@
   <HierarchicalDataTemplate DataType="{x:Type l:Item}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
-      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="{StaticResource ItemStroke}" Margin="3,3,6,3" Fill="{StaticResource ItemBrush}" VerticalAlignment="Top" />
+      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource ItemStroke}" Fill="{StaticResource ItemBrush}" />
       <TextBlock x:Name="nameAndEquals" Text="{Binding NameAndEquals}" />
       <TextBlock Text="{Binding ShortenedText}" />
     </StackPanel>
@@ -271,7 +282,7 @@
 
   <DataTemplate DataType="{x:Type l:Metadata}">
     <StackPanel Orientation="Horizontal">
-      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="{StaticResource MetadataStroke}" Margin="3,3,6,3" Fill="{StaticResource ItemBrush}" VerticalAlignment="Top" />
+      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource MetadataStroke}" Fill="{StaticResource ItemBrush}" />
       <TextBlock x:Name="label" Text="{Binding NameAndEquals, Mode=OneTime}" />
       <TextBlock Text="{Binding ShortenedValue}" />
     </StackPanel>
@@ -316,7 +327,7 @@
 
   <DataTemplate DataType="{x:Type l:Property}">
     <StackPanel Orientation="Horizontal">
-      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="{StaticResource PropertyStroke}" Margin="3,3,6,3" Fill="{StaticResource PropertyBrush}" VerticalAlignment="Top" />
+      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource PropertyStroke}" Fill="{StaticResource PropertyBrush}" />
       <TextBlock x:Name="label" Text="{Binding NameAndEquals, Mode=OneTime}" />
       <TextBlock Text="{Binding ShortenedValue}" />
     </StackPanel>
@@ -330,7 +341,7 @@
   <HierarchicalDataTemplate DataType="{x:Type l:Parameter}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
-      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="{StaticResource ParameterStroke}" Margin="3,3,6,3" Fill="{StaticResource ParameterBrush}" VerticalAlignment="Top" />
+      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource ParameterStroke}" Fill="{StaticResource ParameterBrush}" />
       <TextBlock x:Name="name" Text="{Binding Name}" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
@@ -342,7 +353,7 @@
 
   <DataTemplate DataType="{x:Type l:Message}">
     <StackPanel Orientation="Horizontal">
-      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="{StaticResource MessageStroke}" Margin="3,3,6,3" Fill="{StaticResource MessageBrush}" VerticalAlignment="Top" />
+      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource MessageStroke}" Fill="{StaticResource MessageBrush}" />
       <TextBlock x:Name="messageText" Text="{Binding ShortenedText}" />
     </StackPanel>
     <DataTemplate.Triggers>
@@ -355,13 +366,7 @@
   <HierarchicalDataTemplate DataType="{x:Type l:Import}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal" x:Name="importPanel">
-      <Rectangle x:Name="icon" 
-                 Width="14" 
-                 Height="11" 
-                 Stroke="{StaticResource ImportStroke}" 
-                 Margin="3,3,6,3" 
-                 Fill="{StaticResource ImportBrush}" 
-                 VerticalAlignment="Top" />
+      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource ImportStroke}" Fill="{StaticResource ImportBrush}" />
       <TextBlock x:Name="label" Text="Import" Margin="0,0,6,0" />
       <TextBlock x:Name="name" Text="{Binding Name}" />
       <TextBlock x:Name="location" Text="{Binding Location}" />
@@ -379,13 +384,7 @@
   <HierarchicalDataTemplate DataType="{x:Type l:NoImport}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal" x:Name="importPanel">
-      <Rectangle x:Name="icon"
-                 Width="14"
-                 Height="11"
-                 Stroke="{StaticResource NoImportStroke}"
-                 Margin="3,3,6,3"
-                 Fill="{StaticResource NoImportBrush}"
-                 VerticalAlignment="Top" />
+      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource NoImportStroke}" Fill="{StaticResource NoImportBrush}" />
       <TextBlock x:Name="label" Text="NoImport" Margin="0,0,6,0" />
       <TextBlock x:Name="name" Text="{Binding Name}" />
       <TextBlock x:Name="location" Text="{Binding Location}" Margin="0,0,6,0" />
@@ -413,7 +412,7 @@
 
   <DataTemplate DataType="{x:Type l:Error}">
     <StackPanel Orientation="Horizontal">
-      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="{StaticResource ErrorStroke}" Margin="3,3,6,3" Fill="{StaticResource ErrorBrush}" VerticalAlignment="Top" />
+      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource ErrorStroke}" Fill="{StaticResource ErrorBrush}" />
       <TextBlock x:Name="text" Text="{Binding}" />
     </StackPanel>
     <DataTemplate.Triggers>
@@ -425,7 +424,7 @@
 
   <DataTemplate DataType="{x:Type l:Warning}">
     <StackPanel Orientation="Horizontal">
-      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="{StaticResource WarningStroke}" Margin="3,3,6,3" Fill="{StaticResource WarningBrush}" VerticalAlignment="Top" />
+      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource WarningStroke}" Fill="{StaticResource WarningBrush}" />
       <TextBlock Text="{Binding}" />
     </StackPanel>
   </DataTemplate>
@@ -443,7 +442,7 @@
   <HierarchicalDataTemplate DataType="{x:Type l:SourceFile}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
-      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="{StaticResource MessageStroke}" Margin="3,3,6,3" Fill="{StaticResource MessageBrush}" VerticalAlignment="Top" />
+      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource MessageStroke}" Fill="{StaticResource MessageBrush}" />
       <TextBlock x:Name="messageText" Text="{Binding Name}" />
     </StackPanel>
   </HierarchicalDataTemplate>
@@ -463,8 +462,8 @@
   <HierarchicalDataTemplate DataType="{x:Type core:ProxyNode}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
-      <Rectangle x:Name="icon" Width="14" Height="11" Stroke="{StaticResource ParameterStroke}" Margin="3,3,6,3" Fill="{StaticResource ParameterBrush}" VerticalAlignment="Top" />
-      <ItemsControl ItemsSource="{Binding Highlights}" Focusable="False">
+      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource ParameterStroke}" Fill="{StaticResource ParameterBrush}" />
+      <ItemsControl x:Name="text" ItemsSource="{Binding Highlights}" Focusable="False">
         <ItemsControl.Resources>
           <DataTemplate DataType="{x:Type core:HighlightedText}">
             <TextBlock Foreground="Black" Background="Yellow" Text="{Binding Text}" />
@@ -538,22 +537,25 @@
         <Setter TargetName="icon" Property="Fill" Value="{StaticResource SlnIcon}" />
         <Setter TargetName="icon" Property="Height" Value="16" />
         <Setter TargetName="icon" Property="Width" Value="16" />
-        <Setter TargetName="icon" Property="Stroke" Value="Transparent" />
+        <Setter TargetName="icon" Property="StrokeThickness" Value="0" />
         <Setter TargetName="icon" Property="Margin" Value="2,2,6,2" />
+        <Setter TargetName="text" Property="Margin" Value="0,2,0,0" />
       </DataTrigger>
       <DataTrigger Binding="{Binding ProjectExtension}" Value=".csproj">
         <Setter TargetName="icon" Property="Fill" Value="{StaticResource CSProjIcon}" />
         <Setter TargetName="icon" Property="Height" Value="16" />
         <Setter TargetName="icon" Property="Width" Value="16" />
-        <Setter TargetName="icon" Property="Stroke" Value="Transparent" />
+        <Setter TargetName="icon" Property="StrokeThickness" Value="0" />
         <Setter TargetName="icon" Property="Margin" Value="2,2,6,2" />
+        <Setter TargetName="text" Property="Margin" Value="0,2,0,0" />
       </DataTrigger>
       <DataTrigger Binding="{Binding ProjectExtension}" Value="other">
         <Setter TargetName="icon" Property="Fill" Value="{StaticResource GenericProjectIcon}" />
         <Setter TargetName="icon" Property="Height" Value="16" />
         <Setter TargetName="icon" Property="Width" Value="16" />
-        <Setter TargetName="icon" Property="Stroke" Value="Transparent" />
+        <Setter TargetName="icon" Property="StrokeThickness" Value="0" />
         <Setter TargetName="icon" Property="Margin" Value="2,2,6,2" />
+        <Setter TargetName="text" Property="Margin" Value="0,2,0,0" />
       </DataTrigger>
     </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>

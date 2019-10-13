@@ -3,16 +3,17 @@ using System.Collections.Generic;
 using System.Globalization;
 using Avalonia;
 using Avalonia.Data.Converters;
+using Avalonia.Media;
 
 namespace StructuredLogViewer.Avalonia.Controls
 {
     public class ProjectIconConverter : IValueConverter
     {
-        private readonly Dictionary<string, object> icons = new Dictionary<string, object>();
-            
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        private readonly Dictionary<string, DrawingGroup> icons = new Dictionary<string, DrawingGroup>();
+
+        public DrawingGroup ProjectExtensionToIcon(string projectExtension)
         {
-            switch (value as string)
+            switch (projectExtension)
             {
                 case ".sln":
                     return GetIcon("SlnIcon");
@@ -31,18 +32,22 @@ namespace StructuredLogViewer.Avalonia.Controls
             }
         }
 
-        private object GetIcon(string resourceName)
+        private DrawingGroup GetIcon(string resourceName)
         {
             if (!icons.TryGetValue(resourceName, out var icon))
             {
-                if (!Application.Current.Resources.TryGetResource(resourceName, out icon))
-                    icon = null;
+                if (!Application.Current.Resources.TryGetResource(resourceName, out var resource))
+                    resource = null;
 
+                icon = resource as DrawingGroup;
                 icons[resourceName] = icon;
             }
 
             return icon;
         }
+
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) 
+            => ProjectExtensionToIcon(value as string);
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) 
             => throw new NotSupportedException();
