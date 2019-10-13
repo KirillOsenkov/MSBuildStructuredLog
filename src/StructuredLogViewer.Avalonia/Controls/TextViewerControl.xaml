@@ -43,6 +43,7 @@
 
         <a:TextEditor Name="textEditor"
                       Grid.Row="1"
+                      ShowLineNumbers="True"
                       LineNumbersForeground="Teal"
                       FontSize="14">
             <a:TextEditor.ContextMenu>

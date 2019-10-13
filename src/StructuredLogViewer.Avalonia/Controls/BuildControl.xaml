@@ -51,6 +51,7 @@
                                               BorderBrush="Transparent"
                                               BorderThickness="0"
                                               Classes="searchable"
+                                              AutoScrollToSelectedItem="True"
                                               Items="{Binding Children}"/>
                                 </TabItem>
 
@@ -103,7 +104,8 @@
                                     <ControlTemplate>
                                         <Polygon Points="0,0 3,3 0,6"
                                                  Stroke="Black"
-                                                 Fill="Black" />
+                                                 Fill="Black"
+                                                 VerticalAlignment="Center" />
                                     </ControlTemplate>
                                 </Setter>
                             </Style>

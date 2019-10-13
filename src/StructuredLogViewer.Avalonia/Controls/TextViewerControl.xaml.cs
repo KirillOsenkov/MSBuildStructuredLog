@@ -15,7 +15,6 @@ using Avalonia.Interactivity;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Xml;
-using AvaloniaEdit.Editing;
 using AvaloniaEdit.Highlighting.Xshd;
 
 namespace StructuredLogViewer.Avalonia.Controls
@@ -54,20 +53,10 @@ namespace StructuredLogViewer.Avalonia.Controls
                 textEditor.FontFamily = "Monospace";
             }
 
-            // TOOD: add
-            //SearchPanel.Install(textEditor.TextArea);
-
-            // TODO: remove this after bug fix
-            var lineMargin = new LineNumberMargin { Margin = new Thickness(0, 0, 10, 0) };
-            lineMargin[~TextBlock.ForegroundProperty] = textEditor[~TextEditor.LineNumbersForegroundProperty];
-            textEditor.TextArea.LeftMargins.Insert(0, lineMargin);
-
             textEditor.TextArea.PointerPressed += TextAreaMouseRightButtonDown;
 
             var textView = textEditor.TextArea.TextView;
-            textView.CurrentLineBackground = new SolidColorBrush(Color.FromRgb(224, 224, 224));
-            textView.CurrentLineBorder = new Pen(Brushes.Transparent, 0);
-            //textView.Options.HighlightCurrentLine = true;
+            textView.Options.HighlightCurrentLine = true;
             textView.Options.EnableEmailHyperlinks = false;
             textView.Options.EnableHyperlinks = false;
             textEditor.IsReadOnly = true;
@@ -150,11 +139,10 @@ namespace StructuredLogViewer.Avalonia.Controls
                 var highlighting = HighlightingManager.Instance.GetDefinition("XML");
                 highlighting.GetNamedColor("XmlTag").Foreground = new SimpleHighlightingBrush(Color.FromRgb(163, 21, 21));
                 textEditor.SyntaxHighlighting = highlighting;
-
-                // TODO
-                //var foldingManager = FoldingManager.Install(textEditor.TextArea);
-                //var foldingStrategy = new XmlFoldingStrategy();
-                //foldingStrategy.UpdateFoldings(foldingManager, textEditor.Document);
+                
+                var foldingManager = FoldingManager.Install(textEditor.TextArea);
+                var foldingStrategy = new XmlFoldingStrategy();
+                foldingStrategy.UpdateFoldings(foldingManager, textEditor.Document);
             }
             else if (!looksLikeXml && IsXml)
             {
@@ -176,8 +164,8 @@ namespace StructuredLogViewer.Avalonia.Controls
             {
                 Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    textEditor.ScrollToLine(lineNumber);
                     textEditor.TextArea.Caret.Line = lineNumber;
+                    textEditor.TextArea.Caret.BringCaretToView();
                     textEditor.TextArea.TextView.HighlightedLine = lineNumber;
 
                     if (column > 0)

@@ -15,6 +15,7 @@ using Avalonia.Input;
 using Avalonia;
 using Avalonia.Styling;
 using Avalonia.Data;
+using Avalonia.Layout;
 
 namespace StructuredLogViewer.Avalonia.Controls
 {
@@ -147,7 +148,7 @@ namespace StructuredLogViewer.Avalonia.Controls
 
             searchLogControl.ResultsList.Styles.Add(treeViewItemStyle);
             RegisterTreeViewHandlers(searchLogControl.ResultsList);
-            searchLogControl.ResultsList.PropertyChanged += ResultsList_SelectionChanged;
+            searchLogControl.ResultsList.SelectionChanged += ResultsList_SelectionChanged;
             searchLogControl.ResultsList.GotFocus += (s, a) => ActiveTreeView = searchLogControl.ResultsList;
             searchLogControl.ResultsList.ContextMenu = sharedTreeContextMenu;
 
@@ -556,10 +557,8 @@ Recent:
             }
         }
 
-        private void ResultsList_SelectionChanged(object sender, AvaloniaPropertyChangedEventArgs e)
+        private void ResultsList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (e.Property != TreeView.SelectedItemProperty) return;
-
             var proxy = searchLogControl.ResultsList.SelectedItem as ProxyNode;
             if (proxy != null)
             {
@@ -625,14 +624,16 @@ Recent:
 
         public void SelectItem(ParentedNode item)
         {
-            var parentChain = item.GetParentChainIncludingThis();
-            if (!parentChain.Any())
+            var parentChain = item.GetParentChainExcludingThis();
+            
+            foreach (var node in parentChain)
             {
-                return;
+                if (node is TreeNode treeNode)
+                    treeNode.IsExpanded = true;
             }
 
             SelectTree();
-            treeView.SelectedItem = parentChain;
+            treeView.SelectedItem = item;
         }
 
         private void TreeView_KeyDown(object sender, KeyEventArgs args)
