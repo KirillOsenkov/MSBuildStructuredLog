@@ -63,13 +63,9 @@ namespace StructuredLogViewer.Avalonia.Controls
         {
             return new Rectangle
             {
-                Width = 14,
-                Height = 11,
-                Margin = new Thickness(3, 5, 6, 3),
+                Classes = { "nodeIcon" },
                 Stroke = GetResource(stroke) as IBrush,
-                StrokeThickness = 1,
-                Fill = GetResource(fill) as IBrush,
-                VerticalAlignment = VerticalAlignment.Top
+                Fill = GetResource(fill) as IBrush
             };
         }
 
@@ -77,19 +73,16 @@ namespace StructuredLogViewer.Avalonia.Controls
         {
             return new DrawingPresenter
             {
-                Width = 16,
-                Height = 16,
-                Margin = new Thickness(2, 4, 6, 2),
-                Drawing = projectIconConverter.ProjectExtensionToIcon(projectExtension),
-                VerticalAlignment = VerticalAlignment.Top
+                Classes = { "projectNodeIcon" },
+                Drawing = projectIconConverter.ProjectExtensionToIcon(projectExtension)
             };
         }
-        
+
         private object GetResource(string resourceName)
         {
             if (string.IsNullOrEmpty(resourceName))
                 return null;
-            
+
             if (!resources.TryGetValue(resourceName, out var resource))
             {
                 if (!Application.Current.Resources.TryGetResource(resourceName, out resource))
@@ -101,7 +94,7 @@ namespace StructuredLogViewer.Avalonia.Controls
             return resource;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) 
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
             => throw new NotSupportedException();
     }
 }

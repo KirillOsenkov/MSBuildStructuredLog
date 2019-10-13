@@ -41,6 +41,21 @@
                 </ControlTemplate>
             </Setter>
         </Style>
+        
+        <Style Selector="Rectangle.nodeIcon">
+            <Setter Property="Width" Value="14" />
+            <Setter Property="Height" Value="11" />
+            <Setter Property="Margin" Value="3,5,6,3" />
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+        </Style>
+        
+        <Style Selector="DrawingPresenter.projectNodeIcon">
+            <Setter Property="Width" Value="16" />
+            <Setter Property="Height" Value="16" />
+            <Setter Property="Margin" Value="2,4,6,2" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+        </Style>
 
     </Application.Styles>
     <Application.DataTemplates>
@@ -49,13 +64,9 @@
                           ItemsSource="{Binding Children}">
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
-                           Width="14"
-                           Height="11"
+                           Classes="nodeIcon"
                            Stroke="{DynamicResource FolderStroke}"
-                           StrokeThickness="1"
-                           Margin="3,5,6,3"
-                           Fill="{DynamicResource ClosedFolderBrush}"
-                           VerticalAlignment="Top" />
+                           Fill="{DynamicResource ClosedFolderBrush}" />
                 <TextBlock Name="nameText"
                            Text="{Binding Name}" />
             </StackPanel>
@@ -82,10 +93,7 @@
                           ItemsSource="{Binding Children}">
             <StackPanel Orientation="Horizontal"
                         Name="projectRoot">
-                <DrawingPresenter Width="16"
-                                  Height="16"
-                                  Margin="2,4,6,2"
-                                  VerticalAlignment="Top"
+                <DrawingPresenter Classes="projectNodeIcon"
                                   Drawing="{Binding ProjectFileExtension, Converter={StaticResource ProjectIconConverter}}" />
                 <TextBlock Text="{Binding Name}"
                            Margin="0,1,0,0" />
@@ -97,13 +105,9 @@
             <StackPanel Orientation="Horizontal"
                         Name="targetRoot">
                 <Rectangle Name="icon"
-                           Width="14"
-                           Height="11"
+                           Classes="nodeIcon"
                            Stroke="{DynamicResource TargetStroke}"
-                           StrokeThickness="1"
-                           Margin="3,5,6,3"
-                           Fill="{DynamicResource TargetBrush}"
-                           VerticalAlignment="Top" />
+                           Fill="{DynamicResource TargetBrush}" />
                 <TextBlock Name="label"
                            Text="Target " />
                 <TextBlock Text="{Binding Name}" />
@@ -128,13 +132,9 @@
                           ItemsSource="{Binding Children}">
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
-                           Width="14"
-                           Height="11"
+                           Classes="nodeIcon"
                            Stroke="{DynamicResource TaskStroke}"
-                           StrokeThickness="1"
-                           Margin="3,5,6,3"
-                           Fill="{DynamicResource TaskBrush}"
-                           VerticalAlignment="Top" />
+                           Fill="{DynamicResource TaskBrush}" />
                 <TextBlock Name="label"
                            Text="Task " />
                 <TextBlock Text="{Binding Name}" />
@@ -158,13 +158,9 @@
                           ItemsSource="{Binding Children}">
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
-                           Width="14"
-                           Height="11"
+                           Classes="nodeIcon"
                            Stroke="{DynamicResource ItemStroke}"
-                           StrokeThickness="1"
-                           Margin="3,5,6,3"
-                           Fill="{DynamicResource ItemBrush}"
-                           VerticalAlignment="Top" />
+                           Fill="{DynamicResource ItemBrush}" />
                 <TextBlock Name="label"
                            Text="Add Item " />
                 <TextBlock Text="{Binding Name}" />
@@ -183,13 +179,9 @@
                           ItemsSource="{Binding Children}">
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
-                           Width="14"
-                           Height="11"
+                           Classes="nodeIcon"
                            Stroke="{DynamicResource ItemStroke}"
-                           StrokeThickness="1"
-                           Margin="3,5,6,3"
-                           Fill="{DynamicResource ItemBrush}"
-                           VerticalAlignment="Top" />
+                           Fill="{DynamicResource ItemBrush}" />
                 <TextBlock Name="label"
                            Text="Remove Item " />
                 <TextBlock Text="{Binding Name}" />
@@ -208,13 +200,9 @@
                           ItemsSource="{Binding Children}">
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
-                           Width="14"
-                           Height="11"
+                           Classes="nodeIcon"
                            Stroke="{DynamicResource ItemStroke}"
-                           StrokeThickness="1"
-                           Margin="3,5,6,3"
-                           Fill="{DynamicResource ItemBrush}"
-                           VerticalAlignment="Top" />
+                           Fill="{DynamicResource ItemBrush}" />
                 <TextBlock Name="nameAndEquals"
                            Text="{Binding NameAndEquals}" />
                 <TextBlock Text="{Binding ShortenedText}" />
@@ -232,13 +220,9 @@
         <DataTemplate DataType="{x:Type l:Metadata}">
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
-                           Width="14"
-                           Height="11"
+                           Classes="nodeIcon"
                            Stroke="{DynamicResource MetadataStroke}"
-                           StrokeThickness="1"
-                           Margin="3,5,6,3"
-                           Fill="{DynamicResource ItemBrush}"
-                           VerticalAlignment="Top" />
+                           Fill="{DynamicResource ItemBrush}" />
                 <TextBlock Name="label"
                            Text="{Binding NameAndEquals, Mode=OneTime}" />
                 <TextBlock Text="{Binding ShortenedValue}" />
@@ -256,13 +240,9 @@
         <DataTemplate DataType="{x:Type l:Property}">
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
-                           Width="14"
-                           Height="11"
+                           Classes="nodeIcon"
                            Stroke="{DynamicResource PropertyStroke}"
-                           StrokeThickness="1"
-                           Margin="3,5,6,3"
-                           Fill="{DynamicResource PropertyBrush}"
-                           VerticalAlignment="Top" />
+                           Fill="{DynamicResource PropertyBrush}" />
                 <TextBlock Name="label"
                            Text="{Binding NameAndEquals, Mode=OneTime}" />
                 <TextBlock Text="{Binding ShortenedValue}" />
@@ -281,13 +261,9 @@
                           ItemsSource="{Binding Children}">
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
-                           Width="14"
-                           Height="11"
+                           Classes="nodeIcon"
                            Stroke="{DynamicResource ParameterStroke}"
-                           StrokeThickness="1"
-                           Margin="3,5,6,3"
-                           Fill="{DynamicResource ParameterBrush}"
-                           VerticalAlignment="Top" />
+                           Fill="{DynamicResource ParameterBrush}" />
                 <TextBlock Name="name"
                            Text="{Binding Name}" />
             </StackPanel>
@@ -304,13 +280,9 @@
         <DataTemplate DataType="{x:Type l:Message}">
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
-                           Width="14"
-                           Height="11"
+                           Classes="nodeIcon"
                            Stroke="{DynamicResource MessageStroke}"
-                           StrokeThickness="1"
-                           Margin="3,5,6,3"
-                           Fill="{DynamicResource MessageBrush}"
-                           VerticalAlignment="Top" />
+                           Fill="{DynamicResource MessageBrush}" />
                 <TextBlock Name="messageText"
                            Text="{Binding ShortenedText}" />
             </StackPanel>
@@ -328,13 +300,9 @@
                           ItemsSource="{Binding Children}">
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
-                           Width="14"
-                           Height="11"
+                           Classes="nodeIcon"
                            Stroke="{DynamicResource ImportStroke}"
-                           StrokeThickness="1"
-                           Margin="3,5,6,3"
-                           Fill="{DynamicResource ImportBrush}"
-                           VerticalAlignment="Top" />
+                           Fill="{DynamicResource ImportBrush}" />
                 <TextBlock x:Name="label"
                            Text="Import"
                            Margin="0,0,6,0" />
@@ -349,13 +317,9 @@
                           ItemsSource="{Binding Children}">
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
-                           Width="14"
-                           Height="11"
+                           Classes="nodeIcon"
                            Stroke="{DynamicResource NoImportStroke}"
-                           StrokeThickness="1"
-                           Margin="3,5,6,3"
-                           Fill="{DynamicResource NoImportBrush}"
-                           VerticalAlignment="Top" />
+                           Fill="{DynamicResource NoImportBrush}" />
                 <TextBlock x:Name="label"
                            Text="NoImport"
                            Margin="0,0,6,0" />
@@ -381,13 +345,9 @@
         <DataTemplate DataType="{x:Type l:Error}">
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
-                           Width="14"
-                           Height="11"
+                           Classes="nodeIcon"
                            Stroke="{DynamicResource ErrorStroke}"
-                           StrokeThickness="1"
-                           Margin="3,5,6,3"
-                           Fill="{DynamicResource ErrorBrush}"
-                           VerticalAlignment="Top" />
+                           Fill="{DynamicResource ErrorBrush}" />
                 <TextBlock Name="text"
                            Text="{Binding}" />
             </StackPanel>
@@ -404,13 +364,9 @@
         <DataTemplate DataType="{x:Type l:Warning}">
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
-                           Width="14"
-                           Height="11"
+                           Classes="nodeIcon"
                            Stroke="{DynamicResource WarningStroke}"
-                           StrokeThickness="1"
-                           Margin="3,5,6,3"
-                           Fill="{DynamicResource WarningBrush}"
-                           VerticalAlignment="Top" />
+                           Fill="{DynamicResource WarningBrush}" />
                 <TextBlock Text="{Binding}" />
             </StackPanel>
         </DataTemplate>
@@ -433,13 +389,9 @@
                           ItemsSource="{Binding Children}">
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
-                           Width="14"
-                           Height="11"
+                           Classes="nodeIcon"
                            Stroke="{DynamicResource MessageStroke}"
-                           StrokeThickness="1"
-                           Margin="3,5,6,3"
-                           Fill="{DynamicResource MessageBrush}"
-                           VerticalAlignment="Top" />
+                           Fill="{DynamicResource MessageBrush}" />
                 <TextBlock Name="messageText"
                            Text="{Binding Name}" />
             </StackPanel>
