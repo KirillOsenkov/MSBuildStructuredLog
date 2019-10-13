@@ -10,6 +10,7 @@
                 <ResourceInclude Source="resm:StructuredLogViewer.Avalonia.Resources.xaml?assembly=StructuredLogViewer.Avalonia" />
             </ResourceDictionary.MergedDictionaries>
             
+            <s:ProxyNodeIconConverter x:Key="ProxyNodeIconConverter" />
             <s:ProjectIconConverter x:Key="ProjectIconConverter" />
         </ResourceDictionary>
     </Application.Resources>
@@ -468,14 +469,8 @@
         <TreeDataTemplate DataType="{x:Type common:ProxyNode}"
                           ItemsSource="{Binding Children}">
             <StackPanel Orientation="Horizontal">
-                <Rectangle Name="icon"
-                           Width="14"
-                           Height="11"
-                           Stroke="{DynamicResource ParameterStroke}"
-                           StrokeThickness="1"
-                           Margin="3,5,6,3"
-                           Fill="{DynamicResource ParameterBrush}"
-                           VerticalAlignment="Top" />
+                <ContentPresenter Content="{Binding Converter={StaticResource ProxyNodeIconConverter}}"
+                                  VerticalAlignment="Top" />
                 <ItemsControl Items="{Binding Highlights}"
                               Focusable="False">
                     <ItemsControl.DataTemplates>
@@ -492,170 +487,6 @@
                     </ItemsControl.ItemsPanel>
                 </ItemsControl>
             </StackPanel>
-            <!--<TreeDataTemplate.Triggers>
-                <DataTrigger Binding="{Binding OriginalType}"
-                             Value="Folder">
-                    <Setter TargetName="icon"
-                            Property="Stroke"
-                            Value="{DynamicResource FolderStroke}" />
-                    <Setter TargetName="icon"
-                            Property="Fill"
-                            Value="{DynamicResource ClosedFolderBrush}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding OriginalType}"
-                             Value="Target">
-                    <Setter TargetName="icon"
-                            Property="Stroke"
-                            Value="{DynamicResource TargetStroke}" />
-                    <Setter TargetName="icon"
-                            Property="Fill"
-                            Value="{DynamicResource TargetBrush}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding OriginalType}"
-                             Value="Task">
-                    <Setter TargetName="icon"
-                            Property="Stroke"
-                            Value="{DynamicResource TaskStroke}" />
-                    <Setter TargetName="icon"
-                            Property="Fill"
-                            Value="{DynamicResource TaskBrush}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding OriginalType}"
-                             Value="AddItem">
-                    <Setter TargetName="icon"
-                            Property="Stroke"
-                            Value="{DynamicResource ItemStroke}" />
-                    <Setter TargetName="icon"
-                            Property="Fill"
-                            Value="{DynamicResource ItemBrush}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding OriginalType}"
-                             Value="RemoveItem">
-                    <Setter TargetName="icon"
-                            Property="Stroke"
-                            Value="{DynamicResource ItemStroke}" />
-                    <Setter TargetName="icon"
-                            Property="Fill"
-                            Value="{DynamicResource ItemBrush}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding OriginalType}"
-                             Value="Item">
-                    <Setter TargetName="icon"
-                            Property="Stroke"
-                            Value="{DynamicResource ItemStroke}" />
-                    <Setter TargetName="icon"
-                            Property="Fill"
-                            Value="{DynamicResource ItemBrush}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding OriginalType}"
-                             Value="Metadata">
-                    <Setter TargetName="icon"
-                            Property="Stroke"
-                            Value="{DynamicResource MetadataStroke}" />
-                    <Setter TargetName="icon"
-                            Property="Fill"
-                            Value="{DynamicResource ItemBrush}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding OriginalType}"
-                             Value="Property">
-                    <Setter TargetName="icon"
-                            Property="Stroke"
-                            Value="{DynamicResource PropertyStroke}" />
-                    <Setter TargetName="icon"
-                            Property="Fill"
-                            Value="{DynamicResource PropertyBrush}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding OriginalType}"
-                             Value="Parameter">
-                    <Setter TargetName="icon"
-                            Property="Stroke"
-                            Value="{DynamicResource ParameterStroke}" />
-                    <Setter TargetName="icon"
-                            Property="Fill"
-                            Value="{DynamicResource ParameterBrush}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding OriginalType}"
-                             Value="Message">
-                    <Setter TargetName="icon"
-                            Property="Stroke"
-                            Value="{DynamicResource MessageStroke}" />
-                    <Setter TargetName="icon"
-                            Property="Fill"
-                            Value="{DynamicResource MessageBrush}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding OriginalType}"
-                             Value="Error">
-                    <Setter TargetName="icon"
-                            Property="Stroke"
-                            Value="{DynamicResource ErrorStroke}" />
-                    <Setter TargetName="icon"
-                            Property="Fill"
-                            Value="{DynamicResource ErrorBrush}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding OriginalType}"
-                             Value="Warning">
-                    <Setter TargetName="icon"
-                            Property="Stroke"
-                            Value="{DynamicResource WarningStroke}" />
-                    <Setter TargetName="icon"
-                            Property="Fill"
-                            Value="{DynamicResource WarningBrush}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding ProjectExtension}"
-                             Value=".sln">
-                    <Setter TargetName="icon"
-                            Property="Fill"
-                            Value="{DynamicResource SlnIcon}" />
-                    <Setter TargetName="icon"
-                            Property="Height"
-                            Value="16" />
-                    <Setter TargetName="icon"
-                            Property="Width"
-                            Value="16" />
-                    <Setter TargetName="icon"
-                            Property="Stroke"
-                            Value="Transparent" />
-                    <Setter TargetName="icon"
-                            Property="Margin"
-                            Value="2,2,6,2" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding ProjectExtension}"
-                             Value=".csproj">
-                    <Setter TargetName="icon"
-                            Property="Fill"
-                            Value="{DynamicResource CSProjIcon}" />
-                    <Setter TargetName="icon"
-                            Property="Height"
-                            Value="16" />
-                    <Setter TargetName="icon"
-                            Property="Width"
-                            Value="16" />
-                    <Setter TargetName="icon"
-                            Property="Stroke"
-                            Value="Transparent" />
-                    <Setter TargetName="icon"
-                            Property="Margin"
-                            Value="2,2,6,2" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding ProjectExtension}"
-                             Value="other">
-                    <Setter TargetName="icon"
-                            Property="Fill"
-                            Value="{DynamicResource GenericProjectIcon}" />
-                    <Setter TargetName="icon"
-                            Property="Height"
-                            Value="16" />
-                    <Setter TargetName="icon"
-                            Property="Width"
-                            Value="16" />
-                    <Setter TargetName="icon"
-                            Property="Stroke"
-                            Value="Transparent" />
-                    <Setter TargetName="icon"
-                            Property="Margin"
-                            Value="2,2,6,2" />
-                </DataTrigger>
-            </TreeDataTemplate.Triggers>-->
         </TreeDataTemplate>
 
         <DataTemplate DataType="{x:Type common:WelcomeScreen}">
