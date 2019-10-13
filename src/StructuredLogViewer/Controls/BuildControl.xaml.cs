@@ -1164,10 +1164,8 @@ Recent:
             {
                 TreeNode parent = root;
 
-                var parentedNode = result.Node as ParentedNode;
-                if (parentedNode != null)
+                if (result.Node is ParentedNode parentedNode)
                 {
-                    var chain = parentedNode.GetParentChainIncludingThis();
                     var project = parentedNode.GetNearestParent<Project>();
                     if (project != null)
                     {

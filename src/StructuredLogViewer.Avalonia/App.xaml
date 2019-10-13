@@ -368,6 +368,15 @@
             </StackPanel>
         </TreeDataTemplate>
         
+        <DataTemplate DataType="{x:Type common:ButtonNode}">
+            <StackPanel Orientation="Horizontal">
+                <Button x:Name="button" 
+                        Content="{Binding Text}" 
+                        Command="{Binding Command}" 
+                        Padding="4,2,4,2"/>
+            </StackPanel>
+        </DataTemplate>
+        
         <DataTemplate DataType="{x:Type l:Error}">
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
