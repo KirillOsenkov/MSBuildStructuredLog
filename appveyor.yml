@@ -1,17 +1,24 @@
 version: 1.1.{build}
-image: Visual Studio 2017
+image: Visual Studio 2019
 install:
   - choco upgrade chocolatey # Need at least 0.10.8 to avoid packaging error
 build_script: 
 - cmd: >-
     nuget restore
-    
     msbuild /m /p:Configuration=Release /clp:v=m MSBuildStructuredLog.sln /bl /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
 artifacts:
 - path: msbuild.binlog
   name: MSBuild Log
 - path: 'bin\**\msbuild-structured-log-viewer*.nupkg'
   name: Chocolatey Package
+- path: 'bin\Release\Releases\MSBuildStructuredLogSetup.exe'
+  name: MSBuildStructuredLogSetup.exe
+- path: 'MSBuildStructuredLogViewer*.nupkg'
+  name: Installer nupkg
+- path: 'RELEASES'
+  name: RELEASES
+- path: 'src\StructuredLogger\bin\Release\netstandard2.0\StructuredLogger.dll'
+  name: StructuredLogger.dll
 
 on_failure:
 - appveyor PushArtifact msbuild.binlog
