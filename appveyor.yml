@@ -13,5 +13,8 @@ artifacts:
 - path: 'bin\**\msbuild-structured-log-viewer*.nupkg'
   name: Chocolatey Package
 
-on_failure:
-- appveyor PushArtifact msbuild.binlog
+deploy:
+  - provider: Webhook
+    url: https://app.signpath.io/API/v1/<UNIQUE_ORG_ID_FOR_MSBuildStructuredLog>/Integrations/AppVeyor?ProjectKey=MSBuildStructuredLog&SigningPolicyKey=release-signing
+    authorization:
+      secure: <SECURE_TOKEN_STORED_IN_APPVEYOR>
