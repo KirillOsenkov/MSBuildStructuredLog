@@ -14,9 +14,9 @@ artifacts:
   name: Chocolatey Package
 - path: 'bin\Release\Releases\MSBuildStructuredLogSetup.exe'
   name: MSBuildStructuredLogSetup.exe
-- path: 'MSBuildStructuredLogViewer*.nupkg'
+- path: 'bin\Release\Releases\MSBuildStructuredLogViewer*.nupkg'
   name: Installer nupkg
-- path: 'RELEASES'
+- path: 'bin\Release\Releases\RELEASES'
   name: RELEASES
 - path: 'src\StructuredLogger\bin\Release\netstandard2.0\StructuredLogger.dll'
   name: StructuredLogger.dll
