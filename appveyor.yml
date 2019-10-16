@@ -12,9 +12,9 @@ after_build:
 - ps: >-
     Compress-Archive `
     "bin\Release\Releases\MSBuildStructuredLogSetup.exe", `
-    "bin\Release\Releases\MSBuildStructuredLogViewer*.nupkg" `
+    "bin\Release\Releases\MSBuildStructuredLogViewer*.nupkg", `
     "src\StructuredLogger\bin\Release\netstandard2.0\StructuredLogger.dll" `
-    "MSBuildStructuredLog-${Env:APPVEYOR_BUILD_VERSION}.zip"
+    -DestinationPath "MSBuildStructuredLog-${Env:APPVEYOR_BUILD_VERSION}.zip"
 
 artifacts:
 - path: msbuild.binlog
