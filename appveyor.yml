@@ -7,6 +7,15 @@ build_script:
     nuget restore
 
     msbuild /m /p:Configuration=Release /clp:v=m MSBuildStructuredLog.sln /bl /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+
+after_build:
+- ps: >-
+    Compress-Archive `
+    "bin\Release\Releases\MSBuildStructuredLogSetup.exe", `
+    "bin\Release\Releases\MSBuildStructuredLogViewer*.nupkg", `
+    "src\StructuredLogger\bin\Release\netstandard2.0\StructuredLogger.dll" `
+    -DestinationPath "MSBuildStructuredLog-${Env:APPVEYOR_BUILD_VERSION}.zip"
+
 artifacts:
 - path: msbuild.binlog
   name: MSBuild Log
@@ -20,6 +29,14 @@ artifacts:
   name: RELEASES
 - path: 'src\StructuredLogger\bin\Release\netstandard2.0\StructuredLogger.dll'
   name: StructuredLogger.dll
+- path: 'MSBuildStructuredLog-*.zip'
+  name: Bundle
 
 on_failure:
 - appveyor PushArtifact msbuild.binlog
+
+deploy:
+  - provider: Webhook
+    url: https://app.signpath.io/API/v1/74f63071-f2aa-46ce-bd8f-1e7cd8774019/Integrations/AppVeyor?ProjectKey=MSBuildStructuredLog&SigningPolicyKey=test-signing
+    authorization:
+      secure: <SECURE_TOKEN_STORED_IN_APPVEYOR>
