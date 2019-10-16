@@ -1,20 +1,41 @@
 version: 1.1.{build}
-image: Visual Studio 2017
+image: Visual Studio 2019
 install:
   - choco upgrade chocolatey # Need at least 0.10.8 to avoid packaging error
 build_script: 
 - cmd: >-
     nuget restore
-    
     msbuild /m /p:Configuration=Release /clp:v=m MSBuildStructuredLog.sln /bl /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+
+after_build:
+- ps: >-
+    Compress-Archive `
+    "bin\Release\Releases\MSBuildStructuredLogSetup.exe", `
+    "bin\Release\Releases\MSBuildStructuredLogViewer*.nupkg" `
+    "src\StructuredLogger\bin\Release\netstandard2.0\StructuredLogger.dll" `
+    "MSBuildStructuredLog-${Env:APPVEYOR_BUILD_VERSION}.zip"
+
 artifacts:
 - path: msbuild.binlog
   name: MSBuild Log
 - path: 'bin\**\msbuild-structured-log-viewer*.nupkg'
   name: Chocolatey Package
+- path: 'bin\Release\Releases\MSBuildStructuredLogSetup.exe'
+  name: MSBuildStructuredLogSetup.exe
+- path: 'bin\Release\Releases\MSBuildStructuredLogViewer*.nupkg'
+  name: Installer nupkg
+- path: 'bin\Release\Releases\RELEASES'
+  name: RELEASES
+- path: 'src\StructuredLogger\bin\Release\netstandard2.0\StructuredLogger.dll'
+  name: StructuredLogger.dll
+- path: 'MSBuildStructuredLog-*.zip'
+  name: Bundle
+
+on_failure:
+- appveyor PushArtifact msbuild.binlog
 
 deploy:
   - provider: Webhook
-    url: https://app.signpath.io/API/v1/<UNIQUE_ORG_ID_FOR_MSBuildStructuredLog>/Integrations/AppVeyor?ProjectKey=MSBuildStructuredLog&SigningPolicyKey=release-signing
+    url: https://app.signpath.io/API/v1/b97db90c-7c03-416b-9003-8ed45742da5f/Integrations/AppVeyor?ProjectKey=MSBuildStructuredLog&SigningPolicyKey=release-signing
     authorization:
-      secure: <SECURE_TOKEN_STORED_IN_APPVEYOR>
+      secure: 5Xj6LCgkuuxTKbNrjQHcGeijmtDAK4fCOwdyD5KOQed2T5tz9rdk5jmw4asn9V6mOi9y0Xi335lK8Ec7spTomA==
