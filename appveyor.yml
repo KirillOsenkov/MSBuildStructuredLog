@@ -39,4 +39,4 @@ deploy:
   - provider: Webhook
     url: https://app.signpath.io/API/v1/74f63071-f2aa-46ce-bd8f-1e7cd8774019/Integrations/AppVeyor?ProjectKey=MSBuildStructuredLog&SigningPolicyKey=test-signing
     authorization:
-      secure: FFPc3+ncMTwaOt/dU+8+7BokrTsK2Q75F43idP/C6tWuDTPa7P/5fDDX0R9EDoPAzgYxwDHyU4KkT0KWm5s7EA==
+      secure: WALjHGjvNllt916kBDQ5tSYXGvaKDqymo/jQJoIKwITueSp4LF3jS+9nllR46G8pp2AH+Z6RL1f089XGDOYlfg==
