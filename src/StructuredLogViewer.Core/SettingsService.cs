@@ -281,6 +281,28 @@ namespace StructuredLogViewer
             }
         }
 
+        private static bool parentAllTargetsUnderProject = false;
+        public static bool ParentAllTargetsUnderProject
+        {
+            get
+            {
+                EnsureSettingsRead();
+                return parentAllTargetsUnderProject;
+            }
+
+            set
+            {
+                if (parentAllTargetsUnderProject == value)
+                {
+                    return;
+                }
+
+                parentAllTargetsUnderProject = value;
+                Construction.ParentAllTargetsUnderProject = value;
+                SaveSettings();
+            }
+        }
+
         private static void EnsureSettingsRead()
         {
             if (!settingsRead)
@@ -291,11 +313,13 @@ namespace StructuredLogViewer
         }
 
         const string Virtualization = "Virtualization=";
+        const string ParentAllTargetsUnderProjectSetting = nameof(ParentAllTargetsUnderProject) + "=";
 
         private static void SaveSettings()
         {
             var sb = new StringBuilder();
             sb.AppendLine(Virtualization + enableTreeViewVirtualization.ToString());
+            sb.AppendLine(ParentAllTargetsUnderProjectSetting + parentAllTargetsUnderProject.ToString());
             File.WriteAllText(settingsFilePath, sb.ToString());
         }
 
@@ -315,6 +339,14 @@ namespace StructuredLogViewer
                     if (bool.TryParse(value, out bool boolValue))
                     {
                         enableTreeViewVirtualization = boolValue;
+                    }
+                }
+                else if (line.StartsWith(ParentAllTargetsUnderProjectSetting))
+                {
+                    var value = line.Substring(ParentAllTargetsUnderProjectSetting.Length);
+                    if (bool.TryParse(value, out bool boolValue))
+                    {
+                        parentAllTargetsUnderProject = boolValue;
                     }
                 }
             }
