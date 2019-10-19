@@ -224,6 +224,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 Intern(args.TargetFile));
         }
 
+        public static bool ParentAllTargetsUnderProject { get; set; }
+
         private void AddTargetCore(BuildEventArgs args, string targetName, string parentTargetName, string targetFile)
         {
             try
@@ -235,7 +237,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     target.NodeId = args.BuildEventContext.NodeId;
                     target.StartTime = args.Timestamp;
 
-                    if (!string.IsNullOrEmpty(parentTargetName))
+                    if (!ParentAllTargetsUnderProject && !string.IsNullOrEmpty(parentTargetName))
                     {
                         var parentTarget = project.GetOrAddTargetByName(parentTargetName);
                         parentTarget.TryAddTarget(target);
