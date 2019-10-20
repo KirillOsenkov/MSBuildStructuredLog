@@ -41,7 +41,7 @@ namespace StructuredLogViewer.Avalonia.Controls
 
         static SplitterPanel()
         {
-            AffectsMeasure(OrientationProperty);
+            AffectsMeasure<SplitterPanel>(OrientationProperty);
         }
 
         private Control firstChild;

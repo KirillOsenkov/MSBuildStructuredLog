@@ -9,12 +9,17 @@ namespace StructuredLogViewer.Avalonia
     {
         public static void AddItem(this ItemsControl itemsControl, object o)
         {
-            (itemsControl as IList)?.Add(o);
+            (itemsControl.Items as IList)?.Add(o);
         }
 
+        public static void RemoveItem(this ItemsControl itemsControl, object o)
+        {
+            (itemsControl.Items as IList)?.Remove(o);
+        }
+        
         public static void ClearItems(this ItemsControl itemsControl)
         {
-            (itemsControl as IList)?.Clear();
+            (itemsControl.Items as IList)?.Clear();
         }
 
         public static void RegisterControl<TControl>(this IControl parent, out TControl control, string name)

@@ -10,11 +10,11 @@
             <local:SplitterPanel FirstChildRelativeSize="1*"
                                  SecondChildRelativeSize="3*">
                 <local:SplitterPanel.FirstChild>
-                    <local:TabItemsControl Name="leftPaneTabControl"
-                                           SelectedIndex="0"
-                                           TabStripPlacement="Bottom"
-                                           Margin="0"
-                                           Padding="0">
+                    <TabControl Name="leftPaneTabControl"
+                                SelectedIndex="0"
+                                TabStripPlacement="Bottom"
+                                Margin="0"
+                                Padding="0">
                         <TabItem Name="searchLogTab"
                                  Header="Search Log">
                             <local:SearchAndResultsControl Name="searchLogControl" />
@@ -35,13 +35,13 @@
                             <local:SearchAndResultsControl Name="findInFilesControl"
                                                            WatermarkContent="Search in files" />
                         </TabItem>
-                    </local:TabItemsControl>
+                    </TabControl>
                 </local:SplitterPanel.FirstChild>
                 <local:SplitterPanel.SecondChild>
 
                     <local:SplitterPanel Name="tabs">
                         <local:SplitterPanel.FirstChild>
-                            <local:TabItemsControl Name="centralTabControl"
+                            <TabControl Name="centralTabControl"
                                         TabStripPlacement="Bottom"
                                         SelectedIndex="0"
                                         MinWidth="10">
@@ -59,7 +59,7 @@
                                          Header="Timeline">
                                     <local:TimelineControl Name="timeline" />
                                 </TabItem>-->
-                            </local:TabItemsControl>
+                            </TabControl>
                         </local:SplitterPanel.FirstChild>
 
                         <local:SplitterPanel.SecondChild>

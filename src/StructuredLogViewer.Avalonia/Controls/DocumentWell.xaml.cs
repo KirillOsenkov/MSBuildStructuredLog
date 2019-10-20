@@ -8,11 +8,11 @@ using Avalonia.Interactivity;
 
 namespace StructuredLogViewer.Avalonia.Controls
 {
-    public partial class DocumentWell : UserControl
+    public class DocumentWell : UserControl
     {
-        private TabItemsControl tabControl;
+        private TabControl tabControl;
         private Button closeButton;
-
+        
         public DocumentWell()
         {
             InitializeComponent();
@@ -33,28 +33,6 @@ namespace StructuredLogViewer.Avalonia.Controls
         private void Tabs_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             IsVisible = Tabs.Any();
-
-            if (e.Action == NotifyCollectionChangedAction.Reset)
-            {
-                tabControl.Tabs.Clear();
-                return;
-            }
-
-            if (e.OldItems != null)
-            {
-                foreach (TabItem item in e.OldItems)
-                {
-                    tabControl.Tabs.Remove(item);
-                }
-            }
-
-            if (e.NewItems != null)
-            {
-                foreach (TabItem item in e.NewItems)
-                {
-                    tabControl.Tabs.Add(item);
-                }
-            }
         }
 
         public ObservableCollection<SourceFileTab> Tabs { get; } = new ObservableCollection<SourceFileTab>();
@@ -81,7 +59,7 @@ namespace StructuredLogViewer.Avalonia.Controls
             {
                 IsVisible = true;
                 tabControl.SelectedItem = existing;
-                var textViewer = existing.Content as TextViewerControl;
+                var textViewer = existing.Content;
                 if (textViewer != null)
                 {
                     textViewer.SetPathDisplay(displayPath);
@@ -99,17 +77,12 @@ namespace StructuredLogViewer.Avalonia.Controls
 
             var textViewerControl = new TextViewerControl();
             textViewerControl.DisplaySource(sourceFilePath, text, lineNumber, column, preprocess);
-            var tab = new SourceFileTab()
+            var tab = new SourceFileTab
             {
                 FilePath = sourceFilePath,
-                Text = text,
                 Content = textViewerControl,
             };
-            var header = new SourceFileTabHeader(tab);
-            tab.Header = header;
-            header.CloseRequested += t => Tabs.Remove(t);
-            // TODO: template
-            //tab.HeaderTemplate = (DataTemplate)Application.Current.Resources["SourceFileTabHeaderTemplate"];
+            tab.CloseRequested += t => Tabs.Remove(t);
             textViewerControl.SetPathDisplay(displayPath);
 
             Tabs.Add(tab);
