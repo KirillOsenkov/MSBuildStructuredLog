@@ -20,32 +20,11 @@
         <StyleInclude Source="resm:Avalonia.Themes.Default.Accents.BaseLight.xaml?assembly=Avalonia.Themes.Default" />
         <StyleInclude Source="resm:AvaloniaEdit.AvaloniaEdit.xaml?assembly=AvaloniaEdit" />
         <StyleInclude Source="resm:StructuredLogViewer.Avalonia.Styles.xaml?assembly=StructuredLogViewer.Avalonia" />
-
-        <Style Selector="s|TabItemsControl">
-            <Setter Property="Background"
-                    Value="Transparent" />
-            <Setter Property="Template">
-                <ControlTemplate>
-                    <Border Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}">
-                        <DockPanel>
-                            <TabStrip Items="{TemplateBinding Headers}"
-                                      DockPanel.Dock="{TemplateBinding TabStripPlacement}"
-                                      SelectedIndex="{TemplateBinding SelectedIndex, Mode=TwoWay}" />
-                            <Carousel Items="{TemplateBinding Tabs}"
-                                      MemberSelector="Content"
-                                      SelectedIndex="{TemplateBinding SelectedIndex}" />
-                        </DockPanel>
-                    </Border>
-                </ControlTemplate>
-            </Setter>
-        </Style>
         
         <Style Selector="Rectangle.nodeIcon">
             <Setter Property="Width" Value="14" />
             <Setter Property="Height" Value="11" />
-            <Setter Property="Margin" Value="3,5,6,3" />
+            <Setter Property="Margin" Value="3,3,6,3" />
             <Setter Property="StrokeThickness" Value="1" />
             <Setter Property="VerticalAlignment" Value="Top" />
         </Style>
@@ -53,7 +32,7 @@
         <Style Selector="DrawingPresenter.projectNodeIcon">
             <Setter Property="Width" Value="16" />
             <Setter Property="Height" Value="16" />
-            <Setter Property="Margin" Value="2,4,6,2" />
+            <Setter Property="Margin" Value="2,2,6,2" />
             <Setter Property="VerticalAlignment" Value="Top" />
         </Style>
 

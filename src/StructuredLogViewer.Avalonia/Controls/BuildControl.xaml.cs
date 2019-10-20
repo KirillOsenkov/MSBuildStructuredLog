@@ -47,9 +47,9 @@ namespace StructuredLogViewer.Avalonia.Controls
         private TabItem filesTab;
         private TabItem findInFilesTab;
         private TreeView filesTree;
-        private TabItemsControl centralTabControl;
+        private TabControl centralTabControl;
         private ListBox breadCrumb;
-        private TabItemsControl leftPaneTabControl;
+        private TabControl leftPaneTabControl;
         private TabItem searchLogTab;
         private DocumentWell documentWell;
 

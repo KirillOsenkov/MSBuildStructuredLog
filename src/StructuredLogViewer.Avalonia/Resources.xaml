@@ -118,28 +118,6 @@
         <GeometryDrawing Brush="#FFF0EFF1" Geometry="F1M12,3.96L12,2 8,2 8,2.381 9.927,4 11.547,4 14,6.062 14,3.996z" />
     </DrawingGroup>
 
-    <DataTemplate x:Key="SourceFileTabHeaderTemplate">
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <Button Name="HideButton"
-                    Width="16"
-                    Height="16"
-                    Classes="close"
-                    Grid.Column="1"
-                    Command="{Binding Close}"
-                    VerticalAlignment="Center"
-                    Margin="4,2,-2,0"
-                    ToolTip.Tip="Close">
-            </Button>
-            <TextBlock MinWidth="50"
-                       Text="{Binding Header}"
-                       VerticalAlignment="Center" />
-        </Grid>
-    </DataTemplate>
-
     <s:StringEmptinessToVisibilityConverter x:Key="StringEmptinessToVisibilityConverter" />
     
 </ResourceDictionary>
