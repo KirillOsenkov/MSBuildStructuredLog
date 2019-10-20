@@ -72,13 +72,13 @@
                                               Padding="{TemplateBinding Padding}"
                                               Grid.Column="1"/>
                             <Ellipse Grid.Column="1"
-                                     Width="6" Height="6" Margin="2,4,0,0" StrokeThickness="1"
+                                     Width="6" Height="6" Margin="1,1,0,0" StrokeThickness="1"
                                      HorizontalAlignment="Left" VerticalAlignment="Top"
                                      Fill="{StaticResource ContainsSearchResultBrush}"
                                      Stroke="{StaticResource ContainsSearchResultStroke}"
                                      IsVisible="{Binding ContainsSearchResult}"/>
                             <Ellipse Grid.Column="1"
-                                     Width="6" Height="6" Margin="2,4,0,0" StrokeThickness="1"
+                                     Width="6" Height="6" Margin="1,1,0,0" StrokeThickness="1"
                                      HorizontalAlignment="Left" VerticalAlignment="Top"
                                      Fill="{StaticResource SearchResultBrush}"
                                      Stroke="{StaticResource SearchResultStroke}"
