@@ -48,6 +48,7 @@ namespace StructuredLogViewer.Avalonia
             this.AttachDevTools();
 
             TemplateApplied += MainWindow_Loaded;
+            Construction.ParentAllTargetsUnderProject = SettingsService.ParentAllTargetsUnderProject;
         }
 
         private void InitializeComponent()
