@@ -12,6 +12,8 @@
             
             <s:ProxyNodeIconConverter x:Key="ProxyNodeIconConverter" />
             <s:ProjectIconConverter x:Key="ProjectIconConverter" />
+            <s:NodeLowRelevanceToOpacityConverter x:Key="RelevanceConverter" />
+            <s:NodeIsSelectedToColorConverter x:Key="LabelColorConverter" />
         </ResourceDictionary>
     </Application.Resources>
     
@@ -35,7 +37,7 @@
             <Setter Property="Margin" Value="2,2,6,2" />
             <Setter Property="VerticalAlignment" Value="Top" />
         </Style>
-
+        
     </Application.Styles>
     <Application.DataTemplates>
 
@@ -44,26 +46,20 @@
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
                            Classes="nodeIcon"
-                           Stroke="{DynamicResource FolderStroke}"
-                           Fill="{DynamicResource ClosedFolderBrush}" />
+                           Stroke="{StaticResource FolderStroke}"
+                           Fill="{StaticResource ClosedFolderBrush}" />
                 <TextBlock Name="nameText"
-                           Text="{Binding Name}" />
+                           Text="{Binding Name}"
+                           Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={x:Static Brushes.DarkGoldenrod}}" />
             </StackPanel>
-            <!--<TreeDataTemplate.Triggers>
-                <DataTrigger Binding="{Binding IsSelected}"
-                             Value="False">
-                    <Setter TargetName="nameText"
-                            Property="Foreground"
-                            Value="DarkGoldenrod" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding Name}"
+            <!--<DataTrigger Binding="{Binding Name}"
                              Value="DoubleWrites">
                     <Setter TargetName="nameText"
                             Property="Foreground"
                             Value="Red" />
                     <Setter TargetName="icon"
                             Property="Fill"
-                            Value="{DynamicResource ErrorBrush}" />
+                            Value="{StaticResource ErrorBrush}" />
                 </DataTrigger>
             </TreeDataTemplate.Triggers>-->
         </TreeDataTemplate>
@@ -71,7 +67,8 @@
         <TreeDataTemplate DataType="{x:Type l:Project}"
                           ItemsSource="{Binding Children}">
             <StackPanel Orientation="Horizontal"
-                        Name="projectRoot">
+                        Name="projectRoot"
+                        Opacity="{Binding IsLowRelevance, Converter={StaticResource RelevanceConverter}}">
                 <DrawingPresenter Classes="projectNodeIcon"
                                   Drawing="{Binding ProjectFileExtension, Converter={StaticResource ProjectIconConverter}}" />
                 <TextBlock Text="{Binding Name}"
@@ -82,29 +79,17 @@
         <TreeDataTemplate DataType="{x:Type l:Target}"
                           ItemsSource="{Binding Children}">
             <StackPanel Orientation="Horizontal"
-                        Name="targetRoot">
+                        Name="targetRoot"
+                        Opacity="{Binding IsLowRelevance, Converter={StaticResource RelevanceConverter}}">
                 <Rectangle Name="icon"
                            Classes="nodeIcon"
-                           Stroke="{DynamicResource TargetStroke}"
-                           Fill="{DynamicResource TargetBrush}" />
+                           Stroke="{StaticResource TargetStroke}"
+                           Fill="{StaticResource TargetBrush}" />
                 <TextBlock Name="label"
-                           Text="Target " />
+                           Text="Target "
+                           Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={StaticResource TargetStroke}}" />
                 <TextBlock Text="{Binding Name}" />
             </StackPanel>
-            <!--<TreeDataTemplate.Triggers>
-                <DataTrigger Binding="{Binding IsLowRelevance}"
-                             Value="True">
-                    <Setter TargetName="targetRoot"
-                            Property="Opacity"
-                            Value="0.25" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding IsSelected}"
-                             Value="False">
-                    <Setter TargetName="label"
-                            Property="Foreground"
-                            Value="{DynamicResource TargetStroke}" />
-                </DataTrigger>
-            </TreeDataTemplate.Triggers>-->
         </TreeDataTemplate>
 
         <TreeDataTemplate DataType="{x:Type l:Task}"
@@ -112,25 +97,17 @@
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
                            Classes="nodeIcon"
-                           Stroke="{DynamicResource TaskStroke}"
-                           Fill="{DynamicResource TaskBrush}" />
+                           Stroke="{StaticResource TaskStroke}"
+                           Fill="{StaticResource TaskBrush}" />
                 <TextBlock Name="label"
-                           Text="Task " />
+                           Text="Task "
+                           Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={StaticResource TaskStroke}}"/>
                 <TextBlock Text="{Binding Name}" />
                 <TextBlock Name="duration"
-                           Text="{Binding DurationText}" />
+                           Text="{Binding DurationText}"
+                           Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={x:Static Brushes.LightGray}}"
+                           Margin="6,0,0,0" />
             </StackPanel>
-            <!--<TreeDataTemplate.Triggers>
-                <DataTrigger Binding="{Binding IsSelected}"
-                             Value="False">
-                    <Setter TargetName="label"
-                            Property="Foreground"
-                            Value="{DynamicResource TaskStroke}" />
-                    <Setter TargetName="duration"
-                            Property="Foreground"
-                            Value="LightGray" />
-                </DataTrigger>
-            </TreeDataTemplate.Triggers>-->
         </TreeDataTemplate>
 
         <TreeDataTemplate DataType="{x:Type l:AddItem}"
@@ -138,20 +115,13 @@
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
                            Classes="nodeIcon"
-                           Stroke="{DynamicResource ItemStroke}"
-                           Fill="{DynamicResource ItemBrush}" />
+                           Stroke="{StaticResource ItemStroke}"
+                           Fill="{StaticResource ItemBrush}" />
                 <TextBlock Name="label"
-                           Text="Add Item " />
+                           Text="Add Item "
+                           Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={x:Static Brushes.Teal}}" />
                 <TextBlock Text="{Binding Name}" />
             </StackPanel>
-            <!--<TreeDataTemplate.Triggers>
-                <DataTrigger Binding="{Binding IsSelected}"
-                             Value="False">
-                    <Setter TargetName="label"
-                            Property="Foreground"
-                            Value="Teal" />
-                </DataTrigger>
-            </TreeDataTemplate.Triggers>-->
         </TreeDataTemplate>
 
         <TreeDataTemplate DataType="{x:Type l:RemoveItem}"
@@ -159,20 +129,13 @@
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
                            Classes="nodeIcon"
-                           Stroke="{DynamicResource ItemStroke}"
-                           Fill="{DynamicResource ItemBrush}" />
+                           Stroke="{StaticResource ItemStroke}"
+                           Fill="{StaticResource ItemBrush}" />
                 <TextBlock Name="label"
-                           Text="Remove Item " />
+                           Text="Remove Item "
+                           Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={x:Static Brushes.Teal}}"/>
                 <TextBlock Text="{Binding Name}" />
             </StackPanel>
-            <!--<TreeDataTemplate.Triggers>
-                <DataTrigger Binding="{Binding IsSelected}"
-                             Value="False">
-                    <Setter TargetName="label"
-                            Property="Foreground"
-                            Value="Teal" />
-                </DataTrigger>
-            </TreeDataTemplate.Triggers>-->
         </TreeDataTemplate>
 
         <TreeDataTemplate DataType="{x:Type l:Item}"
@@ -180,60 +143,66 @@
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
                            Classes="nodeIcon"
-                           Stroke="{DynamicResource ItemStroke}"
-                           Fill="{DynamicResource ItemBrush}" />
+                           Stroke="{StaticResource ItemStroke}"
+                           Fill="{StaticResource ItemBrush}" />
                 <TextBlock Name="nameAndEquals"
-                           Text="{Binding NameAndEquals}" />
+                           Text="{Binding NameAndEquals}"
+                           Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={x:Static Brushes.Green}}"/>
                 <TextBlock Text="{Binding ShortenedText}" />
             </StackPanel>
-            <!--<TreeDataTemplate.Triggers>
-                <DataTrigger Binding="{Binding IsSelected}"
-                             Value="False">
-                    <Setter TargetName="nameAndEquals"
-                            Property="Foreground"
-                            Value="Green" />
-                </DataTrigger>
-            </TreeDataTemplate.Triggers>-->
         </TreeDataTemplate>
 
         <DataTemplate DataType="{x:Type l:Metadata}">
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
                            Classes="nodeIcon"
-                           Stroke="{DynamicResource MetadataStroke}"
-                           Fill="{DynamicResource ItemBrush}" />
+                           Stroke="{StaticResource MetadataStroke}"
+                           Fill="{StaticResource ItemBrush}" />
                 <TextBlock Name="label"
-                           Text="{Binding NameAndEquals, Mode=OneTime}" />
+                           Text="{Binding NameAndEquals, Mode=OneTime}"
+                           Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={x:Static Brushes.LightSeaGreen}}"/>
                 <TextBlock Text="{Binding ShortenedValue}" />
             </StackPanel>
-            <!--<DataTemplate.Triggers>
-                <DataTrigger Binding="{Binding IsSelected}"
-                             Value="False">
-                    <Setter TargetName="label"
-                            Property="Foreground"
-                            Value="LightSeaGreen" />
-                </DataTrigger>
-            </DataTemplate.Triggers>-->
         </DataTemplate>
+        
+        <TreeDataTemplate DataType="{x:Type l:EvaluationProfileEntry}"
+                          ItemsSource="{Binding Children}">
+            <StackPanel Orientation="Horizontal">
+                <ProgressBar Width="40" 
+                             Height="9" 
+                             Margin="2,1,6,0" 
+                             Minimum="0"
+                             Maximum="100"
+                             Value="{Binding Value}"
+                             VerticalAlignment="Center" />
+                <TextBlock Name="label" 
+                           VerticalAlignment="Center"
+                           Text="{Binding Title, Mode=OneTime}" />
+                <TextBlock Name="hits" 
+                           VerticalAlignment="Center"
+                           Margin="6,0,0,0"
+                           Text="{Binding DurationText, Mode=OneTime}"
+                           Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={x:Static Brushes.Blue}}" />
+                <TextBlock Name="code"
+                           Text="{Binding ShortenedElementDescription}" 
+                           VerticalAlignment="Center"
+                           Margin="12,0,0,0"
+                           FontFamily="Consolas"
+                           Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={x:Static Brushes.Gray}}" />
+            </StackPanel>
+        </TreeDataTemplate>
 
         <DataTemplate DataType="{x:Type l:Property}">
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
                            Classes="nodeIcon"
-                           Stroke="{DynamicResource PropertyStroke}"
-                           Fill="{DynamicResource PropertyBrush}" />
+                           Stroke="{StaticResource PropertyStroke}"
+                           Fill="{StaticResource PropertyBrush}" />
                 <TextBlock Name="label"
-                           Text="{Binding NameAndEquals, Mode=OneTime}" />
+                           Text="{Binding NameAndEquals, Mode=OneTime}"
+                           Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={StaticResource PropertyStroke}}" />
                 <TextBlock Text="{Binding ShortenedValue}" />
             </StackPanel>
-            <!--<DataTemplate.Triggers>
-                <DataTrigger Binding="{Binding IsSelected}"
-                             Value="False">
-                    <Setter TargetName="label"
-                            Property="Foreground"
-                            Value="{DynamicResource PropertyStroke}" />
-                </DataTrigger>
-            </DataTemplate.Triggers>-->
         </DataTemplate>
 
         <TreeDataTemplate DataType="{x:Type l:Parameter}"
@@ -241,50 +210,38 @@
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
                            Classes="nodeIcon"
-                           Stroke="{DynamicResource ParameterStroke}"
-                           Fill="{DynamicResource ParameterBrush}" />
+                           Stroke="{StaticResource ParameterStroke}"
+                           Fill="{StaticResource ParameterBrush}" />
                 <TextBlock Name="name"
-                           Text="{Binding Name}" />
+                           Text="{Binding Name}"
+                           Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={StaticResource ParameterStroke}}" />
             </StackPanel>
-            <!--<TreeDataTemplate.Triggers>
-                <DataTrigger Binding="{Binding IsSelected}"
-                             Value="False">
-                    <Setter TargetName="name"
-                            Property="Foreground"
-                            Value="{DynamicResource ParameterStroke}" />
-                </DataTrigger>
-            </TreeDataTemplate.Triggers>-->
         </TreeDataTemplate>
 
         <DataTemplate DataType="{x:Type l:Message}">
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
                            Classes="nodeIcon"
-                           Stroke="{DynamicResource MessageStroke}"
-                           Fill="{DynamicResource MessageBrush}" />
+                           Stroke="{StaticResource MessageStroke}"
+                           Fill="{StaticResource MessageBrush}" />
                 <TextBlock Name="messageText"
-                           Text="{Binding ShortenedText}" />
+                           Text="{Binding ShortenedText}"
+                           Opacity="{Binding IsLowRelevance, Converter={StaticResource RelevanceConverter}}" />
             </StackPanel>
-            <!--<DataTemplate.Triggers>
-                <DataTrigger Binding="{Binding IsLowRelevance}"
-                             Value="True">
-                    <Setter TargetName="messageText"
-                            Property="Opacity"
-                            Value="0.25" />
-                </DataTrigger>
-            </DataTemplate.Triggers>-->
         </DataTemplate>
         
         <TreeDataTemplate DataType="{x:Type l:Import}"
                           ItemsSource="{Binding Children}">
-            <StackPanel Orientation="Horizontal">
+            <StackPanel Orientation="Horizontal"
+                        Opacity="{Binding IsLowRelevance, Converter={StaticResource RelevanceConverter}}">
                 <Rectangle Name="icon"
                            Classes="nodeIcon"
-                           Stroke="{DynamicResource ImportStroke}"
-                           Fill="{DynamicResource ImportBrush}" />
+                           Stroke="{StaticResource ImportStroke}"
+                           Fill="{StaticResource ImportBrush}" />
                 <TextBlock x:Name="label"
                            Text="Import"
-                           Margin="0,0,6,0" />
+                           Margin="0,0,6,0"
+                           Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={StaticResource ImportStroke}}" />
                 <TextBlock x:Name="name"
                            Text="{Binding Name}" />
                 <TextBlock x:Name="location"
@@ -294,14 +251,16 @@
 
         <TreeDataTemplate DataType="{x:Type l:NoImport}"
                           ItemsSource="{Binding Children}">
-            <StackPanel Orientation="Horizontal">
+            <StackPanel Orientation="Horizontal"
+                        Opacity="{Binding IsLowRelevance, Converter={StaticResource RelevanceConverter}}">
                 <Rectangle Name="icon"
                            Classes="nodeIcon"
-                           Stroke="{DynamicResource NoImportStroke}"
-                           Fill="{DynamicResource NoImportBrush}" />
+                           Stroke="{StaticResource NoImportStroke}"
+                           Fill="{StaticResource NoImportBrush}" />
                 <TextBlock x:Name="label"
                            Text="NoImport"
-                           Margin="0,0,6,0" />
+                           Margin="0,0,6,0"
+                           Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={StaticResource NoImportStroke}}" />
                 <TextBlock x:Name="name"
                            Text="{Binding Name}" />
                 <TextBlock x:Name="location"
@@ -325,27 +284,20 @@
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
                            Classes="nodeIcon"
-                           Stroke="{DynamicResource ErrorStroke}"
-                           Fill="{DynamicResource ErrorBrush}" />
+                           Stroke="{StaticResource ErrorStroke}"
+                           Fill="{StaticResource ErrorBrush}" />
                 <TextBlock Name="text"
-                           Text="{Binding}" />
+                           Text="{Binding}"
+                           Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={StaticResource ErrorStroke}}" />
             </StackPanel>
-            <!--<DataTemplate.Triggers>
-                <DataTrigger Binding="{Binding IsSelected}"
-                             Value="False">
-                    <Setter TargetName="text"
-                            Property="Foreground"
-                            Value="{DynamicResource ErrorStroke}" />
-                </DataTrigger>
-            </DataTemplate.Triggers>-->
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type l:Warning}">
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
                            Classes="nodeIcon"
-                           Stroke="{DynamicResource WarningStroke}"
-                           Fill="{DynamicResource WarningBrush}" />
+                           Stroke="{StaticResource WarningStroke}"
+                           Fill="{StaticResource WarningBrush}" />
                 <TextBlock Text="{Binding}" />
             </StackPanel>
         </DataTemplate>
@@ -369,8 +321,8 @@
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
                            Classes="nodeIcon"
-                           Stroke="{DynamicResource MessageStroke}"
-                           Fill="{DynamicResource MessageBrush}" />
+                           Stroke="{StaticResource MessageStroke}"
+                           Fill="{StaticResource MessageBrush}" />
                 <TextBlock Name="messageText"
                            Text="{Binding Name}" />
             </StackPanel>
@@ -381,20 +333,12 @@
                 <TextBlock Name="lineNumber"
                            Text="{Binding LineNumber}"
                            FontFamily="Consolas"
-                           Foreground="Teal"
-                           Margin="0,0,12,0" />
+                           Margin="0,0,12,0"
+                           Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={x:Static Brushes.Teal}}" />
                 <TextBlock Name="messageText"
                            Text="{Binding LineText}"
                            FontFamily="Consolas" />
             </StackPanel>
-            <!--<DataTemplate.Triggers>
-                <DataTrigger Binding="{Binding IsSelected}"
-                             Value="True">
-                    <Setter TargetName="lineNumber"
-                            Property="Foreground"
-                            Value="White" />
-                </DataTrigger>
-            </DataTemplate.Triggers>-->
         </DataTemplate>
 
         <TreeDataTemplate DataType="{x:Type common:ProxyNode}"
@@ -447,7 +391,7 @@
                                    TextWrapping="Wrap"
                                    Text="{Binding Message}" />
                         <!--
-                                   IsVisible="{Binding Message, Converter={DynamicResource StringEmptinessToVisibilityConverter}}"
+                                   IsVisible="{Binding Message, Converter={StaticResource StringEmptinessToVisibilityConverter}}"
                         -->
                         <Grid Name="openLogOrProjectCompartment"
                               Grid.Row="1">
@@ -463,7 +407,7 @@
                                     <DrawingPresenter Width="100"
                                                       Height="100"
                                                       Margin="20" 
-                                                      Drawing="{DynamicResource SlnIcon}" />
+                                                      Drawing="{StaticResource SlnIcon}" />
                                     <TextBlock Text="Open Project/Solution"
                                                FontSize="16"
                                                Margin="10"
@@ -483,37 +427,37 @@
                                                    Height="35"
                                                    Canvas.Left="0"
                                                    Canvas.Top="0"
-                                                   Stroke="{DynamicResource TargetStroke}"
+                                                   Stroke="{StaticResource TargetStroke}"
                                                    StrokeThickness="1"
-                                                   Fill="{DynamicResource TargetBrush}" />
+                                                   Fill="{StaticResource TargetBrush}" />
                                         <Rectangle Width="35"
                                                    Height="35"
                                                    Canvas.Left="25"
                                                    Canvas.Top="35"
-                                                   Stroke="{DynamicResource ParameterStroke}"
+                                                   Stroke="{StaticResource ParameterStroke}"
                                                    StrokeThickness="1"
-                                                   Fill="{DynamicResource ParameterBrush}" />
+                                                   Fill="{StaticResource ParameterBrush}" />
                                         <Rectangle Width="35"
                                                    Height="35"
                                                    Canvas.Left="25"
                                                    Canvas.Top="70"
-                                                   Stroke="{DynamicResource TaskStroke}"
+                                                   Stroke="{StaticResource TaskStroke}"
                                                    StrokeThickness="1"
-                                                   Fill="{DynamicResource TaskBrush}" />
+                                                   Fill="{StaticResource TaskBrush}" />
                                         <Rectangle Width="35"
                                                    Height="35"
                                                    Canvas.Left="60"
                                                    Canvas.Top="35"
-                                                   Stroke="{DynamicResource ItemStroke}"
+                                                   Stroke="{StaticResource ItemStroke}"
                                                    StrokeThickness="1"
-                                                   Fill="{DynamicResource ItemBrush}" />
+                                                   Fill="{StaticResource ItemBrush}" />
                                         <Rectangle Width="35"
                                                    Height="35"
                                                    Canvas.Left="60"
                                                    Canvas.Top="70"
-                                                   Stroke="{DynamicResource FolderStroke}"
+                                                   Stroke="{StaticResource FolderStroke}"
                                                    StrokeThickness="1"
-                                                   Fill="{DynamicResource ClosedFolderBrush}" />
+                                                   Fill="{StaticResource ClosedFolderBrush}" />
                                         <Line StartPoint="16,35"
                                               EndPoint="16,87"
                                               Stroke="Black" />

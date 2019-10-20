@@ -29,6 +29,14 @@
         </Setter>
     </Style>
     
+    <Style Selector="TabItem">
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeNormal}" />
+    </Style>
+    
+    <Style Selector="TreeViewItem">
+        <Setter Property="Padding" Value="0" />
+    </Style>
+    
     <Style Selector="TreeView.searchable TreeViewItem">
         <Style.Resources>
             <converters:MarginMultiplierConverter Indent="16" Left="True" x:Key="LeftMarginConverter" />
