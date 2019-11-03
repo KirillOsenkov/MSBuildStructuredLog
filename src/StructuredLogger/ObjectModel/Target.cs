@@ -8,7 +8,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public bool Succeeded { get; internal set; }
         public string DependsOnTargets { get; set; }
         public Project Project => GetNearestParent<Project>();
-        public string SourceFilePath { get; internal set; }
+        public string SourceFilePath { get; set; }
 
         public Target()
         {

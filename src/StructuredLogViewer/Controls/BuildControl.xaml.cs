@@ -12,6 +12,9 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Threading;
+using System.Xml;
+using System.Xml.Linq;
+using System.Xml.XPath;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Language.Xml;
 
@@ -540,6 +543,16 @@ Recent:
                     SourceFilePath = filePath,
                     Name = parts[index]
                 };
+
+                foreach (var target in GetTargets(filePath))
+                {
+                    file.Children.Add(new Target()
+                    {
+                        Name = target,
+                        SourceFilePath = filePath
+                    });
+                }
+
                 folder.AddChild(file);
             }
             else
@@ -549,6 +562,37 @@ Recent:
                 AddSourceFile(subfolder, filePath, parts, index + 1);
             }
         }
+
+        private IEnumerable<string> GetTargets(string file)
+        {
+            if (file.EndsWith(".targets") == false)
+            {
+                yield break;
+            }
+
+            var content = sourceFileResolver.GetSourceFileText(file);
+            
+            var doc = new XmlDocument();
+            doc.LoadXml(content.Text);
+            
+            if (doc.DocumentElement == null)
+            {
+                yield break;
+            }
+
+            var nsmgr = new XmlNamespaceManager(doc.NameTable);
+            nsmgr.AddNamespace("x", doc.DocumentElement.NamespaceURI);
+            var xmlNodeList = doc.SelectNodes(@"//x:Project/x:Target[@Name]", nsmgr);
+            if (xmlNodeList == null)
+            {
+                yield break;
+            }
+            foreach (XmlNode selectNode in xmlNodeList)
+            {
+                yield return selectNode.Attributes["Name"].Value;
+            }
+        }
+
 
         /// <summary>
         /// This is needed as a workaround for a weird bug. When the breadcrumb spans multiple lines
