@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using Microsoft.Win32;
 
 namespace StructuredLogViewer
@@ -21,9 +22,23 @@ namespace StructuredLogViewer
         private const int SHCNE_ASSOCCHANGED = 0x8000000;
         private const int SHCNF_FLUSH = 0x1000;
 
-        public static void EnsureAssociationsSet()
+        public static void EnsureAssociationsSet(string version = null)
         {
             var filePath = Process.GetCurrentProcess().MainModule.FileName;
+
+            if (version != null)
+            {
+                var updated = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "MSBuildStructuredLogViewer",
+                    "app-" + version,
+                    Path.GetFileName(filePath));
+                if (File.Exists(updated))
+                {
+                    filePath = updated;
+                }
+            }
+
             EnsureAssociationsSet(
                 new FileAssociation
                 {

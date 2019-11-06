@@ -224,7 +224,9 @@ namespace StructuredLogViewer
                 }
                 else if (result.Version > currentVersion)
                 {
-                    message = "After restarting the app you will be on version " + result.Version.ToString();
+                    var versionText = result.Version.ToString();
+                    message = "After restarting the app you will be on version " + versionText;
+                    FileAssociations.EnsureAssociationsSet(versionText);
                 }
                 else
                 {
