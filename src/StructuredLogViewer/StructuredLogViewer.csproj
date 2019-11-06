@@ -27,6 +27,14 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="AvalonEdit" Version="5.0.4" />
+    <PackageReference Include="Microsoft.Build.Locator" Version="1.2.6" ExcludeAssets="build" />
+    <PackageReference Include="Microsoft.Language.Xml" Version="1.0.15" />
+    <PackageReference Include="Nerdbank.GitVersioning" Version="2.3.38" PrivateAssets="all" />
+    <PackageReference Include="squirrel.windows" Version="1.4.0" />
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\StructuredLogger\StructuredLogger.csproj">
       <Project>{a939886e-a191-4a46-a84b-21ad670081b9}</Project>
       <Name>StructuredLogger</Name>
@@ -107,7 +115,6 @@
   <ItemGroup>
     <None Include="App.config" />
     <None Include="MSBuildStructuredLogViewer.nuspec" />
-    <None Include="project.json" />
     <EmbeddedResource Include="Resources\SolutionFile.xshd" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

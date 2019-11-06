@@ -20,10 +20,7 @@
     <PackageTags>MSBuild Log Logger Structure Structured</PackageTags>
   </PropertyGroup>
   <ItemGroup Condition=" '$(OS)' == 'Windows_NT' ">
-    <PackageReference Include="Nerdbank.GitVersioning" Version="2.0.41" PrivateAssets="all" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="System.IO.Compression" />
+    <PackageReference Include="Nerdbank.GitVersioning" Version="2.3.38" PrivateAssets="all" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0'">
     <DefineConstants>$(DefineConstants);NETCORE</DefineConstants>
@@ -37,6 +34,7 @@
   <ItemGroup Condition=" '$(TargetFramework)' == 'net46' ">
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.IO.Compression" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
     <PackageReference Include="Microsoft.Build" Version="14.3.0" />
