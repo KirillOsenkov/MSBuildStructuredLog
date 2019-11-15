@@ -58,7 +58,13 @@ namespace StructuredLogViewer.Controls
             Visibility = Visibility.Collapsed;
         }
 
-        public void DisplaySource(string sourceFilePath, string text, int lineNumber = 0, int column = 0, Action preprocess = null, bool displayPath = true)
+        public void DisplaySource(
+            string sourceFilePath,
+            string text,
+            int lineNumber = 0,
+            int column = 0,
+            Action preprocess = null,
+            bool displayPath = true)
         {
             var existing = Find(sourceFilePath);
             if (existing != null)

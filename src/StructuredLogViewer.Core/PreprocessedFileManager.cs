@@ -11,8 +11,7 @@ namespace StructuredLogViewer
     {
         private readonly Build build;
         private readonly SourceFileResolver sourceFileResolver;
-        private readonly Dictionary<string, Bucket> importMap = new Dictionary<string, Bucket>(
-            StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, Dictionary<string, Bucket>> importMapsPerProject = new Dictionary<string, Dictionary<string, Bucket>>();
         private readonly Dictionary<string, string> preprocessedFileCache = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         public PreprocessedFileManager(Build build, SourceFileResolver sourceFileResolver)
@@ -26,21 +25,52 @@ namespace StructuredLogViewer
 
         public void BuildImportMap()
         {
-            var evaluation = build.FindChild<Folder>("Evaluation");
+            var evaluation = build.FindChild<Folder>(Strings.Evaluation);
             if (evaluation == null)
             {
                 return;
             }
 
-            evaluation.VisitAllChildren<Import>(VisitImport);
+            foreach (var projectEvaluation in evaluation.Children.OfType<Project>())
+            {
+                var imports = projectEvaluation.FindChild<Folder>(Strings.Imports);
+                if (imports == null)
+                {
+                    continue;
+                }
+
+                imports.VisitAllChildren<Import>(import => VisitImport(import, projectEvaluation));
+            }
         }
 
-        private void VisitImport(Import import)
+        private void VisitImport(Import import, Project projectEvaluationContext)
         {
             if (sourceFileResolver.HasFile(import.ProjectFilePath) && sourceFileResolver.HasFile(import.ImportedProjectFilePath))
             {
+                var importMap = GetOrCreateImportMap(projectEvaluationContext.ProjectFile);
                 AddImport(importMap, import.ProjectFilePath, import.ImportedProjectFilePath, import.Line, import.Column);
             }
+        }
+
+        private Dictionary<string, Bucket> GetOrCreateImportMap(string projectFilePath)
+        {
+            if (!importMapsPerProject.TryGetValue(projectFilePath, out var importMap))
+            {
+                importMap = new Dictionary<string, Bucket>(StringComparer.OrdinalIgnoreCase);
+                importMapsPerProject[projectFilePath] = importMap;
+            }
+
+            return importMap;
+        }
+
+        private Dictionary<string, Bucket> GetImportMap(string projectFilePath)
+        {
+            if (importMapsPerProject.TryGetValue(projectFilePath, out var importMap))
+            {
+                return importMap;
+            }
+
+            return null;
         }
 
         private int CorrectForMultilineImportElement(SourceText text, int lineNumber)
@@ -86,35 +116,31 @@ namespace StructuredLogViewer
             bucket.Add(new ProjectImport(importedProject, line, column));
         }
 
-        public Action GetPreprocessAction(string sourceFilePath)
+        public Action GetPreprocessAction(string sourceFilePath, string preprocessContext)
         {
-            var text = sourceFileResolver.GetSourceFileText(sourceFilePath);
-            if (text == null)
+            if (!CanPreprocess(sourceFilePath, preprocessContext))
             {
                 return null;
             }
 
-            return GetPreprocessAction(sourceFilePath, text);
+            return () => ShowPreprocessed(sourceFilePath, preprocessContext);
         }
 
-        public Action GetPreprocessAction(string sourceFilePath, SourceText text)
+        public string GetPreprocessedText(string sourceFilePath, string projectEvaluationContext)
         {
-            if (!CanPreprocess(sourceFilePath))
-            {
-                return null;
-            }
-
-            return () => ShowPreprocessed(sourceFilePath);
-        }
-
-        public string GetPreprocessedText(string sourceFilePath)
-        {
-            if (preprocessedFileCache.TryGetValue(sourceFilePath, out var result))
+            string preprocessedFileCacheKey = projectEvaluationContext + sourceFilePath;
+            if (preprocessedFileCache.TryGetValue(preprocessedFileCacheKey, out var result))
             {
                 return result;
             }
 
             var sourceText = sourceFileResolver.GetSourceFileText(sourceFilePath);
+
+            var importMap = GetImportMap(projectEvaluationContext);
+            if (importMap == null)
+            {
+                return string.Empty;
+            }
 
             if (importMap.TryGetValue(sourceFilePath, out var imports) &&
                 imports.Count > 0 &&
@@ -137,7 +163,7 @@ namespace StructuredLogViewer
                         sb.AppendLine(sourceText.GetLineText(line));
                     }
 
-                    var importText = GetPreprocessedText(import.ProjectPath);
+                    var importText = GetPreprocessedText(import.ProjectPath, projectEvaluationContext);
                     sb.AppendLine($"<!-- ======== {import.ProjectPath} ======= -->");
                     sb.AppendLine(importText);
                     sb.AppendLine($"<!-- ======== END OF {import.ProjectPath} ======= -->");
@@ -159,18 +185,42 @@ namespace StructuredLogViewer
                 }
             }
 
-            preprocessedFileCache[sourceFilePath] = result;
+            preprocessedFileCache[preprocessedFileCacheKey] = result;
             return result;
         }
 
-        public void ShowPreprocessed(string sourceFilePath)
+        public string GetProjectEvaluationContext(object node)
         {
-            if (sourceFilePath == null)
+            if (node is TreeNode treeNode)
+            {
+                var project = treeNode.GetNearestParentOrSelf<Project>();
+                if (project != null)
+                {
+                    return project.ProjectFile;
+                }
+            }
+
+            return null;
+        }
+
+        public void ShowPreprocessed(IPreprocessable preprocessable)
+        {
+            if (preprocessable == null)
             {
                 return;
             }
 
-            var preprocessedText = GetPreprocessedText(sourceFilePath);
+            ShowPreprocessed(preprocessable.RootFilePath, GetProjectEvaluationContext(preprocessable));
+        }
+
+        public void ShowPreprocessed(string sourceFilePath, string projectContext)
+        {
+            if (sourceFilePath == null || projectContext == null)
+            {
+                return;
+            }
+
+            var preprocessedText = GetPreprocessedText(sourceFilePath, projectContext);
             if (preprocessedText == null)
             {
                 return;
@@ -180,10 +230,18 @@ namespace StructuredLogViewer
             DisplayFile?.Invoke(filePath);
         }
 
-        public bool CanPreprocess(string sourceFilePath)
+        public bool CanPreprocess(IPreprocessable preprocessable)
+        {
+            string sourceFilePath = preprocessable.RootFilePath;
+            string projectContext = GetProjectEvaluationContext(preprocessable);
+            return CanPreprocess(sourceFilePath, projectContext);
+        }
+
+        public bool CanPreprocess(string sourceFilePath, string projectContext)
         {
             return sourceFilePath != null
                 && sourceFileResolver.HasFile(sourceFilePath)
+                && GetImportMap(projectContext) is Dictionary<string, Bucket> importMap
                 && importMap.TryGetValue(sourceFilePath, out var bucket)
                 && bucket.Count > 0;
         }

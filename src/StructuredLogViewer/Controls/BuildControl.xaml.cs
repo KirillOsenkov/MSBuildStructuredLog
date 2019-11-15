@@ -13,8 +13,6 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Threading;
 using System.Xml;
-using System.Xml.Linq;
-using System.Xml.XPath;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Language.Xml;
 
@@ -375,10 +373,7 @@ Recent:
             searchLogControl.WatermarkContent = watermark;
         }
 
-        private void Preprocess(IPreprocessable project)
-        {
-            preprocessedFileManager.ShowPreprocessed(project.RootFilePath);
-        }
+        private void Preprocess(IPreprocessable project) => preprocessedFileManager.ShowPreprocessed(project);
 
         private void Run(Task task, bool debug = false)
         {
@@ -420,7 +415,7 @@ Recent:
             searchInSubtreeItem.Visibility = hasChildren && node is TimedNode ? Visibility.Visible : Visibility.Collapsed;
             copyChildrenItem.Visibility = copySubtreeItem.Visibility;
             sortChildrenItem.Visibility = copySubtreeItem.Visibility;
-            preprocessItem.Visibility = node is IPreprocessable p && preprocessedFileManager.CanPreprocess(p.RootFilePath) ? Visibility.Visible : Visibility.Collapsed;
+            preprocessItem.Visibility = node is IPreprocessable p && preprocessedFileManager.CanPreprocess(p) ? Visibility.Visible : Visibility.Collapsed;
             Visibility canRun = Build?.LogFilePath != null && node is Task ? Visibility.Visible : Visibility.Collapsed;
             runItem.Visibility = canRun;
             debugItem.Visibility = canRun;
@@ -859,10 +854,10 @@ Recent:
 
         public void OpenFile()
         {
-            var treeNode = treeView.SelectedItem;
-            if (treeNode != null && treeNode is Import import)
+            if (treeView.SelectedItem is Import import)
             {
-                DisplayFile(import.ImportedProjectFilePath);
+                var preprocessContext = preprocessedFileManager.GetProjectEvaluationContext(import);
+                DisplayFile(import.ImportedProjectFilePath, preprocessContext: preprocessContext);
             }
         }
 
@@ -1094,7 +1089,7 @@ Recent:
             return false;
         }
 
-        public bool DisplayFile(string sourceFilePath, int lineNumber = 0, int column = 0)
+        public bool DisplayFile(string sourceFilePath, int lineNumber = 0, int column = 0, string preprocessContext = null)
         {
             var text = sourceFileResolver.GetSourceFileText(sourceFilePath);
             if (text == null)
@@ -1104,7 +1099,12 @@ Recent:
 
             string preprocessableFilePath = Utilities.InsertMissingDriveSeparator(sourceFilePath);
 
-            Action preprocess = preprocessedFileManager.GetPreprocessAction(preprocessableFilePath, text);
+            Action preprocess = null;
+            if (preprocessContext != null)
+            {
+                preprocess = preprocessedFileManager.GetPreprocessAction(preprocessableFilePath, preprocessContext);
+            }
+
             documentWell.DisplaySource(preprocessableFilePath, text.Text, lineNumber, column, preprocess);
             return true;
         }

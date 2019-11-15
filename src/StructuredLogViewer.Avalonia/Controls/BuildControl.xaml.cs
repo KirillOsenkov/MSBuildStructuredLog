@@ -116,7 +116,7 @@ namespace StructuredLogViewer.Avalonia.Controls
             copyNameItem.Click += (s, a) => CopyName();
             copyValueItem.Click += (s, a) => CopyValue();
             viewItem.Click += (s, a) => Invoke(treeView.SelectedItem as ParentedNode);
-            preprocessItem.Click += (s, a) => Preprocess(treeView.SelectedItem as Project);
+            preprocessItem.Click += (s, a) => Preprocess(treeView.SelectedItem as IPreprocessable);
             hideItem.Click += (s, a) => Delete();
             contextMenu.AddItem(viewItem);
             contextMenu.AddItem(preprocessItem);
@@ -376,9 +376,9 @@ Recent:
             searchLogControl.WatermarkContent = new TextBlock { Text = text };
         }
 
-        private void Preprocess(Project project)
+        private void Preprocess(IPreprocessable preprocessable)
         {
-            preprocessedFileManager.ShowPreprocessed(project.SourceFilePath);
+            preprocessedFileManager.ShowPreprocessed(preprocessable);
         }
 
         private void ContextMenu_Opened(object sender, RoutedEventArgs e)
@@ -391,7 +391,7 @@ Recent:
             var hasChildren = node is TreeNode t && t.HasChildren;
             copySubtreeItem.IsVisible = hasChildren;
             sortChildrenItem.IsVisible = hasChildren;
-            preprocessItem.IsVisible = node is Project p && preprocessedFileManager.CanPreprocess(p.SourceFilePath);
+            preprocessItem.IsVisible = node is IPreprocessable p && preprocessedFileManager.CanPreprocess(p);
         }
 
         private object FindInFiles(string searchText, int maxResults = int.MaxValue)
@@ -888,7 +888,7 @@ Recent:
             return false;
         }
 
-        public bool DisplayFile(string sourceFilePath, int lineNumber = 0, int column = 0)
+        public bool DisplayFile(string sourceFilePath, int lineNumber = 0, int column = 0, string preprocessContext = null)
         {
             var text = sourceFileResolver.GetSourceFileText(sourceFilePath);
             if (text == null)
@@ -896,7 +896,7 @@ Recent:
                 return false;
             }
 
-            Action preprocess = preprocessedFileManager.GetPreprocessAction(sourceFilePath, text);
+            Action preprocess = preprocessedFileManager.GetPreprocessAction(sourceFilePath, preprocessContext);
             documentWell.DisplaySource(sourceFilePath, text.Text, lineNumber, column, preprocess);
             return true;
         }

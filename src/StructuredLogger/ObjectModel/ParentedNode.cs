@@ -65,6 +65,23 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return null;
         }
 
+        public T GetNearestParentOrSelf<T>() where T : ParentedNode
+        {
+            ParentedNode current = this;
+            do
+            {
+                if (current is T)
+                {
+                    return (T)current;
+                }
+
+                current = current.Parent;
+            }
+            while (current != null);
+
+            return null;
+        }
+
         public IEnumerable<ParentedNode> EnumerateSiblingsCycle()
         {
             var parent = this.Parent;
