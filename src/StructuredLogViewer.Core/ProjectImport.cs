@@ -38,7 +38,7 @@ namespace StructuredLogViewer
 
         public override int GetHashCode()
         {
-            return ProjectPath.GetHashCode() ^ Line.GetHashCode() ^ Column.GetHashCode();
+            return (ProjectPath, Line, Column).GetHashCode();
         }
 
         public override string ToString()
