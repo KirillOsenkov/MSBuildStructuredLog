@@ -72,8 +72,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 target = CreateTargetInstance(null);
             }
 
-            targetsById[id] = target;
+            AssociateTargetWithId(id, target);
             return target;
+        }
+
+        private void AssociateTargetWithId(int id, Target target)
+        {
+            if (id != -1)
+            {
+                targetsById[id] = target;
+            }
         }
 
         public Target GetOrAddTargetByName(string targetName)
@@ -94,7 +102,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     if (target.Id == -1)
                     {
                         target.Id = id;
-                        targetsById[id] = target;
+                        AssociateTargetWithId(id, target);
                     }
                     // existing target has a different id, it's the case where
                     // there are multiple targets with the same name.
@@ -105,7 +113,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         {
                             target = CreateTargetInstance(name);
                             target.Id = id;
-                            targetsById[id] = target;
+                            AssociateTargetWithId(id, target);
                         }
                         else
                         {
@@ -124,7 +132,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     target = CreateTargetInstance(name);
                     target.Id = id;
-                    targetsById[id] = target;
+                    AssociateTargetWithId(id, target);
                 }
 
                 _targetNameToTargetMap.TryAdd(name, target);
