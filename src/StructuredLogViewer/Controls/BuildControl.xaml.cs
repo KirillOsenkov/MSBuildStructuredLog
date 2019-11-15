@@ -571,10 +571,15 @@ Recent:
             }
 
             var content = sourceFileResolver.GetSourceFileText(file);
-            
+            var contentText = content.Text;
+            if (string.IsNullOrWhiteSpace(contentText))
+            {
+                yield break;
+            }
+
             var doc = new XmlDocument();
             doc.LoadXml(content.Text);
-            
+
             if (doc.DocumentElement == null)
             {
                 yield break;
@@ -587,12 +592,12 @@ Recent:
             {
                 yield break;
             }
+
             foreach (XmlNode selectNode in xmlNodeList)
             {
                 yield return selectNode.Attributes["Name"].Value;
             }
         }
-
 
         /// <summary>
         /// This is needed as a workaround for a weird bug. When the breadcrumb spans multiple lines
@@ -763,7 +768,7 @@ Recent:
 
             var items = selectedItem.EnumerateSiblingsCycle();
 
-            search:
+        search:
             foreach (var item in items)
             {
                 var text = GetText(item);
