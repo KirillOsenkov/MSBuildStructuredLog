@@ -39,13 +39,22 @@ namespace StructuredLogViewer
                     continue;
                 }
 
+                // under which circumstances can this happen?
+                // https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/274
+                if (projectEvaluation.ProjectFile == null)
+                {
+                    continue;
+                }
+
                 imports.VisitAllChildren<Import>(import => VisitImport(import, projectEvaluation));
             }
         }
 
         private void VisitImport(Import import, Project projectEvaluationContext)
         {
-            if (sourceFileResolver.HasFile(import.ProjectFilePath) && sourceFileResolver.HasFile(import.ImportedProjectFilePath))
+            if (sourceFileResolver.HasFile(import.ProjectFilePath) &&
+                sourceFileResolver.HasFile(import.ImportedProjectFilePath) &&
+                !string.IsNullOrEmpty(projectEvaluationContext.ProjectFile))
             {
                 var importMap = GetOrCreateImportMap(projectEvaluationContext.ProjectFile);
                 AddImport(importMap, import.ProjectFilePath, import.ImportedProjectFilePath, import.Line, import.Column);
