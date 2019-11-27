@@ -103,7 +103,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 parent = rootProjectNode.FindFirstDescendant<Import>(i => string.Equals(i.ImportedProjectFilePath, project, StringComparison.OrdinalIgnoreCase));
                 if (parent == null)
                 {
-                    parent = new Import(rootProjectNode.Name, project, 0, 0);
+                    var projectName = rootProjectNode.Name;
+                    int id = projectName.IndexOf(" id:");
+                    if (id > 0)
+                    {
+                        projectName = projectName.Substring(0, id);
+                    }
+
+                    parent = new Import(projectName, project, 0, 0);
                     importsFolder.AddChild(parent);
                 }
             }

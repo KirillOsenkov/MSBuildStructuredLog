@@ -573,7 +573,14 @@ Recent:
             }
 
             var doc = new XmlDocument();
-            doc.LoadXml(content.Text);
+            try
+            {
+                doc.LoadXml(contentText);
+            }
+            catch (Exception)
+            {
+                yield break;
+            }
 
             if (doc.DocumentElement == null)
             {
