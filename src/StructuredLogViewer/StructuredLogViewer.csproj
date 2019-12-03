@@ -14,6 +14,9 @@
     <DebugType>embedded</DebugType>
   </PropertyGroup>
   <Import Project="$(SrcRoot)\Common.props" />
+  <PropertyGroup>
+    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="PresentationCore" />
