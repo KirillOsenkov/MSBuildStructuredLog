@@ -25,6 +25,8 @@ namespace StructuredLogViewer
 
         public const string DefaultTitle = "MSBuild Structured Log Viewer";
 
+        public string VersionMessage { get; set; } = "Locally built version";
+
         public MainWindow()
         {
             InitializeComponent();
@@ -238,6 +240,8 @@ namespace StructuredLogViewer
                 {
                     welcomeScreen.Version = message;
                 }
+
+                VersionMessage = message;
             }
         }
 
@@ -686,6 +690,16 @@ namespace StructuredLogViewer
         private void HelpLink_Click(object sender, RoutedEventArgs e)
         {
             Process.Start("https://github.com/KirillOsenkov/MSBuildStructuredLog");
+        }
+
+        private void HelpLink2_Click(object sender, RoutedEventArgs e)
+        {
+            Process.Start("http://msbuildlog.com");
+        }
+
+        private void HelpAbout_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show(VersionMessage);
         }
 
         private void Exit_Click(object sender, RoutedEventArgs e)
