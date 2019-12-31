@@ -168,22 +168,35 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 lock (syncLock)
                 {
-                    Project parent = null;
+                    Project parentProject = null;
+                    TreeNode parentNode = null;
 
-                    int parentProjectId = args?.ParentProjectBuildEventContext.ProjectContextId ?? -1;
-                    if (parentProjectId > 0)
+                    var parentContext = args?.ParentProjectBuildEventContext;
+                    if (parentContext != null)
                     {
-                        parent = GetOrAddProject(parentProjectId);
+                        int parentProjectId = parentContext.ProjectContextId;
+                        if (parentProjectId > 0)
+                        {
+                            parentProject = GetOrAddProject(parentProjectId);
+                        }
+
+                        int parentTaskId = parentContext.TaskId;
+                        if (parentProject != null && parentTaskId > 0)
+                        {
+                            parentNode = parentProject.FindFirstDescendant<Task>(t => t.Id == parentTaskId);
+                        }
                     }
 
-                    var project = GetOrAddProject(args, parent);
+                    var project = GetOrAddProject(args, parentProject);
 
                     // only parent the project if it's not already in the tree
                     if (project.Parent == null)
                     {
-                        if (parent != null)
+                        parentNode = parentNode ?? parentProject;
+
+                        if (parentNode != null)
                         {
-                            parent.AddChild(project);
+                            parentNode.AddChild(project);
                         }
                         else
                         {
