@@ -41,6 +41,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
+            if (args.SenderName == "BinaryLogger")
+            {
+                var parameter = ItemGroupParser.ParsePropertyOrItemList(message, string.Empty, stringTable);
+                construction.Build.AddChild(parameter);
+                return;
+            }
+
             switch (message[0])
             {
                 case 'A':
