@@ -22,6 +22,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        public ParentedNode GetRoot()
+        {
+            ParentedNode current = this;
+            while (current.Parent != null)
+            {
+                current = current.Parent;
+            }
+
+            return current;
+        }
+
         public IEnumerable<ParentedNode> GetParentChainExcludingThis()
         {
             var chain = new List<ParentedNode>();

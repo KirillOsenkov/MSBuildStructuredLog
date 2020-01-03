@@ -22,9 +22,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 parentTarget,
                 eventTimestamp)
         {
-            TargetBuiltReason = targetBuiltReason;
+            BuildReason = targetBuiltReason;
         }
 
-        public TargetBuiltReason TargetBuiltReason { get; }
+        public TargetBuiltReason BuildReason { get; }
     }
 }

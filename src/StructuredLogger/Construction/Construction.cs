@@ -222,16 +222,28 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public void TargetStarted(object sender, TargetStartedEventArgs args)
         {
+            TargetBuiltReason targetBuiltReason = TargetBuiltReason.None;
+            if (args is TargetStartedEventArgs2 args2)
+            {
+                targetBuiltReason = args2.BuildReason;
+            }
+
             AddTargetCore(
                 args,
                 Intern(args.TargetName),
                 Intern(args.ParentTarget),
-                Intern(args.TargetFile));
+                Intern(args.TargetFile),
+                targetBuiltReason);
         }
 
         public static bool ParentAllTargetsUnderProject { get; set; }
 
-        private void AddTargetCore(BuildEventArgs args, string targetName, string parentTargetName, string targetFile)
+        private void AddTargetCore(
+            BuildEventArgs args,
+            string targetName,
+            string parentTargetName,
+            string targetFile,
+            TargetBuiltReason targetBuiltReason)
         {
             try
             {
@@ -241,6 +253,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     var target = project.CreateTarget(targetName, args.BuildEventContext.TargetId);
                     target.NodeId = args.BuildEventContext.NodeId;
                     target.StartTime = args.Timestamp;
+                    target.ParentTarget = parentTargetName;
+                    target.TargetBuiltReason = targetBuiltReason;
 
                     if (!ParentAllTargetsUnderProject && !string.IsNullOrEmpty(parentTargetName))
                     {
@@ -307,7 +321,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 args,
                 Intern(args.TargetName),
                 Intern(args.ParentTarget),
-                Intern(args.TargetFile));
+                Intern(args.TargetFile),
+                args.BuildReason);
         }
 
         public void TaskStarted(object sender, TaskStartedEventArgs args)

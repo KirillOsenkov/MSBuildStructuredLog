@@ -95,6 +95,7 @@
     </Compile>
     <Compile Include="Controls\SourceFileTab.cs" />
     <Compile Include="Controls\SourceFileTabHeader.cs" />
+    <Compile Include="Controls\NodeHyperlinkControl.cs" />
     <Compile Include="Controls\TextViewerControl.xaml.cs">
       <DependentUpon>TextViewerControl.xaml</DependentUpon>
     </Compile>
