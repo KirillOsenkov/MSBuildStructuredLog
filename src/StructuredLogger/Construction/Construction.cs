@@ -61,14 +61,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 lock (syncLock)
                 {
                     Build.StartTime = args.Timestamp;
-
-                    Build.AddChild(new Property { Name = "Process", Value = Process.GetCurrentProcess().MainModule.FileName });
-
-#if !NETCORE
-                    Build.AddChild(new Property { Name = "Command Line", Value = Environment.CommandLine });
-                    Build.AddChild(new Property { Name = "Current Directory", Value = Environment.CurrentDirectory });
-#endif
-
                     var properties = Build.GetOrCreateNodeWithName<Folder>(Intern("Environment"));
                     AddProperties(properties, args.BuildEnvironment);
                 }
