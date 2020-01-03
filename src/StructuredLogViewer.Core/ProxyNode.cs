@@ -15,6 +15,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 Highlights.Add(new HighlightedText { Text = OriginalType });
                 Highlights.Add(" " + TextUtilities.ShortenValue(result.Node.ToString(), "..."));
+
+                AddDuration(result);
+
                 return;
             }
 
@@ -30,6 +33,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (result.After != null)
             {
                 Highlights.Add(result.After);
+            }
+
+            AddDuration(result);
+        }
+
+        private void AddDuration(SearchResult result)
+        {
+            if (result.Duration != default)
+            {
+                Highlights.Add(new HighlightedText { Text = " " + TextUtilities.DisplayDuration(result.Duration) });
             }
         }
 

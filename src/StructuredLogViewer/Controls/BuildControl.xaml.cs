@@ -1216,11 +1216,18 @@ Recent:
                 Text = $"{results.Count} results. Search took: {Elapsed.ToString()}"
             });
 
+            bool includeDuration = results.Any(r => r.Duration != default);
+
+            if (includeDuration)
+            {
+                results = results.OrderByDescending(r => r.Duration).ToArray();
+            }
+
             foreach (var result in results)
             {
                 TreeNode parent = root;
 
-                if (result.Node is ParentedNode parentedNode)
+                if (!includeDuration && result.Node is ParentedNode parentedNode)
                 {
                     var project = parentedNode.GetNearestParent<Project>();
                     if (project != null)

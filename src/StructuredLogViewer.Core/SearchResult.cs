@@ -1,4 +1,7 @@
-﻿namespace StructuredLogViewer
+﻿using System;
+using Microsoft.Build.Logging.StructuredLogger;
+
+namespace StructuredLogViewer
 {
     public class SearchResult
     {
@@ -13,9 +16,15 @@
         public string After { get; set; }
         public bool MatchedByType { get; private set; }
 
-        public SearchResult(object node)
+        public TimeSpan Duration { get; set; }
+
+        public SearchResult(object node, bool includeDuration = false)
         {
             Node = node;
+            if (includeDuration && node is TimedNode timedNode)
+            {
+                Duration = timedNode.Duration;
+            }
         }
 
         public void AddMatch(string field, string word, int index)

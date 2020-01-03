@@ -14,6 +14,7 @@ namespace StructuredLogViewer
         public int NodeIndex { get; private set; } = -1;
         public HashSet<string> MatchesInStrings { get; private set; }
         private NodeQueryMatcher UnderMatcher { get; set; }
+        public bool IncludeDuration { get; set; }
 
         // avoid allocating this for every node
         private readonly List<string> searchFields = new List<string>(6);
@@ -43,6 +44,14 @@ namespace StructuredLogViewer
             for (int i = Words.Count - 1; i >= 0; i--)
             {
                 var word = Words[i];
+
+                if (word == "$time")
+                {
+                    Words.RemoveAt(i);
+                    IncludeDuration = true;
+                    continue;
+                }
+
                 if (word.Length > 2 && word[0] == '$' && word[1] != '(' && TypeKeyword == null)
                 {
                     Words.RemoveAt(i);
@@ -91,7 +100,12 @@ namespace StructuredLogViewer
                 switch (c)
                 {
                     case ' ' when !isInParentheses && !isInQuotes:
-                        result.Add(TrimQuotes(currentWord.ToString()));
+                        var wordToAdd = TrimQuotes(currentWord.ToString());
+                        if (!string.IsNullOrWhiteSpace(wordToAdd))
+                        {
+                            result.Add(wordToAdd);
+                        }
+
                         currentWord.Clear();
                         break;
                     case '(' when !isInParentheses && !isInQuotes:
@@ -112,7 +126,11 @@ namespace StructuredLogViewer
                 }
             }
 
-            result.Add(TrimQuotes(currentWord.ToString()));
+            var word = TrimQuotes(currentWord.ToString());
+            if (!string.IsNullOrWhiteSpace(word))
+            {
+                result.Add(word);
+            }
 
             return result;
         }
@@ -213,7 +231,7 @@ namespace StructuredLogViewer
                     // this node is of the type that we need, search other fields
                     if (result == null)
                     {
-                        result = new SearchResult(node);
+                        result = new SearchResult(node, IncludeDuration);
                     }
 
                     result.AddMatchByNodeType();
@@ -244,7 +262,7 @@ namespace StructuredLogViewer
                     {
                         if (result == null)
                         {
-                            result = new SearchResult(node);
+                            result = new SearchResult(node, IncludeDuration);
                         }
 
                         // if matched on the type of the node (always field 0), special case it
