@@ -41,7 +41,7 @@ namespace StructuredLogViewer.Controls
             scaleTransform.ScaleY = scaleFactor;
         }
 
-        private const double minimumZoom = 0.3;
+        private const double minimumZoom = 0.1;
         private const double maximumZoom = 4.0;
 
         private void TimelineControl_MouseWheel(object sender, MouseWheelEventArgs e)
@@ -180,7 +180,7 @@ namespace StructuredLogViewer.Controls
                 //if (block.Length > minimumDurationToInclude)
                 {
                     var textBlock = new TextBlock();
-                    textBlock.Text = $"{block.Text} ({Microsoft.Build.Logging.StructuredLogger.TextUtilities.DisplayDuration(block.Duration)})";
+                    textBlock.Text = $"{block.Text} ({TextUtilities.DisplayDuration(block.Duration)})";
                     textBlock.Background = ChooseBackground(block);
 
                     double left = 24 * block.Indent;

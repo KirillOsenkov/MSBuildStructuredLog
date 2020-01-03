@@ -26,7 +26,7 @@
       <Slider x:Name="zoomSlider"
             MinWidth="100"
             MinHeight="30"
-            Minimum="0.3"
+            Minimum="0.1"
             Maximum="4"
             Value="1"
             ValueChanged="zoomSlider_ValueChanged" />

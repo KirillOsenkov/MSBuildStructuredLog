@@ -29,6 +29,11 @@ namespace StructuredLogViewer
                     return;
                 }
 
+                if (node is Microsoft.Build.Logging.StructuredLogger.Task task && task.Name == "MSBuild")
+                {
+                    return;
+                }
+
                 var nodeId = node.NodeId;
                 if (!Lanes.TryGetValue(nodeId, out var lane))
                 {
