@@ -324,6 +324,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return span.Milliseconds + " ms";
         }
 
+        public static string Display(DateTime time, bool displayDate = false)
+        {
+            var formatString = "HH:mm:ss.fff";
+            if (displayDate)
+            {
+                formatString = "yyyy-MM-dd HH:mm:ss.fff";
+            }
+
+            return time.ToString(formatString);
+        }
+
         private static char[] invalidFileNameChars = Path.GetInvalidFileNameChars();
 
         public static string SanitizeFileName(string text)

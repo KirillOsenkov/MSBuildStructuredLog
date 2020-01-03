@@ -233,7 +233,7 @@
       <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource TaskStroke}" Fill="{StaticResource TaskBrush}" />
       <TextBlock x:Name="label" Text="Task " />
       <TextBlock Text="{Binding Title}" />
-      <TextBlock x:Name="duration" Text="{Binding DurationText}" Margin="6,0,0,0" />
+      <TextBlock x:Name="duration" Text="{Binding DurationText}" Margin="6,0,0,0" ToolTip="{Binding ToolTip}" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
       <DataTrigger Binding="{Binding IsSelected}" Value="False">

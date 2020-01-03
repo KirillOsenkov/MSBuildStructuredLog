@@ -31,9 +31,9 @@ namespace StructuredLogViewer
 
             if (Node is TimedNode timedNode)
             {
-                text += "\n" + Microsoft.Build.Logging.StructuredLogger.TextUtilities.DisplayDuration(timedNode.Duration);
-                text += "\nStart: " + Utilities.Display(timedNode.StartTime);
-                text += "\nEnd: " + Utilities.Display(timedNode.EndTime);
+                text += "\n" + TextUtilities.DisplayDuration(timedNode.Duration);
+                text += "\nStart: " + TextUtilities.Display(timedNode.StartTime);
+                text += "\nEnd: " + TextUtilities.Display(timedNode.EndTime);
             }
 
             return text;

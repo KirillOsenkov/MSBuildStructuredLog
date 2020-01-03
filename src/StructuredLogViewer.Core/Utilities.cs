@@ -42,11 +42,6 @@ namespace StructuredLogViewer
             return new string(c);
         }
 
-        public static string Display(DateTime time)
-        {
-            return time.ToString("HH:mm:ss.fff");
-        }
-
         public static string GetSHA1HashOfFileContents(string filePath)
         {
             using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))

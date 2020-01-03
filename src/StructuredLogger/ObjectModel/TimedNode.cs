@@ -18,5 +18,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public TimeSpan Duration => EndTime - StartTime;
 
         public string DurationText => TextUtilities.DisplayDuration(Duration);
+
+        public override string ToolTip
+        {
+            get
+            {
+                return $@"Start: {TextUtilities.Display(StartTime, displayDate: true)}
+End: {TextUtilities.Display(EndTime, displayDate: true)}
+Duration: {DurationText}";
+            }
+        }
     }
 }
