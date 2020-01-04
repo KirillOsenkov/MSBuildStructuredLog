@@ -268,7 +268,8 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             "Property reassignment: $(",
             "out-of-date",
             "csc $task",
-            "ResolveAssemblyReference $task"
+            "ResolveAssemblyReference $task",
+            "$task $time"
         };
 
         private static string[] nodeKinds = new[]
@@ -300,6 +301,8 @@ Use syntax like '$property Prop' to narrow results down by item kind. Supported 
             string watermarkText2 = @"Use the under(FILTER) clause to filter results to only the nodes where any of the parent nodes in the parent chain matches the FILTER. Examples:
  • $task csc under($project Core)
  • Copying file under(Parent)
+
+Append $time to show durations and sort the results by duration descending (for tasks, targets and projects).
 
 Examples:
 ";
