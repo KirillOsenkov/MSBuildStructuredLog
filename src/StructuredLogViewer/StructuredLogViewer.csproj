@@ -1,11 +1,6 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <SrcRoot>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), Common.props))</SrcRoot>
-    <ProjectGuid>{FAEE07FD-7384-40D4-B52B-4756D1011BA6}</ProjectGuid>
-    <AssemblyName>StructuredLogViewer</AssemblyName>
-    <RootNamespace>StructuredLogViewer</RootNamespace>
-    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <OutputType>WinExe</OutputType>
     <Prefer32Bit Condition="$(Prefer32Bit)==''">false</Prefer32Bit>
     <ApplicationIcon>StructuredLogger.ico</ApplicationIcon>
@@ -18,15 +13,9 @@
     <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.CSharp" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.IO.Compression" />
     <Reference Include="System.Xaml" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Xml.Linq" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
@@ -38,18 +27,9 @@
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\StructuredLogger\StructuredLogger.csproj">
-      <Project>{a939886e-a191-4a46-a84b-21ad670081b9}</Project>
-      <Name>StructuredLogger</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\StructuredLogViewer.Core\StructuredLogViewer.Core.csproj">
-      <Project>{3c655c5d-22c3-4b8d-969c-3fc497294703}</Project>
-      <Name>StructuredLogViewer.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\TaskRunner\TaskRunner.csproj">
-      <Project>{b8539a63-8d03-4d16-9945-fe7f8489b56d}</Project>
-      <Name>TaskRunner</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\StructuredLogger\StructuredLogger.csproj" />
+    <ProjectReference Include="..\StructuredLogViewer.Core\StructuredLogViewer.Core.csproj" />
+    <ProjectReference Include="..\TaskRunner\TaskRunner.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="Controls\BuildControl.xaml">
@@ -82,38 +62,6 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BuildParametersScreen.cs" />
-    <Compile Include="Controls\BuildControl.xaml.cs">
-      <DependentUpon>BuildControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Controls\Classifier.cs" />
-    <Compile Include="Controls\DocumentWell.xaml.cs">
-      <DependentUpon>DocumentWell.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Controls\SearchAndResultsControl.xaml.cs">
-      <DependentUpon>SearchAndResultsControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Controls\SourceFileTab.cs" />
-    <Compile Include="Controls\SourceFileTabHeader.cs" />
-    <Compile Include="Controls\NodeHyperlinkControl.cs" />
-    <Compile Include="Controls\TextViewerControl.xaml.cs">
-      <DependentUpon>TextViewerControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Controls\SplitterPanel.cs" />
-    <Compile Include="Controls\StringEmptinessToVisibilityConverter.cs" />
-    <Compile Include="Controls\TimelineControl.xaml.cs">
-      <DependentUpon>TimelineControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Controls\TreeViewExtensions.cs" />
-    <Compile Include="Entrypoint.cs" />
-    <Compile Include="FileAssociations.cs" />
-    <Compile Include="MainWindow.xaml.cs">
-      <DependentUpon>MainWindow.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="MSBuildLocator.cs" />
-    <Compile Include="ScrollViewerHelper.cs" />
-  </ItemGroup>
-  <ItemGroup>
     <Resource Include="StructuredLogger.ico" />
   </ItemGroup>
   <ItemGroup>
@@ -121,6 +69,5 @@
     <None Include="MSBuildStructuredLogViewer.nuspec" />
     <EmbeddedResource Include="Resources\SolutionFile.xshd" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SrcRoot)\Common.targets" />
 </Project>
