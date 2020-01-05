@@ -2,8 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/AArnott/Nerdbank.GitVersioning/master/src/NerdBank.GitVersioning/version.schema.json",
   "version": "2.1",
     "assemblyVersion": {
-        "version": "2.1",
-        "precision": "revision"
+        "precision": "minor"
     },
   "buildNumberOffset": 0,
   "publicReleaseRefSpec": [
