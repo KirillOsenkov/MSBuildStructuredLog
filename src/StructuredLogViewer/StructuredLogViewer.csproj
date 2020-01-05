@@ -7,6 +7,9 @@
     <NuspecFileName>MSBuildStructuredLogViewer</NuspecFileName>
     <ChocolateyFileName>msbuild-structured-log-viewer</ChocolateyFileName>
     <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
+    <Company>Microsoft</Company>
+    <Product>MSBuild Structured Log Viewer</Product>
+    <AssemblyTitle>MSBuild Structured Log Viewer</AssemblyTitle>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="PresentationCore" />
