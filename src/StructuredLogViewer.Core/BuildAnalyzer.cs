@@ -234,6 +234,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 MessageTaskAnalyzer.Analyze(task);
             }
+            else if (task.Name == "Csc")
+            {
+                CscTaskAnalyzer.Analyze(task);
+            }
 
             doubleWritesAnalyzer.AnalyzeTask(task);
         }

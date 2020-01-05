@@ -35,6 +35,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string To => "\" to \"";
         public static string ToFile => "\" to file \"";
         public static string BuildingWithToolsVersionPrefix => "Building with tools version";
+        public static string TotalAnalyzerExecutionTime => "Total analyzer execution time:";
 
         public static string Evaluation => "Evaluation";
         public static string Imports => "Imports";
