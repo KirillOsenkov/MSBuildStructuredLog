@@ -1,8 +1,8 @@
 <Project>
 
   <PropertyGroup Label="Output directory">
-    <BinariesFolder>$(SrcRoot)bin</BinariesFolder>
-    <IntermediateOutputRoot>$(SrcRoot)obj</IntermediateOutputRoot>
+    <BinariesFolder>$(MSBuildThisFileDirectory)bin</BinariesFolder>
+    <IntermediateOutputRoot>$(MSBuildThisFileDirectory)obj</IntermediateOutputRoot>
     <IntermediateOutputPath>$(IntermediateOutputRoot)\$(Configuration)\$(TargetFramework)\$(MSBuildProjectName)</IntermediateOutputPath>
     <AssemblyInfoPath Condition="'$(AssemblyInfoPath)' == ''">$(IntermediateOutputRoot)\GlobalAssemblyInfo.cs</AssemblyInfoPath>
     <CommonOutputDirectory>$(BinariesFolder)\$(Configuration)\$(TargetFramework)</CommonOutputDirectory>
@@ -18,7 +18,7 @@
     <SignAssembly Condition="'$(SignAssembly)' == ''">false</SignAssembly>
     <DefineConstants Condition="'$(SignAssembly)' == 'true'">$(DefineConstants);SIGN;</DefineConstants>
     <DelaySign>false</DelaySign>
-    <AssemblyOriginatorKeyFile>$(SrcRoot)\key.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)\key.snk</AssemblyOriginatorKeyFile>
     <DebugType Condition="$(OS) == 'Windows_NT'">embedded</DebugType>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
