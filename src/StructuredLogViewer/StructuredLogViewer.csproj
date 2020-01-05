@@ -65,5 +65,4 @@
     <None Include="MSBuildStructuredLogViewer.nuspec" />
     <EmbeddedResource Include="Resources\SolutionFile.xshd" />
   </ItemGroup>
-  <Import Project="$(SrcRoot)\Common.targets" />
 </Project>
