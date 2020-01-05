@@ -1,11 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <AssemblyName>StructuredLogger</AssemblyName>
-    <RootNamespace>Microsoft.Build.Logging.StructuredLogger</RootNamespace>
     <TargetFrameworks>net46;netstandard2.0</TargetFrameworks>
     <NBGV_DoNotEmitNonVersionCustomAttributes>true</NBGV_DoNotEmitNonVersionCustomAttributes>
-    <DebugType>embedded</DebugType>
-    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>

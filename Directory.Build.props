@@ -1,0 +1,25 @@
+<Project>
+
+  <PropertyGroup Label="Output directory">
+    <BinariesFolder>$(SrcRoot)bin</BinariesFolder>
+    <IntermediateOutputRoot>$(SrcRoot)obj</IntermediateOutputRoot>
+    <IntermediateOutputPath>$(IntermediateOutputRoot)\$(Configuration)\$(MSBuildProjectName)</IntermediateOutputPath>
+    <AssemblyInfoPath Condition="'$(AssemblyInfoPath)' == ''">$(IntermediateOutputRoot)\GlobalAssemblyInfo.cs</AssemblyInfoPath>
+    <CommonOutputDirectory>$(BinariesFolder)\$(Configuration)</CommonOutputDirectory>
+    <BuildToCommonOutputDirectory Condition="'$(BuildToCommonOutputDirectory)' == ''">true</BuildToCommonOutputDirectory>
+    <OutputPath Condition="'$(OutputPath)' == ''">$(CommonOutputDirectory)\$(AssemblyName)</OutputPath>
+    <OutputPath Condition="'$(BuildToCommonOutputDirectory)' == 'true'">$(CommonOutputDirectory)</OutputPath>
+    <OutDir>$(OutputPath)\</OutDir>
+    <_FindDependencies>false</_FindDependencies>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Common Properties">
+    <SignAssembly Condition="'$(SignAssembly)' == ''">false</SignAssembly>
+    <DefineConstants Condition="'$(SignAssembly)' == 'true'">$(DefineConstants);SIGN;</DefineConstants>
+    <DelaySign>false</DelaySign>
+    <AssemblyOriginatorKeyFile>$(SrcRoot)\key.snk</AssemblyOriginatorKeyFile>
+    <DebugType Condition="$(OS) == 'Windows_NT'">embedded</DebugType>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+</Project>

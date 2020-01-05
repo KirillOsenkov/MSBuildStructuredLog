@@ -4,7 +4,6 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <RuntimeIdentifiers>win7-x64;ubuntu.14.04-x64;osx.10.12-x64</RuntimeIdentifiers>
-    <DebugType Condition="$(OS) == 'Windows_NT'">embedded</DebugType>
   </PropertyGroup>
   
   <ItemGroup>
