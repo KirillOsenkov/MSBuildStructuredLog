@@ -11,6 +11,7 @@
     <OutputPath Condition="'$(BuildToCommonOutputDirectory)' == 'true'">$(CommonOutputDirectory)</OutputPath>
     <OutDir>$(OutputPath)\</OutDir>
     <_FindDependencies>false</_FindDependencies>
+    <TargetFrameworkMonikerAssemblyAttributesPath>$(IntermediateOutputPath)AssemblyAttributes.cs</TargetFrameworkMonikerAssemblyAttributesPath>
   </PropertyGroup>
 
   <PropertyGroup Label="Common Properties">
