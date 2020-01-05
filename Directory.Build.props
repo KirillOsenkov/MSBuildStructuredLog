@@ -3,9 +3,9 @@
   <PropertyGroup Label="Output directory">
     <BinariesFolder>$(SrcRoot)bin</BinariesFolder>
     <IntermediateOutputRoot>$(SrcRoot)obj</IntermediateOutputRoot>
-    <IntermediateOutputPath>$(IntermediateOutputRoot)\$(Configuration)\$(MSBuildProjectName)</IntermediateOutputPath>
+    <IntermediateOutputPath>$(IntermediateOutputRoot)\$(Configuration)\$(TargetFramework)\$(MSBuildProjectName)</IntermediateOutputPath>
     <AssemblyInfoPath Condition="'$(AssemblyInfoPath)' == ''">$(IntermediateOutputRoot)\GlobalAssemblyInfo.cs</AssemblyInfoPath>
-    <CommonOutputDirectory>$(BinariesFolder)\$(Configuration)</CommonOutputDirectory>
+    <CommonOutputDirectory>$(BinariesFolder)\$(Configuration)\$(TargetFramework)</CommonOutputDirectory>
     <BuildToCommonOutputDirectory Condition="'$(BuildToCommonOutputDirectory)' == ''">true</BuildToCommonOutputDirectory>
     <OutputPath Condition="'$(OutputPath)' == ''">$(CommonOutputDirectory)\$(AssemblyName)</OutputPath>
     <OutputPath Condition="'$(BuildToCommonOutputDirectory)' == 'true'">$(CommonOutputDirectory)</OutputPath>
