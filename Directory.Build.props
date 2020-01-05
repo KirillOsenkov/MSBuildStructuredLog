@@ -1,17 +1,11 @@
 <Project>
 
   <PropertyGroup Label="Output directory">
-    <BinariesFolder>$(MSBuildThisFileDirectory)bin</BinariesFolder>
-    <IntermediateOutputRoot>$(MSBuildThisFileDirectory)obj</IntermediateOutputRoot>
-    <IntermediateOutputPath>$(IntermediateOutputRoot)\$(Configuration)\$(TargetFramework)\$(MSBuildProjectName)</IntermediateOutputPath>
-    <AssemblyInfoPath Condition="'$(AssemblyInfoPath)' == ''">$(IntermediateOutputRoot)\GlobalAssemblyInfo.cs</AssemblyInfoPath>
-    <CommonOutputDirectory>$(BinariesFolder)\$(Configuration)\$(TargetFramework)</CommonOutputDirectory>
-    <BuildToCommonOutputDirectory Condition="'$(BuildToCommonOutputDirectory)' == ''">true</BuildToCommonOutputDirectory>
-    <OutputPath Condition="'$(OutputPath)' == ''">$(CommonOutputDirectory)\$(AssemblyName)</OutputPath>
-    <OutputPath Condition="'$(BuildToCommonOutputDirectory)' == 'true'">$(CommonOutputDirectory)</OutputPath>
-    <OutDir>$(OutputPath)\</OutDir>
+    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+    <BaseOutputPath>$(MSBuildThisFileDirectory)bin\$(MSBuildProjectName)\</BaseOutputPath>
+    <BuildToCommonOutputDirectory>true</BuildToCommonOutputDirectory>
     <_FindDependencies>false</_FindDependencies>
-    <TargetFrameworkMonikerAssemblyAttributesPath>$(IntermediateOutputPath)AssemblyAttributes.cs</TargetFrameworkMonikerAssemblyAttributesPath>
+    <TargetFrameworkMonikerAssemblyAttributesPath>$(BaseIntermediateOutputPath)AssemblyAttributes.cs</TargetFrameworkMonikerAssemblyAttributesPath>
   </PropertyGroup>
 
   <PropertyGroup Label="Common Properties">
