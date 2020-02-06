@@ -1,14 +1,46 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Xml;
 using Microsoft.Build.Evaluation;
+using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 
 namespace StructuredLogger.Tests
 {
     public class MSBuild
     {
-        public static bool BuildProject(string projectText, params ILogger[] loggers)
+        public static bool BuildProjectFromFile(string projectText, params ILogger[] loggers)
+        {
+            var projectFile = TestUtilities.GetTestFile("build.proj");
+
+            try
+            {
+                File.WriteAllText(projectFile, CleanupFileContents(projectText));
+
+                var result = BuildManager.DefaultBuildManager.Build(
+                    new BuildParameters
+                    {
+                        ShutdownInProcNodeOnBuildFinish = true,
+                        EnableNodeReuse = false,
+                        Loggers = loggers
+                    },
+                    new BuildRequestData(
+                        projectFile,
+                        new Dictionary<string, string>(),
+                        null,
+                        new string[0],
+                        null));
+
+                return result.OverallResult == BuildResultCode.Success;
+            }
+            finally
+            {
+                File.Delete(projectFile);
+            }
+        }
+
+        public static bool BuildProjectInMemory(string projectText, params ILogger[] loggers)
         {
             Project project = CreateInMemoryProject(projectText, loggers: loggers);
             bool success = project.Build(loggers);
@@ -18,7 +50,7 @@ namespace StructuredLogger.Tests
         public static Project CreateInMemoryProject(string projectText, ProjectCollection projectCollection = null, params ILogger[] loggers)
         {
             XmlReaderSettings readerSettings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Ignore };
-            projectCollection = projectCollection ?? new ProjectCollection();
+            projectCollection ??= new ProjectCollection();
 
             Project project = new Project(
                 XmlReader.Create(new StringReader(CleanupFileContents(projectText)), readerSettings),

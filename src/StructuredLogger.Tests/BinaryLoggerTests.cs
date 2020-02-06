@@ -1,68 +1,120 @@
 ﻿using System;
-using System.IO;
-using System.Reflection;
-using Microsoft.Build.Logging;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Build.Logging.StructuredLogger;
 using StructuredLogger.Tests;
 using Xunit;
 using Xunit.Abstractions;
+using static StructuredLogger.Tests.TestUtilities;
 using BinaryLogger = Microsoft.Build.Logging.StructuredLogger.BinaryLogger;
 
 namespace Microsoft.Build.UnitTests
 {
     public class BinaryLoggerTests : IDisposable
     {
+        private readonly ITestOutputHelper output;
+
         private static string s_testProject = @"
          <Project xmlns='http://schemas.microsoft.com/developer/msbuild/2003'>
             <PropertyGroup>
                <TestProperty>Test</TestProperty>
             </PropertyGroup>
+
             <ItemGroup>
                <TestItem Include=""Test"" />
             </ItemGroup>
+
             <Target Name='Target1'>
                <Message Text='MessageOutputText'/>
+               <Message Text='[$(MSBuildThisFileFullPath)]'/>
             </Target>
+
             <Target Name='Target2' AfterTargets='Target1'>
                <Exec Command='echo a'/>
+            </Target>
+
+            <Target Name='Target3' AfterTargets='Target2'>
+               <MSBuild Projects='$(MSBuildThisFileFullPath)' Properties='GP=a' Targets='InnerTarget1'/>
+               <MSBuild Projects='$(MSBuildThisFileFullPath)' Properties='GP=b' Targets='InnerTarget1'/>
+               <MSBuild Projects='$(MSBuildThisFileFullPath)' Properties='GP=a' Targets='InnerTarget2'/>
+               <MSBuild Projects='$(MSBuildThisFileFullPath)' Properties='GP=a' Targets='InnerTarget2'/>
+            </Target>
+
+            <Target Name='InnerTarget1'>
+               <Message Text='inner target 1'/>
+            </Target>
+
+            <Target Name='InnerTarget2'>
+               <Message Text='inner target 2'/>
             </Target>
          </Project>";
 
         public BinaryLoggerTests(ITestOutputHelper output)
         {
+            this.output = output;
         }
 
         [Fact]
-        public void TestBinaryLoggerRoundtrip()
+        public void TestBuildTreeStructureCount()
         {
-            var binLog = GetFullPath("1.binlog");
+            var binLog = GetTestFile("1.binlog");
             var binaryLogger = new BinaryLogger();
             binaryLogger.Parameters = binLog;
-            MSBuild.BuildProject(s_testProject, binaryLogger);
+            var buildSuccessful = MSBuild.BuildProjectFromFile(s_testProject, binaryLogger);
+
+            Assert.True(buildSuccessful);
 
             var build = Serialization.Read(binLog);
-            var xml1 = GetFullPath("1.xml");
-            Serialization.Write(build, xml1);
 
-            Serialization.Write(build, GetFullPath("1.buildlog"));
-            build = Serialization.Read(GetFullPath("1.buildlog"));
-            Serialization.Write(build, GetFullPath("2.xml"));
+            var projectInvocations = build.FindChildrenRecursive<Project>();
 
-            Assert.False(Differ.AreDifferent(xml1, GetFullPath("2.xml")));
+            // 3 evaluations and 5 project invocations
+            Assert.Equal(8, projectInvocations.Count);
+            Assert.Equal(8, new HashSet<Project>(projectInvocations).Count);
 
-            build = XlinqLogReader.ReadFromXml(xml1);
-            Serialization.Write(build, GetFullPath("3.xml"));
-            Assert.False(Differ.AreDifferent(xml1, GetFullPath("3.xml")));
+            Assert.Equal(7, build.FindChildrenRecursive<Target>().Count);
 
-            build = Serialization.Read(xml1);
-            Serialization.Write(build, GetFullPath("4.xml"));
+            Assert.Equal(10, build.FindChildrenRecursive<Task>().Count);
 
-            Assert.False(Differ.AreDifferent(xml1, GetFullPath("4.xml")));
+            Assert.Equal(4, build.FindChildrenRecursive<Item>().Count);
+
         }
 
-        private static string GetFullPath(string fileName)
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void TestBinaryLoggerRoundtrip(bool useInMemoryProject)
         {
-            return Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), fileName);
+            var binLog = GetTestFile("1.binlog");
+            var binaryLogger = new BinaryLogger();
+            binaryLogger.Parameters = binLog;
+            var buildSuccessful = useInMemoryProject
+                ? MSBuild.BuildProjectInMemory(s_testProject, binaryLogger)
+                : MSBuild.BuildProjectFromFile(s_testProject, binaryLogger);
+
+            Assert.True(buildSuccessful);
+
+            var build = Serialization.Read(binLog);
+            var xml1 = GetTestFile("1.xml");
+            var xml2 = GetTestFile("2.xml");
+
+            Serialization.Write(build, xml1);
+
+            Serialization.Write(build, GetTestFile("1.buildlog"));
+            build = Serialization.Read(GetTestFile("1.buildlog"));
+
+            Serialization.Write(build, xml2);
+
+            Assert.False(Differ.AreDifferent(xml1, xml2));
+
+            build = XlinqLogReader.ReadFromXml(xml1);
+            Serialization.Write(build, GetTestFile("3.xml"));
+            Assert.False(Differ.AreDifferent(xml1, GetTestFile("3.xml")));
+
+            build = Serialization.Read(xml1);
+            Serialization.Write(build, GetTestFile("4.xml"));
+
+            Assert.False(Differ.AreDifferent(xml1, GetTestFile("4.xml")));
         }
 
         private static string GetProperty(Logging.StructuredLogger.Build build)

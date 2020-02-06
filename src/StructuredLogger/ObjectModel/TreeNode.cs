@@ -434,7 +434,26 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return default;
         }
 
-        public void VisitAllChildren<T>(Action<T> processor, CancellationToken cancellationToken = default, bool takeChildrenSnapshot = false)
+        public IReadOnlyList<T> FindChildrenRecursive<T>(Predicate<T> predicate = null)
+        {
+            var foundChildren = new List<T>();
+
+            VisitAllChildren<T>(
+                c =>
+                {
+                    if (predicate == null || predicate(c))
+                    {
+                        foundChildren.Add(c);
+                    }
+                });
+
+            return foundChildren;
+        }
+
+        public void VisitAllChildren<T>(
+            Action<T> processor,
+            CancellationToken cancellationToken = default,
+            bool takeChildrenSnapshot = false)
         {
             if (cancellationToken.IsCancellationRequested)
             {
