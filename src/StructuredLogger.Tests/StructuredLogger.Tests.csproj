@@ -6,12 +6,7 @@
   <ItemGroup>
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
-    <PackageReference Include="System.Threading.Tasks.Dataflow" Version="4.5.24" ExcludeAssets="all" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="$(NuGetPackageRoot)system.threading.tasks.dataflow\4.5.24\lib\portable-net45+win8+wpa81\System.Threading.Tasks.Dataflow.dll">
-      <Private>True</Private>
-    </Reference>
+    <PackageReference Include="System.Threading.Tasks.Dataflow" Version="4.9.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\StructuredLogger\StructuredLogger.csproj" />
