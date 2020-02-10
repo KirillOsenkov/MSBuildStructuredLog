@@ -708,6 +708,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 project.StartTime = args.Timestamp;
                 project.Name = Intern(args.Message);
                 project.ProjectFile = Intern(args.ProjectFile);
+                project.EntryTargets = string.IsNullOrWhiteSpace(args.TargetNames)
+                    ? ImmutableArray<string>.Empty
+                    : stringTable.InternList(TextUtilities.SplitSemicolonDelimitedList(args.TargetNames));
 
                 if (args.GlobalProperties != null)
                 {
