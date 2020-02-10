@@ -6,6 +6,7 @@ using Microsoft.Build.Logging.StructuredLogger;
 using StructuredLogger.Tests;
 using Xunit;
 using Xunit.Abstractions;
+using BinaryLogger = Microsoft.Build.Logging.StructuredLogger.BinaryLogger;
 
 namespace Microsoft.Build.UnitTests
 {
