@@ -11,9 +11,9 @@ build_script:
 after_build:
 - ps: >-
     Compress-Archive `
-    "bin\Release\Releases\MSBuildStructuredLogSetup.exe", `
-    "bin\Release\Releases\MSBuildStructuredLogViewer*.nupkg", `
-    "src\StructuredLogger\bin\Release\netstandard2.0\StructuredLogger.dll" `
+    "bin\StructuredLogViewer\Release\net472\Releases\MSBuildStructuredLogSetup.exe", `
+    "bin\StructuredLogViewer\Release\net472\MSBuildStructuredLogViewer*.nupkg", `
+    "bin\StructuredLogger\Release\netstandard2.0\StructuredLogger.dll" `
     -DestinationPath "MSBuildStructuredLog-${Env:APPVEYOR_BUILD_VERSION}.zip"
 
 artifacts:
@@ -21,13 +21,13 @@ artifacts:
   name: MSBuild Log
 - path: 'bin\**\msbuild-structured-log-viewer*.nupkg'
   name: Chocolatey Package
-- path: 'bin\Release\Releases\MSBuildStructuredLogSetup.exe'
+- path: 'bin\StructuredLogViewer\Release\net472\Releases\MSBuildStructuredLogSetup.exe'
   name: MSBuildStructuredLogSetup.exe
-- path: 'bin\Release\Releases\MSBuildStructuredLogViewer*.nupkg'
+- path: 'bin\StructuredLogViewer\Release\net472\MSBuildStructuredLogViewer*.nupkg'
   name: Installer nupkg
-- path: 'bin\Release\Releases\RELEASES'
+- path: 'bin\StructuredLogViewer\Release\net472\Releases\RELEASES'
   name: RELEASES
-- path: 'src\StructuredLogger\bin\Release\netstandard2.0\StructuredLogger.dll'
+- path: 'bin\StructuredLogger\Release\netstandard2.0\StructuredLogger.dll'
   name: StructuredLogger.dll
 - path: 'MSBuildStructuredLog-*.zip'
   name: Bundle
