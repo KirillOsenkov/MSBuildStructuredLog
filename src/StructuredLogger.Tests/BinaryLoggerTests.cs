@@ -84,7 +84,7 @@ namespace Microsoft.Build.UnitTests
 
         [Theory]
         [InlineData(true)]
-        [InlineData(false)]
+        [InlineData(false, Skip="https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/295")]
         public void TestBinaryLoggerRoundtrip(bool useInMemoryProject)
         {
             var binLog = GetTestFile("1.binlog");
