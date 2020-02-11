@@ -201,6 +201,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             preprocessedFileManager.DisplayFile += filePath => DisplayFile(filePath);
 
             PopulateTimeline();
+            PopulateProjectGraph();
         }
 
         private void FilesTree_SearchTextChanged(string text)
@@ -261,9 +262,9 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
         private void PopulateProjectGraph()
         {
-            var graph = new ProjectGraph(Build);
-            this.projectGraphControl.BuildControl = this;
-            this.projectGraphControl.SetGraph(graph);
+            var graph = new MSAGLProjectGraphConstructor().FromBuild(Build);
+            projectGraphControl.BuildControl = this;
+            projectGraphControl.SetGraph(graph);
         }
 
         private static string[] searchExamples = new[]

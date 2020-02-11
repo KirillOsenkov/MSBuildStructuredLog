@@ -6,10 +6,7 @@
              xmlns:local="clr-namespace:StructuredLogViewer.Controls"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
-  <Grid>
-      <StackPanel Orientation="Vertical">
-          <Button Content="Hello From StackPanel" Visibility="Visible" />
-      </StackPanel>
-  </Grid>
+    <DockPanel x:Name="Panel">
+    </DockPanel>
     
 </UserControl>
