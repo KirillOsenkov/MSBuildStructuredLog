@@ -34,5 +34,49 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             return text;
         }
+
+        public IDictionary<string, string> InternStringDictionary(IDictionary<string, string> inputDictionary)
+        {
+            if (inputDictionary == null)
+            {
+                return null;
+            }
+
+            if (inputDictionary.Count == 0)
+            {
+                return inputDictionary;
+            }
+
+            var outputDictionary = new Dictionary<string, string>(inputDictionary.Count);
+
+            foreach (var kvp in inputDictionary)
+            {
+                outputDictionary[Intern(kvp.Key)] = Intern(kvp.Value);
+            }
+
+            return outputDictionary;
+        }
+
+        public IReadOnlyList<string> InternList(IReadOnlyList<string> inputList)
+        {
+            if (inputList == null)
+            {
+                return null;
+            }
+
+            if (inputList.Count == 0)
+            {
+                return inputList;
+            }
+
+            var outputList = new List<string>(inputList.Count);
+
+            foreach (var element in inputList)
+            {
+                outputList.Add(Intern(element));
+            }
+
+            return outputList;
+        }
     }
 }

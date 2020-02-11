@@ -169,7 +169,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         public IReadOnlyList<string> EntryTargets { get; set; }
-
+        public IDictionary<string, string> GlobalProperties { get; set; }
         public override string ToString() => $"Project Name={Name} File={ProjectFile}";
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -712,9 +713,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     ? ImmutableArray<string>.Empty
                     : stringTable.InternList(TextUtilities.SplitSemicolonDelimitedList(args.TargetNames));
 
+                var internedGlobalProperties = stringTable.InternStringDictionary(args.GlobalProperties) ?? ImmutableDictionary<string, string>.Empty;
+
+                project.GlobalProperties = internedGlobalProperties;
+
                 if (args.GlobalProperties != null)
                 {
-                    AddGlobalProperties(project, args.GlobalProperties);
+                    AddGlobalProperties(project, internedGlobalProperties);
                 }
 
                 if (args.Properties != null)
