@@ -66,11 +66,13 @@ namespace Microsoft.Build.UnitTests
 
             var build = Serialization.Read(binLog);
 
-            var projectInvocations = build.FindChildrenRecursive<Project>();
+            var projectEvaluations = build.FindChildrenRecursive<ProjectEvaluation>();
+            Assert.Equal(3, projectEvaluations.Count);
+            Assert.Equal(3, new HashSet<ProjectEvaluation>(projectEvaluations).Count);
 
-            // 3 evaluations and 5 project invocations
-            Assert.Equal(8, projectInvocations.Count);
-            Assert.Equal(8, new HashSet<Project>(projectInvocations).Count);
+            var projectInvocations = build.FindChildrenRecursive<Project>();
+            Assert.Equal(5, projectInvocations.Count);
+            Assert.Equal(5, new HashSet<Project>(projectInvocations).Count);
 
             Assert.Equal(7, build.FindChildrenRecursive<Target>().Count);
 

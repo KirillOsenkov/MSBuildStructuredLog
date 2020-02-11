@@ -429,14 +429,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         var evaluationId = Reflector.GetEvaluationId(projectEvaluationStarted.BuildEventContext);
                         var projectName = Intern(projectEvaluationStarted.ProjectFile);
                         var nodeName = Intern(GetEvaluationProjectName(evaluationId, projectName));
-                        var project = EvaluationFolder.GetOrCreateNodeWithName<Project>(nodeName);
-                        if (project.ProjectFile == null)
+                        var projectEvaluation = EvaluationFolder.GetOrCreateNodeWithName<ProjectEvaluation>(nodeName);
+                        if (projectEvaluation.ProjectFile == null)
                         {
-                            project.ProjectFile = projectName;
+                            projectEvaluation.ProjectFile = projectName;
                         }
 
                         // we stash the evaluation Id as a negative ProjectContextId
-                        project.Id = evaluationId;
+                        projectEvaluation.Id = evaluationId;
                     }
                     else if (e is ProjectEvaluationFinishedEventArgs projectEvaluationFinished)
                     {
@@ -446,8 +446,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         {
                             var evaluationId = Reflector.GetEvaluationId(projectEvaluationFinished.BuildEventContext);
                             var nodeName = Intern(GetEvaluationProjectName(evaluationId, projectName));
-                            var project = EvaluationFolder.GetOrCreateNodeWithName<Project>(nodeName);
-                            ConstructProfilerResult(project, profilerResult.Value);
+                            var projectEvaluation = EvaluationFolder.GetOrCreateNodeWithName<ProjectEvaluation>(nodeName);
+                            ConstructProfilerResult(projectEvaluation, profilerResult.Value);
                         }
                     }
                     // this happens during live build using MSBuild 15.3 or newer
@@ -456,11 +456,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         var projectName = Intern(TextUtilities.ParseQuotedSubstring(e.Message));
                         var evaluationId = Reflector.GetEvaluationId(e.BuildEventContext);
                         var nodeName = Intern(GetEvaluationProjectName(evaluationId, projectName));
-                        var project = EvaluationFolder.GetOrCreateNodeWithName<Project>(nodeName);
-                        project.Id = Reflector.GetEvaluationId(e.BuildEventContext);
-                        if (project.ProjectFile == null)
+                        var projectEvaluation = EvaluationFolder.GetOrCreateNodeWithName<ProjectEvaluation>(nodeName);
+                        projectEvaluation.Id = Reflector.GetEvaluationId(e.BuildEventContext);
+                        if (projectEvaluation.ProjectFile == null)
                         {
-                            project.ProjectFile = projectName;
+                            projectEvaluation.ProjectFile = projectName;
                         }
                     }
                 }
@@ -476,7 +476,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return projectName + " id:" + evaluationId;
         }
 
-        private void ConstructProfilerResult(Project project, ProfilerResult profilerResult)
+        private void ConstructProfilerResult(ProjectEvaluation projectEvaluation, ProfilerResult profilerResult)
         {
             var nodes = new Dictionary<long, EvaluationProfileEntry>();
 
@@ -520,7 +520,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                     else
                     {
-                        project.AddChildAtBeginning(node);
+                        projectEvaluation.AddChildAtBeginning(node);
                         node.Value = 100;
                     }
                 }
