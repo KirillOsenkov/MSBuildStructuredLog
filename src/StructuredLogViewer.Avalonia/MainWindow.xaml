@@ -1,6 +1,9 @@
 ﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="StructuredLogViewer.Avalonia.MainWindow"
         WindowState="Maximized"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        Classes="mainWindow">
 
     <DockPanel>
         <Menu Name="mainMenu"
@@ -50,6 +53,7 @@
         </Menu>
         <Grid>
             <ContentPresenter Name="mainContent"
+                              Classes="mainContent"
                               Margin="7" />
         </Grid>
     </DockPanel>
