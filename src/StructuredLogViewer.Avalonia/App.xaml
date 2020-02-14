@@ -2,26 +2,26 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:l="clr-namespace:Microsoft.Build.Logging.StructuredLogger;assembly=StructuredLogger"
              xmlns:common="clr-namespace:Microsoft.Build.Logging.StructuredLogger;assembly=StructuredLogViewer.Core"
-             xmlns:s="clr-namespace:StructuredLogViewer.Avalonia.Controls;assembly=StructuredLogViewer.Avalonia">
+             xmlns:s="clr-namespace:StructuredLogViewer.Avalonia.Controls;assembly=StructuredLogViewer.Avalonia"
+             x:Class="StructuredLogViewer.Avalonia.App">
 
     <Application.Resources>
         <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceInclude Source="resm:StructuredLogViewer.Avalonia.Resources.xaml?assembly=StructuredLogViewer.Avalonia" />
-            </ResourceDictionary.MergedDictionaries>
-            
             <s:ProxyNodeIconConverter x:Key="ProxyNodeIconConverter" />
             <s:ProjectIconConverter x:Key="ProjectIconConverter" />
             <s:NodeLowRelevanceToOpacityConverter x:Key="RelevanceConverter" />
             <s:NodeIsSelectedToColorConverter x:Key="LabelColorConverter" />
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="/Resources.xaml" />
+            </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>
     
     <Application.Styles>
-        <StyleInclude Source="resm:Avalonia.Themes.Default.DefaultTheme.xaml?assembly=Avalonia.Themes.Default" />
-        <StyleInclude Source="resm:Avalonia.Themes.Default.Accents.BaseLight.xaml?assembly=Avalonia.Themes.Default" />
+        <StyleInclude Source="avares://Avalonia.Themes.Default/DefaultTheme.xaml" />
+        <StyleInclude Source="avares://Avalonia.Themes.Default/Accents/BaseLight.xaml"/>
         <StyleInclude Source="resm:AvaloniaEdit.AvaloniaEdit.xaml?assembly=AvaloniaEdit" />
-        <StyleInclude Source="resm:StructuredLogViewer.Avalonia.Styles.xaml?assembly=StructuredLogViewer.Avalonia" />
+        <StyleInclude Source="/Styles.xaml" />
         
         <Style Selector="Rectangle.nodeIcon">
             <Setter Property="Width" Value="14" />

@@ -2,6 +2,15 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:s="clr-namespace:StructuredLogViewer.Avalonia.Controls;assembly=StructuredLogViewer.Avalonia"
         xmlns:converters="clr-namespace:Avalonia.Controls.Converters;assembly=Avalonia.Controls">
+
+    <Style Selector="Window.mainWindow">
+        <Setter Property="Background" Value="{DynamicResource WindowBackgroundStroke}"/>
+    </Style>
+
+    <Style Selector="ContentPresenter.mainContent">
+        <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}"/>
+    </Style>
+
     <Style Selector="Button.close">
         <Setter Property="Template">
             <ControlTemplate>

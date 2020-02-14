@@ -6,6 +6,7 @@ using Avalonia;
 using Microsoft.Build.Logging.StructuredLogger;
 using StructuredLogViewer.Avalonia.Controls;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using Avalonia.Input;
@@ -68,6 +69,8 @@ namespace StructuredLogViewer.Avalonia
             this.RegisterControl(out SetMSBuild, nameof(SetMSBuild));
             this.RegisterControl(out HelpLink, nameof(HelpLink));
             this.RegisterControl(out Exit, nameof(Exit));
+
+            this.KeyUp += Window_KeyUp;
 
             startPage.Click += StartPage_Click;
             Build.Click += Build_Click;
@@ -482,7 +485,7 @@ namespace StructuredLogViewer.Avalonia
             {
                 Reload();
             }
-            else if (e.Key == Key.F6 && e.Modifiers.HasFlag(InputModifiers.Shift))
+            else if (e.Key == Key.F6 && e.KeyModifiers.HasFlag(KeyModifiers.Shift))
             {
                 RebuildProjectOrSolution();
             }
@@ -490,15 +493,15 @@ namespace StructuredLogViewer.Avalonia
             {
                 await OpenProjectOrSolution();
             }
-            else if (e.Key == Key.O && e.Modifiers.HasFlag(InputModifiers.Control))
+            else if (e.Key == Key.O && e.KeyModifiers.HasFlag(KeyModifiers.Control))
             {
                 await OpenLogFile();
             }
-            else if (e.Key == Key.F && e.Modifiers.HasFlag(InputModifiers.Control))
+            else if (e.Key == Key.F && e.KeyModifiers.HasFlag(KeyModifiers.Control))
             {
                 FocusSearch();
             }
-            else if (e.Key == Key.C && e.Modifiers.HasFlag(InputModifiers.Control))
+            else if (e.Key == Key.C && e.KeyModifiers.HasFlag(KeyModifiers.Control))
             {
                 var content = mainContent.Content as BuildProgress;
                 if (content != null)
@@ -506,7 +509,7 @@ namespace StructuredLogViewer.Avalonia
                     await Application.Current.Clipboard.SetTextAsync(content.MSBuildCommandLine);
                 }
             }
-            else if (e.Key == Key.S && e.Modifiers.HasFlag(InputModifiers.Control))
+            else if (e.Key == Key.S && e.KeyModifiers.HasFlag(KeyModifiers.Control))
             {
                 var task = SaveAs();
             }
@@ -578,12 +581,17 @@ namespace StructuredLogViewer.Avalonia
 
         private void HelpLink_Click(object sender, RoutedEventArgs e)
         {
-            Process.Start("https://github.com/KirillOsenkov/MSBuildStructuredLog");
+            ProcessStartInfo psi = new ProcessStartInfo
+            {
+                FileName = "https://github.com/KirillOsenkov/MSBuildStructuredLog",
+                UseShellExecute = true
+            };
+            Process.Start (psi);
         }
 
         private void Exit_Click(object sender, RoutedEventArgs e)
         {
-            Application.Current.Exit();
+            ((IClassicDesktopStyleApplicationLifetime)Application.Current.ApplicationLifetime).Shutdown();
         }
 
         private void StartPage_Click(object sender, RoutedEventArgs e)

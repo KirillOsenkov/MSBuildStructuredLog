@@ -5,6 +5,7 @@
     
     <Geometry x:Key="SearchGeometry">F1 M 8.5,7.0 C 7.12,7.00 6.0,5.88 6.0,4.5 C 6.0,3.12 7.12,2.0 8.5,2.0 C 9.88,2.0 11.0,3.12 11.0,4.5 C 11.0,5.88 9.88,7.0 8.5,7.0 Z M 8.5,0.0 C 6.02,0.0 4.0,2.02 4.0,4.500 C 4.0,5.23 4.19,5.9 4.49,6.5 L 0.0,11.0 L 2.0,13.0 L 6.49,8.51 C 7.1,8.81 7.77,9.0 8.5,9.0 C 11.0,9.0 13.0,7.0 13.0,4.5 C 13.0,2.02 11.0,0.0 8.5,0.0 Z</Geometry>
 
+    <SolidColorBrush x:Key="WindowBackgroundStroke" Color="#F0F0F0" />
     <SolidColorBrush x:Key="FolderStroke" Color="Goldenrod" />
     <SolidColorBrush x:Key="TargetStroke" Color="MediumPurple" />
     <SolidColorBrush x:Key="TaskStroke" Color="DodgerBlue" />

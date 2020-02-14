@@ -4,15 +4,8 @@ namespace StructuredLogViewer.Avalonia
 {
     class Program
     {
-        static void Main(string[] args)
-        {
-            ExceptionHandler.Initialize();
-            //DialogService.ShowMessageBoxEvent += message => MessageBox.Show(message);
-            ClipboardService.Set += text => Application.Current.Clipboard.SetTextAsync(text);
+        public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<App>().UsePlatformDetect();
 
-            AppBuilder.Configure<App>()
-                .UsePlatformDetect()
-                .Start<MainWindow>();
-        }
+        public static int Main(string[] args) => BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }
 }

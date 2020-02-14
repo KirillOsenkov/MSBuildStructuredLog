@@ -55,6 +55,10 @@ namespace StructuredLogViewer.Avalonia.Controls
 
         public TreeView ActiveTreeView;
 
+        public BuildControl()
+        {
+        }
+
         public BuildControl(Build build, string logFilePath)
         {
             DataContext = build;
@@ -192,15 +196,13 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
         private void RegisterTreeViewHandlers(TreeView treeView)
         {
-            treeView.AddHandler(PointerPressedEvent, (o, e) =>
+            treeView.DoubleTapped += (o, e) =>
             {
-                if (e.ClickCount < 2) return;
-
                 if (treeView.SelectedItem is ParentedNode node)
                 {
                     e.Handled = Invoke(node);
                 }
-            }, RoutingStrategies.Tunnel);
+            };
 
             treeView.KeyDown += (o, e) =>
             {
@@ -643,7 +645,7 @@ Recent:
                 Delete();
                 args.Handled = true;
             }
-            else if (args.Key == Key.C && args.Modifiers.HasFlag(InputModifiers.Control))
+            else if (args.Key == Key.C && args.KeyModifiers.HasFlag(KeyModifiers.Control))
             {
                 CopySubtree();
                 args.Handled = true;
@@ -768,43 +770,6 @@ Recent:
             {
                 node.IsSelected = false;
                 parent.IsSelected = true;
-            }
-        }
-
-        private void OnItemKeyDown(object sender, KeyEventArgs args)
-        {
-            if (args.Key == Key.Space || args.Key == Key.Return)
-            {
-                var treeNode = GetNode(args);
-                if (treeNode != null)
-                {
-                    args.Handled = Invoke(treeNode);
-                }
-            }
-
-            if (args.Key == Key.Escape)
-            {
-                if (documentWell.IsVisible)
-                {
-                    documentWell.Hide();
-                }
-            }
-        }
-
-        private void OnItemClick(object sender, PointerPressedEventArgs args)
-        {
-            if (args.ClickCount < 2) return;
-
-            // workaround for http://stackoverflow.com/a/36244243/37899
-            var treeViewItem = sender as TreeViewItem;
-            //if (!treeViewItem.IsSelected)
-            //{
-            //    return;
-            //}
-
-            if (treeViewItem?.DataContext is ParentedNode node)
-            {
-                args.Handled = Invoke(node);
             }
         }
 
@@ -1050,8 +1015,8 @@ Recent:
             //    return;
             //}
 
-            Point topLeftInTreeViewCoordinates = treeViewItem.TranslatePoint(new Point(), treeView);
-            var treeViewItemTop = topLeftInTreeViewCoordinates.Y;
+            Point? topLeftInTreeViewCoordinates = treeViewItem.TranslatePoint(new Point(), treeView);
+            var treeViewItemTop = topLeftInTreeViewCoordinates?.Y ?? 0;
             if (treeViewItemTop < 0
                 || treeViewItemTop + treeViewItem.Bounds.Height > scrollViewer.Viewport.Height
                 || treeViewItem.Bounds.Height > scrollViewer.Viewport.Height)

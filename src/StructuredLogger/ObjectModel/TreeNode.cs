@@ -53,8 +53,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 children = list.ToArray();
             }
 
-            RaisePropertyChanged("HasChildren");
-            RaisePropertyChanged("Children");
+            RaisePropertyChanged(nameof(HasChildren));
+            RaisePropertyChanged(nameof(Children));
         }
 
         public void Seal()
@@ -92,9 +92,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 treeNode.Parent = this;
             }
 
-            if (children.Count == 1)
+            if (children.Count >= 1)
             {
                 RaisePropertyChanged(nameof(HasChildren));
+                RaisePropertyChanged(nameof(Children));
             }
         }
 
@@ -116,9 +117,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 treeNode.Parent = this;
             }
 
-            if (children.Count == 1)
+            if (children.Count >= 1)
             {
                 RaisePropertyChanged(nameof(HasChildren));
+                RaisePropertyChanged(nameof(Children));
             }
         }
 

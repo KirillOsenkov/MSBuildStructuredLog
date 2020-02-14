@@ -74,7 +74,7 @@ namespace StructuredLogViewer
 
         private Dictionary<string, Bucket> GetImportMap(string projectFilePath)
         {
-            if (importMapsPerProject.TryGetValue(projectFilePath, out var importMap))
+            if (projectFilePath != null && importMapsPerProject.TryGetValue(projectFilePath, out var importMap))
             {
                 return importMap;
             }
