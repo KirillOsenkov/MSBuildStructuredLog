@@ -168,6 +168,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             set => SetFlag(NodeFlags.LowRelevance, value);
         }
 
+        public IReadOnlyList<string> EntryTargets { get; set; }
+        public IDictionary<string, string> GlobalProperties { get; set; }
         public override string ToString() => $"Project Name={Name} File={ProjectFile}";
     }
 }

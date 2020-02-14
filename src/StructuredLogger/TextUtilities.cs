@@ -10,6 +10,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
     {
         private static readonly IReadOnlyList<Span> Empty = new Span[] { Span.Empty };
 
+        private static readonly char[] semicolonCharArray = { ';' };
+
+        public static IReadOnlyList<string> SplitSemicolonDelimitedList(string list) => list.Split(semicolonCharArray);
+
         public static void CollectLineSpans(this string text, ICollection<Span> spans, bool includeLineBreakInSpan = true)
         {
             if (text == null)

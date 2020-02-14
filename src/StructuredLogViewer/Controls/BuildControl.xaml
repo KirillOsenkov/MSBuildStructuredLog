@@ -50,6 +50,10 @@
                   <local:TimelineControl x:Name="timeline"
                                          structuredLogViewer:ScrollViewerHelper.ShiftWheelScrollsHorizontally="True" />
                 </TabItem>
+                
+                <TabItem x:Name="projectGraphTab" Header="Project Graph">
+                    <local:ProjectGraphControl x:Name="projectGraphControl" />
+                </TabItem>
               </TabControl>
             </local:SplitterPanel.FirstChild>
 

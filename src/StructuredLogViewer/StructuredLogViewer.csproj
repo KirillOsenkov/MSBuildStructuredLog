@@ -12,6 +12,9 @@
     <AssemblyTitle>MSBuild Structured Log Viewer</AssemblyTitle>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="Controls\ProjectGraphControl.xaml" />
+  </ItemGroup>
+  <ItemGroup>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System.Xaml" />
@@ -25,6 +28,8 @@
     <PackageReference Include="squirrel.windows" Version="1.4.0" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="System.IO.Compression" Version="4.3.0" />
+
+    <PackageReference Include="WpfGraphControl" Version="1.0.0.3" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\StructuredLogger\StructuredLogger.csproj" />
@@ -45,6 +50,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\TextViewerControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\ProjectGraphControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

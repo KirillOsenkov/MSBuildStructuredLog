@@ -16,6 +16,8 @@ using System.Xml;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Language.Xml;
 
+using StructuredLogViewer.Core.ProjectGraph;
+
 namespace StructuredLogViewer.Controls
 {
     public partial class BuildControl : UserControl
@@ -199,6 +201,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             preprocessedFileManager.DisplayFile += filePath => DisplayFile(filePath);
 
             PopulateTimeline();
+            PopulateProjectGraph();
         }
 
         private void FilesTree_SearchTextChanged(string text)
@@ -255,6 +258,13 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             var timeline = new Timeline(Build);
             this.timeline.BuildControl = this;
             this.timeline.SetTimeline(timeline);
+        }
+
+        private void PopulateProjectGraph()
+        {
+            var graph = new MSAGLProjectGraphConstructor().FromBuild(Build);
+            projectGraphControl.BuildControl = this;
+            projectGraphControl.SetGraph(graph);
         }
 
         private static string[] searchExamples = new[]
