@@ -1,7 +1,8 @@
 ﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:StructuredLogViewer.Avalonia.Controls;assembly=StructuredLogViewer.Avalonia"
-             xmlns:a="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit">
+             xmlns:a="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
+             x:Class="StructuredLogViewer.Avalonia.Controls.TextViewerControl">
     <Grid RowDefinitions="Auto,*">
         <DockPanel Background="White"
                    Name="filePathToolbar">

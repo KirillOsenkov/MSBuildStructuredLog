@@ -1,6 +1,7 @@
 ﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:StructuredLogViewer.Avalonia.Controls;assembly=StructuredLogViewer.Avalonia">
+             xmlns:local="clr-namespace:StructuredLogViewer.Avalonia.Controls;assembly=StructuredLogViewer.Avalonia"
+             x:Class="StructuredLogViewer.Avalonia.Controls.BuildControl">
 
     <local:SplitterPanel Orientation="Vertical"
                          FirstChildRelativeSize="*"
@@ -88,7 +89,6 @@
                                                     ItemsPanel="{TemplateBinding ItemsPanel}"
                                                     ItemTemplate="{TemplateBinding ItemTemplate}"
                                                     Margin="{TemplateBinding Padding}"
-                                                    MemberSelector="{TemplateBinding MemberSelector}"
                                                     VirtualizationMode="{TemplateBinding VirtualizationMode}" />
                                 </Border>
                             </ControlTemplate>
