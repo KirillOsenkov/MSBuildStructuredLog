@@ -29,11 +29,7 @@ namespace StructuredLogViewer.Avalonia.Controls
         public Orientation Orientation
         {
             get { return GetValue(OrientationProperty); }
-            set
-            {
-                SetValue(OrientationProperty, value);
-                UpdateRowColumnInfo();
-            }
+            set { SetValue(OrientationProperty, value); }
         }
 
         public static readonly StyledProperty<Orientation> OrientationProperty =
