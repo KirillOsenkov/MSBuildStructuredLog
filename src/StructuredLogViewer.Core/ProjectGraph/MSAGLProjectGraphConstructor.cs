@@ -9,7 +9,7 @@ using Microsoft.Msagl.Drawing;
 
 namespace StructuredLogViewer.Core.ProjectGraph
 {
-    public class MSAGLProjectGraphConstructor
+    public class MsaglProjectGraphConstructor
     {
         private class GlobalPropertyComparer : IComparer<string>
         {
@@ -58,9 +58,9 @@ namespace StructuredLogViewer.Core.ProjectGraph
 
         public Graph FromBuild(Build build)
         {
-            var projectInvocations = build.FindChildrenRecursive<Project>();
+            var runtimeGraph = RuntimeGraph.FromBuild(build);
 
-            var commonGlobalProperties = ComputeCommonGlobalProperties(projectInvocations);
+            var commonGlobalProperties = ComputeCommonGlobalProperties(runtimeGraph);
 
             var graph = new Graph {Attr = {LayerSeparation = 100}};
 
@@ -69,25 +69,52 @@ namespace StructuredLogViewer.Core.ProjectGraph
                 AddNodeForCommonGlobalProperties(commonGlobalProperties, graph);
             }
 
-            foreach (var projectInvocation in projectInvocations)
+            foreach (var root in runtimeGraph.SortedRoots)
             {
-                AddNodeForProjectInvocation(projectInvocation, graph, commonGlobalProperties);
+                RecursiveAddNode(root, graph, commonGlobalProperties);
             }
 
             return graph;
         }
 
-        private void AddNodeForProjectInvocation(Project projectInvocation, Graph graph, IDictionary<string, string> commonGlobalProperties)
+        private void RecursiveAddNode(RuntimeGraph.RuntimeGraphNode node, Graph graph, IDictionary<string, string> commonGlobalProperties)
         {
-            var sourceNode = GetNodeForProjectInvocation(projectInvocation.GetNearestParent<Project>(), graph, commonGlobalProperties);
-            var targetNode = GetNodeForProjectInvocation(projectInvocation, graph, commonGlobalProperties);
+            AddNodeAndDirectChildrenToGraph(node, graph, commonGlobalProperties);
 
-            graph.AddEdge(sourceNode.Id, GetTargetString(projectInvocation), targetNode.Id);
+            foreach (var child in node.SortedChildren)
+            {
+                RecursiveAddNode(child, graph, commonGlobalProperties);
+            }
         }
 
-        private static IDictionary<string, string> ComputeCommonGlobalProperties(IReadOnlyList<Project> projectInvocations)
+        private void AddNodeAndDirectChildrenToGraph(RuntimeGraph.RuntimeGraphNode node, Graph graph, IDictionary<string, string> commonGlobalProperties)
         {
-            if (projectInvocations.Count == 0)
+            var msaglNode = GetMsaglNode(node.Project, graph, commonGlobalProperties);
+
+            Node previousMsaglNode = null;
+
+            foreach (var child in node.SortedChildren)
+            {
+                var currentMsaglNode = GetMsaglNode(child.Project, graph, commonGlobalProperties);
+
+                // ensure left to right ordering
+                if (previousMsaglNode != null)
+                {
+                    graph.LayerConstraints.AddLeftRightConstraint(previousMsaglNode, currentMsaglNode);
+                }
+
+                // add edge
+                var edge = new Edge(msaglNode, currentMsaglNode, ConnectionToGraph.Connected);
+                msaglNode.AddOutEdge(edge);
+                edge.LabelText = GetTargetString(child.Project);
+
+                previousMsaglNode = currentMsaglNode;
+            }
+        }
+
+        private static IDictionary<string, string> ComputeCommonGlobalProperties(RuntimeGraph runtimeGraph)
+        {
+            if (runtimeGraph.Nodes.Count == 0)
             {
                 return ImmutableDictionary<string, string>.Empty;
             }
@@ -95,14 +122,16 @@ namespace StructuredLogViewer.Core.ProjectGraph
             // The common global properties are included in all projects. So take the global properties from the first project and prune the uncommon ones.
             var commonGlobalProperties = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-            foreach (var globalProperty in projectInvocations.First(project => !project.ProjectFile.EndsWith(".sln")).GlobalProperties)
+            var templateNode = runtimeGraph.Nodes.First(n => !n.Project.ProjectFile.EndsWith(".sln"));
+
+            foreach (var globalProperty in templateNode.Project.GlobalProperties)
             {
                 commonGlobalProperties[globalProperty.Key] = globalProperty.Value;
             }
 
-            foreach (var projectInvocation in projectInvocations.Skip(1))
+            foreach (var node in runtimeGraph.Nodes.Skip(1))
             {
-                foreach (var globalProperty in projectInvocation.GlobalProperties)
+                foreach (var globalProperty in node.Project.GlobalProperties)
                 {
                     if (commonGlobalProperties.TryGetValue(globalProperty.Key, out var value)
                         && !value.Equals(globalProperty.Value, StringComparison.Ordinal))
@@ -135,7 +164,7 @@ namespace StructuredLogViewer.Core.ProjectGraph
                 : string.Join(";", project.EntryTargets);
         }
 
-        private Node GetNodeForProjectInvocation(Project project, Graph graph, IDictionary<string, string> commonGlobalProperties)
+        private Node GetMsaglNode(Project project, Graph graph, IDictionary<string, string> commonGlobalProperties)
         {
             if (project == null)
             {
