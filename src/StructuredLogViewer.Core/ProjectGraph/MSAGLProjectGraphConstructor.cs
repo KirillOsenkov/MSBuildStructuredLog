@@ -122,22 +122,34 @@ namespace StructuredLogViewer.Core.ProjectGraph
             // The common global properties are included in all projects. So take the global properties from the first project and prune the uncommon ones.
             var commonGlobalProperties = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-            var templateNode = runtimeGraph.Nodes.First(n => !n.Project.ProjectFile.EndsWith(".sln"));
+            // solution nodes are not a good template for common global properties because they set many verbose global properties on their references
+            var meaningfulNodes = runtimeGraph.Nodes.Where(n => !n.Project.ProjectFile.EndsWith(".sln")).ToArray();
+
+            var templateNode = meaningfulNodes.First();
 
             foreach (var globalProperty in templateNode.Project.GlobalProperties)
             {
                 commonGlobalProperties[globalProperty.Key] = globalProperty.Value;
             }
 
-            foreach (var node in runtimeGraph.Nodes.Skip(1))
+            foreach (var node in meaningfulNodes.Skip(1))
             {
-                foreach (var globalProperty in node.Project.GlobalProperties)
+                var nodeProperties = node.Project.GlobalProperties;
+                var keysToRemove = new HashSet<string>();
+
+                foreach (var commonGlobalProperty in commonGlobalProperties)
                 {
-                    if (commonGlobalProperties.TryGetValue(globalProperty.Key, out var value)
-                        && !value.Equals(globalProperty.Value, StringComparison.Ordinal))
+                    if (
+                        !(nodeProperties.TryGetValue(commonGlobalProperty.Key, out var commonValue)
+                          && commonValue.Equals(commonGlobalProperty.Value, StringComparison.Ordinal)))
                     {
-                        commonGlobalProperties.Remove(globalProperty.Key);
+                        keysToRemove.Add(commonGlobalProperty.Key);
                     }
+                }
+
+                foreach (var key in keysToRemove)
+                {
+                    commonGlobalProperties.Remove(key);
                 }
             }
 
@@ -201,7 +213,12 @@ namespace StructuredLogViewer.Core.ProjectGraph
                     WriteGlobalPropertyDictionaryToStringBuilder(
                         project.GlobalProperties
                             // exclude common global properties, they just get repeated on each node and needlessly bloat the graph
-                            .Where(kvp => !commonGlobalProperties.ContainsKey(kvp.Key))
+                            .Where(
+                                kvp =>
+                                    !(commonGlobalProperties.TryGetValue(
+                                        kvp.Key,
+                                        out var commonValue)
+                                      && commonValue.Equals(kvp.Value, StringComparison.Ordinal)))
                             .OrderByDescending(kvp => kvp.Key, GlobalPropertyComparer.Instance),
                         sb);
 
