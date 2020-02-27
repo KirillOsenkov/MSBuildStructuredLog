@@ -262,7 +262,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
         private void PopulateProjectGraph()
         {
-            var graph = new MSAGLProjectGraphConstructor().FromBuild(Build);
+            var graph = new MsaglProjectGraphConstructor().FromBuild(Build);
             projectGraphControl.BuildControl = this;
             projectGraphControl.SetGraph(graph);
         }
