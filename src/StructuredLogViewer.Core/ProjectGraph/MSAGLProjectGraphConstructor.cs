@@ -64,14 +64,14 @@ namespace StructuredLogViewer.Core.ProjectGraph
 
             var graph = new Graph {Attr = {LayerSeparation = 100}};
 
-            if (commonGlobalProperties.Any())
-            {
-                AddNodeForCommonGlobalProperties(commonGlobalProperties, graph);
-            }
-
             foreach (var root in runtimeGraph.SortedRoots)
             {
                 RecursiveAddNode(root, graph, commonGlobalProperties);
+            }
+
+            if (commonGlobalProperties.Any())
+            {
+                AddNodeForCommonGlobalProperties(commonGlobalProperties, graph);
             }
 
             return graph;
@@ -158,15 +158,25 @@ namespace StructuredLogViewer.Core.ProjectGraph
 
         private static void AddNodeForCommonGlobalProperties(IDictionary<string, string> commonGlobalProperties, Graph graph)
         {
-            var node = graph.AddNode("CommonGlobalProperties");
+            var graphRoots = graph.Nodes.Where(n => !n.InEdges.Any());
+
+            var commonGlobalPropertiesNode = graph.AddNode("CommonGlobalProperties");
+
+            // Place the common prop node (which can get very large with solutions) on top of root nodes, to avoid it being placed in the middle of the graph.
+            foreach (var root in graphRoots)
+            {
+                graph.LayerConstraints.AddUpDownConstraint(commonGlobalPropertiesNode, root);
+            }
 
             var sb = new StringBuilder();
 
-            sb.AppendLine("Common Global Properties");
-            sb.AppendLine("------------------------");
+            var title = "Common Global Properties for non solution nodes";
+            sb.AppendLine(title);
+            sb.AppendLine(new string('-', title.Length));
+
             WriteGlobalPropertyDictionaryToStringBuilder(commonGlobalProperties, sb);
 
-            StyleProjectNode(node, sb.ToString());
+            StyleProjectNode(commonGlobalPropertiesNode, sb.ToString());
         }
 
         private static string GetTargetString(Project project)
