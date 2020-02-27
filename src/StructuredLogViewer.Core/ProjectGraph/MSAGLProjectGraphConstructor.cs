@@ -69,12 +69,36 @@ namespace StructuredLogViewer.Core.ProjectGraph
                 RecursiveAddNode(root, graph, commonGlobalProperties);
             }
 
+            AddVirtualBuildRequestNodes(graph);
+
             if (commonGlobalProperties.Any())
             {
                 AddNodeForCommonGlobalProperties(commonGlobalProperties, graph);
             }
 
+
             return graph;
+        }
+
+        private void AddVirtualBuildRequestNodes(Graph graph)
+        {
+            var rootNodes = graph.Nodes.Where(n => !n.InEdges.Any()).ToArray();
+
+            foreach (var rootNode in rootNodes)
+            {
+                if (rootNode.UserData != null && rootNode.UserData is Project project)
+                {
+                    var node = graph.AddNode("Build Request");
+                    node.Attr.Color = Color.Gray;
+                    node.Label.FontColor = Color.Gray;
+
+                    var edge = new Edge(node, rootNode, ConnectionToGraph.Connected);
+                    node.AddOutEdge(edge);
+
+                    edge.LabelText = GetTargetString(project);
+                    edge.Label.FontColor = Color.Gray;
+                }
+            }
         }
 
         private void RecursiveAddNode(RuntimeGraph.RuntimeGraphNode node, Graph graph, IDictionary<string, string> commonGlobalProperties)
