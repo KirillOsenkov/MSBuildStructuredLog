@@ -2,7 +2,9 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using Microsoft.Build.Logging.StructuredLogger;
 
 #nullable enable
@@ -11,6 +13,7 @@ namespace StructuredLogViewer.Core.ProjectGraph
 {
     public class RuntimeGraph
     {
+        [DebuggerDisplay("{DebuggerDisplayString()}")]
         public class RuntimeGraphNode
         {
             private SortedList<DateTime, RuntimeGraphNode>? sortedChildren;
@@ -38,6 +41,15 @@ namespace StructuredLogViewer.Core.ProjectGraph
             public RuntimeGraphNode(Project p)
             {
                 Project = p;
+            }
+
+            public string DebuggerDisplayString()
+            {
+                var sb = new StringBuilder();
+
+                sb.Append($"ReferenceCount: {SortedChildren.Count}, {Project.DebuggerDisplayString()}");
+
+                return sb.ToString();
             }
 
             internal void AddChild(RuntimeGraphNode child)
