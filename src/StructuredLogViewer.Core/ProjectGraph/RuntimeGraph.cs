@@ -2,7 +2,9 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using Microsoft.Build.Logging.StructuredLogger;
 
 #nullable enable
@@ -11,6 +13,7 @@ namespace StructuredLogViewer.Core.ProjectGraph
 {
     public class RuntimeGraph
     {
+        [DebuggerDisplay("{ToString()}")]
         public class RuntimeGraphNode
         {
             private SortedList<DateTime, RuntimeGraphNode>? sortedChildren;
@@ -40,6 +43,15 @@ namespace StructuredLogViewer.Core.ProjectGraph
                 Project = p;
             }
 
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+
+                sb.Append($"ReferenceCount: {SortedChildren.Count}, {Project}");
+
+                return sb.ToString();
+            }
+
             internal void AddChild(RuntimeGraphNode child)
             {
                 if (sortedChildren == null)
@@ -47,8 +59,21 @@ namespace StructuredLogViewer.Core.ProjectGraph
                     sortedChildren = new SortedList<DateTime, RuntimeGraphNode>();
                 }
 
-                sortedChildren.Add(child.Project.StartTime, child);
+                // some projects appear to have the same timestamp, add 1 tick to avoid a key already exists exception from the sorted list
+                var projectStartTime = GetNearestNonConflictingDateTime(child.Project.StartTime, sortedChildren);
+
+                sortedChildren.Add(projectStartTime, child);
                 sortedChildrenCached = null;
+
+                DateTime GetNearestNonConflictingDateTime(DateTime newKey, SortedList<DateTime, RuntimeGraphNode> collection)
+                {
+                    while (collection.ContainsKey(newKey))
+                    {
+                        newKey = newKey.AddTicks(1);
+                    }
+
+                    return newKey;
+                }
             }
         }
 

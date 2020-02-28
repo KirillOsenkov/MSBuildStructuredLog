@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
+    [DebuggerDisplay("{ToString()}")]
     public class Project : TimedNode, IPreprocessable, IHasSourceFile, IHasRelevance
     {
         /// <summary>
@@ -30,6 +33,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         private readonly ConcurrentDictionary<string, Target> _targetNameToTargetMap = new ConcurrentDictionary<string, Target>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<int, Target> targetsById = new Dictionary<int, Target>();
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+
+            sb.Append($"Project Name={Name} File={ProjectFile}");
+            sb.Append($" Targets=[{string.Join(",", EntryTargets)}]");
+            sb.Append($" GlobalProperties=[{string.Join(",", GlobalProperties.Select(kvp => $"{kvp.Key}={kvp.Value}"))}]");
+
+            return sb.ToString();
+        }
 
         public void TryAddTarget(Target target)
         {
@@ -170,6 +184,5 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public IReadOnlyList<string> EntryTargets { get; set; }
         public IDictionary<string, string> GlobalProperties { get; set; }
-        public override string ToString() => $"Project Name={Name} File={ProjectFile}";
     }
 }
