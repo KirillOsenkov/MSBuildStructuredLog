@@ -111,14 +111,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 case BinaryLogRecordKind.TargetSkipped:
                     result = ReadTargetSkippedEventArgs();
                     break;
+                case BinaryLogRecordKind.EnvironmentVariableRead:
+                    result = ReadEnvironmentVariableReadEventArgs();
+                    break;
                 case BinaryLogRecordKind.PropertyReassignment:
                     result = ReadPropertyReassignmentEventArgs();
                     break;
                 case BinaryLogRecordKind.UninitializedPropertyRead:
                     result = ReadUninitializedPropertyReadEventArgs();
-                    break;
-                case BinaryLogRecordKind.EnvironmentVariableRead:
-                    result = ReadEnvironmentVariableReadEventArgs();
                     break;
                 case BinaryLogRecordKind.PropertyInitialValueSet:
                     result = ReadPropertyInitialValueSetEventArgs();
@@ -197,84 +197,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             e.TargetName = targetName;
             e.ParentTarget = parentTarget;
             e.BuildReason = buildReason;
-
-            return e;
-        }
-
-        private BuildEventArgs ReadPropertyReassignmentEventArgs()
-        {
-            var fields = ReadBuildEventArgsFields();
-            var importance = (MessageImportance)ReadInt32();
-            string propertyName = ReadString();
-            string previousValue = ReadString();
-            string newValue = ReadString();
-            string location = ReadString();
-
-            var e = new PropertyReassignmentEventArgs(
-               propertyName,
-               previousValue,
-               newValue,
-               location,
-               fields.Message,
-               fields.HelpKeyword,
-               fields.SenderName,
-               importance);
-            SetCommonFields(e, fields);
-
-            return e;
-        }
-        private BuildEventArgs ReadUninitializedPropertyReadEventArgs()
-        {
-            var fields = ReadBuildEventArgsFields();
-            var importance = (MessageImportance)ReadInt32();
-            string propertyName = ReadString();
-
-            var e = new UninitializedPropertyReadEventArgs(
-               propertyName,
-               fields.Message,
-               fields.HelpKeyword,
-               fields.SenderName,
-               importance);
-            SetCommonFields(e, fields);
-
-            return e;
-        }
-
-        private BuildEventArgs ReadPropertyInitialValueSetEventArgs()
-        {
-            var fields = ReadBuildEventArgsFields();
-            var importance = (MessageImportance)ReadInt32();
-            string propertyName = ReadString();
-            string propertyValue = ReadString();
-            string propertySource = ReadString();
-
-            var e = new PropertyInitialValueSetEventArgs(
-               propertyName,
-               propertyValue,
-               propertySource,
-               fields.Message,
-               fields.HelpKeyword,
-               fields.SenderName,
-               importance);
-            SetCommonFields(e, fields);
-
-            return e;
-        }
-
-        private BuildEventArgs ReadEnvironmentVariableReadEventArgs()
-        {
-            var fields = ReadBuildEventArgsFields();
-            var importance = (MessageImportance)ReadInt32();
-
-            var environmentVariableName = ReadString();
-
-            var e = new EnvironmentVariableReadEventArgs(
-               environmentVariableName,
-               fields.Message,
-               fields.HelpKeyword,
-               fields.SenderName,
-               importance);
-            SetCommonFields(e, fields);
 
             return e;
         }
@@ -375,7 +297,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             var propertyList = ReadPropertyList();
-            var itemList = ReadItems(skip: false);
+            var itemList = ReadItems();
 
             var e = new ProjectStartedEventArgs(
                 projectId,
@@ -597,6 +519,85 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return e;
         }
 
+        private BuildEventArgs ReadEnvironmentVariableReadEventArgs()
+        {
+            var fields = ReadBuildEventArgsFields();
+            var importance = (MessageImportance)ReadInt32();
+
+            var environmentVariableName = ReadString();
+
+            var e = new EnvironmentVariableReadEventArgs(
+                environmentVariableName,
+                fields.Message,
+                fields.HelpKeyword,
+                fields.SenderName,
+                importance);
+            SetCommonFields(e, fields);
+
+            return e;
+        }
+
+        private BuildEventArgs ReadPropertyReassignmentEventArgs()
+        {
+            var fields = ReadBuildEventArgsFields();
+            var importance = (MessageImportance)ReadInt32();
+            string propertyName = ReadString();
+            string previousValue = ReadString();
+            string newValue = ReadString();
+            string location = ReadString();
+
+            var e = new PropertyReassignmentEventArgs(
+                propertyName,
+                previousValue,
+                newValue,
+                location,
+                fields.Message,
+                fields.HelpKeyword,
+                fields.SenderName,
+                importance);
+            SetCommonFields(e, fields);
+
+            return e;
+        }
+
+        private BuildEventArgs ReadUninitializedPropertyReadEventArgs()
+        {
+            var fields = ReadBuildEventArgsFields();
+            var importance = (MessageImportance)ReadInt32();
+            string propertyName = ReadString();
+
+            var e = new UninitializedPropertyReadEventArgs(
+                propertyName,
+                fields.Message,
+                fields.HelpKeyword,
+                fields.SenderName,
+                importance);
+            SetCommonFields(e, fields);
+
+            return e;
+        }
+
+        private BuildEventArgs ReadPropertyInitialValueSetEventArgs()
+        {
+            var fields = ReadBuildEventArgsFields();
+            var importance = (MessageImportance)ReadInt32();
+            string propertyName = ReadString();
+            string propertyValue = ReadString();
+            string propertySource = ReadString();
+
+            var e = new PropertyInitialValueSetEventArgs(
+                propertyName,
+                propertyValue,
+                propertySource,
+                fields.Message,
+                fields.HelpKeyword,
+                fields.SenderName,
+                importance);
+            SetCommonFields(e, fields);
+
+            return e;
+        }
+
         /// <summary>
         /// For errors and warnings these 8 fields are written out explicitly
         /// (their presence is not marked as a bit in the flags). So we have to
@@ -742,20 +743,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
             int projectInstanceId = ReadInt32();
 
             // evaluationId was introduced in format version 2
-            int evaluationId = -1; // BuildEventContext.InvalidEvaluationId;
+            int evaluationId = BuildEventContext.InvalidEvaluationId;
             if (fileFormatVersion > 1)
             {
                 evaluationId = ReadInt32();
             }
 
-            var result = new BuildEventContextWithEvaluationId(
+            var result = new BuildEventContext(
                 submissionId,
                 nodeId,
+                evaluationId,
                 projectInstanceId,
                 projectContextId,
                 targetId,
-                taskId,
-                evaluationId);
+                taskId);
             return result;
         }
 

@@ -1,8 +1,13 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
+using System.Reflection;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
+using Microsoft.Build.Shared.FileSystem;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -29,14 +34,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
         // version 6:
         //   -  Ids and parent ids for the evaluation locations
         // version 7:
-        //   -  Include ProjectStartedEventArgs.GlobalProperties
-        // version 8
-        // - New record kinds: 
-        // - EnvironmentVariableRead
-        // - PropertyInitialValueSet
-        // - PropertyReassignment
-        // - UninitializedPropertyRead
-        internal const int FileFormatVersion = 8;
+        //   - Include ProjectStartedEventArgs.GlobalProperties
+        // version 8:
+        //   - This was used in a now-reverted change but is the same as 9.
+        // version 9:
+        //   - new record kinds: EnvironmentVariableRead, PropertyReassignment, UninitializedPropertyRead
+        internal const int FileFormatVersion = 9;
 
         private Stream stream;
         private BinaryWriter binaryWriter;
@@ -122,6 +125,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     projectImportsCollector = new ProjectImportsCollector(FilePath);
                 }
+
+                if (eventSource is IEventSource3 eventSource3)
+                {
+                    eventSource3.IncludeEvaluationMetaprojects();
+                }
             }
             catch (Exception e)
             {
@@ -137,7 +145,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             binaryWriter.Write(FileFormatVersion);
 
+            LogInitialInfo();
+
             eventSource.AnyEventRaised += EventSource_AnyEventRaised;
+        }
+
+        private void LogInitialInfo()
+        {
+            LogMessage("BinLogFilePath=" + FilePath);
+        }
+
+        private void LogMessage(string text)
+        {
+            var args = new BuildMessageEventArgs(text, helpKeyword: null, senderName: "BinaryLogger", MessageImportance.Normal);
+            args.BuildEventContext = BuildEventContext.Invalid;
+            Write(args);
         }
 
         /// <summary>
@@ -203,18 +225,26 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void CollectImports(BuildEventArgs e)
         {
-            ProjectImportedEventArgs importArgs = e as ProjectImportedEventArgs;
-            if (importArgs != null && importArgs.ImportedProjectFile != null)
+            if (e is ProjectImportedEventArgs importArgs && importArgs.ImportedProjectFile != null)
             {
                 projectImportsCollector.AddFile(importArgs.ImportedProjectFile);
-                return;
             }
-
-            // This is different from the official MSBuild because we want to run on MSBuild 14
-            // and still collect source files mentioned in targets and tasks.
-            // We don't need this in official MSBuild because there we have the ProjectImportedEventArgs
-            // that tells us about all the files.
-            projectImportsCollector.IncludeSourceFiles(e);
+            else if (e is ProjectStartedEventArgs projectArgs)
+            {
+                projectImportsCollector.AddFile(projectArgs.ProjectFile);
+            }
+            else if (e is MetaprojectGeneratedEventArgs metaprojectArgs)
+            {
+                projectImportsCollector.AddFileFromMemory(metaprojectArgs.ProjectFile, metaprojectArgs.metaprojectXml);
+            }
+            else
+            {
+                // This is different from the official MSBuild because we want to run on MSBuild 14
+                // and still collect source files mentioned in targets and tasks.
+                // We don't need this in official MSBuild because there we have the ProjectImportedEventArgs
+                // that tells us about all the files.
+                projectImportsCollector.IncludeSourceFiles(e);
+            }
         }
 
         /// <summary>

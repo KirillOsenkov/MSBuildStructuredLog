@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Microsoft.Build.Exceptions;
 using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -28,10 +30,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         public void Write(BuildEventArgs e)
         {
-            var type = e.GetType().Name;
-
             // the cases are ordered by most used first for performance
-            if (e is BuildMessageEventArgs && type != "ProjectImportedEventArgs" && type != "TargetSkippedEventArgs")
+            if (e is BuildMessageEventArgs)
             {
                 Write((BuildMessageEventArgs)e);
             }
@@ -82,50 +82,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             else if (e is ProjectEvaluationFinishedEventArgs)
             {
                 Write((ProjectEvaluationFinishedEventArgs)e);
-            }
-            // The following cases are due to the fact that StructuredLogger.dll 
-            // only references MSBuild 14.0 .dlls. The following BuildEventArgs types
-            // were only introduced in MSBuild 15.3 so we can't refer to them statically.
-            // To still provide a good experience to those who are using the BinaryLogger
-            // from StructuredLogger.dll against MSBuild 15.3 or later we need to preserve
-            // these new events, so use reflection to create our "equivalents" of those
-            // and populate them to be binary identical to the originals. Then serialize
-            // our copies so that it's impossible to tell what wrote these.
-            else if (type == "ProjectEvaluationStartedEventArgs")
-            {
-                var evaluationStarted = new ProjectEvaluationStartedEventArgs(e.Message);
-                evaluationStarted.BuildEventContext = e.BuildEventContext;
-                evaluationStarted.ProjectFile = Reflector.GetProjectFileFromEvaluationStarted(e);
-                Write(evaluationStarted);
-            }
-            else if (type == "ProjectEvaluationFinishedEventArgs")
-            {
-                var evaluationFinished = new ProjectEvaluationFinishedEventArgs(e.Message);
-                evaluationFinished.BuildEventContext = e.BuildEventContext;
-                evaluationFinished.ProjectFile = Reflector.GetProjectFileFromEvaluationFinished(e);
-                Write(evaluationFinished);
-            }
-            else if (type == "ProjectImportedEventArgs")
-            {
-                var message = e as BuildMessageEventArgs;
-                var projectImported = new ProjectImportedEventArgs(message.LineNumber, message.ColumnNumber, e.Message);
-                projectImported.BuildEventContext = e.BuildEventContext;
-                projectImported.ProjectFile = message.ProjectFile;
-                projectImported.ImportedProjectFile = Reflector.GetImportedProjectFile(e);
-                projectImported.UnexpandedProject = Reflector.GetUnexpandedProject(e);
-                Write(projectImported);
-            }
-            else if (type == "TargetSkippedEventArgs")
-            {
-                var message = e as BuildMessageEventArgs;
-                var targetSkipped = new TargetSkippedEventArgs(e.Message);
-                targetSkipped.BuildEventContext = e.BuildEventContext;
-                targetSkipped.ProjectFile = message.ProjectFile;
-                targetSkipped.TargetName = Reflector.GetTargetNameFromTargetSkipped(e);
-                targetSkipped.TargetFile = Reflector.GetTargetFileFromTargetSkipped(e);
-                targetSkipped.ParentTarget = Reflector.GetParentTargetFromTargetSkipped(e);
-                targetSkipped.BuildReason = Reflector.GetBuildReasonFromTargetSkipped(e);
-                Write(targetSkipped);
             }
             else
             {
@@ -242,7 +198,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             WriteOptionalString(e.ProjectFile);
             WriteOptionalString(e.TargetFile);
             WriteOptionalString(e.ParentTarget);
-            Write((int)Reflector.GetBuildReasonFromTargetStarted(e));
+            Write((int) e.BuildReason);
         }
 
         private void Write(TargetFinishedEventArgs e)
@@ -328,6 +284,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 Write((TargetSkippedEventArgs)e);
                 return;
             }
+
             if (e is PropertyReassignmentEventArgs)
             {
                 Write((PropertyReassignmentEventArgs)e);
@@ -375,6 +332,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Write((int)e.BuildReason);
         }
 
+        private void Write(CriticalBuildMessageEventArgs e)
+        {
+            Write(BinaryLogRecordKind.CriticalBuildMessage);
+            WriteMessageFields(e);
+        }
+
         private void Write(PropertyReassignmentEventArgs e)
         {
             Write(BinaryLogRecordKind.PropertyReassignment);
@@ -384,6 +347,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Write(e.NewValue);
             Write(e.Location);
         }
+
         private void Write(UninitializedPropertyReadEventArgs e)
         {
             Write(BinaryLogRecordKind.UninitializedPropertyRead);
@@ -405,12 +369,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Write(BinaryLogRecordKind.EnvironmentVariableRead);
             WriteMessageFields(e);
             Write(e.EnvironmentVariableName);
-        }
-
-        private void Write(CriticalBuildMessageEventArgs e)
-        {
-            Write(BinaryLogRecordKind.CriticalBuildMessage);
-            WriteMessageFields(e);
         }
 
         private void Write(TaskCommandLineEventArgs e)
@@ -644,7 +602,27 @@ namespace Microsoft.Build.Logging.StructuredLogger
             foreach (string metadataName in customMetadata.Keys)
             {
                 Write(metadataName);
-                Write(item.GetMetadata(metadataName));
+                string valueOrError;
+
+                try
+                {
+                    valueOrError = item.GetMetadata(metadataName);
+                }
+                catch (InvalidProjectFileException e)
+                {
+                    valueOrError = e.Message;
+                }
+                // Temporarily try catch all to mitigate frequent NullReferenceExceptions in
+                // the logging code until CopyOnWritePropertyDictionary is replaced with
+                // ImmutableDictionary. Calling into Debug.Fail to crash the process in case
+                // the exception occures in Debug builds.
+                catch (Exception e)
+                {
+                    valueOrError = e.Message;
+                    Debug.Fail(e.ToString());
+                }
+
+                Write(valueOrError);
             }
         }
 
@@ -686,7 +664,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Write(buildEventContext.TaskId);
             Write(buildEventContext.SubmissionId);
             Write(buildEventContext.ProjectInstanceId);
-            Write(Reflector.GetEvaluationId(buildEventContext));
+            Write(buildEventContext.EvaluationId);
         }
 
         private void Write<TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> keyValuePairs)
