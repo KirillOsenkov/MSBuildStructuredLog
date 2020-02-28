@@ -59,8 +59,21 @@ namespace StructuredLogViewer.Core.ProjectGraph
                     sortedChildren = new SortedList<DateTime, RuntimeGraphNode>();
                 }
 
-                sortedChildren.Add(child.Project.StartTime, child);
+                // some projects appear to have the same timestamp, add 1 tick to avoid a key already exists exception from the sorted list
+                var projectStartTime = GetNearestNonConflictingDateTime(child.Project.StartTime, sortedChildren);
+
+                sortedChildren.Add(projectStartTime, child);
                 sortedChildrenCached = null;
+
+                DateTime GetNearestNonConflictingDateTime(DateTime newKey, SortedList<DateTime, RuntimeGraphNode> collection)
+                {
+                    while (collection.ContainsKey(newKey))
+                    {
+                        newKey = new DateTime(newKey.Ticks + 1);
+                    }
+
+                    return newKey;
+                }
             }
         }
 
