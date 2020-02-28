@@ -8,7 +8,7 @@ using System.Text;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    [DebuggerDisplay("{DebuggerDisplayString()}")]
+    [DebuggerDisplay("{ToString()}")]
     public class Project : TimedNode, IPreprocessable, IHasSourceFile, IHasRelevance
     {
         /// <summary>
@@ -34,13 +34,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private readonly ConcurrentDictionary<string, Target> _targetNameToTargetMap = new ConcurrentDictionary<string, Target>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<int, Target> targetsById = new Dictionary<int, Target>();
 
-        public string DebuggerDisplayString()
+        public override string ToString()
         {
             var sb = new StringBuilder();
 
-            sb.Append(ProjectFile);
-            sb.Append($", /t:[{string.Join(",", EntryTargets)}]");
-            sb.Append($", GlobalProperties: [{string.Join(",", GlobalProperties.Select(kvp => $"{kvp.Key}={kvp.Value}"))}]");
+            sb.Append($"Project Name={Name} File={ProjectFile}");
+            sb.Append($" Targets=[{string.Join(",", EntryTargets)}]");
+            sb.Append($" GlobalProperties=[{string.Join(",", GlobalProperties.Select(kvp => $"{kvp.Key}={kvp.Value}"))}]");
 
             return sb.ToString();
         }
@@ -184,6 +184,5 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public IReadOnlyList<string> EntryTargets { get; set; }
         public IDictionary<string, string> GlobalProperties { get; set; }
-        public override string ToString() => $"Project Name={Name} File={ProjectFile}";
     }
 }

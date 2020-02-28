@@ -13,7 +13,7 @@ namespace StructuredLogViewer.Core.ProjectGraph
 {
     public class RuntimeGraph
     {
-        [DebuggerDisplay("{DebuggerDisplayString()}")]
+        [DebuggerDisplay("{ToString()}")]
         public class RuntimeGraphNode
         {
             private SortedList<DateTime, RuntimeGraphNode>? sortedChildren;
@@ -43,11 +43,11 @@ namespace StructuredLogViewer.Core.ProjectGraph
                 Project = p;
             }
 
-            public string DebuggerDisplayString()
+            public override string ToString()
             {
                 var sb = new StringBuilder();
 
-                sb.Append($"ReferenceCount: {SortedChildren.Count}, {Project.DebuggerDisplayString()}");
+                sb.Append($"ReferenceCount: {SortedChildren.Count}, {Project}");
 
                 return sb.ToString();
             }
