@@ -69,7 +69,7 @@ namespace StructuredLogViewer.Core.ProjectGraph
                 {
                     while (collection.ContainsKey(newKey))
                     {
-                        newKey = new DateTime(newKey.Ticks + 1);
+                        newKey = newKey.AddTicks(1);
                     }
 
                     return newKey;
