@@ -8,7 +8,6 @@ using System.Text;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    [DebuggerDisplay("{ToString()}")]
     public class Project : TimedNode, IPreprocessable, IHasSourceFile, IHasRelevance
     {
         /// <summary>

@@ -13,7 +13,6 @@ namespace StructuredLogViewer.Core.ProjectGraph
 {
     public class RuntimeGraph
     {
-        [DebuggerDisplay("{ToString()}")]
         public class RuntimeGraphNode
         {
             private SortedList<DateTime, RuntimeGraphNode>? sortedChildren;
