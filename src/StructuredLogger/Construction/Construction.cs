@@ -40,8 +40,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 if (evaluationFolder == null)
                 {
-                    evaluationFolder = Build.GetOrCreateNodeWithName<Folder>(Intern("Evaluation"));
+                    evaluationFolder = Build.GetOrCreateNodeWithName<Folder>(Intern(Strings.Evaluation));
                 }
+
                 return evaluationFolder;
             }
         }
@@ -63,7 +64,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 lock (syncLock)
                 {
                     Build.StartTime = args.Timestamp;
-                    var properties = Build.GetOrCreateNodeWithName<Folder>(Intern("Environment"));
+                    var properties = Build.GetOrCreateNodeWithName<Folder>(Intern(Strings.Environment));
                     AddProperties(properties, args.BuildEnvironment);
                 }
             }
@@ -292,7 +293,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     if (args.TargetOutputs != null)
                     {
-                        var targetOutputsFolder = target.GetOrCreateNodeWithName<Folder>(Intern("TargetOutputs"));
+                        var targetOutputsFolder = target.GetOrCreateNodeWithName<Folder>(Intern(Strings.TargetOutputs));
 
                         foreach (ITaskItem targetOutput in args.TargetOutputs)
                         {
@@ -371,23 +372,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 lock (syncLock)
                 {
-                    if (args.GetType().Name == "TargetSkippedEventArgs")
+                    if (args is TargetSkippedEventArgs targetSkipped)
                     {
-                        if (args is TargetSkippedEventArgs targetSkipped)
-                        {
-                            TargetSkipped(targetSkipped);
-                        }
-                        else
-                        {
-                            targetSkipped = new TargetSkippedEventArgs();
-                            targetSkipped.BuildEventContext = args.BuildEventContext;
-                            targetSkipped.TargetName = Intern(Reflector.GetTargetNameFromTargetSkipped(args));
-                            targetSkipped.TargetFile = Intern(Reflector.GetTargetFileFromTargetSkipped(args));
-                            targetSkipped.ParentTarget = Intern(Reflector.GetParentTargetFromTargetSkipped(args));
-                            targetSkipped.BuildReason = Reflector.GetBuildReasonFromTargetSkipped(args);
-                            TargetSkipped(targetSkipped);
-                        }
-
+                        TargetSkipped(targetSkipped);
                         return;
                     }
 
@@ -428,7 +415,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     // This happens when we consume args created by us (deserialized)
                     if (e is ProjectEvaluationStartedEventArgs projectEvaluationStarted)
                     {
-                        var evaluationId = Reflector.GetEvaluationId(projectEvaluationStarted.BuildEventContext);
+                        var evaluationId = projectEvaluationStarted.BuildEventContext.EvaluationId;
                         var projectName = Intern(projectEvaluationStarted.ProjectFile);
                         var nodeName = Intern(GetEvaluationProjectName(evaluationId, projectName));
                         var projectEvaluation = EvaluationFolder.GetOrCreateNodeWithName<ProjectEvaluation>(nodeName);
@@ -446,23 +433,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         var profilerResult = projectEvaluationFinished.ProfilerResult;
                         if (profilerResult != null && projectName != null)
                         {
-                            var evaluationId = Reflector.GetEvaluationId(projectEvaluationFinished.BuildEventContext);
+                            var evaluationId = projectEvaluationFinished.BuildEventContext.EvaluationId;
                             var nodeName = Intern(GetEvaluationProjectName(evaluationId, projectName));
                             var projectEvaluation = EvaluationFolder.GetOrCreateNodeWithName<ProjectEvaluation>(nodeName);
                             ConstructProfilerResult(projectEvaluation, profilerResult.Value);
-                        }
-                    }
-                    // this happens during live build using MSBuild 15.3 or newer
-                    else if (e.GetType().Name == "ProjectEvaluationStartedEventArgs")
-                    {
-                        var projectName = Intern(TextUtilities.ParseQuotedSubstring(e.Message));
-                        var evaluationId = Reflector.GetEvaluationId(e.BuildEventContext);
-                        var nodeName = Intern(GetEvaluationProjectName(evaluationId, projectName));
-                        var projectEvaluation = EvaluationFolder.GetOrCreateNodeWithName<ProjectEvaluation>(nodeName);
-                        projectEvaluation.Id = Reflector.GetEvaluationId(e.BuildEventContext);
-                        if (projectEvaluation.ProjectFile == null)
-                        {
-                            projectEvaluation.ProjectFile = projectName;
                         }
                     }
                 }

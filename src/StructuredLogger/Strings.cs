@@ -38,12 +38,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string TotalAnalyzerExecutionTime => "Total analyzer execution time:";
 
         public static string Evaluation => "Evaluation";
+        public static string Environment => "Environment";
         public static string Imports => "Imports";
         public static string DetailedSummary => "Detailed summary";
         public static string Parameters => "Parameters";
         public static string Results => "Results";
         public static string SearchPaths => "SearchPaths";
         public static string Assemblies => "Assemblies";
+        public static string TargetOutputs => "TargetOutputs";
 
         public static Regex UsingTaskRegex = new Regex("Using \"(?<task>.+)\" task from (assembly|the task factory) \"(?<assembly>.+)\"\\.", RegexOptions.Compiled);
 

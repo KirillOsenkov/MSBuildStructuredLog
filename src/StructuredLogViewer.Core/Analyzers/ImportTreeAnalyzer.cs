@@ -67,7 +67,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             bool imported,
             string reason = null)
         {
-            var rootProjectNode = message.Parent as Project;
+            var rootProjectNode = message.Parent as ProjectEvaluation;
             if (rootProjectNode == null)
             {
                 // possible with localized logs

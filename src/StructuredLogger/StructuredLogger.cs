@@ -69,53 +69,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 eventSource.AnyEventRaised += EventSource_AnyEventRaised;
             }
-
-            var assembly = typeof(BuildEventArgs).GetTypeInfo().Assembly;
-
-            projectImportedEventArgsType = assembly.GetType("Microsoft.Build.Framework.ProjectImportedEventArgs");
-            if (projectImportedEventArgsType != null)
-            {
-                importedProjectFile = projectImportedEventArgsType.GetProperty("ImportedProjectFile", BindingFlags.Public | BindingFlags.Instance);
-                unexpandedProject = projectImportedEventArgsType.GetProperty("UnexpandedProject", BindingFlags.Public | BindingFlags.Instance);
-            }
-
-            projectEvaluationFinishedEventArgsType = assembly.GetType("Microsoft.Build.Framework.ProjectEvaluationFinishedEventArgs");
-            if (projectEvaluationFinishedEventArgsType != null)
-            {
-                projectEvaluationFinishedProjectFile = projectEvaluationFinishedEventArgsType.GetProperty("ProjectFile", BindingFlags.Public | BindingFlags.Instance);
-                projectEvaluationFinishedProfilerResult = projectEvaluationFinishedEventArgsType.GetProperty("ProfilerResult", BindingFlags.Public | BindingFlags.Instance);
-            }
         }
-
-        private Type projectImportedEventArgsType;
-        private PropertyInfo importedProjectFile;
-        private PropertyInfo unexpandedProject;
-
-        private Type projectEvaluationFinishedEventArgsType;
-        private PropertyInfo projectEvaluationFinishedProjectFile;
-        private PropertyInfo projectEvaluationFinishedProfilerResult;
 
         private void EventSource_AnyEventRaised(object sender, BuildEventArgs e)
         {
             try
             {
-                var type = e.GetType();
-                if (type == projectImportedEventArgsType)
+                if (e is ProjectImportedEventArgs projectImportedEventArgs)
                 {
-                    string importedProjectFile = (string)this.importedProjectFile.GetValue(e);
-                    //string unexpandedProject = (string)this.unexpandedProject.GetValue(e);
-                    //var buildMessage = (BuildMessageEventArgs)e;
-                    //ProjectImportedEventArgs args = new ProjectImportedEventArgs(buildMessage.LineNumber, buildMessage.ColumnNumber, buildMessage.Message);
-                    //args.ImportedProjectFile = importedProjectFile;
-                    //args.UnexpandedProject = unexpandedProject;
-                    //args.BuildEventContext = buildMessage.BuildEventContext;
+                    string importedProjectFile = projectImportedEventArgs.ImportedProjectFile;
                     projectImportsCollector.AddFile(importedProjectFile);
                     return;
                 }
-                else if (type == projectEvaluationFinishedEventArgsType)
+                else if (e is ProjectEvaluationFinishedEventArgs projectEvaluationFinishedEventArgs)
                 {
-                    string projectFile = (string)projectEvaluationFinishedProjectFile.GetValue(e);
-                    object profilerResult = projectEvaluationFinishedProfilerResult?.GetValue(e);
+                    string projectFile = projectEvaluationFinishedEventArgs.ProjectFile;
+                    object profilerResult = projectEvaluationFinishedEventArgs.ProfilerResult;
                     return;
                 }
 

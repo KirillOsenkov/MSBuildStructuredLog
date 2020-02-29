@@ -388,10 +388,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                 }
             }
-            else if (Reflector.GetEvaluationId(args.BuildEventContext) is int evaluationId && evaluationId != -1)
+            else if (args.BuildEventContext.EvaluationId != -1)
             {
                 var evaluation = construction.EvaluationFolder;
-                var project = evaluation.FindChild<Project>(p => p.Id == evaluationId);
+                var project = evaluation.FindChild<ProjectEvaluation>(p => p.Id == args.BuildEventContext.EvaluationId);
                 node = project;
 
                 if (node != null && node.FindChild<Message>(message) != null)
