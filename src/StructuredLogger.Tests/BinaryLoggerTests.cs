@@ -54,7 +54,7 @@ namespace Microsoft.Build.UnitTests
             this.output = output;
         }
 
-        [Fact(Skip = "Currently fails, will investigate later")]
+        [Fact]
         public void TestBuildTreeStructureCount()
         {
             var binLog = GetTestFile("1.binlog");
