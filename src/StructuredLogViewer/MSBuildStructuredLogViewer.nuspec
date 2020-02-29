@@ -39,6 +39,7 @@
     <file src="StructuredLogViewer.Core.dll" target="lib\net472" />
     <file src="StructuredLogViewer.exe" target="lib\net472" />
     <file src="StructuredLogViewer.exe.config" target="lib\net472" />
+    <file src="System.Collections.Immutable.dll" target="lib\net472" />
     <file src="System.ValueTuple.dll" target="lib\net472" />
     <file src="TaskRunner.exe" target="lib\net472" />
     <file src="TaskRunner.exe.config" target="lib\net472" />
