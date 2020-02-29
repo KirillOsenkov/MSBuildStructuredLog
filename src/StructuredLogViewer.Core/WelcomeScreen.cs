@@ -40,8 +40,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private static string GetVersion()
         {
-            var version = Assembly.GetEntryAssembly().GetName().Version;
-            return $"Version {version.Major}.{version.Minor}.{version.Build}";
+            return $"Version {ThisAssembly.AssemblyInformationalVersion}";
         }
 
         public string SelectedLog
