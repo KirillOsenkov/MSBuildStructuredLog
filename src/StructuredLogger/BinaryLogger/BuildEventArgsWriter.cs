@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.Build.Exceptions;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Framework.Profiler;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {

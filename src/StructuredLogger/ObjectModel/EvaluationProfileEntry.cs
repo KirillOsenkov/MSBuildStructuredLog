@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using Microsoft.Build.Framework.Profiler;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {

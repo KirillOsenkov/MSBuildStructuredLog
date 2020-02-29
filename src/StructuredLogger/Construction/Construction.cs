@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Framework.Profiler;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -224,9 +225,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public void TargetStarted(object sender, TargetStartedEventArgs args)
         {
             TargetBuiltReason targetBuiltReason = TargetBuiltReason.None;
-            if (args is TargetStartedEventArgs2 args2)
+            if (args is TargetStartedEventArgs targetStartedArgs)
             {
-                targetBuiltReason = args2.BuildReason;
+                targetBuiltReason = targetStartedArgs.BuildReason;
             }
 
             AddTargetCore(

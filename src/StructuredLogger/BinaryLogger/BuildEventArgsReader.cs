@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Framework.Profiler;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -340,7 +341,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             // BuildReason was introduced in version 4
             var buildReason = fileFormatVersion > 3 ? (TargetBuiltReason) ReadInt32() : TargetBuiltReason.None;
 
-            var e = new TargetStartedEventArgs2(
+            var e = new TargetStartedEventArgs(
                 fields.Message,
                 fields.HelpKeyword,
                 targetName,

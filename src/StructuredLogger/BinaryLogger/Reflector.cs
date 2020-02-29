@@ -145,7 +145,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return -1;
             }
 
-            if (buildEventContext is BuildEventContextWithEvaluationId withEvaluationId)
+            if (buildEventContext is BuildEventContext withEvaluationId)
             {
                 return withEvaluationId.EvaluationId;
             }

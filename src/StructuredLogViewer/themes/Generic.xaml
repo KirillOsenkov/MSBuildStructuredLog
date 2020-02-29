@@ -206,6 +206,30 @@
     </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
 
+  <HierarchicalDataTemplate DataType="{x:Type l:ProjectEvaluation}"
+                            ItemsSource="{Binding Children}">
+    <StackPanel Orientation="Horizontal" x:Name="projectRoot">
+      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}"
+                 Width="16" Height="16" Margin="2,2,6,2" StrokeThickness="0"
+                 Fill="{StaticResource GenericProjectIcon}" />
+      <TextBlock Text="{Binding Name}" Margin="0,2,0,0" />
+    </StackPanel>
+    <HierarchicalDataTemplate.Triggers>
+      <DataTrigger Binding="{Binding IsLowRelevance}" Value="True">
+        <Setter TargetName="projectRoot" Property="Opacity" Value="0.25" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding ProjectFileExtension}" Value=".csproj">
+        <Setter TargetName="icon" Property="Fill" Value="{StaticResource CSProjIcon}" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding ProjectFileExtension}" Value=".vbproj">
+        <Setter TargetName="icon" Property="Fill" Value="{StaticResource VBProjIcon}" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding ProjectFileExtension}" Value=".fsproj">
+        <Setter TargetName="icon" Property="Fill" Value="{StaticResource FSProjIcon}" />
+      </DataTrigger>
+    </HierarchicalDataTemplate.Triggers>
+  </HierarchicalDataTemplate>
+
   <HierarchicalDataTemplate DataType="{x:Type l:Target}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal" x:Name="targetRoot">

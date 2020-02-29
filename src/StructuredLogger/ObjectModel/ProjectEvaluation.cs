@@ -10,6 +10,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public string ProjectFile { get; set; }
         public string SourceFilePath => ProjectFile;
         string IPreprocessable.RootFilePath => ProjectFile;
+        public string ProjectFileExtension => ProjectFile != null
+            ? Path.GetExtension(ProjectFile).ToLowerInvariant()
+            : "";
 
         public bool IsLowRelevance
         {
