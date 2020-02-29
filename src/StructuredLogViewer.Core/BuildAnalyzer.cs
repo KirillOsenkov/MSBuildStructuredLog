@@ -110,7 +110,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 AnalyzeMessage(message);
             }
-            else if (node is Folder folder)
+            else if (node is NamedNode folder)
             {
                 if (folder.Name == "Evaluation")
                 {

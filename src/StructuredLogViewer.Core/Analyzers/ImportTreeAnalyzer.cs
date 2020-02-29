@@ -5,7 +5,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class ImportTreeAnalyzer
     {
-        public static void Analyze(Folder evaluation, StringCache stringTable)
+        public static void Analyze(NamedNode evaluation, StringCache stringTable)
         {
             evaluation.VisitAllChildren<Message>(m => VisitMessage(m, stringTable), takeChildrenSnapshot: true);
         }
@@ -74,12 +74,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            if (rootProjectNode.Children.First() is Folder importsFolder && importsFolder.Name == Strings.Imports)
+            if (rootProjectNode.Children.First() is TimedNode importsFolder && importsFolder.Name == Strings.Imports)
             {
             }
             else
             {
-                importsFolder = new Folder()
+                importsFolder = new TimedNode()
                 {
                     Name = Strings.Imports
                 };

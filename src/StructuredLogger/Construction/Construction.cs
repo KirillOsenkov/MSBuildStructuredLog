@@ -32,15 +32,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private readonly MessageProcessor messageProcessor;
         private readonly StringCache stringTable;
 
-        private Folder evaluationFolder;
+        private NamedNode evaluationFolder;
 
-        public Folder EvaluationFolder
+        public NamedNode EvaluationFolder
         {
             get
             {
                 if (evaluationFolder == null)
                 {
-                    evaluationFolder = Build.GetOrCreateNodeWithName<Folder>(Intern(Strings.Evaluation));
+                    evaluationFolder = Build.GetOrCreateNodeWithName<TimedNode>(Intern(Strings.Evaluation));
                 }
 
                 return evaluationFolder;
@@ -424,8 +424,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             projectEvaluation.ProjectFile = projectName;
                         }
 
-                        // we stash the evaluation Id as a negative ProjectContextId
                         projectEvaluation.Id = evaluationId;
+                        projectEvaluation.NodeId = e.BuildEventContext.NodeId;
                     }
                     else if (e is ProjectEvaluationFinishedEventArgs projectEvaluationFinished)
                     {
