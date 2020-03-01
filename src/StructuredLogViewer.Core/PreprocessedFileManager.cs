@@ -25,15 +25,15 @@ namespace StructuredLogViewer
 
         public void BuildImportMap()
         {
-            var evaluation = build.FindChild<Folder>(Strings.Evaluation);
+            var evaluation = build.FindChild<NamedNode>(Strings.Evaluation);
             if (evaluation == null)
             {
                 return;
             }
 
-            foreach (var projectEvaluation in evaluation.Children.OfType<Project>())
+            foreach (var projectEvaluation in evaluation.Children.OfType<ProjectEvaluation>())
             {
-                var imports = projectEvaluation.FindChild<Folder>(Strings.Imports);
+                var imports = projectEvaluation.FindChild<NamedNode>(Strings.Imports);
                 if (imports == null)
                 {
                     continue;
@@ -50,7 +50,7 @@ namespace StructuredLogViewer
             }
         }
 
-        private void VisitImport(Import import, Project projectEvaluationContext)
+        private void VisitImport(Import import, ProjectEvaluation projectEvaluationContext)
         {
             if (sourceFileResolver.HasFile(import.ProjectFilePath) &&
                 sourceFileResolver.HasFile(import.ImportedProjectFilePath) &&
@@ -202,10 +202,10 @@ namespace StructuredLogViewer
         {
             if (node is TreeNode treeNode)
             {
-                var project = treeNode.GetNearestParentOrSelf<Project>();
+                var project = (IPreprocessable)treeNode.GetNearestParentOrSelf<Project>() ?? treeNode.GetNearestParentOrSelf<ProjectEvaluation>();
                 if (project != null)
                 {
-                    return project.ProjectFile;
+                    return project.RootFilePath;
                 }
             }
 

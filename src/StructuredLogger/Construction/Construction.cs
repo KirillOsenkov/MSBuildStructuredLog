@@ -66,6 +66,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     Build.StartTime = args.Timestamp;
                     var properties = Build.GetOrCreateNodeWithName<Folder>(Intern(Strings.Environment));
                     AddProperties(properties, args.BuildEnvironment);
+
+                    // realize the evaluation folder now so it is ordered before the main solution node
+                    _ = EvaluationFolder;
                 }
             }
             catch (Exception ex)
