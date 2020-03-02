@@ -15,11 +15,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (text.StartsWith(Strings.TotalAnalyzerExecutionTime))
                 {
                     analyzerReport = new Folder();
-                    analyzerReport.Name = "Analyzer Report";
+                    analyzerReport.Name = Strings.AnalyzerReport;
                     task.AddChild(analyzerReport);
                     parent = analyzerReport;
                 }
-                else if (text.Contains(", Version="))
+                else if (text.Contains(", Version=") && analyzerReport != null)
                 {
                     var lastAssembly = new Folder();
                     lastAssembly.Name = text;

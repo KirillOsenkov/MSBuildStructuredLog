@@ -46,6 +46,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string SearchPaths => "SearchPaths";
         public static string Assemblies => "Assemblies";
         public static string TargetOutputs => "TargetOutputs";
+        public static string AnalyzerReport => "Analyzer Report";
 
         public static Regex UsingTaskRegex = new Regex("Using \"(?<task>.+)\" task from (assembly|the task factory) \"(?<assembly>.+)\"\\.", RegexOptions.Compiled);
 
