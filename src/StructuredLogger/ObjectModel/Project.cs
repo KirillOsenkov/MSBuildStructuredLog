@@ -38,8 +38,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var sb = new StringBuilder();
 
             sb.Append($"Project Name={Name} File={ProjectFile}");
-            sb.Append($" Targets=[{string.Join(",", EntryTargets)}]");
-            sb.Append($" GlobalProperties=[{string.Join(",", GlobalProperties.Select(kvp => $"{kvp.Key}={kvp.Value}"))}]");
+            if (EntryTargets != null)
+            {
+                sb.Append($" Targets=[{string.Join(",", EntryTargets)}]");
+            }
+
+            if (GlobalProperties != null)
+            {
+                sb.Append($" GlobalProperties=[{string.Join(",", GlobalProperties.Select(kvp => $"{kvp.Key}={kvp.Value}"))}]");
+            }
 
             return sb.ToString();
         }
