@@ -200,7 +200,13 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             preprocessedFileManager = new PreprocessedFileManager(this.Build, sourceFileResolver);
             preprocessedFileManager.DisplayFile += filePath => DisplayFile(filePath);
 
+            centralTabControl.SelectionChanged += CentralTabControl_SelectionChanged;
+
             PopulateTimeline();
+        }
+
+        private void CentralTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
             PopulateProjectGraph();
         }
 
@@ -260,10 +266,25 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             this.timeline.SetTimeline(timeline);
         }
 
+        private Microsoft.Msagl.Drawing.Graph graph;
+
         private void PopulateProjectGraph()
         {
-            var graph = new MsaglProjectGraphConstructor().FromBuild(Build);
+            if (graph != null)
+            {
+                return;
+            }
+
+            graph = new MsaglProjectGraphConstructor().FromBuild(Build);
             projectGraphControl.BuildControl = this;
+
+            if (graph.NodeCount > 1000 || graph.EdgeCount > 10000)
+            {
+                centralTabControl.SelectedIndex = 0;
+                projectGraphTab.Visibility = Visibility.Collapsed;
+                return;
+            }
+
             projectGraphControl.SetGraph(graph);
         }
 
