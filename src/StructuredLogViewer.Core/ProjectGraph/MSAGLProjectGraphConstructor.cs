@@ -149,9 +149,9 @@ namespace StructuredLogViewer.Core.ProjectGraph
             // solution nodes are not a good template for common global properties because they set many verbose global properties on their references
             var meaningfulNodes = runtimeGraph.Nodes.Where(n => !n.Project.ProjectFile.EndsWith(".sln")).ToArray();
 
-            var templateNode = meaningfulNodes.First();
+            var templateNode = meaningfulNodes.FirstOrDefault();
 
-            if (templateNode.Project.GlobalProperties == null)
+            if (templateNode?.Project.GlobalProperties == null || templateNode.Project.GlobalProperties.Count == 0)
             {
                 return ImmutableDictionary<string, string>.Empty;
             }
