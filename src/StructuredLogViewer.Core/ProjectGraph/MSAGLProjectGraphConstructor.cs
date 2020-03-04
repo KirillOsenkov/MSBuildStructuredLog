@@ -62,7 +62,7 @@ namespace StructuredLogViewer.Core.ProjectGraph
 
             var commonGlobalProperties = ComputeCommonGlobalProperties(runtimeGraph);
 
-            var graph = new Graph {Attr = {LayerSeparation = 100}};
+            var graph = new Graph { Attr = { LayerSeparation = 100 } };
 
             foreach (var root in runtimeGraph.SortedRoots)
             {
@@ -150,6 +150,11 @@ namespace StructuredLogViewer.Core.ProjectGraph
             var meaningfulNodes = runtimeGraph.Nodes.Where(n => !n.Project.ProjectFile.EndsWith(".sln")).ToArray();
 
             var templateNode = meaningfulNodes.First();
+
+            if (templateNode.Project.GlobalProperties == null)
+            {
+                return ImmutableDictionary<string, string>.Empty;
+            }
 
             foreach (var globalProperty in templateNode.Project.GlobalProperties)
             {
