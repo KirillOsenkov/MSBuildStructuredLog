@@ -29,7 +29,7 @@ namespace StructuredLogViewer
                     return;
                 }
 
-                if (node is Microsoft.Build.Logging.StructuredLogger.Task task && task.Name == "MSBuild")
+                if (node is Microsoft.Build.Logging.StructuredLogger.Task task && string.Equals(task.Name, "MSBuild", StringComparison.OrdinalIgnoreCase))
                 {
                     return;
                 }
