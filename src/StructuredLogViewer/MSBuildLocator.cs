@@ -26,29 +26,18 @@ namespace StructuredLogViewer
 
         public static string[] GetMSBuildLocations()
         {
-            var programFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
-            var windows = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
-
             var candidates = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-            var hardcoded = new[]
-            {
-                Path.Combine(programFilesX86, @"MSBuild\14.0\Bin\MSBuild.exe"),
-                Path.Combine(programFilesX86, @"MSBuild\14.0\Bin\amd64\MSBuild.exe"),
-                Path.Combine(programFilesX86, @"MSBuild\12.0\Bin\MSBuild.exe"),
-                Path.Combine(programFilesX86, @"MSBuild\12.0\Bin\amd64\MSBuild.exe"),
-                Path.Combine(windows, @"Microsoft.NET\Framework\v4.0.30319\MSBuild.exe"),
-                Path.Combine(windows, @"Microsoft.NET\Framework64\v4.0.30319\MSBuild.exe"),
-            };
 
             var vs15Locations = GetVS15Locations();
             candidates.UnionWith(vs15Locations.Select(l => Path.Combine(l, "MSBuild", "15.0", "Bin", "MSBuild.exe")));
             candidates.UnionWith(vs15Locations.Select(l => Path.Combine(l, "MSBuild", "15.0", "Bin", "amd64", "MSBuild.exe")));
-            candidates.UnionWith(hardcoded);
+            candidates.UnionWith(vs15Locations.Select(l => Path.Combine(l, "MSBuild", "Current", "Bin", "MSBuild.exe")));
+            candidates.UnionWith(vs15Locations.Select(l => Path.Combine(l, "MSBuild", "Current", "Bin", "amd64", "MSBuild.exe")));
             candidates.UnionWith(GetMsBuildInstancesFromVisualStudio());
 
             var finalResults = candidates
                 .Where(File.Exists)
+                .OrderBy(s => s)
                 .ToArray();
 
             return finalResults;
