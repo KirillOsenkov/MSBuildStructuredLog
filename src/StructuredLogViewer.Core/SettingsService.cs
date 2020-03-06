@@ -1,9 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.Build.Logging.StructuredLogger;
+using StructuredLogViewer.Core;
+
+#nullable enable
 
 namespace StructuredLogViewer
 {
@@ -40,6 +45,7 @@ namespace StructuredLogViewer
         }
 
         private static IEnumerable<string> cachedRecentMSBuildLocations;
+
         public static IEnumerable<string> GetRecentMSBuildLocations(IEnumerable<string> extraLocations = null)
         {
             extraLocations = extraLocations ?? Enumerable.Empty<string>();
@@ -111,13 +117,16 @@ namespace StructuredLogViewer
 
         private static IEnumerable<string> GetRecentItems(string storageFilePath)
         {
-            if (!File.Exists(storageFilePath))
+            using (SingleGlobalInstance.Acquire(Path.GetFileName(storageFilePath)))
             {
-                return Array.Empty<string>();
-            }
+                if (!File.Exists(storageFilePath))
+                {
+                    return Array.Empty<string>();
+                }
 
-            var lines = File.ReadAllLines(storageFilePath);
-            return lines;
+                var lines = File.ReadAllLines(storageFilePath);
+                return lines;
+            }
         }
 
         public static string GetRootPath()
@@ -129,9 +138,12 @@ namespace StructuredLogViewer
 
         private static void SaveText(string storageFilePath, IEnumerable<string> lines)
         {
-            string directoryName = Path.GetDirectoryName(storageFilePath);
-            Directory.CreateDirectory(directoryName);
-            File.WriteAllLines(storageFilePath, lines);
+            using (SingleGlobalInstance.Acquire(Path.GetFileName(storageFilePath)))
+            {
+                string directoryName = Path.GetDirectoryName(storageFilePath);
+                Directory.CreateDirectory(directoryName);
+                File.WriteAllLines(storageFilePath, lines);
+            }
         }
 
         private static bool AddOrPromote(List<string> list, string item, bool discardPrefixes = false)
@@ -174,12 +186,18 @@ namespace StructuredLogViewer
 
         public static string GetCustomArguments(string filePath)
         {
-            if (!File.Exists(customArgumentsFilePath))
+            string[] lines;
+
+            using (SingleGlobalInstance.Acquire(Path.GetFileName(customArgumentsFilePath)))
             {
-                return DefaultArguments;
+                if (!File.Exists(customArgumentsFilePath))
+                {
+                    return DefaultArguments;
+                }
+
+                lines = File.ReadAllLines(customArgumentsFilePath);
             }
 
-            var lines = File.ReadAllLines(customArgumentsFilePath);
             if (FindArguments(lines, filePath, out string arguments, out int index))
             {
                 return arguments;
@@ -229,38 +247,42 @@ namespace StructuredLogViewer
 
         public static void SaveCustomArguments(string projectFilePath, string newArguments)
         {
-            if (!File.Exists(customArgumentsFilePath))
+            using (SingleGlobalInstance.Acquire(Path.GetFileName(customArgumentsFilePath)))
             {
-                if (newArguments == DefaultArguments)
+                if (!File.Exists(customArgumentsFilePath))
                 {
-                    return;
+                    if (newArguments == DefaultArguments)
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        File.WriteAllLines(customArgumentsFilePath, new[] {projectFilePath + "=" + newArguments});
+                        return;
+                    }
                 }
-                else
+
+                var list = File.ReadAllLines(customArgumentsFilePath).ToList();
+
+                string arguments;
+                int index;
+                if (FindArguments(list, projectFilePath, out arguments, out index))
                 {
-                    File.WriteAllLines(customArgumentsFilePath, new[] { projectFilePath + "=" + newArguments });
-                    return;
+                    list.RemoveAt(index);
                 }
+
+                list.Insert(0, projectFilePath + "=" + newArguments);
+                if (list.Count >= MaximumProjectsInRecentArgumentsList)
+                {
+                    list.RemoveAt(list.Count - 1);
+                }
+
+                File.WriteAllLines(customArgumentsFilePath, list);
             }
-
-            var list = File.ReadAllLines(customArgumentsFilePath).ToList();
-
-            string arguments;
-            int index;
-            if (FindArguments(list, projectFilePath, out arguments, out index))
-            {
-                list.RemoveAt(index);
-            }
-
-            list.Insert(0, projectFilePath + "=" + newArguments);
-            if (list.Count >= MaximumProjectsInRecentArgumentsList)
-            {
-                list.RemoveAt(list.Count - 1);
-            }
-
-            File.WriteAllLines(customArgumentsFilePath, list);
         }
 
         private static bool enableTreeViewVirtualization = true;
+
         public static bool EnableTreeViewVirtualization
         {
             get
@@ -282,6 +304,7 @@ namespace StructuredLogViewer
         }
 
         private static bool parentAllTargetsUnderProject = false;
+
         public static bool ParentAllTargetsUnderProject
         {
             get
@@ -320,52 +343,63 @@ namespace StructuredLogViewer
             var sb = new StringBuilder();
             sb.AppendLine(Virtualization + enableTreeViewVirtualization.ToString());
             sb.AppendLine(ParentAllTargetsUnderProjectSetting + parentAllTargetsUnderProject.ToString());
-            File.WriteAllText(settingsFilePath, sb.ToString());
+
+
+            using (SingleGlobalInstance.Acquire(Path.GetFileName(settingsFilePath)))
+            {
+                File.WriteAllText(settingsFilePath, sb.ToString());
+            }
         }
 
         private static void ReadSettings()
         {
-            if (!File.Exists(settingsFilePath))
+            using (SingleGlobalInstance.Acquire(Path.GetFileName(settingsFilePath)))
             {
-                return;
-            }
-
-            var lines = File.ReadAllLines(settingsFilePath);
-            foreach (var line in lines)
-            {
-                if (line.StartsWith(Virtualization))
+                if (!File.Exists(settingsFilePath))
                 {
-                    var value = line.Substring(Virtualization.Length);
-                    if (bool.TryParse(value, out bool boolValue))
-                    {
-                        enableTreeViewVirtualization = boolValue;
-                    }
+                    return;
                 }
-                else if (line.StartsWith(ParentAllTargetsUnderProjectSetting))
+
+                var lines = File.ReadAllLines(settingsFilePath);
+                foreach (var line in lines)
                 {
-                    var value = line.Substring(ParentAllTargetsUnderProjectSetting.Length);
-                    if (bool.TryParse(value, out bool boolValue))
+                    if (line.StartsWith(Virtualization))
                     {
-                        parentAllTargetsUnderProject = boolValue;
+                        var value = line.Substring(Virtualization.Length);
+                        if (bool.TryParse(value, out bool boolValue))
+                        {
+                            enableTreeViewVirtualization = boolValue;
+                        }
+                    }
+                    else if (line.StartsWith(ParentAllTargetsUnderProjectSetting))
+                    {
+                        var value = line.Substring(ParentAllTargetsUnderProjectSetting.Length);
+                        if (bool.TryParse(value, out bool boolValue))
+                        {
+                            parentAllTargetsUnderProject = boolValue;
+                        }
                     }
                 }
             }
         }
 
         private static bool cleanedUpTempFiles = false;
-        private static readonly object cleanLock = new object();
 
         public static string WriteContentToTempFileAndGetPath(string content, string fileExtension)
         {
             var folder = tempFolder;
             var filePath = Path.Combine(folder, Utilities.GetMD5Hash(content, 16) + fileExtension);
-            if (File.Exists(filePath))
-            {
-                return filePath;
-            }
 
-            Directory.CreateDirectory(folder);
-            File.WriteAllText(filePath, content);
+            using (SingleGlobalInstance.Acquire(Path.GetFileName(filePath)))
+            {
+                if (File.Exists(filePath))
+                {
+                    return filePath;
+                }
+
+                Directory.CreateDirectory(folder);
+                File.WriteAllText(filePath, content);
+            }
 
             if (!cleanedUpTempFiles)
             {
@@ -380,7 +414,7 @@ namespace StructuredLogViewer
         /// </summary>
         private static void CleanupTempFiles()
         {
-            lock (cleanLock)
+            using (SingleGlobalInstance.Acquire("StructuredLogViewerTempFileCleanup"))
             {
                 if (cleanedUpTempFiles)
                 {
