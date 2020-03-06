@@ -384,7 +384,6 @@ namespace StructuredLogViewer
         }
 
         private static bool cleanedUpTempFiles = false;
-        private static readonly object cleanLock = new object();
 
         public static string WriteContentToTempFileAndGetPath(string content, string fileExtension)
         {
