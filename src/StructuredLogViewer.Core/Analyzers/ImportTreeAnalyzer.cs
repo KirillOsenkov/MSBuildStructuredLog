@@ -5,12 +5,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class ImportTreeAnalyzer
     {
-        public static void Analyze(NamedNode evaluation, StringCache stringTable)
+        public static void Analyze(NamedNode evaluation, IStringCache stringTable)
         {
             evaluation.VisitAllChildren<Message>(m => VisitMessage(m, stringTable), takeChildrenSnapshot: true);
         }
 
-        private static void VisitMessage(Message message, StringCache stringTable)
+        private static void VisitMessage(Message message, IStringCache stringTable)
         {
             var match = Strings.ImportingProjectRegex.Match(message.Text);
             if (match.Success && match.Groups.Count == 5)

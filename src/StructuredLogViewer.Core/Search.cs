@@ -28,13 +28,14 @@ namespace StructuredLogViewer
             var cts = new CancellationTokenSource();
             build.VisitAllChildren<object>(node => Visit(node, matcher, cts), cts.Token);
 
-            MarkSearchResults(build, resultSet.Select(i => i.Node).OfType<BaseNode>());
+            //MarkSearchResults(build, resultSet.Select(i => i.Node).OfType<BaseNode>());
 
             return resultSet;
         }
 
         public static void ClearSearchResults(Build build)
         {
+            return;
             build.VisitAllChildren<BaseNode>(node =>
             {
                 node.IsSearchResult = false;

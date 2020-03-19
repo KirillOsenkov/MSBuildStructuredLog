@@ -30,7 +30,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private readonly object syncLock = new object();
 
         private readonly MessageProcessor messageProcessor;
-        private readonly StringCache stringTable;
+        private readonly IStringCache stringTable;
 
         private NamedNode evaluationFolder;
 

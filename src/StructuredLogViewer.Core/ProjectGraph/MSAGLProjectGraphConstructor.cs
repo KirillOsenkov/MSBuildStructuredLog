@@ -54,7 +54,7 @@ namespace StructuredLogViewer.Core.ProjectGraph
             }
         }
 
-        private readonly StringCache stringCache = new StringCache();
+        private readonly IStringCache stringCache = new StringCache();
 
         public Graph FromBuild(Build build)
         {

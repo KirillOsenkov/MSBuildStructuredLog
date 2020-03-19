@@ -7,7 +7,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
     /// </summary>
     public class Build : TimedNode
     {
-        public StringCache StringTable { get; } = new StringCache();
+        public IStringCache StringTable { get; } = new StringCache();
 
         public bool IsAnalyzed { get; set; }
         public bool Succeeded { get; set; }

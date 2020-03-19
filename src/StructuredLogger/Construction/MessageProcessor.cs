@@ -16,11 +16,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string ItemGroupRemoveMessagePrefix = Strings.ItemGroupRemoveMessagePrefix;
 
         private readonly Construction construction;
-        private readonly StringCache stringTable;
+        private readonly IStringCache stringTable;
 
         public StringBuilder DetailedSummary { get; } = new StringBuilder();
 
-        public MessageProcessor(Construction construction, StringCache stringTable)
+        public MessageProcessor(Construction construction, IStringCache stringTable)
         {
             this.construction = construction;
             this.stringTable = stringTable;
@@ -436,7 +436,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             node.AddChild(nodeToAdd);
         }
 
-        public static void HandleThereWasAConflict(Parameter parameter, string message, StringCache stringTable)
+        public static void HandleThereWasAConflict(Parameter parameter, string message, IStringCache stringTable)
         {
             var numberOfLeadingSpaces = TextUtilities.GetNumberOfLeadingSpaces(message);
             TreeNode node = parameter;
