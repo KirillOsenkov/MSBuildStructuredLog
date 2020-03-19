@@ -6,11 +6,19 @@ using System.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
 using Xunit;
 using Microsoft.Build.Logging;
+using Xunit.Abstractions;
 
 namespace StructuredLogger.Tests
 {
     public class Roundtrip
     {
+        private readonly ITestOutputHelper output;
+
+        public Roundtrip(ITestOutputHelper testOutputHelper)
+        {
+            this.output = testOutputHelper;
+        }
+
         //[Fact]
         public void RoundtripTest()
         {
@@ -67,6 +75,15 @@ namespace StructuredLogger.Tests
             {
                 var t = record.Args;
             }
+        }
+
+        //[Fact]
+        public void LoadBinlog()
+        {
+            var sw = Stopwatch.StartNew();
+            var build = BinaryLog.ReadBuild(@"C:\temp\vsmac.binlog");
+            var elapsed = sw.Elapsed;
+            output.WriteLine(elapsed.ToString());
         }
     }
 }
