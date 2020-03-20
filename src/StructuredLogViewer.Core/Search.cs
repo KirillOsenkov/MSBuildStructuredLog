@@ -1,6 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogViewer
@@ -24,11 +22,7 @@ namespace StructuredLogViewer
             var matcher = new NodeQueryMatcher(query, build.StringTable.Instances);
 
             resultSet = new List<SearchResult>();
-
-            var cts = new CancellationTokenSource();
-            build.VisitAllChildren<object>(node => Visit(node, matcher, cts), cts.Token);
-
-            MarkSearchResults(build, resultSet.Select(i => i.Node).OfType<BaseNode>());
+            Visit(build, matcher);
 
             return resultSet;
         }
@@ -42,45 +36,48 @@ namespace StructuredLogViewer
             });
         }
 
-        private void Visit(object node, NodeQueryMatcher matcher, CancellationTokenSource cancellationTokenSource)
+        private bool Visit(object node, NodeQueryMatcher matcher)
         {
-            if (cancellationTokenSource.IsCancellationRequested)
-            {
-                return;
-            }
+            var isMatch = false;
+            var containsMatch = false;
 
-            if (resultSet.Count >= maxResults)
+            if (resultSet.Count < maxResults)
             {
-                cancellationTokenSource.Cancel();
-                return;
-            }
-
-            var result = matcher.IsMatch(node);
-            if (result != null)
-            {
-                resultSet.Add(result);
-            }
-        }
-
-        private static void MarkSearchResults(Build build, IEnumerable<BaseNode> searchResults)
-        {
-            var resultSet = new HashSet<BaseNode>(searchResults);
-            var ancestorNodes = new HashSet<BaseNode>();
-
-            foreach (var node in resultSet)
-            {
-                var current = (node as ParentedNode)?.Parent;
-                while (current != null && ancestorNodes.Add(current))
+                var result = matcher.IsMatch(node);
+                if (result != null)
                 {
-                    current = current.Parent;
+                    isMatch = true;
+                    resultSet.Add(result);
                 }
             }
 
-            build.VisitAllChildren<BaseNode>(node =>
+            switch (node)
             {
-                node.IsSearchResult = resultSet.Contains(node);
-                node.ContainsSearchResult = ancestorNodes.Contains(node);
-            });
+                case TreeNode treeNode:
+                {
+                    treeNode.IsSearchResult = isMatch;
+
+                    if (treeNode.HasChildren)
+                    {
+                        foreach (var child in treeNode.Children)
+                        {
+                            containsMatch |= Visit(child, matcher);
+                        }
+                    }
+
+                    treeNode.ContainsSearchResult = containsMatch;
+                    break;
+                }
+
+                case BaseNode baseNode:
+                {
+                    baseNode.IsSearchResult = isMatch;
+                    baseNode.ContainsSearchResult = false;
+                    break;
+                }
+            }
+
+            return isMatch || containsMatch;
         }
     }
 }
