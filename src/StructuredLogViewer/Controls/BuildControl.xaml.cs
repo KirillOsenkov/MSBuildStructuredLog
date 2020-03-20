@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -57,10 +58,10 @@ namespace StructuredLogViewer.Controls
 
             UpdateWatermark();
 
-            searchLogControl.ExecuteSearch = (searchText, maxResults) =>
+            searchLogControl.ExecuteSearch = (searchText, maxResults, cancellationToken) =>
             {
                 var search = new Search(Build, maxResults);
-                var results = search.FindNodes(searchText);
+                var results = search.FindNodes(searchText, cancellationToken);
                 return results;
             };
             searchLogControl.ResultsTreeBuilder = BuildResultTree;
@@ -455,12 +456,17 @@ Recent:
             debugItem.Visibility = canRun;
         }
 
-        private object FindInFiles(string searchText, int maxResults = int.MaxValue)
+        private object FindInFiles(string searchText, int maxResults, CancellationToken cancellationToken)
         {
             var results = new List<(string, IEnumerable<(int, string)>)>();
 
             foreach (var file in archiveFile.Files)
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return null;
+                }
+
                 var haystack = file.Value;
                 var resultsInFile = haystack.Find(searchText);
                 if (resultsInFile.Count > 0)

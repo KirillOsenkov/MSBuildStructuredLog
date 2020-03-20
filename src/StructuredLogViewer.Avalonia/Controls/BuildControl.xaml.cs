@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Language.Xml;
 using Avalonia.Controls;
@@ -67,10 +68,10 @@ namespace StructuredLogViewer.Avalonia.Controls
 
             UpdateWatermark();
 
-            searchLogControl.ExecuteSearch = (searchText, maxResults) =>
+            searchLogControl.ExecuteSearch = (searchText, maxResults, cancellationToken) =>
             {
                 var search = new Search(Build, maxResults);
-                var results = search.FindNodes(searchText);
+                var results = search.FindNodes(searchText, cancellationToken);
                 return results;
             };
             searchLogControl.ResultsTreeBuilder = BuildResultTree;
@@ -396,12 +397,17 @@ Recent:
             preprocessItem.IsVisible = node is IPreprocessable p && preprocessedFileManager.CanPreprocess(p);
         }
 
-        private object FindInFiles(string searchText, int maxResults = int.MaxValue)
+        private object FindInFiles(string searchText, int maxResults, CancellationToken cancellationToken)
         {
             var results = new List<(string, IEnumerable<(int, string)>)>();
 
             foreach (var file in archiveFile.Files)
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return null;
+                }
+
                 var haystack = file.Value;
                 var resultsInFile = haystack.Find(searchText);
                 if (resultsInFile.Count > 0)

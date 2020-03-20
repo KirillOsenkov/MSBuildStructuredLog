@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogViewer
@@ -11,18 +12,18 @@ namespace StructuredLogViewer
         private readonly int maxResults;
         private List<SearchResult> resultSet;
 
-        public Search(Build build, int maxResults = DefaultMaxResults)
+        public Search(Build build, int maxResults)
         {
             this.build = build;
             this.maxResults = maxResults;
         }
 
-        public IEnumerable<SearchResult> FindNodes(string query)
+        public IEnumerable<SearchResult> FindNodes(string query, CancellationToken cancellationToken)
         {
             var matcher = new NodeQueryMatcher(query, build.StringTable.Instances);
 
             resultSet = new List<SearchResult>();
-            Visit(build, matcher);
+            Visit(build, matcher, cancellationToken);
 
             return resultSet;
         }
@@ -36,10 +37,15 @@ namespace StructuredLogViewer
             });
         }
 
-        private bool Visit(object node, NodeQueryMatcher matcher)
+        private bool Visit(object node, NodeQueryMatcher matcher, CancellationToken cancellationToken)
         {
             var isMatch = false;
             var containsMatch = false;
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return false;
+            }
 
             if (resultSet.Count < maxResults)
             {
@@ -61,7 +67,7 @@ namespace StructuredLogViewer
                     {
                         foreach (var child in treeNode.Children)
                         {
-                            containsMatch |= Visit(child, matcher);
+                            containsMatch |= Visit(child, matcher, cancellationToken);
                         }
                     }
 
