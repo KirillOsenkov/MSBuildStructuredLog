@@ -76,6 +76,18 @@
             </StackPanel>
         </TreeDataTemplate>
 
+        <TreeDataTemplate DataType="{x:Type l:ProjectEvaluation}"
+                          ItemsSource="{Binding Children}">
+            <StackPanel Orientation="Horizontal"
+                        Name="projectRoot"
+                        Opacity="{Binding IsLowRelevance, Converter={StaticResource RelevanceConverter}}">
+                <DrawingPresenter Classes="projectNodeIcon"
+                                  Drawing="{Binding ProjectFileExtension, Converter={StaticResource ProjectIconConverter}}" />
+                <TextBlock Text="{Binding Name}"
+                           Margin="0,1,0,0" />
+            </StackPanel>
+        </TreeDataTemplate>
+
         <TreeDataTemplate DataType="{x:Type l:Target}"
                           ItemsSource="{Binding Children}">
             <StackPanel Orientation="Horizontal"
@@ -268,6 +280,19 @@
                            Margin="0,0,6,0" />
                 <TextBlock x:Name="reason"
                            Text="{Binding Text}" />
+            </StackPanel>
+        </TreeDataTemplate>
+
+        <TreeDataTemplate DataType="{x:Type l:TimedNode}"
+                          ItemsSource="{Binding Children}">
+            <StackPanel Orientation="Horizontal">
+                <Rectangle Name="icon"
+                           Classes="nodeIcon"
+                           Stroke="{StaticResource FolderStroke}"
+                           Fill="{StaticResource ClosedFolderBrush}" />
+                <TextBlock Name="nameText"
+                           Text="{Binding Name}"
+                           Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={x:Static Brushes.DarkGoldenrod}}" />
             </StackPanel>
         </TreeDataTemplate>
         
