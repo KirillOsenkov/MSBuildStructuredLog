@@ -445,10 +445,11 @@
 
   <DataTemplate DataType="{x:Type core:ButtonNode}">
     <StackPanel Orientation="Horizontal">
-      <Button x:Name="button" 
-              Content="{Binding Text}" 
-              Command="{Binding Command}" 
-              Padding="4,2,4,2"/>
+      <Button x:Name="button"
+              Content="{Binding Text}"
+              Command="{Binding Command}"
+              IsEnabled="{Binding IsEnabled}"
+              Padding="4,2,4,2" />
     </StackPanel>
   </DataTemplate>
 

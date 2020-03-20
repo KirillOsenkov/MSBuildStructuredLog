@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -180,7 +180,6 @@ namespace StructuredLogViewer.Controls
 
                 filesTree.TextChanged += FilesTree_SearchTextChanged;
 
-                var filesNote = new TextBlock();
                 var text =
 @"This log contains the full text of projects and imported files used during the build.
 You can use the 'Files' tab in the bottom left to view these files and the 'Find in Files' tab for full-text search.
@@ -1244,11 +1243,18 @@ Recent:
 
             if (moreAvailable)
             {
-                root.Children.Add(new ButtonNode
+                var showAllButton = new ButtonNode
                 {
-                    Text = $"Showing first {results.Count} results. Show all results instead (slow).",
-                    OnClick = () => searchLogControl.TriggerSearch(searchLogControl.SearchText, int.MaxValue)
-                });
+                    Text = $"Showing first {results.Count} results. Show all results instead (slow)."
+                };
+
+                showAllButton.OnClick = () =>
+                {
+                    showAllButton.IsEnabled = false;
+                    searchLogControl.TriggerSearch(searchLogControl.SearchText, int.MaxValue);
+                };
+
+                root.Children.Add(showAllButton);
             }
 
             root.Children.Add(new Message
