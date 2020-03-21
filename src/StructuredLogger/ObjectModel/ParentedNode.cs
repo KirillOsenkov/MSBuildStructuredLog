@@ -5,6 +5,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class ParentedNode : BaseNode
     {
+        public virtual string TypeName => nameof(ParentedNode);
+
         private TreeNode parent;
         public TreeNode Parent
         {

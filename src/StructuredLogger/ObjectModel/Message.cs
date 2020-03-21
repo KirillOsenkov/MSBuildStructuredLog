@@ -10,6 +10,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         public DateTime Timestamp { get { return DateTime.MinValue; } set { } }
 
+        public override string TypeName => nameof(Message);
+
         public override string LookupKey => Text;
 
         public bool IsLowRelevance

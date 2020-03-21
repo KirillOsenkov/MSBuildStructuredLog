@@ -25,9 +25,8 @@
             }
         }
 
-        public override string ToString()
-        {
-            return Title;
-        }
+        public override string TypeName => nameof(Task);
+
+        public override string ToString() => Title;
     }
 }

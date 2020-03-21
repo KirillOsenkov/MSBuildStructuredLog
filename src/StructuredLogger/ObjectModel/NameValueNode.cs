@@ -8,6 +8,7 @@
         public string ShortenedValue => TextUtilities.ShortenValue(Value);
         public bool IsValueShortened => Value != ShortenedValue;
 
+        public override string TypeName => nameof(NameValueNode);
         public override string ToString() => Name + " = " + Value;
         public bool IsVisible { get { return true; } set { } }
         public bool IsExpanded { get { return true; } set { } }

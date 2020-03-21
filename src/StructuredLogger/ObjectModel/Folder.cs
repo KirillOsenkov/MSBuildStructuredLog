@@ -7,5 +7,7 @@
             get => HasFlag(NodeFlags.LowRelevance) && !IsSelected;
             set => SetFlag(NodeFlags.LowRelevance, value);
         }
+
+        public override string TypeName => nameof(Folder);
     }
 }

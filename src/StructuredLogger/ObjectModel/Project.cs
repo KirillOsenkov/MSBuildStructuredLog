@@ -34,6 +34,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private readonly ConcurrentDictionary<string, Target> _targetNameToTargetMap = new ConcurrentDictionary<string, Target>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<int, Target> targetsById = new Dictionary<int, Target>();
 
+        public override string TypeName => nameof(Project);
+
         public override string ToString()
         {
             var sb = new StringBuilder();

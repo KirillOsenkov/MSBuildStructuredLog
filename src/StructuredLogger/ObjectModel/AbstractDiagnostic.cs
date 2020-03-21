@@ -16,6 +16,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         string IHasSourceFile.SourceFilePath => File;
 
+        public override string TypeName => nameof(AbstractDiagnostic);
+
         public override string ToString()
         {
             File = File ?? "";

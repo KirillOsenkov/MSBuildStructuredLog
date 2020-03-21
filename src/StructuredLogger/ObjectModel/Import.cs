@@ -27,6 +27,8 @@
 
         public string Location => $" at ({Line};{Column})";
 
+        public override string TypeName => nameof(Import);
+
         public bool IsLowRelevance
         {
             get => HasFlag(NodeFlags.LowRelevance) && !IsSelected;

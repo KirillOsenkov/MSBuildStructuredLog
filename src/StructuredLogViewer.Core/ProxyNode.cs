@@ -60,6 +60,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return result;
         }
 
+        public override string TypeName => nameof(ProxyNode);
+
         public override string ToString() => Original.ToString();
     }
 }

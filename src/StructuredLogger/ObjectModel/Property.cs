@@ -2,5 +2,6 @@
 {
     public class Property : NameValueNode
     {
+        public override string TypeName => nameof(Property);
     }
 }

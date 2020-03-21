@@ -2,5 +2,6 @@
 {
     public class Error : AbstractDiagnostic
     {
+        public override string TypeName => nameof(Error);
     }
 }

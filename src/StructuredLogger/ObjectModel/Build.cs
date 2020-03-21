@@ -15,6 +15,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public string LogFilePath { get; set; }
         public byte[] SourceFilesArchive { get; set; }
 
+        public override string TypeName => nameof(Build);
+
         public override string ToString() => $"Build {(Succeeded ? "succeeded" : "failed")}. Duration: {this.DurationText}";
 
         public TreeNode FindDescendant(int index)

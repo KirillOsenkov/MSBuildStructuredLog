@@ -13,6 +13,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public int? LineNumber { get; set; }
         public string NumberOfHits => ProfiledLocation.NumberOfHits > 0 ? ProfiledLocation.NumberOfHits.ToString() : "";
 
+        public override string TypeName => nameof(EvaluationProfileEntry);
+
         public ProfiledLocation ProfiledLocation { get; private set; }
 
         public void AddEntry(ProfiledLocation result)

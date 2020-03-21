@@ -12,7 +12,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public string SourceFilePath { get; set; }
         public string ParentTarget { get; set; }
         public TargetBuiltReason TargetBuiltReason { get; set; }
-        
+
+        public override string TypeName => nameof(Target);
+
         public string ParentTargetTooltip
         {
             get

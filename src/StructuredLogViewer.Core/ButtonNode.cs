@@ -17,5 +17,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         protected override bool IsSelectable => false;
+
+        public override string TypeName => nameof(ButtonNode);
     }
 }

@@ -2,6 +2,8 @@
 {
     public class ManagedCompilerTask : Task
     {
+        public override string TypeName => nameof(ManagedCompilerTask);
+
         private CompilationWrites? compilationWrites;
         public CompilationWrites? CompilationWrites
         {

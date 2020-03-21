@@ -14,6 +14,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             ? Path.GetExtension(ProjectFile).ToLowerInvariant()
             : "";
 
+        public override string TypeName => nameof(ProjectEvaluation);
+
         public bool IsLowRelevance
         {
             get => HasFlag(NodeFlags.LowRelevance) && !IsSelected;

@@ -2,5 +2,6 @@
 {
     public class RemoveItem : NamedNode
     {
+        public override string TypeName => nameof(RemoveItem);
     }
 }

@@ -7,6 +7,7 @@
         public virtual string LookupKey => Name;
         string IHasTitle.Title => GetTitle();
         protected virtual string GetTitle() => Name;
+        public override string TypeName => nameof(NamedNode);
 
         public override string ToString() => Name;
     }

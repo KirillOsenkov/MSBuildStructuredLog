@@ -2,5 +2,6 @@
 {
     public class AddItem : NamedNode
     {
+        public override string TypeName => nameof(AddItem);
     }
 }

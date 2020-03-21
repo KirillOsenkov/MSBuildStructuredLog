@@ -19,6 +19,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public string DurationText => TextUtilities.DisplayDuration(Duration);
 
+        public override string TypeName => nameof(TimedNode);
+
         public override string ToolTip
         {
             get

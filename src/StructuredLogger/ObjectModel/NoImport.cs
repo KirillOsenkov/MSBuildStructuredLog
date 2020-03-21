@@ -12,6 +12,8 @@
             IsLowRelevance = true;
         }
 
+        public override string TypeName => nameof(NoImport);
+
         public NoImport(
             string projectFilePath,
             string importedFileSpec,

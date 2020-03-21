@@ -2,5 +2,6 @@
 {
     public class FscTask : ManagedCompilerTask
     {
+        public override string TypeName => nameof(FscTask);
     }
 }

@@ -5,6 +5,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class CopyTask : Task
     {
+        public override string TypeName => nameof(CopyTask);
+
         private IEnumerable<FileCopyOperation> fileCopyOperations;
         public IEnumerable<FileCopyOperation> FileCopyOperations => fileCopyOperations ?? (fileCopyOperations = GetFileCopyOperations());
 

@@ -2,5 +2,6 @@
 {
     public class Metadata : NameValueNode
     {
+        public override string TypeName => nameof(Metadata);
     }
 }
