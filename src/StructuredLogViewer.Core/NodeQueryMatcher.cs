@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Microsoft.Build.Logging.StructuredLogger;
@@ -15,6 +16,7 @@ namespace StructuredLogViewer
         public HashSet<string> MatchesInStrings { get; private set; }
         private NodeQueryMatcher UnderMatcher { get; set; }
         public bool IncludeDuration { get; set; }
+        public TimeSpan PrecalculationDuration { get; set; }
 
         // avoid allocating this for every node
         private readonly List<string> searchFields = new List<string>(6);
@@ -75,6 +77,23 @@ namespace StructuredLogViewer
         {
             MatchesInStrings = new HashSet<string>();
 
+            var sw = Stopwatch.StartNew();
+
+#if true
+            System.Threading.Tasks.Parallel.ForEach(stringTable, stringInstance =>
+            {
+                foreach (var word in Words)
+                {
+                    if (stringInstance.IndexOf(word, StringComparison.OrdinalIgnoreCase) != -1)
+                    {
+                        lock (MatchesInStrings)
+                        {
+                            MatchesInStrings.Add(stringInstance);
+                        }
+                    }
+                }
+            });
+#else
             foreach (var stringInstance in stringTable)
             {
                 foreach (var word in Words)
@@ -85,6 +104,10 @@ namespace StructuredLogViewer
                     }
                 }
             }
+#endif
+
+            var elapsed = sw.Elapsed;
+            PrecalculationDuration = elapsed;
         }
 
         private static List<string> ParseIntoWords(string query)
