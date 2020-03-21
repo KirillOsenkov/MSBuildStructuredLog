@@ -108,5 +108,28 @@ namespace StructuredLogger.Tests
         {
             return "\"" + text.Replace("\r", "\\r").Replace("\n", "\\n") + "\"";
         }
+
+        [Theory]
+        [InlineData("abcdef", "cd f", "cd", "f")]
+        [InlineData("abcdef", "cde", "cd", "de")]
+        [InlineData("abcdef", "ab", "a", "b")]
+        [InlineData("abcdef", "ab", "ab", "b")]
+        [InlineData("abcdef", "ab", "ab", "a")]
+        [InlineData("abcdef", "ab", "ab", "ab")]
+        public void TestGetHighlightedSpansInText(string haystack, string expected, params string[] terms)
+        {
+            var spans = TextUtilities.GetHighlightedSpansInText(haystack, terms);
+            int index = -1;
+            foreach (var span in spans)
+            {
+                Assert.True(span.Start >= 0);
+                Assert.True(span.End <= haystack.Length);
+                Assert.True(span.Start > index);
+                index = span.End;
+            }
+
+            var actual = string.Join(" ", spans.Select(s => haystack.Substring(s.Start, s.Length)));
+            Assert.Equal(expected, actual);
+        }
     }
 }

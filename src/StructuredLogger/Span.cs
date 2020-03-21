@@ -30,5 +30,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             return new Span(Start + length, Length - length);
         }
+
+        public bool Contains(int position)
+        {
+            return position >= Start && position <= End;
+        }
     }
 }

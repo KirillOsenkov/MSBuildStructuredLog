@@ -369,5 +369,64 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             return sb.ToString();
         }
+
+        public static IReadOnlyList<Span> GetHighlightedSpansInText(string text, IEnumerable<string> searchTerms)
+        {
+            var spans = new List<Span>();
+
+            foreach (var searchTerm in searchTerms)
+            {
+                int index = 0;
+                while (true)
+                {
+                    index = text.IndexOf(searchTerm, index, StringComparison.OrdinalIgnoreCase);
+                    if (index == -1)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        spans.Add(new Span(index, searchTerm.Length));
+                        index += searchTerm.Length;
+                    }
+                }
+            }
+
+            return NormalizeSpans(spans);
+        }
+
+        public static IReadOnlyList<Span> NormalizeSpans(IReadOnlyList<Span> spans)
+        {
+            if (spans == null || spans.Count == 0)
+            {
+                return spans;
+            }
+
+            var final = new List<Span>();
+
+            var sorted = spans.OrderBy(s => s.Start).ThenByDescending(s => s.Length);
+
+            Span current = sorted.First();
+
+            foreach (var span in sorted)
+            {
+                if (current.Contains(span.Start))
+                {
+                    if (span.End > current.End)
+                    {
+                        current.Length = span.End - current.Start;
+                    }
+                }
+                else
+                {
+                    final.Add(current);
+                    current = span;
+                }
+            }
+
+            final.Add(current);
+
+            return final;
+        }
     }
 }
