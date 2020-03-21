@@ -1,51 +1,91 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading;
 using TPLTask = System.Threading.Tasks.Task;
 
 namespace StructuredLogViewer
 {
-    public class TypingConcurrentOperation
+    public delegate object ExecuteSearchFunc(string query, int maxResults, CancellationToken cancellationToken);
+
+    public class TypingConcurrentOperation : IDisposable
     {
-        public Func<string, int, object> ExecuteSearch;
+        public ExecuteSearchFunc ExecuteSearch;
         public event Action<object, bool> DisplayResults;
         public event Action<string, object, TimeSpan> SearchComplete;
 
         public const int ThrottlingDelayMilliseconds = 300;
 
-        public void Reset()
+        private readonly Timer timer;
+        private string searchText;
+        private int maxResults;
+
+        private CancellationTokenSource currentCancellationTokenSource;
+
+        public TypingConcurrentOperation()
         {
-            latestSearch = null;
+            timer = new Timer(OnTimer);
         }
 
-        private string latestSearch;
+        public void Dispose()
+        {
+            timer.Dispose();
+        }
 
-        public void TextChanged(string searchText, int maxResults = Search.DefaultMaxResults)
+        public void Reset()
+        {
+            Interlocked.Exchange(ref currentCancellationTokenSource, null)?.Cancel();
+            timer.Change(Timeout.Infinite, Timeout.Infinite);
+        }
+
+        public void TextChanged(string searchText, int maxResults)
         {
             if (ExecuteSearch == null)
             {
+                Reset();
                 return;
             }
 
-            latestSearch = searchText;
-            TPLTask.Delay(ThrottlingDelayMilliseconds).ContinueWith(_ =>
-            {
-                if (latestSearch == searchText)
-                {
-                    StartOperation(searchText, maxResults);
-                }
-            });
+            Interlocked.Exchange(ref currentCancellationTokenSource, null)?.Cancel();
+
+            this.searchText = searchText;
+            this.maxResults = maxResults;
+
+            timer.Change(ThrottlingDelayMilliseconds, Timeout.Infinite);
         }
 
-        private void StartOperation(string searchText, int maxResults = Search.DefaultMaxResults)
+        public void TriggerSearch(string searchText, int maxResults)
         {
-            Stopwatch sw = Stopwatch.StartNew();
-            var results = ExecuteSearch(searchText, maxResults);
-            bool moreAvailable = results is System.Collections.ICollection collection && collection.Count >= maxResults;
+            Reset();
+
+            this.searchText = searchText;
+            this.maxResults = maxResults;
+
+            TPLTask.Run(StartOperation);
+        }
+
+        private void OnTimer(object state)
+        {
+            TPLTask.Run(StartOperation);
+        }
+
+        private void StartOperation()
+        {
+            var cts = new CancellationTokenSource();
+            Interlocked.Exchange(ref currentCancellationTokenSource, cts)?.Cancel();
+
+            var localSearchText = searchText;
+            var localMaxResults = maxResults;
+
+            var sw = Stopwatch.StartNew();
+            var results = ExecuteSearch(localSearchText, localMaxResults, cts.Token);
             var elapsed = sw.Elapsed;
-            if (latestSearch == searchText)
+
+            var moreAvailable = results is System.Collections.ICollection collection && collection.Count >= localMaxResults;
+
+            if (!cts.Token.IsCancellationRequested)
             {
                 DisplayResults?.Invoke(results, moreAvailable);
-                SearchComplete?.Invoke(searchText, results, elapsed);
+                SearchComplete?.Invoke(localSearchText, results, elapsed);
             }
         }
     }

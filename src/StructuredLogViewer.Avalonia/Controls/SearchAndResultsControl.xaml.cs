@@ -47,7 +47,7 @@ namespace StructuredLogViewer.Avalonia.Controls
         public Func<object, bool, IEnumerable> ResultsTreeBuilder { get; set; }
         public event Action WatermarkDisplayed;
 
-        public Func<string, int, object> ExecuteSearch
+        public ExecuteSearchFunc ExecuteSearch
         {
             get => typingConcurrentOperation.ExecuteSearch;
             set => typingConcurrentOperation.ExecuteSearch = value;
@@ -55,7 +55,7 @@ namespace StructuredLogViewer.Avalonia.Controls
         
         public void TriggerSearch(string text, int maxResults)
         {
-            typingConcurrentOperation.TextChanged(text, maxResults);
+            typingConcurrentOperation.TriggerSearch(text, maxResults);
         }
         
         private void searchTextBox_TextChanged(object sender, AvaloniaPropertyChangedEventArgs e)
@@ -70,7 +70,7 @@ namespace StructuredLogViewer.Avalonia.Controls
                 return;
             }
 
-            typingConcurrentOperation.TextChanged(searchText);
+            typingConcurrentOperation.TextChanged(searchText, Search.DefaultMaxResults);
         }
 
         private void DisplaySearchResults(object results, bool moreAvailable = false)

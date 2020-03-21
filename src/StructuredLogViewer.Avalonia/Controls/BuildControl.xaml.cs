@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Language.Xml;
 using Avalonia.Controls;
@@ -67,10 +68,10 @@ namespace StructuredLogViewer.Avalonia.Controls
 
             UpdateWatermark();
 
-            searchLogControl.ExecuteSearch = (searchText, maxResults) =>
+            searchLogControl.ExecuteSearch = (searchText, maxResults, cancellationToken) =>
             {
                 var search = new Search(Build, maxResults);
-                var results = search.FindNodes(searchText);
+                var results = search.FindNodes(searchText, cancellationToken);
                 return results;
             };
             searchLogControl.ResultsTreeBuilder = BuildResultTree;
@@ -170,7 +171,6 @@ namespace StructuredLogViewer.Avalonia.Controls
                 filesTree.Styles.Add(treeViewItemStyle);
                 RegisterTreeViewHandlers(filesTree);
 
-                var filesNote = new TextBlock();
                 var text =
 @"This log contains the full text of projects and imported files used during the build.
 You can use the 'Files' tab in the bottom left to view these files and the 'Find in Files' tab for full-text search.
@@ -396,12 +396,17 @@ Recent:
             preprocessItem.IsVisible = node is IPreprocessable p && preprocessedFileManager.CanPreprocess(p);
         }
 
-        private object FindInFiles(string searchText, int maxResults = int.MaxValue)
+        private object FindInFiles(string searchText, int maxResults, CancellationToken cancellationToken)
         {
             var results = new List<(string, IEnumerable<(int, string)>)>();
 
             foreach (var file in archiveFile.Files)
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return null;
+                }
+
                 var haystack = file.Value;
                 var resultsInFile = haystack.Find(searchText);
                 if (resultsInFile.Count > 0)
@@ -953,11 +958,18 @@ Recent:
             
             if (moreAvailable)
             {
-                root.Children.Add(new ButtonNode
+                var showAllButton = new ButtonNode
                 {
-                    Text = $"Showing first {results.Count} results. Show all results instead (slow).",
-                    OnClick = () => searchLogControl.TriggerSearch(searchLogControl.SearchText, int.MaxValue)
-                });
+                    Text = $"Showing first {results.Count} results. Show all results instead (slow)."
+                };
+
+                showAllButton.OnClick = () =>
+                {
+                    showAllButton.IsEnabled = false;
+                    searchLogControl.TriggerSearch(searchLogControl.SearchText, int.MaxValue);
+                };
+
+                root.Children.Add(showAllButton);
             }
             
             root.Children.Add(new Message

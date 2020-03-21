@@ -16,11 +16,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public bool IsSelected
         {
-            get
-            {
-                return selectedNode == this;
-            }
-
+            get => selectedNode == this;
             set
             {
                 if (IsSelected == value)
@@ -29,12 +25,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     return;
                 }
 
-                selectedNode = value ? this : null;
+                selectedNode = value && IsSelectable ? this : null;
 
                 RaisePropertyChanged();
                 RaisePropertyChanged("IsLowRelevance");
             }
         }
+
+        protected virtual bool IsSelectable => true;
 
         public bool IsSearchResult
         {
