@@ -173,7 +173,7 @@ namespace StructuredLogViewer
             searchFields.Clear();
 
             // in case they want to narrow down the search such as "Build target" or "Copy task"
-            var typeName = node.GetType().Name;
+            var typeName = GetNodeTypeName(node);
             searchFields.Add(typeName);
 
             // for tasks derived from Task $task should still work
@@ -225,11 +225,38 @@ namespace StructuredLogViewer
         }
 
         /// <summary>
+        /// Type.Name is very expensive so cache it
+        /// </summary>
+        private static readonly Dictionary<Type, string> typeNameCache = new Dictionary<Type, string>();
+
+        private static string GetNodeTypeName(object node)
+        {
+            var type = node.GetType();
+            if (typeNameCache.TryGetValue(type, out var name))
+            {
+                return name;
+            }
+
+            name = type.Name;
+            lock (typeNameCache)
+            {
+                typeNameCache[type] = name;
+            }
+
+            return name;
+        }
+
+        /// <summary>
         ///  Each of the query words must be found in at least one field ∀w ∃f
         /// </summary>
         public SearchResult IsMatch(object node)
         {
             SearchResult result = null;
+
+            if (!(node is ParentedNode))
+            {
+                return null;
+            }
 
             if (NodeIndex > -1)
             {
