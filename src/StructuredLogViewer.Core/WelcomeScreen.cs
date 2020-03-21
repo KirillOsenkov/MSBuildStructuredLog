@@ -108,5 +108,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             get => SettingsService.ParentAllTargetsUnderProject;
             set => SettingsService.ParentAllTargetsUnderProject = value;
         }
+
+        public bool MarkResultsInTree
+        {
+            get => SettingsService.MarkResultsInTree;
+            set => SettingsService.MarkResultsInTree = value;
+        }
     }
 }

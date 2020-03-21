@@ -722,6 +722,10 @@
                       Margin="10,0,10,10"
                       IsChecked="{Binding ParentAllTargetsUnderProject}" 
                       ToolTip="Linearize/flatten all targets under the project instead of parenting targets under their dependency target"/>
+            <CheckBox Content="Mark search results with a dot in the main tree"
+                      Margin="10,0,10,10"
+                      IsChecked="{Binding MarkResultsInTree}" 
+                      ToolTip="Mark tree nodes that appear in search results with a dot"/>
           </StackPanel>
         </Grid>
       </Grid>

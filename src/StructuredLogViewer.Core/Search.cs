@@ -11,11 +11,13 @@ namespace StructuredLogViewer
         private readonly Build build;
         private readonly int maxResults;
         private List<SearchResult> resultSet;
+        private bool markResultsInTree = false;
 
         public Search(Build build, int maxResults)
         {
             this.build = build;
             this.maxResults = maxResults;
+            this.markResultsInTree = SettingsService.MarkResultsInTree;
         }
 
         public IEnumerable<SearchResult> FindNodes(string query, CancellationToken cancellationToken)
@@ -30,6 +32,11 @@ namespace StructuredLogViewer
 
         public static void ClearSearchResults(Build build)
         {
+            if (!SettingsService.MarkResultsInTree)
+            {
+                return;
+            }
+
             build.VisitAllChildren<BaseNode>(node =>
             {
                 node.IsSearchResult = false;
@@ -56,31 +63,26 @@ namespace StructuredLogViewer
                     resultSet.Add(result);
                 }
             }
-
-            switch (node)
+            else if (!markResultsInTree)
             {
-                case TreeNode treeNode:
+                // we save a lot of time if we don't have to visit the entire tree to mark results
+                // after we've found maximum allowed results
+                return false;
+            }
+
+            if (node is TreeNode treeNode && treeNode.HasChildren)
+            {
+                foreach (var child in treeNode.Children)
                 {
-                    treeNode.IsSearchResult = isMatch;
-
-                    if (treeNode.HasChildren)
-                    {
-                        foreach (var child in treeNode.Children)
-                        {
-                            containsMatch |= Visit(child, matcher, cancellationToken);
-                        }
-                    }
-
-                    treeNode.ContainsSearchResult = containsMatch;
-                    break;
+                    containsMatch |= Visit(child, matcher, cancellationToken);
                 }
+            }
 
-                case BaseNode baseNode:
-                {
-                    baseNode.IsSearchResult = isMatch;
-                    baseNode.ContainsSearchResult = false;
-                    break;
-                }
+            // setting these flags on each node is expensive so do it only if the feature is enabled
+            if (markResultsInTree && node is BaseNode baseNode)
+            {
+                baseNode.IsSearchResult = isMatch;
+                baseNode.ContainsSearchResult = containsMatch;
             }
 
             return isMatch || containsMatch;

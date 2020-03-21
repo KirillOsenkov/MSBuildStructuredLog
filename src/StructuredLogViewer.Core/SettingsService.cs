@@ -326,6 +326,28 @@ namespace StructuredLogViewer
             }
         }
 
+        private static bool markResultsInTree = false;
+
+        public static bool MarkResultsInTree
+        {
+            get
+            {
+                EnsureSettingsRead();
+                return markResultsInTree;
+            }
+
+            set
+            {
+                if (markResultsInTree == value)
+                {
+                    return;
+                }
+
+                markResultsInTree = value;
+                SaveSettings();
+            }
+        }
+
         private static void EnsureSettingsRead()
         {
             if (!settingsRead)
@@ -337,13 +359,14 @@ namespace StructuredLogViewer
 
         const string Virtualization = "Virtualization=";
         const string ParentAllTargetsUnderProjectSetting = nameof(ParentAllTargetsUnderProject) + "=";
+        const string MarkResultsInTreeSetting = "MarkResultsInTree=";
 
         private static void SaveSettings()
         {
             var sb = new StringBuilder();
             sb.AppendLine(Virtualization + enableTreeViewVirtualization.ToString());
             sb.AppendLine(ParentAllTargetsUnderProjectSetting + parentAllTargetsUnderProject.ToString());
-
+            sb.AppendLine(MarkResultsInTreeSetting + markResultsInTree.ToString());
 
             using (SingleGlobalInstance.Acquire(Path.GetFileName(settingsFilePath)))
             {
@@ -377,6 +400,14 @@ namespace StructuredLogViewer
                         if (bool.TryParse(value, out bool boolValue))
                         {
                             parentAllTargetsUnderProject = boolValue;
+                        }
+                    }
+                    else if (line.StartsWith(MarkResultsInTreeSetting))
+                    {
+                        var value = line.Substring(MarkResultsInTreeSetting.Length);
+                        if (bool.TryParse(value, out bool boolValue))
+                        {
+                            markResultsInTree = boolValue;
                         }
                     }
                 }
