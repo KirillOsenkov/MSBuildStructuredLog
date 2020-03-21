@@ -74,8 +74,11 @@ namespace StructuredLogViewer.Controls
         {
             if ((content == null || !content.OfType<object>().Any()) && WatermarkContent != null)
             {
-                watermark.Visibility = Visibility.Visible;
-                WatermarkDisplayed?.Invoke();
+                if (watermark.Visibility != Visibility.Visible)
+                {
+                    watermark.Visibility = Visibility.Visible;
+                    WatermarkDisplayed?.Invoke();
+                }
             }
             else
             {
