@@ -76,27 +76,30 @@ namespace StructuredLogViewer
 
             if (node is TreeNode treeNode && treeNode.HasChildren)
             {
+                var children = treeNode.Children;
                 if (node is Project)
                 {
-                    var tasks = new List<System.Threading.Tasks.Task<List<SearchResult>>>();
+                    var tasks = new System.Threading.Tasks.Task<List<SearchResult>>[children.Count];
 
-                    foreach (var child in treeNode.Children)
+                    for (int i = 0; i < children.Count; i++)
                     {
+                        var child = children[i];
                         var task = TPLTask.Run(() =>
                         {
                             var list = new List<SearchResult>();
                             Visit(child, matcher, list, cancellationToken);
                             return list;
                         });
-                        tasks.Add(task);
+                        tasks[i] = task;
                     }
 
-                    TPLTask.WaitAll(tasks.ToArray());
+                    TPLTask.WaitAll(tasks);
 
                     lock (results)
                     {
-                        foreach (var task in tasks)
+                        for (int i = 0; i < tasks.Length; i++)
                         {
+                            var task = tasks[i];
                             var subList = task.Result;
                             results.AddRange(subList);
                             containsMatch |= subList.Count > 0;
@@ -105,8 +108,9 @@ namespace StructuredLogViewer
                 }
                 else
                 {
-                    foreach (var child in treeNode.Children)
+                    for (int i = 0; i < children.Count; i++)
                     {
+                        var child = children[i];
                         containsMatch |= Visit(child, matcher, results, cancellationToken);
                     }
                 }
