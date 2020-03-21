@@ -77,8 +77,11 @@ namespace StructuredLogViewer.Avalonia.Controls
         {
             if (results == null)
             {
-                watermark.IsVisible = true;
-                WatermarkDisplayed?.Invoke();
+                if (!watermark.IsVisible)
+                {
+                    watermark.IsVisible = true;
+                    WatermarkDisplayed?.Invoke();
+                }
             }
             else
             {
