@@ -84,8 +84,8 @@ namespace StructuredLogViewer
 
             if (!cts.Token.IsCancellationRequested)
             {
-                DisplayResults?.Invoke(results, moreAvailable);
                 SearchComplete?.Invoke(localSearchText, results, elapsed);
+                DisplayResults?.Invoke(results, moreAvailable);
             }
         }
     }
