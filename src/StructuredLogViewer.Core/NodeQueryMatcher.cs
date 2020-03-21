@@ -19,7 +19,8 @@ namespace StructuredLogViewer
         public TimeSpan PrecalculationDuration { get; set; }
 
         // avoid allocating this for every node
-        private readonly List<string> searchFields = new List<string>(6);
+        [ThreadStatic]
+        private static List<string> searchFields;
 
         private static readonly char[] space = { ' ' };
 
@@ -170,7 +171,14 @@ namespace StructuredLogViewer
 
         private void PopulateSearchFields(ParentedNode node)
         {
-            searchFields.Clear();
+            if (searchFields == null)
+            {
+                searchFields = new List<string>(6);
+            }
+            else
+            {
+                searchFields.Clear();
+            }
 
             // in case they want to narrow down the search such as "Build target" or "Copy task"
             var typeName = node.TypeName;

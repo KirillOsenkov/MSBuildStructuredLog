@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
+using TPLTask = System.Threading.Tasks.Task;
 
 namespace StructuredLogViewer
 {
@@ -10,7 +11,7 @@ namespace StructuredLogViewer
 
         private readonly Build build;
         private readonly int maxResults;
-        private List<SearchResult> resultSet;
+        private int resultCount;
         private bool markResultsInTree = false;
 
         public Search(Build build, int maxResults)
@@ -24,9 +25,8 @@ namespace StructuredLogViewer
         {
             var matcher = new NodeQueryMatcher(query, build.StringTable.Instances);
 
-            resultSet = new List<SearchResult>();
-            Visit(build, matcher, cancellationToken);
-
+            var resultSet = new List<SearchResult>();
+            Visit(build, matcher, resultSet, cancellationToken);
             return resultSet;
         }
 
@@ -44,7 +44,7 @@ namespace StructuredLogViewer
             });
         }
 
-        private bool Visit(object node, NodeQueryMatcher matcher, CancellationToken cancellationToken)
+        private bool Visit(object node, NodeQueryMatcher matcher, List<SearchResult> results, CancellationToken cancellationToken)
         {
             var isMatch = false;
             var containsMatch = false;
@@ -54,13 +54,17 @@ namespace StructuredLogViewer
                 return false;
             }
 
-            if (resultSet.Count < maxResults)
+            if (resultCount < maxResults)
             {
                 var result = matcher.IsMatch(node);
                 if (result != null)
                 {
                     isMatch = true;
-                    resultSet.Add(result);
+                    lock (results)
+                    {
+                        results.Add(result);
+                        resultCount++;
+                    }
                 }
             }
             else if (!markResultsInTree)
@@ -72,9 +76,39 @@ namespace StructuredLogViewer
 
             if (node is TreeNode treeNode && treeNode.HasChildren)
             {
-                foreach (var child in treeNode.Children)
+                if (node is Project)
                 {
-                    containsMatch |= Visit(child, matcher, cancellationToken);
+                    var tasks = new List<System.Threading.Tasks.Task<List<SearchResult>>>();
+
+                    foreach (var child in treeNode.Children)
+                    {
+                        var task = TPLTask.Run(() =>
+                        {
+                            var list = new List<SearchResult>();
+                            Visit(child, matcher, list, cancellationToken);
+                            return list;
+                        });
+                        tasks.Add(task);
+                    }
+
+                    TPLTask.WaitAll(tasks.ToArray());
+
+                    lock (results)
+                    {
+                        foreach (var task in tasks)
+                        {
+                            var subList = task.Result;
+                            results.AddRange(subList);
+                            containsMatch |= subList.Count > 0;
+                        }
+                    }
+                }
+                else
+                {
+                    foreach (var child in treeNode.Children)
+                    {
+                        containsMatch |= Visit(child, matcher, results, cancellationToken);
+                    }
                 }
             }
 
