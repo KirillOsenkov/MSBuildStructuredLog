@@ -76,7 +76,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             if (result.Duration != default)
             {
-                Highlights.Add(new HighlightedText { Text = TextUtilities.DisplayDuration(result.Duration) });
+                Highlights.Add(new HighlightedText { Text = " " + TextUtilities.DisplayDuration(result.Duration) });
             }
         }
 
