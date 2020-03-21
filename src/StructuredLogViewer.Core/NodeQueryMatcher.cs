@@ -13,7 +13,7 @@ namespace StructuredLogViewer
         public List<string> Words { get; private set; }
         public string TypeKeyword { get; private set; }
         public int NodeIndex { get; private set; } = -1;
-        public HashSet<string> MatchesInStrings { get; private set; }
+        private HashSet<string>[] MatchesInStrings { get; set; }
         private NodeQueryMatcher UnderMatcher { get; set; }
         public bool IncludeDuration { get; set; }
         public TimeSpan PrecalculationDuration { get; set; }
@@ -76,35 +76,56 @@ namespace StructuredLogViewer
 
         private void PrecomputeMatchesInStrings(IEnumerable<string> stringTable)
         {
-            MatchesInStrings = new HashSet<string>();
+            int wordCount = Words.Count;
+            MatchesInStrings = new HashSet<string>[wordCount];
+            var wordTasks = new System.Threading.Tasks.Task[wordCount];
 
             var sw = Stopwatch.StartNew();
 
-#if true
+            for (int i = 0; i < Words.Count; i++)
+            {
+                MatchesInStrings[i] = new HashSet<string>();
+            }
+
+#if false
+            for (int i = 0; i < Words.Count; i++)
+            {
+                var word = Words[i];
+                var matches = MatchesInStrings[i];
+
+                wordTasks[i] = System.Threading.Tasks.Task.Run(() =>
+                {
+                    System.Threading.Tasks.Parallel.ForEach(stringTable, stringInstance =>
+                    {
+                        if (stringInstance.IndexOf(word, StringComparison.OrdinalIgnoreCase) != -1)
+                        {
+                            lock (matches)
+                            {
+                                matches.Add(stringInstance);
+                            }
+                        }
+                    });
+                });
+            }
+
+            System.Threading.Tasks.Task.WaitAll(wordTasks);
+
+#else
             System.Threading.Tasks.Parallel.ForEach(stringTable, stringInstance =>
             {
-                foreach (var word in Words)
+                for (int i = 0; i < Words.Count; i++)
                 {
+                    var word = Words[i];
                     if (stringInstance.IndexOf(word, StringComparison.OrdinalIgnoreCase) != -1)
                     {
-                        lock (MatchesInStrings)
+                        var matches = MatchesInStrings[i];
+                        lock (matches)
                         {
-                            MatchesInStrings.Add(stringInstance);
+                            matches.Add(stringInstance);
                         }
                     }
                 }
             });
-#else
-            foreach (var stringInstance in stringTable)
-            {
-                foreach (var word in Words)
-                {
-                    if (stringInstance.IndexOf(word, StringComparison.OrdinalIgnoreCase) != -1)
-                    {
-                        MatchesInStrings.Add(stringInstance);
-                    }
-                }
-            }
 #endif
 
             var elapsed = sw.Elapsed;
@@ -251,7 +272,7 @@ namespace StructuredLogViewer
                 {
                     result = new SearchResult(node);
                     var prefix = "Node id: ";
-                    result.AddMatch(prefix + NodeIndex.ToString(), NodeIndex.ToString(), prefix.Length);
+                    result.AddMatch(prefix + NodeIndex.ToString(), NodeIndex.ToString());
                     return result;
                 }
             }
@@ -288,39 +309,36 @@ namespace StructuredLogViewer
                 {
                     var field = searchFields[j];
 
-                    if (!MatchesInStrings.Contains(field))
+                    if (!MatchesInStrings[i].Contains(field))
                     {
                         // no point looking here, we know this string doesn't match anything
                         continue;
                     }
 
-                    var index = field.IndexOf(word, StringComparison.OrdinalIgnoreCase);
-                    if (index != -1)
+                    if (result == null)
                     {
-                        if (result == null)
-                        {
-                            result = new SearchResult(node, IncludeDuration);
-                        }
-
-                        // if matched on the type of the node (always field 0), special case it
-                        if (j == 0)
-                        {
-                            result.AddMatchByNodeType();
-                        }
-                        else
-                        {
-                            string fullText = field;
-                            if (node is NameValueNode named && fullText == named.Name)
-                            {
-                                fullText = named.ToString();
-                            }
-
-                            result.AddMatch(fullText, word, index);
-                        }
-
-                        anyFieldMatched = true;
-                        break;
+                        result = new SearchResult(node, IncludeDuration);
                     }
+
+                    // if matched on the type of the node (always field 0), special case it
+                    if (j == 0)
+                    {
+                        result.AddMatchByNodeType();
+                    }
+                    else
+                    {
+                        string fullText = field;
+                        if (node is NameValueNode named && fullText == named.Name)
+                        {
+                            // if we matched a property in the name, show value as well since it's useful
+                            fullText = named.ToString();
+                        }
+
+                        result.AddMatch(fullText, word);
+                    }
+
+                    anyFieldMatched = true;
+                    break;
                 }
 
                 if (!anyFieldMatched)

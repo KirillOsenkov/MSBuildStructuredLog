@@ -999,7 +999,7 @@ Recent:
 
                 var proxy = new ProxyNode();
                 proxy.Original = result.Node;
-                proxy.Populate(result);
+                proxy.SearchResult = result;
                 parent.Children.Add(proxy);
             }
 

@@ -7,11 +7,31 @@ namespace Microsoft.Build.Logging.StructuredLogger
     {
         public object Original { get; set; }
 
-        public List<object> Highlights { get; set; } = new List<object>();
+        public SearchResult SearchResult { get; set; }
+
+        private List<object> highlights;
+        public List<object> Highlights
+        {
+            get
+            {
+                if (highlights == null)
+                {
+                    highlights = new List<object>();
+                    Populate(SearchResult);
+                }
+
+                return highlights;
+            }
+        }
 
         public void Populate(SearchResult result)
         {
-            if (result.MatchedByType && result.Before == null)
+            if (result == null)
+            {
+                return;
+            }
+
+            if (result.MatchedByType && result.WordsInFields.Count == 0)
             {
                 Highlights.Add(new HighlightedText { Text = OriginalType });
                 Highlights.Add(" " + TextUtilities.ShortenValue(result.Node.ToString(), "..."));
@@ -21,18 +41,32 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            Highlights.Add(OriginalType + " ");
+            Highlights.Add(OriginalType);
 
-            Highlights.Add(result.Before);
-
-            if (result.Highlighted != null)
+            foreach (var kvp in result.WordsInFields)
             {
-                Highlights.Add(new HighlightedText { Text = result.Highlighted });
-            }
+                Highlights.Add(" ");
 
-            if (result.After != null)
-            {
-                Highlights.Add(result.After);
+                var fieldText = kvp.Key;
+                fieldText = TextUtilities.ShortenValue(fieldText, "...");
+
+                var highlightSpans = TextUtilities.GetHighlightedSpansInText(fieldText, kvp.Value);
+                int index = 0;
+                foreach (var span in highlightSpans)
+                {
+                    if (span.Start > index)
+                    {
+                        Highlights.Add(fieldText.Substring(index, span.Start - index));
+                    }
+
+                    Highlights.Add(new HighlightedText { Text = fieldText.Substring(span.Start, span.Length) });
+                    index = span.End;
+                }
+
+                if (index < fieldText.Length)
+                {
+                    Highlights.Add(fieldText.Substring(index, fieldText.Length - index));
+                }
             }
 
             AddDuration(result);
@@ -42,7 +76,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             if (result.Duration != default)
             {
-                Highlights.Add(new HighlightedText { Text = " " + TextUtilities.DisplayDuration(result.Duration) });
+                Highlights.Add(new HighlightedText { Text = TextUtilities.DisplayDuration(result.Duration) });
             }
         }
 
