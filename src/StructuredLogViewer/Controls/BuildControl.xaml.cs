@@ -880,8 +880,7 @@ Recent:
 
         public void CopySubtree()
         {
-            var treeNode = treeView.SelectedItem;
-            if (treeNode != null)
+            if (treeView.SelectedItem is BaseNode treeNode)
             {
                 var text = Microsoft.Build.Logging.StructuredLogger.StringWriter.GetString(treeNode);
                 CopyToClipboard(text);
@@ -890,8 +889,7 @@ Recent:
 
         public void ViewSubtreeText()
         {
-            var treeNode = treeView.SelectedItem;
-            if (treeNode != null)
+            if (treeView.SelectedItem is BaseNode treeNode)
             {
                 var text = Microsoft.Build.Logging.StructuredLogger.StringWriter.GetString(treeNode);
                 DisplayText(text, treeNode.ToString());
@@ -945,7 +943,7 @@ Recent:
             }
 
             var sb = new StringBuilder();
-            foreach (var item in tree.Items)
+            foreach (var item in tree.Items.OfType<BaseNode>())
             {
                 var text = Microsoft.Build.Logging.StructuredLogger.StringWriter.GetString(item);
                 sb.AppendLine(text);

@@ -6,7 +6,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class ProxyNode : TextNode
     {
-        public object Original { get; set; }
+        public BaseNode Original { get; set; }
 
         public SearchResult SearchResult { get; set; }
 

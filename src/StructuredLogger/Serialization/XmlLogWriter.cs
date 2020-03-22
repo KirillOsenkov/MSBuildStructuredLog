@@ -31,7 +31,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             xmlWriter = null;
         }
 
-        private void WriteNode(object node)
+        private void WriteNode(BaseNode node)
         {
             var elementName = Serialization.GetNodeName(node);
 

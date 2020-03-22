@@ -144,7 +144,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return build;
         }
 
-        private void SetElementValue(object valueNode, string value)
+        private void SetElementValue(BaseNode valueNode, string value)
         {
             if (valueNode is NameValueNode nameValueNode)
             {
@@ -202,7 +202,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return node;
         }
 
-        private void PopulateAttributes(object node)
+        private void PopulateAttributes(BaseNode node)
         {
             var item = node as Item;
             if (item != null)

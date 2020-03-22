@@ -21,7 +21,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             this.writer = new TreeBinaryWriter(filePath);
         }
 
-        private void WriteNode(object node)
+        private void WriteNode(BaseNode node)
         {
             writer.WriteNode(Serialization.GetNodeName(node));
             WriteAttributes(node);
@@ -34,7 +34,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private void WriteChildren(object node)
+        private void WriteChildren(BaseNode node)
         {
             var treeNode = node as TreeNode;
             if (treeNode != null && treeNode.HasChildren)
@@ -51,7 +51,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private void WriteAttributes(object node)
+        private void WriteAttributes(BaseNode node)
         {
             var metadata = node as Metadata;
             if (metadata != null)

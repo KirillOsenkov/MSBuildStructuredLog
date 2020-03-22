@@ -256,12 +256,11 @@ namespace StructuredLogViewer
         /// <summary>
         ///  Each of the query words must be found in at least one field ∀w ∃f
         /// </summary>
-        public SearchResult IsMatch(object node)
+        public SearchResult IsMatch(BaseNode node)
         {
             SearchResult result = null;
 
-            BaseNode baseNode = node as BaseNode;
-            if (baseNode == null)
+            if (node == null)
             {
                 return null;
             }
@@ -277,7 +276,7 @@ namespace StructuredLogViewer
                 }
             }
 
-            PopulateSearchFields(baseNode);
+            PopulateSearchFields(node);
 
             if (TypeKeyword != null)
             {

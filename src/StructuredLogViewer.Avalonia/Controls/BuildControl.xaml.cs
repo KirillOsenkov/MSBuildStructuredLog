@@ -671,8 +671,7 @@ Recent:
 
         public void Delete()
         {
-            var node = treeView.SelectedItem as TreeNode;
-            if (node != null)
+            if (treeView.SelectedItem is TreeNode node)
             {
                 MoveSelectionOut(node);
                 node.IsVisible = false;
@@ -691,8 +690,7 @@ Recent:
 
         public void CopySubtree()
         {
-            var treeNode = treeView.SelectedItem;
-            if (treeNode != null)
+            if (treeView.SelectedItem is BaseNode treeNode)
             {
                 var text = Microsoft.Build.Logging.StructuredLogger.StringWriter.GetString(treeNode);
                 CopyToClipboard(text);
@@ -717,7 +715,7 @@ Recent:
             }
 
             var sb = new StringBuilder();
-            foreach (var item in tree.Items)
+            foreach (var item in tree.Items.OfType<BaseNode>())
             {
                 var text = Microsoft.Build.Logging.StructuredLogger.StringWriter.GetString(item);
                 sb.AppendLine(text);

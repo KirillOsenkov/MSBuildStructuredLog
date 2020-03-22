@@ -139,7 +139,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return null;
         }
 
-        private void SetAttributes(object node)
+        private void SetAttributes(BaseNode node)
         {
             var metadata = node as Metadata;
             if (metadata != null)
