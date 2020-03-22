@@ -190,7 +190,7 @@ namespace StructuredLogViewer
             return word;
         }
 
-        private void PopulateSearchFields(ParentedNode node)
+        private void PopulateSearchFields(BaseNode node)
         {
             if (searchFields == null)
             {
@@ -260,8 +260,8 @@ namespace StructuredLogViewer
         {
             SearchResult result = null;
 
-            ParentedNode parentedNode = node as ParentedNode;
-            if (parentedNode == null)
+            BaseNode baseNode = node as BaseNode;
+            if (baseNode == null)
             {
                 return null;
             }
@@ -277,7 +277,7 @@ namespace StructuredLogViewer
                 }
             }
 
-            PopulateSearchFields(parentedNode);
+            PopulateSearchFields(baseNode);
 
             if (TypeKeyword != null)
             {
@@ -362,7 +362,7 @@ namespace StructuredLogViewer
 
         private static bool IsUnder(NodeQueryMatcher matcher, SearchResult result)
         {
-            if (!(result.Node is ParentedNode parented))
+            if (!(result.Node is BaseNode parented))
             {
                 return true;
             }

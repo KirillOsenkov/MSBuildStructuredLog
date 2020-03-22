@@ -179,7 +179,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             else if (itemGroup is Parameter parameter)
             {
                 containerNode.Name = parameter.Name;
-                foreach (ParentedNode child in parameter.Children)
+                foreach (BaseNode child in parameter.Children)
                 {
                     child.Parent = null;
                     containerNode.AddChild(child);
@@ -190,7 +190,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 last.GetType() == containerNode.GetType() &&
                 last.Name == containerNode.Name)
             {
-                foreach (ParentedNode child in containerNode.Children)
+                foreach (BaseNode child in containerNode.Children)
                 {
                     child.Parent = null;
                     last.AddChild(child);

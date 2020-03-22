@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public abstract class TreeNode : ParentedNode
+    public abstract class TreeNode : BaseNode
     {
         public bool IsVisible
         {
@@ -86,7 +86,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 ((ChildrenList)children).OnAdded(named);
             }
 
-            var treeNode = child as ParentedNode;
+            var treeNode = child as BaseNode;
             if (treeNode != null)
             {
                 treeNode.Parent = this;
@@ -112,7 +112,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 ((ChildrenList)children).OnAdded(named);
             }
 
-            if (child is ParentedNode treeNode)
+            if (child is BaseNode treeNode)
             {
                 treeNode.Parent = this;
             }

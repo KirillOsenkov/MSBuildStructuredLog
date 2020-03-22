@@ -30,7 +30,7 @@ namespace StructuredLogViewer.Controls
 
         private void TextBlock_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            if (sender is TextBlock textBlock && textBlock.Tag is Block block && block.Node is ParentedNode node)
+            if (sender is TextBlock textBlock && textBlock.Tag is Block block && block.Node is BaseNode node)
             {
                 BuildControl.SelectItem(node);
             }

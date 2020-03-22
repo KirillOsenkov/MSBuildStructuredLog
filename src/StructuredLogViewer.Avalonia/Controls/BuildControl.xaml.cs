@@ -120,7 +120,7 @@ namespace StructuredLogViewer.Avalonia.Controls
             sortChildrenItem.Click += (s, a) => SortChildren();
             copyNameItem.Click += (s, a) => CopyName();
             copyValueItem.Click += (s, a) => CopyValue();
-            viewItem.Click += (s, a) => Invoke(treeView.SelectedItem as ParentedNode);
+            viewItem.Click += (s, a) => Invoke(treeView.SelectedItem as BaseNode);
             preprocessItem.Click += (s, a) => Preprocess(treeView.SelectedItem as IPreprocessable);
             hideItem.Click += (s, a) => Delete();
             contextMenu.AddItem(viewItem);
@@ -198,7 +198,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
         {
             treeView.DoubleTapped += (o, e) =>
             {
-                if (treeView.SelectedItem is ParentedNode node)
+                if (treeView.SelectedItem is BaseNode node)
                 {
                     e.Handled = Invoke(node);
                 }
@@ -206,7 +206,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
             treeView.KeyDown += (o, e) =>
             {
-                if (treeView.SelectedItem is ParentedNode node)
+                if (treeView.SelectedItem is BaseNode node)
                 {
                     if (e.Key == Key.Space || e.Key == Key.Return)
                     {
@@ -385,7 +385,7 @@ Recent:
 
         private void ContextMenu_Opened(object sender, RoutedEventArgs e)
         {
-            var node = treeView.SelectedItem as ParentedNode;
+            var node = treeView.SelectedItem as BaseNode;
             var visibility = node is NameValueNode;
             copyNameItem.IsVisible = visibility;
             copyValueItem.IsVisible = visibility;
@@ -569,7 +569,7 @@ Recent:
             var proxy = searchLogControl.ResultsList.SelectedItem as ProxyNode;
             if (proxy != null)
             {
-                var item = proxy.Original as ParentedNode;
+                var item = proxy.Original as BaseNode;
                 if (item != null)
                 {
                     SelectItem(item);
@@ -579,8 +579,8 @@ Recent:
 
         public void UpdateBreadcrumb(object item)
         {
-            var parentedNode = item as ParentedNode;
-            IEnumerable<object> chain = parentedNode?.GetParentChainIncludingThis();
+            var node = item as BaseNode;
+            IEnumerable<object> chain = node?.GetParentChainIncludingThis();
             if (chain == null || !chain.Any())
             {
                 chain = new[] { item };
@@ -629,7 +629,7 @@ Recent:
             }
         }
 
-        public void SelectItem(ParentedNode item)
+        public void SelectItem(BaseNode item)
         {
             var parentChain = item.GetParentChainExcludingThis();
             
@@ -749,7 +749,7 @@ Recent:
             }
         }
 
-        private void MoveSelectionOut(ParentedNode node)
+        private void MoveSelectionOut(BaseNode node)
         {
             var parent = node.Parent;
             if (parent == null)
@@ -787,7 +787,7 @@ Recent:
             }
         }
 
-        private bool CanView(ParentedNode node)
+        private bool CanView(BaseNode node)
         {
             return node is AbstractDiagnostic
                 || node is Project
@@ -798,7 +798,7 @@ Recent:
                 || (node is TextNode tn && tn.IsTextShortened);
         }
 
-        private bool Invoke(ParentedNode treeNode)
+        private bool Invoke(BaseNode treeNode)
         {
             if (treeNode == null)
             {
@@ -939,10 +939,10 @@ Recent:
             return DisplayFile(sourceFilePath, line + 1);
         }
 
-        private static ParentedNode GetNode(RoutedEventArgs args)
+        private static BaseNode GetNode(RoutedEventArgs args)
         {
             var treeViewItem = args.Source as TreeViewItem;
-            var node = treeViewItem?.DataContext as ParentedNode;
+            var node = treeViewItem?.DataContext as BaseNode;
             return node;
         }
 
@@ -981,9 +981,9 @@ Recent:
             {
                 TreeNode parent = root;
 
-                if (result.Node is ParentedNode parentedNode)
+                if (result.Node is BaseNode node)
                 {
-                    var project = parentedNode.GetNearestParent<Project>();
+                    var project = node.GetNearestParent<Project>();
                     if (project != null)
                     {
                         var projectProxy = root.GetOrCreateNodeWithName<ProxyNode>(project.Name);

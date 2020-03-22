@@ -20,7 +20,7 @@ namespace StructuredLogViewer.Controls
 
         private Brush defaultForeground;
 
-        public Func<ParentedNode> DestinationNodeGetter { get; set; }
+        public Func<BaseNode> DestinationNodeGetter { get; set; }
 
         public Target GetParentTarget()
         {
@@ -50,7 +50,7 @@ namespace StructuredLogViewer.Controls
             }
         }
 
-        private void NavigateToNode(ParentedNode node)
+        private void NavigateToNode(BaseNode node)
         {
             var buildControl = GetBuildControl();
             if (buildControl != null)
