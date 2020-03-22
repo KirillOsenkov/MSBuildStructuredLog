@@ -3,17 +3,17 @@ using System.Collections.Generic;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class ChildrenList : List<object>
+    public class ChildrenList : List<BaseNode>
     {
         public ChildrenList() : base(1)
         {
         }
 
-        public ChildrenList(IEnumerable<object> children) : base(children)
+        public ChildrenList(IEnumerable<BaseNode> children) : base(children)
         {
         }
 
-        private Dictionary<ChildrenCacheKey, object> childrenCache;
+        private Dictionary<ChildrenCacheKey, BaseNode> childrenCache;
 
         public T FindNode<T>(string name) where T : NamedNode
         {
@@ -39,7 +39,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             if (childrenCache == null)
             {
-                childrenCache = new Dictionary<ChildrenCacheKey, object>();
+                childrenCache = new Dictionary<ChildrenCacheKey, BaseNode>();
             }
         }
 
@@ -56,7 +56,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             childrenCache[key] = child;
         }
 
-        private struct ChildrenCacheKey
+        private struct ChildrenCacheKey : IEquatable<ChildrenCacheKey>
         {
             private readonly Type _type;
             private readonly string _name;
@@ -76,7 +76,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             public override bool Equals(object obj)
             {
-                return obj is ChildrenCacheKey && Equals((ChildrenCacheKey)obj);
+                return obj is ChildrenCacheKey key && Equals(key);
             }
 
             public override int GetHashCode() => hashCode;

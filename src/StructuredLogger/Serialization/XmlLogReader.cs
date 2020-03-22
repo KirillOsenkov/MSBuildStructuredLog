@@ -37,7 +37,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Build build = new Build();
             this.stringTable = build.StringTable;
 
-            var stack = new Stack<object>(1024);
+            var stack = new Stack<BaseNode>(1024);
             stack.Push(build);
 
             XmlNodeType previous = XmlNodeType.None;
@@ -161,7 +161,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return stringTable.Intern(reader.Value);
         }
 
-        private object ReadNode()
+        private BaseNode ReadNode()
         {
             var name = stringTable.Intern(reader.Name);
 
@@ -187,7 +187,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return property;
             }
 
-            object node = Serialization.CreateNode(name);
+            var node = Serialization.CreateNode(name);
 
             var folder = node as Folder;
             if (folder != null)

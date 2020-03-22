@@ -220,7 +220,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 Text = message,
                 Timestamp = args.Timestamp
             };
-            object nodeToAdd = messageNode;
+            BaseNode nodeToAdd = messageNode;
 
             if (args.BuildEventContext?.TaskId > 0)
             {
