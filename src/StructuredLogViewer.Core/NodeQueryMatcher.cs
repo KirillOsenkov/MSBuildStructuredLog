@@ -20,7 +20,7 @@ namespace StructuredLogViewer
 
         // avoid allocating this for every node
         [ThreadStatic]
-        private static List<string> searchFields;
+        private static List<string> searchFieldsThreadStatic;
 
         private static readonly char[] space = { ' ' };
 
@@ -190,11 +190,14 @@ namespace StructuredLogViewer
             return word;
         }
 
-        private void PopulateSearchFields(BaseNode node)
+        public static List<string> PopulateSearchFields(BaseNode node)
         {
+            var searchFields = searchFieldsThreadStatic;
+
             if (searchFields == null)
             {
                 searchFields = new List<string>(6);
+                searchFieldsThreadStatic = searchFields;
             }
             else
             {
@@ -251,6 +254,8 @@ namespace StructuredLogViewer
                     searchFields.Add(diagnostic.ProjectFile);
                 }
             }
+
+            return searchFields;
         }
 
         /// <summary>
@@ -276,7 +281,7 @@ namespace StructuredLogViewer
                 }
             }
 
-            PopulateSearchFields(node);
+            var searchFields = PopulateSearchFields(node);
 
             if (TypeKeyword != null)
             {
