@@ -7,7 +7,7 @@ namespace StructuredLogViewer
     public class SearchResult
     {
         public object Node { get; set; }
-        public Dictionary<string, List<string>> WordsInFields = new Dictionary<string, List<string>>();
+        public List<(string field, string match)> WordsInFields = new List<(string, string)>();
         public bool MatchedByType { get; private set; }
         public TimeSpan Duration { get; set; }
 
@@ -22,13 +22,7 @@ namespace StructuredLogViewer
 
         public void AddMatch(string field, string word)
         {
-            if (!WordsInFields.TryGetValue(field, out var bucket))
-            {
-                bucket = new List<string>();
-                WordsInFields[field] = bucket;
-            }
-
-            bucket.Add(word);
+            WordsInFields.Add((field, word));
         }
 
         public void AddMatchByNodeType()

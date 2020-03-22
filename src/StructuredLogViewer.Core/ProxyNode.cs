@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using StructuredLogViewer;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -43,14 +44,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             Highlights.Add(OriginalType);
 
-            foreach (var kvp in result.WordsInFields)
+            foreach (var wordsInField in result.WordsInFields.GroupBy(t => t.field, t => t.match))
             {
                 Highlights.Add(" ");
 
-                var fieldText = kvp.Key;
+                var fieldText = wordsInField.Key;
                 fieldText = TextUtilities.ShortenValue(fieldText, "...");
 
-                var highlightSpans = TextUtilities.GetHighlightedSpansInText(fieldText, kvp.Value);
+                var highlightSpans = TextUtilities.GetHighlightedSpansInText(fieldText, wordsInField);
                 int index = 0;
                 foreach (var span in highlightSpans)
                 {

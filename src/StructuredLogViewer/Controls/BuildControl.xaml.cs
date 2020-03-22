@@ -1259,7 +1259,7 @@ Recent:
 
             root.Children.Add(new Message
             {
-                Text = $"{results.Count} results. Search took: {Elapsed.ToString()}"
+                Text = $"{results.Count} result{(results.Count == 1 ? "" : "s")}. Search took: {Elapsed.ToString()}"
             });
 
             bool includeDuration = results.Any(r => r.Duration != default);
