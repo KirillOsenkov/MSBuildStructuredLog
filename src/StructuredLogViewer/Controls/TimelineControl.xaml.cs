@@ -301,9 +301,9 @@ namespace StructuredLogViewer.Controls
 
         private void TextBlock_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            if (sender is TextBlock textBlock && textBlock.Tag is Block block && block.Node is BaseNode node)
+            if (sender is TextBlock textBlock && textBlock.Tag is Block block)
             {
-                BuildControl.SelectItem(node);
+                BuildControl.SelectItem(block.Node);
             }
         }
 

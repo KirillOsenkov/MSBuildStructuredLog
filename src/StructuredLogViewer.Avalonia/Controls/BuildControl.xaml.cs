@@ -979,20 +979,17 @@ Recent:
             {
                 TreeNode parent = root;
 
-                if (result.Node is BaseNode node)
+                var project = result.Node.GetNearestParent<Project>();
+                if (project != null)
                 {
-                    var project = node.GetNearestParent<Project>();
-                    if (project != null)
+                    var projectProxy = root.GetOrCreateNodeWithName<ProxyNode>(project.Name);
+                    projectProxy.Original = project;
+                    if (projectProxy.Highlights.Count == 0)
                     {
-                        var projectProxy = root.GetOrCreateNodeWithName<ProxyNode>(project.Name);
-                        projectProxy.Original = project;
-                        if (projectProxy.Highlights.Count == 0)
-                        {
-                            projectProxy.Highlights.Add(project.Name);
-                        }
-
-                        parent = projectProxy;
+                        projectProxy.Highlights.Add(project.Name);
                     }
+
+                    parent = projectProxy;
                 }
 
                 var proxy = new ProxyNode();

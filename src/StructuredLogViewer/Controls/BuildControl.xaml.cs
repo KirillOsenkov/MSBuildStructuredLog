@@ -1271,9 +1271,9 @@ Recent:
             {
                 TreeNode parent = root;
 
-                if (!includeDuration && result.Node is BaseNode node)
+                if (!includeDuration)
                 {
-                    var project = node.GetNearestParent<Project>();
+                    var project = result.Node.GetNearestParent<Project>();
                     if (project != null)
                     {
                         var projectProxy = root.GetOrCreateNodeWithName<ProxyNode>(project.Name);

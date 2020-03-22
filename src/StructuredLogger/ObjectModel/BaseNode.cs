@@ -142,9 +142,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             BaseNode current = this;
             do
             {
-                if (current is T)
+                if (current is T typedCurrent)
                 {
-                    return (T) current;
+                    return typedCurrent;
                 }
 
                 current = current.Parent;
@@ -165,18 +165,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var index = parent.FindChildIndex(this);
             for (int i = index; i < parent.Children.Count; i++)
             {
-                if (parent.Children[i] is BaseNode child)
-                {
-                    yield return child;
-                }
+                yield return parent.Children[i];
             }
 
             for (int i = 0; i < index; i++)
             {
-                if (parent.Children[i] is BaseNode child)
-                {
-                    yield return child;
-                }
+                yield return parent.Children[i];
             }
         }
     }
