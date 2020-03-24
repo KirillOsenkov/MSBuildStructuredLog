@@ -44,7 +44,7 @@ namespace StructuredLogViewer
             });
         }
 
-        private bool Visit(object node, NodeQueryMatcher matcher, List<SearchResult> results, CancellationToken cancellationToken)
+        private bool Visit(BaseNode node, NodeQueryMatcher matcher, List<SearchResult> results, CancellationToken cancellationToken)
         {
             var isMatch = false;
             var containsMatch = false;
@@ -117,10 +117,10 @@ namespace StructuredLogViewer
             }
 
             // setting these flags on each node is expensive so do it only if the feature is enabled
-            if (markResultsInTree && node is BaseNode baseNode)
+            if (markResultsInTree)
             {
-                baseNode.IsSearchResult = isMatch;
-                baseNode.ContainsSearchResult = containsMatch;
+                node.IsSearchResult = isMatch;
+                node.ContainsSearchResult = containsMatch;
             }
 
             return isMatch || containsMatch;

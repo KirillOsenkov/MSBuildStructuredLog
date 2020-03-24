@@ -79,10 +79,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     {
                         Visit(childNode);
                     }
-                    else
-                    {
-                        ProcessTerminalNode(child);
-                    }
                 }
             }
 
@@ -204,10 +200,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     project.IsLowRelevance = true;
                 }
             }
-        }
-
-        private void ProcessTerminalNode(object instance)
-        {
         }
 
         private void AnalyzeTask(Task task)

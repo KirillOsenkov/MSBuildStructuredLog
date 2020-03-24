@@ -20,7 +20,7 @@ namespace StructuredLogViewer
 
         // avoid allocating this for every node
         [ThreadStatic]
-        private static List<string> searchFields;
+        private static List<string> searchFieldsThreadStatic;
 
         private static readonly char[] space = { ' ' };
 
@@ -190,11 +190,14 @@ namespace StructuredLogViewer
             return word;
         }
 
-        private void PopulateSearchFields(ParentedNode node)
+        public static List<string> PopulateSearchFields(BaseNode node)
         {
+            var searchFields = searchFieldsThreadStatic;
+
             if (searchFields == null)
             {
                 searchFields = new List<string>(6);
+                searchFieldsThreadStatic = searchFields;
             }
             else
             {
@@ -251,17 +254,18 @@ namespace StructuredLogViewer
                     searchFields.Add(diagnostic.ProjectFile);
                 }
             }
+
+            return searchFields;
         }
 
         /// <summary>
         ///  Each of the query words must be found in at least one field ∀w ∃f
         /// </summary>
-        public SearchResult IsMatch(object node)
+        public SearchResult IsMatch(BaseNode node)
         {
             SearchResult result = null;
 
-            ParentedNode parentedNode = node as ParentedNode;
-            if (parentedNode == null)
+            if (node == null)
             {
                 return null;
             }
@@ -277,7 +281,7 @@ namespace StructuredLogViewer
                 }
             }
 
-            PopulateSearchFields(parentedNode);
+            var searchFields = PopulateSearchFields(node);
 
             if (TypeKeyword != null)
             {
@@ -362,12 +366,7 @@ namespace StructuredLogViewer
 
         private static bool IsUnder(NodeQueryMatcher matcher, SearchResult result)
         {
-            if (!(result.Node is ParentedNode parented))
-            {
-                return true;
-            }
-
-            foreach (var parent in parented.GetParentChainExcludingThis())
+            foreach (var parent in result.Node.GetParentChainExcludingThis())
             {
                 if (matcher.IsMatch(parent) != null)
                 {

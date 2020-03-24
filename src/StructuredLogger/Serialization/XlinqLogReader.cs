@@ -39,7 +39,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private StringCache stringTable;
 
-        private object ReadNode(XElement element)
+        private BaseNode ReadNode(XElement element)
         {
             var name = element.Name.LocalName;
 
@@ -98,7 +98,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return stringTable.Intern(element.Value);
         }
 
-        private void ReadAttributes(object node, XElement element)
+        private void ReadAttributes(BaseNode node, XElement element)
         {
             var item = node as Item;
             if (item != null)

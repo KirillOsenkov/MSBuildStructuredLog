@@ -75,7 +75,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             this.formatIsValid = reader.IsValid();
         }
 
-        private object ReadNode()
+        private BaseNode ReadNode()
         {
             var name = reader.ReadString();
             var node = Serialization.CreateNode(name);
@@ -139,7 +139,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return null;
         }
 
-        private void SetAttributes(object node)
+        private void SetAttributes(BaseNode node)
         {
             var metadata = node as Metadata;
             if (metadata != null)

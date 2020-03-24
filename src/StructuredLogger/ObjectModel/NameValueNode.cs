@@ -1,6 +1,6 @@
 ﻿namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class NameValueNode : ParentedNode, IHasTitle
+    public class NameValueNode : BaseNode, IHasTitle
     {
         public string Name { get; set; }
         public string Value { get; set; }

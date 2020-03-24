@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public abstract class TreeNode : ParentedNode
+    public abstract class TreeNode : BaseNode
     {
         public bool IsVisible
         {
@@ -24,10 +24,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             get => null;
         }
 
-        private IList<object> children;
+        private IList<BaseNode> children;
         public bool HasChildren => children != null && children.Count > 0;
 
-        public IList<object> Children
+        public IList<BaseNode> Children
         {
             get
             {
@@ -67,13 +67,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public void Unseal()
         {
-            if (children is object[])
+            if (children is BaseNode[])
             {
                 children = new ChildrenList(children);
             }
         }
 
-        public void AddChildAtBeginning(object child)
+        public void AddChildAtBeginning(BaseNode child)
         {
             if (children == null)
             {
@@ -86,11 +86,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 ((ChildrenList)children).OnAdded(named);
             }
 
-            var treeNode = child as ParentedNode;
-            if (treeNode != null)
-            {
-                treeNode.Parent = this;
-            }
+            child.Parent = this;
 
             if (children.Count >= 1)
             {
@@ -99,7 +95,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        public virtual void AddChild(object child)
+        public virtual void AddChild(BaseNode child)
         {
             if (children == null)
             {
@@ -112,10 +108,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 ((ChildrenList)children).OnAdded(named);
             }
 
-            if (child is ParentedNode treeNode)
-            {
-                treeNode.Parent = this;
-            }
+            child.Parent = this;
 
             if (children.Count >= 1)
             {
@@ -147,7 +140,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return FindChild<T>(c => string.Equals(c.LookupKey, name, StringComparison.OrdinalIgnoreCase));
         }
 
-        public virtual T FindChild<T>(Predicate<T> predicate)
+        public virtual T FindChild<T>(Predicate<T> predicate) where T : BaseNode
         {
             if (HasChildren)
             {
@@ -163,25 +156,25 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return default;
         }
 
-        public virtual T FindFirstInSubtreeIncludingSelf<T>(Predicate<T> predicate = null)
+        public virtual T FindFirstInSubtreeIncludingSelf<T>(Predicate<T> predicate = null) where T : BaseNode
         {
-            if (this is T && (predicate == null || predicate((T)(object)this)))
+            if (this is T typedThis && (predicate == null || predicate(typedThis)))
             {
-                return (T)(object)this;
+                return typedThis;
             }
 
             return FindFirstDescendant<T>(predicate);
         }
 
-        public virtual T FindFirstChild<T>(Predicate<T> predicate = null)
+        public virtual T FindFirstChild<T>(Predicate<T> predicate = null) where T : BaseNode
         {
             if (HasChildren)
             {
                 foreach (var child in Children)
                 {
-                    if (child is T && (predicate == null || predicate((T)child)))
+                    if (child is T typedChild && (predicate == null || predicate(typedChild)))
                     {
-                        return (T)child;
+                        return typedChild;
                     }
                 }
             }
@@ -189,7 +182,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return default;
         }
 
-        public virtual T FindFirstDescendant<T>(Predicate<T> predicate = null)
+        public virtual T FindFirstDescendant<T>(Predicate<T> predicate = null) where T : BaseNode
         {
             if (HasChildren)
             {
@@ -204,9 +197,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             return found;
                         }
                     }
-                    else if (child is T && (predicate == null || predicate((T)child)))
+                    else if (child is T typedChild && (predicate == null || predicate(typedChild)))
                     {
-                        return (T)child;
+                        return typedChild;
                     }
                 }
             }
@@ -214,7 +207,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return default;
         }
 
-        public virtual T FindLastInSubtreeIncludingSelf<T>(Predicate<T> predicate = null)
+        public virtual T FindLastInSubtreeIncludingSelf<T>(Predicate<T> predicate = null)  where T : BaseNode
         {
             var child = FindLastDescendant<T>(predicate);
             if (child != null)
@@ -222,15 +215,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return child;
             }
 
-            if (this is T && (predicate == null || predicate((T)(object)this)))
+            if (this is T typedThis && (predicate == null || predicate(typedThis)))
             {
-                return (T)(object)this;
+                return typedThis;
             }
 
             return default;
         }
 
-        public virtual T FindLastChild<T>()
+        public virtual T FindLastChild<T>() where T : BaseNode
         {
             if (HasChildren)
             {
@@ -246,7 +239,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return default;
         }
 
-        public object FirstChild
+        public BaseNode FirstChild
         {
             get
             {
@@ -259,7 +252,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        public object LastChild
+        public BaseNode LastChild
         {
             get
             {
@@ -272,7 +265,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        public virtual T FindLastDescendant<T>(Predicate<T> predicate = null)
+        public virtual T FindLastDescendant<T>(Predicate<T> predicate = null) where T : BaseNode
         {
             if (HasChildren)
             {
@@ -287,9 +280,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             return found;
                         }
                     }
-                    else if (child is T && (predicate == null || predicate((T)child)))
+                    else if (child is T typedChild && (predicate == null || predicate(typedChild)))
                     {
-                        return (T)child;
+                        return typedChild;
                     }
                 }
             }
@@ -297,7 +290,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return default;
         }
 
-        public int FindChildIndex(object child)
+        public int FindChildIndex(BaseNode child)
         {
             if (HasChildren)
             {
@@ -313,7 +306,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return -1;
         }
 
-        public T FindPreviousChild<T>(object currentChild, Predicate<T> predicate = null)
+        public T FindPreviousChild<T>(BaseNode currentChild, Predicate<T> predicate = null) where T : BaseNode
         {
             var i = FindChildIndex(currentChild);
             if (i == -1)
@@ -323,16 +316,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             for (int j = i - 1; j >= 0; j--)
             {
-                if (Children[j] is T && (predicate == null || predicate((T)Children[j])))
+                if (Children[j] is T typedChild && (predicate == null || predicate(typedChild)))
                 {
-                    return (T)Children[j];
+                    return typedChild;
                 }
             }
 
             return default;
         }
 
-        public T FindNextChild<T>(object currentChild, Predicate<T> predicate = null)
+        public T FindNextChild<T>(BaseNode currentChild, Predicate<T> predicate = null) where T : BaseNode
         {
             var i = FindChildIndex(currentChild);
             if (i == -1)
@@ -342,16 +335,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             for (int j = i + 1; j < Children.Count; j++)
             {
-                if (Children[j] is T && (predicate == null || predicate((T)Children[j])))
+                if (Children[j] is T typedChild && (predicate == null || predicate(typedChild)))
                 {
-                    return (T)Children[j];
+                    return typedChild;
                 }
             }
 
             return default;
         }
 
-        public T FindPreviousInTraversalOrder<T>(Predicate<T> predicate = null)
+        public T FindPreviousInTraversalOrder<T>(Predicate<T> predicate = null) where T : BaseNode
         {
             if (Parent == null)
             {
@@ -386,15 +379,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
-            if (Parent is T && (predicate == null || predicate((T)(object)Parent)))
+            if (Parent is T typedParent && (predicate == null || predicate(typedParent)))
             {
-                return (T)(object)Parent;
+                return typedParent;
             }
 
             return Parent.FindPreviousInTraversalOrder(predicate);
         }
 
-        public T FindNextInTraversalOrder<T>(Predicate<T> predicate = null)
+        public T FindNextInTraversalOrder<T>(Predicate<T> predicate = null) where T : BaseNode
         {
             if (Parent == null)
             {
@@ -436,7 +429,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return default;
         }
 
-        public IReadOnlyList<T> FindChildrenRecursive<T>(Predicate<T> predicate = null)
+        public IReadOnlyList<T> FindChildrenRecursive<T>(Predicate<T> predicate = null) where T : BaseNode
         {
             var foundChildren = new List<T>();
 
@@ -455,16 +448,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public void VisitAllChildren<T>(
             Action<T> processor,
             CancellationToken cancellationToken = default,
-            bool takeChildrenSnapshot = false)
+            bool takeChildrenSnapshot = false) where T : BaseNode
         {
             if (cancellationToken.IsCancellationRequested)
             {
                 return;
             }
 
-            if (this is T)
+            if (this is T typedThis)
             {
-                processor((T)(object)this);
+                processor(typedThis);
             }
 
             if (HasChildren)
@@ -482,14 +475,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         return;
                     }
 
-                    var node = child as TreeNode;
-                    if (node != null)
+                    if (child is TreeNode node)
                     {
                         node.VisitAllChildren(processor, cancellationToken, takeChildrenSnapshot);
                     }
-                    else if (child is T)
+                    else if (child is T typedChild)
                     {
-                        processor((T)child);
+                        processor(typedChild);
                     }
                 }
             }

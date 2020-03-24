@@ -6,12 +6,12 @@ namespace StructuredLogViewer
 {
     public class SearchResult
     {
-        public object Node { get; set; }
+        public BaseNode Node { get; }
         public List<(string field, string match)> WordsInFields = new List<(string, string)>();
         public bool MatchedByType { get; private set; }
         public TimeSpan Duration { get; set; }
 
-        public SearchResult(object node, bool includeDuration = false)
+        public SearchResult(BaseNode node, bool includeDuration = false)
         {
             Node = node;
             if (includeDuration && node is TimedNode timedNode)
