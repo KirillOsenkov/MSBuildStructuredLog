@@ -14,6 +14,11 @@ namespace TaskRunner
         public static void Execute(Task task)
         {
             var assemblyFilePath = task.FromAssembly;
+            if (string.IsNullOrEmpty(assemblyFilePath))
+            {
+                return;
+            }
+
             Assembly assembly = null;
             if (File.Exists(assemblyFilePath))
             {

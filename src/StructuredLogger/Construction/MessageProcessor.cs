@@ -94,6 +94,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     if (message.StartsWith(TaskParameterMessagePrefix))
                     {
                         var task = GetTask(args);
+                        if (IgnoreParameters(task))
+                        {
+                            return;
+                        }
+
                         var folder = task.GetOrCreateNodeWithName<Folder>(Strings.Parameters);
                         var parameter = ItemGroupParser.ParsePropertyOrItemList(message, TaskParameterMessagePrefix, stringTable);
                         folder.AddChild(parameter);
@@ -126,6 +131,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             // Just the generic log message or something we currently don't handle in the object model.
             AddMessage(args, message);
+        }
+
+        private bool IgnoreParameters(Task task)
+        {
+            string taskName = task.Name;
+            if (taskName == "Message")
+            {
+                return true;
+            }
+
+            return false;
         }
 
         private Task GetTask(BuildMessageEventArgs args)

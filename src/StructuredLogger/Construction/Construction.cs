@@ -337,6 +337,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 lock (syncLock)
                 {
+                    Build.Statistics.Tasks++;
+
                     var project = GetOrAddProject(args.BuildEventContext.ProjectContextId);
                     var target = project.GetTargetById(args.BuildEventContext.TargetId);
 
@@ -800,10 +802,36 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 .GetValue(instance);
         }
 
+        private bool IgnoreAssembly(string taskName)
+        {
+            switch (taskName)
+            {
+                case "AssignTargetPath":
+                case "CallTarget":
+                case "Copy":
+                case "Delete":
+                case "FindUnderPath":
+                case "MakeDir":
+                case "Message":
+                case "MSBuild":
+                case "ReadLinesFromFile":
+                case "WriteLinesToFile":
+                    return true;
+            }
+
+            return false;
+        }
+
         private Task CreateTask(TaskStartedEventArgs taskStartedEventArgs)
         {
             var taskName = Intern(taskStartedEventArgs.TaskName);
-            var assembly = Intern(GetTaskAssembly(taskName));
+
+            string assembly = null;
+            if (!IgnoreAssembly(taskName))
+            {
+                assembly = Intern(GetTaskAssembly(taskName));
+            }
+
             var taskId = taskStartedEventArgs.BuildEventContext.TaskId;
             var startTime = taskStartedEventArgs.Timestamp;
 
