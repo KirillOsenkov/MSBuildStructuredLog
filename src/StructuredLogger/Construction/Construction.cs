@@ -181,7 +181,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         int parentTaskId = parentContext.TaskId;
                         if (parentProject != null && parentTaskId > 0)
                         {
-                            parentNode = parentProject.FindFirstDescendant<Task>(t => t.Id == parentTaskId);
+                            parentNode = parentProject.FindFirstDescendant<Task>(t => t.Id == parentTaskId && t.GetNearestParent<Project>().Id == parentProjectId);
                         }
                     }
 
