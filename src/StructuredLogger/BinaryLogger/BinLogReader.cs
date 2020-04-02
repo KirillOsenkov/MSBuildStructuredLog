@@ -155,7 +155,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public IEnumerable<Record> ReadRecordsFromDecompressedStream(Stream decompressedStream)
         {
-            var binaryReader = new BinaryReader(decompressedStream);
+            var wrapper = new WrapperStream(decompressedStream);
+
+            var binaryReader = new BinaryReader(wrapper);
 
             int fileFormatVersion = binaryReader.ReadInt32();
 
@@ -190,6 +192,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 BuildEventArgs instance = null;
 
+                long start = wrapper.Position;
+
                 instance = reader.Read();
                 if (instance == null)
                 {
@@ -200,8 +204,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     Bytes = null, // probably can reconstruct this from the Args if necessary
                     Args = instance,
-                    Start = 0,
-                    Length = 0
+                    Start = start,
+                    Length = wrapper.Position - start
                 };
 
                 yield return record;
@@ -213,6 +217,58 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 yield return blob;
             }
+        }
+    }
+
+    public class WrapperStream : Stream
+    {
+        private readonly Stream stream;
+
+        public WrapperStream(Stream stream)
+        {
+            this.stream = stream;
+        }
+
+        public override bool CanRead => stream.CanRead;
+
+        public override bool CanSeek => stream.CanSeek;
+
+        public override bool CanWrite => stream.CanWrite;
+
+        public override long Length => stream.Length;
+
+        private long position;
+        public override long Position 
+        {
+            get => position; 
+            set => throw new NotImplementedException(); 
+        }
+
+        public override void Flush()
+        {
+            stream.Flush();
+        }
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            var result = stream.Read(buffer, offset, count);
+            position += result;
+            return result;
+        }
+
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            return stream.Seek(offset, origin);
+        }
+
+        public override void SetLength(long value)
+        {
+            stream.SetLength(value);
+        }
+
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            stream.Write(buffer, offset, count);
         }
     }
 }
