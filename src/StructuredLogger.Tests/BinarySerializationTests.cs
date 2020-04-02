@@ -49,7 +49,7 @@ namespace StructuredLogger.Tests
 
             var messages = mostRecords[0].list;
             var messageGroups = messages.GroupBy(m => GetMessageType(m.Args?.Message))
-                .Select(g => (g.Key, g.Count(), g.Sum(m => m.Args?.Message?.Length ?? 0), g.ToArray()))
+                .Select(g => (g.Key, g.Count(), g.Sum(m => m.Args?.Message?.Length ?? 0), g.OrderByDescending(r => r.Length).ToArray()))
                 .OrderByDescending(g => g.Item3)
                 .ToArray();
 
@@ -85,12 +85,48 @@ namespace StructuredLogger.Tests
         public void Stats()
         {
             var sw = Stopwatch.StartNew();
-            var build = Serialization.Read(@"C:\temp\WithoutPerfFix.binlog");
+            var build = Serialization.Read(@"C:\temp\vsmac.binlog");
             var stats = build.Statistics;
 
             //var messages = stats.TruncatedMessages.OrderByDescending(m => m.text.Length).Select(m => (m.taskName, m.text.Length, m.text)).ToArray();
             //var lengths = messages.Select(m => m.taskName + "," + m.Length.ToString()).ToArray();
             //System.Windows.Forms.Clipboard.SetText(string.Join("\n", lengths));
+
+            var messagesDirectlyUnderTask = build
+                .FindChildrenRecursive<Message>()
+                .Where(m => m.Parent is Task)
+                .GroupBy(m => ((Task)m.Parent).Name)
+                .Select(g => (g.Key, g.Count(), g.Sum(m => m.Text.Length), g.OrderByDescending(m => m.Text.Length).ToArray()))
+                .OrderByDescending(g => g.Item3)
+                .ToArray();
+
+            var parameters = build
+                .FindChildrenRecursive<Parameter>()
+                .Where(m => m.Parent is Folder f && f.Name == "Parameters")
+                .GroupBy(m => ((Task)m.Parent.Parent).Name)
+                .Select(g => (g.Key, g.Count(), g.ToArray()))
+                .OrderByDescending(g => g.Item2)
+                .ToArray();
+
+            foreach (var bucket in stats.TaskParameterMessagesByTask.Values)
+            {
+                bucket.Sort((l, r) => Math.Sign(r.Length - l.Length));
+            }
+
+            foreach (var bucket in stats.OutputItemMessagesByTask.Values)
+            {
+                bucket.Sort((l, r) => Math.Sign(r.Length - l.Length));
+            }
+
+            var parametersList = stats.TaskParameterMessagesByTask
+                .Select(m => (m.Key, m.Value.Sum(l => l.Length), m.Value.Count, m.Value))
+                .OrderByDescending(g => g.Item2)
+                .ToArray();
+
+            var outputItemList = stats.OutputItemMessagesByTask
+                .Select(m => (m.Key, m.Value.Sum(l => l.Length), m.Value.Count, m.Value))
+                .OrderByDescending(g => g.Item2)
+                .ToArray();
 
             var elapsed = sw.Elapsed;
         }
