@@ -117,7 +117,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        public T GetOrCreateNodeWithName<T>(string name) where T : NamedNode, new()
+        public T GetOrCreateNodeWithName<T>(string name, bool addAtBeginning = false) where T : NamedNode, new()
         {
             T node = FindChild<T>(name);
             if (node != null)
@@ -126,7 +126,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             var newNode = new T() { Name = name };
-            this.AddChild(newNode);
+            if (addAtBeginning)
+            {
+                this.AddChildAtBeginning(newNode);
+            }
+            else
+            {
+                this.AddChild(newNode);
+            }
             return newNode;
         }
 
