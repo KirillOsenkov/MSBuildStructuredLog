@@ -413,11 +413,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 var evaluation = construction.EvaluationFolder;
                 var project = evaluation.FindChild<ProjectEvaluation>(p => p.Id == args.BuildEventContext.EvaluationId);
-                var preassigment = project.GetOrCreateNodeWithName<Folder>(Strings.PropertyReassignment);
+               
                 if (Strings.IsPropertyReassignmentMessage(message))
-                    node = preassigment.GetOrCreateNodeWithName<Folder>(Strings.GetPropertyName(message));
+                {
+                    var properties = project.GetOrCreateNodeWithName<Folder>(Strings.Properties, true);
+                    node = properties.GetOrCreateNodeWithName<Folder>(Strings.GetPropertyName(message));
+                }
                 else
+                {
                     node = project;
+                }
 
                 if (node != null && node.FindChild<Message>(message) != null)
                 {
@@ -445,8 +450,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     {
                         return;
                     }
-                    var preassigment = construction.EvaluationFolder.FindChild<Folder>(Strings.PropertyReassignment);
-                    node = preassigment.GetOrCreateNodeWithName<Folder>(Strings.GetPropertyName(message));
+                    var properties = construction.EvaluationFolder.GetOrCreateNodeWithName<Folder>(Strings.Properties);
+                    node = properties.GetOrCreateNodeWithName<Folder>(Strings.GetPropertyName(message));
                 }
                 else if (Strings.IsTargetDoesNotExistAndWillBeSkipped(message))
                 {

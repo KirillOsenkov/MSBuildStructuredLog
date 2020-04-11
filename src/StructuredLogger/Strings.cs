@@ -47,7 +47,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string Assemblies => "Assemblies";
         public static string TargetOutputs => "TargetOutputs";
         public static string AnalyzerReport => "Analyzer Report";
-        public static string PropertyReassignment => "PropertyReassignment";
+        public static string Properties => "Properties";
 
         public static Regex UsingTaskRegex = new Regex("Using \"(?<task>.+)\" task from (assembly|the task factory) \"(?<assembly>.+)\"\\.", RegexOptions.Compiled);
 
@@ -56,7 +56,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             @"^Importing project ""(?<ImportedProject>[^\""]+)"" into project ""(?<File>[^\""]+)"" at \((?<Line>\d+),(?<Column>\d+)\)\.$", RegexOptions.Compiled);
         public static Regex ProjectWasNotImportedRegex = new Regex(@"^Project ""(?<ImportedProject>[^""]+)"" was not imported by ""(?<File>[^""]+)"" at \((?<Line>\d+),(?<Column>\d+)\), due to (?<Reason>.+)$", RegexOptions.Compiled);
 
-        public static string GetPropertyName(string mesage) => mesage.Substring(mesage.IndexOf("$"), mesage.IndexOf("=") - mesage.IndexOf("$"));
+        public static string GetPropertyName(string message) => message.Substring(message.IndexOf("$") + 2, message.IndexOf("=") - message.IndexOf("$") - 3);
 
         public static bool IsTaskSkipped(string message) => message.StartsWith("Task") && message.Contains("skipped");
         public static bool IsTargetSkipped(string message) => message.StartsWith("Target") && message.Contains("skipped");
