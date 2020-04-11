@@ -105,5 +105,5 @@ Open an issue if you're running into something weird and I can take a look into 
 
 ## MSBuild Resources
  * [http://msbuildlog.com](http://msbuildlog.com)
- * [https://github.com/Microsoft/msbuild/wiki/MSBuild-Resources](https://github.com/Microsoft/msbuild/wiki/MSBuild-Resources)
- * [https://github.com/Microsoft/msbuild/wiki/MSBuild-Tips-&-Tricks](https://github.com/Microsoft/msbuild/wiki/MSBuild-Tips-&-Tricks)
+ * [https://github.com/Microsoft/msbuild/blob/master/documentation/wiki/MSBuild-Resources.md](https://github.com/Microsoft/msbuild/blob/master/documentation/wiki/MSBuild-Resources.md)
+ * [https://github.com/Microsoft/msbuild/blob/master/documentation/wiki/MSBuild-Tips-&-Tricks.md](https://github.com/Microsoft/msbuild/blob/master/documentation/wiki/MSBuild-Tips-&-Tricks.md)
