@@ -12,6 +12,9 @@ namespace StructuredLogViewer
         public string Query { get; private set; }
         public List<string> Words { get; private set; }
         public string TypeKeyword { get; private set; }
+
+        public Dictionary<string, string> AdditionalKeywords { get; private set; } = new Dictionary<string, string>();
+
         public int NodeIndex { get; private set; } = -1;
         private HashSet<string>[] MatchesInStrings { get; set; }
         private NodeQueryMatcher UnderMatcher { get; set; }
@@ -29,6 +32,10 @@ namespace StructuredLogViewer
             this.Query = query;
 
             this.Words = ParseIntoWords(query);
+            ////if (this.TypeKeywords == null)
+            ////    this.TypeKeywords = new List<string>();
+            string tag;
+            int eqaulindex;
 
             if (Words.Count == 1 &&
                 Words[0] is string potentialNodeIndex &&
@@ -43,7 +50,6 @@ namespace StructuredLogViewer
                     return;
                 }
             }
-
             for (int i = Words.Count - 1; i >= 0; i--)
             {
                 var word = Words[i];
@@ -54,8 +60,7 @@ namespace StructuredLogViewer
                     IncludeDuration = true;
                     continue;
                 }
-
-                if (word.Length > 2 && word[0] == '$' && word[1] != '(' && TypeKeyword == null)
+                if (word.Length > 2 && word[0] == '$' && word[1] != '(' &&(TypeKeyword == null || !TypeKeyword.Contains(word.Substring(1).ToLowerInvariant())))
                 {
                     Words.RemoveAt(i);
                     TypeKeyword = word.Substring(1).ToLowerInvariant();
@@ -67,6 +72,16 @@ namespace StructuredLogViewer
                     word = word.Substring(6, word.Length - 7);
                     Words.RemoveAt(i);
                     UnderMatcher = new NodeQueryMatcher(word, stringTable);
+                    continue;
+                }
+                if ((word.StartsWith("name=", StringComparison.OrdinalIgnoreCase) || word.StartsWith("value=", StringComparison.OrdinalIgnoreCase)) && !word.EndsWith("="))
+                {
+                    eqaulindex = word.IndexOf("=");
+                    tag = word.Substring(0, eqaulindex);
+                    word = word.Substring(eqaulindex + 1, word.Length - (eqaulindex + 1));
+                    Words.RemoveAt(i);
+                    Words.Insert(i, word);
+                    AdditionalKeywords.Add(tag, word);
                     continue;
                 }
             }
@@ -226,6 +241,7 @@ namespace StructuredLogViewer
 
             if (node is NameValueNode nameValueNode)
             {
+
                 if (!string.IsNullOrEmpty(nameValueNode.Name))
                 {
                     searchFields.Add(nameValueNode.Name);
@@ -303,7 +319,8 @@ namespace StructuredLogViewer
                     return null;
                 }
             }
-
+            bool nameMatched = false;
+            string wordname = String.Empty;
             for (int i = 0; i < Words.Count; i++)
             {
                 bool anyFieldMatched = false;
@@ -332,17 +349,63 @@ namespace StructuredLogViewer
                     else
                     {
                         string fullText = field;
-                        if (node is NameValueNode named && fullText == named.Name)
+                        if (node is NameValueNode named && fullText == named.Name && AdditionalKeywords.Count == 0)
                         {
                             // if we matched a property in the name, show value as well since it's useful
                             fullText = named.ToString();
                         }
+                        // NameValueNode is special case have to check in witch field to search
+                        if (node is NameValueNode && AdditionalKeywords.Count > 0)
+                        {
+                            if (AdditionalKeywords.Keys.Contains("name") && j == 1)
+                            {
+                                if (!AdditionalKeywords.Keys.Contains("value"))
+                                {
+                                    result.AddMatch(fullText, word);
+                                    anyFieldMatched = true;
+                                    break;
+                                }
+                                else
+                                {
+                                    nameMatched = true;
+                                    wordname = word;
+                                }
+                            }
 
-                        result.AddMatch(fullText, word);
+                            if (AdditionalKeywords.Keys.Contains("value") && j == 2)
+                            {
+                                if (!AdditionalKeywords.Keys.Contains("name"))
+                                {
+                                    result.AddMatch(fullText, word);
+                                    anyFieldMatched = true;
+                                    break;
+                                }
+                                else
+                                {
+                                    if (nameMatched)
+                                    {
+                                        fullText = node.ToString();
+                                        result.AddMatch(fullText, word);
+                                        result.AddMatch(fullText, wordname);
+                                        anyFieldMatched = true;
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        anyFieldMatched = false;
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            result.AddMatch(fullText, word);
+                            anyFieldMatched = true;
+                            break;
+                        }
                     }
 
-                    anyFieldMatched = true;
-                    break;
+                   
                 }
 
                 if (!anyFieldMatched)
