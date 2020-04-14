@@ -319,8 +319,9 @@ namespace StructuredLogViewer
                     return null;
                 }
             }
-            bool nameMatched = false;
-            string wordname = String.Empty;
+            
+            bool searchInName = AdditionalKeywords.Keys.Contains("name");
+            bool searchInValue = AdditionalKeywords.Keys.Contains("value");
             for (int i = 0; i < Words.Count; i++)
             {
                 bool anyFieldMatched = false;
@@ -355,47 +356,22 @@ namespace StructuredLogViewer
                             fullText = named.ToString();
                         }
                         // NameValueNode is special case have to check in witch field to search
-                        if (node is NameValueNode && AdditionalKeywords.Count > 0)
+                        if (node is NameValueNode && (searchInName ||  searchInValue))
                         {
-                            if (AdditionalKeywords.Keys.Contains("name") && j == 1)
-                            {
-                                if (!AdditionalKeywords.Keys.Contains("value"))
-                                {
+                            if (searchInName && j == 1 && word == AdditionalKeywords["name"])
+                            {                                
                                     result.AddMatch(fullText, word);
                                     anyFieldMatched = true;
                                     break;
-                                }
-                                else
-                                {
-                                    nameMatched = true;
-                                    wordname = word;
-                                }
+                                
                             }
-
-                            if (AdditionalKeywords.Keys.Contains("value") && j == 2)
-                            {
-                                if (!AdditionalKeywords.Keys.Contains("name"))
-                                {
+                            if (searchInValue && j == 2 && word == AdditionalKeywords["value"])
+                            {                                
                                     result.AddMatch(fullText, word);
                                     anyFieldMatched = true;
-                                    break;
-                                }
-                                else
-                                {
-                                    if (nameMatched)
-                                    {
-                                        fullText = node.ToString();
-                                        result.AddMatch(fullText, word);
-                                        result.AddMatch(fullText, wordname);
-                                        anyFieldMatched = true;
-                                        break;
-                                    }
-                                    else
-                                    {
-                                        anyFieldMatched = false;
-                                    }
-                                }
+                                    break;                                
                             }
+                            
                         }
                         else
                         {
@@ -415,6 +391,11 @@ namespace StructuredLogViewer
             }
 
             if (result == null)
+            {
+                return null;
+            }
+
+            if (searchInName && searchInValue && result.WordsInFields.Count < 2)
             {
                 return null;
             }
