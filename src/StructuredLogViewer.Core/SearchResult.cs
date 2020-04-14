@@ -20,9 +20,16 @@ namespace StructuredLogViewer
             }
         }
 
-        public void AddMatch(string field, string word)
+        public void AddMatch(string field, string word, bool addAtBeginning = false)
         {
-            WordsInFields.Add((field, word));
+            if (addAtBeginning)
+            {
+                WordsInFields.Insert(0, (field, word));
+            }
+            else
+            {
+                WordsInFields.Add((field, word));
+            }
         }
 
         public void AddMatchByNodeType()

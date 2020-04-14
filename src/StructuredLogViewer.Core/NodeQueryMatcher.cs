@@ -78,10 +78,13 @@ namespace StructuredLogViewer
                 {
                     eqaulindex = word.IndexOf("=");
                     tag = word.Substring(0, eqaulindex);
-                    word = word.Substring(eqaulindex + 1, word.Length - (eqaulindex + 1));
-                    Words.RemoveAt(i);
-                    Words.Insert(i, word);
-                    AdditionalKeywords.Add(tag, word);
+                    if (!AdditionalKeywords.ContainsKey(tag))
+                    {
+                        word = word.Substring(eqaulindex + 1, word.Length - (eqaulindex + 1));
+                        Words.RemoveAt(i);
+                        Words.Insert(i, word);
+                        AdditionalKeywords.Add(tag, word);
+                    }
                     continue;
                 }
             }
@@ -320,8 +323,8 @@ namespace StructuredLogViewer
                 }
             }
             
-            bool searchInName = AdditionalKeywords.Keys.Contains("name");
-            bool searchInValue = AdditionalKeywords.Keys.Contains("value");
+            bool searchInName = AdditionalKeywords.ContainsKey("name");
+            bool searchInValue = AdditionalKeywords.ContainsKey("value");
             for (int i = 0; i < Words.Count; i++)
             {
                 bool anyFieldMatched = false;
@@ -360,7 +363,7 @@ namespace StructuredLogViewer
                         {
                             if (searchInName && j == 1 && word == AdditionalKeywords["name"])
                             {                                
-                                    result.AddMatch(fullText, word);
+                                    result.AddMatch(fullText + (searchInValue? " =": ""), word, true);
                                     anyFieldMatched = true;
                                     break;
                                 
