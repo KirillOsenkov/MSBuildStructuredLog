@@ -12,9 +12,6 @@ namespace StructuredLogViewer
         public string Query { get; private set; }
         public List<string> Words { get; private set; }
         public string TypeKeyword { get; private set; }
-
-        public Dictionary<string, string> AdditionalKeywords { get; private set; } = new Dictionary<string, string>();
-
         public int NodeIndex { get; private set; } = -1;
         private HashSet<string>[] MatchesInStrings { get; set; }
         private NodeQueryMatcher UnderMatcher { get; set; }
