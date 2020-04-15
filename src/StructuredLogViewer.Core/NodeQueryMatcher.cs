@@ -353,23 +353,24 @@ namespace StructuredLogViewer
                     else
                     {
                         string fullText = field;
-                        if (node is NameValueNode named && fullText == named.Name && nameToSearch == null && valueToSearch == null)
+                        var named = node as NameValueNode;
+                        if (named != null && fullText == named.Name && nameToSearch == null && valueToSearch == null)
                         {
                             // if we matched a property in the name, show value as well since it's useful
                             fullText = named.ToString();
                         }
 
                         // NameValueNode is special case have to check in which field to search
-                        if (node is NameValueNode)
+                        if (named != null && (nameToSearch != null || valueToSearch != null))
                         {
-                            if (nameToSearch != null && j == 1 && word == nameToSearch)
+                            if (j == 1 && word == nameToSearch)
                             {
                                 result.AddMatch(fullText + (valueToSearch != null ? " =" : ""), word, true);
                                 anyFieldMatched = true;
                                 break;
                             }
 
-                            if (valueToSearch != null && j == 2 && word == valueToSearch)
+                            if (j == 2 && word == valueToSearch)
                             {
                                 result.AddMatch(fullText, word);
                                 anyFieldMatched = true;
