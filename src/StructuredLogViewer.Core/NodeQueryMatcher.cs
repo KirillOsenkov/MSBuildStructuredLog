@@ -18,6 +18,11 @@ namespace StructuredLogViewer
         public bool IncludeDuration { get; set; }
         public TimeSpan PrecalculationDuration { get; set; }
 
+        private bool searchInName { get; set; }
+        private bool searchInValue { get; set; }
+        private string nameToSearch { get; set; }
+        private string valueToSearch { get; set; }
+
         // avoid allocating this for every node
         [ThreadStatic]
         private static List<string> searchFieldsThreadStatic;
@@ -55,7 +60,7 @@ namespace StructuredLogViewer
                     continue;
                 }
 
-                if (word.Length > 2 && word[0] == '$' && word[1] != '(' && TypeKeyword == null)
+                if (word.Length > 2 && word[0] == '$' && word[1] != '(' && (TypeKeyword == null || !TypeKeyword.Contains(word.Substring(1).ToLowerInvariant())))
                 {
                     Words.RemoveAt(i);
                     TypeKeyword = word.Substring(1).ToLowerInvariant();
@@ -67,6 +72,26 @@ namespace StructuredLogViewer
                     word = word.Substring(6, word.Length - 7);
                     Words.RemoveAt(i);
                     UnderMatcher = new NodeQueryMatcher(word, stringTable);
+                    continue;
+                }
+
+                if (word.StartsWith("name=", StringComparison.OrdinalIgnoreCase) && word.Length > 5)
+                {
+                    word = word.Substring(5, word.Length - 5);
+                    Words.RemoveAt(i);
+                    Words.Insert(i, word);
+                    nameToSearch = word;
+                    searchInName = true;
+                    continue;
+                }
+
+                if (word.StartsWith("value=", StringComparison.OrdinalIgnoreCase) && word.Length > 6)
+                {
+                    word = word.Substring(6, word.Length - 6);
+                    Words.RemoveAt(i);
+                    Words.Insert(i, word);
+                    valueToSearch = word;
+                    searchInValue = true;
                     continue;
                 }
             }
@@ -332,17 +357,36 @@ namespace StructuredLogViewer
                     else
                     {
                         string fullText = field;
-                        if (node is NameValueNode named && fullText == named.Name)
+                        if (node is NameValueNode named && fullText == named.Name && !searchInValue && !searchInName)
                         {
                             // if we matched a property in the name, show value as well since it's useful
                             fullText = named.ToString();
                         }
 
-                        result.AddMatch(fullText, word);
-                    }
+                        // NameValueNode is special case have to check in witch field to search
+                        if (node is NameValueNode && (searchInName || searchInValue))
+                        {
+                            if (searchInName && j == 1 && word == nameToSearch)
+                            {
+                                result.AddMatch(fullText + (searchInValue ? " =" : ""), word, true);
+                                anyFieldMatched = true;
+                                break;
+                            }
 
-                    anyFieldMatched = true;
-                    break;
+                            if (searchInValue && j == 2 && word == valueToSearch)
+                            {
+                                result.AddMatch(fullText, word);
+                                anyFieldMatched = true;
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            result.AddMatch(fullText, word);
+                            anyFieldMatched = true;
+                            break;
+                        }
+                    }
                 }
 
                 if (!anyFieldMatched)
@@ -352,6 +396,11 @@ namespace StructuredLogViewer
             }
 
             if (result == null)
+            {
+                return null;
+            }
+
+            if (searchInName && searchInValue && result.WordsInFields.Count < 2)
             {
                 return null;
             }
