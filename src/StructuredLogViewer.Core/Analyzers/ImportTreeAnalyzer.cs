@@ -74,12 +74,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            if (rootProjectNode.Children.First() is TimedNode importsFolder && importsFolder.Name == Strings.Imports)
+            if (rootProjectNode.Children.First() is Folder importsFolder && importsFolder.Name == Strings.Imports)
             {
             }
             else
             {
-                importsFolder = new TimedNode()
+                importsFolder = new Folder()
                 {
                     Name = Strings.Imports
                 };
