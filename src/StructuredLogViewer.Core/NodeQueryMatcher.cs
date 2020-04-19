@@ -13,7 +13,6 @@ namespace StructuredLogViewer
         public List<string> Words { get; private set; }
         public string TypeKeyword { get; private set; }
         public int NodeIndex { get; private set; } = -1;
-
         private HashSet<string>[] MatchesInStrings { get; set; }
         public bool IncludeDuration { get; set; }
         public TimeSpan PrecalculationDuration { get; set; }
