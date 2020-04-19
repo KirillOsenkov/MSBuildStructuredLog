@@ -10,7 +10,6 @@ namespace StructuredLogViewer
         public List<(string field, string match)> WordsInFields = new List<(string, string)>();
         public bool MatchedByType { get; private set; }
         public TimeSpan Duration { get; set; }
-        public bool ExcludeMatch { get; set; } = false;
 
         public SearchResult(BaseNode node, bool includeDuration = false)
         {

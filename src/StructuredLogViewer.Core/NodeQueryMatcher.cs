@@ -21,10 +21,10 @@ namespace StructuredLogViewer
         private bool searchInValue { get; set; }
         private string nameToSearch { get; set; }
         private string valueToSearch { get; set; }
-        private List<NodeQueryMatcher> UnderMatchers { get; set; } = new List<NodeQueryMatcher>();
+        private List<NodeQueryMatcher> IncludeMatchers { get; set; } = new List<NodeQueryMatcher>();
+        private List<NodeQueryMatcher> ExcludeMatchers { get; set; } = new List<NodeQueryMatcher>();
+
         public int NodeIndex { get; set; } = -1;
-        public bool ExcludeFromSearch { get; set; }
-        private List<BaseNode> ExcludedNodes { get; set; } = new List<BaseNode>();
 
         // avoid allocating this for every node
         [ThreadStatic]
@@ -75,8 +75,7 @@ namespace StructuredLogViewer
                     word = word.Substring(6, word.Length - 7);
                     Words.RemoveAt(i);
                     UnderMatcher = new NodeQueryMatcher(word, stringTable);
-                    UnderMatcher.ExcludeFromSearch = false;
-                    UnderMatchers.Add(UnderMatcher);
+                    IncludeMatchers.Add(UnderMatcher);
                     continue;
                 }
 
@@ -85,8 +84,7 @@ namespace StructuredLogViewer
                     word = word.Substring(9, word.Length - 10);
                     Words.RemoveAt(i);
                     UnderMatcher = new NodeQueryMatcher(word, stringTable);
-                    UnderMatcher.ExcludeFromSearch = true;
-                    UnderMatchers.Add(UnderMatcher);
+                    ExcludeMatchers.Add(UnderMatcher);
                     continue;
                 }
 
@@ -337,23 +335,14 @@ namespace StructuredLogViewer
             {
                 if (node is TimedNode timedNode && timedNode.Index == NodeIndex)
                 {
-                    if (!ExcludeFromSearch)
-                    {
-                        result = new SearchResult(node);
-                        var prefix = "Node id: ";
-                        result.AddMatch(prefix + NodeIndex.ToString(), NodeIndex.ToString());
-                        return result;
-                    }
-                    else
-                    {
-                        result = new SearchResult(node);
-                        result.ExcludeMatch = true;
-                        return result;
-                    }
+                    result = new SearchResult(node);
+                    var prefix = "Node id: ";
+                    result.AddMatch(prefix + NodeIndex.ToString(), NodeIndex.ToString());
+                    return result;
                 }
             }
 
-            bool showResult = UnderMatchers.Count == 0;
+            bool showResult = IncludeMatchers.Count == 0;
             for (int i = 0; i < Words.Count; i++)
             {
                 bool anyFieldMatched = false;
@@ -430,50 +419,42 @@ namespace StructuredLogViewer
                 return null;
             }
 
-            foreach(NodeQueryMatcher matcher in UnderMatchers)
+            foreach (NodeQueryMatcher matcher in IncludeMatchers)
             {
-                if (!matcher.ExcludeFromSearch && NodeQueryMatcher.IsUnder(matcher, result, ExcludedNodes))
+                if (!showResult)
                 {
-                    showResult = true;
-                    break;
+                    showResult = NodeQueryMatcher.IsUnder(matcher, result);
                 }
+            }
 
-                if (matcher.ExcludeFromSearch && NodeQueryMatcher.IsUnder(matcher, result, ExcludedNodes))
+            if (IncludeMatchers.Count == 0)
+            {
+                showResult = true;
+            }
+
+            foreach (NodeQueryMatcher matcher in ExcludeMatchers)
+            {
+                if (NodeQueryMatcher.IsUnder(matcher, result))
                 {
                     showResult = false;
                     break;
                 }
-
             }
-
+                                 
             if (!showResult)
             {
                 return null;
             }
 
-            if (ExcludeFromSearch && result != null)
-            {
-                result.ExcludeMatch = true;
-            }
-
             return result;
         }
 
-        private static bool IsUnder(NodeQueryMatcher matcher, SearchResult result, List<BaseNode> exludedNodes)
+        private static bool IsUnder(NodeQueryMatcher matcher, SearchResult result)
         {
             foreach (var parent in result.Node.GetParentChainExcludingThis())
             {
-                if (exludedNodes.Contains(parent)) return true;
-
-                var parentresult = matcher.IsMatch(parent);
-
-                if (parentresult != null)
+                if (matcher.IsMatch(parent) != null)
                 {
-                    if (parentresult.ExcludeMatch)
-                    {
-                        exludedNodes.Add(parent);
-                    }
-
                     return true;
                 }
             }
