@@ -14,12 +14,13 @@ namespace StructuredLogViewer
         public string TypeKeyword { get; private set; }
         public int NodeIndex { get; private set; } = -1;
         private HashSet<string>[] MatchesInStrings { get; set; }
-        private NodeQueryMatcher UnderMatcher { get; set; }
         public bool IncludeDuration { get; set; }
         public TimeSpan PrecalculationDuration { get; set; }
 
         private string nameToSearch { get; set; }
         private string valueToSearch { get; set; }
+        private List<NodeQueryMatcher> IncludeMatchers { get; set; } = new List<NodeQueryMatcher>();
+        private List<NodeQueryMatcher> ExcludeMatchers { get; set; } = new List<NodeQueryMatcher>();
 
         // avoid allocating this for every node
         [ThreadStatic]
@@ -69,7 +70,17 @@ namespace StructuredLogViewer
                 {
                     word = word.Substring(6, word.Length - 7);
                     Words.RemoveAt(i);
-                    UnderMatcher = new NodeQueryMatcher(word, stringTable);
+                    var underMatcher = new NodeQueryMatcher(word, stringTable);
+                    IncludeMatchers.Add(underMatcher);
+                    continue;
+                }
+
+                if (word.StartsWith("notunder(", StringComparison.OrdinalIgnoreCase) && word.EndsWith(")"))
+                {
+                    word = word.Substring(9, word.Length - 10);
+                    Words.RemoveAt(i);
+                    var underMatcher = new NodeQueryMatcher(word, stringTable);
+                    ExcludeMatchers.Add(underMatcher);
                     continue;
                 }
 
@@ -402,9 +413,26 @@ namespace StructuredLogViewer
                 return null;
             }
 
-            if (UnderMatcher != null && !IsUnder(UnderMatcher, result))
+            bool showResult = IncludeMatchers.Count == 0;
+            foreach (NodeQueryMatcher matcher in IncludeMatchers)
+            {
+                if (!showResult)
+                {
+                    showResult = IsUnder(matcher, result);
+                }
+            }
+
+            if (!showResult)
             {
                 return null;
+            }
+
+            foreach (NodeQueryMatcher matcher in ExcludeMatchers)
+            {
+                if (IsUnder(matcher, result))
+                {
+                    return null;
+                }
             }
 
             return result;
