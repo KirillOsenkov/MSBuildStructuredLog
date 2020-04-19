@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Microsoft.Build.Logging.StructuredLogger;
 using Xunit;
 
@@ -10,6 +11,14 @@ namespace StructuredLogger.Tests
 {
     public class BinarySerializationTests
     {
+        public void DumpTimedNodes()
+        {
+            var build = Serialization.Read("1.binlog");
+            var sb = new StringBuilder();
+            build.VisitAllChildren<TimedNode>(t => sb.AppendLine($"{t.Index}: {t}"));
+            System.Windows.Forms.Clipboard.SetText(sb.ToString());
+        }
+
         //[Fact]
         public void RecordStats()
         {
