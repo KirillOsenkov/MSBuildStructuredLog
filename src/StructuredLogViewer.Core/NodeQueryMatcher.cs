@@ -17,8 +17,6 @@ namespace StructuredLogViewer
         public bool IncludeDuration { get; set; }
         public TimeSpan PrecalculationDuration { get; set; }
 
-        private bool searchInName { get; set; }
-        private bool searchInValue { get; set; }
         private string nameToSearch { get; set; }
         private string valueToSearch { get; set; }
         private List<NodeQueryMatcher> IncludeMatchers { get; set; } = new List<NodeQueryMatcher>();
@@ -94,7 +92,6 @@ namespace StructuredLogViewer
                     Words.RemoveAt(i);
                     Words.Insert(i, word);
                     nameToSearch = word;
-                    searchInName = true;
                     continue;
                 }
 
@@ -104,7 +101,6 @@ namespace StructuredLogViewer
                     Words.RemoveAt(i);
                     Words.Insert(i, word);
                     valueToSearch = word;
-                    searchInValue = true;
                     continue;
                 }
             }
@@ -371,23 +367,24 @@ namespace StructuredLogViewer
                     else
                     {
                         string fullText = field;
-                        if (node is NameValueNode named && fullText == named.Name && !searchInValue && !searchInName)
+                        var named = node as NameValueNode;
+                        if (named != null && fullText == named.Name && nameToSearch == null && valueToSearch == null)
                         {
                             // if we matched a property in the name, show value as well since it's useful
                             fullText = named.ToString();
                         }
 
-                        // NameValueNode is special case have to check in witch field to search
-                        if (node is NameValueNode && (searchInName || searchInValue))
+                        // NameValueNode is special case have to check in which field to search
+                        if (named != null && (nameToSearch != null || valueToSearch != null))
                         {
-                            if (searchInName && j == 1 && word == nameToSearch)
+                            if (j == 1 && word == nameToSearch)
                             {
-                                result.AddMatch(fullText + (searchInValue ? " =" : ""), word, true);
+                                result.AddMatch(fullText + (valueToSearch != null ? " =" : ""), word, true);
                                 anyFieldMatched = true;
                                 break;
                             }
 
-                            if (searchInValue && j == 2 && word == valueToSearch)
+                            if (j == 2 && word == valueToSearch)
                             {
                                 result.AddMatch(fullText, word);
                                 anyFieldMatched = true;
@@ -414,7 +411,7 @@ namespace StructuredLogViewer
                 return null;
             }
 
-            if (searchInName && searchInValue && result.WordsInFields.Count < 2)
+            if (nameToSearch != null && valueToSearch != null && result.WordsInFields.Count < 2)
             {
                 return null;
             }
