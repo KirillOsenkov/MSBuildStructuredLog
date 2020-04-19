@@ -12,6 +12,8 @@ namespace StructuredLogViewer
         public string Query { get; private set; }
         public List<string> Words { get; private set; }
         public string TypeKeyword { get; private set; }
+        public int NodeIndex { get; private set; } = -1;
+
         private HashSet<string>[] MatchesInStrings { get; set; }
         public bool IncludeDuration { get; set; }
         public TimeSpan PrecalculationDuration { get; set; }
@@ -20,8 +22,6 @@ namespace StructuredLogViewer
         private string valueToSearch { get; set; }
         private List<NodeQueryMatcher> IncludeMatchers { get; set; } = new List<NodeQueryMatcher>();
         private List<NodeQueryMatcher> ExcludeMatchers { get; set; } = new List<NodeQueryMatcher>();
-
-        public int NodeIndex { get; set; } = -1;
 
         // avoid allocating this for every node
         [ThreadStatic]
@@ -303,6 +303,17 @@ namespace StructuredLogViewer
                 return null;
             }
 
+            if (NodeIndex > -1)
+            {
+                if (node is TimedNode timedNode && timedNode.Index == NodeIndex)
+                {
+                    result = new SearchResult(node);
+                    var prefix = "Node id: ";
+                    result.AddMatch(prefix + NodeIndex.ToString(), NodeIndex.ToString());
+                    return result;
+                }
+            }
+
             var searchFields = PopulateSearchFields(node);
 
             if (TypeKeyword != null)
@@ -323,17 +334,6 @@ namespace StructuredLogViewer
                 else
                 {
                     return null;
-                }
-            }
-
-            if (NodeIndex > -1)
-            {
-                if (node is TimedNode timedNode && timedNode.Index == NodeIndex)
-                {
-                    result = new SearchResult(node);
-                    var prefix = "Node id: ";
-                    result.AddMatch(prefix + NodeIndex.ToString(), NodeIndex.ToString());
-                    return result;
                 }
             }
 
