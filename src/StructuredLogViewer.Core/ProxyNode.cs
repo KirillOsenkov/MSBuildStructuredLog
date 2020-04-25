@@ -68,6 +68,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     Highlights.Add(fieldText.Substring(index, fieldText.Length - index));
                 }
+
+                if (result.SearchResultPaar.ContainsKey(fieldText))
+                {
+                    Highlights.Add(" = " + TextUtilities.ShortenValue(result.SearchResultPaar[fieldText], "..."));
+                }
             }
 
             AddDuration(result);

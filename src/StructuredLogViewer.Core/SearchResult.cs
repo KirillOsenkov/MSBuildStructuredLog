@@ -8,6 +8,7 @@ namespace StructuredLogViewer
     {
         public BaseNode Node { get; }
         public List<(string field, string match)> WordsInFields = new List<(string, string)>();
+        public Dictionary<string, string> SearchResultPaar = new Dictionary<string, string>();
         public bool MatchedByType { get; private set; }
         public TimeSpan Duration { get; set; }
 
@@ -20,7 +21,7 @@ namespace StructuredLogViewer
             }
         }
 
-        public void AddMatch(string field, string word, bool addAtBeginning = false)
+        public void AddMatch(string field, string word, string notHighlightedtext = "", bool addAtBeginning = false)
         {
             if (addAtBeginning)
             {
@@ -29,6 +30,11 @@ namespace StructuredLogViewer
             else
             {
                 WordsInFields.Add((field, word));
+            }
+
+            if (!string.IsNullOrEmpty(notHighlightedtext))
+            {
+                SearchResultPaar.Add(field, notHighlightedtext);
             }
         }
 
