@@ -336,6 +336,8 @@ namespace StructuredLogViewer
                 }
             }
 
+            bool nameMatched = false;
+            bool valueMatched = false;
             for (int i = 0; i < Words.Count; i++)
             {
                 bool anyFieldMatched = false;
@@ -385,7 +387,7 @@ namespace StructuredLogViewer
                                 {
                                     result.AddMatch(fullText, word, notHighlightedtext: named.Value, addAtBeginning: true);
                                 }
-
+                                nameMatched = true;
                                 anyFieldMatched = true;
                                 break;
                             }
@@ -393,6 +395,7 @@ namespace StructuredLogViewer
                             if (j == 2 && word == valueToSearch)
                             {
                                 result.AddMatch(fullText, word);
+                                valueMatched = true;
                                 anyFieldMatched = true;
                                 break;
                             }
@@ -417,7 +420,7 @@ namespace StructuredLogViewer
                 return null;
             }
 
-            if (nameToSearch != null && valueToSearch != null && result.WordsInFields.Count < 2)
+            if (nameToSearch != null && valueToSearch != null && (!nameMatched || !valueMatched))
             {
                 return null;
             }
