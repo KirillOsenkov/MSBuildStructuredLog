@@ -68,6 +68,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     Highlights.Add(fieldText.Substring(index, fieldText.Length - index));
                 }
+
+                string fieldValue = result.SearchResultPaar.Where(t => t.highlighted.Equals(fieldText)).Select(t => t.nothighleghted).FirstOrDefault();
+                if (fieldValue != null)
+                {
+                    Highlights.Add(" = " + TextUtilities.ShortenValue(fieldValue, "..."));
+                }
             }
 
             AddDuration(result);
