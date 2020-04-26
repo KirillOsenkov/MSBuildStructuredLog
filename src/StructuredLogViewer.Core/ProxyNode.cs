@@ -49,6 +49,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 Highlights.Add(" ");
 
                 var fieldText = wordsInField.Key;
+                
+                //NameValueNode is speial case: have to show name=value when seached only in one (name or value)
+                var named = SearchResult.Node as NameValueNode;
+                if (named != null && wordsInField.Key.Equals(named.Value))
+                {                    
+                        Highlights.Add(named.Name + " = ");
+                }
+
                 fieldText = TextUtilities.ShortenValue(fieldText, "...");
 
                 var highlightSpans = TextUtilities.GetHighlightedSpansInText(fieldText, wordsInField);
@@ -69,10 +77,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     Highlights.Add(fieldText.Substring(index, fieldText.Length - index));
                 }
 
-                string fieldValue = result.SearchResultPaar.Where(t => t.highlighted.Equals(fieldText)).Select(t => t.nothighleghted).FirstOrDefault();
-                if (fieldValue != null)
+                //NameValueNode is speial case: have to show name=value when seached only in one (name or value)
+                if (named != null && wordsInField.Key.Equals(named.Name))
                 {
-                    Highlights.Add(" = " + TextUtilities.ShortenValue(fieldValue, "..."));
+                    Highlights.Add(" = " + TextUtilities.ShortenValue(named.Value, "..."));
                 }
             }
 

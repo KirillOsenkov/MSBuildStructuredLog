@@ -380,13 +380,10 @@ namespace StructuredLogViewer
                             {
                                 if (valueToSearch != null)
                                 {
-                                    fullText += " =";
-                                    result.AddMatch(fullText, word, addAtBeginning: true);
+                                    fullText += " = ";
+
                                 }
-                                else
-                                {
-                                    result.AddMatch(fullText, word, notHighlightedtext: named.Value, addAtBeginning: true);
-                                }
+                                result.AddMatch(fullText, word, addAtBeginning: true);
                                 nameMatched = true;
                                 anyFieldMatched = true;
                                 break;
