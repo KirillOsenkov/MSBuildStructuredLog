@@ -7,6 +7,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class CompilerInvocation
     {
+        public const string CSharp = "C#";
+        public const string FSharp = "F#";
+        public const string TypeScript = "TypeScript";
+        public const string VisualBasic = "Visual Basic";
+
         public string Language { get; set; }
         public string CommandLineArguments { get; set; }
         public string ProjectFilePath { get; set; }
@@ -21,19 +26,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
     public class CompilerInvocationsReader
     {
-        public const string CSharp = "C#";
-        public const string FSharp = "F#";
-        public const string TypeScript = "TypeScript";
-        public const string VisualBasic = "Visual Basic";
-
-        public string LogFilePath { get; }
-
         public static IEnumerable<CompilerInvocation> ReadInvocations(string binLogFilePath)
         {
-            return new CompilerInvocationsReader(binLogFilePath).Read();
+            return new CompilerInvocationsReader().Read(binLogFilePath);
         }
 
-        public CompilerInvocationsReader(string binLogFilePath)
+        public static IEnumerable<CompilerInvocation> ReadInvocations(Build build)
+        {
+            return new CompilerInvocationsReader().Read(build);
+        }
+
+        public IEnumerable<CompilerInvocation> Read(string binLogFilePath)
         {
             binLogFilePath = Path.GetFullPath(binLogFilePath);
 
@@ -42,14 +45,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 throw new FileNotFoundException(binLogFilePath);
             }
 
-            LogFilePath = binLogFilePath;
-        }
-
-        public IEnumerable<CompilerInvocation> Read()
-        {
-            if (LogFilePath.EndsWith(".buildlog", StringComparison.OrdinalIgnoreCase))
+            if (binLogFilePath.EndsWith(".buildlog", StringComparison.OrdinalIgnoreCase))
             {
-                return ReadBuildLogFormat(LogFilePath);
+                return ReadBuildLogFormat(binLogFilePath);
             }
 
             var invocations = new List<CompilerInvocation>();
@@ -68,9 +66,30 @@ namespace Microsoft.Build.Logging.StructuredLogger
             reader.TargetStarted += TryGetInvocationFromEvent;
             reader.MessageRaised += TryGetInvocationFromEvent;
 
-            reader.Replay(LogFilePath);
+            reader.Replay(binLogFilePath);
 
             return invocations;
+        }
+
+        public IEnumerable<CompilerInvocation> Read(Build build)
+        {
+            var invocations = new List<CompilerInvocation>();
+            build.VisitAllChildren<Task>(t =>
+            {
+                var invocation = TryGetInvocationFromTask(t);
+                if (invocation != null)
+                {
+                    invocations.Add(invocation);
+                }
+            });
+
+            return invocations;
+        }
+
+        public IEnumerable<CompilerInvocation> ReadBuildLogFormat(string buildLogFilePath)
+        {
+            var build = Serialization.Read(buildLogFilePath);
+            return Read(build);
         }
 
         public CompilerInvocation TryGetInvocationFromRecord(BuildEventArgs args, Dictionary<(int, int), CompilerInvocation> taskIdToInvocationMap)
@@ -126,22 +145,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return commandLine;
         }
 
-        public List<CompilerInvocation> ReadBuildLogFormat(string buildLogFilePath)
-        {
-            var build = Serialization.Read(buildLogFilePath);
-            var invocations = new List<CompilerInvocation>();
-            build.VisitAllChildren<Task>(t =>
-            {
-                var invocation = TryGetInvocationFromTask(t);
-                if (invocation != null)
-                {
-                    invocations.Add(invocation);
-                }
-            });
-
-            return invocations;
-        }
-
         public CompilerInvocation TryGetInvocationFromTask(Task task)
         {
             var name = task.Name;
@@ -167,7 +170,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             int occurrence = -1;
 
-            if (language == CSharp)
+            if (language == CompilerInvocation.CSharp)
             {
                 occurrence = commandLine.IndexOf("csc.exe ", StringComparison.OrdinalIgnoreCase);
                 if (occurrence == -1)
@@ -175,7 +178,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     occurrence = commandLine.IndexOf("csc.dll ", StringComparison.OrdinalIgnoreCase);
                 }
             }
-            else if (language == VisualBasic)
+            else if (language == CompilerInvocation.VisualBasic)
             {
                 occurrence = commandLine.IndexOf("vbc.exe ", StringComparison.OrdinalIgnoreCase);
                 if (occurrence == -1)
@@ -183,7 +186,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     occurrence = commandLine.IndexOf("vbc.dll ", StringComparison.OrdinalIgnoreCase);
                 }
             }
-            else if (language == FSharp)
+            else if (language == CompilerInvocation.FSharp)
             {
                 occurrence = commandLine.IndexOf("fsc.exe ", StringComparison.OrdinalIgnoreCase);
                 if (occurrence == -1)
@@ -191,7 +194,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     occurrence = commandLine.IndexOf("fsc.dll ", StringComparison.OrdinalIgnoreCase);
                 }
             }
-            else if (language == TypeScript)
+            else if (language == CompilerInvocation.TypeScript)
             {
                 occurrence = commandLine.IndexOf("tsc.exe ", StringComparison.OrdinalIgnoreCase);
                 if (occurrence == -1)
@@ -213,19 +216,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             if (string.Equals(name, "Csc", StringComparison.OrdinalIgnoreCase))
             {
-                return CSharp;
+                return CompilerInvocation.CSharp;
             }
             else if (string.Equals(name, "Vbc", StringComparison.OrdinalIgnoreCase))
             {
-                return VisualBasic;
+                return CompilerInvocation.VisualBasic;
             }
             else if (string.Equals(name, "Fsc", StringComparison.OrdinalIgnoreCase))
             {
-                return FSharp;
+                return CompilerInvocation.FSharp;
             }
             else if (string.Equals(name, "Tsc", StringComparison.OrdinalIgnoreCase))
             {
-                return TypeScript;
+                return CompilerInvocation.TypeScript;
             }
             else
             {
