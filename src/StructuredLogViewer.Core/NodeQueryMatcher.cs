@@ -385,7 +385,7 @@ namespace StructuredLogViewer
                                 }
                                 else
                                 {
-                                    result.AddMatch(fullText, word, notHighlightedtext: named.Value, addAtBeginning: true);
+                                    result.AddMatch(fullText, word, notHighlightedText: named.Value, addAtBeginning: true);
                                 }
 
                                 nameMatched = true;
