@@ -21,11 +21,7 @@ namespace StructuredLogViewer
             }
         }
 
-<<<<<<< HEAD
         public void AddMatch(string field, string word, bool addAtBeginning = false)
-=======
-        public void AddMatch(string field, string word, string notHighlightedText = "", bool addAtBeginning = false)
->>>>>>> master
         {
             if (addAtBeginning)
             {
@@ -34,16 +30,7 @@ namespace StructuredLogViewer
             else
             {
                 WordsInFields.Add((field, word));
-<<<<<<< HEAD
             }            
-=======
-            }
-
-            if (!string.IsNullOrEmpty(notHighlightedText))
-            {
-                SearchResultPair.Add((field, notHighlightedText));
-            }
->>>>>>> master
         }
 
         public void AddMatchByNodeType()
