@@ -367,12 +367,7 @@ namespace StructuredLogViewer
                     {
                         string fullText = field;
                         var named = node as NameValueNode;
-                        if (named != null && fullText == named.Name && nameToSearch == null && valueToSearch == null)
-                        {
-                            // if we matched a property in the name, show value as well since it's useful
-                            fullText = named.ToString();
-                        }
-
+                      
                         // NameValueNode is special case have to check in which field to search
                         if (named != null && (nameToSearch != null || valueToSearch != null))
                         {
@@ -380,14 +375,10 @@ namespace StructuredLogViewer
                             {
                                 if (valueToSearch != null)
                                 {
-                                    fullText += " =";
-                                    result.AddMatch(fullText, word, addAtBeginning: true);
-                                }
-                                else
-                                {
-                                    result.AddMatch(fullText, word, notHighlightedText: named.Value, addAtBeginning: true);
-                                }
+                                    fullText += " = ";
 
+                                }
+                                result.AddMatch(fullText, word, addAtBeginning: true);
                                 nameMatched = true;
                                 anyFieldMatched = true;
                                 break;
