@@ -52,7 +52,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 
                 //NameValueNode is speial case: have to show name=value when seached only in one (name or value)
                 var named = SearchResult.Node as NameValueNode;
-                if (named != null && wordsInField.Key.Equals(named.Value))
+                if (named != null && wordsInField.Key.Equals(named.Value) &&
+                    (!result.WordsInFields.Any(t => t.field == named.Name) && !result.WordsInFields.Any(t => t.field == named.Name + " = ")))
                 {                    
                         Highlights.Add(named.Name + " = ");
                 }
@@ -78,7 +79,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
 
                 //NameValueNode is speial case: have to show name=value when seached only in one (name or value)
-                if (named != null && wordsInField.Key.Equals(named.Name))
+                if (named != null && wordsInField.Key.Equals(named.Name) && !result.WordsInFields.Any(t => t.field == named.Value))
                 {
                     Highlights.Add(" = " + TextUtilities.ShortenValue(named.Value, "..."));
                 }
