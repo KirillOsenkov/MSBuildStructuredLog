@@ -30,7 +30,7 @@ namespace StructuredLogViewer
             else
             {
                 WordsInFields.Add((field, word));
-            }            
+            }
         }
 
         public void AddMatchByNodeType()
