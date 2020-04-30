@@ -44,18 +44,35 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             Highlights.Add(OriginalType);
 
+            //NameValueNode is speial case: have to show name=value when seached only in one (name or value)
+            var named = SearchResult.Node as NameValueNode;
+            bool nameFound = false;
+            bool valueFound = false;
+            if (named != null)
+            {
+                foreach (var fieldText in result.WordsInFields.GroupBy(t => t.field))
+                {
+                    if (fieldText.Key.Equals(named.Name) || fieldText.Key.Equals(named.Name + " = "))
+                    { 
+                        nameFound = true;
+                    }
+
+                    if (fieldText.Key.Equals(named.Value))
+                    {
+                        valueFound = true;
+                    }
+                }
+            }
+
             foreach (var wordsInField in result.WordsInFields.GroupBy(t => t.field, t => t.match))
             {
                 Highlights.Add(" ");
 
                 var fieldText = wordsInField.Key;
-                
-                //NameValueNode is speial case: have to show name=value when seached only in one (name or value)
-                var named = SearchResult.Node as NameValueNode;
-                if (named != null && wordsInField.Key.Equals(named.Value) &&
-                    (!result.WordsInFields.Any(t => t.field == named.Name) && !result.WordsInFields.Any(t => t.field == named.Name + " = ")))
-                {                    
-                        Highlights.Add(named.Name + " = ");
+
+                if (named != null && wordsInField.Key.Equals(named.Value) && !nameFound)
+                {
+                    Highlights.Add(named.Name + " = ");
                 }
 
                 fieldText = TextUtilities.ShortenValue(fieldText, "...");
@@ -78,8 +95,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     Highlights.Add(fieldText.Substring(index, fieldText.Length - index));
                 }
 
-                //NameValueNode is speial case: have to show name=value when seached only in one (name or value)
-                if (named != null && wordsInField.Key.Equals(named.Name) && !result.WordsInFields.Any(t => t.field == named.Value))
+                if (named != null && wordsInField.Key.Equals(named.Name) && !valueFound)
                 {
                     Highlights.Add(" = " + TextUtilities.ShortenValue(named.Value, "..."));
                 }
