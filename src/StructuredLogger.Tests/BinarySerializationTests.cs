@@ -11,6 +11,12 @@ namespace StructuredLogger.Tests
 {
     public class BinarySerializationTests
     {
+        [Fact]
+        public void ReadCompilerInvocations()
+        {
+            var invocations = CompilerInvocationsReader.ReadInvocations(@"C:\temp\mmitche\build.x64.binlog");
+        }
+
         public void DumpTimedNodes()
         {
             var build = Serialization.Read("1.binlog");
@@ -19,11 +25,11 @@ namespace StructuredLogger.Tests
             System.Windows.Forms.Clipboard.SetText(sb.ToString());
         }
 
-        //[Fact]
+        [Fact]
         public void RecordStats()
         {
             var reader = new BinLogReader();
-            var records = reader.ReadRecords(@"C:\temp\vsmac.binlog");
+            var records = reader.ReadRecords(@"C:\temp\RoslynBinlogs\RoslynNew.binlog");
 
             var recordsByType = new Dictionary<string, List<Microsoft.Build.Logging.Record>>();
 
@@ -90,11 +96,11 @@ namespace StructuredLogger.Tests
             return "Misc";
         }
 
-        //[Fact]
+        [Fact]
         public void Stats()
         {
             var sw = Stopwatch.StartNew();
-            var build = Serialization.Read(@"C:\temp\vsmac.binlog");
+            var build = Serialization.Read(@"C:\temp\mmitche\build.x64.binlog");
             var stats = build.Statistics;
 
             //var messages = stats.TruncatedMessages.OrderByDescending(m => m.text.Length).Select(m => (m.taskName, m.text.Length, m.text)).ToArray();

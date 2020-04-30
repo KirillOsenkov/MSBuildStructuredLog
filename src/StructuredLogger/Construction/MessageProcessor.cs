@@ -62,7 +62,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     {
                         var task = GetTask(args);
 
-                        //this.construction.Build.Statistics.ReportOutputItemMessage(task, message);
+                        this.construction.Build.Statistics.ReportOutputItemMessage(task, message);
 
                         var folder = task.GetOrCreateNodeWithName<Folder>("OutputItems");
                         var parameter = ItemGroupParser.ParsePropertyOrItemList(message, OutputItemsMessagePrefix, stringTable);
@@ -102,7 +102,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             return;
                         }
 
-                        //this.construction.Build.Statistics.ReportTaskParameterMessage(task, message);
+                        this.construction.Build.Statistics.ReportTaskParameterMessage(task, message);
 
                         var folder = task.GetOrCreateNodeWithName<Folder>(Strings.Parameters);
                         var parameter = ItemGroupParser.ParsePropertyOrItemList(message, TaskParameterMessagePrefix, stringTable);
