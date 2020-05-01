@@ -1300,6 +1300,19 @@ Recent:
                         parent = projectProxy;
                         parent.IsExpanded = true;
                     }
+
+                    var task = result.Node.GetNearestParent<Task>();
+                    if (task != null)
+                    {
+                        var taskProxy = parent.GetOrCreateNodeWithName<ProxyNode>(task.TypeName + ": " + task.Name);
+                        taskProxy.Original = task;
+                        if (taskProxy.Highlights.Count == 0)
+                        {
+                            taskProxy.Highlights.Add(taskProxy.Name);
+                        }
+                        parent = taskProxy;
+                        parent.IsExpanded = true;
+                    }
                 }
 
                 var proxy = new ProxyNode();

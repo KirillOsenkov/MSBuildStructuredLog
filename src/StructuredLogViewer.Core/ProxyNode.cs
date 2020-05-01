@@ -70,7 +70,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 var fieldText = wordsInField.Key;
 
+<<<<<<< HEAD
                 if (named != null && wordsInField.Key.Equals(named.Value) && !nameFound)
+=======
+                // NameValueNode is a special case: have to show name=value when searched only in one (name or value)
+                var named = SearchResult.Node as NameValueNode;
+                if (named != null && wordsInField.Key.Equals(named.Value) &&
+                    (!result.WordsInFields.Any(t => t.field == named.Name) && !result.WordsInFields.Any(t => t.field == named.Name + " = ")))
+>>>>>>> b1d331fe77e28c47f44f9fe063ca09bb5b968b79
                 {
                     Highlights.Add(named.Name + " = ");
                 }
@@ -95,7 +102,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     Highlights.Add(fieldText.Substring(index, fieldText.Length - index));
                 }
 
+<<<<<<< HEAD
                 if (named != null && wordsInField.Key.Equals(named.Name) && !valueFound)
+=======
+                // NameValueNode is a special case: have to show name=value when searched only in one (name or value)
+                if (named != null && wordsInField.Key.Equals(named.Name) && !result.WordsInFields.Any(t => t.field == named.Value))
+>>>>>>> b1d331fe77e28c47f44f9fe063ca09bb5b968b79
                 {
                     Highlights.Add(" = " + TextUtilities.ShortenValue(named.Value, "..."));
                 }
