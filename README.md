@@ -19,9 +19,18 @@ The app updates automatically via [Squirrel](https://github.com/Squirrel/Squirre
 
 ![Screenshot1](http://msbuildlog.com/Screenshot1.png)
 
+## Running the Avalonia version on Mac:
+
+1. git clone https://github.com/KirillOsenkov/MSBuildStructuredLog
+2. dotnet build
+3. dotnet publish --self-contained -o <some_dir> (I used $HOME/tools/artifacts/StructuredLogViewer.Avalonia)
+4. make a script $HOME/bin/structured-log-viewer (or whatever's on your PATH):
+#! /bin/sh
+exec dotnet ${HOME}/tools/artifacts/StructuredLogViewer.Avalonia/publish/StructuredLogViewer.Avalonia.dll "$@"
+
 ## Requirements:
  * .NET Framework 4.7.2
- * MSBuild 15.0
+ * MSBuild 16.0
  * Visual Studio 2019
 
 ## Usage:
