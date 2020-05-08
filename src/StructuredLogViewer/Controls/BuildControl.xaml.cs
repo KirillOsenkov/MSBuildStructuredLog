@@ -38,6 +38,7 @@ namespace StructuredLogViewer.Controls
         private MenuItem viewSubtreeTextItem;
         private MenuItem searchInSubtreeItem;
         private MenuItem excludeSubtreeFromSearchItem;
+        private MenuItem goToTimeLineItem;
         private MenuItem copyChildrenItem;
         private MenuItem sortChildrenItem;
         private MenuItem copyNameItem;
@@ -102,6 +103,7 @@ namespace StructuredLogViewer.Controls
             viewSubtreeTextItem = new MenuItem() { Header = "View subtree text" };
             searchInSubtreeItem = new MenuItem() { Header = "Search in subtree" };
             excludeSubtreeFromSearchItem = new MenuItem() { Header = "Exclude subtree from search" };
+            goToTimeLineItem = new MenuItem() { Header = "Go to timeline" };
             copyChildrenItem = new MenuItem() { Header = "Copy children" };
             sortChildrenItem = new MenuItem() { Header = "Sort children" };
             copyNameItem = new MenuItem() { Header = "Copy name" };
@@ -117,6 +119,7 @@ namespace StructuredLogViewer.Controls
             viewSubtreeTextItem.Click += (s, a) => ViewSubtreeText();
             searchInSubtreeItem.Click += (s, a) => SearchInSubtree();
             excludeSubtreeFromSearchItem.Click += (s, a) => ExcludeSubtreeFromSearch();
+            goToTimeLineItem.Click += (s, a) => goToTimeLine();
             copyChildrenItem.Click += (s, a) => CopyChildren();
             sortChildrenItem.Click += (s, a) => SortChildren();
             copyNameItem.Click += (s, a) => CopyName();
@@ -135,6 +138,7 @@ namespace StructuredLogViewer.Controls
             contextMenu.Items.Add(preprocessItem);
             contextMenu.Items.Add(searchInSubtreeItem);
             contextMenu.Items.Add(excludeSubtreeFromSearchItem);
+            contextMenu.Items.Add(goToTimeLineItem);
             contextMenu.Items.Add(copyItem);
             contextMenu.Items.Add(copySubtreeItem);
             contextMenu.Items.Add(viewSubtreeTextItem);
@@ -452,6 +456,7 @@ Recent:
             viewSubtreeTextItem.Visibility = copySubtreeItem.Visibility;
             searchInSubtreeItem.Visibility = hasChildren && node is TimedNode ? Visibility.Visible : Visibility.Collapsed;
             excludeSubtreeFromSearchItem.Visibility = hasChildren && node is TimedNode ? Visibility.Visible : Visibility.Collapsed;
+            goToTimeLineItem.Visibility = node is TimedNode ? Visibility.Visible : Visibility.Collapsed;
             copyChildrenItem.Visibility = copySubtreeItem.Visibility;
             sortChildrenItem.Visibility = copySubtreeItem.Visibility;
             preprocessItem.Visibility = node is IPreprocessable p && preprocessedFileManager.CanPreprocess(p) ? Visibility.Visible : Visibility.Collapsed;
@@ -928,6 +933,16 @@ Recent:
             }
         }
 
+        public void goToTimeLine()
+        {
+            var treeNode = treeView.SelectedItem as TimedNode;
+            if (treeNode != null)
+            {
+                centralTabControl.SelectedIndex = 1;
+                this.timeline.GoToTimeNode(treeNode);
+            }
+        }
+
         public void CopyChildren()
         {
             if (treeView.SelectedItem is TreeNode node && node.HasChildren)
@@ -1298,6 +1313,32 @@ Recent:
                         }
 
                         parent = projectProxy;
+                        parent.IsExpanded = true;
+                    }
+                    var target = result.Node.GetNearestParent<Target>();
+                    if (target != null)
+                    {
+                        var targetProxy = parent.GetOrCreateNodeWithName<ProxyNode>(target.TypeName + " " + target.Name);
+                        targetProxy.Original = target;
+                        if (targetProxy.Highlights.Count == 0)
+                        {
+                            targetProxy.Highlights.Add(targetProxy.Name);
+                        }
+                        parent = targetProxy;
+                        parent.IsExpanded = true;
+                    }
+
+                    //add task
+                    var task = result.Node.GetNearestParent<Task>();
+                    if (task != null)
+                    {
+                        var taskProxy = parent.GetOrCreateNodeWithName<ProxyNode>(task.TypeName + " " + task.Name);
+                        taskProxy.Original = task;
+                        if (taskProxy.Highlights.Count == 0)
+                        {
+                            taskProxy.Highlights.Add(taskProxy.Name);
+                        }
+                        parent = taskProxy;
                         parent.IsExpanded = true;
                     }
                 }

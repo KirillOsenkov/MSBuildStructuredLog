@@ -73,6 +73,10 @@ namespace StructuredLogViewer.Controls
 
         public BuildControl BuildControl { get; set; }
 
+        public Dictionary<BaseNode, TextBlock> TextBlocks { get; set; } = new Dictionary<BaseNode, TextBlock>();
+
+        private bool isDoubleClick = false;
+
         public void SetTimeline(Timeline timeline)
         {
             var lanesPanel = new StackPanel { Orientation = Orientation.Horizontal };
@@ -85,6 +89,28 @@ namespace StructuredLogViewer.Controls
                 {
                     lanesPanel.Children.Add(panel);
                 }
+            }
+        }
+
+        public void GoToTimeNode(TimedNode node)
+        {
+            TextBlock textblock = null;
+            foreach (TimedNode timedNode in node.GetParentChainIncludingThis().OfType<TimedNode>())
+            {
+                if (TextBlocks.TryGetValue(timedNode, out textblock))
+                {
+                    HighlightTextBlock(textblock, scrollToElement: true);
+                    break;
+                }
+            }
+
+            if (textblock == null && activeTextBlock != null)
+            {
+                if (highlight.Parent is Panel parent)
+                {
+                    parent.Children.Remove(highlight);
+                }
+                scrollViewer.ScrollToVerticalOffset(0);
             }
         }
 
@@ -179,6 +205,7 @@ namespace StructuredLogViewer.Controls
             {
                 //if (block.Length > minimumDurationToInclude)
                 {
+                    var content = new ContentControl();
                     var textBlock = new TextBlock();
                     textBlock.Text = $"{block.Text} ({TextUtilities.DisplayDuration(block.Duration)})";
                     textBlock.Background = ChooseBackground(block);
@@ -219,6 +246,7 @@ namespace StructuredLogViewer.Controls
                     textBlock.ToolTip = block.GetTooltip();
                     textBlock.MouseUp += TextBlock_MouseUp;
                     textBlock.Tag = block;
+                    TextBlocks.Add(block.Node, textBlock);
 
                     currentHeight = top + textHeight;
 
@@ -227,38 +255,26 @@ namespace StructuredLogViewer.Controls
                         totalHeight = top + height;
                     }
 
-                    Canvas.SetLeft(textBlock, left);
-                    Canvas.SetTop(textBlock, top);
-                    canvas.Children.Add(textBlock);
+                    Canvas.SetLeft(content, left);
+                    Canvas.SetTop(content, top);
+                    content.Content = textBlock;
+                    content.MouseDoubleClick += Content_MouseDoubleClick;
+                    canvas.Children.Add(content);
                 }
             }
 
             canvas.Height = totalHeight;
             canvas.Width = width;
 
-            canvas.MouseMove += Canvas_MouseMove;
-
             return canvas;
         }
 
-        private void Canvas_MouseMove(object sender, MouseEventArgs e)
+        private void Content_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
-            if (e.LeftButton == MouseButtonState.Pressed || 
-                e.RightButton == MouseButtonState.Pressed)
+            var content = sender as ContentControl;
+            if (content.Content is TextBlock textBlock && textBlock.Tag is Block block)
             {
-                return;
-            }
-
-            Canvas canvas = sender as Canvas;
-            if (canvas == null)
-            {
-                return;
-            }
-
-            var hit = canvas.InputHitTest(e.GetPosition(canvas)) as TextBlock;
-            if (hit != null)
-            {
-                HighlightTextBlock(hit);
+                isDoubleClick = true;
             }
         }
 
@@ -269,7 +285,7 @@ namespace StructuredLogViewer.Controls
             BorderThickness = new Thickness(1)
         };
 
-        private void HighlightTextBlock(TextBlock hit)
+        private void HighlightTextBlock(TextBlock hit, bool scrollToElement = false)
         {
             if (activeTextBlock == hit)
             {
@@ -288,13 +304,19 @@ namespace StructuredLogViewer.Controls
 
             if (activeTextBlock != null)
             {
-                if (activeTextBlock.Parent is Panel parent)
+                ContentControl content = activeTextBlock.Parent as ContentControl;
+                if (content != null && content.Parent is Panel parent)
                 {
                     parent.Children.Add(highlight);
-                    Canvas.SetLeft(highlight, Canvas.GetLeft(activeTextBlock));
-                    Canvas.SetTop(highlight, Canvas.GetTop(activeTextBlock));
+                    Canvas.SetLeft(highlight, Canvas.GetLeft(content));
+                    Canvas.SetTop(highlight, Canvas.GetTop(content));
                     highlight.Width = activeTextBlock.ActualWidth;
                     highlight.Height = activeTextBlock.ActualHeight;
+
+                    if (scrollToElement)
+                    {
+                        scrollViewer.ScrollToVerticalOffset(Canvas.GetTop(content));
+                    }
                 }
             }
         }
@@ -303,7 +325,15 @@ namespace StructuredLogViewer.Controls
         {
             if (sender is TextBlock textBlock && textBlock.Tag is Block block)
             {
-                BuildControl.SelectItem(block.Node);
+                if (isDoubleClick)
+                {
+                    isDoubleClick = false;
+                    BuildControl.SelectItem(block.Node);
+                }
+                else
+                {
+                    HighlightTextBlock(textBlock);
+                }
             }
         }
 

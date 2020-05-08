@@ -373,11 +373,6 @@ namespace StructuredLogViewer
                         {
                             if (j == 1 && word == nameToSearch)
                             {
-                                if (valueToSearch != null)
-                                {
-                                    fullText += " = ";
-                                }
-
                                 result.AddMatch(fullText, word, addAtBeginning: true);
                                 nameMatched = true;
                                 anyFieldMatched = true;
