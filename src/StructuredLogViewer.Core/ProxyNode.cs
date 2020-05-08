@@ -52,7 +52,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 foreach (var fieldText in result.WordsInFields.GroupBy(t => t.field))
                 {
-                    if (fieldText.Key.Equals(named.Name) || fieldText.Key.Equals(named.Name + " = "))
+                    if (fieldText.Key.Equals(named.Name))
                     { 
                         nameFound = true;
                     }
@@ -95,9 +95,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     Highlights.Add(fieldText.Substring(index, fieldText.Length - index));
                 }
 
-                if (named != null && wordsInField.Key.Equals(named.Name) && !valueFound)
+                if (named != null && wordsInField.Key.Equals(named.Name) )
                 {
-                    Highlights.Add(" = " + TextUtilities.ShortenValue(named.Value, "..."));
+                    if (!valueFound)
+                    {
+                        Highlights.Add(" = " + TextUtilities.ShortenValue(named.Value, "..."));
+                    }
+                    else
+                    {
+                        Highlights.Add(" = ");
+                    }
                 }
             }
 
