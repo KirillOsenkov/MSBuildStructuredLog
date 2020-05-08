@@ -119,7 +119,7 @@ namespace StructuredLogViewer.Controls
             viewSubtreeTextItem.Click += (s, a) => ViewSubtreeText();
             searchInSubtreeItem.Click += (s, a) => SearchInSubtree();
             excludeSubtreeFromSearchItem.Click += (s, a) => ExcludeSubtreeFromSearch();
-            goToTimeLineItem.Click += (s, a) => goToTimeLine();
+            goToTimeLineItem.Click += (s, a) => GoToTimeLine();
             copyChildrenItem.Click += (s, a) => CopyChildren();
             sortChildrenItem.Click += (s, a) => SortChildren();
             copyNameItem.Click += (s, a) => CopyName();
@@ -269,9 +269,12 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
         private void PopulateTimeline()
         {
-            var timeline = new Timeline(Build);
-            this.timeline.BuildControl = this;
-            this.timeline.SetTimeline(timeline);
+            if (this.timeline.Timeline == null)
+            {
+                var timeline = new Timeline(Build);
+                this.timeline.BuildControl = this;
+                this.timeline.SetTimeline(timeline);
+            }
         }
 
         private Microsoft.Msagl.Drawing.Graph graph;
@@ -933,12 +936,13 @@ Recent:
             }
         }
 
-        public void goToTimeLine()
+        public void GoToTimeLine()
         {
             var treeNode = treeView.SelectedItem as TimedNode;
             if (treeNode != null)
             {
-                centralTabControl.SelectedIndex = 1;
+                PopulateTimeline();
+                centralTabControl.SelectedItem = this.timeline;
                 this.timeline.GoToTimeNode(treeNode);
             }
         }

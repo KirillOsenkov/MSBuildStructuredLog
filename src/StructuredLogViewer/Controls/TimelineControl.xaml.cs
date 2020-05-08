@@ -77,8 +77,12 @@ namespace StructuredLogViewer.Controls
 
         private bool isDoubleClick = false;
 
+        public Timeline Timeline { get; set; }
+
         public void SetTimeline(Timeline timeline)
         {
+            Timeline = timeline;
+
             var lanesPanel = new StackPanel { Orientation = Orientation.Horizontal };
             grid.Children.Add(lanesPanel);
 
@@ -95,7 +99,7 @@ namespace StructuredLogViewer.Controls
         public void GoToTimeNode(TimedNode node)
         {
             TextBlock textblock = null;
-            foreach (TimedNode timedNode in node.GetParentChainIncludingThis().OfType<TimedNode>())
+            foreach (TimedNode timedNode in node.GetParentChainIncludingThis().OfType<TimedNode>().Reverse())
             {
                 if (TextBlocks.TryGetValue(timedNode, out textblock))
                 {
@@ -110,6 +114,7 @@ namespace StructuredLogViewer.Controls
                 {
                     parent.Children.Remove(highlight);
                 }
+
                 scrollViewer.ScrollToVerticalOffset(0);
             }
         }
@@ -316,6 +321,7 @@ namespace StructuredLogViewer.Controls
                     if (scrollToElement)
                     {
                         scrollViewer.ScrollToVerticalOffset(Canvas.GetTop(content));
+                        // scrollViewer.ScrollToHorizontalOffset(Canvas.GetLeft(content));
                     }
                 }
             }
