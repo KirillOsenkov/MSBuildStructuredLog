@@ -75,7 +75,6 @@ namespace StructuredLogViewer.Controls
 
         public Dictionary<BaseNode, TextBlock> TextBlocks { get; set; } = new Dictionary<BaseNode, TextBlock>();
 
-        //check and ensure double click in mouseup event to go to tree
         private bool isDoubleClick = false;
 
         public void SetTimeline(Timeline timeline)
@@ -98,12 +97,13 @@ namespace StructuredLogViewer.Controls
             TextBlock textblock = null;
             foreach (TimedNode timedNode in node.GetParentChainIncludingThis().OfType<TimedNode>())
             {
-                if (TextBlocks.TryGetValue(node, out textblock))
+                if (TextBlocks.TryGetValue(timedNode, out textblock))
                 {
                     HighlightTextBlock(textblock, scrollToElement: true);
                     break;
                 }
             }
+
             if (textblock == null && activeTextBlock != null)
             {
                 if (highlight.Parent is Panel parent)
@@ -275,27 +275,6 @@ namespace StructuredLogViewer.Controls
             if (content.Content is TextBlock textBlock && textBlock.Tag is Block block)
             {
                 isDoubleClick = true;
-            }
-        }
-
-        private void Canvas_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (e.LeftButton == MouseButtonState.Pressed ||
-                e.RightButton == MouseButtonState.Pressed)
-            {
-                return;
-            }
-
-            Canvas canvas = sender as Canvas;
-            if (canvas == null)
-            {
-                return;
-            }
-
-            var hit = canvas.InputHitTest(e.GetPosition(canvas)) as TextBlock;
-            if (hit != null)
-            {
-                HighlightTextBlock(hit);
             }
         }
 
