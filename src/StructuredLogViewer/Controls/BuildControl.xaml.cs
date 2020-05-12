@@ -941,8 +941,8 @@ Recent:
             var treeNode = treeView.SelectedItem as TimedNode;
             if (treeNode != null)
             {
-                PopulateTimeline();
-                centralTabControl.SelectedItem = this.timeline;
+               // PopulateTimeline();
+                centralTabControl.SelectedIndex = 1;
                 this.timeline.GoToTimeNode(treeNode);
             }
         }
