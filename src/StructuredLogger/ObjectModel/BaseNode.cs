@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -122,15 +123,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return chain;
         }
 
-        public T GetNearestParent<T>() where T : BaseNode
+        public T GetNearestParent<T>(Predicate<T> predicate = null) where T : BaseNode
         {
             BaseNode current = this;
             while (current.Parent != null)
             {
                 current = current.Parent;
-                if (current is T)
+                if (current is T t && (predicate == null || predicate(t)))
                 {
-                    return (T) current;
+                    return t;
                 }
             }
 

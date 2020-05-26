@@ -941,7 +941,6 @@ Recent:
             var treeNode = treeView.SelectedItem as TimedNode;
             if (treeNode != null)
             {
-               // PopulateTimeline();
                 centralTabControl.SelectedIndex = 1;
                 this.timeline.GoToTimeNode(treeNode);
             }
@@ -1319,6 +1318,7 @@ Recent:
                         parent = projectProxy;
                         parent.IsExpanded = true;
                     }
+
                     var target = result.Node.GetNearestParent<Target>();
                     if (target != null)
                     {
@@ -1328,12 +1328,13 @@ Recent:
                         {
                             targetProxy.Highlights.Add(targetProxy.Name);
                         }
+
                         parent = targetProxy;
                         parent.IsExpanded = true;
                     }
 
-                    //add task
-                    var task = result.Node.GetNearestParent<Task>();
+                    // nest under a Task, unless it's an MSBuild task higher up the parent chain
+                    var task = result.Node.GetNearestParent<Task>(t => !string.Equals(t.Name, "MSBuild", StringComparison.OrdinalIgnoreCase));
                     if (task != null)
                     {
                         var taskProxy = parent.GetOrCreateNodeWithName<ProxyNode>(task.TypeName + " " + task.Name);
@@ -1342,6 +1343,7 @@ Recent:
                         {
                             taskProxy.Highlights.Add(taskProxy.Name);
                         }
+
                         parent = taskProxy;
                         parent.IsExpanded = true;
                     }
