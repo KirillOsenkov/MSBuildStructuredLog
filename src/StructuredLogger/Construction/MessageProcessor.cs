@@ -48,83 +48,83 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            switch (message[0])
+            //switch (message[0])
+            //{
+            //case 'A':
+            if (message.StartsWith(ItemGroupIncludeMessagePrefix))
             {
-                case 'A':
-                    if (message.StartsWith(ItemGroupIncludeMessagePrefix))
-                    {
-                        AddItemGroup(args, ItemGroupIncludeMessagePrefix, new AddItem());
-                        return;
-                    }
-                    break;
-                case 'O':
-                    if (message.StartsWith(OutputItemsMessagePrefix))
-                    {
-                        var task = GetTask(args);
-
-                        //this.construction.Build.Statistics.ReportOutputItemMessage(task, message);
-
-                        var folder = task.GetOrCreateNodeWithName<Folder>("OutputItems");
-                        var parameter = ItemGroupParser.ParsePropertyOrItemList(message, OutputItemsMessagePrefix, stringTable);
-                        folder.AddChild(parameter);
-                        return;
-                    }
-
-                    if (message.StartsWith(OutputPropertyMessagePrefix))
-                    {
-                        var task = GetTask(args);
-                        var folder = task.GetOrCreateNodeWithName<Folder>("OutputProperties");
-                        var parameter = ItemGroupParser.ParsePropertyOrItemList(message, OutputPropertyMessagePrefix, stringTable);
-                        folder.AddChild(parameter);
-                        return;
-                    }
-                    break;
-                case 'R':
-                    if (message.StartsWith(ItemGroupRemoveMessagePrefix))
-                    {
-                        AddItemGroup(args, ItemGroupRemoveMessagePrefix, new RemoveItem());
-                        return;
-                    }
-                    break;
-                case 'S':
-                    if (message.StartsWith(PropertyGroupMessagePrefix))
-                    {
-                        AddPropertyGroup(args, PropertyGroupMessagePrefix);
-                        return;
-                    }
-                    break;
-                case 'T':
-                    if (message.StartsWith(TaskParameterMessagePrefix))
-                    {
-                        var task = GetTask(args);
-                        if (IgnoreParameters(task))
-                        {
-                            return;
-                        }
-
-                        //this.construction.Build.Statistics.ReportTaskParameterMessage(task, message);
-
-                        var folder = task.GetOrCreateNodeWithName<Folder>(Strings.Parameters);
-                        var parameter = ItemGroupParser.ParsePropertyOrItemList(message, TaskParameterMessagePrefix, stringTable);
-                        folder.AddChild(parameter);
-                        return;
-                    }
-                    break;
-                case 'U':
-                    // A task from assembly message (parses out the task name and assembly path).
-                    var match = usingTaskRegex.Match(message);
-                    if (match.Success)
-                    {
-                        construction.SetTaskAssembly(
-                            stringTable.Intern(match.Groups["task"].Value),
-                            stringTable.Intern(match.Groups["assembly"].Value));
-                        return;
-                    }
-
-                    break;
-                default:
-                    break;
+                AddItemGroup(args, ItemGroupIncludeMessagePrefix, new AddItem());
+                return;
             }
+            //    break;
+            //case 'O':
+            if (message.StartsWith(OutputItemsMessagePrefix))
+            {
+                var task = GetTask(args);
+
+                //this.construction.Build.Statistics.ReportOutputItemMessage(task, message);
+
+                var folder = task.GetOrCreateNodeWithName<Folder>("OutputItems");
+                var parameter = ItemGroupParser.ParsePropertyOrItemList(message, OutputItemsMessagePrefix, stringTable);
+                folder.AddChild(parameter);
+                return;
+            }
+
+           if (message.StartsWith(OutputPropertyMessagePrefix))
+            {
+                var task = GetTask(args);
+                var folder = task.GetOrCreateNodeWithName<Folder>("OutputProperties");
+                var parameter = ItemGroupParser.ParsePropertyOrItemList(message, OutputPropertyMessagePrefix, stringTable);
+                folder.AddChild(parameter);
+                return;
+            }
+            //    break;
+            //case 'R':
+            if (message.StartsWith(ItemGroupRemoveMessagePrefix))
+            {
+                AddItemGroup(args, ItemGroupRemoveMessagePrefix, new RemoveItem());
+                return;
+            }
+            //    break;
+            //case 'S':
+            if (message.StartsWith(PropertyGroupMessagePrefix))
+            {
+                AddPropertyGroup(args, PropertyGroupMessagePrefix);
+                return;
+            }
+            //    break;
+            //case 'T':
+            if (message.StartsWith(TaskParameterMessagePrefix))
+            {
+                var task = GetTask(args);
+                if (IgnoreParameters(task))
+                {
+                    return;
+                }
+
+                //this.construction.Build.Statistics.ReportTaskParameterMessage(task, message);
+
+                var folder = task.GetOrCreateNodeWithName<Folder>(Strings.Parameters);
+                var parameter = ItemGroupParser.ParsePropertyOrItemList(message, TaskParameterMessagePrefix, stringTable);
+                folder.AddChild(parameter);
+                return;
+            }
+            //    break;
+            //case 'U':
+            // A task from assembly message (parses out the task name and assembly path).
+            var match = usingTaskRegex.Match(message);
+            if (match.Success)
+            {
+                construction.SetTaskAssembly(
+                    stringTable.Intern(match.Groups["task"].Value),
+                    stringTable.Intern(match.Groups["assembly"].Value));
+                return;
+            }
+
+            //        break;
+            //    default:
+            //        break;
+            //}
 
             if (args is TaskCommandLineEventArgs taskArgs)
             {
@@ -285,7 +285,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                         // only indent if it's not a "For SearchPath..." message - that one needs to be directly under parameter
                                         // also don't indent if it's under AssemblyFoldersEx in Results
                                         if (lastItem != null &&
-                                            !message.StartsWith(Strings.ForSearchPathPrefix) &&
+                                            !Strings.ForSearchPathPrefix.IsMatch(message) &&
                                             !parameter.Name.StartsWith("AssemblyFoldersEx"))
                                         {
                                             node = lastItem;
@@ -389,7 +389,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     .GetOrAddProject(args.BuildEventContext.ProjectContextId)
                     .GetTargetById(args.BuildEventContext.TargetId);
 
-                if (Strings.IsTaskSkipped(message))
+                if (Strings.IsTaskSkipped.Match(message).Success)
                 {
                     messageNode.IsLowRelevance = true;
                 }
@@ -413,8 +413,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 var evaluation = construction.EvaluationFolder;
                 var project = evaluation.FindChild<ProjectEvaluation>(p => p.Id == args.BuildEventContext.EvaluationId);
-               
-                if (Strings.IsPropertyReassignmentMessage(message))
+
+                if (Strings.PropertyReassignment.IsMatch(message))
                 {
                     var properties = project.GetOrCreateNodeWithName<Folder>(Strings.Properties, true);
                     node = properties.GetOrCreateNodeWithName<Folder>(Strings.GetPropertyName(message));
@@ -444,7 +444,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     node = construction.EvaluationFolder;
                 }
-                else if (Strings.IsPropertyReassignmentMessage(message))
+                else if (Strings.PropertyReassignment.IsMatch(message))
                 {
                     if (!evaluationMessagesAlreadySeen.Add(message))
                     {

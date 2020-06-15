@@ -1,80 +1,232 @@
-﻿using System;
+﻿using StructuredLogger.Properties;
+using System;
+using System.Globalization;
+using System.Resources;
 using System.Text.RegularExpressions;
+using System.Windows;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class Strings
     {
+
+        private static ResourceSet resourceSet;
+
+        public static void SetCultureInfo(CultureInfo cultureInfo)
+        {
+            resourceSet = Resources.ResourceManager.GetResourceSet(cultureInfo, true, true);
+            InitializeRegex();
+            
+        }
+
+        private static void InitializeRegex()
+        {
+            OutputPropertyMessagePrefix = resourceSet.GetString("OutputPropertyLogMessage").Replace("{0}={1}", "");
+            BuildingWithToolsVersionPrefix = new Regex(resourceSet.GetString("ToolsVersionInEffectForBuild").Replace("{0}", ".*?"));
+            PropertyGroupMessagePrefix = resourceSet.GetString("PropertyGroupLogMessage").Replace("{0}={1}", "");
+            ForSearchPathPrefix = new Regex(resourceSet.GetString("ResolveAssemblyReference.SearchPath").Replace("{0}", ".*?"));
+            string taskSkipped = resourceSet.GetString("TaskSkippedFalseCondition")
+                .Replace("{0}", ".*?")
+                .Replace("{1}", ".*?")
+                .Replace("{2}", ".*?");
+            IsTaskSkipped = new Regex(taskSkipped);
+
+            string importProject = resourceSet.GetString("ProjectImported")
+                .Replace("{0}", @"(?<ImportedProject>[^\""]+)")
+                .Replace("{1}", @"(?<File>[^\""]+)")
+                .Replace("({2},{3})", @"\((?<Line>\d+),(?<Column>\d+)\)\.$");
+            ImportingProjectRegex = new Regex(@"^" + importProject.Substring(0, importProject.Length - 1), RegexOptions.Compiled);
+
+            string skippedMissingFile = resourceSet.GetString("ProjectImportSkippedMissingFile")
+                .Replace("{0}", @"(?<ImportedProject>[^\""]+)")
+                .Replace("{1}", @"(?<File>[^\""]+)")
+                .Replace("({2},{3})", @"\((?<Line>\d+),(?<Column>\d+)\)\.");
+            ProjectImportSkippedMissingFile = new Regex(@"^" + skippedMissingFile.Substring(0, skippedMissingFile.Length - 1), RegexOptions.Compiled);
+
+            string skippedInvalidFile = resourceSet.GetString("ProjectImportSkippedInvalidFile")
+               .Replace("{0}", @"(?<ImportedProject>[^\""]+)")
+               .Replace("{1}", @"(?<File>[^\""]+)")
+               .Replace("({2},{3})", @"\((?<Line>\d+),(?<Column>\d+)\)\.");
+            ProjectImportSkippedInvalidFile = new Regex(@"^" + skippedMissingFile.Substring(0, skippedMissingFile.Length - 1), RegexOptions.Compiled);
+
+            string skippedEmptyFile = resourceSet.GetString("ProjectImportSkippedEmptyFile")
+             .Replace("{0}", @"(?<ImportedProject>[^\""]+)")
+             .Replace("{1}", @"(?<File>[^\""]+)")
+             .Replace("({2},{3})", @"\((?<Line>\d+),(?<Column>\d+)\)\.");
+            ProjectImportSkippedEmptyFile = new Regex(@"^" + skippedEmptyFile.Substring(0, skippedEmptyFile.Length - 1), RegexOptions.Compiled);
+
+            string skippedNoMatches = resourceSet.GetString("ProjectImportSkippedNoMatches")
+             .Replace("{0}", @"(?<ImportedProject>[^\""]+)")
+             .Replace("{1}", @"(?<File>[^\""]+)")
+             .Replace("({2},{3})", @"\((?<Line>\d+),(?<Column>\d+)\)\.");
+            ProjectImportSkippedNoMatches = new Regex(@"^" + skippedNoMatches.Substring(0, skippedNoMatches.Length - 1), RegexOptions.Compiled);
+
+            string skippedFalseCondition = resourceSet.GetString("ProjectImportSkippedFalseCondition")
+           .Replace("{0}", @"(?<ImportedProject>[^\""]+)")
+           .Replace("{1}", @"(?<File>[^\""]+)")
+           .Replace("({2},{3})", @"\((?<Line>\d+),(?<Column>\d+)\)")
+           .Replace("{4}", "(?<Reason>.+)")
+           .Replace("{5}", ".*?");
+            ProjectImportSkippedFalseCondition = new Regex(@"^" + skippedFalseCondition.Substring(0, skippedFalseCondition.Length - 1), RegexOptions.Compiled);
+
+            PropertyReassignment = new Regex(resourceSet.GetString("PropertyReassignment")
+                .Replace("{0}", ".*?")
+                .Replace("{1}", ".*?")
+                .Replace("{2}", ".*?")
+                .Replace("{3}", ".*?")
+                .Replace("$", @"\$")
+                .Replace("(", @"\(")
+                .Replace(")", @"\)"));
+        }
+
+        public static Regex BuildingWithToolsVersionPrefix { get; set; }
+        public static Regex ForSearchPathPrefix { get; set; }
+        public static Regex IsTaskSkipped { get; set; }
+        public static Regex ProjectImportSkippedMissingFile { get; set; }
+        public static Regex ProjectImportSkippedInvalidFile { get; set; }
+        public static Regex ProjectImportSkippedEmptyFile { get; set; }
+        public static Regex ProjectImportSkippedFalseCondition { get; set; }
+        public static Regex ProjectImportSkippedNoMatches { get; set; }
+        public static Regex PropertyReassignment { get; set; }
+
+
+
+
+        public static Regex ImportingProjectRegex { get; set; } // = new Regex(
+                                                                //   @"^Importing project ""(?<ImportedProject>[^\""]+)"" into project ""(?<File>[^\""]+)"" at \((?<Line>\d+),(?<Column>\d+)\)\.$", RegexOptions.Compiled);
+
+        public static Match ProjectWasNotImportedRegex(string message, out string reason)
+        {
+            reason = "";
+            if (ProjectImportSkippedMissingFile.Match(message).Success)
+            {
+                reason = "the file not existing";
+                return ProjectImportSkippedMissingFile.Match(message);
+            }
+            if (ProjectImportSkippedInvalidFile.Match(message).Success)
+            {
+                reason = "the file being invalid";
+                return ProjectImportSkippedInvalidFile.Match(message);
+            }
+
+            if (ProjectImportSkippedEmptyFile.Match(message).Success)
+            {
+                reason = "the file being empty";
+                return ProjectImportSkippedEmptyFile.Match(message);
+            }
+            if (ProjectImportSkippedNoMatches.Match(message).Success)
+            {
+                reason = "no matching files";
+                return ProjectImportSkippedNoMatches.Match(message);
+            }
+            if (ProjectImportSkippedFalseCondition.Match(message).Success)
+            {
+                reason = "false condition; ";
+                Match match =  ProjectImportSkippedFalseCondition.Match(message);
+                reason += match.Groups["Reason"].Value;
+                return match;
+
+            }
+            return Match.Empty;
+            //ProjectImportSkippedMissingFile $:$ Project "{0}" was not imported by "{1}" at ({2},{3}), due to the file not existing.
+            //ProjectImportSkippedInvalidFile $:$ Project "{0}" was not imported by "{1}" at({ 2},{3}), due to the file being invalid.
+            //ProjectImportSkippedEmptyFile $:$ Project "{0}" was not imported by "{1}" at ({2},{3}), due to the file being empty.
+            //ProjectImportSkippedFalseCondition $:$ Project "{0}" was not imported by "{1}" at({ 2},{3}), due to false condition; ({4}) was evaluated as ({5}).
+            //ProjectImportSkippedNoMatches $:$ Project "{0}" was not imported by "{1}" at({ 2},{3}), due to no matching files.
+        }
+
+
+
+        public static String PropertyGroupMessagePrefix { get; set; }
+        public static String OutputPropertyMessagePrefix { get; set; }
+
+
         public static string UsedAssemblySearchPathsLocations => "Used AssemblySearchPaths locations";
         public static string UnusedAssemblySearchPathsLocations => "Unused AssemblySearchPaths locations";
         public static string UsedLocations => "Used locations";
         public static string UnusedLocations = "Unused locations";
 
-        public static string TaskParameterMessagePrefix => @"Task Parameter:";
-        public static string OutputItemsMessagePrefix => @"Output Item(s): ";
-        public static string OutputPropertyMessagePrefix => @"Output Property: ";
-        public static string PropertyGroupMessagePrefix => @"Set Property: ";
-        public static string ItemGroupIncludeMessagePrefix => @"Added Item(s): ";
-        public static string ItemGroupRemoveMessagePrefix => @"Removed Item(s): ";
+        public static string TaskParameterMessagePrefix => resourceSet.GetString("TaskParameterPrefix");
+        public static string OutputItemsMessagePrefix => resourceSet.GetString("OutputItemParameterMessagePrefix");
+       
+       
+        public static string ItemGroupIncludeMessagePrefix => resourceSet.GetString("ItemGroupIncludeLogMessagePrefix");
+        public static string ItemGroupRemoveMessagePrefix => resourceSet.GetString("ItemGroupRemoveLogMessage");
 
-        public static string ThereWasAConflictPrefix => "There was a conflict";
-        public static string ForSearchPathPrefix => "For SearchPath";
-        public static string UnifiedPrimaryReferencePrefix => "Unified primary reference ";
-        public static string PrimaryReferencePrefix => "Primary reference ";
-        public static string DependencyPrefix => "Dependency ";
-        public static string UnifiedDependencyPrefix => "Unified Dependency ";
-        public static string AssemblyFoldersExLocation => "AssemblyFoldersEx location";
-        public static string GlobalPropertiesPrefix => "Global Properties";
-        public static string AdditionalPropertiesPrefix => "Additional Properties";
-        public static string OverridingGlobalPropertiesPrefix => "Overriding Global Properties";
-        public static string RemovingPropertiesPrefix => "Removing Properties";
+        public static string ThereWasAConflictPrefix => "There was a conflict"; //GetSDKReferenceFiles.ConflictReferenceSameSDK $:$ There was a conflict between two references with the same file name resolved within the "{0}" SDK. Choosing "{1}" over "{2}" because it was resolved first.
+        //GetSDKReferenceFiles.ConflictRedistDifferentSDK $:$ There was a conflict between two files from the redist folder files going to the same target path "{0}" between the "{1}" and "{2}" SDKs. Choosing "{3}" over "{4}" because it was resolved first.
+        //GetSDKReferenceFiles.ConflictReferenceDifferentSDK $:$ There was a conflict between two references with the same file name between the "{0}" and "{1}" SDKs. Choosing "{2}" over "{3}" because it was resolved first.
+     
+        public static string UnifiedPrimaryReferencePrefix => "Unified primary reference "; //ResolveAssemblyReference.UnifiedPrimaryReference $:$ Unified primary reference "{0}
+        public static string PrimaryReferencePrefix => "Primary reference "; //ResolveAssemblyReference.PrimaryReference - Primärverweis "{0}".
+        public static string DependencyPrefix => "Dependency "; //ResolveAssemblyReference.Dependency $:$ Dependency "{0}".
+        public static string UnifiedDependencyPrefix => "Unified Dependency "; //ResolveAssemblyReference.UnifiedDependency $:$ Unified Dependency "{0}".
+        public static string AssemblyFoldersExLocation => "AssemblyFoldersEx location"; //ResolveAssemblyReference.AssemblyFoldersExSearchLocations $:$ AssemblyFoldersEx location: "{0}"
+        public static string GlobalPropertiesPrefix => resourceSet.GetString("General.GlobalProperties");
+        public static string AdditionalPropertiesPrefix => "Additional Properties"; //General.AdditionalProperties $:$ Additional Properties for project "{0}":
+        public static string OverridingGlobalPropertiesPrefix => "Overriding Global Properties"; //General.OverridingProperties $:$ Overriding Global Properties for project "{0}" with:
+        public static string RemovingPropertiesPrefix => resourceSet.GetString("General.UndefineProperties");
 
-        public static string CopyingFileFrom => "Copying file from \"";
-        public static string CreatingHardLink => "Creating hard link to copy \"";
-        public static string DidNotCopy => "Did not copy from file \"";
+        public static string CopyingFileFrom => "Copying file from \""; //Copy.FileComment $:$ Copying file from "{0}" to "{1}".
+        public static string CreatingHardLink => "Creating hard link to copy \""; //Copy.HardLinkComment $:$ Creating hard link to copy "{0}" to "{1}".
+        public static string DidNotCopy => "Did not copy from file \""; //Copy.DidNotCopyBecauseOfFileMatch $:$ Did not copy from file "{0}" to file "{1}" because the "{2}" parameter was set to "{3}" in the project and the files' sizes and timestamps match.
         public static string To => "\" to \"";
         public static string ToFile => "\" to file \"";
-        public static string BuildingWithToolsVersionPrefix => "Building with tools version";
+       
         public static string TotalAnalyzerExecutionTime => "Total analyzer execution time:";
 
-        public static string Evaluation => "Evaluation";
-        public static string Environment => "Environment";
-        public static string Imports => "Imports";
-        public static string DetailedSummary => "Detailed summary";
-        public static string Parameters => "Parameters";
-        public static string Results => "Results";
-        public static string SearchPaths => "SearchPaths";
-        public static string Assemblies => "Assemblies";
-        public static string TargetOutputs => "TargetOutputs";
-        public static string AnalyzerReport => "Analyzer Report";
-        public static string Properties => "Properties";
+        public static string Evaluation => "Evaluation"; //only node name
+        public static string Environment => "Environment"; //only node name
+        public static string Imports => "Imports"; //only node name??
+        public static string DetailedSummary => "Detailed summary";  //only node name
+        public static string Parameters => "Parameters"; //only node name??
+        public static string Results => "Results"; //only node name?? used as string in MessageProcessor.cs line 258, 333
+        public static string SearchPaths => "SearchPaths"; //only node name??
+        public static string Assemblies => "Assemblies"; //only node name??
+        public static string TargetOutputs => "TargetOutputs"; //only node name??
+        public static string AnalyzerReport => "Analyzer Report"; //only node name??
+        public static string Properties => "Properties"; //only node name??
 
+        //TaskFoundFromFactory $:$ Using "{0}" task from the task factory "{1}".
+        //TaskFound $:$ Using "{0}" task from assembly "{1}".
         public static Regex UsingTaskRegex = new Regex("Using \"(?<task>.+)\" task from (assembly|the task factory) \"(?<assembly>.+)\"\\.", RegexOptions.Compiled);
 
+        //PropertyReassignment $:$ Property reassignment: $({0})="{1}" (previous value: "{2}") at {3}
         public static Regex PropertyReassignmentRegex = new Regex(@"^Property reassignment: \$\(\w+\)=.+ \(previous value: .*\) at (?<File>.*) \((?<Line>\d+),(\d+)\)$", RegexOptions.Compiled);
-        public static Regex ImportingProjectRegex = new Regex(
-            @"^Importing project ""(?<ImportedProject>[^\""]+)"" into project ""(?<File>[^\""]+)"" at \((?<Line>\d+),(?<Column>\d+)\)\.$", RegexOptions.Compiled);
-        public static Regex ProjectWasNotImportedRegex = new Regex(@"^Project ""(?<ImportedProject>[^""]+)"" was not imported by ""(?<File>[^""]+)"" at \((?<Line>\d+),(?<Column>\d+)\), due to (?<Reason>.+)$", RegexOptions.Compiled);
+
+       
+        //ProjectImportSkippedMissingFile $:$ Project "{0}" was not imported by "{1}" at ({2},{3}), due to the file not existing.
+        //ProjectImportSkippedInvalidFile $:$ Project "{0}" was not imported by "{1}" at({ 2},{3}), due to the file being invalid.
+        //ProjectImportSkippedEmptyFile $:$ Project "{0}" was not imported by "{1}" at ({2},{3}), due to the file being empty.
+        //ProjectImportSkippedFalseCondition $:$ Project "{0}" was not imported by "{1}" at({ 2},{3}), due to false condition; ({4}) was evaluated as ({5}).
+        //ProjectImportSkippedNoMatches $:$ Project "{0}" was not imported by "{1}" at({ 2},{3}), due to no matching files.
+       // public static Regex ProjectWasNotImportedRegex = new Regex(@"^Project ""(?<ImportedProject>[^""]+)"" was not imported by ""(?<File>[^""]+)"" at \((?<Line>\d+),(?<Column>\d+)\), due to (?<Reason>.+)$", RegexOptions.Compiled);
 
         public static string GetPropertyName(string message) => message.Substring(message.IndexOf("$") + 2, message.IndexOf("=") - message.IndexOf("$") - 3);
 
-        public static bool IsTaskSkipped(string message) => message.StartsWith("Task") && message.Contains("skipped");
+        //public static bool IsTaskSkipped(string message) => message.StartsWith("Task") && message.Contains("skipped");
+
+        //TargetAlreadyCompleteSuccess $:$ Target "{0}" skipped.Previously built successfully.
+        //TargetSkippedFalseCondition $:$ Target "{0}" skipped, due to false condition; ({1}) was evaluated as ({2}).
+        //TargetAlreadyCompleteFailure $:$ Target "{0}" skipped.Previously built unsuccessfully.
+        //TargetSkippedWhenSkipNonexistentTargets"><value>Target "{0}" skipped. The target does not exist in the project and SkipNonexistentTargets is set to true.</value></data>
         public static bool IsTargetSkipped(string message) => message.StartsWith("Target") && message.Contains("skipped");
+        //TargetDoesNotExistBeforeTargetMessage"><value>The target "{0}" listed in a BeforeTargets attribute at "{1}" does not exist in the project, and will be ignored.</value></data>
         public static bool IsTargetDoesNotExistAndWillBeSkipped(string message) => message.StartsWith("The target") && message.Contains("does not exist in the project, and will be ignored");
 
         public static bool IsEvaluationMessage(string message)
         {
-            return message.StartsWith("Search paths being used")
-                || message.StartsWith("Overriding target")
-                || message.StartsWith("Trying to import")
-                || message.StartsWith("Importing project")
-                || message.Contains("cannot be imported again.")
+            return message.StartsWith("Search paths being used") //SearchPathsForMSBuildExtensionsPath $:$ Search paths being used for {0} are {1}
+                || message.StartsWith("Overriding target") //OverridingTarget $:$ Overriding target "{0}" in project "{1}" with target "{2}" from project "{3}".
+                || message.StartsWith("Trying to import") //TryingExtensionsPath $:$ Trying to import {0} using extensions path {1}
+                || message.StartsWith("Importing project") //ProjectImported $:$ Importing project "{0}" into project "{1}" at ({2},{3}).
+                || message.Contains("cannot be imported again.") //DuplicateImport $:$ MSB4011: "{0}" cannot be imported again. It was already imported at "{1}". This is most likely a build authoring error. This subsequent import will be ignored. {2}
                 || (message.StartsWith("Project \"") && message.Contains("was not imported by"));
-        }
-
-        public static bool IsPropertyReassignmentMessage(string message)
-        {
-            return message.StartsWith("Property reassignment");                
+            //ProjectImportSkippedEmptyFile $:$ Project "{0}" was not imported by "{1}" at({ 2},{ 3}), due to the file being empty.
+            //ProjectImportSkippedFalseCondition $:$ Project "{0}" was not imported by "{1}" at ({2},{3}), due to false condition; ({4}) was evaluated as ({5}).
+            //ProjectImportSkippedNoMatches $:$ Project "{0}" was not imported by "{1}" at ({2},{3}), due to no matching files.
+            //ProjectImportSkippedMissingFile $:$ Project "{0}" was not imported by "{1}" at ({2},{3}), due to the file not existing.
+            //ProjectImportSkippedInvalidFile $:$ Project "{0}" was not imported by "{1}" at ({2},{3}), due to the file being invalid.
         }
     }
 }

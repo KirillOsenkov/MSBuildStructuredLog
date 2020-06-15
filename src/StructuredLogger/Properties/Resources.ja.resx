@@ -1,0 +1,246 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+ <data name="OutputItemParameterMessagePrefix" xml:space="preserve">
+<value>出力項目: </value>
+</data>
+<data name="ProjectImportSkippedEmptyFile" xml:space="preserve">
+<value>ファイルが空であるため、プロジェクト "{0}" は "{1}" によって ({2},{3}) でインポートされませんでした。</value>
+</data>
+<data name="TaskFound" xml:space="preserve">
+<value>"{0}" タスクをアセンブリ "{1}" から使用しています。</value>
+</data>
+<data name="ToolsVersionInEffectForBuild" xml:space="preserve">
+<value>ツール バージョン "{0}" でビルドしています。</value>
+</data>
+<data name="OverridingTarget" xml:space="preserve">
+<value>プロジェクト "{1}" のターゲット "{0}" をプロジェクト "{3}" からのターゲット "{2}" でオーバーライドしています。</value>
+</data>
+<data name="TargetSkippedWhenSkipNonexistentTargets" xml:space="preserve">
+<value>ターゲット "{0}" はスキップされました。ターゲットがプロジェクトに存在しないので、SkipNonexistentTargets が true に設定されます。</value>
+</data>
+<data name="ProjectImportSkippedFalseCondition" xml:space="preserve">
+<value>false 条件のために、プロジェクト "{0}" は "{1}" によって ({2},{3}) でインポートされませんでした。({4}) は ({5}) として評価されました。</value>
+</data>
+<data name="ProjectImportSkippedNoMatches" xml:space="preserve">
+<value>合致するファイルがないため、プロジェクト "{0}" は "{1}" によって ({2},{3}) でインポートされませんでした。</value>
+</data>
+<data name="SearchPathsForMSBuildExtensionsPath" xml:space="preserve">
+<value>{0} で使用されている検索パスは {1} です</value>
+</data>
+<data name="TaskParameterPrefix" xml:space="preserve">
+<value>タスク パラメーター:</value>
+</data>
+<data name="DuplicateImport" xml:space="preserve">
+<value>MSB4011: "{0}" は 2 度インポートできません。このファイルは既に "{1}" でインポートされています。ビルド作成エラーである可能性があります。この再インポートは無視されます。{2}</value>
+</data>
+<data name="TargetAlreadyCompleteFailure" xml:space="preserve">
+<value>ターゲット "{0}" を省略しました。以前に正しくビルドされていませんでした。</value>
+</data>
+<data name="General.OverridingProperties" xml:space="preserve">
+<value>プロジェクト "{0}" のグローバル プロパティを次の値でオーバーライド:</value>
+</data>
+<data name="ItemGroupRemoveLogMessage" xml:space="preserve">
+<value>削除された項目: </value>
+</data>
+<data name="ProjectImported" xml:space="preserve">
+<value>プロジェクト "{0}" を ({2},{3}) でプロジェクト "{1}" にインポートしています。</value>
+</data>
+<data name="PropertyGroupLogMessage" xml:space="preserve">
+<value>プロパティの設定: {0}={1}</value>
+</data>
+<data name="General.AdditionalProperties" xml:space="preserve">
+<value>プロジェクト "{0}" の追加のプロパティ:</value>
+</data>
+<data name="TargetDoesNotExistBeforeTargetMessage" xml:space="preserve">
+<value>"{1}" にある BeforeTargets 属性に一覧表示されているターゲット "{0}" はプロジェクト内に存在しないため、無視されます。</value>
+</data>
+<data name="TaskFoundFromFactory" xml:space="preserve">
+<value>タスク ファクトリ "{1}" の "{0}" タスクを使用しています。</value>
+</data>
+<data name="ProjectImportSkippedMissingFile" xml:space="preserve">
+<value>ファイルが存在しないため、プロジェクト "{0}" は "{1}" によって ({2},{3}) でインポートされませんでした。</value>
+</data>
+<data name="TargetSkippedFalseCondition" xml:space="preserve">
+<value>false 条件により、ターゲット "{0}" を省略しました。({1}) は ({2}) として評価されました。</value>
+</data>
+<data name="TaskSkippedFalseCondition" xml:space="preserve">
+<value>false 条件のため、タスク "{0}" を省略しました。({1}) は ({2}) として評価されました。</value>
+</data>
+<data name="ItemGroupIncludeLogMessagePrefix" xml:space="preserve">
+<value>追加項目: </value>
+</data>
+<data name="OutputPropertyLogMessage" xml:space="preserve">
+<value>出力プロパティ: {0}={1}</value>
+</data>
+<data name="ProjectImportSkippedInvalidFile" xml:space="preserve">
+<value>ファイルが無効であるため、プロジェクト "{0}" は "{1}" によって ({2},{3}) でインポートされませんでした。</value>
+</data>
+<data name="TargetAlreadyCompleteSuccess" xml:space="preserve">
+<value>ターゲット "{0}" を省略しました。以前に正しくビルドされていました。</value>
+</data>
+<data name="TryingExtensionsPath" xml:space="preserve">
+<value>拡張パス {1} を使用して {0} をインポートしようとしています</value>
+</data>
+<data name="PropertyReassignment" xml:space="preserve">
+<value>プロパティの再代入: $({0})="{1}" (以前の値: "{2}") {3}</value>
+</data>
+<data name="General.GlobalProperties" xml:space="preserve">
+<value>グローバル プロパティ:</value>
+</data>
+<data name="General.UndefineProperties" xml:space="preserve">
+<value>プロパティの削除:</value>
+</data>
+<data name="ResolveAssemblyReference.UnifiedPrimaryReference" xml:space="preserve">
+<value>統合されたプライマリ参照 "{0}" です。</value>
+</data>
+<data name="ResolveAssemblyReference.AssemblyFoldersExSearchLocations" xml:space="preserve">
+<value>AssemblyFoldersEx の場所:"{0}"</value>
+</data>
+<data name="GetSDKReferenceFiles.ConflictReferenceDifferentSDK" xml:space="preserve">
+<value>2 つの参照の間で競合が見つかりました。"{0}" と "{1}" の SDK 間でファイル名が同じになります。先に解決された "{2}" が "{3}" よりも優先されます。</value>
+</data>
+<data name="ResolveAssemblyReference.Dependency" xml:space="preserve">
+<value>依存関係 "{0}" です。</value>
+</data>
+<data name="ResolveAssemblyReference.PrimaryReference" xml:space="preserve">
+<value>プライマリ参照 "{0}" です。</value>
+</data>
+<data name="Copy.HardLinkComment" xml:space="preserve">
+<value>ハード リンクを作成して "{0}" を "{1}" にコピーしています。</value>
+</data>
+<data name="Copy.DidNotCopyBecauseOfFileMatch" xml:space="preserve">
+<value>"{2}" パラメーターがプロジェクトで "{3}" に設定されているため、またファイルのサイズとタイムスタンプが一致するため、ファイル "{0}" からファイル "{1}" にコピーしませんでした。</value>
+</data>
+<data name="ResolveAssemblyReference.SearchPath" xml:space="preserve">
+<value>検索パスは "{0}" です。</value>
+</data>
+<data name="ResolveAssemblyReference.UnifiedDependency" xml:space="preserve">
+<value>統合された依存関係 "{0}" です。</value>
+</data>
+<data name="GetSDKReferenceFiles.ConflictReferenceSameSDK" xml:space="preserve">
+<value>2 つの参照の間で競合が見つかりました。"{0}" SDK 内でどちらも同じファイル名に解決されます。先に解決された "{1}" が "{2}" よりも優先されます。</value>
+</data>
+<data name="GetSDKReferenceFiles.ConflictRedistDifferentSDK" xml:space="preserve">
+<value>"{1}" SDK と "{2}" SDK の間で同じターゲット パス "{0}" に移動する再頒布可能パッケージ フォルダーの 2 つのファイル間に競合がありました。先に解決された "{3}" が "{4}" よりも優先されます。</value>
+</data>
+<data name="Copy.FileComment" xml:space="preserve">
+<value>"{0}" から "{1}" へファイルをコピーしています。</value>
+</data>
+</root>
