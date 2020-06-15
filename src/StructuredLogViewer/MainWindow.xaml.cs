@@ -274,6 +274,8 @@ namespace StructuredLogViewer
                 return true;
             }
 
+            filePath = Path.GetFullPath(filePath);
+
             if (OpenFile(filePath))
             {
                 return true;
@@ -572,8 +574,10 @@ namespace StructuredLogViewer
         {
             if (currentBuild != null)
             {
+                string currentFilePath = currentBuild.LogFilePath;
+
                 var saveFileDialog = new SaveFileDialog();
-                saveFileDialog.Filter = Serialization.FileDialogFilter;
+                saveFileDialog.Filter = currentFilePath != null && currentFilePath.EndsWith(".binlog", StringComparison.OrdinalIgnoreCase) ? Serialization.BinlogFileDialogFilter : Serialization.FileDialogFilter;
                 saveFileDialog.Title = "Save log file as";
                 saveFileDialog.CheckFileExists = false;
                 saveFileDialog.OverwritePrompt = true;
@@ -584,20 +588,47 @@ namespace StructuredLogViewer
                     return;
                 }
 
-                logFilePath = saveFileDialog.FileName;
-                System.Threading.Tasks.Task.Run(() =>
+                string newFilePath = saveFileDialog.FileName;
+                if (string.IsNullOrEmpty(newFilePath) || string.Equals(currentFilePath, newFilePath, StringComparison.OrdinalIgnoreCase))
                 {
-                    currentBuild.LogFilePath = logFilePath;
-                    currentBuild.Build.LogFilePath = logFilePath;
-                    Serialization.Write(currentBuild.Build, logFilePath);
-                    Dispatcher.InvokeAsync(() =>
+                    return;
+                }
+
+                logFilePath = saveFileDialog.FileName;
+
+                lock (inProgressOperationLock)
+                {
+                    InProgressTask = InProgressTask.ContinueWith(t =>
                     {
-                        currentBuild.UpdateBreadcrumb(new Message { Text = $"Saved {logFilePath}" });
+                        try
+                        {
+                            if (logFilePath.EndsWith(".binlog", StringComparison.OrdinalIgnoreCase))
+                            {
+                                File.Copy(currentFilePath, logFilePath, overwrite: true);
+                            }
+                            else
+                            {
+                                Serialization.Write(currentBuild.Build, logFilePath);
+                            }
+
+                            currentBuild.Build.LogFilePath = logFilePath;
+
+                            Dispatcher.InvokeAsync(() =>
+                            {
+                                currentBuild.UpdateBreadcrumb(new Message { Text = $"Saved {logFilePath}" });
+                            });
+                            SettingsService.AddRecentLogFile(logFilePath);
+                        }
+                        catch
+                        {
+                        }
                     });
-                    SettingsService.AddRecentLogFile(logFilePath);
-                });
+                }
             }
         }
+
+        private object inProgressOperationLock = new object();
+        public System.Threading.Tasks.Task InProgressTask = System.Threading.Tasks.Task.CompletedTask;
 
         private void Window_KeyUp(object sender, KeyEventArgs e)
         {

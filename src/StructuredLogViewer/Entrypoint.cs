@@ -18,6 +18,9 @@ namespace StructuredLogViewer
             app.DispatcherUnhandledException += OnDispatcherUnhandledException;
             var window = new MainWindow();
             app.Run(window);
+
+            // wait for potential background operations to finish before shutting down
+            window.InProgressTask.Wait();
         }
 
         private static void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)

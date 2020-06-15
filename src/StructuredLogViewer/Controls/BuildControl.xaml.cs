@@ -25,7 +25,7 @@ namespace StructuredLogViewer.Controls
     {
         public Build Build { get; set; }
         public TreeViewItem SelectedTreeViewItem { get; private set; }
-        public string LogFilePath { get; set; }
+        public string LogFilePath => Build?.LogFilePath;
 
         private ScrollViewer scrollViewer;
 
@@ -77,8 +77,6 @@ namespace StructuredLogViewer.Controls
 
             DataContext = build;
             Build = build;
-
-            LogFilePath = logFilePath;
 
             if (build.SourceFilesArchive != null)
             {

@@ -9,20 +9,21 @@ namespace StructuredLogViewer
     public class HostedBuild
     {
         private readonly string customArguments;
+        private readonly string currentDirectory;
         private readonly string projectFilePath;
 
         public HostedBuild(string projectFilePath, string customArguments)
         {
-            this.projectFilePath = projectFilePath;
+            this.projectFilePath = Path.GetFullPath(projectFilePath);
             this.customArguments = customArguments ?? "";
+            this.currentDirectory = Path.GetDirectoryName(projectFilePath);
         }
 
-        private static readonly string logFilePath = Path.Combine(Path.GetTempPath(), $"MSBuildStructuredLog-{Process.GetCurrentProcess().Id}.buildlog");
+        private static readonly string logFilePath = Path.Combine(Path.GetTempPath(), $"MSBuildStructuredLog-{Process.GetCurrentProcess().Id}.binlog");
 
         public static string GetPostfixArguments()
         {
-            var loggerDll = typeof(StructuredLogger).Assembly.Location;
-            return $@"/v:diag /nologo /clp:NoSummary;Verbosity=minimal /logger:{nameof(StructuredLogger)},""{loggerDll}"";""{logFilePath}""";
+            return $@"/v:diag /nologo /clp:NoSummary;Verbosity=minimal /bl";
         }
 
         public Task<Build> BuildAndGetResult(BuildProgress progress)
@@ -46,14 +47,16 @@ namespace StructuredLogViewer
                     var process = Process.Start(processStartInfo);
                     process.WaitForExit();
 
-                    var build = Serialization.Read(logFilePath);
-                    File.Delete(logFilePath);
+                    var logFilePath = Path.Combine(currentDirectory, "msbuild.binlog");
 
-                    var projectImportsZip = Path.ChangeExtension(logFilePath, ".ProjectImports.zip");
-                    if (File.Exists(projectImportsZip))
-                    {
-                        File.Delete(projectImportsZip);
-                    }
+                    var build = Serialization.Read(logFilePath);
+                    //File.Delete(logFilePath);
+
+                    //var projectImportsZip = Path.ChangeExtension(logFilePath, ".ProjectImports.zip");
+                    //if (File.Exists(projectImportsZip))
+                    //{
+                    //    File.Delete(projectImportsZip);
+                    //}
 
                     return build;
                 }
