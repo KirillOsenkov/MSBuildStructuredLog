@@ -265,7 +265,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             var parameter = node.FindLastChild<Parameter>();
                             if (parameter != null)
                             {
-                                bool thereWasAConflict = parameter.ToString().StartsWith(Strings.ThereWasAConflictPrefix);
+                                bool thereWasAConflict = Strings.IsThereWasAConflictPrefix(parameter.ToString()); //parameter.ToString().StartsWith(Strings.ThereWasAConflictPrefix);
                                 if (thereWasAConflict)
                                 {
                                     HandleThereWasAConflict(parameter, message, stringTable);
@@ -321,12 +321,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         {
                             if (results == null)
                             {
-                                bool isResult = message.StartsWith(Strings.UnifiedPrimaryReferencePrefix) ||
-                                    message.StartsWith(Strings.PrimaryReferencePrefix) ||
-                                    message.StartsWith(Strings.DependencyPrefix) ||
-                                    message.StartsWith(Strings.UnifiedDependencyPrefix) ||
-                                    message.StartsWith(Strings.AssemblyFoldersExLocation) ||
-                                    message.StartsWith(Strings.ThereWasAConflictPrefix);
+                                //bool isResult = message.StartsWith(Strings.UnifiedPrimaryReferencePrefix) ||
+                                //    message.StartsWith(Strings.PrimaryReferencePrefix) ||
+                                //    message.StartsWith(Strings.DependencyPrefix) ||
+                                //    message.StartsWith(Strings.UnifiedDependencyPrefix) ||
+                                //    message.StartsWith(Strings.AssemblyFoldersExLocation) ||
+                                //    message.StartsWith(Strings.ThereWasAConflictPrefix);
+                                bool isResult = Strings.UnifiedPrimaryReferencePrefix.IsMatch(message) ||
+                                   Strings.PrimaryReferencePrefix.IsMatch(message) ||
+                                   Strings.DependencyPrefix.IsMatch(message) ||
+                                   Strings.UnifiedDependencyPrefix.IsMatch(message) ||
+                                   Strings.AssemblyFoldersExLocation.IsMatch(message) ||
+                                   Strings.IsThereWasAConflictPrefix(message);
 
                                 if (isResult)
                                 {
@@ -349,11 +355,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                     else if (task.Name == "MSBuild")
                     {
-                        if (message.StartsWith(Strings.GlobalPropertiesPrefix) ||
-                            message.StartsWith(Strings.AdditionalPropertiesPrefix) ||
-                            message.StartsWith(Strings.OverridingGlobalPropertiesPrefix) ||
+                        //if (message.StartsWith(Strings.GlobalPropertiesPrefix) ||
+                        //    message.StartsWith(Strings.AdditionalPropertiesPrefix) ||
+                        //    message.StartsWith(Strings.OverridingGlobalPropertiesPrefix) ||
+                        //    message.StartsWith(Strings.RemovingPropertiesPrefix))
+                            if (message.StartsWith(Strings.GlobalPropertiesPrefix) ||
+                            Strings.AdditionalPropertiesPrefix.IsMatch(message) ||
+                            Strings.OverridingGlobalPropertiesPrefix.IsMatch(message) ||
                             message.StartsWith(Strings.RemovingPropertiesPrefix))
-                        {
+                            {
                             node.GetOrCreateNodeWithName<Folder>(message);
                             return;
                         }

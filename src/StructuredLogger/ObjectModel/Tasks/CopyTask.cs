@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -19,46 +20,45 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             List<FileCopyOperation> list = new List<FileCopyOperation>();
 
+            Match match;
             foreach (var message in this.Children.OfType<Message>())
             {
                 var text = message.Text;
-                if (text.StartsWith(copyingFileFrom))
+                match = Strings.CopyingFileFrom.Match(message.Text);
+                if (match.Success && match.Groups.Count > 2)
                 {
-                    var operation = ParseCopyingFileFrom(text, copyingFileFrom, to);
+                    var operation = ParseCopyingFileFrom(match);
                     list.Add(operation);
                 }
-                else if (text.StartsWith(creatingHardLink))
+
+                match = Strings.CreatingHardLink.Match(message.Text);
+                if (match.Success && match.Groups.Count > 2)
                 {
-                    var operation = ParseCopyingFileFrom(text, creatingHardLink, to);
+                    var operation = ParseCopyingFileFrom(match);
                     list.Add(operation);
                 }
-                else if (text.StartsWith(didNotCopy))
+
+                match = Strings.DidNotCopy.Match(message.Text);
+                if (match.Success && match.Groups.Count > 2)
                 {
-                    var operation = ParseCopyingFileFrom(text, didNotCopy, toFile);
-                    operation.Copied = false;
+                    var operation = ParseCopyingFileFrom(match, copied:false);
                     list.Add(operation);
-                }
+                }                
             }
 
             return list;
         }
 
-        private static readonly string copyingFileFrom = Strings.CopyingFileFrom;
-        private static readonly string creatingHardLink = Strings.CreatingHardLink;
-        private static readonly string didNotCopy = Strings.DidNotCopy;
         private static readonly string to = Strings.To;
         private static readonly string toFile = Strings.ToFile;
 
-        private static FileCopyOperation ParseCopyingFileFrom(string text, string prefix, string infix)
+        private static FileCopyOperation ParseCopyingFileFrom(Match match, bool copied = true)
         {
             var result = new FileCopyOperation();
 
-            var split = text.IndexOf(infix);
-            var prefixLength = prefix.Length;
-            int toLength = infix.Length;
-            result.Source = text.Substring(prefixLength, split - prefixLength);
-            result.Destination = text.Substring(split + toLength, text.Length - 2 - split - toLength);
-            result.Copied = true;
+            result.Source = match.Groups["From"].Value;
+            result.Destination = match.Groups["To"].Value;
+            result.Copied = copied;
 
             return result;
         }
