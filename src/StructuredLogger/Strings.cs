@@ -32,7 +32,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
             AssemblyFoldersExLocation = new Regex(resourceSet.GetString("ResolveAssemblyReference.AssemblyFoldersExSearchLocations").Replace("{0}", ".*?"));
             AdditionalPropertiesPrefix = new Regex(resourceSet.GetString("General.AdditionalProperties").Replace("{0}", ".*?"));
             OverridingGlobalPropertiesPrefix = new Regex(resourceSet.GetString("General.OverridingProperties").Replace("{0}", ".*?"));
-           
+            TargetAlreadyCompleteSuccess = new Regex(resourceSet.GetString("TargetAlreadyCompleteSuccess").Replace("{0}", @".*?"));
+            TargetAlreadyCompleteFailure = new Regex(resourceSet.GetString("TargetAlreadyCompleteFailure").Replace("{0}", @".*?"));
+            TargetSkippedWhenSkipNonexistentTargets = new Regex(resourceSet.GetString("TargetSkippedWhenSkipNonexistentTargets").Replace("{0}", @".*?"));
+
+            TargetSkippedFalseCondition = new Regex(resourceSet.GetString("TargetSkippedFalseCondition")
+                .Replace("{0}", @".*?")
+                .Replace("{1}", @".*?")
+                .Replace("{2}", @".*?")
+                );
+
+            TargetDoesNotExistBeforeTargetMessage = new Regex(resourceSet.GetString("TargetDoesNotExistBeforeTargetMessage")
+                .Replace("{0}", @".*?")
+                .Replace("{1}", @".*?")
+                );
+
             CopyingFileFrom = new Regex(resourceSet.GetString("Copy.FileComment")
                 .Replace("{0}", @"(?<From>[^\""]+)")
                 .Replace("{1}", @"(?<To>[^\""]+)")
@@ -82,9 +96,25 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             string skippedNoMatches = resourceSet.GetString("ProjectImportSkippedNoMatches")
              .Replace("{0}", @"(?<ImportedProject>[^\""]+)")
-             .Replace("{1}", @"(?<File>[^\""]+)")
+             .Replace("{1}", @"(?<File>.*)")
              .Replace("({2},{3})", @"\((?<Line>\d+),(?<Column>\d+)\)\.");
             ProjectImportSkippedNoMatches = new Regex(@"^" + skippedNoMatches.Substring(0, skippedNoMatches.Length - 1), RegexOptions.Compiled);
+
+            string propertyReassignment = resourceSet.GetString("PropertyReassignment")
+             .Replace(@"$({0})=""{1}"" (", @"\$\(\w+\)=.*? \(")
+             .Replace(@"""{2}"")", @".*?""\)")
+             .Replace("{3}", @"(?<File>.*) \((?<Line>\d+),(\d+)\)$");
+            PropertyReassignmentRegex = new Regex("^" + propertyReassignment, RegexOptions.Compiled);
+
+            string taskFoundFromFactory = resourceSet.GetString("TaskFoundFromFactory")
+                .Replace(@"""{0}""", @"\""(?<task>.+)\""")
+                .Replace(@"""{1}""", @"\""(?<assembly>.+)\""");
+            TaskFoundFromFactory = new Regex("^" + taskFoundFromFactory, RegexOptions.Compiled);
+
+            string taskFound = resourceSet.GetString("TaskFound")
+               .Replace(@"""{0}""", @"\""(?<task>.+)\""")
+               .Replace(@"""{1}""", @"\""(?<assembly>.+)\""");
+            TaskFound = new Regex("^" + taskFound, RegexOptions.Compiled);
 
             string skippedFalseCondition = resourceSet.GetString("ProjectImportSkippedFalseCondition")
            .Replace("{0}", @"(?<ImportedProject>[^\""]+)")
@@ -148,6 +178,64 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static Regex CopyingFileFrom { get; set; } // => "Copying file from \""; //Copy.FileComment $:$ Copying file from "{0}" to "{1}".
         public static Regex CreatingHardLink { get; set; } // => "Creating hard link to copy \""; //Copy.HardLinkComment $:$ Creating hard link to copy "{0}" to "{1}".
         public static Regex DidNotCopy { get; set; } //=> "Did not copy from file \""; //Copy.DidNotCopyBecauseOfFileMatch $:$ Did not copy from file "{0}" to file "{1}" because the "{2}" parameter was set to "{3}"
+        public static Regex TargetDoesNotExistBeforeTargetMessage { get; set; }
+        public static Regex TargetAlreadyCompleteSuccess { get; set; }
+        public static Regex TargetSkippedFalseCondition { get; set; }
+        public static Regex TargetAlreadyCompleteFailure { get; set; }
+        public static Regex TargetSkippedWhenSkipNonexistentTargets { get; set; }
+        public static Regex PropertyReassignmentRegex { get; set; }
+        public static Regex TaskFoundFromFactory { get; set; }
+        public static Regex TaskFound { get; set; }
+
+        public static Match UsingTask(string message)
+        {
+            if (TaskFoundFromFactory.IsMatch(message))
+            {
+                return TaskFoundFromFactory.Match(message);
+            }
+
+            if (TaskFound.IsMatch(message))
+            {
+                return TaskFound.Match(message);
+            }
+
+            return Match.Empty;
+        }
+        // = new Regex("Using \"(?<task>.+)\" task from (assembly|the task factory) \"(?<assembly>.+)\"\\.", RegexOptions.Compiled);
+
+        public static bool IsTargetSkipped(string message)
+        {
+            if (TargetAlreadyCompleteSuccess.IsMatch(message))
+            {
+                return true;
+            }
+
+            if (TargetSkippedFalseCondition.IsMatch(message))
+            {
+                return true;
+            }
+
+            if (TargetAlreadyCompleteFailure.IsMatch(message))
+            {
+                return true;
+            }
+
+            if (TargetSkippedWhenSkipNonexistentTargets.IsMatch(message))
+            {
+                return true;
+            }
+            //TargetAlreadyCompleteSuccess $:$ Target "{0}" skipped.Previously built successfully.
+            //TargetSkippedFalseCondition $:$ Target "{0}" skipped, due to false condition; ({1}) was evaluated as ({2}).
+            //TargetAlreadyCompleteFailure $:$ Target "{0}" skipped.Previously built unsuccessfully.
+            //TargetSkippedWhenSkipNonexistentTargets"><value>Target "{0}" skipped. The target does not exist in the project and SkipNonexistentTargets is set to true.</value></data>
+
+            return false;
+        }
+
+        public static bool IsTargetDoesNotExistAndWillBeSkipped(string message)
+        {
+            return TargetDoesNotExistBeforeTargetMessage.IsMatch(message);
+        }
 
         public static Match ProjectWasNotImportedRegex(string message, out string reason)
         {
@@ -181,6 +269,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return match;
 
             }
+
             return Match.Empty;
             //ProjectImportSkippedMissingFile $:$ Project "{0}" was not imported by "{1}" at ({2},{3}), due to the file not existing.
             //ProjectImportSkippedInvalidFile $:$ Project "{0}" was not imported by "{1}" at({ 2},{3}), due to the file being invalid.
@@ -248,32 +337,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string AnalyzerReport => "Analyzer Report"; //only node name??
         public static string Properties => "Properties"; //only node name??
 
-        //TaskFoundFromFactory $:$ Using "{0}" task from the task factory "{1}".
-        //TaskFound $:$ Using "{0}" task from assembly "{1}".
-        public static Regex UsingTaskRegex = new Regex("Using \"(?<task>.+)\" task from (assembly|the task factory) \"(?<assembly>.+)\"\\.", RegexOptions.Compiled);
 
-        //PropertyReassignment $:$ Property reassignment: $({0})="{1}" (previous value: "{2}") at {3}
-        public static Regex PropertyReassignmentRegex = new Regex(@"^Property reassignment: \$\(\w+\)=.+ \(previous value: .*\) at (?<File>.*) \((?<Line>\d+),(\d+)\)$", RegexOptions.Compiled);
-
-
-        //ProjectImportSkippedMissingFile $:$ Project "{0}" was not imported by "{1}" at ({2},{3}), due to the file not existing.
-        //ProjectImportSkippedInvalidFile $:$ Project "{0}" was not imported by "{1}" at({ 2},{3}), due to the file being invalid.
-        //ProjectImportSkippedEmptyFile $:$ Project "{0}" was not imported by "{1}" at ({2},{3}), due to the file being empty.
-        //ProjectImportSkippedFalseCondition $:$ Project "{0}" was not imported by "{1}" at({ 2},{3}), due to false condition; ({4}) was evaluated as ({5}).
-        //ProjectImportSkippedNoMatches $:$ Project "{0}" was not imported by "{1}" at({ 2},{3}), due to no matching files.
-        // public static Regex ProjectWasNotImportedRegex = new Regex(@"^Project ""(?<ImportedProject>[^""]+)"" was not imported by ""(?<File>[^""]+)"" at \((?<Line>\d+),(?<Column>\d+)\), due to (?<Reason>.+)$", RegexOptions.Compiled);
 
         public static string GetPropertyName(string message) => message.Substring(message.IndexOf("$") + 2, message.IndexOf("=") - message.IndexOf("$") - 3);
-
-        //public static bool IsTaskSkipped(string message) => message.StartsWith("Task") && message.Contains("skipped");
-
-        //TargetAlreadyCompleteSuccess $:$ Target "{0}" skipped.Previously built successfully.
-        //TargetSkippedFalseCondition $:$ Target "{0}" skipped, due to false condition; ({1}) was evaluated as ({2}).
-        //TargetAlreadyCompleteFailure $:$ Target "{0}" skipped.Previously built unsuccessfully.
-        //TargetSkippedWhenSkipNonexistentTargets"><value>Target "{0}" skipped. The target does not exist in the project and SkipNonexistentTargets is set to true.</value></data>
-        public static bool IsTargetSkipped(string message) => message.StartsWith("Target") && message.Contains("skipped");
-        //TargetDoesNotExistBeforeTargetMessage"><value>The target "{0}" listed in a BeforeTargets attribute at "{1}" does not exist in the project, and will be ignored.</value></data>
-        public static bool IsTargetDoesNotExistAndWillBeSkipped(string message) => message.StartsWith("The target") && message.Contains("does not exist in the project, and will be ignored");
 
         public static bool IsEvaluationMessage(string message)
         {

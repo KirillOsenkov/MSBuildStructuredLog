@@ -26,7 +26,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             this.stringTable = stringTable;
         }
 
-        private static Regex usingTaskRegex = Strings.UsingTaskRegex;
+        //private static Regex usingTaskRegex = Strings.UsingTaskRegex;
 
         public void Process(BuildMessageEventArgs args)
         {
@@ -112,7 +112,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             //    break;
             //case 'U':
             // A task from assembly message (parses out the task name and assembly path).
-            var match = usingTaskRegex.Match(message);
+            var match = Strings.UsingTask(message);
             if (match.Success)
             {
                 construction.SetTaskAssembly(
