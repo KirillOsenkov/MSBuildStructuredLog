@@ -61,11 +61,380 @@ namespace StructuredLogger.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Did not copy from file &quot;{0}&quot; to file &quot;{1}&quot; because the &quot;{2}&quot; parameter was set to &quot;{3}&quot; in the project and the files&apos; sizes and timestamps match..
+        /// </summary>
+        internal static string Copy_DidNotCopyBecauseOfFileMatch {
+            get {
+                return ResourceManager.GetString("Copy.DidNotCopyBecauseOfFileMatch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Copying file from &quot;{0}&quot; to &quot;{1}&quot;..
+        /// </summary>
+        internal static string Copy_FileComment {
+            get {
+                return ResourceManager.GetString("Copy.FileComment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Creating hard link to copy &quot;{0}&quot; to &quot;{1}&quot;..
+        /// </summary>
+        internal static string Copy_HardLinkComment {
+            get {
+                return ResourceManager.GetString("Copy.HardLinkComment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MSB4011: &quot;{0}&quot; cannot be imported again. It was already imported at &quot;{1}&quot;. This is most likely a build authoring error. This subsequent import will be ignored. {2}.
+        /// </summary>
+        internal static string DuplicateImport {
+            get {
+                return ResourceManager.GetString("DuplicateImport", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Additional Properties for project &quot;{0}&quot;:.
+        /// </summary>
+        internal static string General_AdditionalProperties {
+            get {
+                return ResourceManager.GetString("General.AdditionalProperties", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Global Properties:.
+        /// </summary>
+        internal static string General_GlobalProperties {
+            get {
+                return ResourceManager.GetString("General.GlobalProperties", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Overriding Global Properties for project &quot;{0}&quot; with:.
+        /// </summary>
+        internal static string General_OverridingProperties {
+            get {
+                return ResourceManager.GetString("General.OverridingProperties", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removing Properties:.
+        /// </summary>
+        internal static string General_UndefineProperties {
+            get {
+                return ResourceManager.GetString("General.UndefineProperties", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was a conflict between two files from the redist folder files going to the same target path &quot;{0}&quot; between the &quot;{1}&quot; and &quot;{2}&quot; SDKs. Choosing &quot;{3}&quot; over &quot;{4}&quot; because it was resolved first..
+        /// </summary>
+        internal static string GetSDKReferenceFiles_ConflictRedistDifferentSDK {
+            get {
+                return ResourceManager.GetString("GetSDKReferenceFiles.ConflictRedistDifferentSDK", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was a conflict between two references with the same file name between the &quot;{0}&quot; and &quot;{1}&quot; SDKs. Choosing &quot;{2}&quot; over &quot;{3}&quot; because it was resolved first..
+        /// </summary>
+        internal static string GetSDKReferenceFiles_ConflictReferenceDifferentSDK {
+            get {
+                return ResourceManager.GetString("GetSDKReferenceFiles.ConflictReferenceDifferentSDK", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There was a conflict between two references with the same file name resolved within the &quot;{0}&quot; SDK. Choosing &quot;{1}&quot; over &quot;{2}&quot; because it was resolved first..
+        /// </summary>
+        internal static string GetSDKReferenceFiles_ConflictReferenceSameSDK {
+            get {
+                return ResourceManager.GetString("GetSDKReferenceFiles.ConflictReferenceSameSDK", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Added Item(s): .
+        /// </summary>
+        internal static string ItemGroupIncludeLogMessagePrefix {
+            get {
+                return ResourceManager.GetString("ItemGroupIncludeLogMessagePrefix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed Item(s): .
+        /// </summary>
+        internal static string ItemGroupRemoveLogMessage {
+            get {
+                return ResourceManager.GetString("ItemGroupRemoveLogMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Output Item(s): .
+        /// </summary>
+        internal static string OutputItemParameterMessagePrefix {
+            get {
+                return ResourceManager.GetString("OutputItemParameterMessagePrefix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Output Property: {0}={1}.
+        /// </summary>
+        internal static string OutputPropertyLogMessage {
+            get {
+                return ResourceManager.GetString("OutputPropertyLogMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Overriding target &quot;{0}&quot; in project &quot;{1}&quot; with target &quot;{2}&quot; from project &quot;{3}&quot;..
+        /// </summary>
+        internal static string OverridingTarget {
+            get {
+                return ResourceManager.GetString("OverridingTarget", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Importing project &quot;{0}&quot; into project &quot;{1}&quot; at ({2},{3})..
+        /// </summary>
+        internal static string ProjectImported {
+            get {
+                return ResourceManager.GetString("ProjectImported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project &quot;{0}&quot; was not imported by &quot;{1}&quot; at ({2},{3}), due to the file being empty..
+        /// </summary>
+        internal static string ProjectImportSkippedEmptyFile {
+            get {
+                return ResourceManager.GetString("ProjectImportSkippedEmptyFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project &quot;{0}&quot; was not imported by &quot;{1}&quot; at ({2},{3}), due to false condition; ({4}) was evaluated as ({5})..
+        /// </summary>
+        internal static string ProjectImportSkippedFalseCondition {
+            get {
+                return ResourceManager.GetString("ProjectImportSkippedFalseCondition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project &quot;{0}&quot; was not imported by &quot;{1}&quot; at ({2},{3}), due to the file being invalid..
+        /// </summary>
+        internal static string ProjectImportSkippedInvalidFile {
+            get {
+                return ResourceManager.GetString("ProjectImportSkippedInvalidFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project &quot;{0}&quot; was not imported by &quot;{1}&quot; at ({2},{3}), due to the file not existing..
+        /// </summary>
+        internal static string ProjectImportSkippedMissingFile {
+            get {
+                return ResourceManager.GetString("ProjectImportSkippedMissingFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project &quot;{0}&quot; was not imported by &quot;{1}&quot; at ({2},{3}), due to no matching files..
+        /// </summary>
+        internal static string ProjectImportSkippedNoMatches {
+            get {
+                return ResourceManager.GetString("ProjectImportSkippedNoMatches", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Set Property: {0}={1}.
+        /// </summary>
+        internal static string PropertyGroupLogMessage {
+            get {
+                return ResourceManager.GetString("PropertyGroupLogMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Property reassignment: $({0})=&quot;{1}&quot; (previous value: &quot;{2}&quot;) at {3}.
+        /// </summary>
+        internal static string PropertyReassignment {
+            get {
+                return ResourceManager.GetString("PropertyReassignment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AssemblyFoldersEx location: &quot;{0}&quot;.
+        /// </summary>
+        internal static string ResolveAssemblyReference_AssemblyFoldersExSearchLocations {
+            get {
+                return ResourceManager.GetString("ResolveAssemblyReference.AssemblyFoldersExSearchLocations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Dependency &quot;{0}&quot;..
+        /// </summary>
+        internal static string ResolveAssemblyReference_Dependency {
+            get {
+                return ResourceManager.GetString("ResolveAssemblyReference.Dependency", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Primary reference &quot;{0}&quot;..
+        /// </summary>
+        internal static string ResolveAssemblyReference_PrimaryReference {
+            get {
+                return ResourceManager.GetString("ResolveAssemblyReference.PrimaryReference", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to For SearchPath &quot;{0}&quot;..
+        /// </summary>
+        internal static string ResolveAssemblyReference_SearchPath {
+            get {
+                return ResourceManager.GetString("ResolveAssemblyReference.SearchPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unified Dependency &quot;{0}&quot;..
+        /// </summary>
+        internal static string ResolveAssemblyReference_UnifiedDependency {
+            get {
+                return ResourceManager.GetString("ResolveAssemblyReference.UnifiedDependency", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unified primary reference &quot;{0}&quot;..
+        /// </summary>
+        internal static string ResolveAssemblyReference_UnifiedPrimaryReference {
+            get {
+                return ResourceManager.GetString("ResolveAssemblyReference.UnifiedPrimaryReference", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search paths being used for {0} are {1}.
+        /// </summary>
+        internal static string SearchPathsForMSBuildExtensionsPath {
+            get {
+                return ResourceManager.GetString("SearchPathsForMSBuildExtensionsPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Target &quot;{0}&quot; skipped. Previously built unsuccessfully..
+        /// </summary>
+        internal static string TargetAlreadyCompleteFailure {
+            get {
+                return ResourceManager.GetString("TargetAlreadyCompleteFailure", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Target &quot;{0}&quot; skipped. Previously built successfully..
+        /// </summary>
+        internal static string TargetAlreadyCompleteSuccess {
+            get {
+                return ResourceManager.GetString("TargetAlreadyCompleteSuccess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The target &quot;{0}&quot; listed in a BeforeTargets attribute at &quot;{1}&quot; does not exist in the project, and will be ignored..
+        /// </summary>
+        internal static string TargetDoesNotExistBeforeTargetMessage {
+            get {
+                return ResourceManager.GetString("TargetDoesNotExistBeforeTargetMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Target &quot;{0}&quot; skipped, due to false condition; ({1}) was evaluated as ({2})..
+        /// </summary>
+        internal static string TargetSkippedFalseCondition {
+            get {
+                return ResourceManager.GetString("TargetSkippedFalseCondition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Target &quot;{0}&quot; skipped. The target does not exist in the project and SkipNonexistentTargets is set to true..
+        /// </summary>
+        internal static string TargetSkippedWhenSkipNonexistentTargets {
+            get {
+                return ResourceManager.GetString("TargetSkippedWhenSkipNonexistentTargets", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Using &quot;{0}&quot; task from assembly &quot;{1}&quot;..
+        /// </summary>
+        internal static string TaskFound {
+            get {
+                return ResourceManager.GetString("TaskFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Using &quot;{0}&quot; task from the task factory &quot;{1}&quot;..
+        /// </summary>
+        internal static string TaskFoundFromFactory {
+            get {
+                return ResourceManager.GetString("TaskFoundFromFactory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Task Parameter:.
         /// </summary>
         internal static string TaskParameterPrefix {
             get {
                 return ResourceManager.GetString("TaskParameterPrefix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Task &quot;{0}&quot; skipped, due to false condition; ({1}) was evaluated as ({2})..
+        /// </summary>
+        internal static string TaskSkippedFalseCondition {
+            get {
+                return ResourceManager.GetString("TaskSkippedFalseCondition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Building with tools version &quot;{0}&quot;..
+        /// </summary>
+        internal static string ToolsVersionInEffectForBuild {
+            get {
+                return ResourceManager.GetString("ToolsVersionInEffectForBuild", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Trying to import {0} using extensions path {1}.
+        /// </summary>
+        internal static string TryingExtensionsPath {
+            get {
+                return ResourceManager.GetString("TryingExtensionsPath", resourceCulture);
             }
         }
     }
