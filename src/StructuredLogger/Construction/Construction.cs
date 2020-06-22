@@ -390,7 +390,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         if (!String.IsNullOrEmpty(culture))
                         {
                             Strings.SetCultureInfo(System.Globalization.CultureInfo.GetCultureInfo(culture));
-                        }                        
+                        }
                     }
 
                     // initialize englisch when CultureInfo from log not found

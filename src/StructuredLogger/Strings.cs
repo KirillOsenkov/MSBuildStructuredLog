@@ -34,7 +34,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             TargetAlreadyCompleteSuccess = new Regex(ResourceSet.GetString("TargetAlreadyCompleteSuccess").Replace("{0}", @".*?"));
             TargetAlreadyCompleteFailure = new Regex(ResourceSet.GetString("TargetAlreadyCompleteFailure").Replace("{0}", @".*?"));
             TargetSkippedWhenSkipNonexistentTargets = new Regex(ResourceSet.GetString("TargetSkippedWhenSkipNonexistentTargets").Replace("{0}", @".*?"));
-            
+
             DuplicateImport = new Regex(ResourceSet.GetString("SearchPathsForMSBuildExtensionsPath")
                 .Replace("{0}", @".*?")
                 .Replace("{1}", @".*?")
@@ -43,7 +43,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             SearchPathsForMSBuildExtensionsPath = new Regex(ResourceSet.GetString("SearchPathsForMSBuildExtensionsPath")
                 .Replace("{0}", @".*?")
                 .Replace("{1}", @".*?"));
-            
+
             OverridingTarget = new Regex(ResourceSet.GetString("OverridingTarget")
                 .Replace("{0}", @".*?")
                 .Replace("{1}", @".*?")
@@ -53,7 +53,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             TryingExtensionsPath = new Regex(ResourceSet.GetString("TryingExtensionsPath")
                  .Replace("{0}", @".*?")
                  .Replace("{1}", @".*?"));
-            
+
             ProjectImported = new Regex(ResourceSet.GetString("ProjectImported")
                 .Replace("{0}", @".*?")
                 .Replace("{1}", @".*?")
@@ -177,11 +177,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
                .Replace("{2}", ".*?")
                .Replace("{3}", ".*?")
                );
+
+            TaskParameterMessagePrefix = ResourceSet.GetString("TaskParameterPrefix");
+            OutputItemsMessagePrefix = ResourceSet.GetString("OutputItemParameterMessagePrefix");
+            ItemGroupIncludeMessagePrefix = ResourceSet.GetString("ItemGroupIncludeLogMessagePrefix");
+            ItemGroupRemoveMessagePrefix = ResourceSet.GetString("ItemGroupRemoveLogMessage");
+            GlobalPropertiesPrefix = ResourceSet.GetString("General.GlobalProperties");
+            RemovingPropertiesPrefix = ResourceSet.GetString("General.UndefineProperties");
         }
 
         public static Regex DuplicateImport { get; set; }
         public static Regex SearchPathsForMSBuildExtensionsPath { get; set; }
-        public static Regex  OverridingTarget { get; set; }
+        public static Regex OverridingTarget { get; set; }
         public static Regex TryingExtensionsPath { get; set; }
         public static Regex ProjectImported { get; set; }
         public static Regex BuildingWithToolsVersionPrefix { get; set; }
@@ -194,18 +201,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static Regex ProjectImportSkippedNoMatches { get; set; }
         public static Regex PropertyReassignment { get; set; }
         public static Regex ImportingProjectRegex { get; set; }
-        public static Regex UnifiedPrimaryReferencePrefix { get; set; } 
+        public static Regex UnifiedPrimaryReferencePrefix { get; set; }
         public static Regex PrimaryReferencePrefix { get; set; }
-        public static Regex DependencyPrefix { get; set; } 
-        public static Regex UnifiedDependencyPrefix { get; set; } 
-        public static Regex AssemblyFoldersExLocation { get; set; } 
+        public static Regex DependencyPrefix { get; set; }
+        public static Regex UnifiedDependencyPrefix { get; set; }
+        public static Regex AssemblyFoldersExLocation { get; set; }
         public static Regex ConflictReferenceSameSDK { get; set; }
         public static Regex ConflictRedistDifferentSDK { get; set; }
         public static Regex ConflictReferenceDifferentSDK { get; set; }
-        public static Regex AdditionalPropertiesPrefix { get; set; } 
-        public static Regex OverridingGlobalPropertiesPrefix { get; set; } 
-        public static Regex CopyingFileFrom { get; set; } 
-        public static Regex CreatingHardLink { get; set; } 
+        public static Regex AdditionalPropertiesPrefix { get; set; }
+        public static Regex OverridingGlobalPropertiesPrefix { get; set; }
+        public static Regex CopyingFileFrom { get; set; }
+        public static Regex CreatingHardLink { get; set; }
         public static Regex DidNotCopy { get; set; }
         public static Regex TargetDoesNotExistBeforeTargetMessage { get; set; }
         public static Regex TargetAlreadyCompleteSuccess { get; set; }
@@ -338,28 +345,28 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string UsedLocations => "Used locations";
         public static string UnusedLocations = "Unused locations";
 
-        public static string TaskParameterMessagePrefix => ResourceSet.GetString("TaskParameterPrefix");
-        public static string OutputItemsMessagePrefix => ResourceSet.GetString("OutputItemParameterMessagePrefix");
-        public static string ItemGroupIncludeMessagePrefix => ResourceSet.GetString("ItemGroupIncludeLogMessagePrefix");
-        public static string ItemGroupRemoveMessagePrefix => ResourceSet.GetString("ItemGroupRemoveLogMessage");
-        public static string GlobalPropertiesPrefix => ResourceSet.GetString("General.GlobalProperties");
-        public static string RemovingPropertiesPrefix => ResourceSet.GetString("General.UndefineProperties");
+        public static string TaskParameterMessagePrefix { get; set; }
+        public static string OutputItemsMessagePrefix { get; set; }
+        public static string ItemGroupIncludeMessagePrefix { get; set; }
+        public static string ItemGroupRemoveMessagePrefix { get; set; }
+        public static string GlobalPropertiesPrefix { get; set; }
+        public static string RemovingPropertiesPrefix { get; set; }
 
         public static string To => "\" to \"";
         public static string ToFile => "\" to file \"";
 
         public static string TotalAnalyzerExecutionTime => "Total analyzer execution time:";
 
-        public static string Evaluation => "Evaluation"; 
-        public static string Environment => "Environment"; 
-        public static string Imports => "Imports"; 
-        public static string DetailedSummary => "Detailed summary"; 
-        public static string Parameters => "Parameters"; 
-        public static string Results => "Results"; 
-        public static string SearchPaths => "SearchPaths"; 
-        public static string Assemblies => "Assemblies"; 
-        public static string TargetOutputs => "TargetOutputs"; 
-        public static string AnalyzerReport => "Analyzer Report"; 
+        public static string Evaluation => "Evaluation";
+        public static string Environment => "Environment";
+        public static string Imports => "Imports";
+        public static string DetailedSummary => "Detailed summary";
+        public static string Parameters => "Parameters";
+        public static string Results => "Results";
+        public static string SearchPaths => "SearchPaths";
+        public static string Assemblies => "Assemblies";
+        public static string TargetOutputs => "TargetOutputs";
+        public static string AnalyzerReport => "Analyzer Report";
         public static string Properties => "Properties";
 
         public static string GetPropertyName(string message) => message.Substring(message.IndexOf("$") + 2, message.IndexOf("=") - message.IndexOf("$") - 3);
@@ -376,7 +383,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 || ProjectImportSkippedNoMatches.IsMatch(message)
                 || ProjectImportSkippedMissingFile.IsMatch(message)
                 || ProjectImportSkippedInvalidFile.IsMatch(message);
-             //Project "{0}" was not imported by "{1}" at({ 2},{ 3}), due to the file being empty.
+            //Project "{0}" was not imported by "{1}" at({ 2},{ 3}), due to the file being empty.
             //ProjectImportSkippedFalseCondition $:$ Project "{0}" was not imported by "{1}" at ({2},{3}), due to false condition; ({4}) was evaluated as ({5}).
             //ProjectImportSkippedNoMatches $:$ Project "{0}" was not imported by "{1}" at ({2},{3}), due to no matching files.
             //ProjectImportSkippedMissingFile $:$ Project "{0}" was not imported by "{1}" at ({2},{3}), due to the file not existing.

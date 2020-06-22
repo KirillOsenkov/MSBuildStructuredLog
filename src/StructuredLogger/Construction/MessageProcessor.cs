@@ -8,13 +8,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class MessageProcessor
     {
-        public static string TaskParameterMessagePrefix = Strings.TaskParameterMessagePrefix;
-        public static string OutputItemsMessagePrefix = Strings.OutputItemsMessagePrefix;
-        public static string OutputPropertyMessagePrefix = Strings.OutputPropertyMessagePrefix;
-        public static string PropertyGroupMessagePrefix = Strings.PropertyGroupMessagePrefix;
-        public static string ItemGroupIncludeMessagePrefix = Strings.ItemGroupIncludeMessagePrefix;
-        public static string ItemGroupRemoveMessagePrefix = Strings.ItemGroupRemoveMessagePrefix;
-
         private readonly Construction construction;
         private readonly StringCache stringTable;
 
@@ -46,46 +39,46 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            if (message.StartsWith(ItemGroupIncludeMessagePrefix))
+            if (message.StartsWith(Strings.ItemGroupIncludeMessagePrefix))
             {
-                AddItemGroup(args, ItemGroupIncludeMessagePrefix, new AddItem());
+                AddItemGroup(args, Strings.ItemGroupIncludeMessagePrefix, new AddItem());
                 return;
             }
 
-            if (message.StartsWith(OutputItemsMessagePrefix))
+            if (message.StartsWith(Strings.OutputItemsMessagePrefix))
             {
                 var task = GetTask(args);
 
                 //this.construction.Build.Statistics.ReportOutputItemMessage(task, message);
 
                 var folder = task.GetOrCreateNodeWithName<Folder>("OutputItems");
-                var parameter = ItemGroupParser.ParsePropertyOrItemList(message, OutputItemsMessagePrefix, stringTable);
+                var parameter = ItemGroupParser.ParsePropertyOrItemList(message, Strings.OutputItemsMessagePrefix, stringTable);
                 folder.AddChild(parameter);
                 return;
             }
 
-            if (message.StartsWith(OutputPropertyMessagePrefix))
+            if (message.StartsWith(Strings.OutputPropertyMessagePrefix))
             {
                 var task = GetTask(args);
                 var folder = task.GetOrCreateNodeWithName<Folder>("OutputProperties");
-                var parameter = ItemGroupParser.ParsePropertyOrItemList(message, OutputPropertyMessagePrefix, stringTable);
+                var parameter = ItemGroupParser.ParsePropertyOrItemList(message, Strings.OutputPropertyMessagePrefix, stringTable);
                 folder.AddChild(parameter);
                 return;
             }
 
-            if (message.StartsWith(ItemGroupRemoveMessagePrefix))
+            if (message.StartsWith(Strings.ItemGroupRemoveMessagePrefix))
             {
-                AddItemGroup(args, ItemGroupRemoveMessagePrefix, new RemoveItem());
+                AddItemGroup(args, Strings.ItemGroupRemoveMessagePrefix, new RemoveItem());
                 return;
             }
 
-            if (message.StartsWith(PropertyGroupMessagePrefix))
+            if (message.StartsWith(Strings.PropertyGroupMessagePrefix))
             {
-                AddPropertyGroup(args, PropertyGroupMessagePrefix);
+                AddPropertyGroup(args, Strings.PropertyGroupMessagePrefix);
                 return;
             }
     
-            if (message.StartsWith(TaskParameterMessagePrefix))
+            if (message.StartsWith(Strings.TaskParameterMessagePrefix))
             {
                 var task = GetTask(args);
                 if (IgnoreParameters(task))
@@ -96,7 +89,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 //this.construction.Build.Statistics.ReportTaskParameterMessage(task, message);
 
                 var folder = task.GetOrCreateNodeWithName<Folder>(Strings.Parameters);
-                var parameter = ItemGroupParser.ParsePropertyOrItemList(message, TaskParameterMessagePrefix, stringTable);
+                var parameter = ItemGroupParser.ParsePropertyOrItemList(message, Strings.TaskParameterMessagePrefix, stringTable);
                 folder.AddChild(parameter);
                 return;
             }
