@@ -48,9 +48,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     throw new LoggerException($"Failed to create the source archive for log file {_logFile}", ex);
                 }
-            }
-            //read language from log and initialzie resource strings
-            Strings.SetCultureInfo(System.Globalization.CultureInfo.GetCultureInfo("en-US"));
+            }           
 
             construction = new Construction();
 

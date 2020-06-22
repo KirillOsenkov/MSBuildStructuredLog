@@ -383,6 +383,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         return;
                     }
 
+                    if (args.SenderName == "BinaryLogger" && args.Message.StartsWith("CurrentUICulture"))
+                    {
+                        string culture = args.Message.Substring(args.Message.IndexOf("=") + 1, args.Message.Length - 1 - args.Message.IndexOf("="));
+                        //read language from log and initialize resource strings
+                        if (!String.IsNullOrEmpty(culture))
+                        {
+                            Strings.SetCultureInfo(System.Globalization.CultureInfo.GetCultureInfo(culture));
+                        }                        
+                    }
+
+                    // initialize englisch when CultureInfo from log not found
+                    if (Strings.ResourceSet == null)
+                    {
+                        Strings.SetCultureInfo(System.Globalization.CultureInfo.GetCultureInfo("en-US"));
+                    }
+
                     messageProcessor.Process(args);
                 }
             }
