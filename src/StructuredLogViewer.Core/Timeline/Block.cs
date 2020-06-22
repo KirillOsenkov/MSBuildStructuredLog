@@ -21,7 +21,7 @@ namespace StructuredLogViewer
 
         public string GetTooltip()
         {
-            var text = Node.ToString();
+            var text = TextUtilities.ShortenValue(Node.ToString(), maxChars: 100);
 
             var project = Node.GetNearestParent<Project>();
             if (project != null)

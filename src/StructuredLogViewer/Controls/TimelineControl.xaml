@@ -9,7 +9,7 @@
   <Grid>
     <ScrollViewer x:Name="scrollViewer"
                 HorizontalScrollBarVisibility="Auto" 
-                VerticalScrollBarVisibility="Auto">
+                VerticalScrollBarVisibility="Auto" Loaded="ScrollViewer_Loaded" Unloaded="ScrollViewer_Unloaded">
       <Grid x:Name="grid">
       </Grid>
     </ScrollViewer>

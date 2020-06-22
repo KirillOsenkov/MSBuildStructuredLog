@@ -1,0 +1,2 @@
+cd src/StructuredLogViewer.Avalonia
+dotnet run StructuredLogViewer.Avalonia.csproj

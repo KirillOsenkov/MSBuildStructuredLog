@@ -25,7 +25,7 @@ namespace StructuredLogViewer.Controls
     {
         public Build Build { get; set; }
         public TreeViewItem SelectedTreeViewItem { get; private set; }
-        public string LogFilePath { get; set; }
+        public string LogFilePath => Build?.LogFilePath;
 
         private ScrollViewer scrollViewer;
 
@@ -78,8 +78,6 @@ namespace StructuredLogViewer.Controls
             DataContext = build;
             Build = build;
 
-            LogFilePath = logFilePath;
-
             if (build.SourceFilesArchive != null)
             {
                 // first try to see if the source archive was embedded in the log
@@ -119,7 +117,7 @@ namespace StructuredLogViewer.Controls
             viewSubtreeTextItem.Click += (s, a) => ViewSubtreeText();
             searchInSubtreeItem.Click += (s, a) => SearchInSubtree();
             excludeSubtreeFromSearchItem.Click += (s, a) => ExcludeSubtreeFromSearch();
-            goToTimeLineItem.Click += (s, a) => goToTimeLine();
+            goToTimeLineItem.Click += (s, a) => GoToTimeLine();
             copyChildrenItem.Click += (s, a) => CopyChildren();
             sortChildrenItem.Click += (s, a) => SortChildren();
             copyNameItem.Click += (s, a) => CopyName();
@@ -269,9 +267,12 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
         private void PopulateTimeline()
         {
-            var timeline = new Timeline(Build);
-            this.timeline.BuildControl = this;
-            this.timeline.SetTimeline(timeline);
+            if (this.timeline.Timeline == null)
+            {
+                var timeline = new Timeline(Build);
+                this.timeline.BuildControl = this;
+                this.timeline.SetTimeline(timeline);
+            }
         }
 
         private Microsoft.Msagl.Drawing.Graph graph;
@@ -933,7 +934,7 @@ Recent:
             }
         }
 
-        public void goToTimeLine()
+        public void GoToTimeLine()
         {
             var treeNode = treeView.SelectedItem as TimedNode;
             if (treeNode != null)
@@ -1315,6 +1316,7 @@ Recent:
                         parent = projectProxy;
                         parent.IsExpanded = true;
                     }
+
                     var target = result.Node.GetNearestParent<Target>();
                     if (target != null)
                     {
@@ -1324,12 +1326,13 @@ Recent:
                         {
                             targetProxy.Highlights.Add(targetProxy.Name);
                         }
+
                         parent = targetProxy;
                         parent.IsExpanded = true;
                     }
 
-                    //add task
-                    var task = result.Node.GetNearestParent<Task>();
+                    // nest under a Task, unless it's an MSBuild task higher up the parent chain
+                    var task = result.Node.GetNearestParent<Task>(t => !string.Equals(t.Name, "MSBuild", StringComparison.OrdinalIgnoreCase));
                     if (task != null)
                     {
                         var taskProxy = parent.GetOrCreateNodeWithName<ProxyNode>(task.TypeName + " " + task.Name);
@@ -1338,6 +1341,7 @@ Recent:
                         {
                             taskProxy.Highlights.Add(taskProxy.Name);
                         }
+
                         parent = taskProxy;
                         parent.IsExpanded = true;
                     }

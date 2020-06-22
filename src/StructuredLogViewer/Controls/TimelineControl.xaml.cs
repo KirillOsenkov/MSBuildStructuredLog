@@ -21,6 +21,20 @@ namespace StructuredLogViewer.Controls
         }
 
         private double scaleFactor = 1;
+        private double horizontalOffset = 0;
+        private double verticalOffset = 0;
+
+        private void ScrollViewer_Loaded(object sender, RoutedEventArgs e)
+        {
+            scrollViewer.ScrollToHorizontalOffset(horizontalOffset);
+            scrollViewer.ScrollToVerticalOffset(verticalOffset);
+        }
+
+        private void ScrollViewer_Unloaded(object sender, RoutedEventArgs e)
+        {
+            horizontalOffset = scrollViewer.HorizontalOffset;
+            verticalOffset = scrollViewer.VerticalOffset;
+        }
 
         private void zoomSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
@@ -77,8 +91,12 @@ namespace StructuredLogViewer.Controls
 
         private bool isDoubleClick = false;
 
+        public Timeline Timeline { get; set; }
+
         public void SetTimeline(Timeline timeline)
         {
+            Timeline = timeline;
+
             var lanesPanel = new StackPanel { Orientation = Orientation.Horizontal };
             grid.Children.Add(lanesPanel);
 
@@ -95,7 +113,7 @@ namespace StructuredLogViewer.Controls
         public void GoToTimeNode(TimedNode node)
         {
             TextBlock textblock = null;
-            foreach (TimedNode timedNode in node.GetParentChainIncludingThis().OfType<TimedNode>())
+            foreach (TimedNode timedNode in node.GetParentChainIncludingThis().OfType<TimedNode>().Reverse())
             {
                 if (TextBlocks.TryGetValue(timedNode, out textblock))
                 {
@@ -110,7 +128,9 @@ namespace StructuredLogViewer.Controls
                 {
                     parent.Children.Remove(highlight);
                 }
+
                 scrollViewer.ScrollToVerticalOffset(0);
+                scrollViewer.ScrollToHorizontalOffset(0);
             }
         }
 
@@ -289,6 +309,13 @@ namespace StructuredLogViewer.Controls
         {
             if (activeTextBlock == hit)
             {
+                if (scrollToElement)
+                {
+                    ContentControl content = activeTextBlock.Parent as ContentControl;
+                    Point p = content.TranslatePoint(new Point(0, 0), grid);
+                    horizontalOffset = p.X > 20 ? p.X - 20 : p.X;
+                    verticalOffset = p.Y > 20 ? p.Y - 20 : p.Y;
+                }
                 return;
             }
 
@@ -312,10 +339,12 @@ namespace StructuredLogViewer.Controls
                     Canvas.SetTop(highlight, Canvas.GetTop(content));
                     highlight.Width = activeTextBlock.ActualWidth;
                     highlight.Height = activeTextBlock.ActualHeight;
-
+                   
                     if (scrollToElement)
                     {
-                        scrollViewer.ScrollToVerticalOffset(Canvas.GetTop(content));
+                        Point p = content.TranslatePoint(new Point(0, 0), grid);
+                        horizontalOffset = p.X > 20 ? p.X - 20: p.X;
+                        verticalOffset = p.Y > 20 ? p.Y - 20 : p.Y;
                     }
                 }
             }

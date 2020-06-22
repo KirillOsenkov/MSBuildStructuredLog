@@ -13,16 +13,39 @@ Thanks to https://signpath.io for generously providing a certificate to sign the
 ![signpath.io](https://about.signpath.io/wp-content/uploads/2018/11/logo_signpath_500.png)
 
 ## Install:
-https://github.com/KirillOsenkov/MSBuildStructuredLog/releases/download/v2.1.97/MSBuildStructuredLogSetup.exe
+https://github.com/KirillOsenkov/MSBuildStructuredLog/releases/download/v2.1.133/MSBuildStructuredLogSetup.exe
 
 The app updates automatically via [Squirrel](https://github.com/Squirrel/Squirrel.Windows) (after launch it checks for updates in background), next launch starts the newly downloaded latest version.
 
 ![Screenshot1](http://msbuildlog.com/Screenshot1.png)
 
+## Running the Avalonia version on Mac:
+
+```
+git clone https://github.com/KirillOsenkov/MSBuildStructuredLog
+./run.sh
+```
+
+Alternatively, a longer version:
+
+1. `dotnet build`
+2. `dotnet publish --self-contained -o <some_dir>` (I used $HOME/tools/artifacts/StructuredLogViewer.Avalonia)
+3. make a script `$HOME/bin/structured-log-viewer` (or whatever's on your PATH):
+
+```
+#! /bin/sh
+exec dotnet ${HOME}/tools/artifacts/StructuredLogViewer.Avalonia/publish/StructuredLogViewer.Avalonia.dll "$@"
+```
+
 ## Requirements:
+
+Windows:
  * .NET Framework 4.7.2
- * MSBuild 15.0
+ * MSBuild 16.0
  * Visual Studio 2019
+
+Mac:
+ * .NET Core SDK
 
 ## Usage:
 
@@ -38,7 +61,7 @@ Alternatively (useful for older versions of MSBuild) you can attach the logger t
 https://www.nuget.org/packages/MSBuild.StructuredLogger
 
 ```
-msbuild solution.sln /t:Rebuild /v:diag /noconlog /logger:BinaryLogger,%localappdata%\MSBuildStructuredLogViewer\app-2.1.97\StructuredLogger.dll;1.binlog
+msbuild solution.sln /t:Rebuild /v:diag /noconlog /logger:BinaryLogger,%localappdata%\MSBuildStructuredLogViewer\app-2.1.133\StructuredLogger.dll;1.binlog
 ```
 
 To use a portable version of the logger (e.g. with the `dotnet msbuild` command) you need a .NET Standard version of `StructuredLogger.dll`, not the .NET Framework (Desktop) version.
@@ -46,7 +69,7 @@ To use a portable version of the logger (e.g. with the `dotnet msbuild` command)
 Download this NuGet package: https://www.nuget.org/packages/MSBuild.StructuredLogger/2.1.88
 and inside it there's the `lib\netstandard2.0\StructuredLogger.dll`. Try passing that to `dotnet build` like this:
 ```
-dotnet msbuild Some.sln /v:diag /nologo /logger:BinaryLogger,"packages\MSBuild.StructuredLogger.2.1.97\lib\netstandard2.0\StructuredLogger.dll";"C:\Users\SomeUser\Desktop\binarylog.binlog"
+dotnet msbuild Some.sln /v:diag /nologo /logger:BinaryLogger,"packages\MSBuild.StructuredLogger.2.1.133\lib\netstandard2.0\StructuredLogger.dll";"C:\Users\SomeUser\Desktop\binarylog.binlog"
 ```
 
 The logger supports three file formats:

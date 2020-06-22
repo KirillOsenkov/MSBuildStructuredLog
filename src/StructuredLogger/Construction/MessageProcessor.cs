@@ -389,17 +389,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
             else if (args.BuildEventContext.EvaluationId != -1)
             {
-                var evaluation = construction.EvaluationFolder;
-                var project = evaluation.FindChild<ProjectEvaluation>(p => p.Id == args.BuildEventContext.EvaluationId);
+                node = construction.EvaluationFolder;
 
-                if (Strings.PropertyReassignment.IsMatch(message))
-                {
-                    var properties = project.GetOrCreateNodeWithName<Folder>(Strings.Properties, true);
-                    node = properties.GetOrCreateNodeWithName<Folder>(Strings.GetPropertyName(message));
-                }
-                else
+                var project = node.FindChild<ProjectEvaluation>(p => p.Id == args.BuildEventContext.EvaluationId);
+                if (project != null)
                 {
                     node = project;
+                }
+
+                if (Strings.IsPropertyReassignmentMessage(message))
+                {
+                    var properties = node.GetOrCreateNodeWithName<Folder>(Strings.Properties, true);
+                    node = properties.GetOrCreateNodeWithName<Folder>(Strings.GetPropertyName(message));
                 }
 
                 if (node != null && node.FindChild<Message>(message) != null)
