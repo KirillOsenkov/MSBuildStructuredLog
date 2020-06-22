@@ -9,7 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Blazor.FileReader;
 
-namespace StructuredLogViewer
+namespace StructuredLoggerWASM
 {
     public class Program
     {
@@ -20,7 +20,6 @@ namespace StructuredLogViewer
 
             builder.Services.AddFileReaderService(options => options.UseWasmSharedBuffer = true);
             builder.Services.AddTransient(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
-          
             await builder.Build().RunAsync();
         }
     }

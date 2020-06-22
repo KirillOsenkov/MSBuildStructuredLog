@@ -56,14 +56,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             // Use a producer-consumer queue so that IO can happen on one thread
             // while processing can happen on another thread decoupled. The speed
             // up is from 4.65 to 4.15 seconds.
-            var queue = new BlockingCollection<BuildEventArgs>(boundedCapacity: 5000);
-            var processingTask = System.Threading.Tasks.Task.Run(() =>
-            {
-                foreach (var args in queue.GetConsumingEnumerable())
-                {
-                    Dispatch(args);
-                }
-            });
+            //var queue = new BlockingCollection<BuildEventArgs>(boundedCapacity: 5000);
+            //var processingTask = System.Threading.Tasks.Task.Run(() =>
+            //{
+            //    foreach (var args in queue.GetConsumingEnumerable())
+            //    {
+            //        Dispatch(args);
+            //    }
+            //});
 
             int recordsRead = 0;
 
@@ -85,14 +85,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 recordsRead++;
                 if (instance == null)
                 {
-                    queue.CompleteAdding();
+                    //queue.CompleteAdding();
                     break;
                 }
 
-                queue.Add(instance);
+                Dispatch(instance);
             }
 
-            processingTask.Wait();
+            //processingTask.Wait();
         }
 
         private class DisposableEnumerable<T> : IEnumerable<T>, IDisposable
