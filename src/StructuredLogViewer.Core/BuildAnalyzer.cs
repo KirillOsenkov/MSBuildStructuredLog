@@ -117,7 +117,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void AnalyzeMessage(Message message)
         {
-            if (message.Text != null && Strings.BuildingWithToolsVersionPrefix.Match(message.Text).Success)// message.Text.StartsWith(Strings.BuildingWithToolsVersionPrefix))
+            if (message.Text != null && Strings.BuildingWithToolsVersionPrefix.Match(message.Text).Success)
             {
                 message.IsLowRelevance = true;
             }

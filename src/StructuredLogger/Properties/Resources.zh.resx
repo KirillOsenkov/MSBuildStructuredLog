@@ -117,130 +117,130 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
- <data name="OutputItemParameterMessagePrefix" xml:space="preserve">
-<value>출력 항목: </value>
+<data name="OutputItemParameterMessagePrefix" xml:space="preserve">
+<value>输出项: </value>
 </data>
 <data name="ProjectImportSkippedEmptyFile" xml:space="preserve">
-<value>파일이 비어 있어 ({2},{3})의 "{1}"이(가) "{0}" 프로젝트를 가져오지 않았습니다.</value>
+<value>由于文件为空，项目“{0}”不由 ({2}、{3}) 处的“{1}”导入。</value>
 </data>
 <data name="TaskFound" xml:space="preserve">
-<value>"{1}" 어셈블리에서 "{0}" 작업을 사용합니다.</value>
+<value>正在使用程序集“{1}”中的“{0}”任务。</value>
 </data>
 <data name="ToolsVersionInEffectForBuild" xml:space="preserve">
-<value>도구 버전 "{0}"(을)를 사용하여 빌드하고 있습니다.</value>
+<value>正在使用工具版本“{0}”进行生成。</value>
 </data>
 <data name="OverridingTarget" xml:space="preserve">
-<value>"{1}" 프로젝트의 "{0}" 대상을 "{3}" 프로젝트의 "{2}" 대상으로 재정의하고 있습니다.</value>
+<value>正在使用项目“{3}”中的目标“{2}”重写项目“{1}”中的目标“{0}”。</value>
 </data>
 <data name="TargetSkippedWhenSkipNonexistentTargets" xml:space="preserve">
-<value>"{0}" 대상을 건너뛰었습니다. 대상이 프로젝트에 없고 SkipNonexistentTargets가 true로 설정되어 있습니다.</value>
+<value>已跳过目标“{0}”。项目中不存在该目标，SkipNonexistentTargets 设置为 true。</value>
 </data>
 <data name="ProjectImportSkippedFalseCondition" xml:space="preserve">
-<value>false 조건으로 인해 ({2},{3})의 "{1}”이(가) "{0}" 프로젝트를 가져오지 않았습니다. ({4})은(는) ({5})(으)로 확인되었습니다.</value>
+<value>由于 false 条件，项目“{0}” 不由 ({2}、{3}) 处的“{1}”导入， ({4}) 的计算结果为 ({5}).</value>
 </data>
 <data name="ProjectImportSkippedNoMatches" xml:space="preserve">
-<value>일치하는 파일이 없어 ({2},{3})의 "{1}"이(가) "{0}" 프로젝트를 가져오지 않았습니다.</value>
+<value>由于没有匹配的文件，项目“{0}” 不由 ({2}、{3}) 处的“{1}”导入。</value>
 </data>
 <data name="SearchPathsForMSBuildExtensionsPath" xml:space="preserve">
-<value>{0}에 사용 중인 검색 경로는 {1}입니다.</value>
+<value>将用于 {0} 的搜索路径为 {1}</value>
 </data>
 <data name="TaskParameterPrefix" xml:space="preserve">
-<value>작업 매개 변수:</value>
+<value>任务参数:</value>
 </data>
 <data name="DuplicateImport" xml:space="preserve">
-<value>MSB4011: "{0}"을(를) 다시 가져올 수 없습니다. "{1}"에서 이미 가져왔습니다. 이는 빌드 작성 오류일 가능성이 높으며 이 후속 가져오기는 무시됩니다. {2}</value>
+<value>MSB4011: 无法再次导入“{0}”。可能已在“{1}”处导入过它。这很可能是生成创作错误。将忽略此后续导入。{2}</value>
 </data>
 <data name="TargetAlreadyCompleteFailure" xml:space="preserve">
-<value>"{0}" 대상을 건너뜁니다. 이전에 제대로 빌드되지 않았습니다.</value>
+<value>已跳过目标“{0}”。以前的生成不成功。</value>
 </data>
 <data name="General.OverridingProperties" xml:space="preserve">
-<value>"{0}" 프로젝트의 전역 속성을 다음으로 재정의:</value>
+<value>将项目“{0}”的全局属性重写为:</value>
 </data>
 <data name="ItemGroupRemoveLogMessage" xml:space="preserve">
-<value>삭제된 항목: </value>
+<value>删除的项: </value>
 </data>
 <data name="ProjectImported" xml:space="preserve">
-<value>"{0}" 프로젝트를 ({2},{3})의 "{1}" 프로젝트로 가져오는 중입니다.</value>
+<value>正在将项目“{0}”导入 ({2}、{3}) 处的项目“{1}”。</value>
 </data>
 <data name="PropertyGroupLogMessage" xml:space="preserve">
-<value>설정 속성: {0}={1}</value>
+<value>设置属性: {0}={1}</value>
 </data>
 <data name="General.AdditionalProperties" xml:space="preserve">
-<value>"{0}" 프로젝트의 추가 속성:</value>
+<value>项目“{0}”的其他属性:</value>
 </data>
 <data name="TargetDoesNotExistBeforeTargetMessage" xml:space="preserve">
-<value>"{1}"의 BeforeTargets 특성에 나열된 "{0}" 대상이 프로젝트에 없으며 무시됩니다.</value>
+<value>项目中不存在 BeforeTargets 特性中的“{1}”位置列出的目标“{0}”，将忽略该目标。</value>
 </data>
 <data name="TaskFoundFromFactory" xml:space="preserve">
-<value>"{1}" 작업 팩터리에서 "{0}" 작업을 사용합니다.</value>
+<value>正在使用来自任务工厂“{1}”的“{0}”任务。</value>
 </data>
 <data name="ProjectImportSkippedMissingFile" xml:space="preserve">
-<value>파일이 없어 ({2},{3})의 "{1}"이(가) "{0}" 프로젝트를 가져오지 않았습니다.</value>
+<value>由于文件不存在，项目“{0}”不由 ({2},{3}) 处的“{1}”导入。</value>
 </data>
 <data name="TargetSkippedFalseCondition" xml:space="preserve">
-<value>조건이 잘못되어 "{0}" 대상을 건너뜁니다. ({1})이(가) ({2})(으)로 확인되었습니다.</value>
+<value>由于条件的计算结果为 false，已跳过目标“{0}”；({1})的计算结果为({2})。</value>
 </data>
 <data name="TaskSkippedFalseCondition" xml:space="preserve">
-<value>조건이 잘못되어 "{0}" 작업을 건너뜁니다. ({1})이(가) ({2})(으)로 확인되었습니다.</value>
+<value>由于 false 条件，已跳过任务“{0}”；({1})计算为({2})。</value>
 </data>
 <data name="ItemGroupIncludeLogMessagePrefix" xml:space="preserve">
-<value>추가된 항목: </value>
+<value>添加的项: </value>
 </data>
 <data name="OutputPropertyLogMessage" xml:space="preserve">
-<value>출력 속성: {0}={1}</value>
+<value>输出属性: {0}={1}</value>
 </data>
 <data name="ProjectImportSkippedInvalidFile" xml:space="preserve">
-<value>파일이 잘못되어 ({2},{3})의 "{1}"이(가) "{0}" 프로젝트를 가져오지 않았습니다.</value>
+<value>由于文件无效，项目“{0}”不由 ({2},{3}) 处的“{1}”导入。</value>
 </data>
 <data name="TargetAlreadyCompleteSuccess" xml:space="preserve">
-<value>"{0}" 대상을 건너뜁니다. 이전에 빌드되었습니다.</value>
+<value>已跳过目标“{0}”。以前的生成已成功。</value>
 </data>
 <data name="TryingExtensionsPath" xml:space="preserve">
-<value>확장 경로 {1}을(를) 사용하여 {0}을(를) 가져옵니다.</value>
+<value>尝试使用扩展路径 {1} 导入 {0}</value>
 </data>
 <data name="PropertyReassignment" xml:space="preserve">
-<value>속성 재할당: $({0})={3}의 "{1}"(이전 값: "{2}")</value>
+<value>在 {3} 处重新分配属性: $({0})=“{1}”(先前值:“{2}”)</value>
 </data>
 <data name="General.GlobalProperties" xml:space="preserve">
-<value>전역 속성:</value>
+<value>全局属性:</value>
 </data>
 <data name="General.UndefineProperties" xml:space="preserve">
-<value>속성 제거:</value>
+<value>移除属性:</value>
 </data>
 <data name="ResolveAssemblyReference.UnifiedPrimaryReference" xml:space="preserve">
-<value>통합된 기본 참조 "{0}"입니다.</value>
+<value>统一主引用“{0}”。</value>
 </data>
 <data name="ResolveAssemblyReference.AssemblyFoldersExSearchLocations" xml:space="preserve">
-<value>AssemblyFoldersEx 위치: "{0}"</value>
+<value>AssemblyFoldersEx 位置:“{0}”</value>
 </data>
 <data name="GetSDKReferenceFiles.ConflictReferenceDifferentSDK" xml:space="preserve">
-<value>"{0}" 및 "{1}" SDK 사이에서 동일한 파일 이름을 사용하는 두 참조 간에 충돌이 발생했습니다. "{3}" 대신 먼저 확인된 "{2}"을(를) 선택합니다.</value>
+<value>两个引用之间存在冲突，它们在“{0}”和“{1}”SDK 之间具有相同的文件名。将优先于“{3}”选择“{2}”，因为后者是先解析的。</value>
 </data>
 <data name="ResolveAssemblyReference.Dependency" xml:space="preserve">
-<value>"{0}" 종속성입니다.</value>
+<value>依赖项“{0}”。</value>
 </data>
 <data name="ResolveAssemblyReference.PrimaryReference" xml:space="preserve">
-<value>기본 참조 "{0}"입니다.</value>
+<value>主引用“{0}”。</value>
 </data>
 <data name="Copy.HardLinkComment" xml:space="preserve">
-<value>"{0}"을(를) "{1}"(으)로 복사하기 위해 하드 링크를 만듭니다.</value>
+<value>创建硬链接以将“{0}”复制到“{1}”。</value>
 </data>
 <data name="Copy.DidNotCopyBecauseOfFileMatch" xml:space="preserve">
-<value>"{2}" 매개 변수가 프로젝트에 "{3}"(으)로 설정되었고 파일 크기와 타임스탬프가 일치하기 때문에 "{0}" 파일에서 "{1}" 파일로 복사할 수 없습니다.</value>
+<value>未从文件“{0}”复制到文件“{1}”，因为“{2}”参数在项目中设置为“{3}”，而两个文件的大小及时间戳一致。</value>
 </data>
 <data name="ResolveAssemblyReference.SearchPath" xml:space="preserve">
-<value>SearchPath "{0}"에 사용됩니다.</value>
+<value>用于 SearchPath“{0}”。</value>
 </data>
 <data name="ResolveAssemblyReference.UnifiedDependency" xml:space="preserve">
-<value>통합된 종속성 "{0}"입니다.</value>
+<value>统一依赖项“{0}”。</value>
 </data>
 <data name="GetSDKReferenceFiles.ConflictReferenceSameSDK" xml:space="preserve">
-<value>"{0}" SDK 내에서 확인된 동일한 파일 이름을 사용하는 두 참조 간에 충돌이 발생했습니다. "{2}" 대신 먼저 확인된 "{1}"을(를) 선택합니다.</value>
+<value>两个引用之间存在冲突，它们在“{0}”SDK 内解析的文件名相同。将优先于“{2}”选择“{1}”，因为后者是先解析的。</value>
 </data>
 <data name="GetSDKReferenceFiles.ConflictRedistDifferentSDK" xml:space="preserve">
-<value>"{1}" 및 "{2}" SDK 사이의 동일한 대상 경로 "{0}"(으)로 이동하는 재배포 가능 패키지 폴더 파일의 두 파일 간에 충돌이 발생했습니다. "{4}" 대신 먼저 확인된 "{3}"을(를) 선택합니다.</value>
+<value>可再发行程序包文件夹中的两个文件之间存在冲突，它们在“{1}”和“{2}”SDK 之间进入同一目标路径“{0}”。将优先于“{4}”选择“{3}”，因为后者是先解析的。</value>
 </data>
 <data name="Copy.FileComment" xml:space="preserve">
-<value>"{0}"에서 "{1}"(으)로 파일을 복사하고 있습니다.</value>
+<value>正在将文件从“{0}”复制到“{1}”。</value>
 </data>
 </root>

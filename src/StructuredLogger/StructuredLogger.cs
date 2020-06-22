@@ -51,7 +51,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
             StringResourceReader.ReadResources();
             //read language from log and initialzie resource strings
-            Strings.SetCultureInfo(System.Globalization.CultureInfo.GetCultureInfo("ru-RU"));
+            Strings.SetCultureInfo(System.Globalization.CultureInfo.GetCultureInfo("en-US"));
 
             construction = new Construction();
 

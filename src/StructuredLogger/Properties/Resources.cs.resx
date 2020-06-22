@@ -117,130 +117,130 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
- <data name="OutputItemParameterMessagePrefix" xml:space="preserve">
-<value>출력 항목: </value>
+<data name="OutputItemParameterMessagePrefix" xml:space="preserve">
+<value>Výstupní položky: </value>
 </data>
 <data name="ProjectImportSkippedEmptyFile" xml:space="preserve">
-<value>파일이 비어 있어 ({2},{3})의 "{1}"이(가) "{0}" 프로젝트를 가져오지 않았습니다.</value>
+<value>{1} neimportoval projekt {0} v ({2},{3}), protože soubor je prázdný.</value>
 </data>
 <data name="TaskFound" xml:space="preserve">
-<value>"{1}" 어셈블리에서 "{0}" 작업을 사용합니다.</value>
+<value>Probíhá použití úlohy {0} ze sestavení {1}.</value>
 </data>
 <data name="ToolsVersionInEffectForBuild" xml:space="preserve">
-<value>도구 버전 "{0}"(을)를 사용하여 빌드하고 있습니다.</value>
+<value>Probíhá sestavení s verzí nástrojů {0}.</value>
 </data>
 <data name="OverridingTarget" xml:space="preserve">
-<value>"{1}" 프로젝트의 "{0}" 대상을 "{3}" 프로젝트의 "{2}" 대상으로 재정의하고 있습니다.</value>
+<value>Probíhá přepisování cíle {0} v projektu {1} cílem {2} z projektu {3}.</value>
 </data>
 <data name="TargetSkippedWhenSkipNonexistentTargets" xml:space="preserve">
-<value>"{0}" 대상을 건너뛰었습니다. 대상이 프로젝트에 없고 SkipNonexistentTargets가 true로 설정되어 있습니다.</value>
+<value>Cíl {0} byl vynechán. Cíl neexistuje v projektu a SkipNonexistentTargets je nastaveno na true.</value>
 </data>
 <data name="ProjectImportSkippedFalseCondition" xml:space="preserve">
-<value>false 조건으로 인해 ({2},{3})의 "{1}”이(가) "{0}" 프로젝트를 가져오지 않았습니다. ({4})은(는) ({5})(으)로 확인되었습니다.</value>
+<value>{1} neimportoval projekt {0} v ({2},{3}) z důvodu nepravdivé podmínky; ({4}) se vyhodnotil jako ({5}).</value>
 </data>
 <data name="ProjectImportSkippedNoMatches" xml:space="preserve">
-<value>일치하는 파일이 없어 ({2},{3})의 "{1}"이(가) "{0}" 프로젝트를 가져오지 않았습니다.</value>
+<value>{1} neimportoval projekt {0} v ({2},{3}), protože nejsou žádné shodné soubory.</value>
 </data>
 <data name="SearchPathsForMSBuildExtensionsPath" xml:space="preserve">
-<value>{0}에 사용 중인 검색 경로는 {1}입니다.</value>
+<value>Vyhledávací cesty používané pro {0} jsou {1}.</value>
 </data>
 <data name="TaskParameterPrefix" xml:space="preserve">
-<value>작업 매개 변수:</value>
+<value>Parametr úlohy:</value>
 </data>
 <data name="DuplicateImport" xml:space="preserve">
-<value>MSB4011: "{0}"을(를) 다시 가져올 수 없습니다. "{1}"에서 이미 가져왔습니다. 이는 빌드 작성 오류일 가능성이 높으며 이 후속 가져오기는 무시됩니다. {2}</value>
+<value>MSB4011: Soubor {0} nelze znovu importovat. Již byl importován (čas: {1}). Nejpravděpodobněji se jedná o chybu při vytváření sestavení. Následný import bude ignorován. {2}</value>
 </data>
 <data name="TargetAlreadyCompleteFailure" xml:space="preserve">
-<value>"{0}" 대상을 건너뜁니다. 이전에 제대로 빌드되지 않았습니다.</value>
+<value>Cíl {0} byl vynechán. Předchozí sestavení se nezdařilo.</value>
 </data>
 <data name="General.OverridingProperties" xml:space="preserve">
-<value>"{0}" 프로젝트의 전역 속성을 다음으로 재정의:</value>
+<value>Globální vlastnosti projektu {0} budou přepsány následujícími hodnotami:</value>
 </data>
 <data name="ItemGroupRemoveLogMessage" xml:space="preserve">
-<value>삭제된 항목: </value>
+<value>Odebrané položky: </value>
 </data>
 <data name="ProjectImported" xml:space="preserve">
-<value>"{0}" 프로젝트를 ({2},{3})의 "{1}" 프로젝트로 가져오는 중입니다.</value>
+<value>Importuje se projekt {0} do projektu {1} v ({2},{3}).</value>
 </data>
 <data name="PropertyGroupLogMessage" xml:space="preserve">
-<value>설정 속성: {0}={1}</value>
+<value>Nastavit vlastnost: {0}={1}</value>
 </data>
 <data name="General.AdditionalProperties" xml:space="preserve">
-<value>"{0}" 프로젝트의 추가 속성:</value>
+<value>Další vlastnosti pro projekt {0}:</value>
 </data>
 <data name="TargetDoesNotExistBeforeTargetMessage" xml:space="preserve">
-<value>"{1}"의 BeforeTargets 특성에 나열된 "{0}" 대상이 프로젝트에 없으며 무시됩니다.</value>
+<value>Cíl {0} uvedený v atributu BeforeTargets na místě {1} v projektu neexistuje a bude ignorován.</value>
 </data>
 <data name="TaskFoundFromFactory" xml:space="preserve">
-<value>"{1}" 작업 팩터리에서 "{0}" 작업을 사용합니다.</value>
+<value>Bude použita úloha {0} z objektu pro vytváření úloh {1}.</value>
 </data>
 <data name="ProjectImportSkippedMissingFile" xml:space="preserve">
-<value>파일이 없어 ({2},{3})의 "{1}"이(가) "{0}" 프로젝트를 가져오지 않았습니다.</value>
+<value>{1} neimportoval projekt {0} v ({2},{3}), protože soubor neexistuje.</value>
 </data>
 <data name="TargetSkippedFalseCondition" xml:space="preserve">
-<value>조건이 잘못되어 "{0}" 대상을 건너뜁니다. ({1})이(가) ({2})(으)로 확인되었습니다.</value>
+<value>Cíl {0} byl vynechán z důvodu podmínky vyhodnocené jako false; ({1}) bylo vyhodnoceno jako ({2}).</value>
 </data>
 <data name="TaskSkippedFalseCondition" xml:space="preserve">
-<value>조건이 잘못되어 "{0}" 작업을 건너뜁니다. ({1})이(가) ({2})(으)로 확인되었습니다.</value>
+<value>Úloha {0} byla vynechána z důvodu podmínky vyhodnocené jako false; ({1}) bylo vyhodnoceno jako ({2}).</value>
 </data>
 <data name="ItemGroupIncludeLogMessagePrefix" xml:space="preserve">
-<value>추가된 항목: </value>
+<value>Přidané položky: </value>
 </data>
 <data name="OutputPropertyLogMessage" xml:space="preserve">
-<value>출력 속성: {0}={1}</value>
+<value>Výstupní vlastnost: {0}={1}</value>
 </data>
 <data name="ProjectImportSkippedInvalidFile" xml:space="preserve">
-<value>파일이 잘못되어 ({2},{3})의 "{1}"이(가) "{0}" 프로젝트를 가져오지 않았습니다.</value>
+<value>{1} neimportoval projekt {0} v ({2},{3}), protože soubor je neplatný.</value>
 </data>
 <data name="TargetAlreadyCompleteSuccess" xml:space="preserve">
-<value>"{0}" 대상을 건너뜁니다. 이전에 빌드되었습니다.</value>
+<value>Cíl {0} byl vynechán. Předchozí sestavení bylo úspěšné.</value>
 </data>
 <data name="TryingExtensionsPath" xml:space="preserve">
-<value>확장 경로 {1}을(를) 사용하여 {0}을(를) 가져옵니다.</value>
+<value>Zkouší se import {0} pomocí cesty rozšíření {1}.</value>
 </data>
 <data name="PropertyReassignment" xml:space="preserve">
-<value>속성 재할당: $({0})={3}의 "{1}"(이전 값: "{2}")</value>
+<value>Opětovné přiřazení vlastnosti: $({0})={1} (předchozí hodnota: {2}) v {3}</value>
 </data>
 <data name="General.GlobalProperties" xml:space="preserve">
-<value>전역 속성:</value>
+<value>Globální vlastnosti:</value>
 </data>
 <data name="General.UndefineProperties" xml:space="preserve">
-<value>속성 제거:</value>
+<value>Odstraňování vlastností:</value>
 </data>
 <data name="ResolveAssemblyReference.UnifiedPrimaryReference" xml:space="preserve">
-<value>통합된 기본 참조 "{0}"입니다.</value>
+<value>Sjednocený primární odkaz {0}</value>
 </data>
 <data name="ResolveAssemblyReference.AssemblyFoldersExSearchLocations" xml:space="preserve">
-<value>AssemblyFoldersEx 위치: "{0}"</value>
+<value>Umístění AssemblyFoldersEx: {0}</value>
 </data>
 <data name="GetSDKReferenceFiles.ConflictReferenceDifferentSDK" xml:space="preserve">
-<value>"{0}" 및 "{1}" SDK 사이에서 동일한 파일 이름을 사용하는 두 참조 간에 충돌이 발생했습니다. "{3}" 대신 먼저 확인된 "{2}"을(를) 선택합니다.</value>
+<value>Došlo ke konfliktu mezi dvěma odkazy se stejným názvem souboru mezi sadami SDK {0} a {1}. Bude upřednostněn soubor {2} před souborem {3}, protože byl vyřešen jako první.</value>
 </data>
 <data name="ResolveAssemblyReference.Dependency" xml:space="preserve">
-<value>"{0}" 종속성입니다.</value>
+<value>Závislost {0}.</value>
 </data>
 <data name="ResolveAssemblyReference.PrimaryReference" xml:space="preserve">
-<value>기본 참조 "{0}"입니다.</value>
+<value>Primární odkaz {0}.</value>
 </data>
 <data name="Copy.HardLinkComment" xml:space="preserve">
-<value>"{0}"을(를) "{1}"(으)로 복사하기 위해 하드 링크를 만듭니다.</value>
+<value>Vytváří se pevný odkaz pro kopírování {0} do {1}.</value>
 </data>
 <data name="Copy.DidNotCopyBecauseOfFileMatch" xml:space="preserve">
-<value>"{2}" 매개 변수가 프로젝트에 "{3}"(으)로 설정되었고 파일 크기와 타임스탬프가 일치하기 때문에 "{0}" 파일에서 "{1}" 파일로 복사할 수 없습니다.</value>
+<value>Nebylo možno kopírovat ze souboru {0} do souboru {1}, protože parametr {2} byl v projektu nastaven na hodnotu {3} a velikosti souborů a časová razítka se shodují.</value>
 </data>
 <data name="ResolveAssemblyReference.SearchPath" xml:space="preserve">
-<value>SearchPath "{0}"에 사용됩니다.</value>
+<value>Pro funkci SearchPath {0}</value>
 </data>
 <data name="ResolveAssemblyReference.UnifiedDependency" xml:space="preserve">
-<value>통합된 종속성 "{0}"입니다.</value>
+<value>Sjednocená závislost {0}</value>
 </data>
 <data name="GetSDKReferenceFiles.ConflictReferenceSameSDK" xml:space="preserve">
-<value>"{0}" SDK 내에서 확인된 동일한 파일 이름을 사용하는 두 참조 간에 충돌이 발생했습니다. "{2}" 대신 먼저 확인된 "{1}"을(를) 선택합니다.</value>
+<value>Došlo ke konfliktu mezi dvěma odkazy se stejným názvem souboru, které byly vyřešeny v rámci sady SDK {0}. Bude upřednostněn odkaz {1} před odkazem {2}, protože byl vyřešen jako první.</value>
 </data>
 <data name="GetSDKReferenceFiles.ConflictRedistDifferentSDK" xml:space="preserve">
-<value>"{1}" 및 "{2}" SDK 사이의 동일한 대상 경로 "{0}"(으)로 이동하는 재배포 가능 패키지 폴더 파일의 두 파일 간에 충돌이 발생했습니다. "{4}" 대신 먼저 확인된 "{3}"을(를) 선택합니다.</value>
+<value>Došlo ke konfliktu mezi dvěma soubory ze složky redistribučního balíčku, které oba směřují do stejné cílové cesty {0}. K tomuto konfliktu došlo mezi sadami SDK {1} a {2}. Bude upřednostněn soubor {3} před souborem {4}, protože byl vyřešen jako první.</value>
 </data>
 <data name="Copy.FileComment" xml:space="preserve">
-<value>"{0}"에서 "{1}"(으)로 파일을 복사하고 있습니다.</value>
+<value>Probíhá kopírování souboru z umístění {0} do umístění {1}.</value>
 </data>
 </root>

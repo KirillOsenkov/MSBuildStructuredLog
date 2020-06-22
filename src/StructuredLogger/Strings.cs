@@ -35,6 +35,31 @@ namespace Microsoft.Build.Logging.StructuredLogger
             TargetAlreadyCompleteSuccess = new Regex(resourceSet.GetString("TargetAlreadyCompleteSuccess").Replace("{0}", @".*?"));
             TargetAlreadyCompleteFailure = new Regex(resourceSet.GetString("TargetAlreadyCompleteFailure").Replace("{0}", @".*?"));
             TargetSkippedWhenSkipNonexistentTargets = new Regex(resourceSet.GetString("TargetSkippedWhenSkipNonexistentTargets").Replace("{0}", @".*?"));
+            
+            DuplicateImport = new Regex(resourceSet.GetString("SearchPathsForMSBuildExtensionsPath")
+                .Replace("{0}", @".*?")
+                .Replace("{1}", @".*?")
+                .Replace("{2}", @".*?"));
+
+            SearchPathsForMSBuildExtensionsPath = new Regex(resourceSet.GetString("SearchPathsForMSBuildExtensionsPath")
+                .Replace("{0}", @".*?")
+                .Replace("{1}", @".*?"));
+            
+            OverridingTarget = new Regex(resourceSet.GetString("OverridingTarget")
+                .Replace("{0}", @".*?")
+                .Replace("{1}", @".*?")
+                .Replace("{2}", @".*?")
+                .Replace("{3}", @".*?"));
+
+            TryingExtensionsPath = new Regex(resourceSet.GetString("TryingExtensionsPath")
+                 .Replace("{0}", @".*?")
+                 .Replace("{1}", @".*?"));
+            
+            ProjectImported = new Regex(resourceSet.GetString("ProjectImported")
+                .Replace("{0}", @".*?")
+                .Replace("{1}", @".*?")
+                .Replace("{2}", @".*?")
+                .Replace("{3}", @".*?"));
 
             TargetSkippedFalseCondition = new Regex(resourceSet.GetString("TargetSkippedFalseCondition")
                 .Replace("{0}", @".*?")
@@ -131,7 +156,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 .Replace("{3}", ".*?")
                 .Replace("$", @"\$")
                 .Replace("(", @"\(")
-                .Replace(")", @"\)"));
+                .Replace(")", @"\)"), RegexOptions.Singleline);
 
             ConflictReferenceSameSDK = new Regex(resourceSet.GetString("GetSDKReferenceFiles.ConflictReferenceSameSDK")
                .Replace("{0}", ".*?")
@@ -155,6 +180,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                );
         }
 
+        public static Regex DuplicateImport { get; set; }
+        public static Regex SearchPathsForMSBuildExtensionsPath { get; set; }
+        public static Regex  OverridingTarget { get; set; }
+        public static Regex TryingExtensionsPath { get; set; }
+        public static Regex ProjectImported { get; set; }
         public static Regex BuildingWithToolsVersionPrefix { get; set; }
         public static Regex ForSearchPathPrefix { get; set; }
         public static Regex IsTaskSkipped { get; set; }
@@ -165,19 +195,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static Regex ProjectImportSkippedNoMatches { get; set; }
         public static Regex PropertyReassignment { get; set; }
         public static Regex ImportingProjectRegex { get; set; }
-        public static Regex UnifiedPrimaryReferencePrefix { get; set; } //=> "Unified primary reference "; //ResolveAssemblyReference.UnifiedPrimaryReference $:$ Unified primary reference "{0}
-        public static Regex PrimaryReferencePrefix { get; set; } //=> "Primary reference "; //ResolveAssemblyReference.PrimaryReference - Primärverweis "{0}".
-        public static Regex DependencyPrefix { get; set; } //=> "Dependency "; //ResolveAssemblyReference.Dependency $:$ Dependency "{0}".
-        public static Regex UnifiedDependencyPrefix { get; set; } //=> "Unified Dependency "; //ResolveAssemblyReference.UnifiedDependency $:$ Unified Dependency "{0}".
-        public static Regex AssemblyFoldersExLocation { get; set; } // => "AssemblyFoldersEx location"; //ResolveAssemblyReference.AssemblyFoldersExSearchLocations $:$ AssemblyFoldersEx location: "{0}"
+        public static Regex UnifiedPrimaryReferencePrefix { get; set; } 
+        public static Regex PrimaryReferencePrefix { get; set; }
+        public static Regex DependencyPrefix { get; set; } 
+        public static Regex UnifiedDependencyPrefix { get; set; } 
+        public static Regex AssemblyFoldersExLocation { get; set; } 
         public static Regex ConflictReferenceSameSDK { get; set; }
         public static Regex ConflictRedistDifferentSDK { get; set; }
         public static Regex ConflictReferenceDifferentSDK { get; set; }
-        public static Regex AdditionalPropertiesPrefix { get; set; } // => "Additional Properties"; //General.AdditionalProperties $:$ Additional Properties for project "{0}":
-        public static Regex OverridingGlobalPropertiesPrefix { get; set; } //=> "Overriding Global Properties"; //General.OverridingProperties $:$ Overriding Global Properties for project "{0}" with:
-        public static Regex CopyingFileFrom { get; set; } // => "Copying file from \""; //Copy.FileComment $:$ Copying file from "{0}" to "{1}".
-        public static Regex CreatingHardLink { get; set; } // => "Creating hard link to copy \""; //Copy.HardLinkComment $:$ Creating hard link to copy "{0}" to "{1}".
-        public static Regex DidNotCopy { get; set; } //=> "Did not copy from file \""; //Copy.DidNotCopyBecauseOfFileMatch $:$ Did not copy from file "{0}" to file "{1}" because the "{2}" parameter was set to "{3}"
+        public static Regex AdditionalPropertiesPrefix { get; set; } 
+        public static Regex OverridingGlobalPropertiesPrefix { get; set; } 
+        public static Regex CopyingFileFrom { get; set; } 
+        public static Regex CreatingHardLink { get; set; } 
+        public static Regex DidNotCopy { get; set; }
         public static Regex TargetDoesNotExistBeforeTargetMessage { get; set; }
         public static Regex TargetAlreadyCompleteSuccess { get; set; }
         public static Regex TargetSkippedFalseCondition { get; set; }
@@ -201,7 +231,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             return Match.Empty;
         }
-        // = new Regex("Using \"(?<task>.+)\" task from (assembly|the task factory) \"(?<assembly>.+)\"\\.", RegexOptions.Compiled);
 
         public static bool IsTargetSkipped(string message)
         {
@@ -317,39 +346,38 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string GlobalPropertiesPrefix => resourceSet.GetString("General.GlobalProperties");
         public static string RemovingPropertiesPrefix => resourceSet.GetString("General.UndefineProperties");
 
-        //public static string CopyingFileFrom => "Copying file from \""; //Copy.FileComment $:$ Copying file from "{0}" to "{1}".
-        //public static string CreatingHardLink => "Creating hard link to copy \""; //Copy.HardLinkComment $:$ Creating hard link to copy "{0}" to "{1}".
-        //public static string DidNotCopy => "Did not copy from file \""; //Copy.DidNotCopyBecauseOfFileMatch $:$ Did not copy from file "{0}" to file "{1}" because the "{2}" parameter was set to "{3}" in the project and the files' sizes and timestamps match.
         public static string To => "\" to \"";
         public static string ToFile => "\" to file \"";
 
         public static string TotalAnalyzerExecutionTime => "Total analyzer execution time:";
 
-        public static string Evaluation => "Evaluation"; //only node name
-        public static string Environment => "Environment"; //only node name
-        public static string Imports => "Imports"; //only node name??
-        public static string DetailedSummary => "Detailed summary";  //only node name
-        public static string Parameters => "Parameters"; //only node name??
-        public static string Results => "Results"; //only node name?? used as string in MessageProcessor.cs line 258, 333
-        public static string SearchPaths => "SearchPaths"; //only node name??
-        public static string Assemblies => "Assemblies"; //only node name??
-        public static string TargetOutputs => "TargetOutputs"; //only node name??
-        public static string AnalyzerReport => "Analyzer Report"; //only node name??
-        public static string Properties => "Properties"; //only node name??
-
-
+        public static string Evaluation => "Evaluation"; 
+        public static string Environment => "Environment"; 
+        public static string Imports => "Imports"; 
+        public static string DetailedSummary => "Detailed summary"; 
+        public static string Parameters => "Parameters"; 
+        public static string Results => "Results"; 
+        public static string SearchPaths => "SearchPaths"; 
+        public static string Assemblies => "Assemblies"; 
+        public static string TargetOutputs => "TargetOutputs"; 
+        public static string AnalyzerReport => "Analyzer Report"; 
+        public static string Properties => "Properties";
 
         public static string GetPropertyName(string message) => message.Substring(message.IndexOf("$") + 2, message.IndexOf("=") - message.IndexOf("$") - 3);
 
         public static bool IsEvaluationMessage(string message)
         {
-            return message.StartsWith("Search paths being used") //SearchPathsForMSBuildExtensionsPath $:$ Search paths being used for {0} are {1}
-                || message.StartsWith("Overriding target") //OverridingTarget $:$ Overriding target "{0}" in project "{1}" with target "{2}" from project "{3}".
-                || message.StartsWith("Trying to import") //TryingExtensionsPath $:$ Trying to import {0} using extensions path {1}
-                || message.StartsWith("Importing project") //ProjectImported $:$ Importing project "{0}" into project "{1}" at ({2},{3}).
-                || message.Contains("cannot be imported again.") //DuplicateImport $:$ MSB4011: "{0}" cannot be imported again. It was already imported at "{1}". This is most likely a build authoring error. This subsequent import will be ignored. {2}
-                || (message.StartsWith("Project \"") && message.Contains("was not imported by"));
-            //ProjectImportSkippedEmptyFile $:$ Project "{0}" was not imported by "{1}" at({ 2},{ 3}), due to the file being empty.
+            return SearchPathsForMSBuildExtensionsPath.IsMatch(message)
+                || OverridingTarget.IsMatch(message)
+                || TryingExtensionsPath.IsMatch(message)
+                || ProjectImported.IsMatch(message)
+                || DuplicateImport.IsMatch(message)
+                || ProjectImportSkippedEmptyFile.IsMatch(message)
+                || ProjectImportSkippedFalseCondition.IsMatch(message)
+                || ProjectImportSkippedNoMatches.IsMatch(message)
+                || ProjectImportSkippedMissingFile.IsMatch(message)
+                || ProjectImportSkippedInvalidFile.IsMatch(message);
+             //Project "{0}" was not imported by "{1}" at({ 2},{ 3}), due to the file being empty.
             //ProjectImportSkippedFalseCondition $:$ Project "{0}" was not imported by "{1}" at ({2},{3}), due to false condition; ({4}) was evaluated as ({5}).
             //ProjectImportSkippedNoMatches $:$ Project "{0}" was not imported by "{1}" at ({2},{3}), due to no matching files.
             //ProjectImportSkippedMissingFile $:$ Project "{0}" was not imported by "{1}" at ({2},{3}), due to the file not existing.

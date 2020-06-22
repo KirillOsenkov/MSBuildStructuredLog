@@ -117,130 +117,130 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="OutputItemParameterMessagePrefix" xml:space="preserve">
-<value>Elementos de salida: </value>
+ <data name="OutputItemParameterMessagePrefix" xml:space="preserve">
+<value>Elementi di output: </value>
 </data>
 <data name="ProjectImportSkippedEmptyFile" xml:space="preserve">
-<value>"{1}" no importó el proyecto "{0}" en ({2},{3}) porque el archivo estaba vacío.</value>
+<value>Il progetto "{0}" non è stato importato da "{1}" a ({2},{3}) perché il file è vuoto.</value>
 </data>
 <data name="TaskFound" xml:space="preserve">
-<value>Usando la tarea "{0}" del ensamblado "{1}".</value>
+<value>Verrà usata l'attività "{0}" dall'assembly "{1}".</value>
 </data>
 <data name="ToolsVersionInEffectForBuild" xml:space="preserve">
-<value>Compilando con la versión de herramientas "{0}".</value>
+<value>Compilazione con la versione degli strumenti "{0}".</value>
 </data>
 <data name="OverridingTarget" xml:space="preserve">
-<value>Invalidando el destino "{0}" del proyecto"{1}" con el destino "{2}" del proyecto "{3}".</value>
+<value>Override della destinazione "{0}" nel progetto "{1}" con la destinazione "{2}" del progetto "{3}".</value>
 </data>
 <data name="TargetSkippedWhenSkipNonexistentTargets" xml:space="preserve">
-<value>Se omitió el destino "{0}". El destino no existe en el proyecto y SkipNonexistentTargets está configurado en True.</value>
+<value>La destinazione "{0}" è stata ignorata perché non esiste nel progetto e SkipNonexistentTargets è impostato su true.</value>
 </data>
 <data name="ProjectImportSkippedFalseCondition" xml:space="preserve">
-<value>"{1}" no importó el proyecto "{0}" en ({2},{3}) debido a una condición false; ({4}) se evaluó como ({5}).</value>
+<value>Il progetto "{0}" non è stato importato da "{1}" a ({2},{3}), a causa della condizione false. ({4}) ha restituito ({5}).</value>
 </data>
 <data name="ProjectImportSkippedNoMatches" xml:space="preserve">
-<value>"{1}" no importó el proyecto "{0}" en ({2},{3}) porque no había archivos coincidentes.</value>
+<value>Il progetto "{0}" non è stato importato da "{1}" a ({2},{3}) perché non esistono file corrispondenti.</value>
 </data>
 <data name="SearchPathsForMSBuildExtensionsPath" xml:space="preserve">
-<value>Las rutas de búsqueda usadas para {0} son {1}</value>
+<value>I percorsi di ricerca usati per {0} sono {1}</value>
 </data>
 <data name="TaskParameterPrefix" xml:space="preserve">
-<value>Parámetro de tarea:</value>
+<value>Parametro attività:</value>
 </data>
 <data name="DuplicateImport" xml:space="preserve">
-<value>MSB4011: "{0}" no se puede volver a importar. Ya se importó en "{1}". Lo más probable es que se trate de un error al crear la compilación. Se omitirá esta importación. {2}</value>
+<value>MSB4011: non è possibile importare di nuovo "{0}". L'importazione è già stata eseguita in "{1}". Si tratta probabilmente di un errore di creazione della compilazione. Questa importazione successiva verrà ignorata. {2}</value>
 </data>
 <data name="TargetAlreadyCompleteFailure" xml:space="preserve">
-<value>Se omitió el destino "{0}". Compilado previamente de forma incorrecta.</value>
+<value>La destinazione "{0}" è stata ignorata. La compilazione non era riuscita in precedenza.</value>
 </data>
 <data name="General.OverridingProperties" xml:space="preserve">
-<value>Las propiedades globales del proyecto "{0}" se reemplazarán con:</value>
+<value>Override delle proprietà globali per il progetto "{0}" con:</value>
 </data>
 <data name="ItemGroupRemoveLogMessage" xml:space="preserve">
-<value>Elementos quitados: </value>
+<value>Elementi rimossi: </value>
 </data>
 <data name="ProjectImported" xml:space="preserve">
-<value>Importando el proyecto "{0}" en el proyecto "{1}" en ({2},{3}).</value>
+<value>Importazione del progetto "{0}" nel progetto "{1}" a ({2},{3}).</value>
 </data>
 <data name="PropertyGroupLogMessage" xml:space="preserve">
-<value>Propiedad establecida: {0}={1}</value>
+<value>Proprietà impostata: {0}={1}</value>
 </data>
 <data name="General.AdditionalProperties" xml:space="preserve">
-<value>Propiedades adicionales del proyecto "{0}":</value>
+<value>Proprietà aggiuntive per il progetto "{0}":</value>
 </data>
 <data name="TargetDoesNotExistBeforeTargetMessage" xml:space="preserve">
-<value>El destino "{0}" que aparece en un atributo BeforeTargets en "{1}" no existe en el proyecto y se omitirá.</value>
+<value>La destinazione "{0}" elencata in un attributo BeforeTargets in "{1}" non esiste nel progetto e verrà ignorata.</value>
 </data>
 <data name="TaskFoundFromFactory" xml:space="preserve">
-<value>Se usará la tarea "{0}" del generador de tareas "{1}".</value>
+<value>Verrà usata l'attività "{0}" dalla factory delle attività "{1}".</value>
 </data>
 <data name="ProjectImportSkippedMissingFile" xml:space="preserve">
-<value>"{1}" no importó el proyecto "{0}" en ({2},{3}) porque el archivo no existía.</value>
+<value>Il progetto "{0}" non è stato importato da "{1}" a ({2},{3}) perché il file non esiste.</value>
 </data>
 <data name="TargetSkippedFalseCondition" xml:space="preserve">
-<value>Se omitió el destino "{0}" debido a una condición falsa (False); ({1}) se evaluó como ({2}).</value>
+<value>Destinazione"{0}" ignorata. Condizione false. ({1}) ha restituito ({2}).</value>
 </data>
 <data name="TaskSkippedFalseCondition" xml:space="preserve">
-<value>Se omitió la tarea "{0}" debido a una condición falsa (False); ({1}) se evaluó como ({2}).</value>
+<value>Attività "{0}" ignorata. Condizione false. ({1}) ha restituito ({2}).</value>
 </data>
 <data name="ItemGroupIncludeLogMessagePrefix" xml:space="preserve">
-<value>Elementos agregados: </value>
+<value>Elementi aggiunti: </value>
 </data>
 <data name="OutputPropertyLogMessage" xml:space="preserve">
-<value>Propiedad de salida: {0}={1}</value>
+<value>Proprietà di output: {0}={1}</value>
 </data>
 <data name="ProjectImportSkippedInvalidFile" xml:space="preserve">
-<value>"{1}" no importó el proyecto "{0}" en ({2},{3}) porque el archivo no era válido.</value>
+<value>Il progetto "{0}" non è stato importato da "{1}" a ({2},{3}) perché il file non è valido.</value>
 </data>
 <data name="TargetAlreadyCompleteSuccess" xml:space="preserve">
-<value>Se omitió el destino "{0}". Compilado previamente de forma correcta.</value>
+<value>La destinazione "{0}" è stata ignorata. La compilazione era stata completata in precedenza.</value>
 </data>
 <data name="TryingExtensionsPath" xml:space="preserve">
-<value>Intentando importar {0} con la ruta de acceso de extensiones {1}</value>
+<value>Si sta provando a importare {0} usando il percorso delle estensioni {1}</value>
 </data>
 <data name="PropertyReassignment" xml:space="preserve">
-<value>Reasignación de propiedad: $({0})="{1}" (valor anterior: "{2}") en {3}</value>
+<value>Riassegnazione della proprietà: $({0})="{1}" (valore precedente: "{2}") in {3}</value>
 </data>
 <data name="General.GlobalProperties" xml:space="preserve">
-<value>Propiedades globales:</value>
+<value>Proprietà globali:</value>
 </data>
 <data name="General.UndefineProperties" xml:space="preserve">
-<value>Quitando propiedades:</value>
+<value>Rimozione proprietà:</value>
 </data>
 <data name="ResolveAssemblyReference.UnifiedPrimaryReference" xml:space="preserve">
-<value>Referencia principal unificada "{0}".</value>
+<value>Riferimento primario unificato "{0}".</value>
 </data>
 <data name="ResolveAssemblyReference.AssemblyFoldersExSearchLocations" xml:space="preserve">
-<value>Ubicación de AssemblyFoldersEx: "{0}"</value>
+<value>Percorso AssemblyFoldersEx: "{0}"</value>
 </data>
 <data name="GetSDKReferenceFiles.ConflictReferenceDifferentSDK" xml:space="preserve">
-<value>Hubo un conflicto entre dos referencias con el mismo nombre de archivo entre los SDK "{0}" y "{1}". Se elegirá "{2}" sobre "{3}" porque se resolvió primero.</value>
+<value>Conflitto tra due riferimenti con lo stesso nome file tra gli SDK "{0}" e "{1}". Viene scelto "{2}" invece di "{3}" perché è stato risolto per primo.</value>
 </data>
 <data name="ResolveAssemblyReference.Dependency" xml:space="preserve">
-<value>Dependencia "{0}".</value>
+<value>Dipendenza "{0}".</value>
 </data>
 <data name="ResolveAssemblyReference.PrimaryReference" xml:space="preserve">
-<value>Referencia principal "{0}".</value>
+<value>Riferimento primario "{0}".</value>
 </data>
 <data name="Copy.HardLinkComment" xml:space="preserve">
-<value>Creando un vínculo físico para copiar "{0}" en "{1}".</value>
+<value>Creazione del collegamento reale per copiare "{0}" in "{1}".</value>
 </data>
 <data name="Copy.DidNotCopyBecauseOfFileMatch" xml:space="preserve">
-<value>No se copió del archivo "{0}" en el archivo "{1}" porque el parámetro "{2}" se estableció como "{3}" en el proyecto y los tamaños y las marcas de tiempo de los archivos coinciden.</value>
+<value>Non è possibile eseguire la copia dal file "{0}" al file "{1}". Il parametro "{2}" è stato impostato su "{3}" nel progetto e la dimensione e il timestamp dei file corrispondono.</value>
 </data>
 <data name="ResolveAssemblyReference.SearchPath" xml:space="preserve">
-<value>Para SearchPath "{0}".</value>
+<value>Per SearchPath "{0}".</value>
 </data>
 <data name="ResolveAssemblyReference.UnifiedDependency" xml:space="preserve">
-<value>Dependencia unificada "{0}".</value>
+<value>Dipendenza unificata "{0}".</value>
 </data>
 <data name="GetSDKReferenceFiles.ConflictReferenceSameSDK" xml:space="preserve">
-<value>Hubo un conflicto entre dos referencias con el mismo nombre de archivo resuelto dentro del SDK "{0}". Se elegirá "{1}" en lugar de "{2}" porque se resolvió primero.</value>
+<value>Conflitto tra due riferimenti con lo stesso nome file risolti nell'SDK "{0}". Viene scelto "{1}" invece di "{2}" perché è stato risolto per primo.</value>
 </data>
 <data name="GetSDKReferenceFiles.ConflictRedistDifferentSDK" xml:space="preserve">
-<value>Conflicto entre dos archivos de la carpeta redist que van a la misma ruta de acceso de destino "{0}" entre los SDK "{1}" y "{2}". Se elegirá "{3}" sobre "{4}" porque se resolvió primero.</value>
+<value>Conflitto tra due file della cartella dei pacchetti ridistribuibili che hanno lo stesso percorso di destinazione "{0}" tra gli SDK "{1}" e "{2}". Verrà scelto "{3}" invece di "{4}" perché è stato risolto per primo.</value>
 </data>
 <data name="Copy.FileComment" xml:space="preserve">
-<value>Copiando el archivo de "{0}" en "{1}".</value>
+<value>Copia del file da "{0}" a "{1}".</value>
 </data>
 </root>
