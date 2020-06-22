@@ -397,7 +397,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     node = project;
                 }
 
-                if (Strings.IsPropertyReassignmentMessage(message))
+                if (Strings.PropertyReassignmentRegex.IsMatch(message))
                 {
                     var properties = node.GetOrCreateNodeWithName<Folder>(Strings.Properties, true);
                     node = properties.GetOrCreateNodeWithName<Folder>(Strings.GetPropertyName(message));
