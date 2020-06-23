@@ -1,0 +1,75 @@
+﻿@page "/Home"
+    @using System.IO
+    @using Microsoft.Build.Logging.StructuredLogger
+    @using Radzen
+    @using Radzen.Blazor
+    @inject Blazor.FileReader.IFileReaderService fileReaderService
+
+    <h1>Structured Log Viewer</h1>
+
+    <input type="file" @ref=inputElement />
+    <button @onclick=ReadFile class="btn btn-primary">Read file</button>
+    <button @onclick=ClearFile class="btn btn-primary">Clear</button>
+
+    <br />
+    <br />
+    @if (binLogSelected)
+    {
+        <RadzenTree Data="@entries" Expand="@((TreeExpandEventArgs args) => {OnExpand(args);})">
+            <RadzenTreeLevel Text="@GetTextForNode" />
+        </RadzenTree>
+    }
+
+    @code {
+        bool binLogSelected = false;
+        ElementReference inputElement;
+
+        IEnumerable<BaseNode> entries = null;
+
+        string GetTextForNode(Object node)
+        {
+            return ((BaseNode)node).ToString();
+        }
+
+        void OnExpand(TreeExpandEventArgs args)
+        {
+            var directory = args.Value as string;
+
+            args.Children.Data = ((TreeNode) args.Value).Children;
+            args.Children.Text = GetTextForNode;
+            args.Children.HasChildren = (Object obj) => ((TreeNode)args.Value).HasChildren;
+        }
+
+        public async System.Threading.Tasks.Task ClearFile()
+        {
+            await fileReaderService.CreateReference(inputElement).ClearValue();
+        }
+
+        public async System.Threading.Tasks.Task ReadFile()
+        {
+            var files = (await fileReaderService.CreateReference(inputElement).EnumerateFilesAsync());
+            foreach (Blazor.FileReader.IFileReference file in files)
+            {
+                var fileInfo = await file.ReadFileInfoAsync();
+                String[] split = fileInfo.Name.Split(".");
+                if (!String.Equals("binlog", split[split.Length - 1]))
+                {
+                    break;
+                }
+                binLogSelected = true;
+                Task<Blazor.FileReader.AsyncDisposableStream>
+        streamTask = file.OpenReadAsync();
+                var stream = await streamTask;
+                var memoryStream = new MemoryStream();
+                await stream.CopyToAsync(memoryStream);
+
+                memoryStream.Position = 0;
+
+                Build build = Serialization.ReadBinLog(memoryStream);
+                BuildAnalyzer.AnalyzeBuild(build);
+                entries = (IEnumerable<BaseNode>)build.Children;
+            }
+            this.StateHasChanged();
+        }
+
+    }
