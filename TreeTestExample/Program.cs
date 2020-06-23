@@ -9,7 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Blazor.FileReader;
 
-namespace TreeTestExample
+namespace StructuredLogViewerWASM
 {
     public class Program
     {
