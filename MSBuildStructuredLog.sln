@@ -26,7 +26,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StructuredLogViewer.Avaloni
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blazor.FileReader", "..\..\BlazorFileReader\src\Blazor.FileReader\Blazor.FileReader.csproj", "{E90CCA79-A697-4EC4-BE7A-7DE89B4B2874}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StructuredLoggerWASM", "StructuredLoggerWASM\StructuredLoggerWASM.csproj", "{2E86F224-30F2-4695-A2AC-C7752EAFD563}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StructuredLoggerWASM", "StructuredLoggerWASM\StructuredLoggerWASM.csproj", "{2E86F224-30F2-4695-A2AC-C7752EAFD563}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
