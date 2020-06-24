@@ -10,19 +10,26 @@
     <input type="file" @ref=inputElement />
     <button @onclick=ReadFile class="btn btn-primary">Read file</button>
     <button @onclick=ClearFile class="btn btn-primary">Clear</button>
-
+    
+<h1>@test</h1>
     <br />
     <br />
     @if (binLogSelected)
     {
         <RadzenTree Data="@entries" Expand="@((TreeExpandEventArgs args) => {OnExpand(args);})">
-            <RadzenTreeLevel Text="@GetTextForNode" />
+            <RadzenTreeLevel Text="@GetTextForNode" 
+                             HasChildren="@((node) => {
+                                                if (node is TreeNode)
+                                                    return ((TreeNode)node).HasChildren;
+                                                else return false;
+                                            })"/>
         </RadzenTree>
     }
 
     @code {
         bool binLogSelected = false;
         ElementReference inputElement;
+        string test;
 
         IEnumerable<BaseNode> entries = null;
 
@@ -33,11 +40,23 @@
 
         void OnExpand(TreeExpandEventArgs args)
         {
-            var directory = args.Value as string;
-
-            args.Children.Data = ((TreeNode) args.Value).Children;
-            args.Children.Text = GetTextForNode;
-            args.Children.HasChildren = (Object obj) => ((TreeNode)args.Value).HasChildren;
+            if(args.Value is TreeNode)
+            {
+                args.Children.Data = ((TreeNode)args.Value).Children;
+                args.Children.Text = GetTextForNode;
+                args.Children.HasChildren = (node) =>
+                {
+                    if (node is TreeNode)
+                        return ((TreeNode)node).HasChildren;
+                    else
+                        return false;
+                };
+            } else
+            {
+                args.Children.Data = null;
+                args.Children.Text = (Object obj) => (string) args.Value;
+                args.Children.HasChildren = (Object obj) => false;
+            }
         }
 
         public async System.Threading.Tasks.Task ClearFile()
