@@ -13,7 +13,7 @@
     <DefineConstants Condition="'$(SignAssembly)' == 'true'">$(DefineConstants);SIGN;</DefineConstants>
     <DelaySign>false</DelaySign>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)\key.snk</AssemblyOriginatorKeyFile>
-    <DebugType Condition="$(OS) == 'Windows_NT'">embedded</DebugType>
+    <!--<DebugType Condition="$(OS) == 'Windows_NT'">embedded</DebugType>-->
     <LangVersion>latest</LangVersion>
 
     <MSBuildPackageVersion>16.4.0</MSBuildPackageVersion>
