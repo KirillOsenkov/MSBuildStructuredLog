@@ -1,94 +1,143 @@
 ﻿@page "/Home"
-    @using System.IO
-    @using Microsoft.Build.Logging.StructuredLogger
-    @using Radzen
-    @using Radzen.Blazor
-    @inject Blazor.FileReader.IFileReaderService fileReaderService
+@using System.IO
+@using Microsoft.Build.Logging.StructuredLogger
+@using Radzen
+@using Radzen.Blazor
+@inject Blazor.FileReader.IFileReaderService fileReaderService
+@inject NotificationService notificationService
 
-    <h1>Structured Log Viewer</h1>
+    <center>
+        <h1>Structured Log Viewer</h1>
+        <input type="file" @ref=inputElement />
+        <button @onclick=ReadFile class="btn btn-primary">Read file</button>
+        <button @onclick=ClearFile class="btn btn-primary">Clear</button>
+        <br />
+        <br />
+        @if (reading)
+        {
+            <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" Style="margin-bottom: 20px" />
+            <h3>@waitText</h3>
+        }
+    </center>
 
-    <input type="file" @ref=inputElement />
-    <button @onclick=ReadFile class="btn btn-primary">Read file</button>
-    <button @onclick=ClearFile class="btn btn-primary">Clear</button>
-    
+
 <h1>@test</h1>
-    <br />
-    <br />
-    @if (binLogSelected)
-    {
-        <RadzenTree Data="@entries" Expand="@((TreeExpandEventArgs args) => {OnExpand(args);})">
-            <RadzenTreeLevel Text="@GetTextForNode" 
-                             HasChildren="@((node) => {
+<br />
+<br />
+@if (binLogSelected)
+{
+    <RadzenTree Data="@entries" Expand="@((TreeExpandEventArgs args) => {OnExpand(args);})">
+        <RadzenTreeLevel Text="@GetTextForNode"
+                         HasChildren="@((node) => {
                                                 if (node is TreeNode)
                                                     return ((TreeNode)node).HasChildren;
                                                 else return false;
-                                            })"/>
-        </RadzenTree>
+                                            })" />
+    </RadzenTree>
+}
+<RadzenNotification />
+
+@code {
+    bool binLogSelected = false;
+    ElementReference inputElement;
+    string test;
+    bool reading;
+    string waitText;
+
+    IEnumerable<BaseNode> entries = null;
+
+    async System.Threading.Tasks.Task ShowNotification(NotificationMessage message)
+    {
+        message.Severity = NotificationSeverity.Error;
+        message.Summary = "Wrong File Type!";
+        message.Detail = "Currently we only read .binlog files. Click Instructions to learn more.";
+        message.Duration = 4000;
+        notificationService.Notify(message);
     }
 
-    @code {
-        bool binLogSelected = false;
-        ElementReference inputElement;
-        string test;
 
-        IEnumerable<BaseNode> entries = null;
+    string GetTextForNode(Object node)
+    {
+        return ((BaseNode)node).ToString();
+    }
 
-        string GetTextForNode(Object node)
+    void OnExpand(TreeExpandEventArgs args)
+    {
+        if (args.Value is TreeNode)
         {
-            return ((BaseNode)node).ToString();
+            args.Children.Data = ((TreeNode)args.Value).Children;
+            args.Children.Text = GetTextForNode;
+            args.Children.HasChildren = (node) =>
+            {
+                if (node is TreeNode)
+                    return ((TreeNode)node).HasChildren;
+                else
+                    return false;
+            };
         }
-
-        void OnExpand(TreeExpandEventArgs args)
+        else
         {
-            if(args.Value is TreeNode)
+            args.Children.Data = null;
+            args.Children.Text = (Object obj) => (string)args.Value;
+            args.Children.HasChildren = (Object obj) => false;
+        }
+    }
+
+    public async System.Threading.Tasks.Task ClearFile()
+    {
+        await fileReaderService.CreateReference(inputElement).ClearValue();
+        binLogSelected = false;
+        reading = false;
+        waitText = "";
+    }
+
+    public async System.Threading.Tasks.Task ReadFile()
+    {
+        binLogSelected = false;
+        reading = true;
+        this.StateHasChanged();
+        waitText = "Here we go...";
+        await System.Threading.Tasks.Task.Delay(2000);
+        var files = (await fileReaderService.CreateReference(inputElement).EnumerateFilesAsync());
+        foreach (Blazor.FileReader.IFileReference file in files)
+        {
+            var fileInfo = await file.ReadFileInfoAsync();
+            String[] split = fileInfo.Name.Split(".");
+            if (!String.Equals("binlog", split[split.Length - 1]))
             {
-                args.Children.Data = ((TreeNode)args.Value).Children;
-                args.Children.Text = GetTextForNode;
-                args.Children.HasChildren = (node) =>
-                {
-                    if (node is TreeNode)
-                        return ((TreeNode)node).HasChildren;
-                    else
-                        return false;
-                };
-            } else
-            {
-                args.Children.Data = null;
-                args.Children.Text = (Object obj) => (string) args.Value;
-                args.Children.HasChildren = (Object obj) => false;
+                await ShowNotification(new NotificationMessage());
+                await ClearFile();
+                break;
             }
-        }
-
-        public async System.Threading.Tasks.Task ClearFile()
-        {
-            await fileReaderService.CreateReference(inputElement).ClearValue();
-        }
-
-        public async System.Threading.Tasks.Task ReadFile()
-        {
-            var files = (await fileReaderService.CreateReference(inputElement).EnumerateFilesAsync());
-            foreach (Blazor.FileReader.IFileReference file in files)
-            {
-                var fileInfo = await file.ReadFileInfoAsync();
-                String[] split = fileInfo.Name.Split(".");
-                if (!String.Equals("binlog", split[split.Length - 1]))
-                {
-                    break;
-                }
-                binLogSelected = true;
-                Task<Blazor.FileReader.AsyncDisposableStream>
-        streamTask = file.OpenReadAsync();
-                var stream = await streamTask;
-                var memoryStream = new MemoryStream();
-                await stream.CopyToAsync(memoryStream);
-
-                memoryStream.Position = 0;
-
-                Build build = Serialization.ReadBinLog(memoryStream);
-                BuildAnalyzer.AnalyzeBuild(build);
-                entries = (IEnumerable<BaseNode>)build.Children;
-            }
+            waitText = "Still reading...";
             this.StateHasChanged();
-        }
+            await System.Threading.Tasks.Task.Delay(2000);
+            binLogSelected = true;
+            Task<Blazor.FileReader.AsyncDisposableStream>
+            streamTask = file.OpenReadAsync();
+            var stream = await streamTask;
+            var memoryStream = new MemoryStream();
+            await System.Threading.Tasks.Task.Delay(2000);
+            waitText = "Teaching you patience...";
+            this.StateHasChanged();
+            await stream.CopyToAsync(memoryStream);
 
+            memoryStream.Position = 0;
+
+            Build build = Serialization.ReadBinLog(memoryStream);
+            waitText = "Trust me you're computer wants this to be over more than you do...";
+            this.StateHasChanged();
+            await System.Threading.Tasks.Task.Delay(2000);
+            BuildAnalyzer.AnalyzeBuild(build);
+            await System.Threading.Tasks.Task.Delay(2000);
+            waitText = "Not a joke...We're actually still reading...";
+            this.StateHasChanged();
+            await System.Threading.Tasks.Task.Delay(4000);
+            entries = (IEnumerable<BaseNode>)build.Children;
+        }
+        this.StateHasChanged();
+        reading = false;
+        waitText = "";
     }
+
+}
