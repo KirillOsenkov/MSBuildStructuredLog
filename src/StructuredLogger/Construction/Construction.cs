@@ -371,6 +371,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        private bool sawCulture = false;
+
         public void MessageRaised(object sender, BuildMessageEventArgs args)
         {
             try
@@ -383,20 +385,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         return;
                     }
 
-                    if (args.SenderName == "BinaryLogger" && args.Message.StartsWith("CurrentUICulture"))
+                    if (!sawCulture && args.SenderName == "BinaryLogger" && args.Message.StartsWith("CurrentUICulture"))
                     {
-                        string culture = args.Message.Substring(args.Message.IndexOf("=") + 1, args.Message.Length - 1 - args.Message.IndexOf("="));
-                        //read language from log and initialize resource strings
-                        if (!String.IsNullOrEmpty(culture))
+                        sawCulture = true;
+                        int equalsIndex = args.Message.IndexOf("=");
+                        if (equalsIndex > 0 && equalsIndex < args.Message.Length - 1)
                         {
-                            Strings.SetCultureInfo(System.Globalization.CultureInfo.GetCultureInfo(culture));
-                        }
-                    }
+                            string culture = args.Message.Substring(equalsIndex + 1, args.Message.Length - 1 - equalsIndex);
 
-                    // initialize englisch when CultureInfo from log not found
-                    if (Strings.ResourceSet == null)
-                    {
-                        Strings.SetCultureInfo(System.Globalization.CultureInfo.GetCultureInfo("en-US"));
+                            // read language from log and initialize resource strings
+                            if (!String.IsNullOrEmpty(culture))
+                            {
+                                Strings.Initialize(culture, force: true);
+                            }
+                        }
                     }
 
                     messageProcessor.Process(args);

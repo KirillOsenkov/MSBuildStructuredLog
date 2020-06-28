@@ -52,6 +52,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             construction = new Construction();
 
+            Strings.Initialize();
+
             eventSource.BuildStarted += construction.BuildStarted;
             eventSource.BuildFinished += construction.BuildFinished;
             eventSource.ProjectStarted += construction.ProjectStarted;

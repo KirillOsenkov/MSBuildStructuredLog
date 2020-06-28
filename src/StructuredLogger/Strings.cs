@@ -1,4 +1,4 @@
-﻿using StructuredLogger.Properties;
+using StructuredLogger.Properties;
 using System;
 using System.Globalization;
 using System.Resources;
@@ -9,7 +9,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class Strings
     {
-
         public static ResourceSet ResourceSet { get; private set; }
 
         public static void SetCultureInfo(CultureInfo cultureInfo)
@@ -270,6 +269,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static bool IsTargetDoesNotExistAndWillBeSkipped(string message)
         {
             return TargetDoesNotExistBeforeTargetMessage.IsMatch(message);
+        }
+
+        public static void Initialize(string culture = "en-US", bool force = false)
+        {
+            if (ResourceSet == null || force)
+            {
+                SetCultureInfo(CultureInfo.GetCultureInfo(culture));
+            }
         }
 
         public static Match ProjectWasNotImportedRegex(string message, out string reason)

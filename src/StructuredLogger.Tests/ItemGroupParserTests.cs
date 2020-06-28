@@ -8,11 +8,7 @@ namespace StructuredLogger.Tests
         [Fact]
         public void AddItemWithMultilineMetadata()
         {
-            //Initialzie resource set default englich 
-            if (Strings.ResourceSet == null)
-            {
-                Strings.SetCultureInfo(System.Globalization.CultureInfo.GetCultureInfo("en-US"));
-            }
+            Strings.Initialize();
             var result = ItemGroupParser.ParsePropertyOrItemList(@"Added Item(s): 
     Link=
         tmp
@@ -27,11 +23,7 @@ namespace StructuredLogger.Tests
         [Fact]
         public void ParseSuggestedBindingRedirectsMetadata()
         {
-            //Initialzie resource set default englich 
-            if (Strings.ResourceSet == null)
-            {
-                Strings.SetCultureInfo(System.Globalization.CultureInfo.GetCultureInfo("en-US"));
-            }
+            Strings.Initialize();
             var parameter = ItemGroupParser.ParsePropertyOrItemList(@"Output Item(s): 
     SuggestedBindingRedirects=
         Microsoft.Build, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
@@ -57,11 +49,7 @@ namespace StructuredLogger.Tests
         [Fact]
         public void ParseThereWasAConflict()
         {
-            //Initialzie resource set default englich 
-            if (Strings.ResourceSet == null)
-            {
-                Strings.SetCultureInfo(System.Globalization.CultureInfo.GetCultureInfo("en-US"));
-            }
+            Strings.Initialize();
 
             var lines = @"""System.IO.Compression, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"" was chosen because it was primary and ""System.IO.Compression, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"" was not.
 References which depend on ""System.IO.Compression, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"" [C:\Program Files (x86)\System.IO.Compression.dll].
@@ -108,11 +96,7 @@ References which depend on ""System.IO.Compression, Version=4.1.1.0, Culture=neu
         [Fact]
         public void ParseMultilineMetadata()
         {
-            //Initialzie resource set default englich 
-            if (Strings.ResourceSet == null)
-            {
-                Strings.SetCultureInfo(System.Globalization.CultureInfo.GetCultureInfo("en-US"));
-            }
+            Strings.Initialize();
             var parameter = ItemGroupParser.ParsePropertyOrItemList(@"Added Item(s): 
     _ProjectsFiles=
         Project1
