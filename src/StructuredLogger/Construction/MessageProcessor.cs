@@ -397,7 +397,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     node = project;
                 }
 
-                if (Strings.PropertyReassignmentRegex.IsMatch(message))
+                if (Strings.PropertyReassignment.IsMatch(message))
                 {
                     var properties = node.GetOrCreateNodeWithName<Folder>(Strings.Properties, true);
                     node = properties.GetOrCreateNodeWithName<Folder>(Strings.GetPropertyName(message));
@@ -429,6 +429,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     {
                         return;
                     }
+
                     var properties = construction.EvaluationFolder.GetOrCreateNodeWithName<Folder>(Strings.Properties);
                     node = properties.GetOrCreateNodeWithName<Folder>(Strings.GetPropertyName(message));
                 }
@@ -449,7 +450,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     DetailedSummary.AppendLine(message);
                     return;
                 }
-
             }
 
             node.AddChild(nodeToAdd);

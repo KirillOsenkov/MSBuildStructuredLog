@@ -127,7 +127,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
              .Replace(@"$({0})=""{1}"" (", @"\$\(\w+\)=.*? \(")
              .Replace(@"""{2}"")", @".*?""\)")
              .Replace("{3}", @"(?<File>.*) \((?<Line>\d+),(\d+)\)$");
-            PropertyReassignmentRegex = new Regex("^" + propertyReassignment, RegexOptions.Compiled);
+            PropertyReassignmentRegex = new Regex("^" + propertyReassignment, RegexOptions.Compiled | RegexOptions.Singleline);
 
             string taskFoundFromFactory = ResourceSet.GetString("TaskFoundFromFactory")
                 .Replace(@"""{0}""", @"\""(?<task>.+)\""")
@@ -140,11 +140,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             TaskFound = new Regex("^" + taskFound, RegexOptions.Compiled);
 
             string skippedFalseCondition = ResourceSet.GetString("ProjectImportSkippedFalseCondition")
-           .Replace("{0}", @"(?<ImportedProject>[^\""]+)")
-           .Replace("{1}", @"(?<File>[^\""]+)")
-           .Replace("({2},{3})", @"\((?<Line>\d+),(?<Column>\d+)\)")
-           .Replace("{4}", "(?<Reason>.+)")
-           .Replace("{5}", ".*?");
+               .Replace("{0}", @"(?<ImportedProject>[^\""]+)")
+               .Replace("{1}", @"(?<File>[^\""]+)")
+               .Replace("({2},{3})", @"\((?<Line>\d+),(?<Column>\d+)\)")
+               .Replace("{4}", "(?<Reason>.+)")
+               .Replace("{5}", ".*?");
             ProjectImportSkippedFalseCondition = new Regex(@"^" + skippedFalseCondition.Substring(0, skippedFalseCondition.Length - 1), RegexOptions.Compiled);
 
             PropertyReassignment = new Regex(ResourceSet.GetString("PropertyReassignment")
@@ -199,6 +199,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static Regex ProjectImportSkippedFalseCondition { get; set; }
         public static Regex ProjectImportSkippedNoMatches { get; set; }
         public static Regex PropertyReassignment { get; set; }
+        public static Regex PropertyReassignmentRegex { get; set; }
         public static Regex ImportingProjectRegex { get; set; }
         public static Regex UnifiedPrimaryReferencePrefix { get; set; }
         public static Regex PrimaryReferencePrefix { get; set; }
@@ -218,7 +219,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static Regex TargetSkippedFalseCondition { get; set; }
         public static Regex TargetAlreadyCompleteFailure { get; set; }
         public static Regex TargetSkippedWhenSkipNonexistentTargets { get; set; }
-        public static Regex PropertyReassignmentRegex { get; set; }
         public static Regex TaskFoundFromFactory { get; set; }
         public static Regex TaskFound { get; set; }
 
@@ -282,37 +282,37 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static Match ProjectWasNotImportedRegex(string message, out string reason)
         {
             reason = "";
+
             if (ProjectImportSkippedMissingFile.Match(message).Success)
             {
                 reason = "the file not existing";
                 return ProjectImportSkippedMissingFile.Match(message);
             }
-            if (ProjectImportSkippedInvalidFile.Match(message).Success)
+            else if (ProjectImportSkippedInvalidFile.Match(message).Success)
             {
                 reason = "the file being invalid";
                 return ProjectImportSkippedInvalidFile.Match(message);
             }
-
-            if (ProjectImportSkippedEmptyFile.Match(message).Success)
+            else if (ProjectImportSkippedEmptyFile.Match(message).Success)
             {
                 reason = "the file being empty";
                 return ProjectImportSkippedEmptyFile.Match(message);
             }
-            if (ProjectImportSkippedNoMatches.Match(message).Success)
+            else if (ProjectImportSkippedNoMatches.Match(message).Success)
             {
                 reason = "no matching files";
                 return ProjectImportSkippedNoMatches.Match(message);
             }
-            if (ProjectImportSkippedFalseCondition.Match(message).Success)
+            else if (ProjectImportSkippedFalseCondition.Match(message).Success)
             {
                 reason = "false condition; ";
                 Match match = ProjectImportSkippedFalseCondition.Match(message);
                 reason += match.Groups["Reason"].Value;
                 return match;
-
             }
 
             return Match.Empty;
+
             //ProjectImportSkippedMissingFile $:$ Project "{0}" was not imported by "{1}" at ({2},{3}), due to the file not existing.
             //ProjectImportSkippedInvalidFile $:$ Project "{0}" was not imported by "{1}" at({ 2},{3}), due to the file being invalid.
             //ProjectImportSkippedEmptyFile $:$ Project "{0}" was not imported by "{1}" at ({2},{3}), due to the file being empty.
