@@ -334,6 +334,34 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             "$noimport"
         };
 
+        Inline MakeLink(string query, string before = " • ", string after = "\r\n")
+        {
+            var hyperlink = new Hyperlink(new Run(query));
+            hyperlink.Click += (s, e) => searchLogControl.SearchText = query;
+
+            var span = new System.Windows.Documents.Span();
+            if (before != null)
+            {
+                span.Inlines.Add(new Run(before));
+            }
+
+            span.Inlines.Add(hyperlink);
+
+            if (after != null)
+            {
+                if (after == "\r\n")
+                {
+                    span.Inlines.Add(new LineBreak());
+                }
+                else
+                {
+                    span.Inlines.Add(new Run(after));
+                }
+            }
+
+            return span;
+        }
+
         private void UpdateWatermark()
         {
             string watermarkText1 = @"Type in the search box to search. Press Ctrl+F to focus the search box. Results (up to 1000) will display here.
@@ -346,38 +374,10 @@ Use syntax like '$property Prop' to narrow results down by item kind. Supported 
  • $task csc under($project Core)
  • Copying file under(Parent)
 
-Append $time to show durations and sort the results by duration descending (for tasks, targets and projects).
+Append [[$time]], [[$start]] and/or [[$end]] to show times and/or durations and sort the results by start time or duration descending (for tasks, targets and projects).
 
 Examples:
 ";
-
-            Inline MakeLink(string query, string before = " • ", string after = "\r\n")
-            {
-                var hyperlink = new Hyperlink(new Run(query));
-                hyperlink.Click += (s, e) => searchLogControl.SearchText = query;
-
-                var span = new System.Windows.Documents.Span();
-                if (before != null)
-                {
-                    span.Inlines.Add(new Run(before));
-                }
-
-                span.Inlines.Add(hyperlink);
-
-                if (after != null)
-                {
-                    if (after == "\r\n")
-                    {
-                        span.Inlines.Add(new LineBreak());
-                    }
-                    else
-                    {
-                        span.Inlines.Add(new Run(after));
-                    }
-                }
-
-                return span;
-            }
 
             var watermark = new TextBlock();
             watermark.Inlines.Add(watermarkText1);
@@ -397,7 +397,7 @@ Examples:
             watermark.Inlines.Add(new LineBreak());
             watermark.Inlines.Add(new LineBreak());
 
-            watermark.Inlines.Add(watermarkText2);
+            AddTextWithHyperlinks(watermarkText2, watermark.Inlines);
 
             foreach (var example in searchExamples)
             {
@@ -418,6 +418,25 @@ Recent:
             }
 
             searchLogControl.WatermarkContent = watermark;
+        }
+
+        public void AddTextWithHyperlinks(string text, InlineCollection result)
+        {
+            const string openParen = "[[";
+            const string closeParen = "]]";
+            var chunks = TextUtilities.SplitIntoParenthesizedSpans(text, openParen, closeParen);
+            foreach (var chunk in chunks)
+            {
+                if (chunk.StartsWith(openParen) && chunk.EndsWith(closeParen))
+                {
+                    var link = chunk.Substring(openParen.Length, chunk.Length - openParen.Length - closeParen.Length);
+                    result.Add(MakeLink(link, before: null, after: null));
+                }
+                else
+                {
+                    result.Add(chunk);
+                }
+            }
         }
 
         private void Preprocess(IPreprocessable project) => preprocessedFileManager.ShowPreprocessed(project);

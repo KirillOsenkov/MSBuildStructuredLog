@@ -131,5 +131,17 @@ namespace StructuredLogger.Tests
             var actual = string.Join(" ", spans.Select(s => haystack.Substring(s.Start, s.Length)));
             Assert.Equal(expected, actual);
         }
+
+        [Theory]
+        [InlineData(null, "")]
+        [InlineData("", "")]
+        [InlineData("a", "a")]
+        [InlineData("a[[b]]c", "a", "[[b]]", "c")]
+        [InlineData("a[[b", "a", "[[b")]
+        public void TestSplitIntoParenthesizedSpans(string haystack, params string[] expectedChunks)
+        {
+            var actual = TextUtilities.SplitIntoParenthesizedSpans(haystack, "[[", "]]");
+            AssertEqual(expectedChunks, actual);
+        }
     }
 }

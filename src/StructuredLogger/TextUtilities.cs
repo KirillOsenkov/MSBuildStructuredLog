@@ -428,5 +428,53 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             return final;
         }
+
+        public static IReadOnlyList<string> SplitIntoParenthesizedSpans(string text, string openParen, string closeParen)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return Array.Empty<string>();
+            }
+
+            var list = new List<string>();
+
+            void Add(int start, int end)
+            {
+                if (end > start)
+                {
+                    var chunk = text.Substring(start, end - start);
+                    list.Add(chunk);
+                }
+            }
+
+            int previous = 0;
+            for (int i = 0; i > -1 && i < text.Length; )
+            {
+                i = text.IndexOf(openParen, i);
+                if (i == -1)
+                {
+                    Add(previous, text.Length);
+                    return list;
+                }
+
+                Add(previous, i);
+                previous = i;
+
+                i = text.IndexOf(closeParen, i);
+                if (i == -1)
+                {
+                    Add(previous, text.Length);
+                    return list;
+                }
+
+                i += closeParen.Length;
+
+                Add(previous, i);
+                previous = i;
+            }
+
+            Add(previous, text.Length);
+            return list;
+        }
     }
 }
