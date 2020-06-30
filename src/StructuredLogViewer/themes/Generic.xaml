@@ -261,6 +261,7 @@
       </DataTrigger>
       <DataTrigger Binding="{Binding IsSelected}" Value="False">
         <Setter TargetName="label" Property="Foreground" Value="{StaticResource TargetStroke}" />
+        <Setter TargetName="duration" Property="Foreground" Value="LightGray" />
       </DataTrigger>
     </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
