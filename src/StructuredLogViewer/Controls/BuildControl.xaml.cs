@@ -990,7 +990,11 @@ Recent:
             foreach (var item in tree.Items.OfType<BaseNode>())
             {
                 var text = Microsoft.Build.Logging.StructuredLogger.StringWriter.GetString(item);
-                sb.AppendLine(text);
+                sb.Append(text);
+                if (!text.Contains("\n"))
+                {
+                    sb.AppendLine();
+                }
             }
 
             CopyToClipboard(sb.ToString());
@@ -1304,18 +1308,46 @@ Recent:
                 Text = $"{results.Count} result{(results.Count == 1 ? "" : "s")}. Search took: {Elapsed.ToString()}"
             });
 
-            bool includeDuration = results.Any(r => r.Duration != default);
+            bool includeDuration = false;
+            bool includeStart = false;
+            bool includeEnd = false;
+
+            foreach (var r in results)
+            {
+                if (r.Duration != default)
+                {
+                    includeDuration = true;
+                }
+
+                if (r.StartTime != default)
+                {
+                    includeStart = true;
+                }
+
+                if (r.EndTime != default)
+                {
+                    includeEnd = true;
+                }
+            }
 
             if (includeDuration)
             {
                 results = results.OrderByDescending(r => r.Duration).ToArray();
+            }
+            else if (includeStart)
+            {
+                results = results.OrderBy(r => r.StartTime).ToArray();
+            }
+            else if (includeEnd)
+            {
+                results = results.OrderBy(r => r.EndTime).ToArray();
             }
 
             foreach (var result in results)
             {
                 TreeNode parent = root;
 
-                if (!includeDuration)
+                if (!includeDuration && !includeStart && !includeEnd)
                 {
                     var project = result.Node.GetNearestParent<Project>();
                     if (project != null)

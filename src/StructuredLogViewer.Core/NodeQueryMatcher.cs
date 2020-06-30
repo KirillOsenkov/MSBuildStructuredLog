@@ -15,6 +15,8 @@ namespace StructuredLogViewer
         public int NodeIndex { get; private set; } = -1;
         private HashSet<string>[] MatchesInStrings { get; set; }
         public bool IncludeDuration { get; set; }
+        public bool IncludeStart { get; set; }
+        public bool IncludeEnd { get; set; }
         public TimeSpan PrecalculationDuration { get; set; }
 
         private string nameToSearch { get; set; }
@@ -52,10 +54,22 @@ namespace StructuredLogViewer
             {
                 var word = Words[i];
 
-                if (word == "$time")
+                if (word == "$time" || word == "$duration")
                 {
                     Words.RemoveAt(i);
                     IncludeDuration = true;
+                    continue;
+                }
+                else if (word == "$start" || word == "$starttime")
+                {
+                    Words.RemoveAt(i);
+                    IncludeStart = true;
+                    continue;
+                }
+                else if (word == "$end" || word == "$endtime")
+                {
+                    Words.RemoveAt(i);
+                    IncludeEnd = true;
                     continue;
                 }
 
@@ -325,7 +339,7 @@ namespace StructuredLogViewer
                     // this node is of the type that we need, search other fields
                     if (result == null)
                     {
-                        result = new SearchResult(node, IncludeDuration);
+                        result = new SearchResult(node, IncludeDuration, IncludeStart, IncludeEnd);
                     }
 
                     result.AddMatchByNodeType();
@@ -355,7 +369,7 @@ namespace StructuredLogViewer
 
                     if (result == null)
                     {
-                        result = new SearchResult(node, IncludeDuration);
+                        result = new SearchResult(node, IncludeDuration, IncludeStart, IncludeEnd);
                     }
 
                     // if matched on the type of the node (always field 0), special case it

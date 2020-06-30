@@ -23,7 +23,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Indent(sb, indent);
             var text = rootNode.ToString() ?? "";
 
-            // when we injest strings we normalize on \n to save space.
+            // when we ingest strings we normalize on \n to save space.
             // when the strings leave our app via clipboard, bring \r\n back so that notepad works
             text = text.Replace("\n", "\r\n");
 

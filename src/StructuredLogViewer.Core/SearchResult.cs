@@ -11,13 +11,29 @@ namespace StructuredLogViewer
 
         public bool MatchedByType { get; private set; }
         public TimeSpan Duration { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
 
-        public SearchResult(BaseNode node, bool includeDuration = false)
+        public SearchResult(BaseNode node, bool includeDuration = false, bool includeStart = false, bool includeEnd = false)
         {
             Node = node;
-            if (includeDuration && node is TimedNode timedNode)
+
+            if (node is TimedNode timedNode)
             {
-                Duration = timedNode.Duration;
+                if (includeDuration)
+                {
+                    Duration = timedNode.Duration;
+                }
+
+                if (includeStart)
+                {
+                    StartTime = timedNode.StartTime;
+                }
+
+                if (includeEnd)
+                {
+                    EndTime = timedNode.EndTime;
+                }
             }
         }
 

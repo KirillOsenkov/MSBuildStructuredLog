@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using StructuredLogViewer;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -44,7 +45,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             Highlights.Add(OriginalType);
 
-            //NameValueNode is speial case: have to show name=value when seached only in one (name or value)
+            // NameValueNode is special case: have to show name=value when searched only in one (name or value)
             var named = SearchResult.Node as NameValueNode;
             bool nameFound = false;
             bool valueFound = false;
@@ -53,7 +54,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 foreach (var fieldText in result.WordsInFields.GroupBy(t => t.field))
                 {
                     if (fieldText.Key.Equals(named.Name))
-                    { 
+                    {
                         nameFound = true;
                     }
 
@@ -95,7 +96,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     Highlights.Add(fieldText.Substring(index, fieldText.Length - index));
                 }
 
-                if (named != null && wordsInField.Key.Equals(named.Name) )
+                if (named != null && wordsInField.Key.Equals(named.Name))
                 {
                     if (!valueFound)
                     {
@@ -113,9 +114,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void AddDuration(SearchResult result)
         {
+            if (result.StartTime != default)
+            {
+                Highlights.Add(new HighlightedText { Text = " " + TextUtilities.Display(result.StartTime), Style = "time" });
+            }
+
+            if (result.EndTime != default)
+            {
+                Highlights.Add(new HighlightedText { Text = " " + TextUtilities.Display(result.EndTime), Style = "time" });
+            }
+
             if (result.Duration != default)
             {
-                Highlights.Add(new HighlightedText { Text = " " + TextUtilities.DisplayDuration(result.Duration) });
+                Highlights.Add(new HighlightedText { Text = " " + TextUtilities.DisplayDuration(result.Duration), Style = "time" });
             }
         }
 
@@ -135,6 +146,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public override string TypeName => nameof(ProxyNode);
 
-        public override string ToString() => Original.ToString();
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+
+            foreach (var highlight in Highlights)
+            {
+                sb.Append(highlight.ToString());
+            }
+
+            return sb.ToString();
+        }
     }
 }
