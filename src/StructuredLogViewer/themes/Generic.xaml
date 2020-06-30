@@ -249,6 +249,7 @@
       <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource TargetStroke}" Fill="{StaticResource TargetBrush}" />
       <TextBlock x:Name="label" Text="Target " />
       <TextBlock Text="{Binding Name}" />
+      <TextBlock x:Name="duration" Text="{Binding DurationText}" Margin="6,0,0,0" ToolTip="{Binding ToolTip}" />
       <controls:NodeHyperlinkControl
             Text="{Binding ParentTargetText}"
             Foreground="LightBlue"
