@@ -50,6 +50,7 @@ namespace StructuredLogViewer.Controls
         private MenuItem debugItem;
         private MenuItem hideItem;
         private MenuItem copyAllItem;
+        private MenuItem showTimeItem;
         private ContextMenu sharedTreeContextMenu;
 
         public TreeView ActiveTreeView;
@@ -107,6 +108,7 @@ namespace StructuredLogViewer.Controls
             copyNameItem = new MenuItem() { Header = "Copy name" };
             copyValueItem = new MenuItem() { Header = "Copy value" };
             viewItem = new MenuItem() { Header = "View" };
+            showTimeItem = new MenuItem() { Header = "Show time and duration" };
             openFileItem = new MenuItem() { Header = "Open File" };
             preprocessItem = new MenuItem() { Header = "Preprocess" };
             hideItem = new MenuItem() { Header = "Hide" };
@@ -123,6 +125,7 @@ namespace StructuredLogViewer.Controls
             copyNameItem.Click += (s, a) => CopyName();
             copyValueItem.Click += (s, a) => CopyValue();
             viewItem.Click += (s, a) => Invoke(treeView.SelectedItem as BaseNode);
+            showTimeItem.Click += (s, a) => ShowTimeAndDuration();
             openFileItem.Click += (s, a) => OpenFile();
             preprocessItem.Click += (s, a) => Preprocess(treeView.SelectedItem as IPreprocessable);
             runItem.Click += (s, a) => Run(treeView.SelectedItem as Task, debug: false);
@@ -144,6 +147,7 @@ namespace StructuredLogViewer.Controls
             contextMenu.Items.Add(sortChildrenItem);
             contextMenu.Items.Add(copyNameItem);
             contextMenu.Items.Add(copyValueItem);
+            contextMenu.Items.Add(showTimeItem);
             contextMenu.Items.Add(hideItem);
 
             var existingTreeViewItemStyle = (Style)Application.Current.Resources[typeof(TreeViewItem)];
@@ -455,6 +459,7 @@ Recent:
             var hasChildren = node is TreeNode t && t.HasChildren;
             copySubtreeItem.Visibility = hasChildren ? Visibility.Visible : Visibility.Collapsed;
             viewSubtreeTextItem.Visibility = copySubtreeItem.Visibility;
+            showTimeItem.Visibility = node is TimedNode ? Visibility.Visible : Visibility.Collapsed;
             searchInSubtreeItem.Visibility = hasChildren && node is TimedNode ? Visibility.Visible : Visibility.Collapsed;
             excludeSubtreeFromSearchItem.Visibility = hasChildren && node is TimedNode ? Visibility.Visible : Visibility.Collapsed;
             goToTimeLineItem.Visibility = node is TimedNode ? Visibility.Visible : Visibility.Collapsed;
@@ -904,6 +909,15 @@ Recent:
             {
                 var text = Microsoft.Build.Logging.StructuredLogger.StringWriter.GetString(treeNode);
                 DisplayText(text, treeNode.ToString());
+            }
+        }
+
+        public void ShowTimeAndDuration()
+        {
+            if (treeView.SelectedItem is TimedNode timedNode)
+            {
+                var text = timedNode.GetTimeAndDurationText();
+                DisplayText(text, timedNode.ToString());
             }
         }
 
