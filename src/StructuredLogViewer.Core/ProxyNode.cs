@@ -26,6 +26,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        public string GetNodeText(BaseNode node)
+        {
+            if (node is Target t)
+            {
+                return t.Name;
+            }
+
+            return node.ToString();
+        }
+
         public void Populate(SearchResult result)
         {
             if (result == null)
@@ -36,7 +46,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (result.MatchedByType && result.WordsInFields.Count == 0)
             {
                 Highlights.Add(new HighlightedText { Text = OriginalType });
-                Highlights.Add(" " + TextUtilities.ShortenValue(result.Node.ToString(), "..."));
+                Highlights.Add(" " + TextUtilities.ShortenValue(GetNodeText(result.Node), "..."));
 
                 AddDuration(result);
 
