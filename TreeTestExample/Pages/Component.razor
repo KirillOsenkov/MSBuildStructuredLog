@@ -1,0 +1,17 @@
+﻿@page "/test"
+@inject IJSRuntime JSRuntime 
+
+    <div>
+        <div class="cell a" id="one"> Does it work</div>
+        <div class="cell b" id="two"> Does it work</div>
+    </div>
+    
+    @(JSRuntime.InvokeVoidAsync("interop.SplitView", new {document.getElementById('one'), 'two'}))
+
+@code {
+
+    async System.Threading.Tasks.Task Split()
+    {
+        await JSRuntime.InvokeVoidAsync(identifier: "SplitView");
+    }
+}

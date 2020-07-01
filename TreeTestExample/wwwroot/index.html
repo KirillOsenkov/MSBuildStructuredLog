@@ -2,6 +2,9 @@
 <html>
 
 <head>
+    <app>
+        @(await Html.RenderComponentAsync<App>(RenderMode.ServerPrerendered))</App>)
+    </app>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>TreeTestExample</title>
@@ -11,6 +14,9 @@
     <link rel="stylesheet" href="_content/Radzen.Blazor/css/default-base.css">
     <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
     <link href="_content/Blazored.Modal/blazored-modal.css" rel="stylesheet" />
+    <script src="https://unpkg.com/split.js/dist/split.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.6.0/split.min.js"></script>
+ 
 </head>
 
 <body>
@@ -22,6 +28,7 @@
         <a class="dismiss">🗙</a>
     </div>
     <script src="_framework/blazor.webassembly.js"></script>
+    <script src="js/interop.js"></script>
 </body>
 
 </html>

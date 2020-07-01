@@ -18,7 +18,7 @@ namespace StructuredLogViewer
         {
             this.build = build;
             this.maxResults = maxResults;
-            this.markResultsInTree = SettingsService.MarkResultsInTree;
+            this.markResultsInTree = false;
         }
 
         public IEnumerable<SearchResult> FindNodes(string query, CancellationToken cancellationToken)
@@ -79,32 +79,13 @@ namespace StructuredLogViewer
                 var children = treeNode.Children;
                 if (node is Project)
                 {
-                    var tasks = new System.Threading.Tasks.Task<List<SearchResult>>[children.Count];
-
                     for (int i = 0; i < children.Count; i++)
                     {
                         var child = children[i];
-                        var task = TPLTask.Run(() =>
-                        {
-                            var list = new List<SearchResult>();
-                            Visit(child, matcher, list, cancellationToken);
-                            return list;
-                        });
-                        tasks[i] = task;
+                        Visit(child, matcher, results, cancellationToken);
                     }
 
-                    TPLTask.WaitAll(tasks);
-
-                    lock (results)
-                    {
-                        for (int i = 0; i < tasks.Length; i++)
-                        {
-                            var task = tasks[i];
-                            var subList = task.Result;
-                            results.AddRange(subList);
-                            containsMatch |= subList.Count > 0;
-                        }
-                    }
+                            containsMatch |= results.Count > 0;
                 }
                 else
                 {

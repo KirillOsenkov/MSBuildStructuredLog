@@ -1,25 +1,25 @@
-﻿@page "/Home"
+﻿@page "/FileTree"
 @using System.IO
-@using System.Collections 
+@using System.Collections
 @using Microsoft.Build.Logging.StructuredLogger
 @using Radzen
 @using Radzen.Blazor
 @inject Blazor.FileReader.IFileReaderService fileReaderService
 @inject NotificationService notificationService
 
-    <center>
-        <h1>Structured Log Viewer</h1>
-        <input type="file" @ref=inputElement />
-        <button @onclick=ReadFile class="btn btn-primary">Read file</button>
-        <button @onclick=ClearFile class="btn btn-primary">Clear</button>
-        <br />
-        <br />
-        @if (reading)
-        {
-            <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" Style="margin-bottom: 20px" />
-            <h3>@waitText</h3>
-        }
-    </center>
+<center>
+    <h1>Structured Log Viewer</h1>
+    <input type="file" @ref=inputElement />
+    <button @onclick=ReadFile class="btn btn-primary">Read file</button>
+    <button @onclick=ClearFile class="btn btn-primary">Clear</button>
+    <br />
+    <br />
+    @if (reading)
+    {
+        <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" Style="margin-bottom: 20px" />
+        <h3>@waitText</h3>
+    }
+</center>
 
 
 <h1>@test</h1>
@@ -28,12 +28,12 @@
 @if (binLogSelected)
 {
     <RadzenTree Data="@entries" Expand="@((TreeExpandEventArgs args) => {OnExpand(args);})">
-        <RadzenTreeLevel Template="@TreeDesign" Text="@GetTextForNode"
-                         HasChildren="@((node) => {
-                                                if (node is TreeNode)
-                                                    return ((TreeNode)node).HasChildren;
-                                                else return false;
-                                            })" />
+            <RadzenTreeLevel Template="@TreeDesign" Text="@GetTextForNode"
+                             HasChildren="@((node) => {
+                                    if (node is TreeNode)
+                                        return ((TreeNode)node).HasChildren;
+                                    else return false;
+                                })" />
     </RadzenTree>
 }
 <RadzenNotification />
@@ -47,16 +47,16 @@
 
     IEnumerable<BaseNode> entries = null;
 
-    RenderFragment<RadzenTreeItem> TreeDesign = (context) => builder =>
+    public static RenderFragment<RadzenTreeItem> TreeDesign = (context) => builder =>
     {
         builder.OpenComponent<RadzenIcon>(0);
         builder.AddAttribute(1, "Icon", "crop_16_9");
         var node = (BaseNode)context.Value;
-
         if (node is Folder)
         {
             builder.AddAttribute(2, "Style", "color: Goldenrod");
-        } else if (node is Target)
+        }
+        else if (node is Target)
         {
             builder.AddAttribute(2, "Style", "color: MediumPurple");
         }
@@ -114,7 +114,7 @@
     }
 
 
-    string GetTextForNode(Object node)
+    public static string GetTextForNode(Object node)
     {
         string text = node switch
         {
@@ -130,7 +130,7 @@
 
     }
 
-    void OnExpand(TreeExpandEventArgs args)
+    public static void OnExpand(TreeExpandEventArgs args)
     {
         if (args.Value is TreeNode)
         {
@@ -167,7 +167,6 @@
         reading = true;
         this.StateHasChanged();
         waitText = "Here we go...";
-        await System.Threading.Tasks.Task.Delay(2000);
         var files = (await fileReaderService.CreateReference(inputElement).EnumerateFilesAsync());
         foreach (Blazor.FileReader.IFileReference file in files)
         {
@@ -181,13 +180,11 @@
             }
             waitText = "Still reading...";
             this.StateHasChanged();
-            await System.Threading.Tasks.Task.Delay(2000);
             binLogSelected = true;
             Task<Blazor.FileReader.AsyncDisposableStream>
             streamTask = file.OpenReadAsync();
             var stream = await streamTask;
             var memoryStream = new MemoryStream();
-            await System.Threading.Tasks.Task.Delay(2000);
             waitText = "Teaching you patience...";
             this.StateHasChanged();
             await stream.CopyToAsync(memoryStream);
@@ -195,14 +192,12 @@
             memoryStream.Position = 0;
 
             Build build = Serialization.ReadBinLog(memoryStream);
+            SearchViewer.searcher = new StructuredLogViewer.Search(build, StructuredLogViewer.Search.DefaultMaxResults);
             waitText = "Trust me you're computer wants this to be over more than you do...";
             this.StateHasChanged();
-            await System.Threading.Tasks.Task.Delay(2000);
             BuildAnalyzer.AnalyzeBuild(build);
-            await System.Threading.Tasks.Task.Delay(2000);
             waitText = "Not a joke...We're actually still reading...";
             this.StateHasChanged();
-            await System.Threading.Tasks.Task.Delay(4000);
             entries = (IEnumerable<BaseNode>)build.Children;
             splitDescription();
         }
