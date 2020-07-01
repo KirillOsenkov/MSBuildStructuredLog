@@ -2,16 +2,30 @@
 @inject IJSRuntime JSRuntime 
 
     <div>
-        <div class="cell a" id="one"> Does it work</div>
-        <div class="cell b" id="two"> Does it work</div>
+        <div @ref="one" class="cell a" id="one"> Does it work</div>
+        <div @ref="two"class="cell b" id="two"> Does it work</div>
     </div>
-    
     @*@(JSRuntime.InvokeVoidAsync("interop.SplitView", new {document.getElementById('one'), 'two'}))*@
 
 @code {
+    ElementReference one;
+    ElementReference two;
+    
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Split();
+    }
 
     async System.Threading.Tasks.Task Split()
     {
-        await JSRuntime.InvokeVoidAsync(identifier: "SplitView");
+        String[] array = new string[2];
+        array[0] = "#one";
+        array[1] = "#two";
+        ElementReference[] arr = new ElementReference[2];
+        arr[0] = one;
+        arr[1] = two;
+        
+        await JSRuntime.InvokeVoidAsync(identifier: "Split", arr);
     }
 }
