@@ -158,7 +158,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             var durations = taskDurations
                 .OrderByDescending(kvp => kvp.Value)
-                .Where(kvp => !string.Equals(kvp.Key, "MSBuild", StringComparison.OrdinalIgnoreCase)) // no need to include MSBuild task as it's not a "terminal leaf" task
+                .Where(kvp => // no need to include MSBuild and CallTarget tasks as they are not "terminal leaf" tasks
+                    !string.Equals(kvp.Key, "MSBuild", StringComparison.OrdinalIgnoreCase) &&
+                    !string.Equals(kvp.Key, "CallTarget", StringComparison.OrdinalIgnoreCase))
                 .Take(10)
                 .ToArray();
 
