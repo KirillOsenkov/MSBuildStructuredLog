@@ -802,24 +802,23 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 .GetValue(instance);
         }
 
+        private static HashSet<string> ignoreAssemblyForTasks = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "AssignTargetPath",
+            "CallTarget",
+            "Copy",
+            "Delete",
+            "FindUnderPath",
+            "MakeDir",
+            "Message",
+            "MSBuild",
+            "ReadLinesFromFile",
+            "WriteLinesToFile"
+        };
+
         private bool IgnoreAssembly(string taskName)
         {
-            switch (taskName)
-            {
-                case "AssignTargetPath":
-                case "CallTarget":
-                case "Copy":
-                case "Delete":
-                case "FindUnderPath":
-                case "MakeDir":
-                case "Message":
-                case "MSBuild":
-                case "ReadLinesFromFile":
-                case "WriteLinesToFile":
-                    return true;
-            }
-
-            return false;
+            return ignoreAssemblyForTasks.Contains(taskName);
         }
 
         private Task CreateTask(TaskStartedEventArgs taskStartedEventArgs)

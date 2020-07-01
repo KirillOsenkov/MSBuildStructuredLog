@@ -347,7 +347,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             return;
                         }
                     }
-                    else if (task.Name == "MSBuild")
+                    else if (string.Equals(task.Name, "MSBuild", StringComparison.OrdinalIgnoreCase))
                     {
                         if (message.StartsWith(Strings.GlobalPropertiesPrefix) ||
                             message.StartsWith(Strings.AdditionalPropertiesPrefix) ||
