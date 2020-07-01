@@ -46,6 +46,15 @@ app {
     text-overflow: ellipsis;
 }
 
+.split, .gutter.gutter-horizontal {
+    float: left;
+}
+
+.gutter.gutter-horizontal {
+    cursor: ew-resize;
+    color:red;
+}
+
 .sidebar {
         background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
 /*    height: 5rem;
