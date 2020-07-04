@@ -144,7 +144,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                .Replace("{1}", @"(?<File>[^\""]+)")
                .Replace("({2},{3})", @"\((?<Line>\d+),(?<Column>\d+)\)")
                .Replace("{4}", "(?<Reason>.+)")
-               .Replace("{5}", ".*?");
+               .Replace("{5}", "(?<Evaluated>.+)");
             ProjectImportSkippedFalseCondition = new Regex(@"^" + skippedFalseCondition.Substring(0, skippedFalseCondition.Length - 1), RegexOptions.Compiled);
 
             PropertyReassignment = new Regex(ResourceSet.GetString("PropertyReassignment")
@@ -308,6 +308,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 reason = "false condition; ";
                 Match match = ProjectImportSkippedFalseCondition.Match(message);
                 reason += match.Groups["Reason"].Value;
+                reason += " was evaluated as " + match.Groups["Evaluated"].Value;
                 return match;
             }
 
