@@ -133,8 +133,8 @@ namespace StructuredLogger.Tests
         }
 
         [Theory]
-        [InlineData(null, "")]
-        [InlineData("", "")]
+        [InlineData(null)]
+        [InlineData("")]
         [InlineData("a", "a")]
         [InlineData("a[[b]]c", "a", "[[b]]", "c")]
         [InlineData("a[[b", "a", "[[b")]
