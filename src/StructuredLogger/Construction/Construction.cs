@@ -371,6 +371,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        private bool sawCulture = false;
+
         public void MessageRaised(object sender, BuildMessageEventArgs args)
         {
             try
@@ -381,6 +383,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     {
                         TargetSkipped(targetSkipped);
                         return;
+                    }
+
+                    if (!sawCulture && args.SenderName == "BinaryLogger" && args.Message.StartsWith("CurrentUICulture"))
+                    {
+                        sawCulture = true;
+                        int equalsIndex = args.Message.IndexOf("=");
+                        if (equalsIndex > 0 && equalsIndex < args.Message.Length - 1)
+                        {
+                            string culture = args.Message.Substring(equalsIndex + 1, args.Message.Length - 1 - equalsIndex);
+
+                            // read language from log and initialize resource strings
+                            if (!String.IsNullOrEmpty(culture))
+                            {
+                                Strings.Initialize(culture, force: true);
+                            }
+                        }
                     }
 
                     messageProcessor.Process(args);

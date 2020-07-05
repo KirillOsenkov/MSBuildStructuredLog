@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using StructuredLogger;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -47,9 +48,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     throw new LoggerException($"Failed to create the source archive for log file {_logFile}", ex);
                 }
-            }
+            }           
 
             construction = new Construction();
+
+            Strings.Initialize();
 
             eventSource.BuildStarted += construction.BuildStarted;
             eventSource.BuildFinished += construction.BuildFinished;

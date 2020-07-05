@@ -1,0 +1,246 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+<data name="OutputItemParameterMessagePrefix" xml:space="preserve">
+<value>输出项: </value>
+</data>
+<data name="ProjectImportSkippedEmptyFile" xml:space="preserve">
+<value>由于文件为空，项目“{0}”不由 ({2}、{3}) 处的“{1}”导入。</value>
+</data>
+<data name="TaskFound" xml:space="preserve">
+<value>正在使用程序集“{1}”中的“{0}”任务。</value>
+</data>
+<data name="ToolsVersionInEffectForBuild" xml:space="preserve">
+<value>正在使用工具版本“{0}”进行生成。</value>
+</data>
+<data name="OverridingTarget" xml:space="preserve">
+<value>正在使用项目“{3}”中的目标“{2}”重写项目“{1}”中的目标“{0}”。</value>
+</data>
+<data name="TargetSkippedWhenSkipNonexistentTargets" xml:space="preserve">
+<value>已跳过目标“{0}”。项目中不存在该目标，SkipNonexistentTargets 设置为 true。</value>
+</data>
+<data name="ProjectImportSkippedFalseCondition" xml:space="preserve">
+<value>由于 false 条件，项目“{0}” 不由 ({2}、{3}) 处的“{1}”导入， ({4}) 的计算结果为 ({5}).</value>
+</data>
+<data name="ProjectImportSkippedNoMatches" xml:space="preserve">
+<value>由于没有匹配的文件，项目“{0}” 不由 ({2}、{3}) 处的“{1}”导入。</value>
+</data>
+<data name="SearchPathsForMSBuildExtensionsPath" xml:space="preserve">
+<value>将用于 {0} 的搜索路径为 {1}</value>
+</data>
+<data name="TaskParameterPrefix" xml:space="preserve">
+<value>任务参数:</value>
+</data>
+<data name="DuplicateImport" xml:space="preserve">
+<value>MSB4011: 无法再次导入“{0}”。可能已在“{1}”处导入过它。这很可能是生成创作错误。将忽略此后续导入。{2}</value>
+</data>
+<data name="TargetAlreadyCompleteFailure" xml:space="preserve">
+<value>已跳过目标“{0}”。以前的生成不成功。</value>
+</data>
+<data name="General.OverridingProperties" xml:space="preserve">
+<value>将项目“{0}”的全局属性重写为:</value>
+</data>
+<data name="ItemGroupRemoveLogMessage" xml:space="preserve">
+<value>删除的项: </value>
+</data>
+<data name="ProjectImported" xml:space="preserve">
+<value>正在将项目“{0}”导入 ({2}、{3}) 处的项目“{1}”。</value>
+</data>
+<data name="PropertyGroupLogMessage" xml:space="preserve">
+<value>设置属性: {0}={1}</value>
+</data>
+<data name="General.AdditionalProperties" xml:space="preserve">
+<value>项目“{0}”的其他属性:</value>
+</data>
+<data name="TargetDoesNotExistBeforeTargetMessage" xml:space="preserve">
+<value>项目中不存在 BeforeTargets 特性中的“{1}”位置列出的目标“{0}”，将忽略该目标。</value>
+</data>
+<data name="TaskFoundFromFactory" xml:space="preserve">
+<value>正在使用来自任务工厂“{1}”的“{0}”任务。</value>
+</data>
+<data name="ProjectImportSkippedMissingFile" xml:space="preserve">
+<value>由于文件不存在，项目“{0}”不由 ({2},{3}) 处的“{1}”导入。</value>
+</data>
+<data name="TargetSkippedFalseCondition" xml:space="preserve">
+<value>由于条件的计算结果为 false，已跳过目标“{0}”；({1})的计算结果为({2})。</value>
+</data>
+<data name="TaskSkippedFalseCondition" xml:space="preserve">
+<value>由于 false 条件，已跳过任务“{0}”；({1})计算为({2})。</value>
+</data>
+<data name="ItemGroupIncludeLogMessagePrefix" xml:space="preserve">
+<value>添加的项: </value>
+</data>
+<data name="OutputPropertyLogMessage" xml:space="preserve">
+<value>输出属性: {0}={1}</value>
+</data>
+<data name="ProjectImportSkippedInvalidFile" xml:space="preserve">
+<value>由于文件无效，项目“{0}”不由 ({2},{3}) 处的“{1}”导入。</value>
+</data>
+<data name="TargetAlreadyCompleteSuccess" xml:space="preserve">
+<value>已跳过目标“{0}”。以前的生成已成功。</value>
+</data>
+<data name="TryingExtensionsPath" xml:space="preserve">
+<value>尝试使用扩展路径 {1} 导入 {0}</value>
+</data>
+<data name="PropertyReassignment" xml:space="preserve">
+<value>在 {3} 处重新分配属性: $({0})=“{1}”(先前值:“{2}”)</value>
+</data>
+<data name="General.GlobalProperties" xml:space="preserve">
+<value>全局属性:</value>
+</data>
+<data name="General.UndefineProperties" xml:space="preserve">
+<value>移除属性:</value>
+</data>
+<data name="ResolveAssemblyReference.UnifiedPrimaryReference" xml:space="preserve">
+<value>统一主引用“{0}”。</value>
+</data>
+<data name="ResolveAssemblyReference.AssemblyFoldersExSearchLocations" xml:space="preserve">
+<value>AssemblyFoldersEx 位置:“{0}”</value>
+</data>
+<data name="GetSDKReferenceFiles.ConflictReferenceDifferentSDK" xml:space="preserve">
+<value>两个引用之间存在冲突，它们在“{0}”和“{1}”SDK 之间具有相同的文件名。将优先于“{3}”选择“{2}”，因为后者是先解析的。</value>
+</data>
+<data name="ResolveAssemblyReference.Dependency" xml:space="preserve">
+<value>依赖项“{0}”。</value>
+</data>
+<data name="ResolveAssemblyReference.PrimaryReference" xml:space="preserve">
+<value>主引用“{0}”。</value>
+</data>
+<data name="Copy.HardLinkComment" xml:space="preserve">
+<value>创建硬链接以将“{0}”复制到“{1}”。</value>
+</data>
+<data name="Copy.DidNotCopyBecauseOfFileMatch" xml:space="preserve">
+<value>未从文件“{0}”复制到文件“{1}”，因为“{2}”参数在项目中设置为“{3}”，而两个文件的大小及时间戳一致。</value>
+</data>
+<data name="ResolveAssemblyReference.SearchPath" xml:space="preserve">
+<value>用于 SearchPath“{0}”。</value>
+</data>
+<data name="ResolveAssemblyReference.UnifiedDependency" xml:space="preserve">
+<value>统一依赖项“{0}”。</value>
+</data>
+<data name="GetSDKReferenceFiles.ConflictReferenceSameSDK" xml:space="preserve">
+<value>两个引用之间存在冲突，它们在“{0}”SDK 内解析的文件名相同。将优先于“{2}”选择“{1}”，因为后者是先解析的。</value>
+</data>
+<data name="GetSDKReferenceFiles.ConflictRedistDifferentSDK" xml:space="preserve">
+<value>可再发行程序包文件夹中的两个文件之间存在冲突，它们在“{1}”和“{2}”SDK 之间进入同一目标路径“{0}”。将优先于“{4}”选择“{3}”，因为后者是先解析的。</value>
+</data>
+<data name="Copy.FileComment" xml:space="preserve">
+<value>正在将文件从“{0}”复制到“{1}”。</value>
+</data>
+</root>

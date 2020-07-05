@@ -8,12 +8,13 @@ namespace StructuredLogger.Tests
         [Fact]
         public void AddItemWithMultilineMetadata()
         {
+            Strings.Initialize();
             var result = ItemGroupParser.ParsePropertyOrItemList(@"Added Item(s): 
     Link=
         tmp
                 AcceptableNonZeroExitCodes=
                 AdditionalDependencies=kernel32.lib;user32.lib;
-                ;", MessageProcessor.OutputItemsMessagePrefix, new StringCache());
+                ;", Strings.OutputItemsMessagePrefix, new StringCache());
         }
 
         /// <summary>
@@ -22,13 +23,14 @@ namespace StructuredLogger.Tests
         [Fact]
         public void ParseSuggestedBindingRedirectsMetadata()
         {
+            Strings.Initialize();
             var parameter = ItemGroupParser.ParsePropertyOrItemList(@"Output Item(s): 
     SuggestedBindingRedirects=
         Microsoft.Build, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
                 MaxVersion=15.1.0.0
         Microsoft.VisualStudio.Validation, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
                 MaxVersion=15.3.0.0",
-                MessageProcessor.OutputItemsMessagePrefix, new StringCache()) as Parameter;
+                Strings.OutputItemsMessagePrefix, new StringCache()) as Parameter;
             Assert.True(parameter != null);
             Assert.True(parameter.Children.Count == 2);
 
@@ -47,6 +49,8 @@ namespace StructuredLogger.Tests
         [Fact]
         public void ParseThereWasAConflict()
         {
+            Strings.Initialize();
+
             var lines = @"""System.IO.Compression, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"" was chosen because it was primary and ""System.IO.Compression, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"" was not.
 References which depend on ""System.IO.Compression, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"" [C:\Program Files (x86)\System.IO.Compression.dll].
     C:\Program Files (x86)\System.IO.Compression.dll
@@ -92,6 +96,7 @@ References which depend on ""System.IO.Compression, Version=4.1.1.0, Culture=neu
         [Fact]
         public void ParseMultilineMetadata()
         {
+            Strings.Initialize();
             var parameter = ItemGroupParser.ParsePropertyOrItemList(@"Added Item(s): 
     _ProjectsFiles=
         Project1
@@ -108,7 +113,7 @@ References which depend on ""System.IO.Compression, Version=4.1.1.0, Culture=neu
                 AdditionalProperties=
         AutoParameterizationWebConfigConnectionStrings=false;
         _PackageTempDir=Out\Dir;
-        ", MessageProcessor.ItemGroupIncludeMessagePrefix, new StringCache()) as Parameter;
+        ", Strings.ItemGroupIncludeMessagePrefix, new StringCache()) as Parameter;
 
             //Assert.Equal(3, parameter.Children.Count);
         }

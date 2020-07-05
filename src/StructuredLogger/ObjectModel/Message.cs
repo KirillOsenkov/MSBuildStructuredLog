@@ -48,7 +48,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return match;
             }
 
-            match = Strings.ProjectWasNotImportedRegex.Match(Text);
+            string reason;
+            match = Strings.ProjectWasNotImportedRegex(Text, out reason);
             return match;
         }
 
