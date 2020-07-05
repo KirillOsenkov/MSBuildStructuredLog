@@ -118,129 +118,132 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="OutputItemParameterMessagePrefix" xml:space="preserve">
-<value>Output Item(s): </value>
-</data>
-<data name="ProjectImportSkippedEmptyFile" xml:space="preserve">
-<value>Project "{0}" was not imported by "{1}" at ({2},{3}), due to the file being empty.</value>
-</data>
-<data name="TaskFound" xml:space="preserve">
-<value>Using "{0}" task from assembly "{1}".</value>
-</data>
-<data name="ToolsVersionInEffectForBuild" xml:space="preserve">
-<value>Building with tools version "{0}".</value>
-</data>
-<data name="OverridingTarget" xml:space="preserve">
-<value>Overriding target "{0}" in project "{1}" with target "{2}" from project "{3}".</value>
-</data>
-<data name="TargetSkippedWhenSkipNonexistentTargets" xml:space="preserve">
-<value>Target "{0}" skipped. The target does not exist in the project and SkipNonexistentTargets is set to true.</value>
-</data>
-<data name="ProjectImportSkippedFalseCondition" xml:space="preserve">
-<value>Project "{0}" was not imported by "{1}" at ({2},{3}), due to false condition; ({4}) was evaluated as ({5}).</value>
-</data>
-<data name="ProjectImportSkippedNoMatches" xml:space="preserve">
-<value>Project "{0}" was not imported by "{1}" at ({2},{3}), due to no matching files.</value>
-</data>
-<data name="SearchPathsForMSBuildExtensionsPath" xml:space="preserve">
-<value>Search paths being used for {0} are {1}</value>
-</data>
-<data name="TaskParameterPrefix" xml:space="preserve">
-<value>Task Parameter:</value>
-</data>
-<data name="DuplicateImport" xml:space="preserve">
-<value>MSB4011: "{0}" cannot be imported again. It was already imported at "{1}". This is most likely a build authoring error. This subsequent import will be ignored. {2}</value>
-</data>
-<data name="TargetAlreadyCompleteFailure" xml:space="preserve">
-<value>Target "{0}" skipped. Previously built unsuccessfully.</value>
-</data>
-<data name="General.OverridingProperties" xml:space="preserve">
-<value>Overriding Global Properties for project "{0}" with:</value>
-</data>
-<data name="ItemGroupRemoveLogMessage" xml:space="preserve">
-<value>Removed Item(s): </value>
-</data>
-<data name="ProjectImported" xml:space="preserve">
-<value>Importing project "{0}" into project "{1}" at ({2},{3}).</value>
-</data>
-<data name="PropertyGroupLogMessage" xml:space="preserve">
-<value>Set Property: {0}={1}</value>
-</data>
-<data name="General.AdditionalProperties" xml:space="preserve">
-<value>Additional Properties for project "{0}":</value>
-</data>
-<data name="TargetDoesNotExistBeforeTargetMessage" xml:space="preserve">
-<value>The target "{0}" listed in a BeforeTargets attribute at "{1}" does not exist in the project, and will be ignored.</value>
-</data>
-<data name="TaskFoundFromFactory" xml:space="preserve">
-<value>Using "{0}" task from the task factory "{1}".</value>
-</data>
-<data name="ProjectImportSkippedMissingFile" xml:space="preserve">
-<value>Project "{0}" was not imported by "{1}" at ({2},{3}), due to the file not existing.</value>
-</data>
-<data name="TargetSkippedFalseCondition" xml:space="preserve">
-<value>Target "{0}" skipped, due to false condition; ({1}) was evaluated as ({2}).</value>
-</data>
-<data name="TaskSkippedFalseCondition" xml:space="preserve">
-<value>Task "{0}" skipped, due to false condition; ({1}) was evaluated as ({2}).</value>
-</data>
-<data name="ItemGroupIncludeLogMessagePrefix" xml:space="preserve">
-<value>Added Item(s): </value>
-</data>
-<data name="OutputPropertyLogMessage" xml:space="preserve">
-<value>Output Property: {0}={1}</value>
-</data>
-<data name="ProjectImportSkippedInvalidFile" xml:space="preserve">
-<value>Project "{0}" was not imported by "{1}" at ({2},{3}), due to the file being invalid.</value>
-</data>
-<data name="TargetAlreadyCompleteSuccess" xml:space="preserve">
-<value>Target "{0}" skipped. Previously built successfully.</value>
-</data>
-<data name="TryingExtensionsPath" xml:space="preserve">
-<value>Trying to import {0} using extensions path {1}</value>
-</data>
-<data name="PropertyReassignment" xml:space="preserve">
-<value>Property reassignment: $({0})="{1}" (previous value: "{2}") at {3}</value>
-</data>
-<data name="General.GlobalProperties" xml:space="preserve">
-<value>Global Properties:</value>
-</data>
-<data name="General.UndefineProperties" xml:space="preserve">
-<value>Removing Properties:</value>
-</data>
-<data name="ResolveAssemblyReference.UnifiedPrimaryReference" xml:space="preserve">
-<value>Unified primary reference "{0}".</value>
-</data>
-<data name="ResolveAssemblyReference.AssemblyFoldersExSearchLocations" xml:space="preserve">
-<value>AssemblyFoldersEx location: "{0}"</value>
-</data>
-<data name="GetSDKReferenceFiles.ConflictReferenceDifferentSDK" xml:space="preserve">
-<value>There was a conflict between two references with the same file name between the "{0}" and "{1}" SDKs. Choosing "{2}" over "{3}" because it was resolved first.</value>
-</data>
-<data name="ResolveAssemblyReference.Dependency" xml:space="preserve">
-<value>Dependency "{0}".</value>
-</data>
-<data name="ResolveAssemblyReference.PrimaryReference" xml:space="preserve">
-<value>Primary reference "{0}".</value>
-</data>
-<data name="Copy.HardLinkComment" xml:space="preserve">
-<value>Creating hard link to copy "{0}" to "{1}".</value>
-</data>
-<data name="Copy.DidNotCopyBecauseOfFileMatch" xml:space="preserve">
-<value>Did not copy from file "{0}" to file "{1}" because the "{2}" parameter was set to "{3}" in the project and the files' sizes and timestamps match.</value>
-</data>
-<data name="ResolveAssemblyReference.SearchPath" xml:space="preserve">
-<value>For SearchPath "{0}".</value>
-</data>
-<data name="ResolveAssemblyReference.UnifiedDependency" xml:space="preserve">
-<value>Unified Dependency "{0}".</value>
-</data>
-<data name="GetSDKReferenceFiles.ConflictReferenceSameSDK" xml:space="preserve">
-<value>There was a conflict between two references with the same file name resolved within the "{0}" SDK. Choosing "{1}" over "{2}" because it was resolved first.</value>
-</data>
-<data name="GetSDKReferenceFiles.ConflictRedistDifferentSDK" xml:space="preserve">
-<value>There was a conflict between two files from the redist folder files going to the same target path "{0}" between the "{1}" and "{2}" SDKs. Choosing "{3}" over "{4}" because it was resolved first.</value>
-</data>
-<data name="Copy.FileComment" xml:space="preserve">
-<value>Copying file from "{0}" to "{1}".</value>
-</data>
+    <value>Output Item(s): </value>
+  </data>
+  <data name="ProjectImportSkippedEmptyFile" xml:space="preserve">
+    <value>Project "{0}" was not imported by "{1}" at ({2},{3}), due to the file being empty.</value>
+  </data>
+  <data name="TaskFound" xml:space="preserve">
+    <value>Using "{0}" task from assembly "{1}".</value>
+  </data>
+  <data name="ToolsVersionInEffectForBuild" xml:space="preserve">
+    <value>Building with tools version "{0}".</value>
+  </data>
+  <data name="OverridingTarget" xml:space="preserve">
+    <value>Overriding target "{0}" in project "{1}" with target "{2}" from project "{3}".</value>
+  </data>
+  <data name="TargetSkippedWhenSkipNonexistentTargets" xml:space="preserve">
+    <value>Target "{0}" skipped. The target does not exist in the project and SkipNonexistentTargets is set to true.</value>
+  </data>
+  <data name="ProjectImportSkippedFalseCondition" xml:space="preserve">
+    <value>Project "{0}" was not imported by "{1}" at ({2},{3}), due to false condition; ({4}) was evaluated as ({5}).</value>
+  </data>
+  <data name="ProjectImportSkippedNoMatches" xml:space="preserve">
+    <value>Project "{0}" was not imported by "{1}" at ({2},{3}), due to no matching files.</value>
+  </data>
+  <data name="SearchPathsForMSBuildExtensionsPath" xml:space="preserve">
+    <value>Search paths being used for {0} are {1}</value>
+  </data>
+  <data name="TaskParameterPrefix" xml:space="preserve">
+    <value>Task Parameter:</value>
+  </data>
+  <data name="DuplicateImport" xml:space="preserve">
+    <value>MSB4011: "{0}" cannot be imported again. It was already imported at "{1}". This is most likely a build authoring error. This subsequent import will be ignored. {2}</value>
+  </data>
+  <data name="TargetAlreadyCompleteFailure" xml:space="preserve">
+    <value>Target "{0}" skipped. Previously built unsuccessfully.</value>
+  </data>
+  <data name="General.OverridingProperties" xml:space="preserve">
+    <value>Overriding Global Properties for project "{0}" with:</value>
+  </data>
+  <data name="ItemGroupRemoveLogMessage" xml:space="preserve">
+    <value>Removed Item(s): </value>
+  </data>
+  <data name="ProjectImported" xml:space="preserve">
+    <value>Importing project "{0}" into project "{1}" at ({2},{3}).</value>
+  </data>
+  <data name="PropertyGroupLogMessage" xml:space="preserve">
+    <value>Set Property: {0}={1}</value>
+  </data>
+  <data name="General.AdditionalProperties" xml:space="preserve">
+    <value>Additional Properties for project "{0}":</value>
+  </data>
+  <data name="TargetDoesNotExistBeforeTargetMessage" xml:space="preserve">
+    <value>The target "{0}" listed in a BeforeTargets attribute at "{1}" does not exist in the project, and will be ignored.</value>
+  </data>
+  <data name="TaskFoundFromFactory" xml:space="preserve">
+    <value>Using "{0}" task from the task factory "{1}".</value>
+  </data>
+  <data name="ProjectImportSkippedMissingFile" xml:space="preserve">
+    <value>Project "{0}" was not imported by "{1}" at ({2},{3}), due to the file not existing.</value>
+  </data>
+  <data name="TargetSkippedFalseCondition" xml:space="preserve">
+    <value>Target "{0}" skipped, due to false condition; ({1}) was evaluated as ({2}).</value>
+  </data>
+  <data name="TaskSkippedFalseCondition" xml:space="preserve">
+    <value>Task "{0}" skipped, due to false condition; ({1}) was evaluated as ({2}).</value>
+  </data>
+  <data name="ItemGroupIncludeLogMessagePrefix" xml:space="preserve">
+    <value>Added Item(s): </value>
+  </data>
+  <data name="OutputPropertyLogMessage" xml:space="preserve">
+    <value>Output Property: {0}={1}</value>
+  </data>
+  <data name="ProjectImportSkippedInvalidFile" xml:space="preserve">
+    <value>Project "{0}" was not imported by "{1}" at ({2},{3}), due to the file being invalid.</value>
+  </data>
+  <data name="TargetAlreadyCompleteSuccess" xml:space="preserve">
+    <value>Target "{0}" skipped. Previously built successfully.</value>
+  </data>
+  <data name="TryingExtensionsPath" xml:space="preserve">
+    <value>Trying to import {0} using extensions path {1}</value>
+  </data>
+  <data name="PropertyReassignment" xml:space="preserve">
+    <value>Property reassignment: $({0})="{1}" (previous value: "{2}") at {3}</value>
+  </data>
+  <data name="General.GlobalProperties" xml:space="preserve">
+    <value>Global Properties:</value>
+  </data>
+  <data name="General.UndefineProperties" xml:space="preserve">
+    <value>Removing Properties:</value>
+  </data>
+  <data name="ResolveAssemblyReference.UnifiedPrimaryReference" xml:space="preserve">
+    <value>Unified primary reference "{0}".</value>
+  </data>
+  <data name="ResolveAssemblyReference.AssemblyFoldersExSearchLocations" xml:space="preserve">
+    <value>AssemblyFoldersEx location: "{0}"</value>
+  </data>
+  <data name="GetSDKReferenceFiles.ConflictReferenceDifferentSDK" xml:space="preserve">
+    <value>There was a conflict between two references with the same file name between the "{0}" and "{1}" SDKs. Choosing "{2}" over "{3}" because it was resolved first.</value>
+  </data>
+  <data name="ResolveAssemblyReference.Dependency" xml:space="preserve">
+    <value>Dependency "{0}".</value>
+  </data>
+  <data name="ResolveAssemblyReference.PrimaryReference" xml:space="preserve">
+    <value>Primary reference "{0}".</value>
+  </data>
+  <data name="Copy.HardLinkComment" xml:space="preserve">
+    <value>Creating hard link to copy "{0}" to "{1}".</value>
+  </data>
+  <data name="Copy.DidNotCopyBecauseOfFileMatch" xml:space="preserve">
+    <value>Did not copy from file "{0}" to file "{1}" because the "{2}" parameter was set to "{3}" in the project and the files' sizes and timestamps match.</value>
+  </data>
+  <data name="ResolveAssemblyReference.SearchPath" xml:space="preserve">
+    <value>For SearchPath "{0}".</value>
+  </data>
+  <data name="ResolveAssemblyReference.UnifiedDependency" xml:space="preserve">
+    <value>Unified Dependency "{0}".</value>
+  </data>
+  <data name="GetSDKReferenceFiles.ConflictReferenceSameSDK" xml:space="preserve">
+    <value>There was a conflict between two references with the same file name resolved within the "{0}" SDK. Choosing "{1}" over "{2}" because it was resolved first.</value>
+  </data>
+  <data name="GetSDKReferenceFiles.ConflictRedistDifferentSDK" xml:space="preserve">
+    <value>There was a conflict between two files from the redist folder files going to the same target path "{0}" between the "{1}" and "{2}" SDKs. Choosing "{3}" over "{4}" because it was resolved first.</value>
+  </data>
+  <data name="Copy.FileComment" xml:space="preserve">
+    <value>Copying file from "{0}" to "{1}".</value>
+  </data>
+  <data name="General.ProjectUndefineProperties" xml:space="preserve">
+    <value>Removing Properties for project "{0}":</value>
+  </data>
 </root>

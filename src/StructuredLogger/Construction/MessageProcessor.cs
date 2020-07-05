@@ -330,7 +330,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         if (message.StartsWith(Strings.GlobalPropertiesPrefix) ||
                         Strings.AdditionalPropertiesPrefix.IsMatch(message) ||
                         Strings.OverridingGlobalPropertiesPrefix.IsMatch(message) ||
-                        message.StartsWith(Strings.RemovingPropertiesPrefix))
+                        message.StartsWith(Strings.RemovingPropertiesPrefix)
+                        || Strings.RemovingProjectProperties.IsMatch(message))
                         {
                             node.GetOrCreateNodeWithName<Folder>(message);
                             return;

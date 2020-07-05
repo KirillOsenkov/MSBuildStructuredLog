@@ -124,6 +124,15 @@ namespace StructuredLogger.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Removing Properties for project &quot;{0}&quot;:.
+        /// </summary>
+        internal static string General_ProjectUndefineProperties {
+            get {
+                return ResourceManager.GetString("General.ProjectUndefineProperties", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Removing Properties:.
         /// </summary>
         internal static string General_UndefineProperties {

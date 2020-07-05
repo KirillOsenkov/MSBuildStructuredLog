@@ -33,6 +33,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             TargetAlreadyCompleteSuccess = new Regex(ResourceSet.GetString("TargetAlreadyCompleteSuccess").Replace("{0}", @".*?"));
             TargetAlreadyCompleteFailure = new Regex(ResourceSet.GetString("TargetAlreadyCompleteFailure").Replace("{0}", @".*?"));
             TargetSkippedWhenSkipNonexistentTargets = new Regex(ResourceSet.GetString("TargetSkippedWhenSkipNonexistentTargets").Replace("{0}", @".*?"));
+            RemovingProjectProperties = new Regex(ResourceSet.GetString("General.ProjectUndefineProperties").Replace("{0}", @".*?"));
 
             DuplicateImport = new Regex(ResourceSet.GetString("SearchPathsForMSBuildExtensionsPath")
                 .Replace("{0}", @".*?")
@@ -185,6 +186,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             RemovingPropertiesPrefix = ResourceSet.GetString("General.UndefineProperties");
         }
 
+        public static Regex RemovingProjectProperties { get; set; }
         public static Regex DuplicateImport { get; set; }
         public static Regex SearchPathsForMSBuildExtensionsPath { get; set; }
         public static Regex OverridingTarget { get; set; }
