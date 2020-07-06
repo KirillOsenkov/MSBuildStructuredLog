@@ -3,12 +3,12 @@
 @using Radzen
 @using Radzen.Blazor
 @using StructuredLogViewer.Controls
-@using System.Collections 
-<h3>Search</h3>
+@using System.Collections
 <RadzenTextBox Placeholder="Search..." Change="@(args => Change(args, "TextBox with placeholder"))" Style="margin-bottom: 20px" />
-
-<RadzenTree Data="@searchResults" Expand="@((TreeExpandEventArgs args) => {FileTree.OnExpand(args);})">
-    <RadzenTreeLevel Expanded="@((obj) => true)" Template="@FileTree.TreeDesign" Text="@FileTree.GetTextForNode"
+<br />
+<br />
+<RadzenTree Data="@searchResults" Style="word-break:break-all;overflow-y:scroll;color:black" Expand="@((TreeExpandEventArgs args) => {ExpandResults(args);})">
+    <RadzenTreeLevel Expanded="@((obj) => (obj is TreeNode && ((TreeNode)obj).HasChildren))" Template="@FileTree.TreeDesign" Text="@FileTree.GetTextForNode"
                      HasChildren="@((node) => {
                                     if (node is TreeNode)
                                         return ((TreeNode)node).HasChildren;
@@ -17,7 +17,16 @@
 </RadzenTree>
 @code {
     public static StructuredLogViewer.Search searcher;
-     IEnumerable<BaseNode> searchResults;
+    IEnumerable<BaseNode> searchResults;
+
+    public static void ExpandResults(TreeExpandEventArgs args)
+    {
+        FileTree.OnExpand(args);
+        if (args.Value is TreeNode && ((TreeNode)(args.Value)).HasChildren)
+        {
+            args.Children.Expanded = (obj) => (obj is TreeNode && ((TreeNode)obj).HasChildren);
+        }
+    }
 
     void Change(string value, string name)
     {
@@ -27,7 +36,9 @@
         }
         IEnumerable<StructuredLogViewer.SearchResult> results = searcher.FindNodes(value, new System.Threading.CancellationToken());
         searchResults = BuildResultTree(results) as IEnumerable<BaseNode>;
-        StateHasChanged();
+        this.StateHasChanged();
+        SplitPane.change = true;
+        this.StateHasChanged();
     }
 
     public IEnumerable BuildResultTree(object resultsObject, bool moreAvailable = false)

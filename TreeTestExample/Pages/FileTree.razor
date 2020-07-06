@@ -27,7 +27,7 @@
 <br />
 @if (binLogSelected)
 {
-    <RadzenTree Data="@entries" Expand="@((TreeExpandEventArgs args) => {OnExpand(args);})">
+    <RadzenTree Data="@entries" Style="word-break:break-all;overflow-y:scroll" Expand="@((TreeExpandEventArgs args) => {OnExpand(args);})">
             <RadzenTreeLevel Template="@TreeDesign" Text="@GetTextForNode"
                              HasChildren="@((node) => {
                                     if (node is TreeNode)
@@ -204,6 +204,7 @@
         this.StateHasChanged();
         reading = false;
         waitText = "";
+        SplitPane.change = true;
     }
 
     void splitDescription()

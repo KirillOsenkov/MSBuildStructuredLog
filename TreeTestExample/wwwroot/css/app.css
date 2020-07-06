@@ -2,6 +2,9 @@
 
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    height:100vh;
+    width:100%;
+    overflow-y:scroll;
 }
 
 a, .btn-link {
@@ -20,56 +23,31 @@ app {
     flex-direction: column;
 }
 
-.top-row {
-    height: 3.5rem;
-    display: flex;
-    align-items: center;
-}
-
 .main {
     flex: 1;
 }
 
-    .main .top-row {
-        background-color: #f7f7f7;
-        border-bottom: 1px solid #d6d5d5;
-        justify-content: flex-end;
-    }
-
-        .main .top-row > a, .main .top-row .btn-link {
-            white-space: nowrap;
-            margin-left: 1.5rem;
-        }
-
-.main .top-row a:first-child {
-    overflow: hidden;
-    text-overflow: ellipsis;
+element.Style {
+    width:3px;
+    background-color:white;
 }
 
 .split, .gutter.gutter-horizontal {
     float: left;
+    min-height: 100vh;
+    height: 100vh;
 }
 
 .gutter.gutter-horizontal {
     cursor: ew-resize;
-    color:red;
+    background-color:black;
+    min-height:100vh;
+    height:100vh;
+    max-width:3px;
 }
 
 .sidebar {
         background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
-/*    height: 5rem;
-    background-color: rgb(192,0,0);
-    background-image: linear-gradient(rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.25) 25%, rgba(0,0,0,0) 70%);
-    display: flex;
-    align-items: stretch;
-    color: white;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.4);
-    padding: 0 3rem;
-    position: fixed;
-    top: 0;
-    right: 0;
-    left: 0;
-    z-index: 1030;*/
 }
 
     .sidebar .top-row {
@@ -89,15 +67,15 @@ app {
 
     .sidebar .nav-item {
         font-size: 0.9rem;
-        padding-bottom: 0.5rem;
+        padding-right: 0.5rem;
     }
 
         .sidebar .nav-item:first-of-type {
-            padding-top: 1rem;
+            padding-left: 1rem;
         }
 
         .sidebar .nav-item:last-of-type {
-            padding-bottom: 1rem;
+            padding-right: 1rem;
         }
 
         .sidebar .nav-item a {
@@ -158,33 +136,15 @@ app {
     top: 0.5rem;
 }
 
-@media (max-width: 767.98px) {
-    .main .top-row:not(.auth) {
-        display: none;
-    }
-
-    .main .top-row.auth {
-        justify-content: space-between;
-    }
-
-    .main .top-row a, .main .top-row .btn-link {
-        margin-left: 0;
-    }
-}
-
 @media (min-width: 768px) {
     app {
-        flex-direction: row;
+        flex-direction: column;
+        height:100%;
     }
 
     .sidebar {
-        width: 250px;
-        height: 100vh;
-        position: sticky;
-        top: 0;
-    }
-
-    .main .top-row {
+        width: 100%;
+        height: 50px;
         position: sticky;
         top: 0;
     }
