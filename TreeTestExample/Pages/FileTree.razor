@@ -52,6 +52,10 @@
         builder.OpenComponent<RadzenIcon>(0);
         builder.AddAttribute(1, "Icon", "crop_16_9");
         var node = (BaseNode)context.Value;
+        if (node is ProxyNode)
+        {
+            node = ((ProxyNode)node).Original;
+        }
         string color = "Black";
         if (node is Folder)
         {
@@ -134,6 +138,10 @@
 
     public static string GetTextForNode(Object node)
     {
+        if (node is ProxyNode)
+        {
+            node = ((ProxyNode)node).Original;
+        }
         string text = node switch
         {
             Project p => p.Name,
@@ -156,14 +164,18 @@
             Note n => n.Text,
             SourceFile sf => sf.Name,
             SourceFileLine sfl => sfl.LineNumber + " " + sfl.LineText,
-            ProxyNode pn => pn.Text,
+            ProxyNode pn => pn.TypeName,
             TimedNode t => t.Name,
             _ => node.ToString()
         };
-        if (text != null &&  text.Contains("Detailed summary"))
-        {
-            text = "Detailed Summary...";
-        }
+        //if (text == null)
+        //{
+        //    text = node.ToString();
+        //}
+        //if (text != null &&  text.Contains("Detailed summary"))
+        //{
+        //    text = "Detailed Summary...";
+        //}
         return text;
 
     }
@@ -197,6 +209,7 @@
         binLogSelected = false;
         reading = false;
         waitText = "";
+        entries = null;
     }
 
     public async System.Threading.Tasks.Task ReadFile()
