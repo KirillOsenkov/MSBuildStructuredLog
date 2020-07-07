@@ -3,7 +3,9 @@
 
 <body style="height:100%">
     <div>
-        <div @ref="one" class="split" id="one"> <SearchViewer /></div>
+        <div @ref="one" class="split" id="one"> 
+        <SearchViewer />
+        </div>
         <div style="overflow-y:scroll" @ref="two" class="split" id="two"> <FileTree /></div>
     </div>
 </body>
@@ -20,8 +22,7 @@
             ElementReference[] arr = new ElementReference[2];
             arr[0] = one;
             arr[1] = two;
-
-            await JSRuntime.InvokeVoidAsync(identifier: "Split", arr, "minSize:500px");
+            await JSRuntime.InvokeVoidAsync(identifier: "Split", arr) ;
             this.StateHasChanged();
         }
         change = false;

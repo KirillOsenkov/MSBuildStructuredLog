@@ -52,56 +52,74 @@
         builder.OpenComponent<RadzenIcon>(0);
         builder.AddAttribute(1, "Icon", "crop_16_9");
         var node = (BaseNode)context.Value;
+        string color = "Black";
         if (node is Folder)
         {
             builder.AddAttribute(2, "Style", "color: Goldenrod");
+            color = "GoldenRod";
         }
         else if (node is Target)
         {
             builder.AddAttribute(2, "Style", "color: MediumPurple");
+            color = "MediumPurple";
         }
         else if (node is Microsoft.Build.Logging.StructuredLogger.Task)
         {
             builder.AddAttribute(2, "Style", "color: DodgerBlue");
+            color = "DodgerBlue";
         }
         else if (node is Parameter)
         {
             builder.AddAttribute(2, "Style", "color: DodgerBlue");
+            color = "DodgerBlue";
         }
         else if (node is Microsoft.Build.Logging.StructuredLogger.Property)
         {
             builder.AddAttribute(2, "Style", "color: DodgerBlue");
+            color = "DodgerBlue";
         }
         else if (node is Item)
         {
             builder.AddAttribute(2, "Style", "color: MediumAquamarine");
+            color = "MediumAquamarine";
         }
         else if (node is Metadata)
         {
             builder.AddAttribute(2, "Style", "color: MediumAquamarine");
+            color = "MediumAquamarine";
         }
         else if (node is Message)
         {
             builder.AddAttribute(2, "Style", "color: LightGray");
+            color = "LightGray";
         }
         else if (node is Import)
         {
             builder.AddAttribute(2, "Style", "color: Sienna");
+            color = "Sienna";
         }
         else if (node is NoImport)
         {
             builder.AddAttribute(2, "Style", "color: Red");
+            color = "Red";
         }
         else if (node is Error)
         {
             builder.AddAttribute(2, "Style", "color: Red");
+            color = "Red";
         }
         else if (node is Warning)
         {
             builder.AddAttribute(2, "Style", "color: Gold");
+            color = "Gold";
         }
+        if (!context.HasChildren)
+        {
+            builder.AddAttribute(3, "Style", "color: " + color + ";margin-left: 24px");
+        }
+
         builder.CloseComponent();
-        builder.AddContent(3, context.Text);
+        builder.AddContent(4, context.Text);
     };
 
     async System.Threading.Tasks.Task ShowNotification(NotificationMessage message)
@@ -120,9 +138,29 @@
         {
             Project p => p.Name,
             Target t => "Target " + t.Name,
+            Folder f => f.Name,
+            ProjectEvaluation pe => pe.Name,
+            Microsoft.Build.Logging.StructuredLogger.Task ta => "Task " + ta.Title + " duration " + ta.DurationText,
+            AddItem a => "Add Item " + a.Name,
+            RemoveItem r => "Remove Item " + r.Name,
+            Item i => i.NameAndEquals + " " + i.ShortenedText,
+            Metadata m => m.NameAndEquals + " " + m.ShortenedValue,
+            EvaluationProfileEntry epe => epe.Title + " " + epe.DurationText + " " + epe.ShortenedElementDescription,
+            Property p => p.NameAndEquals + " " + p.ShortenedValue,
+            Parameter p => p.Name,
+            Message m => m.ShortenedText,
+            Import i => "Import " + i.Name + " " + i.Location,
+            NoImport ni => "NoImport " + ni.Name + " " + ni.Location + " " + ni.Text,
+            Error e => e.ToString(),
+            Warning w => w.ToString(),
+            Note n => n.Text,
+            SourceFile sf => sf.Name,
+            SourceFileLine sfl => sfl.LineNumber + " " + sfl.LineText,
+            ProxyNode pn => pn.Text,
+            TimedNode t => t.Name,
             _ => node.ToString()
         };
-        if (text.Contains("Detailed summary"))
+        if (text != null &&  text.Contains("Detailed summary"))
         {
             text = "Detailed Summary...";
         }
