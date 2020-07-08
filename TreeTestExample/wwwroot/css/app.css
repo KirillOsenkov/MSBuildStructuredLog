@@ -3,7 +3,7 @@
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     width:100%;
-    overflow-y:scroll;
+    overflow-y:hidden;
 }
 
 @media #one.split and (max-width:200px) {
@@ -47,9 +47,8 @@ element.Style {
 
 .split, .gutter.gutter-horizontal {
     float: left;
-    min-height: 100vh;
-    height: 100vh;
-    word-break:break-all;
+    height: calc(100vh - 50px);
+    word-break: break-all;
 }
 
 .gutter.gutter-horizontal {
