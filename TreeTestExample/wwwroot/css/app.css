@@ -6,6 +6,16 @@ html, body {
     overflow-y:scroll;
 }
 
+@media #one.split and (max-width:200px) {
+    #one {
+        visibility: hidden;
+    }
+
+    .gutter.gutter-horizontal {
+        background-color: red;
+    }
+}
+
 a, .btn-link {
     color: #0366d6;
 }
@@ -31,10 +41,15 @@ element.Style {
     background-color:white;
 }
 
+#one {
+    overflow-x: hidden;
+}
+
 .split, .gutter.gutter-horizontal {
     float: left;
     min-height: 100vh;
     height: 100vh;
+    word-break:break-all;
 }
 
 .gutter.gutter-horizontal {
