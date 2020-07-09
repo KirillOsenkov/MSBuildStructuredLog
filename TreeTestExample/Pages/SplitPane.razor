@@ -1,23 +1,29 @@
 ﻿@page "/home"
 @inject IJSRuntime JSRuntime
 
-<body style="height:100%">
-    <div>
-        <div @ref="one" class="split" id="one"> 
-        <SearchViewer />
+<CascadingValue Value=this>
+    <body style="height:100%">
+        <div>
+            <div @ref="one" class="split" id="one">
+                <SearchViewer />
+            </div>
+            <div style="overflow-y:scroll" @ref="two" class="split" id="two"> <FileTree /></div>
         </div>
-        <div style="overflow-y:scroll" @ref="two" class="split" id="two"> <FileTree /></div>
-    </div>
-</body>
+    </body>
+</CascadingValue>
 
 @code {
     static ElementReference one;
     static ElementReference two;
-    public static bool change;
+
+    public void Render()
+    {
+        this.StateHasChanged();
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender || change)
+        if (firstRender)
         {
             ElementReference[] arr = new ElementReference[2];
             arr[0] = one;
@@ -25,6 +31,5 @@
             await JSRuntime.InvokeVoidAsync(identifier: "Split", arr) ;
             this.StateHasChanged();
         }
-        change = false;
     }
 }

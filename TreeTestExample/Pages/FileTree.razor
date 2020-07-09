@@ -28,8 +28,8 @@
 @if (binLogSelected)
 {
     <RadzenTree Data="@entries" Style="word-break:break-all;overflow-y:scroll" Expand="@((TreeExpandEventArgs args) => {OnExpand(args);})">
-            <RadzenTreeLevel Template="@TreeDesign" Text="@GetTextForNode"
-                             HasChildren="@((node) => {
+        <RadzenTreeLevel Template="@TreeFormatting.TreeDesign" Text="@GetTextForNode" Selected="@((node) => { return ((BaseNode)node).IsSelected; })"
+                         HasChildren="@((node) => {
                                     if (node is TreeNode)
                                         return ((TreeNode)node).HasChildren;
                                     else return false;
@@ -45,86 +45,10 @@
     bool reading;
     string waitText;
 
+    [CascadingParameter]
+    public SplitPane ContainerSplit { get; set; }
+
     IEnumerable<BaseNode> entries = null;
-
-    public static RenderFragment<RadzenTreeItem> TreeDesign = (context) => builder =>
-    {
-        builder.OpenComponent<RadzenIcon>(0);
-        builder.AddAttribute(1, "Icon", "crop_16_9");
-        var node = (BaseNode)context.Value;
-        if (node is ProxyNode)
-        {
-            node = ((ProxyNode)node).Original;
-        }
-        string color = "Black";
-        if (node is Folder)
-        {
-            builder.AddAttribute(2, "Style", "color: Goldenrod");
-            color = "GoldenRod";
-        }
-        else if (node is Target)
-        {
-            builder.AddAttribute(2, "Style", "color: MediumPurple");
-            color = "MediumPurple";
-        }
-        else if (node is Microsoft.Build.Logging.StructuredLogger.Task)
-        {
-            builder.AddAttribute(2, "Style", "color: DodgerBlue");
-            color = "DodgerBlue";
-        }
-        else if (node is Parameter)
-        {
-            builder.AddAttribute(2, "Style", "color: DodgerBlue");
-            color = "DodgerBlue";
-        }
-        else if (node is Microsoft.Build.Logging.StructuredLogger.Property)
-        {
-            builder.AddAttribute(2, "Style", "color: DodgerBlue");
-            color = "DodgerBlue";
-        }
-        else if (node is Item)
-        {
-            builder.AddAttribute(2, "Style", "color: MediumAquamarine");
-            color = "MediumAquamarine";
-        }
-        else if (node is Metadata)
-        {
-            builder.AddAttribute(2, "Style", "color: MediumAquamarine");
-            color = "MediumAquamarine";
-        }
-        else if (node is Message)
-        {
-            builder.AddAttribute(2, "Style", "color: LightGray");
-            color = "LightGray";
-        }
-        else if (node is Import)
-        {
-            builder.AddAttribute(2, "Style", "color: Sienna");
-            color = "Sienna";
-        }
-        else if (node is NoImport)
-        {
-            builder.AddAttribute(2, "Style", "color: Red");
-            color = "Red";
-        }
-        else if (node is Error)
-        {
-            builder.AddAttribute(2, "Style", "color: Red");
-            color = "Red";
-        }
-        else if (node is Warning)
-        {
-            builder.AddAttribute(2, "Style", "color: Gold");
-            color = "Gold";
-        }
-        if (!context.HasChildren)
-        {
-            builder.AddAttribute(3, "Style", "color: " + color + ";margin-left: 24px");
-        }
-
-        builder.CloseComponent();
-        builder.AddContent(4, context.Text);
-    };
 
     async System.Threading.Tasks.Task ShowNotification(NotificationMessage message)
     {
@@ -138,69 +62,12 @@
 
     public static string GetTextForNode(Object node)
     {
-        if (node is ProxyNode)
-        {
-            node = ((ProxyNode)node).Original;
-        }
-        string text = node switch
-        {
-            Project p => p.Name,
-            Target t => "Target " + t.Name,
-            Folder f => f.Name,
-            ProjectEvaluation pe => pe.Name,
-            Microsoft.Build.Logging.StructuredLogger.Task ta => "Task " + ta.Title + " duration " + ta.DurationText,
-            AddItem a => "Add Item " + a.Name,
-            RemoveItem r => "Remove Item " + r.Name,
-            Item i => i.NameAndEquals + " " + i.ShortenedText,
-            Metadata m => m.NameAndEquals + " " + m.ShortenedValue,
-            EvaluationProfileEntry epe => epe.Title + " " + epe.DurationText + " " + epe.ShortenedElementDescription,
-            Property p => p.NameAndEquals + " " + p.ShortenedValue,
-            Parameter p => p.Name,
-            Message m => m.ShortenedText,
-            Import i => "Import " + i.Name + " " + i.Location,
-            NoImport ni => "NoImport " + ni.Name + " " + ni.Location + " " + ni.Text,
-            Error e => e.ToString(),
-            Warning w => w.ToString(),
-            Note n => n.Text,
-            SourceFile sf => sf.Name,
-            SourceFileLine sfl => sfl.LineNumber + " " + sfl.LineText,
-            ProxyNode pn => pn.TypeName,
-            TimedNode t => t.Name,
-            _ => node.ToString()
-        };
-        //if (text == null)
-        //{
-        //    text = node.ToString();
-        //}
-        //if (text != null &&  text.Contains("Detailed summary"))
-        //{
-        //    text = "Detailed Summary...";
-        //}
-        return text;
-
+        return TreeFormatting.TextSelector(node);
     }
 
     public static void OnExpand(TreeExpandEventArgs args)
     {
-        if (args.Value is TreeNode)
-        {
-            args.Children.Data = ((TreeNode)args.Value).Children;
-            args.Children.Text = GetTextForNode;
-            args.Children.HasChildren = (node) =>
-            {
-                if (node is TreeNode)
-                    return ((TreeNode)node).HasChildren;
-                else
-                    return false;
-            };
-            args.Children.Template = TreeDesign;
-        }
-        else
-        {
-            args.Children.Text = (Object obj) => (string)args.Value;
-            args.Children.Data = null;
-            args.Children.HasChildren = (Object obj) => false;
-        }
+        TreeFormatting.OnExpand(args);
     }
 
     public async System.Threading.Tasks.Task ClearFile()
@@ -250,24 +117,9 @@
             waitText = "Not a joke...We're actually still reading...";
             this.StateHasChanged();
             entries = (IEnumerable<BaseNode>)build.Children;
-            splitDescription();
         }
         this.StateHasChanged();
         reading = false;
         waitText = "";
-        SplitPane.change = true;
     }
-
-    void splitDescription()
-    {
-        BaseNode[] nodes = entries.ToArray();
-        for (int i = 0; i < nodes.Length; i++)
-        {
-            if (nodes[i].ToString().Contains("Detailed summary"))
-            {
-                ((Message)nodes[i]).AddChild(new Message() { Text = nodes[i].ToString().Substring(17) });
-            }
-        }
-    }
-
 }

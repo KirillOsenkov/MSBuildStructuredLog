@@ -4,11 +4,13 @@
 @using Radzen.Blazor
 @using StructuredLogViewer.Controls
 @using System.Collections
+@inject IJSRuntime JSRuntime
+
 <RadzenTextBox Placeholder="Search..." Change="@(args => Change(args, "TextBox with placeholder"))" Style="margin-bottom: 20px" />
 <br />
 <br />
-<RadzenTree Data="@searchResults" Style="word-break:break-all;overflow-y:scroll;color:black" Expand="@((TreeExpandEventArgs args) => {ExpandResults(args);})">
-    <RadzenTreeLevel Expanded="@((obj) => (obj is TreeNode && ((TreeNode)obj).HasChildren))" Template="@FileTree.TreeDesign" Text="@FileTree.GetTextForNode"
+<RadzenTree Data="@searchResults" Style="word-break:break-all;overflow-y:scroll;color:black" Change="@OnChange" Expand="@((TreeExpandEventArgs args) => {ExpandResults(args);})">
+    <RadzenTreeLevel Expanded="@((obj) => (obj is TreeNode && ((TreeNode)obj).HasChildren))" Template="@TreeFormatting.TreeDesign" Text="@TreeFormatting.TextSelector"
                      HasChildren="@((node) => {
                                     if (node is TreeNode)
                                         return ((TreeNode)node).HasChildren;
@@ -18,10 +20,25 @@
 @code {
     public static StructuredLogViewer.Search searcher;
     IEnumerable<BaseNode> searchResults;
+    public static string test;
+
+    [CascadingParameter]
+    public SplitPane ContainerSplit { get; set; }
+
+    private ValueTask<bool> ScrollToElementId(string elementId)
+    {
+        return JSRuntime.InvokeAsync<bool>("scrollToElementId", elementId);
+    }
+
+    void OnChange(TreeEventArgs args)
+    {
+        ((ProxyNode)(args.Value)).Original.IsSelected = true;
+        ContainerSplit.Render();
+    }
 
     public static void ExpandResults(TreeExpandEventArgs args)
     {
-        FileTree.OnExpand(args);
+        TreeFormatting.OnExpand(args);
         if (args.Value is TreeNode && ((TreeNode)(args.Value)).HasChildren)
         {
             args.Children.Expanded = (obj) => (obj is TreeNode && ((TreeNode)obj).HasChildren);
@@ -36,9 +53,6 @@
         }
         IEnumerable<StructuredLogViewer.SearchResult> results = searcher.FindNodes(value, new System.Threading.CancellationToken());
         searchResults = BuildResultTree(results) as IEnumerable<BaseNode>;
-        this.StateHasChanged();
-        SplitPane.change = true;
-        this.StateHasChanged();
     }
 
     public IEnumerable BuildResultTree(object resultsObject, bool moreAvailable = false)

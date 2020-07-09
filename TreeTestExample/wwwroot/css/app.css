@@ -6,16 +6,6 @@ html, body {
     overflow-y:hidden;
 }
 
-@media #one.split and (max-width:200px) {
-    #one {
-        visibility: hidden;
-    }
-
-    .gutter.gutter-horizontal {
-        background-color: red;
-    }
-}
-
 a, .btn-link {
     color: #0366d6;
 }
