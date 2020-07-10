@@ -31,10 +31,13 @@ element.Style {
     background-color:white;
 }
 
-#one {
+#four {
     overflow-x: hidden;
 }
 
+#one {
+    overflow-x: hidden;
+}
 .split, .gutter.gutter-horizontal {
     float: left;
     height: calc(100vh - 50px);

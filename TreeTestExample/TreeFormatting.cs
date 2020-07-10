@@ -47,6 +47,8 @@ namespace StructuredLogViewerWASM
                     return false;
             };
             args.Children.Template = TreeDesign;
+           // args.Children.Selected = ((node) => { return ((BaseNode)node).IsSelected; });
+            args.Children.Expanded = ((node) => { return ((BaseNode)node).IsExpanded; });
         }
         public static string TextSelector(Object node)
         {

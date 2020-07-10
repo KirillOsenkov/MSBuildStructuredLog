@@ -19,7 +19,7 @@
 </RadzenTree>
 @code {
     public static StructuredLogViewer.Search searcher;
-    IEnumerable<BaseNode> searchResults;
+    static IEnumerable<BaseNode> searchResults;
     public static string test;
 
     [CascadingParameter]
@@ -32,7 +32,13 @@
 
     void OnChange(TreeEventArgs args)
     {
-        ((ProxyNode)(args.Value)).Original.IsSelected = true;
+        BaseNode org = ((ProxyNode)(args.Value)).Original;
+        org.IsSelected = true;
+        foreach (var node in org.GetParentChainExcludingThis())
+        {
+            node.IsExpanded = true;
+        }
+        ContainerSplit.search = true;
         ContainerSplit.Render();
     }
 

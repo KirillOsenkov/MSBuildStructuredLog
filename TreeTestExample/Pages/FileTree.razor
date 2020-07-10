@@ -27,28 +27,47 @@
 <br />
 @if (binLogSelected)
 {
-    <RadzenTree Data="@entries" Style="word-break:break-all;overflow-y:scroll" Expand="@((TreeExpandEventArgs args) => {OnExpand(args);})">
-        <RadzenTreeLevel Template="@TreeFormatting.TreeDesign" Text="@GetTextForNode" Selected="@((node) => { return ((BaseNode)node).IsSelected; })"
+    <RadzenTree Data="@entries" Style="word-break:break-all;overflow-y:scroll" 
+                                Expand="@((TreeExpandEventArgs args) => {OnExpand(args);})"
+                                Change="@OnChange"
+                                    >
+        <RadzenTreeLevel Template="@TreeFormatting.TreeDesign" 
+                         Text="@GetTextForNode" 
+                         Expanded="@((node) => { return ((BaseNode)node).IsExpanded; })"
                          HasChildren="@((node) => {
                                     if (node is TreeNode)
                                         return ((TreeNode)node).HasChildren;
                                     else return false;
-                                })" />
+                                })" 
+                          />
     </RadzenTree>
 }
 <RadzenNotification />
 
 @code {
-    bool binLogSelected = false;
-    ElementReference inputElement;
+    static bool binLogSelected = false;
+    static ElementReference inputElement;
     static string test;
-    bool reading;
-    string waitText;
+    static bool reading;
+    static string waitText;
 
     [CascadingParameter]
     public SplitPane ContainerSplit { get; set; }
 
-    IEnumerable<BaseNode> entries = null;
+    static IEnumerable<BaseNode> entries = null;
+
+
+    void OnChange(TreeEventArgs args)
+    {
+        ContainerSplit.selected = (BaseNode)args.Value;
+        ContainerSplit.show += 1;
+        ContainerSplit.Render();
+    }
+
+    //protected override bool shouldrender()
+    //{
+    //    return true;
+    //}
 
     async System.Threading.Tasks.Task ShowNotification(NotificationMessage message)
     {
@@ -109,14 +128,14 @@
 
             memoryStream.Position = 0;
 
-            Build build = Serialization.ReadBinLog(memoryStream);
-            SearchViewer.searcher = new StructuredLogViewer.Search(build, StructuredLogViewer.Search.DefaultMaxResults);
+            ContainerSplit.build = Serialization.ReadBinLog(memoryStream);
+            SearchViewer.searcher = new StructuredLogViewer.Search(ContainerSplit.build, StructuredLogViewer.Search.DefaultMaxResults);
             waitText = "Trust me you're computer wants this to be over more than you do...";
             this.StateHasChanged();
-            BuildAnalyzer.AnalyzeBuild(build);
+            BuildAnalyzer.AnalyzeBuild(ContainerSplit.build);
             waitText = "Not a joke...We're actually still reading...";
             this.StateHasChanged();
-            entries = (IEnumerable<BaseNode>)build.Children;
+            entries = (IEnumerable<BaseNode>)ContainerSplit.build.Children;
         }
         this.StateHasChanged();
         reading = false;

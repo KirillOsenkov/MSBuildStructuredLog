@@ -1,20 +1,51 @@
 ﻿@page "/home"
 @inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager 
 
-<CascadingValue Value=this>
-    <body style="height:100%">
-        <div>
-            <div @ref="one" class="split" id="one">
-                <SearchViewer />
-            </div>
-            <div style="overflow-y:scroll" @ref="two" class="split" id="two"> <FileTree /></div>
-        </div>
-    </body>
-</CascadingValue>
+    <CascadingValue Value=this>
+            @if (show % 2 == 1)
+            {
+                <body style="height:100%">
+                    <div>
+                        <div @ref="one" style="overflow-y:scroll" class="split" id="one">
+                            <SearchViewer />
+                        </div>
+                        <div style="overflow-y:scroll" @ref="two" class="split" id="two">
+                            <FileTree />
+                        </div>
+                        <div style="overflow-y:scroll" @ref="three" class="split" id="three">
+                            <SourceFile />
+                        </div>
+                    </div>
+                </body>
+            }
+            else
+            {
+                <body style="height:100%">
+                    <div>
+                        <div @ref="four" style="overflow-y:scroll" class="split" id="four">
+                            <SearchViewer />
+                        </div>
+                        <div style="overflow-y:scroll" @ref="five" class="split" id="five">
+                            <FileTree />
+                        </div>
+                    </div>
+                </body>
+            }
+    </CascadingValue>
+
+
 
 @code {
-    static ElementReference one;
-    static ElementReference two;
+    public int show;
+    protected ElementReference one;
+    protected ElementReference two;
+    protected ElementReference three;
+    protected ElementReference four;
+    protected ElementReference five;
+    public bool search;
+    public Microsoft.Build.Logging.StructuredLogger.Build build;
+    public Microsoft.Build.Logging.StructuredLogger.BaseNode selected;
 
     public void Render()
     {
@@ -23,13 +54,20 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (show % 2 == 0 && !search)
         {
-            ElementReference[] arr = new ElementReference[2];
+            ElementReference[] arr2 = new ElementReference[2];
+            arr2[0] = four;
+            arr2[1] = five;
+            await JSRuntime.InvokeVoidAsync(identifier: "Split", arr2);
+        } if (show % 2 == 1 && !search)
+        {
+            ElementReference[] arr = new ElementReference[3];
             arr[0] = one;
             arr[1] = two;
-            await JSRuntime.InvokeVoidAsync(identifier: "Split", arr) ;
-            this.StateHasChanged();
+            arr[2] = three;
+            await JSRuntime.InvokeVoidAsync(identifier: "Split", arr);
         }
+        search = false;
     }
 }
