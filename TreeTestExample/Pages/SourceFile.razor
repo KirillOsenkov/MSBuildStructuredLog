@@ -10,21 +10,20 @@
 </MonacoEditor>
 
 @code {
-        [CascadingParameter]
-        public SplitPane ContainerSplit { get; set; }
-        string text;
+    [CascadingParameter]
+    public SplitPane ContainerSplit { get; set; }
+    string text;
 
-        public void Render()
-        {
-            this.StateHasChanged();
-        }
+    public void Render()
+    {
+        this.StateHasChanged();
+    }
 
-        public async System.Threading.Tasks.Task Exit()
-        {
-            ContainerSplit.show += 1;
-            ContainerSplit.Render();
-        }
-            
+    public async System.Threading.Tasks.Task Exit()
+    {
+        ContainerSplit.show += 1;
+        ContainerSplit.Render();
+    }
 
     protected override async System.Threading.Tasks.Task OnAfterRenderAsync(bool firstRender)
     {
@@ -32,37 +31,54 @@
         //if (CanView(ContainerSplit.selected, sourceFileResolver) && CanOpenFile(ContainerSplit.selected, sourceFileResolver))
         //{
         string path = "";
-        if (ContainerSplit.selected is AbstractDiagnostic)
+        BaseNode bn = (BaseNode)ContainerSplit.selected;
+
+        if (bn is AbstractDiagnostic)
         {
-            path = ((AbstractDiagnostic)ContainerSplit.selected).ProjectFile;
+            AbstractDiagnostic ad = (AbstractDiagnostic)bn;
+            path = ad.ProjectFile;
+            if (ad.IsTextShortened)
+            {
+                text = ad.Text;
+            } else
+            {
+                text = sourceFileResolver.GetSourceFileText(path).Text;
+            }
         }
-        else if (ContainerSplit.selected is Project)
+        else if (bn is Project)
         {
-            path = ((Project)ContainerSplit.selected).SourceFilePath;
+            path = ((Project)bn).SourceFilePath;
+            text = sourceFileResolver.GetSourceFileText(path).Text;
         }
-        else if (ContainerSplit.selected is Target)
+        else if (bn is Target)
         {
             path = ((Target)ContainerSplit.selected).SourceFilePath;
+            text = sourceFileResolver.GetSourceFileText(path).Text;
         }
-        else if (ContainerSplit.selected is Microsoft.Build.Logging.StructuredLogger.Task)
+        else if (bn is Microsoft.Build.Logging.StructuredLogger.Task)
         {
-            path = ((Target)((Microsoft.Build.Logging.StructuredLogger.Task)ContainerSplit.selected).Parent).SourceFilePath;
+            path = ((Microsoft.Build.Logging.StructuredLogger.Task)bn).SourceFilePath;
+            text = sourceFileResolver.GetSourceFileText(path).Text;
+        } else if (bn is IHasSourceFile && ((IHasSourceFile)bn).SourceFilePath != null)
+        {
+            path = ((IHasSourceFile)bn).SourceFilePath;
+            text = sourceFileResolver.GetSourceFileText(path).Text;
         }
-        else if (ContainerSplit.selected is IHasSourceFile)
+        else if (bn is SourceFileLine && ((SourceFileLine)bn).Parent is Microsoft.Build.Logging.StructuredLogger.SourceFile
+        && ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).SourceFilePath != null)
         {
-            path = ((IHasSourceFile)ContainerSplit.selected).SourceFilePath;
+            path = ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).SourceFilePath;
+            text = sourceFileResolver.GetSourceFileText(path).Text;
         }
-        else if (ContainerSplit.selected is NameValueNode)
+        else if (bn is NameValueNode && ((NameValueNode)bn).IsValueShortened)
         {
-            //not sure
+            text = ((NameValueNode)bn).Value;
         }
-        else if (ContainerSplit.selected is TextNode)
+        else if (bn is TextNode && ((TextNode)bn).IsTextShortened)
         {
-            //not sure
+            text = ((TextNode)bn).Text;
         }
 
-
-        text = sourceFileResolver.GetSourceFileText(path).Text;
         if (text == null)
         {
             text = "No file to display";
