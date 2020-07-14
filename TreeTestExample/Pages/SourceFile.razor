@@ -4,60 +4,70 @@
 @using System.IO
 
 <button @onclick=Exit class="btn btn-primary">Close</button>
-@text
+
+<MonacoEditor>
+    @text
+</MonacoEditor>
+
 @code {
         [CascadingParameter]
         public SplitPane ContainerSplit { get; set; }
         string text;
+
+        public void Render()
+        {
+            this.StateHasChanged();
+        }
 
         public async System.Threading.Tasks.Task Exit()
         {
             ContainerSplit.show += 1;
             ContainerSplit.Render();
         }
+            
 
     protected override async System.Threading.Tasks.Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        SourceFileResolver sourceFileResolver = new SourceFileResolver(ContainerSplit.build.SourceFilesArchive);
+        //if (CanView(ContainerSplit.selected, sourceFileResolver) && CanOpenFile(ContainerSplit.selected, sourceFileResolver))
+        //{
+        string path = "";
+        if (ContainerSplit.selected is AbstractDiagnostic)
         {
-            SourceFileResolver sourceFileResolver = new SourceFileResolver(ContainerSplit.build.SourceFilesArchive);
-            //if (CanView(ContainerSplit.selected, sourceFileResolver) && CanOpenFile(ContainerSplit.selected, sourceFileResolver))
-            //{
-            string path = "";
-            if (ContainerSplit.selected is AbstractDiagnostic)
-            {
-                path = ((AbstractDiagnostic)ContainerSplit.selected).ProjectFile;
-            }
-            else if (ContainerSplit.selected is Project)
-            {
-                path = ((Project)ContainerSplit.selected).SourceFilePath;
-            }
-            else if (ContainerSplit.selected is Target)
-            {
-                path = ((Target)ContainerSplit.selected).SourceFilePath;
-            }
-            else if (ContainerSplit.selected is Microsoft.Build.Logging.StructuredLogger.Task)
-            {
-                path = ((Target)((Microsoft.Build.Logging.StructuredLogger.Task)ContainerSplit.selected).Parent).SourceFilePath;
-            }
-            else if (ContainerSplit.selected is IHasSourceFile)
-            {
-                path = ((IHasSourceFile)ContainerSplit.selected).SourceFilePath;
-            }
-            else if (ContainerSplit.selected is NameValueNode)
-            {
-                //not sure
-            }
-            else if (ContainerSplit.selected is TextNode)
-            {
-                //not sure
-            }
-
-
-            text = sourceFileResolver.GetSourceFileText(path).Text;
-            this.StateHasChanged();
-            //}
+            path = ((AbstractDiagnostic)ContainerSplit.selected).ProjectFile;
         }
+        else if (ContainerSplit.selected is Project)
+        {
+            path = ((Project)ContainerSplit.selected).SourceFilePath;
+        }
+        else if (ContainerSplit.selected is Target)
+        {
+            path = ((Target)ContainerSplit.selected).SourceFilePath;
+        }
+        else if (ContainerSplit.selected is Microsoft.Build.Logging.StructuredLogger.Task)
+        {
+            path = ((Target)((Microsoft.Build.Logging.StructuredLogger.Task)ContainerSplit.selected).Parent).SourceFilePath;
+        }
+        else if (ContainerSplit.selected is IHasSourceFile)
+        {
+            path = ((IHasSourceFile)ContainerSplit.selected).SourceFilePath;
+        }
+        else if (ContainerSplit.selected is NameValueNode)
+        {
+            //not sure
+        }
+        else if (ContainerSplit.selected is TextNode)
+        {
+            //not sure
+        }
+
+
+        text = sourceFileResolver.GetSourceFileText(path).Text;
+        if (text == null)
+        {
+            text = "No file to display";
+        }
+        //}
     }
 
     private bool CanOpenFile(BaseNode node, SourceFileResolver sourceFileResolver)

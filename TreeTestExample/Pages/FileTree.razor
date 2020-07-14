@@ -60,8 +60,12 @@
     void OnChange(TreeEventArgs args)
     {
         ContainerSplit.selected = (BaseNode)args.Value;
-        ContainerSplit.show += 1;
-        ContainerSplit.Render();
+        if (ContainerSplit.show % 2 == 0)
+        {
+            ContainerSplit.show += 1;
+            ContainerSplit.Render();
+        }
+        
     }
 
     //protected override bool shouldrender()

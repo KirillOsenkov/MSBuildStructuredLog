@@ -14,7 +14,7 @@
                             <FileTree />
                         </div>
                         <div style="overflow-y:scroll" @ref="three" class="split" id="three">
-                            <SourceFile />
+                           @DrawSources()
                         </div>
                     </div>
                 </body>
@@ -46,10 +46,29 @@
     public bool search;
     public Microsoft.Build.Logging.StructuredLogger.Build build;
     public Microsoft.Build.Logging.StructuredLogger.BaseNode selected;
+    private SourceFile sf;
 
     public void Render()
     {
         this.StateHasChanged();
+    }
+
+    public void FileRender()
+    {
+        if (sf != null)
+        {
+            sf.Render();
+        }
+    }
+
+    public RenderFragment DrawSources()
+    {
+        return new RenderFragment(builder =>
+        {
+            builder.OpenComponent<SourceFile>(0);
+            builder.AddComponentReferenceCapture(1, inst => { sf = (SourceFile)inst; });
+            builder.CloseComponent();
+        });
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
