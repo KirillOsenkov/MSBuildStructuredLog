@@ -137,8 +137,11 @@
             this.StateHasChanged();
             entries = (IEnumerable<BaseNode>)ContainerSplit.build.Children;
         }
+        ContainerSplit.sourceFileResolver = new StructuredLogViewer.SourceFileResolver(ContainerSplit.build.SourceFilesArchive);
+        ContainerSplit.afr = ContainerSplit.sourceFileResolver.ArchiveFile;
         this.StateHasChanged();
         reading = false;
         waitText = "";
+
     }
 }

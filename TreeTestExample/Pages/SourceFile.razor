@@ -19,7 +19,7 @@
 
     public void Render()
     {
-        SourceFileResolver sourceFileResolver = new SourceFileResolver(ContainerSplit.build.SourceFilesArchive);
+        SourceFileResolver sourceFileResolver = ContainerSplit.sourceFileResolver;
         //if (CanView(ContainerSplit.selected, sourceFileResolver) && CanOpenFile(ContainerSplit.selected, sourceFileResolver))
         //{
         string path = "";
