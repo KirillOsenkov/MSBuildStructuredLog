@@ -51,6 +51,10 @@
     public void Render()
     {
         this.StateHasChanged();
+        if (sf != null)
+        {
+            sf.Render();
+        }
     }
 
     public void FileRender()

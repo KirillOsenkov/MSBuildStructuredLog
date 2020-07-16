@@ -2,36 +2,29 @@
 @using Microsoft.Build.Logging.StructuredLogger
 @using StructuredLogViewer
 @using System.IO
-
-<button @onclick=Exit class="btn btn-primary">Close</button>
-
-<MonacoEditor>
+    <div align="right">
+        <button @onclick=Exit class="btn btn-primary">Close</button>
+    </div>
+<br />
+<div class="code" align="center">
     @text
-</MonacoEditor>
+</div>
+
+
 
 @code {
     [CascadingParameter]
     public SplitPane ContainerSplit { get; set; }
-    string text;
+    static string text;
 
     public void Render()
-    {
-        this.StateHasChanged();
-    }
-
-    public async System.Threading.Tasks.Task Exit()
-    {
-        ContainerSplit.show += 1;
-        ContainerSplit.Render();
-    }
-
-    protected override async System.Threading.Tasks.Task OnAfterRenderAsync(bool firstRender)
     {
         SourceFileResolver sourceFileResolver = new SourceFileResolver(ContainerSplit.build.SourceFilesArchive);
         //if (CanView(ContainerSplit.selected, sourceFileResolver) && CanOpenFile(ContainerSplit.selected, sourceFileResolver))
         //{
         string path = "";
         BaseNode bn = (BaseNode)ContainerSplit.selected;
+        text = null;
 
         if (bn is AbstractDiagnostic)
         {
@@ -40,7 +33,8 @@
             if (ad.IsTextShortened)
             {
                 text = ad.Text;
-            } else
+            }
+            else
             {
                 text = sourceFileResolver.GetSourceFileText(path).Text;
             }
@@ -59,7 +53,8 @@
         {
             path = ((Microsoft.Build.Logging.StructuredLogger.Task)bn).SourceFilePath;
             text = sourceFileResolver.GetSourceFileText(path).Text;
-        } else if (bn is IHasSourceFile && ((IHasSourceFile)bn).SourceFilePath != null)
+        }
+        else if (bn is IHasSourceFile && ((IHasSourceFile)bn).SourceFilePath != null)
         {
             path = ((IHasSourceFile)bn).SourceFilePath;
             text = sourceFileResolver.GetSourceFileText(path).Text;
@@ -83,7 +78,13 @@
         {
             text = "No file to display";
         }
-        //}
+        this.StateHasChanged();
+    }
+
+    public async System.Threading.Tasks.Task Exit()
+    {
+        ContainerSplit.show += 1;
+        ContainerSplit.Render();
     }
 
     private bool CanOpenFile(BaseNode node, SourceFileResolver sourceFileResolver)

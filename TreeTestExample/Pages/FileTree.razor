@@ -64,17 +64,10 @@
         {
             ContainerSplit.show += 1;
             ContainerSplit.Render();
-        } else
-        {
-            ContainerSplit.FileRender();
         }
+        ContainerSplit.FileRender();
 
     }
-
-    //protected override bool shouldrender()
-    //{
-    //    return true;
-    //}
 
     async System.Threading.Tasks.Task ShowNotification(NotificationMessage message)
     {
