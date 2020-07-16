@@ -8,7 +8,7 @@
                 <body style="height:100%">
                     <div>
                         <div @ref="one" style="overflow-y:scroll" class="split" id="one">
-                            <Tabs />
+                            @DrawTabs()
                         </div>
                         <div style="overflow-y:scroll" @ref="two" class="split" id="two">
                             <FileTree />
@@ -24,7 +24,7 @@
                 <body style="height:100%">
                     <div>
                         <div @ref="four" style="overflow-y:scroll" class="split" id="four">
-                            <Tabs />
+                            @DrawTabs()
                         </div>
                         <div style="overflow-y:scroll" @ref="five" class="split" id="five">
                             <FileTree />
@@ -47,9 +47,11 @@
             public Microsoft.Build.Logging.StructuredLogger.Build build;
             public Microsoft.Build.Logging.StructuredLogger.BaseNode selected;
             private SourceFile sf;
+            private Tabs tabs;
             public StructuredLogViewer.ArchiveFileResolver afr;
             public StructuredLogViewer.SourceFileResolver sourceFileResolver;
-
+            public IEnumerable<Microsoft.Build.Logging.StructuredLogger.BaseNode> files;
+            
             public void Render()
             {
                 this.StateHasChanged();
@@ -65,6 +67,16 @@
                 {
                     sf.Render();
                 }
+            }
+
+            public RenderFragment DrawTabs()
+            {
+                return new RenderFragment(builder =>
+                {
+                    builder.OpenComponent<Tabs>(0);
+                    builder.AddComponentReferenceCapture(1, inst => { tabs = (Tabs)inst; });
+                    builder.CloseComponent();
+                });
             }
 
             public RenderFragment DrawSources()
