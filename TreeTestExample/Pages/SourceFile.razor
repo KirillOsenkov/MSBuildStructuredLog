@@ -2,83 +2,97 @@
 @using Microsoft.Build.Logging.StructuredLogger
 @using StructuredLogViewer
 @using System.IO
-    <div align="right">
-        <button @onclick=Exit class="btn btn-primary">Close</button>
-    </div>
-<br />
-<div class="code" align="center">
-    @text
-</div>
 
+@ContainerSplit.sfn
+<div align="right">
+    <button @onclick=Exit class="btn btn-primary">Close</button>
+</div>
+<br />
+
+<MonacoEditor @ref="_editor" CssClass="code" Id="monaco-editor" ConstructionOptions="EditorConstructionOptions" />
 
 
 @code {
     [CascadingParameter]
     public SplitPane ContainerSplit { get; set; }
-    static string text;
+    private MonacoEditor _editor { get; set; }
+
+    private StandaloneEditorConstructionOptions EditorConstructionOptions(MonacoEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions()
+        {
+            Value = ContainerSplit.SourceFileText
+        };
+    }
+
+    protected override bool ShouldRender()
+    {
+        var renderUI = true;
+
+        return renderUI;
+    }
 
     public void Render()
     {
-        SourceFileResolver sourceFileResolver = ContainerSplit.sourceFileResolver;
-        //if (CanView(ContainerSplit.selected, sourceFileResolver) && CanOpenFile(ContainerSplit.selected, sourceFileResolver))
-        //{
-        string path = "";
-        BaseNode bn = (BaseNode)ContainerSplit.selected;
-        text = null;
-
-        if (bn is AbstractDiagnostic)
-        {
-            AbstractDiagnostic ad = (AbstractDiagnostic)bn;
-            path = ad.ProjectFile;
-            if (ad.IsTextShortened)
-            {
-                text = ad.Text;
-            }
-            else
-            {
-                text = sourceFileResolver.GetSourceFileText(path).Text;
-            }
-        }
-        else if (bn is Project)
-        {
-            path = ((Project)bn).SourceFilePath;
-            text = sourceFileResolver.GetSourceFileText(path).Text;
-        }
-        else if (bn is Target)
-        {
-            path = ((Target)ContainerSplit.selected).SourceFilePath;
-            text = sourceFileResolver.GetSourceFileText(path).Text;
-        }
-        else if (bn is Microsoft.Build.Logging.StructuredLogger.Task)
-        {
-            path = ((Microsoft.Build.Logging.StructuredLogger.Task)bn).SourceFilePath;
-            text = sourceFileResolver.GetSourceFileText(path).Text;
-        }
-        else if (bn is IHasSourceFile && ((IHasSourceFile)bn).SourceFilePath != null)
-        {
-            path = ((IHasSourceFile)bn).SourceFilePath;
-            text = sourceFileResolver.GetSourceFileText(path).Text;
-        }
-        else if (bn is SourceFileLine && ((SourceFileLine)bn).Parent is Microsoft.Build.Logging.StructuredLogger.SourceFile
-        && ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).SourceFilePath != null)
-        {
-            path = ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).SourceFilePath;
-            text = sourceFileResolver.GetSourceFileText(path).Text;
-        }
-        else if (bn is NameValueNode && ((NameValueNode)bn).IsValueShortened)
-        {
-            text = ((NameValueNode)bn).Value;
-        }
-        else if (bn is TextNode && ((TextNode)bn).IsTextShortened)
-        {
-            text = ((TextNode)bn).Text;
-        }
-
-        if (text == null)
-        {
-            text = "No file to display";
-        }
         this.StateHasChanged();
+        //SourceFileResolver sourceFileResolver = ContainerSplit.sourceFileResolver;
+        //string path = "";
+        //BaseNode bn = (BaseNode)ContainerSplit.selected;
+        //text = null;
+
+        //if (bn is AbstractDiagnostic)
+        //{
+        //    AbstractDiagnostic ad = (AbstractDiagnostic)bn;
+        //    path = ad.ProjectFile;
+        //    if (ad.IsTextShortened)
+        //    {
+        //        text = ad.Text;
+        //    }
+        //    else
+        //    {
+        //        text = sourceFileResolver.GetSourceFileText(path).Text;
+        //    }
+        //}
+        //else if (bn is Project)
+        //{
+        //    path = ((Project)bn).SourceFilePath;
+        //    text = sourceFileResolver.GetSourceFileText(path).Text;
+        //}
+        //else if (bn is Target)
+        //{
+        //    path = ((Target)ContainerSplit.selected).SourceFilePath;
+        //    text = sourceFileResolver.GetSourceFileText(path).Text;
+        //}
+        //else if (bn is Microsoft.Build.Logging.StructuredLogger.Task)
+        //{
+        //    path = ((Microsoft.Build.Logging.StructuredLogger.Task)bn).SourceFilePath;
+        //    text = sourceFileResolver.GetSourceFileText(path).Text;
+        //}
+        //else if (bn is IHasSourceFile && ((IHasSourceFile)bn).SourceFilePath != null)
+        //{
+        //    path = ((IHasSourceFile)bn).SourceFilePath;
+        //    text = sourceFileResolver.GetSourceFileText(path).Text;
+        //}
+        //else if (bn is SourceFileLine && ((SourceFileLine)bn).Parent is Microsoft.Build.Logging.StructuredLogger.SourceFile
+        //&& ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).SourceFilePath != null)
+        //{
+        //    path = ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).SourceFilePath;
+        //    text = sourceFileResolver.GetSourceFileText(path).Text;
+        //}
+        //else if (bn is NameValueNode && ((NameValueNode)bn).IsValueShortened)
+        //{
+        //    text = ((NameValueNode)bn).Value;
+        //}
+        //else if (bn is TextNode && ((TextNode)bn).IsTextShortened)
+        //{
+        //    text = ((TextNode)bn).Text;
+        //}
+
+        //if (text == null)
+        //{
+        //    text = "No file to display";
+        //}
+
     }
 
     public async System.Threading.Tasks.Task Exit()

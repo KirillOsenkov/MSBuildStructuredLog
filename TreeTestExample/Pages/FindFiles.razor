@@ -8,7 +8,10 @@
 <RadzenTextBox Placeholder="Search..." Change="@(args => Change(args, "TextBox with placeholder"))" Style="margin-bottom: 20px" />
 <br />
 <br />
-<RadzenTree Data="@findResults" Style="word-break:break-all;overflow-y:scroll;color:black" Expand="@((TreeExpandEventArgs args) => {ExpandResults(args);})">
+<RadzenTree Data="@findResults" 
+            Style="word-break:break-all;overflow-y:scroll;color:black" 
+            Expand="@((TreeExpandEventArgs args) => {ExpandResults(args);})"
+            Change="@OnChange">
     <RadzenTreeLevel Expanded="@((obj) => (obj is TreeNode && ((TreeNode)obj).HasChildren))" Template="@TreeFormatting.TreeDesign" Text="@TreeFormatting.TextSelector"
                      HasChildren="@((node) => {
                                     if (node is TreeNode)
@@ -21,6 +24,18 @@
     [CascadingParameter]
     public SplitPane ContainerSplit { get; set; }
     static IEnumerable<BaseNode> findResults;
+
+    void OnChange(TreeEventArgs args)
+    {
+        ContainerSplit.selected = (BaseNode)args.Value;
+        if (ContainerSplit.show % 2 == 0)
+        {
+            ContainerSplit.show += 1;
+            ContainerSplit.Render();
+        }
+        ContainerSplit.FileRender();
+
+    }
 
     void Change(string value, string name)
     {

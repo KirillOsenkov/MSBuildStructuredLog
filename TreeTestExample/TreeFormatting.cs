@@ -17,7 +17,7 @@ namespace StructuredLogViewerWASM
         [Inject]
         static IJSRuntime JSRuntime { get; set; }
 
-        public static RenderFragment<RadzenTreeItem> TreeDesign = (context) => builder =>
+        public static RenderFragment<RadzenTreeItem> TreeDesign = (RadzenTreeItem context) => builder =>
         {
             builder.OpenComponent<RadzenIcon>(0);
             builder.AddAttribute(1, "Icon", "crop_16_9");
