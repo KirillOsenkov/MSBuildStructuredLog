@@ -3,11 +3,13 @@
 @using StructuredLogViewer
 @using System.IO
 
-@ContainerSplit.sfn
-<div align="right">
-    <button @onclick=Exit class="btn btn-primary">Close</button>
-</div>
-<br />
+        <div  style="justify-content:right">
+            <button @onclick=Exit class="btn btn-primary">Close</button>
+        </div>
+        <h3>@ContainerSplit.sfn</h3>
+
+
+
 
 <MonacoEditor @ref="_editor" CssClass="code" Id="monaco-editor" ConstructionOptions="EditorConstructionOptions" />
 
@@ -23,7 +25,7 @@
         {
             ReadOnly = true,
             Value = ContainerSplit.SourceFileText,
-            ScrollBeyondLastLine = false
+ 
         };
     }
 

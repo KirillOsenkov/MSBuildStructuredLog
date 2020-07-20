@@ -16,9 +16,12 @@ namespace StructuredLogViewerWASM
     {
         [Inject]
         static IJSRuntime JSRuntime { get; set; }
+        static int count = 0;
 
         public static RenderFragment<RadzenTreeItem> TreeDesign = (RadzenTreeItem context) => builder =>
         {
+            builder.OpenElement(0, "div");
+            builder.AddAttribute(1, "id", count++);
             builder.OpenComponent<RadzenIcon>(0);
             builder.AddAttribute(1, "Icon", "crop_16_9");
             var node = (BaseNode)context.Value;
@@ -27,6 +30,9 @@ namespace StructuredLogViewerWASM
             builder.AddAttribute(2, "Style", "color: " + color + ";margin-left: " + margin);
             builder.CloseComponent();
             builder.AddContent(4, context.Text);
+            builder.CloseElement();
+            ((BaseNode)context.Value).id = count;
+
         };
 
         private static ValueTask<bool> ScrollToElementId(string elementId)

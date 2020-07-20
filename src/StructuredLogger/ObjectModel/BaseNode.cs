@@ -8,6 +8,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
     {
         private TreeNode parent;
         private NodeFlags flags;
+        public int id;
 
         public TreeNode Parent
         {
