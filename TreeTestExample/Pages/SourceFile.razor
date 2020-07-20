@@ -21,7 +21,9 @@
     {
         return new StandaloneEditorConstructionOptions()
         {
-            Value = ContainerSplit.SourceFileText
+            ReadOnly = true,
+            Value = ContainerSplit.SourceFileText,
+            ScrollBeyondLastLine = false
         };
     }
 
@@ -35,64 +37,7 @@
     public void Render()
     {
         this.StateHasChanged();
-        //SourceFileResolver sourceFileResolver = ContainerSplit.sourceFileResolver;
-        //string path = "";
-        //BaseNode bn = (BaseNode)ContainerSplit.selected;
-        //text = null;
-
-        //if (bn is AbstractDiagnostic)
-        //{
-        //    AbstractDiagnostic ad = (AbstractDiagnostic)bn;
-        //    path = ad.ProjectFile;
-        //    if (ad.IsTextShortened)
-        //    {
-        //        text = ad.Text;
-        //    }
-        //    else
-        //    {
-        //        text = sourceFileResolver.GetSourceFileText(path).Text;
-        //    }
-        //}
-        //else if (bn is Project)
-        //{
-        //    path = ((Project)bn).SourceFilePath;
-        //    text = sourceFileResolver.GetSourceFileText(path).Text;
-        //}
-        //else if (bn is Target)
-        //{
-        //    path = ((Target)ContainerSplit.selected).SourceFilePath;
-        //    text = sourceFileResolver.GetSourceFileText(path).Text;
-        //}
-        //else if (bn is Microsoft.Build.Logging.StructuredLogger.Task)
-        //{
-        //    path = ((Microsoft.Build.Logging.StructuredLogger.Task)bn).SourceFilePath;
-        //    text = sourceFileResolver.GetSourceFileText(path).Text;
-        //}
-        //else if (bn is IHasSourceFile && ((IHasSourceFile)bn).SourceFilePath != null)
-        //{
-        //    path = ((IHasSourceFile)bn).SourceFilePath;
-        //    text = sourceFileResolver.GetSourceFileText(path).Text;
-        //}
-        //else if (bn is SourceFileLine && ((SourceFileLine)bn).Parent is Microsoft.Build.Logging.StructuredLogger.SourceFile
-        //&& ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).SourceFilePath != null)
-        //{
-        //    path = ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).SourceFilePath;
-        //    text = sourceFileResolver.GetSourceFileText(path).Text;
-        //}
-        //else if (bn is NameValueNode && ((NameValueNode)bn).IsValueShortened)
-        //{
-        //    text = ((NameValueNode)bn).Value;
-        //}
-        //else if (bn is TextNode && ((TextNode)bn).IsTextShortened)
-        //{
-        //    text = ((TextNode)bn).Text;
-        //}
-
-        //if (text == null)
-        //{
-        //    text = "No file to display";
-        //}
-
+        _editor.SetValue(ContainerSplit.SourceFileText);
     }
 
     public async System.Threading.Tasks.Task Exit()
