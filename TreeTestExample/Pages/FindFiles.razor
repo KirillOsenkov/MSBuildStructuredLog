@@ -1,0 +1,118 @@
+﻿@page "/findInFiles"
+@using StructuredLogViewer
+@using StructuredLogViewer.Core
+@using System.Collections
+@using Microsoft.Build.Logging.StructuredLogger
+@using System.IO
+
+<RadzenTextBox Placeholder="Search..." Change="@(args => Change(args, "TextBox with placeholder"))" Style="margin-bottom: 20px" />
+<br />
+<br />
+<RadzenTree Data="@findResults" 
+            Style="word-break:break-all;overflow-y:scroll;color:black" 
+            Expand="@((TreeExpandEventArgs args) => {ExpandResults(args);})"
+            Change="@OnChange">
+    <RadzenTreeLevel Expanded="@((obj) => (obj is TreeNode && ((TreeNode)obj).HasChildren))" Template="@TreeFormatting.TreeDesign" Text="@TreeFormatting.TextSelector"
+                     HasChildren="@((node) => {
+                                    if (node is TreeNode)
+                                        return ((TreeNode)node).HasChildren;
+                                    else return false;
+                                })" />
+</RadzenTree>
+
+@code {
+    [CascadingParameter]
+    public SplitPane ContainerSplit { get; set; }
+    static IEnumerable<BaseNode> findResults;
+
+    void OnChange(TreeEventArgs args)
+    {
+        ContainerSplit.selected = (BaseNode)args.Value;
+        if (ContainerSplit.show % 2 == 0)
+        {
+            ContainerSplit.show += 1;
+            ContainerSplit.Render();
+        }
+        ContainerSplit.FileRender();
+
+    }
+
+    void Change(string value, string name)
+    {
+        var results = FindInFiles(value, 1000, new System.Threading.CancellationToken());
+        findResults = (IEnumerable<BaseNode>) BuildFindResults(results, true, value);
+    }
+
+    public static void ExpandResults(TreeExpandEventArgs args)
+    {
+        TreeFormatting.OnExpand(args);
+        if (args.Value is TreeNode && ((TreeNode)(args.Value)).HasChildren)
+        {
+            args.Children.Expanded = (obj) => (obj is TreeNode && ((TreeNode)obj).HasChildren);
+        }
+    }
+
+    private object FindInFiles(string searchText, int maxResults, System.Threading.CancellationToken cancellationToken)
+    {
+        var results = new List<(string, IEnumerable<(int, string)>)>();
+        ArchiveFileResolver archiveFile = ContainerSplit.afr;
+
+        foreach (var file in archiveFile.Files)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return null;
+            }
+
+            var haystack = file.Value;
+            var resultsInFile = haystack.Find(searchText);
+            if (resultsInFile.Count > 0)
+            {
+                results.Add((file.Key, resultsInFile.Select(lineNumber => (lineNumber, haystack.GetLineText(lineNumber)))));
+            }
+        }
+
+        return results;
+    }
+
+    private IEnumerable BuildFindResults(object resultsObject, bool moreAvailable, string searchText)
+    {
+        if (resultsObject == null)
+        {
+            return null;
+        }
+
+        var results = resultsObject as IEnumerable<(string, IEnumerable<(int, string)>)>;
+
+        var root = new Folder();
+
+        if (results != null)
+        {
+            foreach (var file in results)
+            {
+                var folder = new Microsoft.Build.Logging.StructuredLogger.SourceFile
+                {
+                    Name = Path.GetFileName(file.Item1),
+                    SourceFilePath = file.Item1,
+                };
+                root.AddChild(folder);
+                foreach (var line in file.Item2)
+                {
+                    var sourceFileLine = new SourceFileLine()
+                    {
+                        LineNumber = line.Item1 + 1,
+                        LineText = line.Item2
+                    };
+                    folder.AddChild(sourceFileLine);
+                }
+            }
+        }
+
+        if (!root.HasChildren && !string.IsNullOrEmpty(searchText))
+        {
+            root.Children.Add(new Message { Text = "No results found." });
+        }
+
+        return root.Children;
+    }
+}

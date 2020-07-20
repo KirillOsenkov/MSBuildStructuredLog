@@ -1,0 +1,148 @@
+﻿@page "/SearchViewer"
+@using Microsoft.Build.Logging.StructuredLogger
+@using Radzen
+@using Radzen.Blazor
+@using StructuredLogViewer.Controls
+@using System.Collections
+@inject IJSRuntime JSRuntime
+
+<RadzenTextBox Placeholder="Search..." Change="@(args => Change(args, "TextBox with placeholder"))" Style="margin-bottom: 20px" />
+<br />
+<br />
+<RadzenTree Data="@searchResults" Style="word-break:break-all;overflow-y:scroll;color:black" Change="@OnChange" Expand="@((TreeExpandEventArgs args) => {ExpandResults(args);})">
+    <RadzenTreeLevel Expanded="@((obj) => (obj is TreeNode && ((TreeNode)obj).HasChildren))" Template="@TreeFormatting.TreeDesign" Text="@TreeFormatting.TextSelector"
+                     HasChildren="@((node) => {
+                                    if (node is TreeNode)
+                                        return ((TreeNode)node).HasChildren;
+                                    else return false;
+                                })" />
+</RadzenTree>
+@code {
+    public static StructuredLogViewer.Search searcher;
+    static IEnumerable<BaseNode> searchResults;
+    public static string test;
+
+    [CascadingParameter]
+    public SplitPane ContainerSplit { get; set; }
+
+    private ValueTask<bool> ScrollToElementId(string elementId)
+    {
+        return JSRuntime.InvokeAsync<bool>("scrollToElementId", elementId);
+    }
+
+    void OnChange(TreeEventArgs args)
+    {
+        BaseNode org = ((ProxyNode)(args.Value)).Original;
+        org.IsSelected = true;
+        foreach (var node in org.GetParentChainExcludingThis())
+        {
+            node.IsExpanded = true;
+        }
+        ContainerSplit.search = true;
+        ContainerSplit.Render();
+    }
+
+    public static void ExpandResults(TreeExpandEventArgs args)
+    {
+        TreeFormatting.OnExpand(args);
+        if (args.Value is TreeNode && ((TreeNode)(args.Value)).HasChildren)
+        {
+            args.Children.Expanded = (obj) => (obj is TreeNode && ((TreeNode)obj).HasChildren);
+        }
+    }
+
+    void Change(string value, string name)
+    {
+        if (searcher == null)
+        {
+            return;
+        }
+        IEnumerable<StructuredLogViewer.SearchResult> results = searcher.FindNodes(value, new System.Threading.CancellationToken());
+        searchResults = BuildResultTree(results) as IEnumerable<BaseNode>;
+    }
+
+    public IEnumerable BuildResultTree(object resultsObject, bool moreAvailable = false)
+    {
+        var results = resultsObject as ICollection<StructuredLogViewer.SearchResult>;
+        if (results == null)
+        {
+            return results;
+        }
+
+        var root = new Folder();
+
+        root.Children.Add(new Message
+        {
+            Text = $"{results.Count} result{(results.Count == 1 ? "" : "s")}."
+        });
+
+        bool includeDuration = results.Any(r => r.Duration != default);
+
+        if (includeDuration)
+        {
+            results = results.OrderByDescending(r => r.Duration).ToArray();
+        }
+
+        foreach (var result in results)
+        {
+            TreeNode parent = root;
+
+            if (!includeDuration)
+            {
+                var project = result.Node.GetNearestParent<Project>();
+                if (project != null)
+                {
+                    var projectProxy = root.GetOrCreateNodeWithName<ProxyNode>(project.Name);
+                    projectProxy.Original = project;
+                    if (projectProxy.Highlights.Count == 0)
+                    {
+                        projectProxy.Highlights.Add(project.Name);
+                    }
+
+                    parent = projectProxy;
+                    parent.IsExpanded = true;
+                }
+
+                var target = result.Node.GetNearestParent<Target>();
+                if (target != null)
+                {
+                    var targetProxy = parent.GetOrCreateNodeWithName<ProxyNode>(target.TypeName + " " + target.Name);
+                    targetProxy.Original = target;
+                    if (targetProxy.Highlights.Count == 0)
+                    {
+                        targetProxy.Highlights.Add(targetProxy.Name);
+                    }
+
+                    parent = targetProxy;
+                    parent.IsExpanded = true;
+                }
+                // nest under a Task, unless it's an MSBuild task higher up the parent chain
+                var task = result.Node.GetNearestParent<Microsoft.Build.Logging.StructuredLogger.Task>(t => !string.Equals(t.Name, "MSBuild", StringComparison.OrdinalIgnoreCase));
+                if (task != null)
+                {
+                    var taskProxy = parent.GetOrCreateNodeWithName<ProxyNode>(task.TypeName + " " + task.Name);
+                    taskProxy.Original = task;
+                    if (taskProxy.Highlights.Count == 0)
+                    {
+                        taskProxy.Highlights.Add(taskProxy.Name);
+                    }
+
+                    parent = taskProxy;
+                    parent.IsExpanded = true;
+                }
+            }
+
+            var proxy = new ProxyNode();
+            proxy.Original = result.Node;
+            proxy.SearchResult = result;
+            parent.Children.Add(proxy);
+        }
+
+        if (!root.HasChildren)
+        {
+            root.Children.Add(new Message { Text = "No results found." });
+        }
+
+        return root.Children;
+    }
+}

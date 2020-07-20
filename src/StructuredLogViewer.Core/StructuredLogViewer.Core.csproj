@@ -13,6 +13,8 @@
     <PackageReference Include="Nerdbank.GitVersioning" Version="2.3.38" PrivateAssets="all" />
 
     <PackageReference Include="MSAGL.netstandard" Version="1.0.0" />
+
+    <PackageReference Include="Tewr.Blazor.FileReader" Version="1.6.0.20166" />
   </ItemGroup>
 
 </Project>

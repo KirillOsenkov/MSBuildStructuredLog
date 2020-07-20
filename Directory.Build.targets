@@ -38,7 +38,7 @@
           DependsOnTargets="ExtractVersion;_DownloadNuGet"
           Inputs="@(NuGetInput)"
           Outputs="$(NupkgPath)">
-    <Exec Command="$(NuGetExePath) Pack $(NuspecFileName).nuspec -BasePath $(OutDir) -OutputDirectory $(OutDir) -prop currentVersion=$(Version)" />
+    <!--<Exec Command="&quot;$(NuGetExePath)&quot; Pack $(NuspecFileName).nuspec -BasePath &quot;$(OutDir)&quot; -OutputDirectory &quot;$(OutDir)&quot; -prop currentVersion=$(Version)" />-->
   </Target>
 
   <Target Name="BuildChocolatey"

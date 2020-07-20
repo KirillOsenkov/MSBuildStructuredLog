@@ -1259,7 +1259,7 @@ Recent:
             return node;
         }
 
-        private IEnumerable BuildResultTree(object resultsObject, bool moreAvailable = false)
+        public IEnumerable BuildResultTree(object resultsObject, bool moreAvailable = false)
         {
             var results = resultsObject as ICollection<SearchResult>;
             if (results == null)

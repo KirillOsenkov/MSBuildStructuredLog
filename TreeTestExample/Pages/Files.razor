@@ -1,0 +1,46 @@
+﻿@page "/files"
+@using StructuredLogViewer
+@using StructuredLogViewer.Core
+@using System.IO
+@using Microsoft.Build.Logging.StructuredLogger
+
+    <RadzenTree Data="@ContainerSplit.files" 
+                Style="word-break:break-all;overflow-y:scroll;color:black" 
+                Expand="@((TreeExpandEventArgs args) => {ExpandResults(args);})"
+                Change="OnChange">
+        <RadzenTreeLevel Expanded="@((obj) => (obj is TreeNode && ((TreeNode)obj).HasChildren))" Template="@TreeFormatting.TreeDesign" Text="@TreeFormatting.TextSelector"
+                         HasChildren="@((node) => {
+                                    if (node is TreeNode)
+                                        return ((TreeNode)node).HasChildren;
+                                    else return false;
+                                })" />
+    </RadzenTree>
+
+@code {
+    [CascadingParameter]
+    public SplitPane ContainerSplit { get; set; }
+
+    void OnChange(TreeEventArgs args)
+    {
+        ContainerSplit.selected = (BaseNode)args.Value;
+        if (ContainerSplit.show % 2 == 0)
+        {
+            ContainerSplit.show += 1;
+            ContainerSplit.Render();
+        }
+        ContainerSplit.FileRender();
+
+    }
+
+    public static void ExpandResults(TreeExpandEventArgs args)
+    {
+        TreeFormatting.OnExpand(args);
+        if (args.Value is TreeNode && ((TreeNode)(args.Value)).HasChildren)
+        {
+            args.Children.Expanded = (obj) => (obj is TreeNode && ((TreeNode)obj).HasChildren);
+        }
+    }
+
+
+
+            }

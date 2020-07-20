@@ -1,0 +1,207 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Blazor.FileReader</name>
+    </assembly>
+    <members>
+        <member name="T:Blazor.FileReader.BrowserFileReaderException">
+            <summary>
+            Exception that is thrown if an exception occurs in the browser during file reader operations
+            </summary>
+        </member>
+        <member name="T:Blazor.FileReader.IFileReaderRef">
+            <summary>
+            Provides methods for interacting with an element that provides file streams.
+            </summary>
+        </member>
+        <member name="M:Blazor.FileReader.IFileReaderRef.RegisterDropEventsAsync(System.Boolean)">
+            <summary>
+            Register for drop events on the source element
+            </summary>
+            <param name="additive">If set to true, drop target file list becomes additive. Defaults to false.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Blazor.FileReader.IFileReaderRef.UnregisterDropEventsAsync">
+            <summary>
+            Unregister drop events on the source element
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Blazor.FileReader.IFileReaderRef.ClearValue">
+            <summary>
+            Clears any value set on the source element
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Blazor.FileReader.IFileReaderRef.EnumerateFilesAsync">
+            <summary>
+            Enumerates the currently selected file references
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:Blazor.FileReader.IFileReference">
+            <summary>
+            Provides properties and instance methods for the reading file metadata and aids in the creation of Readonly Stream objects. 
+            </summary>
+        </member>
+        <member name="M:Blazor.FileReader.IFileReference.OpenReadAsync">
+            <summary>
+            Opens a stream to read the file.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Blazor.FileReader.IFileReference.OpenReadBase64Async">
+            <summary>
+            Opens a base64-encoded string stream to read the file
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Blazor.FileReader.IFileReference.CreateMemoryStreamAsync">
+            <summary>
+            Convenience method to read the file into memory using a single interop call 
+            and returns it as a MemoryStream. Buffer size will be equal to the file size.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Blazor.FileReader.IFileReference.CreateMemoryStreamAsync(System.Int32)">
+            <summary>
+            Convenience method to read the file into memory and returns it as a MemoryStream, using the specified buffersize.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Blazor.FileReader.IFileReference.ReadFileInfoAsync">
+            <summary>
+            Reads the file metadata
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:Blazor.FileReader.IBase64Stream">
+            <summary>
+            Provides a base64-encoded string view of a sequence of bytes from a file.
+            </summary>
+        </member>
+        <member name="P:Blazor.FileReader.IBase64Stream.Position">
+            <summary>
+            Gets or sets the current byte position in the Stream.
+            </summary>
+        </member>
+        <member name="P:Blazor.FileReader.IBase64Stream.Length">
+            <summary>
+            Gets the length of the stream in bytes.
+            </summary>
+        </member>
+        <member name="M:Blazor.FileReader.IBase64Stream.ReadAsync(System.Int32,System.Int32,System.Threading.CancellationToken)">
+            <summary>
+            Asynchronously reads a sequence of bytes as a base64 encoded string from the current stream 
+            and advances the position within the stream by the number of bytes read.
+            </summary>
+            <param name="offset">The byte offset in the source at which to begin reading data from the stream.</param>
+            <param name="count">The maximum number of bytes to read.</param>
+            <param name="cancellationToken"></param>
+            <returns>The requested sequence of bytes as a base64 encoded string. 
+            The resulting string can be shorter than the number of bytes requested if
+            the number of bytes currently available is less than the requested 
+            number, or it can be string.empty if the end of the stream has been reached. </returns>
+        </member>
+        <member name="T:Blazor.FileReader.IFileInfo">
+            <summary>
+            Provides properties for file metadata.
+            </summary>
+        </member>
+        <member name="P:Blazor.FileReader.IFileInfo.Name">
+            <summary>
+            Returns the name of the file referenced by the File object.
+            </summary>
+        </member>
+        <member name="P:Blazor.FileReader.IFileInfo.NonStandardProperties">
+            <summary>
+            Returns a list of non-standard DOM properties attached to the object, like the webkitRelativePath property.
+            </summary>
+        </member>
+        <member name="P:Blazor.FileReader.IFileInfo.Size">
+            <summary>
+            Returns the size of the file in bytes.
+            </summary>
+        </member>
+        <member name="P:Blazor.FileReader.IFileInfo.Type">
+            <summary>
+            Returns the MIME type of the file.
+            </summary>
+        </member>
+        <member name="P:Blazor.FileReader.IFileInfo.LastModified">
+            <summary>
+            Returns the last modified time of the file, in millisecond since the UNIX epoch (January 1st, 1970 at Midnight).
+            </summary>
+        </member>
+        <member name="P:Blazor.FileReader.IFileInfo.LastModifiedDate">
+            <summary>
+            Returns the last modified time of the file.
+            </summary>
+        </member>
+        <member name="M:Blazor.FileReader.AsyncDisposableStream.DisposeAsync">
+            <inheritdoc/>
+        </member>
+        <member name="T:Blazor.FileReader.IFileReaderServiceOptions">
+            <summary>
+            Provides configuration options for <see cref="T:Blazor.FileReader.IFileReaderService"/>
+            </summary>
+        </member>
+        <member name="P:Blazor.FileReader.IFileReaderServiceOptions.InitializeOnFirstCall">
+            <summary>
+            Initializes the file service on the first interop call.
+            Redundant for client-side blazor.
+            </summary>
+            <remarks>
+            Initializing on the first call is neccessary only if the javascript 
+            interop file (FileReaderComponent.js)
+            has not been loaded manually using a script tag.
+            </remarks>
+        </member>
+        <member name="P:Blazor.FileReader.IFileReaderServiceOptions.UseWasmSharedBuffer">
+            <summary>
+            For client-side blazor, uses shared memory buffer to transfer data quickly.
+            Not available for server-side blazor.
+            </summary>
+        </member>
+        <member name="T:Blazor.FileReader.IFileReaderService">
+            <summary>
+            Servive for creating a <see cref="T:Blazor.FileReader.IFileReaderRef"/> instance from an element.
+            </summary>
+        </member>
+        <member name="M:Blazor.FileReader.IFileReaderService.EnsureInitializedAsync">
+            <summary>
+            Explicitly initializes this instance by loading the neccessary interop code to the browser.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Blazor.FileReader.IFileReaderService.CreateReference(Microsoft.AspNetCore.Components.ElementReference)">
+            <summary>
+            Creates a new instance of <see cref="T:Blazor.FileReader.IFileReaderRef"/> for the specified element.
+            </summary>
+            <param name="element">A reference to an element that can provide file streams. 
+            Should be obtained using the @ref attribute. 
+            Should reference either an input element of type file or a drop target.</param>
+            <returns>a new instance of <see cref="T:Blazor.FileReader.IFileReaderRef"/></returns>
+        </member>
+        <member name="T:Blazor.FileReader.SetupExtension">
+            <summary>
+            Provides extension methods for setting up <see cref="T:Blazor.FileReader.IFileReaderService"/>
+            </summary>
+        </member>
+        <member name="M:Blazor.FileReader.SetupExtension.AddFileReaderService(Microsoft.Extensions.DependencyInjection.IServiceCollection)">
+            <summary>
+            Adds <see cref="T:Blazor.FileReader.IFileReaderService"/> as a scoped service
+            to the specified <see cref="T:Microsoft.Extensions.DependencyInjection.IServiceCollection"/>.
+            </summary>
+            <param name="services"></param>
+        </member>
+        <member name="M:Blazor.FileReader.SetupExtension.AddFileReaderService(Microsoft.Extensions.DependencyInjection.IServiceCollection,System.Action{Blazor.FileReader.IFileReaderServiceOptions})">
+            <summary>
+            Adds <see cref="T:Blazor.FileReader.IFileReaderService"/> as a scoped service
+            to the specified <see cref="T:Microsoft.Extensions.DependencyInjection.IServiceCollection"/> with the specifed <paramref name="setOptions"/>
+            </summary>
+            <param name="services"></param>
+            <param name="setOptions">Delegate that modifies the options for <see cref="T:Blazor.FileReader.IFileReaderService"/> </param>
+        </member>
+    </members>
+</doc>

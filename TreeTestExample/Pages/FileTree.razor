@@ -1,0 +1,287 @@
+﻿@page "/FileTree"
+@using System.IO
+@using System.Collections
+@using Microsoft.Build.Logging.StructuredLogger
+@using Radzen
+@using Radzen.Blazor
+@inject Blazor.FileReader.IFileReaderService fileReaderService
+@inject NotificationService notificationService
+
+<center>
+    <h1>Structured Log Viewer</h1>
+    <input type="file" @ref=inputElement />
+    <button @onclick=ReadFile class="btn btn-primary">Read file</button>
+    <button @onclick=ClearFile class="btn btn-primary">Clear</button>
+    <br />
+    <br />
+    @if (reading)
+    {
+        <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" Style="margin-bottom: 20px" />
+        <h3>@waitText</h3>
+    }
+</center>
+
+
+<h1>@test</h1>
+<br />
+<br />
+@if (binLogSelected)
+{
+    <RadzenTree Data="@entries" Style="word-break:break-all;overflow-y:scroll" 
+                                Expand="@((TreeExpandEventArgs args) => {OnExpand(args);})"
+                                Change="@OnChange"
+                                    >
+        <RadzenTreeLevel Template="@TreeFormatting.TreeDesign" 
+                         Text="@GetTextForNode" 
+                         Expanded="@((node) => { return ((BaseNode)node).IsExpanded; })"
+                         HasChildren="@((node) => {
+                                    if (node is TreeNode)
+                                        return ((TreeNode)node).HasChildren;
+                                    else return false;
+                                })" 
+                          />
+    </RadzenTree>
+}
+<RadzenNotification />
+
+@code {
+    static bool binLogSelected = false;
+    static ElementReference inputElement;
+    static string test;
+    static bool reading;
+    static string waitText;
+
+    [CascadingParameter]
+    public SplitPane ContainerSplit { get; set; }
+
+    static IEnumerable<BaseNode> entries = null;
+
+
+    void OnChange(TreeEventArgs args)
+    {
+        ContainerSplit.selected = (BaseNode)args.Value;
+        if (ContainerSplit.show % 2 == 0)
+        {
+            ContainerSplit.show += 1;
+            SourceFileText();
+            ContainerSplit.Render();
+        } else
+        {
+            SourceFileText();
+            ContainerSplit.FileRender();
+        }
+    }
+
+    public void SourceFileText()
+    {
+        StructuredLogViewer.SourceFileResolver sourceFileResolver = ContainerSplit.sourceFileResolver;
+        string path = "";
+        BaseNode bn = (BaseNode)ContainerSplit.selected;
+        ContainerSplit.SourceFileText = null;
+        ContainerSplit.sfn = "";
+
+        if (bn is AbstractDiagnostic)
+        {
+            AbstractDiagnostic ad = (AbstractDiagnostic)bn;
+            path = ad.ProjectFile;
+            if (ad.IsTextShortened)
+            {
+                ContainerSplit.SourceFileText = ad.Text;
+                ContainerSplit.sfn = ad.ShortenedText;
+            }
+            else
+            {
+                ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
+                ContainerSplit.sfn = ad.Name;
+            }
+        }
+        else if (bn is Project)
+        {
+            path = ((Project)bn).SourceFilePath;
+            ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
+            ContainerSplit.sfn = ((Project)bn).Name;
+        }
+        else if (bn is Target)
+        {
+            path = ((Target)ContainerSplit.selected).SourceFilePath;
+            ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
+            ContainerSplit.sfn = ((Target)bn).Name;
+        }
+        else if (bn is Microsoft.Build.Logging.StructuredLogger.Task)
+        {
+            path = ((Microsoft.Build.Logging.StructuredLogger.Task)bn).SourceFilePath;
+            ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
+            ContainerSplit.sfn = ((Microsoft.Build.Logging.StructuredLogger.Task)bn).Name;
+        }
+        else if (bn is IHasSourceFile && ((IHasSourceFile)bn).SourceFilePath != null)
+        {
+            path = ((IHasSourceFile)bn).SourceFilePath;
+            ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
+            ContainerSplit.sfn = ((IHasSourceFile)bn).SourceFilePath;
+        }
+        else if (bn is SourceFileLine && ((SourceFileLine)bn).Parent is Microsoft.Build.Logging.StructuredLogger.SourceFile
+        && ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).SourceFilePath != null)
+        {
+            path = ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).SourceFilePath;
+            ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
+            ContainerSplit.sfn = ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).Name;
+        }
+        else if (bn is NameValueNode && ((NameValueNode)bn).IsValueShortened)
+        {
+            ContainerSplit.SourceFileText = ((NameValueNode)bn).Value;
+            ContainerSplit.sfn = ((NameValueNode)bn).Name;
+        }
+        else if (bn is TextNode && ((TextNode)bn).IsTextShortened)
+        {
+            ContainerSplit.SourceFileText = ((TextNode)bn).Text;
+            ContainerSplit.sfn = ((TextNode)bn).Name;
+        }
+
+        if (ContainerSplit.SourceFileText == null)
+        {
+            ContainerSplit.SourceFileText = "No file to display";
+        }
+    }
+
+    async System.Threading.Tasks.Task ShowNotification(NotificationMessage message)
+    {
+        message.Severity = NotificationSeverity.Error;
+        message.Summary = "Wrong File Type!";
+        message.Detail = "Currently we only read .binlog files. Click Instructions to learn more.";
+        message.Duration = 4000;
+        notificationService.Notify(message);
+    }
+
+
+    public static string GetTextForNode(Object node)
+    {
+        return TreeFormatting.TextSelector(node);
+    }
+
+    public static void OnExpand(TreeExpandEventArgs args)
+    {
+        TreeFormatting.OnExpand(args);
+    }
+
+    public async System.Threading.Tasks.Task ClearFile()
+    {
+        await fileReaderService.CreateReference(inputElement).ClearValue();
+        binLogSelected = false;
+        reading = false;
+        waitText = "";
+        entries = null;
+    }
+
+    public async System.Threading.Tasks.Task ReadFile()
+    {
+        binLogSelected = false;
+        reading = true;
+        this.StateHasChanged();
+        waitText = "Here we go...";
+        var files = (await fileReaderService.CreateReference(inputElement).EnumerateFilesAsync());
+        foreach (Blazor.FileReader.IFileReference file in files)
+        {
+            var fileInfo = await file.ReadFileInfoAsync();
+            String[] split = fileInfo.Name.Split(".");
+            if (!String.Equals("binlog", split[split.Length - 1]))
+            {
+                await ShowNotification(new NotificationMessage());
+                await ClearFile();
+                break;
+            }
+            waitText = "Still reading...";
+            this.StateHasChanged();
+            binLogSelected = true;
+            Task<Blazor.FileReader.AsyncDisposableStream>
+            streamTask = file.OpenReadAsync();
+            var stream = await streamTask;
+            var memoryStream = new MemoryStream();
+            waitText = "Teaching you patience...";
+            this.StateHasChanged();
+            await stream.CopyToAsync(memoryStream);
+
+            memoryStream.Position = 0;
+
+            ContainerSplit.build = Serialization.ReadBinLog(memoryStream);
+            SearchViewer.searcher = new StructuredLogViewer.Search(ContainerSplit.build, StructuredLogViewer.Search.DefaultMaxResults);
+            waitText = "Trust me you're computer wants this to be over more than you do...";
+            this.StateHasChanged();
+            BuildAnalyzer.AnalyzeBuild(ContainerSplit.build);
+            waitText = "Not a joke...We're actually still reading...";
+            this.StateHasChanged();
+            entries = (IEnumerable<BaseNode>)ContainerSplit.build.Children;
+        }
+        ContainerSplit.sourceFileResolver = new StructuredLogViewer.SourceFileResolver(ContainerSplit.build.SourceFilesArchive);
+        ContainerSplit.afr = ContainerSplit.sourceFileResolver.ArchiveFile;
+        PopulateFilesTab();
+        this.StateHasChanged();
+        reading = false;
+        waitText = "";
+
+    }
+
+    public void PopulateFilesTab()
+    {
+        var root = new Folder();
+        StructuredLogViewer.ArchiveFileResolver archiveFile = ContainerSplit.afr;
+
+        foreach (var file in archiveFile.Files.OrderBy(kvp => kvp.Key, StringComparer.OrdinalIgnoreCase))
+        {
+            var parts = file.Key.Split('\\');
+            AddSourceFile(root, file.Key, parts, 0);
+        }
+
+        foreach (var subFolder in root.Children.OfType<Folder>())
+        {
+            CompressTree(subFolder);
+        }
+
+        ContainerSplit.files = (IEnumerable<BaseNode>)root.Children;
+        this.StateHasChanged();
+    }
+
+    private void CompressTree(Folder parent)
+    {
+        if (parent.Children.Count == 1 && parent.Children[0] is Folder subfolder)
+        {
+            parent.Children.Clear();
+            var grandchildren = subfolder.Children.ToArray();
+            subfolder.Children.Clear();
+            foreach (var grandChild in grandchildren)
+            {
+                parent.Children.Add(grandChild);
+            }
+
+            parent.Name = Path.Combine(parent.Name, subfolder.Name);
+            CompressTree(parent);
+        }
+        else
+        {
+            foreach (var subFolder in parent.Children.OfType<Folder>
+                ())
+            {
+                CompressTree(subFolder);
+            }
+        }
+    }
+
+    private void AddSourceFile(Folder folder, string filePath, string[] parts, int index)
+    {
+        if (index == parts.Length - 1)
+        {
+            var file = new Microsoft.Build.Logging.StructuredLogger.SourceFile()
+            {
+                SourceFilePath = filePath,
+                Name = parts[index]
+            };
+            folder.AddChild(file);
+        }
+        else
+        {
+            var subfolder = folder.GetOrCreateNodeWithName<Folder>
+                (parts[index]);
+            subfolder.IsExpanded = true;
+            AddSourceFile(subfolder, filePath, parts, index + 1);
+        }
+    }
+}
