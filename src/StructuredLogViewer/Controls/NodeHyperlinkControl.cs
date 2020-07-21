@@ -38,6 +38,11 @@ namespace StructuredLogViewer.Controls
                 }
             }
 
+            if (DataContext is EntryTarget entryTarget)
+            {
+                return entryTarget.Target;
+            }
+
             return null;
         }
 
