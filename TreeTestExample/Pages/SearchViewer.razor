@@ -40,9 +40,11 @@
         }
         ContainerSplit.search = true;
         string[] elem = new string[1];
-        elem[0] = ((BaseNode)args.Value).id.ToString();
-        await JSRuntime.InvokeVoidAsync("blazorHelpers.scrollToFragment", elem);
+        Console.WriteLine(org.Id);
+        elem[0] = org.Id.ToString();
         ContainerSplit.Render();
+        await JSRuntime.InvokeVoidAsync("blazorHelpers.scrollToFragment", elem);
+
     }
 
     public static void ExpandResults(TreeExpandEventArgs args)

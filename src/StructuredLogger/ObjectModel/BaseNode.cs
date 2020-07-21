@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -8,7 +9,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
     {
         private TreeNode parent;
         private NodeFlags flags;
-        public int id;
+
+        private static int _nextID = 0;
+
+        public BaseNode()
+        {
+            Id = Interlocked.Increment(ref _nextID);
+        }
+
+        public int Id { get; }
 
         public TreeNode Parent
         {
