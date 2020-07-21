@@ -267,10 +267,10 @@
   </HierarchicalDataTemplate>
 
   <DataTemplate DataType="{x:Type l:EntryTarget}">
-      <StackPanel Orientation="Horizontal">
-          <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource TargetStroke}" Fill="{StaticResource TargetBrush}" />
-          <TextBlock Text="{Binding Name}" />
-      </StackPanel>
+    <StackPanel Orientation="Horizontal">
+      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource TargetStroke}" Fill="{StaticResource TargetBrush}" />
+      <TextBlock Text="{Binding Name}" />
+    </StackPanel>
   </DataTemplate>
 
   <HierarchicalDataTemplate DataType="{x:Type l:Task}"
