@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
@@ -44,9 +45,9 @@ namespace StructuredLogViewer
             AddRecentItem(filePath, recentMSBuildLocationsFilePath);
         }
 
-        private static IEnumerable<string> cachedRecentMSBuildLocations;
+        private static IEnumerable<string>? cachedRecentMSBuildLocations;
 
-        public static IEnumerable<string> GetRecentMSBuildLocations(IEnumerable<string> extraLocations = null)
+        public static IEnumerable<string> GetRecentMSBuildLocations(IEnumerable<string>? extraLocations = null)
         {
             extraLocations = extraLocations ?? Enumerable.Empty<string>();
 
@@ -198,7 +199,7 @@ namespace StructuredLogViewer
                 lines = File.ReadAllLines(customArgumentsFilePath);
             }
 
-            if (FindArguments(lines, filePath, out string arguments, out int index))
+            if (FindArguments(lines, filePath, out string? arguments, out int index))
             {
                 return arguments;
             }
@@ -214,7 +215,7 @@ namespace StructuredLogViewer
         /// </summary>
         public static bool DisableUpdates => File.Exists(disableUpdatesFilePath);
 
-        private static bool FindArguments(IList<string> lines, string projectFilePath, out string existingArguments, out int index)
+        private static bool FindArguments(IList<string> lines, string projectFilePath, [NotNullWhen(returnValue: true)] out string? existingArguments, out int index)
         {
             for (int i = 0; i < lines.Count; i++)
             {
@@ -264,9 +265,7 @@ namespace StructuredLogViewer
 
                 var list = File.ReadAllLines(customArgumentsFilePath).ToList();
 
-                string arguments;
-                int index;
-                if (FindArguments(list, projectFilePath, out arguments, out index))
+                if (FindArguments(list, projectFilePath, out string? arguments, out int index))
                 {
                     list.RemoveAt(index);
                 }
