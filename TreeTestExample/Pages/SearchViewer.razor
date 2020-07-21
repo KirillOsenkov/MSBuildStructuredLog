@@ -30,7 +30,7 @@
         return JSRuntime.InvokeAsync<bool>("scrollToElementId", elementId);
     }
 
-    void OnChange(TreeEventArgs args)
+    async System.Threading.Tasks.Task OnChange(TreeEventArgs args)
     {
         BaseNode org = ((ProxyNode)(args.Value)).Original;
         org.IsSelected = true;
@@ -39,6 +39,9 @@
             node.IsExpanded = true;
         }
         ContainerSplit.search = true;
+        string[] elem = new string[1];
+        elem[0] = ((BaseNode)args.Value).id.ToString();
+        await JSRuntime.InvokeVoidAsync("blazorHelpers.scrollToFragment", elem);
         ContainerSplit.Render();
     }
 

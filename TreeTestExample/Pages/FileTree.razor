@@ -27,19 +27,17 @@
 <br />
 @if (binLogSelected)
 {
-    <RadzenTree Data="@entries" Style="word-break:break-all;overflow-y:scroll" 
-                                Expand="@((TreeExpandEventArgs args) => {OnExpand(args);})"
-                                Change="@OnChange"
-                                    >
-        <RadzenTreeLevel Template="@TreeFormatting.TreeDesign" 
-                         Text="@GetTextForNode" 
+    <RadzenTree Data="@entries" Style="word-break:break-all;overflow-y:scroll"
+                Expand="@((TreeExpandEventArgs args) => {OnExpand(args);})"
+                Change="@OnChange">
+        <RadzenTreeLevel Template="@TreeFormatting.TreeDesignFiles"
+                         Text="@GetTextForNode"
                          Expanded="@((node) => { return ((BaseNode)node).IsExpanded; })"
                          HasChildren="@((node) => {
                                     if (node is TreeNode)
                                         return ((TreeNode)node).HasChildren;
                                     else return false;
-                                })" 
-                          />
+                                })" />
     </RadzenTree>
 }
 <RadzenNotification />
@@ -56,7 +54,6 @@
 
     static IEnumerable<BaseNode> entries = null;
 
-
     void OnChange(TreeEventArgs args)
     {
         ContainerSplit.selected = (BaseNode)args.Value;
@@ -65,7 +62,8 @@
             ContainerSplit.show += 1;
             SourceFileText();
             ContainerSplit.Render();
-        } else
+        }
+        else
         {
             SourceFileText();
             ContainerSplit.FileRender();

@@ -20,6 +20,18 @@ namespace StructuredLogViewerWASM
 
         public static RenderFragment<RadzenTreeItem> TreeDesign = (RadzenTreeItem context) => builder =>
         {
+            builder.OpenComponent<RadzenIcon>(0);
+            builder.AddAttribute(1, "Icon", "crop_16_9");
+            var node = (BaseNode)context.Value;
+            string color = TreeFormatting.ColorSelector(node);
+            string margin = TreeFormatting.MarginSelector(context);
+            builder.AddAttribute(2, "Style", "color: " + color + ";margin-left: " + margin);
+            builder.CloseComponent();
+            builder.AddContent(4, context.Text);
+        };
+
+        public static RenderFragment<RadzenTreeItem> TreeDesignFiles = (RadzenTreeItem context) => builder =>
+        {
             builder.OpenElement(0, "div");
             builder.AddAttribute(1, "id", count++);
             builder.OpenComponent<RadzenIcon>(0);
@@ -32,7 +44,6 @@ namespace StructuredLogViewerWASM
             builder.AddContent(4, context.Text);
             builder.CloseElement();
             ((BaseNode)context.Value).id = count;
-
         };
 
         private static ValueTask<bool> ScrollToElementId(string elementId)
