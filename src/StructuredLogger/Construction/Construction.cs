@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Build.Execution;
@@ -718,6 +717,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     AddGlobalProperties(project);
                 }
 
+                if (!string.IsNullOrEmpty(args.TargetNames))
+                {
+                    AddEntryTargets(project);
+                }
+
                 if (args.Properties != null)
                 {
                     var properties = project.GetOrCreateNodeWithName<Folder>(Intern("Properties"));
@@ -909,6 +913,23 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 var global = propertiesNode.GetOrCreateNodeWithName<Folder>("Global");
                 AddProperties(global, properties);
+            }
+        }
+
+        private static void AddEntryTargets(Project project)
+        {
+            var targetsNode = project.GetOrCreateNodeWithName<Folder>("Entry Targets");
+            var entryTargets = project.EntryTargets;
+            if (entryTargets != null)
+            {
+                foreach (var entryTarget in entryTargets)
+                {
+                    var property = new EntryTarget
+                    {
+                        Name = entryTarget,
+                    };
+                    targetsNode.AddChild(property);
+                }
             }
         }
 

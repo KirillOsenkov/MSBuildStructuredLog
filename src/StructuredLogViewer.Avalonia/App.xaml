@@ -104,6 +104,16 @@
             </StackPanel>
         </TreeDataTemplate>
 
+        <DataTemplate DataType="{x:Type l:EntryTarget}">
+            <StackPanel Orientation="Horizontal">
+                <Rectangle Name="icon"
+                           Classes="nodeIcon"
+                           Stroke="{StaticResource TargetStroke}"
+                           Fill="{StaticResource TargetBrush}" />
+                <TextBlock Text="{Binding Name}" />
+            </StackPanel>
+        </DataTemplate>
+
         <TreeDataTemplate DataType="{x:Type l:Task}"
                           ItemsSource="{Binding Children}">
             <StackPanel Orientation="Horizontal">
