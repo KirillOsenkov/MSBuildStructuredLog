@@ -30,10 +30,14 @@ namespace StructuredLogViewerWASM
             builder.AddContent(4, context.Text);
         };
 
+        //#E7E6E9 is the color I want for when something is being selected
+        //nothing if it's not selected
         public static RenderFragment<RadzenTreeItem> TreeDesignFiles = (RadzenTreeItem context) => builder =>
         {
             builder.OpenElement(0, "div");
             builder.AddAttribute(1, "id", count++);
+            if (((BaseNode)context.Value).IsSelected)
+                builder.AddAttribute(1, "Style", "background-color: #E7E6E9");
             builder.OpenComponent<RadzenIcon>(0);
             builder.AddAttribute(1, "Icon", "crop_16_9");
             var node = (BaseNode)context.Value;
@@ -44,6 +48,7 @@ namespace StructuredLogViewerWASM
             builder.AddContent(4, context.Text);
             builder.CloseElement();
             ((BaseNode)context.Value).id = count;
+            ((BaseNode)context.Value).IsSelected = false;
         };
 
         private static ValueTask<bool> ScrollToElementId(string elementId)
