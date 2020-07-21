@@ -193,5 +193,42 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public IReadOnlyList<string> EntryTargets { get; set; } = Array.Empty<string>();
         public IDictionary<string, string> GlobalProperties { get; set; } = ImmutableDictionary<string, string>.Empty;
+
+        public override string ToolTip
+        {
+            get
+            {
+                var sb = new StringBuilder();
+
+                sb.AppendLine(ProjectFile);
+
+                if (EntryTargets != null)
+                {
+                    sb.AppendLine();
+                    sb.AppendLine("Targets:");
+                    sb.AppendLine();
+                    foreach (var target in EntryTargets.OrderBy(target => target, StringComparer.InvariantCultureIgnoreCase))
+                    {
+                        sb.AppendLine(target);
+                    }
+                }
+
+                if (GlobalProperties != null)
+                {
+                    sb.AppendLine();
+                    sb.AppendLine("Global Properties:");
+                    sb.AppendLine();
+                    foreach (var pair in GlobalProperties.OrderBy(pair => pair.Key, StringComparer.InvariantCultureIgnoreCase))
+                    {
+                        sb.AppendLine($"{pair.Key} = {pair.Value}");
+                    }
+                }
+
+                sb.AppendLine();
+                sb.Append(GetTimeAndDurationText());
+
+                return sb.ToString();
+            }
+        }
     }
 }

@@ -198,7 +198,7 @@
       <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}"
                  Width="16" Height="16" Margin="2,2,6,2" StrokeThickness="0"
                  Fill="{StaticResource GenericProjectIcon}" />
-      <TextBlock Text="{Binding Name}" Margin="0,2,0,0" />
+      <TextBlock Text="{Binding Name}" Margin="0,2,0,0" ToolTip="{Binding ToolTip}" ToolTipService.ShowDuration="60000" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
       <DataTrigger Binding="{Binding IsLowRelevance}" Value="True">
@@ -265,6 +265,25 @@
       </DataTrigger>
     </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
+
+  <DataTemplate DataType="{x:Type l:EntryTarget}">
+    <StackPanel Orientation="Horizontal" x:Name="entryTargetRoot">
+      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource TargetStroke}" Fill="{StaticResource TargetBrush}" />
+      <TextBlock Text="{Binding Name}" />
+      <TextBlock x:Name="duration" Text="{Binding DurationText}" Margin="6,0,0,0" ToolTip="{Binding ToolTip}" />
+      <controls:NodeHyperlinkControl
+          Text=" → Show"
+          Foreground="LightBlue" />
+    </StackPanel>
+    <DataTemplate.Triggers>
+      <DataTrigger Binding="{Binding IsLowRelevance}" Value="True">
+        <Setter TargetName="entryTargetRoot" Property="Opacity" Value="0.25" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding IsSelected}" Value="False">
+        <Setter TargetName="duration" Property="Foreground" Value="LightGray" />
+      </DataTrigger>
+    </DataTemplate.Triggers>
+  </DataTemplate>
 
   <HierarchicalDataTemplate DataType="{x:Type l:Task}"
                             ItemsSource="{Binding Children}">

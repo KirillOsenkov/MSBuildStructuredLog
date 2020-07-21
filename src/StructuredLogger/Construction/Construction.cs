@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Build.Execution;
@@ -711,13 +710,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     ? ImmutableArray<string>.Empty
                     : stringTable.InternList(TextUtilities.SplitSemicolonDelimitedList(args.TargetNames));
 
-                var internedGlobalProperties = stringTable.InternStringDictionary(args.GlobalProperties) ?? ImmutableDictionary<string, string>.Empty;
-
-                project.GlobalProperties = internedGlobalProperties;
+                project.GlobalProperties = stringTable.InternStringDictionary(args.GlobalProperties) ?? ImmutableDictionary<string, string>.Empty;
 
                 if (args.GlobalProperties != null)
                 {
-                    AddGlobalProperties(project, internedGlobalProperties);
+                    AddGlobalProperties(project);
+                }
+
+                if (!string.IsNullOrEmpty(args.TargetNames))
+                {
+                    AddEntryTargets(project);
                 }
 
                 if (args.Properties != null)
@@ -903,13 +905,31 @@ namespace Microsoft.Build.Logging.StructuredLogger
             _taskToAssemblyMap.GetOrAdd(taskName, t => assembly);
         }
 
-        private void AddGlobalProperties(Project project, IEnumerable<KeyValuePair<string, string>> properties)
+        private void AddGlobalProperties(Project project)
         {
             var propertiesNode = project.GetOrCreateNodeWithName<Folder>("Properties");
+            var properties = project.GlobalProperties;
             if (properties != null && properties.Any())
             {
                 var global = propertiesNode.GetOrCreateNodeWithName<Folder>("Global");
                 AddProperties(global, properties);
+            }
+        }
+
+        private static void AddEntryTargets(Project project)
+        {
+            var targetsNode = project.GetOrCreateNodeWithName<Folder>("Entry Targets");
+            var entryTargets = project.EntryTargets;
+            if (entryTargets != null)
+            {
+                foreach (var entryTarget in entryTargets)
+                {
+                    var property = new EntryTarget
+                    {
+                        Name = entryTarget,
+                    };
+                    targetsNode.AddChild(property);
+                }
             }
         }
 
