@@ -44,6 +44,7 @@
         string[] elem = new string[1];
         Console.WriteLine(org.Id);
         elem[0] = org.Id.ToString();
+        await System.Threading.Tasks.Task.Delay(1000);
         ContainerSplit.Render();
         await JSRuntime.InvokeVoidAsync("blazorHelpers.scrollToFragment", elem);
 
