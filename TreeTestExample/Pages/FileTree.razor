@@ -168,6 +168,17 @@
         reading = false;
         waitText = "";
         entries = null;
+        ContainerSplit.files = null;
+        FindFiles.findResults = null;
+        SearchViewer.searchResults = null;
+        ContainerSplit.search = false;
+        if (ContainerSplit.show % 2 == 1)
+        {
+            ContainerSplit.show += 1;
+        }
+        ContainerSplit.Render();
+        FindFiles.search = null;
+        SearchViewer.search = null;
     }
 
     public async System.Threading.Tasks.Task ReadFile()
@@ -185,7 +196,7 @@
             {
                 await ShowNotification(new NotificationMessage());
                 await ClearFile();
-                break;
+                return;
             }
             waitText = "Still reading...";
             this.StateHasChanged();

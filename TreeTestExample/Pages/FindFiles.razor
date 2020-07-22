@@ -5,7 +5,7 @@
 @using Microsoft.Build.Logging.StructuredLogger
 @using System.IO
 
-<RadzenTextBox Placeholder="Search..." Change="@(args => Change(args, "TextBox with placeholder"))" Style="margin-bottom: 20px" />
+<RadzenTextBox Value=@search Placeholder="Search..." Change="@(args => Change(args, "TextBox with placeholder"))" Style="margin-bottom: 20px" />
 <br />
 <br />
 <RadzenTree Data="@findResults" 
@@ -23,11 +23,13 @@
 @code {
     [CascadingParameter]
     public SplitPane ContainerSplit { get; set; }
-    static IEnumerable<BaseNode> findResults;
+    public static IEnumerable<BaseNode> findResults;
+    public static string search;
 
     void OnChange(TreeEventArgs args)
     {
-        ContainerSplit.selected = (BaseNode)args.Value;
+        ContainerSplit.selected = ((ProxyNode)(args.Value)).Original;
+        //ContainerSplit.selected = (BaseNode)args.Value;
         if (ContainerSplit.show % 2 == 0)
         {
             ContainerSplit.show += 1;
@@ -39,6 +41,10 @@
 
     void Change(string value, string name)
     {
+        if (value != null)
+        {
+            search = value;
+        }
         var results = FindInFiles(value, 1000, new System.Threading.CancellationToken());
         findResults = (IEnumerable<BaseNode>) BuildFindResults(results, true, value);
     }

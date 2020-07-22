@@ -6,7 +6,7 @@
 @using System.Collections
 @inject IJSRuntime JSRuntime
 
-<RadzenTextBox Placeholder="Search..." Change="@(args => Change(args, "TextBox with placeholder"))" Style="margin-bottom: 20px" />
+<RadzenTextBox Value=@search Placeholder="Search..." Change="@(args => Change(args, "TextBox with placeholder"))" Style="margin-bottom: 20px" />
 <br />
 <br />
 <RadzenTree Data="@searchResults" Style="word-break:break-all;overflow-y:scroll;color:black" Change="@OnChange" Expand="@((TreeExpandEventArgs args) => {ExpandResults(args);})">
@@ -19,8 +19,9 @@
 </RadzenTree>
 @code {
     public static StructuredLogViewer.Search searcher;
-    static IEnumerable<BaseNode> searchResults;
+    public static IEnumerable<BaseNode> searchResults;
     public static string test;
+    public static string search;
 
     [CascadingParameter]
     public SplitPane ContainerSplit { get; set; }
@@ -32,6 +33,7 @@
 
     async System.Threading.Tasks.Task OnChange(TreeEventArgs args)
     {
+
         BaseNode org = ((ProxyNode)(args.Value)).Original;
         org.IsSelected = true;
         foreach (var node in org.GetParentChainExcludingThis())
@@ -58,6 +60,10 @@
 
     void Change(string value, string name)
     {
+        if (value != null)
+        {
+            search = value;
+        }
         if (searcher == null)
         {
             return;
