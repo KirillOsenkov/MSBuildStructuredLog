@@ -53,6 +53,9 @@
             public IEnumerable<Microsoft.Build.Logging.StructuredLogger.BaseNode> files;
             public string SourceFileText;
             public string sfn;
+            //0 is sfr 1 is afr -1 neither
+            public int sfrOrafr = -1;
+
 
             public void Render()
             {

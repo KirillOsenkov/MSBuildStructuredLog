@@ -28,8 +28,10 @@
 
     void OnChange(TreeEventArgs args)
     {
-        ContainerSplit.selected = ((ProxyNode)(args.Value)).Original;
-        //ContainerSplit.selected = (BaseNode)args.Value;
+        // ContainerSplit.selected = ((ProxyNode)(args.Value)).Original;
+        ContainerSplit.selected = (BaseNode)args.Value;
+        ContainerSplit.sfrOrafr = 1;
+        SourceFileText();
         if (ContainerSplit.show % 2 == 0)
         {
             ContainerSplit.show += 1;
@@ -121,4 +123,125 @@
 
         return root.Children;
     }
+
+    public void SourceFileText()
+    {
+        StructuredLogViewer.SourceFileResolver sourceFileResolver = ContainerSplit.sourceFileResolver;
+        string path = "";
+        BaseNode bn = (BaseNode)ContainerSplit.selected;
+        ContainerSplit.SourceFileText = null;
+        ContainerSplit.sfn = "";
+
+        if (bn is AbstractDiagnostic)
+        {
+            AbstractDiagnostic ad = (AbstractDiagnostic)bn;
+            path = ad.ProjectFile;
+            if (ad.IsTextShortened)
+            {
+                ContainerSplit.SourceFileText = ad.Text;
+                ContainerSplit.sfn = ad.ShortenedText;
+            }
+            else
+            {
+
+                if (ContainerSplit.sfrOrafr == 0)
+                {
+                    ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
+                }
+                else if (ContainerSplit.sfrOrafr == 1)
+                {
+                    ContainerSplit.SourceFileText = ContainerSplit.afr.GetSourceFileText(path).Text;
+                }
+                ContainerSplit.sfn = ad.Name;
+            }
+        }
+        else if (bn is Project)
+        {
+            path = ((Project)bn).SourceFilePath;
+            ContainerSplit.sfn = ((Project)bn).Name;
+
+            if (ContainerSplit.sfrOrafr == 0)
+            {
+                ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
+            }
+            else if (ContainerSplit.sfrOrafr == 1)
+            {
+                ContainerSplit.SourceFileText = ContainerSplit.afr.GetSourceFileText(path).Text;
+            }
+        }
+        else if (bn is Target)
+        {
+            path = ((Target)ContainerSplit.selected).SourceFilePath;
+            ContainerSplit.sfn = ((Target)bn).Name;
+
+            if (ContainerSplit.sfrOrafr == 0)
+            {
+                ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
+            }
+            else if (ContainerSplit.sfrOrafr == 1)
+            {
+                ContainerSplit.SourceFileText = ContainerSplit.afr.GetSourceFileText(path).Text;
+            }
+        }
+        else if (bn is Microsoft.Build.Logging.StructuredLogger.Task)
+        {
+            path = ((Microsoft.Build.Logging.StructuredLogger.Task)bn).SourceFilePath;
+            ContainerSplit.sfn = ((Microsoft.Build.Logging.StructuredLogger.Task)bn).Name;
+
+            if (ContainerSplit.sfrOrafr == 0)
+            {
+                ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
+            }
+            else if (ContainerSplit.sfrOrafr == 1)
+            {
+                ContainerSplit.SourceFileText = ContainerSplit.afr.GetSourceFileText(path).Text;
+            }
+        }
+        else if (bn is IHasSourceFile && ((IHasSourceFile)bn).SourceFilePath != null)
+        {
+            path = ((IHasSourceFile)bn).SourceFilePath;
+            ContainerSplit.sfn = ((IHasSourceFile)bn).SourceFilePath;
+
+            if (ContainerSplit.sfrOrafr == 0)
+            {
+                ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
+            }
+            else if (ContainerSplit.sfrOrafr == 1)
+            {
+                ContainerSplit.SourceFileText = ContainerSplit.afr.GetSourceFileText(path).Text;
+            }
+        }
+        else if (bn is SourceFileLine && ((SourceFileLine)bn).Parent is Microsoft.Build.Logging.StructuredLogger.SourceFile
+        && ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).SourceFilePath != null)
+        {
+            path = ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).SourceFilePath;
+            ContainerSplit.sfn = ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).Name;
+
+            if (ContainerSplit.sfrOrafr == 0)
+            {
+                ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
+            }
+            else if (ContainerSplit.sfrOrafr == 1)
+            {
+                ContainerSplit.SourceFileText = ContainerSplit.afr.GetSourceFileText(path).Text;
+            }
+        }
+        else if (bn is NameValueNode && ((NameValueNode)bn).IsValueShortened)
+        {
+            ContainerSplit.SourceFileText = ((NameValueNode)bn).Value;
+            ContainerSplit.sfn = ((NameValueNode)bn).Name;
+        }
+        else if (bn is TextNode && ((TextNode)bn).IsTextShortened)
+        {
+            ContainerSplit.SourceFileText = ((TextNode)bn).Text;
+            ContainerSplit.sfn = ((TextNode)bn).Name;
+        }
+
+        if (ContainerSplit.SourceFileText == null)
+        {
+            ContainerSplit.SourceFileText = "No file to display";
+        }
+        ContainerSplit.sfrOrafr = -1;
+    }
+
 }

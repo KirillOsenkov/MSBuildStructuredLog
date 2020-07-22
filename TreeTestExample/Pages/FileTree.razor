@@ -57,6 +57,7 @@
     void OnChange(TreeEventArgs args)
     {
         ContainerSplit.selected = (BaseNode)args.Value;
+        ContainerSplit.sfrOrafr = 0;
         if (ContainerSplit.show % 2 == 0)
         {
             ContainerSplit.show += 1;
@@ -89,40 +90,87 @@
             }
             else
             {
-                ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
+
+                if (ContainerSplit.sfrOrafr == 0)
+                {
+                    ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
+                } else if (ContainerSplit.sfrOrafr == 1)
+                {
+                    ContainerSplit.SourceFileText = ContainerSplit.afr.GetSourceFileText(path).Text;
+                }
                 ContainerSplit.sfn = ad.Name;
             }
         }
         else if (bn is Project)
         {
             path = ((Project)bn).SourceFilePath;
-            ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
             ContainerSplit.sfn = ((Project)bn).Name;
+
+            if (ContainerSplit.sfrOrafr == 0)
+            {
+                ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
+            }
+            else if (ContainerSplit.sfrOrafr == 1)
+            {
+                ContainerSplit.SourceFileText = ContainerSplit.afr.GetSourceFileText(path).Text;
+            }
         }
         else if (bn is Target)
         {
             path = ((Target)ContainerSplit.selected).SourceFilePath;
-            ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
             ContainerSplit.sfn = ((Target)bn).Name;
+
+            if (ContainerSplit.sfrOrafr == 0)
+            {
+                ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
+            }
+            else if (ContainerSplit.sfrOrafr == 1)
+            {
+                ContainerSplit.SourceFileText = ContainerSplit.afr.GetSourceFileText(path).Text;
+            }
         }
         else if (bn is Microsoft.Build.Logging.StructuredLogger.Task)
         {
             path = ((Microsoft.Build.Logging.StructuredLogger.Task)bn).SourceFilePath;
-            ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
             ContainerSplit.sfn = ((Microsoft.Build.Logging.StructuredLogger.Task)bn).Name;
+
+            if (ContainerSplit.sfrOrafr == 0)
+            {
+                ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
+            }
+            else if (ContainerSplit.sfrOrafr == 1)
+            {
+                ContainerSplit.SourceFileText = ContainerSplit.afr.GetSourceFileText(path).Text;
+            }
         }
         else if (bn is IHasSourceFile && ((IHasSourceFile)bn).SourceFilePath != null)
         {
             path = ((IHasSourceFile)bn).SourceFilePath;
-            ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
             ContainerSplit.sfn = ((IHasSourceFile)bn).SourceFilePath;
+
+            if (ContainerSplit.sfrOrafr == 0)
+            {
+                ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
+            }
+            else if (ContainerSplit.sfrOrafr == 1)
+            {
+                ContainerSplit.SourceFileText = ContainerSplit.afr.GetSourceFileText(path).Text;
+            }
         }
         else if (bn is SourceFileLine && ((SourceFileLine)bn).Parent is Microsoft.Build.Logging.StructuredLogger.SourceFile
         && ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).SourceFilePath != null)
         {
             path = ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).SourceFilePath;
-            ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
             ContainerSplit.sfn = ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).Name;
+
+            if (ContainerSplit.sfrOrafr == 0)
+            {
+                ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
+            }
+            else if (ContainerSplit.sfrOrafr == 1)
+            {
+                ContainerSplit.SourceFileText = ContainerSplit.afr.GetSourceFileText(path).Text;
+            }
         }
         else if (bn is NameValueNode && ((NameValueNode)bn).IsValueShortened)
         {
@@ -139,6 +187,7 @@
         {
             ContainerSplit.SourceFileText = "No file to display";
         }
+        ContainerSplit.sfrOrafr = -1;
     }
 
     async System.Threading.Tasks.Task ShowNotification(NotificationMessage message)
