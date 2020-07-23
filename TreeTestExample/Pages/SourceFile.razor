@@ -3,13 +3,12 @@
 @using StructuredLogViewer
 @using System.IO
 
-        <div  style="justify-content:right">
-            <button @onclick=Exit class="btn btn-primary">Close</button>
-        </div>
+         <button @onclick=Exit style="float:right"class="btn btn-primary">Close</button>
         <h3>@ContainerSplit.sfn</h3>
 
 
-
+<br />
+<br />
 
 <MonacoEditor @ref="_editor" CssClass="code" Id="monaco-editor" ConstructionOptions="EditorConstructionOptions" />
 
