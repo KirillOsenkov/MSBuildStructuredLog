@@ -46,6 +46,9 @@
         elem[0] = org.Id.ToString();
         await System.Threading.Tasks.Task.Delay(1000);
         ContainerSplit.Render();
+        ContainerSplit.search = true;
+        org.IsSelected = true;
+        ContainerSplit.Render();
         await JSRuntime.InvokeVoidAsync("blazorHelpers.scrollToFragment", elem);
 
     }

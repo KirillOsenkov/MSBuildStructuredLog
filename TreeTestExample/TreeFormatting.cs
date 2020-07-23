@@ -36,7 +36,10 @@ namespace StructuredLogViewerWASM
             builder.OpenElement(0, "div");
             builder.AddAttribute(1, "id", ((BaseNode)context.Value).Id.ToString());
             if (((BaseNode)context.Value).IsSelected)
+            {
                 builder.AddAttribute(2, "Style", "background-color: #E7E6E9");
+                ((BaseNode)context.Value).IsSelected = false;
+            } 
             builder.OpenComponent<RadzenIcon>(0);
             builder.AddAttribute(3, "Icon", "crop_16_9");
             var node = (BaseNode)context.Value;
@@ -46,8 +49,6 @@ namespace StructuredLogViewerWASM
             builder.CloseComponent();
             builder.AddContent(5, context.Text);
             builder.CloseElement();
-            
-            ((BaseNode)context.Value).IsSelected = false;
         };
 
         private static ValueTask<bool> ScrollToElementId(string elementId)
