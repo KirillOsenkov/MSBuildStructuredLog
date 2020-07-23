@@ -27,6 +27,7 @@
 <br />
 @if (binLogSelected)
 {
+<div id="fileTree">
     <RadzenTree Data="@entries" Style="word-break:break-all;overflow-y:scroll"
                 Expand="@((TreeExpandEventArgs args) => {OnExpand(args);})"
                 Change="@OnChange">
@@ -43,6 +44,7 @@
                                     else return false;
                                 })" />
     </RadzenTree>
+</div>
 }
 <RadzenNotification />
 

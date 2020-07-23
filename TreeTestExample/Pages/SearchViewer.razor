@@ -49,6 +49,7 @@
         ContainerSplit.search = true;
         org.IsSelected = true;
         ContainerSplit.Render();
+        await System.Threading.Tasks.Task.Delay(1000);
         await JSRuntime.InvokeVoidAsync("blazorHelpers.scrollToFragment", elem);
 
     }
