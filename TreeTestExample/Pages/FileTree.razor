@@ -32,6 +32,10 @@
                 Change="@OnChange">
         <RadzenTreeLevel Template="@TreeFormatting.TreeDesignFiles"
                          Text="@GetTextForNode"
+                         Selected="@((node) => {
+                                         bool temp = ((BaseNode)node).SourceDisplayed;
+                                         ((BaseNode)node).SourceDisplayed = false;
+                                         return temp; })"
                          Expanded="@((node) => { return ((BaseNode)node).IsExpanded; })"
                          HasChildren="@((node) => {
                                     if (node is TreeNode)
@@ -59,6 +63,7 @@
     {
         ContainerSplit.selected = (BaseNode)args.Value;
         ContainerSplit.sfrOrafr = 0;
+        ((BaseNode)args.Value).SourceDisplayed = true;
         if (ContainerSplit.show % 2 == 0)
         {
             ContainerSplit.show += 1;
@@ -221,7 +226,7 @@
         ContainerSplit.files = null;
         FindFiles.findResults = null;
         SearchViewer.searchResults = null;
-        ContainerSplit.search = false;
+        ContainerSplit.search = true;
         if (ContainerSplit.show % 2 == 1)
         {
             ContainerSplit.show += 1;

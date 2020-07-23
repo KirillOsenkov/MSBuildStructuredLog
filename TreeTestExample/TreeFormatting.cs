@@ -69,7 +69,12 @@ namespace StructuredLogViewerWASM
                     return false;
             };
             args.Children.Template = TreeDesignFiles;
-            // args.Children.Selected = ((node) => { return ((BaseNode)node).IsSelected; });
+            args.Children.Selected = ((node) =>
+            {
+                bool temp = ((BaseNode)node).SourceDisplayed;
+                ((BaseNode)node).SourceDisplayed = false;
+                return temp;
+            });
             args.Children.Expanded = ((node) => { return ((BaseNode)node).IsExpanded; });
             ((BaseNode)(args.Value)).IsExpanded = true;
         }

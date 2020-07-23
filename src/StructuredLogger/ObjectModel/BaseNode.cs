@@ -10,6 +10,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private TreeNode parent;
         private NodeFlags flags;
 
+        public bool SourceDisplayed;
+
         private static int _nextID = 0;
 
         public BaseNode()
