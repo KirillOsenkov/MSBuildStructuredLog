@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO;
+using System;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -16,13 +17,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     projectImportsArchive = File.ReadAllBytes(projectImportsZipFile);
                 }
 
-                var build = ReadBuild(stream, projectImportsArchive);
+                var build = ReadBuild(stream, projectImportsArchive).Result;
                 build.LogFilePath = filePath;
                 return build;
             }
         }
 
-        public static Build ReadBuild(Stream stream, byte[] projectImportsArchive = null)
+        public static async System.Threading.Tasks.Task<Build> ReadBuild(Stream stream, byte[] projectImportsArchive = null, Func<long, long, System.Threading.Tasks.Task> progressFunc = null)
         {
             var eventSource = new BinLogReader();
 
@@ -52,7 +53,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             build = structuredLogger.Construction.Build;
 
             var sw = Stopwatch.StartNew();
-            eventSource.Replay(stream);
+            await eventSource.Replay(stream, progressFunc);
             var elapsed = sw.Elapsed;
 
             structuredLogger.Shutdown();

@@ -34,11 +34,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             using (var stream = new FileStream(sourceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                Replay(stream);
+                Replay(stream).Wait();
             }
         }
 
-        public void Replay(Stream stream)
+        public async System.Threading.Tasks.Task Replay(Stream stream, Func<long, long, System.Threading.Tasks.Task> progressFunc = null)
         {
             var gzipStream = new GZipStream(stream, CompressionMode.Decompress, leaveOpen: true);
             var binaryReader = new BinaryReader(gzipStream);
@@ -90,6 +90,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
 
                 Dispatch(instance);
+                if (progressFunc != null)
+                {
+                    await progressFunc(stream.Position, stream.Length);
+                }
             }
 
             //processingTask.Wait();

@@ -16,7 +16,7 @@
     <br />
     @if (reading)
     {
-        <RadzenProgressBar Value="100" ShowValue="false" Mode="ProgressBarMode.Indeterminate" Style="margin-bottom: 20px" />
+<RadzenProgressBar Value="@_progressValue" ShowValue="false" Mode="ProgressBarMode.Determinate" Style="margin-bottom: 20px" />
         <h3>@waitText</h3>
     }
 </center>
@@ -48,6 +48,7 @@
     static string test;
     static bool reading;
     static string waitText;
+    double _progressValue = 0;
 
     [CascadingParameter]
     public SplitPane ContainerSplit { get; set; }
@@ -232,49 +233,69 @@
 
     public async System.Threading.Tasks.Task ReadFile()
     {
-        binLogSelected = false;
-        reading = true;
-        this.StateHasChanged();
-        waitText = "Here we go...";
-        var files = (await fileReaderService.CreateReference(inputElement).EnumerateFilesAsync());
-        foreach (Blazor.FileReader.IFileReference file in files)
-        {
-            var fileInfo = await file.ReadFileInfoAsync();
-            String[] split = fileInfo.Name.Split(".");
-            if (!String.Equals("binlog", split[split.Length - 1]))
+        try {
+            binLogSelected = false;
+            reading = true;
+            this.StateHasChanged();
+            waitText = "Here we go...";
+            var files = (await fileReaderService.CreateReference(inputElement).EnumerateFilesAsync());
+            foreach (Blazor.FileReader.IFileReference file in files)
             {
-                await ShowNotification(new NotificationMessage());
-                await ClearFile();
-                return;
+                var fileInfo = await file.ReadFileInfoAsync();
+                String[] split = fileInfo.Name.Split(".");
+                if (!String.Equals("binlog", split[split.Length - 1]))
+                {
+                    await ShowNotification(new NotificationMessage());
+                    await ClearFile();
+                    return;
+                }
+                waitText = "Still reading...";
+                this.StateHasChanged();
+                binLogSelected = true;
+                Task<Blazor.FileReader.AsyncDisposableStream>
+                streamTask = file.OpenReadAsync();
+                var stream = await streamTask;
+                var memoryStream = new MemoryStream();
+                waitText = "Teaching you patience...";
+                this.StateHasChanged();
+                await stream.CopyToAsync(memoryStream);
+
+                memoryStream.Position = 0;
+                System.Diagnostics.Stopwatch timeSinceUpdate = System.Diagnostics.Stopwatch.StartNew();
+
+                //ContainerSplit.build = Serialization.ReadBinLog(memoryStream);
+                ContainerSplit.build = await BinaryLog.ReadBuild(memoryStream, progressFunc: async (current, total) =>
+                {
+                    if (timeSinceUpdate.Elapsed.TotalSeconds > 0.1)
+                    {
+                        //waitText = current.ToString() + " / " + total.ToString();
+                        //Console.WriteLine(waitText);
+                        _progressValue = 100 * current / (double)total;
+                        this.StateHasChanged();
+                        await System.Threading.Tasks.Task.Delay(1);
+                        timeSinceUpdate.Restart();
+                    }
+                });
+
+                SearchViewer.searcher = new StructuredLogViewer.Search(ContainerSplit.build, StructuredLogViewer.Search.DefaultMaxResults);
+                waitText = "Trust me you're computer wants this to be over more than you do...";
+                this.StateHasChanged();
+                BuildAnalyzer.AnalyzeBuild(ContainerSplit.build);
+                waitText = "Not a joke...We're actually still reading...";
+                this.StateHasChanged();
+                entries = (IEnumerable<BaseNode>)ContainerSplit.build.Children;
             }
-            waitText = "Still reading...";
+            ContainerSplit.sourceFileResolver = new StructuredLogViewer.SourceFileResolver(ContainerSplit.build.SourceFilesArchive);
+            ContainerSplit.afr = ContainerSplit.sourceFileResolver.ArchiveFile;
+            PopulateFilesTab();
             this.StateHasChanged();
-            binLogSelected = true;
-            Task<Blazor.FileReader.AsyncDisposableStream>
-            streamTask = file.OpenReadAsync();
-            var stream = await streamTask;
-            var memoryStream = new MemoryStream();
-            waitText = "Teaching you patience...";
-            this.StateHasChanged();
-            await stream.CopyToAsync(memoryStream);
-
-            memoryStream.Position = 0;
-
-            ContainerSplit.build = Serialization.ReadBinLog(memoryStream);
-            SearchViewer.searcher = new StructuredLogViewer.Search(ContainerSplit.build, StructuredLogViewer.Search.DefaultMaxResults);
-            waitText = "Trust me you're computer wants this to be over more than you do...";
-            this.StateHasChanged();
-            BuildAnalyzer.AnalyzeBuild(ContainerSplit.build);
-            waitText = "Not a joke...We're actually still reading...";
-            this.StateHasChanged();
-            entries = (IEnumerable<BaseNode>)ContainerSplit.build.Children;
+            reading = false;
+            waitText = "";
+        } catch (Exception ex)
+        {
+            Console.WriteLine(ex.ToString());
+            throw;
         }
-        ContainerSplit.sourceFileResolver = new StructuredLogViewer.SourceFileResolver(ContainerSplit.build.SourceFilesArchive);
-        ContainerSplit.afr = ContainerSplit.sourceFileResolver.ArchiveFile;
-        PopulateFilesTab();
-        this.StateHasChanged();
-        reading = false;
-        waitText = "";
 
     }
 
