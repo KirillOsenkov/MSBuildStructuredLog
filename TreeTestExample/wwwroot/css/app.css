@@ -6,6 +6,14 @@ html, body {
     overflow-y:hidden;
 }
 
+.decorationGlyphMarginClass {
+    background: red;
+}
+
+.decorationContentClass {
+    background: lightblue;
+}
+
 .code {
     font-family: Consolas, Courier New, Courier, monospace;
     font-size: small;

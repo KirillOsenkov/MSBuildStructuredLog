@@ -140,6 +140,7 @@
             {
                 ContainerSplit.SourceFileText = ad.Text;
                 ContainerSplit.sfn = ad.ShortenedText;
+                ContainerSplit.lineNumber = ad.LineNumber;
             }
             else
             {
@@ -153,12 +154,14 @@
                     ContainerSplit.SourceFileText = ContainerSplit.afr.GetSourceFileText(path).Text;
                 }
                 ContainerSplit.sfn = ad.Name;
+                ContainerSplit.lineNumber = ad.LineNumber;
             }
         }
         else if (bn is Project)
         {
             path = ((Project)bn).SourceFilePath;
             ContainerSplit.sfn = ((Project)bn).Name;
+
 
             if (ContainerSplit.sfrOrafr == 0)
             {
@@ -216,7 +219,7 @@
         {
             path = ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).SourceFilePath;
             ContainerSplit.sfn = ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).Name;
-
+            ContainerSplit.lineNumber = ((SourceFileLine)bn).LineNumber;
             if (ContainerSplit.sfrOrafr == 0)
             {
                 ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
@@ -230,11 +233,13 @@
         {
             ContainerSplit.SourceFileText = ((NameValueNode)bn).Value;
             ContainerSplit.sfn = ((NameValueNode)bn).Name;
+
         }
         else if (bn is TextNode && ((TextNode)bn).IsTextShortened)
         {
             ContainerSplit.SourceFileText = ((TextNode)bn).Text;
             ContainerSplit.sfn = ((TextNode)bn).Name;
+            
         }
 
         if (ContainerSplit.SourceFileText == null)

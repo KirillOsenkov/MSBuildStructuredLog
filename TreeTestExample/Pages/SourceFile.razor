@@ -2,16 +2,18 @@
 @using Microsoft.Build.Logging.StructuredLogger
 @using StructuredLogViewer
 @using System.IO
+@using BlazorMonaco
+@using BlazorMonaco.Bridge
 
-         <button @onclick=Exit style="float:right"class="btn btn-primary">Close</button>
-        <h3>@ContainerSplit.sfn</h3>
+<button @onclick=Exit style="float:right" class="btn btn-primary">Close</button>
+<h3>@ContainerSplit.sfn</h3>
 
 
 <br />
 <br />
 <br />
 
-<MonacoEditor @ref="_editor" CssClass="code" Id="monaco-editor" ConstructionOptions="EditorConstructionOptions" />
+<MonacoEditor @ref="_editor" CssClass="code" Id="monaco-editor" ConstructionOptions="EditorConstructionOptions" OnDidInit="EditorOnDidInit"/>
 
 
 @code {
@@ -25,8 +27,33 @@
         {
             ReadOnly = true,
             Value = ContainerSplit.SourceFileText,
+            GlyphMargin = true,
 
         };
+    }
+
+    private async System.Threading.Tasks.Task EditorOnDidInit(MonacoEditor editor)
+    {
+        if (ContainerSplit.lineNumber != -1)
+        {
+            var newDecorations = new ModelDeltaDecoration[]
+            {
+            new ModelDeltaDecoration
+            {
+                Range = new BlazorMonaco.Bridge.Range(ContainerSplit.lineNumber,1,ContainerSplit.lineNumber,1),
+                Options = new ModelDecorationOptions
+                {
+                    IsWholeLine = true,
+                    ClassName = "decorationContentClass",
+                    GlyphMarginClassName = "decorationGlyphMarginClass"
+                }
+            }
+                };
+            ContainerSplit.lineNumber = -1;
+            await _editor.DeltaDecorations(null, newDecorations);
+        }
+
+
     }
 
     protected override bool ShouldRender()
