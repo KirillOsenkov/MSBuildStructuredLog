@@ -67,11 +67,12 @@
                 }
             }
 
-            public void FileRender()
+            public async void FileRender()
             {
                 if (sf != null)
                 {
                     sf.Render();
+                    await sf.changeHighlight(sf._editor);
                 }
             }
 

@@ -19,7 +19,7 @@
 @code {
     [CascadingParameter]
     public SplitPane ContainerSplit { get; set; }
-    private MonacoEditor _editor { get; set; }
+    public MonacoEditor _editor { get; set; }
 
     private StandaloneEditorConstructionOptions EditorConstructionOptions(MonacoEditor editor)
     {
@@ -30,6 +30,12 @@
             GlyphMargin = true,
 
         };
+
+    }
+
+    public async System.Threading.Tasks.Task changeHighlight(MonacoEditor editor)
+    {
+        await EditorOnDidInit(editor);
     }
 
     private async System.Threading.Tasks.Task EditorOnDidInit(MonacoEditor editor)
