@@ -1,15 +1,13 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
-using System.Text;
+using System.Runtime.Serialization.Json;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class ResourcesCollection
     {
-        public Dictionary<string, Dictionary<string, string>> CultureResources { get; set; } = new Dictionary<string, Dictionary<string, string>>();
+        public Dictionary<string, Dictionary<string, string>> CultureResources { get; set; }
     }
 
     public class StringsSet
@@ -23,9 +21,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 var assembly = typeof(StructuredLogger).Assembly;
                 var stream = assembly.GetManifestResourceStream(@"Strings.json");
-                using var streamReader = new StreamReader(stream);
-                var jsonstring = streamReader.ReadToEnd();
-                ResourcesCollection = JsonConvert.DeserializeObject<ResourcesCollection>(jsonstring);
+
+                var settings = new DataContractJsonSerializerSettings() { UseSimpleDictionaryFormat = true };
+                var d = new DataContractJsonSerializer(typeof(ResourcesCollection), settings);
+                ResourcesCollection = (ResourcesCollection)d.ReadObject(stream);
             }
 
             if (ResourcesCollection.CultureResources.ContainsKey(cultureInfo.Name))
@@ -49,7 +48,5 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return String.Empty;
             }
         }
-
     }
-
 }
