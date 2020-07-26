@@ -35,14 +35,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public string GetString(string key)
         {
-            if (CurrentSet.ContainsKey(key))
+            if (CurrentSet.TryGetValue(key, out var value))
             {
-                return CurrentSet[key];
+                return value;
             }
-            else
-            {
-                return String.Empty;
-            }
+
+            return string.Empty;
         }
     }
 }
