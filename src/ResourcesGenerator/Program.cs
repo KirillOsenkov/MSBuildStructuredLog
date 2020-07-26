@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Reflection.Metadata;
-using System.Text;
+using System.Linq;
 
 namespace ResourcesGenerator
 {
@@ -10,48 +8,35 @@ namespace ResourcesGenerator
     {
         static void Main(string[] args)
         {
-            var arguments = new List<string>();
-            string path;
-            foreach (var item in Environment.GetCommandLineArgs())
+            var options = new Microsoft.Build.Locator.VisualStudioInstanceQueryOptions()
             {
-                try
+                DiscoveryTypes = Microsoft.Build.Locator.DiscoveryType.VisualStudioSetup | Microsoft.Build.Locator.DiscoveryType.DotNetSdk
+            };
+            var instances = Microsoft.Build.Locator.MSBuildLocator.QueryVisualStudioInstances(options)
+                .OrderByDescending(i => i.Version).ToArray();
+            var instance =
+                instances.FirstOrDefault(i => !i.MSBuildPath.Contains("Preview")) ??
+                instances.FirstOrDefault();
+            var msbuildPath = instance?.MSBuildPath;
+
+            if (msbuildPath == null)
+            {
+                string defaultMSBuild = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+                    "Microsoft Visual Studio", "2019", "Enterprise", "MSBuild", "Current", "Bin");
+                if (Directory.Exists(defaultMSBuild))
                 {
-                    if (item.Equals("?"))
-                    {
-                        Console.WriteLine("please add path to msbuild.exe file location: 'msbuild folder path'");
-                    }
-                    else if (item.Contains(@"ResourcesGenerator.dll"))
-                    {
-                        continue;
-                    }
-                    else
-                    {
-                        path = item.Replace(@"""", "");
-                        if (!Directory.Exists(path))
-                        {
-                            Console.WriteLine("MSBuild folder not found: " + path);
-                        }
-                        else
-                        {
-                            arguments.Add(path);
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                    Console.WriteLine(" ----------------------------- ");
-                    Console.WriteLine("please add path to msbuild.exe file location: 'msbuild folder path'");
+                    msbuildPath = defaultMSBuild;
                 }
             }
 
-            if (arguments.Count > 0)
+            if (Directory.Exists(msbuildPath))
             {
-               ResourceCreator.CreateResourceFile(arguments[0], @"d:\temp\");
+                ResourceCreator.CreateResourceFile(msbuildPath);
             }
             else
             {
-                Console.WriteLine("please add path to msbuild.exe file location: 'msbuild folder path'");
+                Console.Error.WriteLine("Couldn't find MSBuild at " + msbuildPath);
             }
         }
     }
