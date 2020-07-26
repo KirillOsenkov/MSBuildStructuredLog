@@ -1,19 +1,16 @@
-using StructuredLogger.Properties;
 using System;
 using System.Globalization;
-using System.Resources;
 using System.Text.RegularExpressions;
-using System.Windows;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class Strings
     {
-        public static ResourceSet ResourceSet { get; private set; }
+        public static StringsSet ResourceSet { get; private set; }
 
         public static void SetCultureInfo(CultureInfo cultureInfo)
-        {
-            ResourceSet = Resources.ResourceManager.GetResourceSet(cultureInfo, true, true);
+        {  
+            ResourceSet.InitializeCollection(cultureInfo);
             InitializeRegex();
         }
 
@@ -277,6 +274,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             if (ResourceSet == null || force)
             {
+                ResourceSet = new StringsSet();
                 SetCultureInfo(CultureInfo.GetCultureInfo(culture));
             }
         }
