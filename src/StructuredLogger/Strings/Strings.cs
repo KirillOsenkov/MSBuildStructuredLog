@@ -1,11 +1,6 @@
-using StructuredLogger.Properties;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
-using System.Resources;
 using System.Text.RegularExpressions;
-using Newtonsoft.Json;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
