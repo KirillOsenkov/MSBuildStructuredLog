@@ -3,25 +3,25 @@
 @inject NavigationManager NavigationManager 
 
     <CascadingValue Value=this>
-
-        <body style="height:100%">
-            <div>
-                <div @ref="one" style="overflow-y:scroll" class="split" id="one">
-                    @DrawTabs()
-                </div>
-                <div style="overflow-y:scroll" @ref="two" class="split" id="two">
-                    <FileTree />
-                </div>
-                @if (show % 2 == 1)
-                {
-                    <div style="overflow-y:hidden" @ref="three" class="split" id="three">
-                        @DrawSources()
-                    </div>
-                }
-            </div>
-        </body>
-
-    </CascadingValue>
+            
+                <body style="height:100%">
+                    <div>
+                        <div @ref="one" style="overflow-y:scroll" class="split" id="one">
+                            @DrawTabs()
+                        </div>
+                        <div style="overflow-y:scroll" @ref="two" class="split" id="two">
+                            <FileTree />
+                        </div>
+                        @if (show % 2 == 1)
+                        {
+                            <div style="overflow-y:hidden" @ref="three" class="split" id="three">
+                                @DrawSources()
+                            </div>
+                        }
+                        </div>
+                </body>
+            
+        </CascadingValue>
 
 
 
@@ -105,6 +105,8 @@
                     arr[2] = three;
                     await JSRuntime.InvokeVoidAsync(identifier: "blazorHelpers.Split", arr);
                 }
-                search = false;
+                //await JSRuntime.InvokeVoidAsync(identifier: "blazorHelpers.Split", arr2);
+                //await JSRuntime.InvokeVoidAsync("blazorHelpers.Destroy");
+
             }
         }
