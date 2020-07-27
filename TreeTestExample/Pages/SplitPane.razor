@@ -3,8 +3,7 @@
 @inject NavigationManager NavigationManager 
 
     <CascadingValue Value=this>
-            @if (show % 2 == 1)
-            {
+            
                 <body style="height:100%">
                     <div>
                         <div @ref="one" style="overflow-y:scroll" class="split" id="one">
@@ -13,25 +12,15 @@
                         <div style="overflow-y:scroll" @ref="two" class="split" id="two">
                             <FileTree />
                         </div>
-                        <div style="overflow-y:hidden" @ref="three" class="split" id="three">
-                            @DrawSources()
+                        @if (show % 2 == 1)
+                        {
+                            <div style="overflow-y:hidden" @ref="three" class="split" id="three">
+                                @DrawSources()
+                            </div>
+                        }
                         </div>
-                    </div>
                 </body>
-            }
-            else
-            {
-                <body style="height:100%">
-                    <div>
-                        <div @ref="four" style="overflow-y:scroll" class="split" id="four">
-                            @DrawTabs()
-                        </div>
-                        <div style="overflow-y:scroll" @ref="five" class="split" id="five">
-                            <FileTree />
-                        </div>
-                    </div>
-                </body>
-            }
+            
         </CascadingValue>
 
 
@@ -41,8 +30,6 @@
             protected ElementReference one;
             protected ElementReference two;
             protected ElementReference three;
-            protected ElementReference four;
-            protected ElementReference five;
             public bool search;
             public Microsoft.Build.Logging.StructuredLogger.Build build;
             public Microsoft.Build.Logging.StructuredLogger.BaseNode selected;
@@ -100,19 +87,26 @@
             {
                 if (show % 2 == 0 && !search)
                 {
+                    if (!firstRender)
+                    {
+                        await JSRuntime.InvokeVoidAsync("blazorHelpers.Destroy");
+                    }
                     ElementReference[] arr2 = new ElementReference[2];
-                    arr2[0] = four;
-                    arr2[1] = five;
-                    await JSRuntime.InvokeVoidAsync(identifier: "Split", arr2);
+                    arr2[0] = one;
+                    arr2[1] = two;
+                    await JSRuntime.InvokeVoidAsync(identifier: "blazorHelpers.Split", arr2);
                 }
                 if (show % 2 == 1 && !search)
                 {
+                    await JSRuntime.InvokeVoidAsync("blazorHelpers.Destroy");
                     ElementReference[] arr = new ElementReference[3];
                     arr[0] = one;
                     arr[1] = two;
                     arr[2] = three;
-                    await JSRuntime.InvokeVoidAsync(identifier: "Split", arr);
+                    await JSRuntime.InvokeVoidAsync(identifier: "blazorHelpers.Split", arr);
                 }
-                search = false;
+                //await JSRuntime.InvokeVoidAsync(identifier: "blazorHelpers.Split", arr2);
+                //await JSRuntime.InvokeVoidAsync("blazorHelpers.Destroy");
+
             }
         }

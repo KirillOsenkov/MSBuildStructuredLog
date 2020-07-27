@@ -51,7 +51,6 @@
         ContainerSplit.Render();
         await System.Threading.Tasks.Task.Delay(1000);
         await JSRuntime.InvokeVoidAsync("blazorHelpers.scrollToFragment", elem);
-
     }
 
     public static void ExpandResults(TreeExpandEventArgs args)
