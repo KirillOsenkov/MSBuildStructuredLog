@@ -13,5 +13,13 @@
                 behavior: 'smooth'
             });
         }
+    },
+
+    Split: (splitElem) => {
+        instance = Split(splitElem);
+    },
+
+    Destroy: () => {
+        instance.destroy();
     }
 };
