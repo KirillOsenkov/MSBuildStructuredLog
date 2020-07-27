@@ -12,7 +12,8 @@
     <Description>An MSBuild logger that can be passed to MSBuild to record a detailed structured log file. See usage example at: https://github.com/KirillOsenkov/MSBuildStructuredLog/blob/master/README.md#usage</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/KirillOsenkov/MSBuildStructuredLog</PackageProjectUrl>
-    <PackageIconUrl>https://github.com/KirillOsenkov/MSBuildStructuredLog/blob/08a544cbc97fdb80f78822e599b52756a7df047c/docs/StructuredLogger.png</PackageIconUrl>
+    <IconFilePath>$(MSBuildThisFileDirectory)..\StructuredLogViewer\icons\msbuild-structured-log-viewer.png</IconFilePath>
+    <PackageIcon>msbuild-structured-log-viewer.png</PackageIcon>
     <RepositoryUrl>https://github.com/KirillOsenkov/MSBuildStructuredLog</RepositoryUrl>
     <PackageTags>MSBuild Log Logger Structure Structured</PackageTags>
   </PropertyGroup>
@@ -40,12 +41,13 @@
     <EmbeddedResource Include="Strings\Strings.json">
       <LogicalName>Strings.json</LogicalName>
     </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Update="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(IconFilePath)" Pack="true" PackagePath=""/>
   </ItemGroup>
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
     <StartAction>Program</StartAction>
