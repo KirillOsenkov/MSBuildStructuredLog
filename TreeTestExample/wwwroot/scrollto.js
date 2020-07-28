@@ -12,6 +12,16 @@
         }
     },
 
+    HideSource: () => {
+        var element = document.getElementById("three").style.visibility = "hidden";
+    },
+
+
+    ShowSource: () => {
+        var element = document.getElementById("three").style.visibility = "visible";
+
+    },
+
     Split: (splitElem) => {
         instance = Split(splitElem);
     },

@@ -12,12 +12,9 @@
                         <div style="overflow-y:scroll" @ref="two" class="split" id="two">
                             <FileTree />
                         </div>
-                        @if (show % 2 == 1)
-                        {
-                            <div style="overflow-y:hidden" @ref="three" class="split" id="three">
-                                @DrawSources()
-                            </div>
-                        }
+                        <div style="overflow-y:hidden; visibility:hidden" @ref="three" class="split" id="three">
+                            @DrawSources()
+                        </div>
                         </div>
                 </body>
             
@@ -94,6 +91,7 @@
                     ElementReference[] arr2 = new ElementReference[2];
                     arr2[0] = one;
                     arr2[1] = two;
+                    await JSRuntime.InvokeVoidAsync(identifier: "blazorHelpers.HideSource", arr2);
                     await JSRuntime.InvokeVoidAsync(identifier: "blazorHelpers.Split", arr2);
                 }
                 if (show % 2 == 1 && !search)
@@ -103,6 +101,7 @@
                     arr[0] = one;
                     arr[1] = two;
                     arr[2] = three;
+                    await JSRuntime.InvokeVoidAsync("blazorHelpers.ShowSource");
                     await JSRuntime.InvokeVoidAsync(identifier: "blazorHelpers.Split", arr);
                 }
                 //await JSRuntime.InvokeVoidAsync(identifier: "blazorHelpers.Split", arr2);

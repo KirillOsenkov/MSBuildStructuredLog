@@ -1,4 +1,6 @@
-﻿@page "/files"
+﻿@*Displays the project files tree in the Files tab*@
+
+@page "/files"
 @using StructuredLogViewer
 @using StructuredLogViewer.Core
 @using System.IO
@@ -8,7 +10,9 @@
                 Style="word-break:break-all;overflow-y:scroll;color:black" 
                 Expand="@((TreeExpandEventArgs args) => {ExpandResults(args);})"
                 Change="OnChange">
-        <RadzenTreeLevel Expanded="@((obj) => (obj is TreeNode && ((TreeNode)obj).HasChildren))" Template="@TreeFormatting.TreeDesign" Text="@TreeFormatting.TextSelector"
+        <RadzenTreeLevel Expanded="@((obj) => (obj is TreeNode && ((TreeNode)obj).HasChildren))" 
+                         Template="@TreeFormatting.TreeDesign" 
+                         Text="@TreeFormatting.TextSelector"
                          HasChildren="@((node) => {
                                     if (node is TreeNode)
                                         return ((TreeNode)node).HasChildren;
