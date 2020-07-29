@@ -41,7 +41,11 @@ It allows users to search within the source/archive files*@
     /// <param name="args"> Handler that holds the event (.Value is the tree node selected) </param>
     void OnChange(TreeEventArgs args)
     {
-        SourceFileHelper.SourceFileText(ContainerSplit, ContainerSplit.archiveFileResolver, (BaseNode)args.Value);
+        object[] sourceFileInfo = SourceFileHelper.SourceFileText(ContainerSplit.archiveFileResolver, (BaseNode)args.Value);
+        ContainerSplit.sourceFileName = (string)sourceFileInfo[0];
+        ContainerSplit.sourceFileText = (string)sourceFileInfo[1];
+        ContainerSplit.sourceFileLineNumber = (int)sourceFileInfo[2];
+
         if (!ContainerSplit.showSourceFilePanel)
         {
             ContainerSplit.showSourceFilePanel = true;

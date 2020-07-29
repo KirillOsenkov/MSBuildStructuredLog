@@ -1,6 +1,7 @@
 ﻿using StructuredLogViewerWASM.Pages;
 using Microsoft.Build.Logging.StructuredLogger;
 using StructuredLogViewer;
+using System.ComponentModel;
 
 namespace StructuredLogViewerWASM
 {
@@ -9,14 +10,14 @@ namespace StructuredLogViewerWASM
         /// <summary>
         /// Determines the SourceFile (text, name, line number) from the tree node
         /// </summary>
-        /// <param name="ContainerSplit">The parent container, holding the shared variables </param>
         /// <param name="fileResolver"> Either the Source or Archive File Resolver to read file from </param>
         /// <param name="bn">BaseNode to be reading file from</param>
-        public static SplitPane SourceFileText(SplitPane ContainerSplit, ISourceFileResolver fileResolver, BaseNode bn)
+        public static object[] SourceFileText(ISourceFileResolver fileResolver, BaseNode bn)
         {
             string path;
-            ContainerSplit.sourceFileText = null;
-            ContainerSplit.sourceFileName = "";
+            string sourceFileText = null;
+            string sourceFileName = "";
+            int sourceFileLineNumber = -1;
 
             if (bn is AbstractDiagnostic)
             {
@@ -24,65 +25,68 @@ namespace StructuredLogViewerWASM
                 path = ad.ProjectFile;
                 if (ad.IsTextShortened)
                 {
-                    ContainerSplit.sourceFileText = ad.Text;
-                    ContainerSplit.sourceFileName = ad.ShortenedText;
+                    sourceFileText = ad.Text;
+                    sourceFileName = ad.ShortenedText;
                 }
                 else
                 {
-                    ContainerSplit.sourceFileText = fileResolver.GetSourceFileText(path).Text;
-                    ContainerSplit.sourceFileName = ad.Name;
+                    sourceFileText = fileResolver.GetSourceFileText(path).Text;
+                    sourceFileName = ad.Name;
                 }
-                ContainerSplit.sourceFileLineNumber = ad.LineNumber;
+                sourceFileLineNumber = ad.LineNumber;
             }
             else if (bn is Project)
             {
                 path = ((Project)bn).SourceFilePath;
-                ContainerSplit.sourceFileName = ((Project)bn).Name;
-                ContainerSplit.sourceFileText = fileResolver.GetSourceFileText(path).Text;
+                sourceFileName = ((Project)bn).Name;
+                sourceFileText = fileResolver.GetSourceFileText(path).Text;
             }
             else if (bn is Target)
             {
                 path = ((Target)bn).SourceFilePath;
-                ContainerSplit.sourceFileName = ((Target)bn).Name;
-                ContainerSplit.sourceFileText = fileResolver.GetSourceFileText(path).Text;
+                sourceFileName = ((Target)bn).Name;
+                sourceFileText = fileResolver.GetSourceFileText(path).Text;
             }
             else if (bn is Microsoft.Build.Logging.StructuredLogger.Task)
             {
                 path = ((Microsoft.Build.Logging.StructuredLogger.Task)bn).SourceFilePath;
-                ContainerSplit.sourceFileName = ((Microsoft.Build.Logging.StructuredLogger.Task)bn).Name;
-                ContainerSplit.sourceFileText = fileResolver.GetSourceFileText(path).Text;
+                sourceFileName = ((Microsoft.Build.Logging.StructuredLogger.Task)bn).Name;
+                sourceFileText = fileResolver.GetSourceFileText(path).Text;
             }
             else if (bn is IHasSourceFile && ((IHasSourceFile)bn).SourceFilePath != null)
             {
                 path = ((IHasSourceFile)bn).SourceFilePath;
-                ContainerSplit.sourceFileName = ((IHasSourceFile)bn).SourceFilePath;
-                ContainerSplit.sourceFileText = fileResolver.GetSourceFileText(path).Text;
+                sourceFileName = ((IHasSourceFile)bn).SourceFilePath;
+                sourceFileText = fileResolver.GetSourceFileText(path).Text;
             }
             else if (bn is SourceFileLine && ((SourceFileLine)bn).Parent is Microsoft.Build.Logging.StructuredLogger.SourceFile
             && ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).SourceFilePath != null)
             {
                 path = ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).SourceFilePath;
-                ContainerSplit.sourceFileName = ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).Name;
-                ContainerSplit.sourceFileText = fileResolver.GetSourceFileText(path).Text;
-                ContainerSplit.sourceFileLineNumber = ((SourceFileLine)bn).LineNumber;
+                sourceFileName = ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).Name;
+                sourceFileText = fileResolver.GetSourceFileText(path).Text;
+                sourceFileLineNumber = ((SourceFileLine)bn).LineNumber;
             }
             else if (bn is NameValueNode && ((NameValueNode)bn).IsValueShortened)
             {
-                ContainerSplit.sourceFileText = ((NameValueNode)bn).Value;
-                ContainerSplit.sourceFileName = ((NameValueNode)bn).Name;
+                sourceFileText = ((NameValueNode)bn).Value;
+                sourceFileName = ((NameValueNode)bn).Name;
             }
             else if (bn is TextNode && ((TextNode)bn).IsTextShortened)
             {
-                ContainerSplit.sourceFileText = ((TextNode)bn).Text;
-                ContainerSplit.sourceFileName = ((TextNode)bn).Name;
+                sourceFileText = ((TextNode)bn).Text;
+                sourceFileName = ((TextNode)bn).Name;
             }
 
-            if (ContainerSplit.sourceFileText == null)
+            if (sourceFileText == null)
             {
-                ContainerSplit.sourceFileText = "No file to display";
+                sourceFileText = "No file to display";
             }
-
-            return ContainerSplit;
+            object[] sourceFileResults = new object[3];
+            sourceFileResults[0] = sourceFileName;
+            sourceFileResults[1] = sourceFileText;
+            sourceFileResults[2] = sourceFileLineNumber;
+            return sourceFileResults;
         }
     }
 }

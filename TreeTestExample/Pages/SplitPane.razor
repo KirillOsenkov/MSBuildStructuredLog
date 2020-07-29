@@ -7,25 +7,24 @@
 @inject NavigationManager NavigationManager 
 
     <CascadingValue Value=this>
-            
-                <body style="height:100%">
-                    <div>
-                        <div @ref="tabPanel" style="overflow-y:scroll" class="split" id="tabPanel">
-                            <Tabs />
-                        </div>
-                        <div @ref="fileTreePanel" style="overflow-y:scroll" class="split" id="fileTreePanel">
-                            <FileTree />
-                        </div>
-                        @if (showSourceFilePanel) 
-                        { 
-                        <div @ref="sourceFilePanel" style="overflow-y:hidden" class="split" id="sourceFilePanel">
-                            @DrawSourceFilePanel()
-                        </div>
-                        }
-                        </div>
-                </body>
-            
-        </CascadingValue>
+
+        <body style="height:100%">
+            <div>
+                <div @ref="tabPanel" style="overflow-y:scroll" class="split" id="tabPanel">
+                    <Tabs />
+                </div>
+                <div @ref="fileTreePanel" style="overflow-y:scroll" class="split" id="fileTreePanel">
+                    <FileTree />
+                </div>
+                @if (showSourceFilePanel)
+                {
+                    <div @ref="sourceFilePanel" style="overflow-y:hidden" id="sourceFilePanel">
+                        @DrawSourceFilePanel()
+                    </div>
+                }
+            </div>
+        </body>   
+    </CascadingValue>
 
 
 
@@ -39,7 +38,7 @@
             public ArchiveFileResolver archiveFileResolver;
             public Build build;
             public IEnumerable<BaseNode> projectFiles;
-            public string sourceFileText;
+            public string sourceFileText = "No file to display.";
             public int sourceFileLineNumber = -1;
             public string sourceFileName;
             public bool searching;
@@ -96,7 +95,8 @@
                     elementArray[0] = tabPanel;
                     elementArray[1] = fileTreePanel;
                     await JSRuntime.InvokeVoidAsync(identifier: "blazorHelpers.Split", elementArray);
-                } else if (!searching)
+                }
+                else if (!searching)
                 {
                     await JSRuntime.InvokeVoidAsync("blazorHelpers.Destroy");
                     ElementReference[] elementArray = new ElementReference[3];

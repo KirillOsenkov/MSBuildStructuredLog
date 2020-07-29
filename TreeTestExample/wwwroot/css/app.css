@@ -6,6 +6,14 @@ html, body {
     overflow-y:hidden;
 }
 
+.monaco-scrollable-element editor-scrollable vs {
+    width: 645px;
+}
+
+.minimap slider-mouseover {
+    left:300px;
+}
+
 .decorationGlyphMarginClass {
     background: lightblue;
 }
@@ -25,6 +33,7 @@ html, body {
     overflow-y: scroll;
     height: calc(100vh - 70px);
     align-content:center;
+    width:600px;
 }
 
 a, .btn-link {

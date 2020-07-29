@@ -14,12 +14,11 @@
 <br />
 <br />
 <br />
-
-<MonacoEditor @ref="_editor" 
-              CssClass="code" 
-              Id="monaco-editor" 
-              ConstructionOptions="EditorConstructionOptions" 
-              OnDidInit="EditorOnDidInit"/>
+    <MonacoEditor @ref="_editor"
+                  CssClass="code"
+                  Id="monaco-editor"
+                  ConstructionOptions="EditorConstructionOptions"
+                  OnDidInit="EditorOnDidInit" />
 
 
 @code {
@@ -38,8 +37,6 @@
         {
             ReadOnly = true,
             Value = ContainerSplit.sourceFileText,
-            GlyphMargin = true,
-
         };
 
     }
@@ -72,7 +69,6 @@
                 {
                     IsWholeLine = true,
                     ClassName = "decorationContentClass",
-                    GlyphMarginClassName = "decorationGlyphMarginClass"
                 }
             }
                 };
