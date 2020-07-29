@@ -1,4 +1,6 @@
-﻿@page "/FileTree"
+﻿@*Creates the layout of the File Tree Panel in the center*@
+
+@page "/FileTree"
 @using System.IO
 @using System.Collections
 @using Microsoft.Build.Logging.StructuredLogger
@@ -9,30 +11,34 @@
 
 <center>
     <h1>Structured Log Viewer</h1>
-    <input type="file" @ref=inputElement />
+    <input type="file" @ref=fileToRead />
     <button @onclick=ReadFile class="btn btn-primary">Read file</button>
     <button @onclick=ClearFile class="btn btn-primary">Clear</button>
     <br />
     <br />
+
     @if (reading)
     {
-<RadzenProgressBar Value="@_progressValue" ShowValue="false" Mode="ProgressBarMode.Determinate" Style="margin-bottom: 20px" />
+<RadzenProgressBar Value="@_progressValue" 
+                   ShowValue="false" 
+                   Mode="ProgressBarMode.Determinate" 
+                   Style="margin-bottom: 20px" />
         <h3>@waitText</h3>
     }
 </center>
 
 
-<h1>@test</h1>
 <br />
 <br />
 @if (binLogSelected)
 {
 <div id="fileTree">
-    <RadzenTree Data="@entries" Style="word-break:break-all;overflow-y:scroll"
-                Expand="@((TreeExpandEventArgs args) => {OnExpand(args);})"
+    <RadzenTree Data="@fileTree" 
+                Style="word-break:break-all;overflow-y:scroll"
+                Expand="@((TreeExpandEventArgs args) => {TreeFormatting.OnExpandFiles(args);})"
                 Change="@OnChange">
         <RadzenTreeLevel Template="@TreeFormatting.TreeDesignFiles"
-                         Text="@GetTextForNode"
+                         Text="@TreeFormatting.TextSelector"
                          Selected="@((node) => {
                                          bool temp = ((BaseNode)node).SourceDisplayed;
                                          ((BaseNode)node).SourceDisplayed = false;
@@ -49,156 +55,37 @@
 <RadzenNotification />
 
 @code {
+    [CascadingParameter]
+    public SplitPane ContainerSplit { get; set; }
     static bool binLogSelected = false;
-    static ElementReference inputElement;
-    static string test;
+    static ElementReference fileToRead;
     static bool reading;
     static string waitText;
     double _progressValue = 0;
+    static IEnumerable<BaseNode> fileTree = null;
 
-    [CascadingParameter]
-    public SplitPane ContainerSplit { get; set; }
-
-    static IEnumerable<BaseNode> entries = null;
-
+    /// <summary>
+    /// Fired when a user selects a tree node from the results
+    /// Opens the file and highlights the line where the info can be found
+    /// </summary>
+    /// <param name="args"> Handler that holds the event (.Value is the tree node selected) </param>
     void OnChange(TreeEventArgs args)
     {
-        ContainerSplit.selected = (BaseNode)args.Value;
-        ContainerSplit.sfrOrafr = 0;
-        //((BaseNode)args.Value).SourceDisplayed = true;
-        if (ContainerSplit.show % 2 == 0)
+        SourceFileHelper.SourceFileText(ContainerSplit, ContainerSplit.sourceFileResolver, (BaseNode)args.Value);
+        if (!ContainerSplit.showSourceFilePanel)
         {
-            ContainerSplit.show += 1;
-            SourceFileText();
+            ContainerSplit.showSourceFilePanel = true;
             ContainerSplit.Render();
-            ContainerSplit.FileRender();
         }
-        else
-        {
-            SourceFileText();
-            ContainerSplit.FileRender();
-        }
+        ContainerSplit.SourceFileRender();
     }
 
-    public void SourceFileText()
-    {
-        StructuredLogViewer.SourceFileResolver sourceFileResolver = ContainerSplit.sourceFileResolver;
-        string path = "";
-        BaseNode bn = (BaseNode)ContainerSplit.selected;
-        ContainerSplit.SourceFileText = null;
-        ContainerSplit.sfn = "";
-
-        if (bn is AbstractDiagnostic)
-        {
-            AbstractDiagnostic ad = (AbstractDiagnostic)bn;
-            path = ad.ProjectFile;
-            if (ad.IsTextShortened)
-            {
-                ContainerSplit.SourceFileText = ad.Text;
-                ContainerSplit.sfn = ad.ShortenedText;
-            }
-            else
-            {
-
-                if (ContainerSplit.sfrOrafr == 0)
-                {
-                    ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
-                } else if (ContainerSplit.sfrOrafr == 1)
-                {
-                    ContainerSplit.SourceFileText = ContainerSplit.afr.GetSourceFileText(path).Text;
-                }
-                ContainerSplit.sfn = ad.Name;
-            }
-        }
-        else if (bn is Project)
-        {
-            path = ((Project)bn).SourceFilePath;
-            ContainerSplit.sfn = ((Project)bn).Name;
-
-            if (ContainerSplit.sfrOrafr == 0)
-            {
-                ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
-            }
-            else if (ContainerSplit.sfrOrafr == 1)
-            {
-                ContainerSplit.SourceFileText = ContainerSplit.afr.GetSourceFileText(path).Text;
-            }
-        }
-        else if (bn is Target)
-        {
-            path = ((Target)ContainerSplit.selected).SourceFilePath;
-            ContainerSplit.sfn = ((Target)bn).Name;
-
-            if (ContainerSplit.sfrOrafr == 0)
-            {
-                ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
-            }
-            else if (ContainerSplit.sfrOrafr == 1)
-            {
-                ContainerSplit.SourceFileText = ContainerSplit.afr.GetSourceFileText(path).Text;
-            }
-        }
-        else if (bn is Microsoft.Build.Logging.StructuredLogger.Task)
-        {
-            path = ((Microsoft.Build.Logging.StructuredLogger.Task)bn).SourceFilePath;
-            ContainerSplit.sfn = ((Microsoft.Build.Logging.StructuredLogger.Task)bn).Name;
-
-            if (ContainerSplit.sfrOrafr == 0)
-            {
-                ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
-            }
-            else if (ContainerSplit.sfrOrafr == 1)
-            {
-                ContainerSplit.SourceFileText = ContainerSplit.afr.GetSourceFileText(path).Text;
-            }
-        }
-        else if (bn is IHasSourceFile && ((IHasSourceFile)bn).SourceFilePath != null)
-        {
-            path = ((IHasSourceFile)bn).SourceFilePath;
-            ContainerSplit.sfn = ((IHasSourceFile)bn).SourceFilePath;
-
-            if (ContainerSplit.sfrOrafr == 0)
-            {
-                ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
-            }
-            else if (ContainerSplit.sfrOrafr == 1)
-            {
-                ContainerSplit.SourceFileText = ContainerSplit.afr.GetSourceFileText(path).Text;
-            }
-        }
-        else if (bn is SourceFileLine && ((SourceFileLine)bn).Parent is Microsoft.Build.Logging.StructuredLogger.SourceFile
-        && ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).SourceFilePath != null)
-        {
-            path = ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).SourceFilePath;
-            ContainerSplit.sfn = ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).Name;
-
-            if (ContainerSplit.sfrOrafr == 0)
-            {
-                ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
-            }
-            else if (ContainerSplit.sfrOrafr == 1)
-            {
-                ContainerSplit.SourceFileText = ContainerSplit.afr.GetSourceFileText(path).Text;
-            }
-        }
-        else if (bn is NameValueNode && ((NameValueNode)bn).IsValueShortened)
-        {
-            ContainerSplit.SourceFileText = ((NameValueNode)bn).Value;
-            ContainerSplit.sfn = ((NameValueNode)bn).Name;
-        }
-        else if (bn is TextNode && ((TextNode)bn).IsTextShortened)
-        {
-            ContainerSplit.SourceFileText = ((TextNode)bn).Text;
-            ContainerSplit.sfn = ((TextNode)bn).Name;
-        }
-
-        if (ContainerSplit.SourceFileText == null)
-        {
-            ContainerSplit.SourceFileText = "No file to display";
-        }
-        ContainerSplit.sfrOrafr = -1;
-    }
-
+    /// <summary>
+    /// Fired when a user selects a file to read that is not a .binlog
+    /// Shows an error message explaining that only .binlog files can be read
+    /// </summary>
+    /// <param name="message"> Message to be displayed to the user </param>
+    /// <returns></returns>
     async System.Threading.Tasks.Task ShowNotification(NotificationMessage message)
     {
         message.Severity = NotificationSeverity.Error;
@@ -208,48 +95,51 @@
         notificationService.Notify(message);
     }
 
-
-    public static string GetTextForNode(Object node)
-    {
-        return TreeFormatting.TextSelector(node);
-    }
-
-    public static void OnExpand(TreeExpandEventArgs args)
-    {
-        TreeFormatting.OnExpandFiles(args);
-    }
-
+    /// <summary>
+    /// Fired when user selects the Clear button
+    /// Resets the app to original state before reading file
+    /// </summary>
+    /// <returns> Task to update app</returns>
     public async System.Threading.Tasks.Task ClearFile()
     {
-        await fileReaderService.CreateReference(inputElement).ClearValue();
+        await fileReaderService.CreateReference(fileToRead).ClearValue();
         binLogSelected = false;
         reading = false;
         waitText = "";
-        entries = null;
-        ContainerSplit.files = null;
-        FindFiles.findResults = null;
+        fileTree = null;
+        ContainerSplit.projectFiles = null;
+        FindInFiles.findResults = null;
         SearchViewer.searchResults = null;
-        ContainerSplit.search = true;
-        if (ContainerSplit.show % 2 == 1)
+        ContainerSplit.searching = true;
+        if (ContainerSplit.showSourceFilePanel)
         {
-            ContainerSplit.show += 1;
-            ContainerSplit.search = false;
+            ContainerSplit.showSourceFilePanel = false;
+            ContainerSplit.searching = false;
         }
         ContainerSplit.Render();
-        FindFiles.search = null;
-        SearchViewer.search = null;
+        FindInFiles.searchKeyword = null;
+        SearchViewer.searchKeyword = null;
     }
 
+    /// <summary>
+    /// Fired when user selects Read File button
+    /// Reads the file: produces file tree and File tab if .binlog otherwise shows error
+    /// </summary>
+    /// <returns> Task to update app</returns>
     public async System.Threading.Tasks.Task ReadFile()
     {
         try {
+            //setting appropriate variables to display progress bar
             binLogSelected = false;
             reading = true;
             this.StateHasChanged();
             waitText = "Here we go...";
-            var files = (await fileReaderService.CreateReference(inputElement).EnumerateFilesAsync());
+
+            //creating files list from the file selected
+            var files = (await fileReaderService.CreateReference(fileToRead).EnumerateFilesAsync());
             foreach (Blazor.FileReader.IFileReference file in files)
             {
+                //determining if file is of type .binlog (errors if not)
                 var fileInfo = await file.ReadFileInfoAsync();
                 String[] split = fileInfo.Name.Split(".");
                 if (!String.Equals("binlog", split[split.Length - 1]))
@@ -261,6 +151,8 @@
                 waitText = "Still reading...";
                 this.StateHasChanged();
                 binLogSelected = true;
+
+                //reading .binlog file using streams (must be put into memoryStream to properly read
                 Task<Blazor.FileReader.AsyncDisposableStream>
                 streamTask = file.OpenReadAsync();
                 var stream = await streamTask;
@@ -268,11 +160,10 @@
                 waitText = "Teaching you patience...";
                 this.StateHasChanged();
                 await stream.CopyToAsync(memoryStream);
-
                 memoryStream.Position = 0;
                 System.Diagnostics.Stopwatch timeSinceUpdate = System.Diagnostics.Stopwatch.StartNew();
 
-                //ContainerSplit.build = Serialization.ReadBinLog(memoryStream);
+                //reading build and creating tree from the build
                 ContainerSplit.build = await BinaryLog.ReadBuild(memoryStream, progressFunc: async (current, total) =>
                 {
                     if (timeSinceUpdate.Elapsed.TotalSeconds > 0.1)
@@ -285,17 +176,22 @@
                         timeSinceUpdate.Restart();
                     }
                 });
-
-                SearchViewer.searcher = new StructuredLogViewer.Search(ContainerSplit.build, StructuredLogViewer.Search.DefaultMaxResults);
                 waitText = "Trust me you're computer wants this to be over more than you do...";
-                this.StateHasChanged();
                 BuildAnalyzer.AnalyzeBuild(ContainerSplit.build);
+                fileTree = (IEnumerable<BaseNode>)ContainerSplit.build.Children;
+
+                //creating a search object to be used in the Search tab
+                SearchViewer.searcher = new StructuredLogViewer.Search(ContainerSplit.build, StructuredLogViewer.Search.DefaultMaxResults);
+                this.StateHasChanged();
                 waitText = "Not a joke...We're actually still reading...";
                 this.StateHasChanged();
-                entries = (IEnumerable<BaseNode>)ContainerSplit.build.Children;
             }
+
+            //creating file resolvers to read/look through archive/source files
             ContainerSplit.sourceFileResolver = new StructuredLogViewer.SourceFileResolver(ContainerSplit.build.SourceFilesArchive);
-            ContainerSplit.afr = ContainerSplit.sourceFileResolver.ArchiveFile;
+            ContainerSplit.archiveFileResolver = ContainerSplit.sourceFileResolver.ArchiveFile;
+
+            //populates the Files tab with the projectFiles tree
             PopulateFilesTab();
             this.StateHasChanged();
             reading = false;
@@ -308,10 +204,13 @@
 
     }
 
+    /// <summary>
+    /// Creates the project files tree in the Files tab
+    /// </summary>
     public void PopulateFilesTab()
     {
         var root = new Folder();
-        StructuredLogViewer.ArchiveFileResolver archiveFile = ContainerSplit.afr;
+        StructuredLogViewer.ArchiveFileResolver archiveFile = ContainerSplit.archiveFileResolver;
 
         foreach (var file in archiveFile.Files.OrderBy(kvp => kvp.Key, StringComparer.OrdinalIgnoreCase))
         {
@@ -324,10 +223,14 @@
             CompressTree(subFolder);
         }
 
-        ContainerSplit.files = (IEnumerable<BaseNode>)root.Children;
+        ContainerSplit.projectFiles = (IEnumerable<BaseNode>)root.Children;
         this.StateHasChanged();
     }
 
+    /// <summary>
+    /// Creates a tree structure such that if folders have same parent they are displayed under that same node
+    /// </summary>
+    /// <param name="parent"> parent folder to </param>
     private void CompressTree(Folder parent)
     {
         if (parent.Children.Count == 1 && parent.Children[0] is Folder subfolder)
@@ -353,6 +256,13 @@
         }
     }
 
+    /// <summary>
+    /// adds a sourcefile as a child to the parent node
+    /// </summary>
+    /// <param name="folder"> folder to add the child to </param>
+    /// <param name="filePath">path of the file the child is located at </param>
+    /// <param name="parts"> holds information about the child including the file name </param>
+    /// <param name="index"> locates where the file name can be found in the parts array</param>
     private void AddSourceFile(Folder folder, string filePath, string[] parts, int index)
     {
         if (index == parts.Length - 1)

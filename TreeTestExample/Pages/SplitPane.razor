@@ -1,4 +1,8 @@
-﻿@page "/home"
+﻿@*Main page that determines three vs two panel layout*@
+
+@page "/home"
+@using Microsoft.Build.Logging.StructuredLogger
+@using StructuredLogViewer
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager 
 
@@ -6,15 +10,18 @@
             
                 <body style="height:100%">
                     <div>
-                        <div @ref="one" style="overflow-y:scroll" class="split" id="one">
-                            @DrawTabs()
+                        <div @ref="tabPanel" style="overflow-y:scroll" class="split" id="tabPanel">
+                            <Tabs />
                         </div>
-                        <div style="overflow-y:scroll" @ref="two" class="split" id="two">
+                        <div @ref="fileTreePanel" style="overflow-y:scroll" class="split" id="fileTreePanel">
                             <FileTree />
                         </div>
-                        <div style="overflow-y:hidden; visibility:hidden" @ref="three" class="split" id="three">
-                            @DrawSources()
+                        @if (showSourceFilePanel) 
+                        { 
+                        <div @ref="sourceFilePanel" style="overflow-y:hidden" class="split" id="sourceFilePanel">
+                            @DrawSourceFilePanel()
                         </div>
+                        }
                         </div>
                 </body>
             
@@ -23,89 +30,81 @@
 
 
         @code {
-            public int show;
-            protected ElementReference one;
-            protected ElementReference two;
-            protected ElementReference three;
-            public bool search;
-            public Microsoft.Build.Logging.StructuredLogger.Build build;
-            public Microsoft.Build.Logging.StructuredLogger.BaseNode selected;
-            private SourceFile sf;
-            private Tabs tabs;
-            public StructuredLogViewer.ArchiveFileResolver afr;
-            public StructuredLogViewer.SourceFileResolver sourceFileResolver;
-            public IEnumerable<Microsoft.Build.Logging.StructuredLogger.BaseNode> files;
-            public string SourceFileText;
-            public string sfn;
-            //0 is sfr 1 is afr -1 neither
-            public int sfrOrafr = -1;
-            public int lineNumber = -1;
+            public bool showSourceFilePanel;
+            protected ElementReference tabPanel;
+            protected ElementReference fileTreePanel;
+            protected ElementReference sourceFilePanel;
+            private SourceFile sourceFile;
+            public SourceFileResolver sourceFileResolver;
+            public ArchiveFileResolver archiveFileResolver;
+            public Build build;
+            public IEnumerable<BaseNode> projectFiles;
+            public string sourceFileText;
+            public int sourceFileLineNumber = -1;
+            public string sourceFileName;
+            public bool searching;
 
-
+            /// <summary>
+            /// Allows sub pages to re-render the entire app
+            /// </summary>
             public void Render()
             {
                 this.StateHasChanged();
-                if (sf != null)
+            }
+
+            /// <summary>
+            /// Allows separate pages to re-render the SourcefilePanel
+            /// </summary>
+            public async void SourceFileRender()
+            {
+                if (sourceFile != null)
                 {
-                    sf.Render();
+                    sourceFile.Render();
+                    await sourceFile.changeHighlight(sourceFile._editor);
                 }
             }
 
-            public async void FileRender()
-            {
-                if (sf != null)
-                {
-                    sf.Render();
-                    await sf.changeHighlight(sf._editor);
-                }
-            }
-
-            public RenderFragment DrawTabs()
-            {
-                return new RenderFragment(builder =>
-                {
-                    builder.OpenComponent<Tabs>(0);
-                    builder.AddComponentReferenceCapture(1, inst => { tabs = (Tabs)inst; });
-                    builder.CloseComponent();
-                });
-            }
-
-            public RenderFragment DrawSources()
+            /// <summary>
+            /// Draws the SourceFilePanel
+            /// </summary>
+            /// <returns> The RenderFragment to be used in the html code </returns>
+            public RenderFragment DrawSourceFilePanel()
             {
                 return new RenderFragment(builder =>
                 {
                     builder.OpenComponent<SourceFile>(0);
-                    builder.AddComponentReferenceCapture(1, inst => { sf = (SourceFile)inst; });
+                    builder.AddComponentReferenceCapture(1, inst => { sourceFile = (SourceFile)inst; });
                     builder.CloseComponent();
                 });
             }
 
-            protected override async Task OnAfterRenderAsync(bool firstRender)
+            /// <summary>
+            /// Calls the Split/Destroy methods once the html elements have rendered
+            /// Determines if the split is between 2 or 3 panels
+            /// </summary>
+            /// <param name="firstRender"> true if it is the first time the page has ever rendered false otherwise </param>
+            /// <returns> Task to update the html </returns>
+            protected override async System.Threading.Tasks.Task OnAfterRenderAsync(bool firstRender)
             {
-                if (show % 2 == 0 && !search)
+                if (!showSourceFilePanel && !searching)
                 {
                     if (!firstRender)
                     {
                         await JSRuntime.InvokeVoidAsync("blazorHelpers.Destroy");
                     }
-                    ElementReference[] arr2 = new ElementReference[2];
-                    arr2[0] = one;
-                    arr2[1] = two;
-                    await JSRuntime.InvokeVoidAsync(identifier: "blazorHelpers.HideSource", arr2);
-                    await JSRuntime.InvokeVoidAsync(identifier: "blazorHelpers.Split", arr2);
-                }
-                if (show % 2 == 1 && !search)
+                    ElementReference[] elementArray = new ElementReference[2];
+                    elementArray[0] = tabPanel;
+                    elementArray[1] = fileTreePanel;
+                    await JSRuntime.InvokeVoidAsync(identifier: "blazorHelpers.Split", elementArray);
+                } else if (!searching)
                 {
                     await JSRuntime.InvokeVoidAsync("blazorHelpers.Destroy");
-                    ElementReference[] arr = new ElementReference[3];
-                    arr[0] = one;
-                    arr[1] = two;
-                    arr[2] = three;
-                    await JSRuntime.InvokeVoidAsync("blazorHelpers.ShowSource");
-                    await JSRuntime.InvokeVoidAsync(identifier: "blazorHelpers.Split", arr);
+                    ElementReference[] elementArray = new ElementReference[3];
+                    elementArray[0] = tabPanel;
+                    elementArray[1] = fileTreePanel;
+                    elementArray[2] = sourceFilePanel;
+                    await JSRuntime.InvokeVoidAsync(identifier: "blazorHelpers.Split", elementArray);
                 }
-                //await JSRuntime.InvokeVoidAsync(identifier: "blazorHelpers.Split", arr2);
-                //await JSRuntime.InvokeVoidAsync("blazorHelpers.Destroy");
-
+                searching = false;
             }
         }

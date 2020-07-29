@@ -17,6 +17,9 @@ namespace StructuredLogViewerWASM
         [Inject]
         static IJSRuntime JSRuntime { get; set; }
 
+        /// <summary>
+        /// Creates the render fragment for each tree node (selects icon/color, margins, and text to show)
+        /// </summary>
         public static RenderFragment<RadzenTreeItem> TreeDesign = (RadzenTreeItem context) => builder =>
         {
             builder.OpenComponent<RadzenIcon>(0);
@@ -29,8 +32,10 @@ namespace StructuredLogViewerWASM
             builder.AddContent(3, context.Text);
         };
 
-        //#E7E6E9 is the color I want for when something is being selected
-        //nothing if it's not selected
+        /// <summary>
+        /// Used only for the FileTree panel, is necessary to allow for scrolling/highlighting
+        /// if a user selects a node from the search bar and wants to find it in the FileTree
+        /// </summary>
         public static RenderFragment<RadzenTreeItem> TreeDesignFiles = (RadzenTreeItem context) => builder =>
         {
             builder.OpenElement(0, "div");
@@ -39,46 +44,32 @@ namespace StructuredLogViewerWASM
             {
                 builder.AddAttribute(2, "Style", "background-color: #E7E6E9");
                 ((BaseNode)context.Value).IsSelected = false;
-            } 
+            }
             builder.OpenComponent<RadzenIcon>(0);
-            builder.AddAttribute(3, "Icon", "crop_16_9");
+            builder.AddAttribute(1, "Icon", "crop_16_9");
             var node = (BaseNode)context.Value;
             string color = TreeFormatting.ColorSelector(node);
             string margin = TreeFormatting.MarginSelector(context);
-            builder.AddAttribute(4, "Style", "color: " + color + ";margin-left: " + margin);
+            builder.AddAttribute(2, "Style", "color: " + color + ";margin-left: " + margin);
             builder.CloseComponent();
-            builder.AddContent(5, context.Text);
+            builder.AddContent(3, context.Text);
             builder.CloseElement();
         };
 
-        private static ValueTask<bool> ScrollToElementId(string elementId)
-        {
-            object[] my_Array = new object[1] {elementId};
-            return JSRuntime.InvokeAsync<bool>("scrollToElementId", my_Array);
-        }
-
+        /// <summary>
+        /// Used only for File Tree, calls the TreeDesignFiles method instead of TreeDesign
+        /// </summary>
+        /// <param name="args"> Holds the nodes to add the expansion preferences to</param>
         public static void OnExpandFiles(TreeExpandEventArgs args)
         {
-            args.Children.Data = ((TreeNode)args.Value).Children;
-            args.Children.Text = TextSelector;
-            args.Children.HasChildren = (node) =>
-            {
-                if (node is TreeNode)
-                    return ((TreeNode)node).HasChildren;
-                else
-                    return false;
-            };
+            OnExpand(args);
             args.Children.Template = TreeDesignFiles;
-            args.Children.Selected = ((node) =>
-            {
-                bool temp = ((BaseNode)node).SourceDisplayed;
-                ((BaseNode)node).SourceDisplayed = false;
-                return temp;
-            });
-            args.Children.Expanded = ((node) => { return ((BaseNode)node).IsExpanded; });
-            ((BaseNode)(args.Value)).IsExpanded = true;
         }
 
+        /// <summary>
+        /// Determines how the children of a node should be designed
+        /// </summary>
+        /// <param name="args"> Holds the children nodes </param>
         public static void OnExpand(TreeExpandEventArgs args)
         {
             args.Children.Data = ((TreeNode)args.Value).Children;
@@ -91,10 +82,15 @@ namespace StructuredLogViewerWASM
                     return false;
             };
             args.Children.Template = TreeDesign;
-           // args.Children.Selected = ((node) => { return ((BaseNode)node).IsSelected; });
             args.Children.Expanded = ((node) => { return ((BaseNode)node).IsExpanded; });
             ((BaseNode)(args.Value)).IsExpanded = true;
         }
+
+        /// <summary>
+        /// Finds the proper text to be used for a tree node
+        /// </summary>
+        /// <param name="node"> node to find name for </param>
+        /// <returns>name of the node to display on tree </returns>
         public static string TextSelector(Object node)
         {
             if (node is ProxyNode)
@@ -129,10 +125,22 @@ namespace StructuredLogViewerWASM
             };
             return text;
         }
+
+        /// <summary>
+        /// Finds the amount of margin there should be for a node, to align the node names properly
+        /// </summary>
+        /// <param name="context"> Node to detemine margins for</param>
+        /// <returns>string value of the margin amount </returns>
         public static string MarginSelector(RadzenTreeItem context)
         {
             return context.HasChildren ? "0px" : "24px";
         }
+
+        /// <summary>
+        /// Finds the proper color for the node icon
+        /// </summary>
+        /// <param name="node"> node the icon will be placed with </param>
+        /// <returns> selected color for the icon </returns>
         public static string ColorSelector(BaseNode node)
         {
             if (node is ProxyNode)

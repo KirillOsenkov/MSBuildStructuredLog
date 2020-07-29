@@ -6,7 +6,7 @@
 @using System.IO
 @using Microsoft.Build.Logging.StructuredLogger
 
-    <RadzenTree Data="@ContainerSplit.files" 
+    <RadzenTree Data="@ContainerSplit.projectFiles" 
                 Style="word-break:break-all;overflow-y:scroll;color:black" 
                 Expand="@((TreeExpandEventArgs args) => {ExpandResults(args);})"
                 Change="OnChange">
@@ -24,143 +24,27 @@
     [CascadingParameter]
     public SplitPane ContainerSplit { get; set; }
 
+    /// <summary>
+    /// Fired when a user clicks on a tree node
+    /// Opens source file/ highlights line number if available
+    /// </summary>
+    /// <param name="args"> Holds the event (.Value is the tree node selected) </param>
     void OnChange(TreeEventArgs args)
     {
-        Console.WriteLine("test");
-        ContainerSplit.selected = ((BaseNode)(args.Value));
-        Console.WriteLine("after test");
-        ContainerSplit.sfrOrafr = 1;
-        SourceFileText();
-        Console.WriteLine("goes thorugh");
-        if (ContainerSplit.show % 2 == 0)
+        SourceFileHelper.SourceFileText(ContainerSplit, ContainerSplit.archiveFileResolver, (BaseNode)args.Value);
+        if (!ContainerSplit.showSourceFilePanel)
         {
-            ContainerSplit.show += 1;
+            ContainerSplit.showSourceFilePanel = true;
             ContainerSplit.Render();
         }
-        ContainerSplit.FileRender();
-
+        ContainerSplit.SourceFileRender();
     }
 
-    public void SourceFileText()
-    {
-        StructuredLogViewer.SourceFileResolver sourceFileResolver = ContainerSplit.sourceFileResolver;
-        string path = "";
-        BaseNode bn = (BaseNode)ContainerSplit.selected;
-        ContainerSplit.SourceFileText = null;
-        ContainerSplit.sfn = "";
-
-        if (bn is AbstractDiagnostic)
-        {
-            AbstractDiagnostic ad = (AbstractDiagnostic)bn;
-            path = ad.ProjectFile;
-            if (ad.IsTextShortened)
-            {
-                ContainerSplit.SourceFileText = ad.Text;
-                ContainerSplit.sfn = ad.ShortenedText;
-            }
-            else
-            {
-
-                if (ContainerSplit.sfrOrafr == 0)
-                {
-                    ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
-                }
-                else if (ContainerSplit.sfrOrafr == 1)
-                {
-                    ContainerSplit.SourceFileText = ContainerSplit.afr.GetSourceFileText(path).Text;
-                }
-                ContainerSplit.sfn = ad.Name;
-            }
-        }
-        else if (bn is Project)
-        {
-            path = ((Project)bn).SourceFilePath;
-            ContainerSplit.sfn = ((Project)bn).Name;
-
-            if (ContainerSplit.sfrOrafr == 0)
-            {
-                ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
-            }
-            else if (ContainerSplit.sfrOrafr == 1)
-            {
-                ContainerSplit.SourceFileText = ContainerSplit.afr.GetSourceFileText(path).Text;
-            }
-        }
-        else if (bn is Target)
-        {
-            path = ((Target)ContainerSplit.selected).SourceFilePath;
-            ContainerSplit.sfn = ((Target)bn).Name;
-
-            if (ContainerSplit.sfrOrafr == 0)
-            {
-                ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
-            }
-            else if (ContainerSplit.sfrOrafr == 1)
-            {
-                ContainerSplit.SourceFileText = ContainerSplit.afr.GetSourceFileText(path).Text;
-            }
-        }
-        else if (bn is Microsoft.Build.Logging.StructuredLogger.Task)
-        {
-            path = ((Microsoft.Build.Logging.StructuredLogger.Task)bn).SourceFilePath;
-            ContainerSplit.sfn = ((Microsoft.Build.Logging.StructuredLogger.Task)bn).Name;
-
-            if (ContainerSplit.sfrOrafr == 0)
-            {
-                ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
-            }
-            else if (ContainerSplit.sfrOrafr == 1)
-            {
-                ContainerSplit.SourceFileText = ContainerSplit.afr.GetSourceFileText(path).Text;
-            }
-        }
-        else if (bn is IHasSourceFile && ((IHasSourceFile)bn).SourceFilePath != null)
-        {
-            path = ((IHasSourceFile)bn).SourceFilePath;
-            ContainerSplit.sfn = ((IHasSourceFile)bn).SourceFilePath;
-
-            if (ContainerSplit.sfrOrafr == 0)
-            {
-                ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
-            }
-            else if (ContainerSplit.sfrOrafr == 1)
-            {
-                ContainerSplit.SourceFileText = ContainerSplit.afr.GetSourceFileText(path).Text;
-            }
-        }
-        else if (bn is SourceFileLine && ((SourceFileLine)bn).Parent is Microsoft.Build.Logging.StructuredLogger.SourceFile
-        && ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).SourceFilePath != null)
-        {
-            path = ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).SourceFilePath;
-            ContainerSplit.sfn = ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).Name;
-
-            if (ContainerSplit.sfrOrafr == 0)
-            {
-                ContainerSplit.SourceFileText = sourceFileResolver.GetSourceFileText(path).Text;
-            }
-            else if (ContainerSplit.sfrOrafr == 1)
-            {
-                ContainerSplit.SourceFileText = ContainerSplit.afr.GetSourceFileText(path).Text;
-            }
-        }
-        else if (bn is NameValueNode && ((NameValueNode)bn).IsValueShortened)
-        {
-            ContainerSplit.SourceFileText = ((NameValueNode)bn).Value;
-            ContainerSplit.sfn = ((NameValueNode)bn).Name;
-        }
-        else if (bn is TextNode && ((TextNode)bn).IsTextShortened)
-        {
-            ContainerSplit.SourceFileText = ((TextNode)bn).Text;
-            ContainerSplit.sfn = ((TextNode)bn).Name;
-        }
-
-        if (ContainerSplit.SourceFileText == null)
-        {
-            ContainerSplit.SourceFileText = "No file to display";
-        }
-        ContainerSplit.sfrOrafr = -1;
-    }
-
+    /// <summary>
+    /// Defines the expansion of the tree. 
+    /// Ensures that the results will be fully layed out to begin with.
+    /// </summary>
+    /// <param name="args"> Handler that holds the event (.Value is the tree node selected) </param>
     public static void ExpandResults(TreeExpandEventArgs args)
     {
         TreeFormatting.OnExpand(args);
@@ -169,7 +53,4 @@
             args.Children.Expanded = (obj) => (obj is TreeNode && ((TreeNode)obj).HasChildren);
         }
     }
-
-
-
-            }
+}
