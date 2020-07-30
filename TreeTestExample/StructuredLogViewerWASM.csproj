@@ -22,4 +22,8 @@
     <ProjectReference Include="..\src\StructuredLogViewer\StructuredLogViewer.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\icons\" />
+  </ItemGroup>
+
 </Project>

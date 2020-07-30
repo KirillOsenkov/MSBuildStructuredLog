@@ -9,10 +9,12 @@ Allows the user to search through the File Tree*@
 @using System.Collections
 @inject IJSRuntime JSRuntime
 
+<i class="fa fa-check"></i> 
 <RadzenTextBox Value=@searchKeyword 
                Placeholder="Search..." 
                Change="@(args => Change(args, "SearchBar"))" 
-               Style="margin-bottom: 20px" />
+               Style="margin-bottom: 20px" 
+               aria-label="Search through the File Tree"/>
 <br />
 <br />
 <RadzenTree Data="@searchResults" 

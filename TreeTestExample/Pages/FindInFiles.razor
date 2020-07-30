@@ -11,7 +11,8 @@ It allows users to search within the source/archive files*@
 <RadzenTextBox Value=@searchKeyword 
                Placeholder="Search..." 
                Change="@(args => Change(args, "SearchBox"))" 
-               Style="margin-bottom: 20px" />
+               Style="margin-bottom: 20px" 
+               aria-label="Find in files"/>
 <br />
 <br />
 <RadzenTree Data="@findResults" 

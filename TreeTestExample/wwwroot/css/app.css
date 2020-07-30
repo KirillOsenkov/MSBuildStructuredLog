@@ -10,6 +10,14 @@ html, body {
     width: 645px;
 }
 
+.ui-tabview-title {
+    color: #0000A0;
+}
+
+.btn.btn-primary {
+    background-color: #0000A0;
+}
+
 .minimap slider-mouseover {
     left:300px;
 }

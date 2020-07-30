@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.Msagl.Core.Layout;
 using System.Threading.Tasks;
 using Microsoft.JSInterop;
+using Microsoft.Msagl.Core.ProjectionSolver;
 
 namespace StructuredLogViewerWASM
 {
@@ -22,13 +23,15 @@ namespace StructuredLogViewerWASM
         /// </summary>
         public static RenderFragment<RadzenTreeItem> TreeDesign = (RadzenTreeItem context) => builder =>
         {
-            builder.OpenComponent<RadzenIcon>(0);
-            builder.AddAttribute(1, "Icon", "crop_16_9");
             var node = (BaseNode)context.Value;
-            string color = TreeFormatting.ColorSelector(node);
             string margin = TreeFormatting.MarginSelector(context);
-            builder.AddAttribute(2, "Style", "color: " + color + ";margin-left: " + margin);
-            builder.CloseComponent();
+            string icon = IconSelector(node);
+
+            builder.OpenElement(3, "img");
+            builder.AddAttribute(4, "src", icon);
+            builder.AddAttribute(5, "aria-label", icon);
+            builder.AddAttribute(2, "Style", "margin-left: " + margin);
+            builder.CloseElement();
             builder.AddContent(3, context.Text);
         };
 
@@ -38,6 +41,10 @@ namespace StructuredLogViewerWASM
         /// </summary>
         public static RenderFragment<RadzenTreeItem> TreeDesignFiles = (RadzenTreeItem context) => builder =>
         {
+            var node = (BaseNode)context.Value;
+            string margin = TreeFormatting.MarginSelector(context);
+            string icon = IconSelector(node);
+
             builder.OpenElement(0, "div");
             builder.AddAttribute(1, "id", ((BaseNode)context.Value).Id.ToString());
             if (((BaseNode)context.Value).IsSelected)
@@ -45,13 +52,11 @@ namespace StructuredLogViewerWASM
                 builder.AddAttribute(2, "Style", "background-color: #E7E6E9");
                 ((BaseNode)context.Value).IsSelected = false;
             }
-            builder.OpenComponent<RadzenIcon>(0);
-            builder.AddAttribute(1, "Icon", "crop_16_9");
-            var node = (BaseNode)context.Value;
-            string color = TreeFormatting.ColorSelector(node);
-            string margin = TreeFormatting.MarginSelector(context);
-            builder.AddAttribute(2, "Style", "color: " + color + ";margin-left: " + margin);
-            builder.CloseComponent();
+            builder.OpenElement(3, "img");
+            builder.AddAttribute(4, "src", icon);
+            builder.AddAttribute(5, "aria-label", icon);
+            builder.AddAttribute(2, "Style", "margin-left: " + margin);
+            builder.CloseElement();
             builder.AddContent(3, context.Text);
             builder.CloseElement();
         };
@@ -84,6 +89,87 @@ namespace StructuredLogViewerWASM
             args.Children.Template = TreeDesign;
             args.Children.Expanded = ((node) => { return ((BaseNode)node).IsExpanded; });
             ((BaseNode)(args.Value)).IsExpanded = true;
+        }
+
+        public static string IconSelector(Object node)
+        {
+            string img = "/icons/";
+            if (node is ProxyNode)
+            {
+                node = ((ProxyNode)node).Original;
+            }
+
+            if (node is Folder)
+            {
+                img += "FolderClosed.png";
+            } else if (node is Solution)
+            {
+                img += "SolutionV15.png";
+            } else if (node is Project)
+            {
+                string extension = ((Project)node).ProjectFileExtension;
+                if (extension.Equals(".csproj"))
+                {
+                    img += "CSProjectNode.png";
+                } else if (extension.Equals(".fsproj"))
+                {
+                    img += "FSProjectNode.png";
+                } else if (extension.Equals(".vbproj"))
+                {
+                    img += "VBProjectNode.png";
+                } else
+                {
+                    img += "VisualStudio.png";
+                }
+            }
+            else if (node is Target)
+            {
+                img += "TargetFile.ico";
+            }
+            else if (node is Microsoft.Build.Logging.StructuredLogger.Task)
+            {
+                img += "task.ico";
+            }
+            else if (node is Parameter)
+            {
+                img += "Parameter.png";
+            }
+            else if (node is Microsoft.Build.Logging.StructuredLogger.Property)
+            {
+                img += "Property.png";
+            }
+            else if (node is Item)
+            {
+                img += "Item.png";
+            }
+            else if (node is Metadata)
+            {
+                img += "Metadata.png";
+            }
+            else if (node is Message)
+            {
+                img += "Message.png";
+            }
+            else if (node is Import)
+            {
+                img += "Import.png";
+            }
+            else if (node is NoImport)
+            {
+                img += "NoImport.png";
+            }
+            else if (node is Error)
+            {
+                img += "StatusError.png";
+            }
+            else if (node is Warning)
+            {
+                img += "StatusWarning.png";
+            } else
+            {
+                img += "FilledRectangle.png";
+            }
+            return img;
         }
 
         /// <summary>
