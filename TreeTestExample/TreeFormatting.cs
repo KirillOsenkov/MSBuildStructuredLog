@@ -91,6 +91,11 @@ namespace StructuredLogViewerWASM
             ((BaseNode)(args.Value)).IsExpanded = true;
         }
 
+        /// <summary>
+        /// Determines which icon should be used to distinguish visually what the tree node is
+        /// </summary>
+        /// <param name="node"> node to find icon for</param>
+        /// <returns> name of icon to use </returns>
         public static string IconSelector(Object node)
         {
             string img = "/icons/";

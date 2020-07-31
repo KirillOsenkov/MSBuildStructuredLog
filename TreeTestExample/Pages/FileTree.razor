@@ -135,12 +135,17 @@
         try {
             //setting appropriate variables to display progress bar
             binLogSelected = false;
+
+            //creating files list from the file selected
+            var files = (await fileReaderService.CreateReference(fileToRead).EnumerateFilesAsync());
+            if (!files.Any())
+            {
+                return;
+            }
             reading = true;
             this.StateHasChanged();
             waitText = "Here we go...";
 
-            //creating files list from the file selected
-            var files = (await fileReaderService.CreateReference(fileToRead).EnumerateFilesAsync());
             foreach (Blazor.FileReader.IFileReference file in files)
             {
                 //determining if file is of type .binlog (errors if not)

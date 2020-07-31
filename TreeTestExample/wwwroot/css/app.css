@@ -11,12 +11,19 @@ html, body {
 }
 
 .ui-tabview-title {
-    color: #0000A0;
+    color: rgb(5, 39, 103);
 }
 
 .btn.btn-primary {
-    background-color: #0000A0;
+    background-color: rgb(5, 39, 103);
+    border-color: rgb(5, 39, 103);
+    color: #fff;
 }
+
+.ui-tabview-nav .ui-tabview-selected {
+    border-top-color: rgb(5, 39, 103);
+}
+
 
 .minimap slider-mouseover {
     left:300px;
@@ -48,11 +55,6 @@ a, .btn-link {
     color: #0366d6;
 }
 
-.btn-primary {
-    color: #fff;
-    background-color: #1b6ec2;
-    border-color: #1861ac;
-}
 
 app {
     position: relative;
