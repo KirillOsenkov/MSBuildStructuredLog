@@ -1,6 +1,7 @@
 ﻿@*Main page that determines three vs two panel layout*@
 
 @page "/home"
+@page "/"
 @using Microsoft.Build.Logging.StructuredLogger
 @using StructuredLogViewer
 @inject IJSRuntime JSRuntime
@@ -10,15 +11,15 @@
 
         <body style="height:100%">
             <div>
-                <div @ref="tabPanel" style="overflow-y:scroll" class="split" id="tabPanel">
+                <div @ref="tabPanel" style="overflow: scroll; white-space: nowrap;" class="split" id="tabPanel">
                     <Tabs />
                 </div>
-                <div @ref="fileTreePanel" style="overflow-y:scroll" class="split" id="fileTreePanel">
+                <div @ref="fileTreePanel" style="overflow: scroll; white-space: nowrap;" class="split" id="fileTreePanel">
                     <FileTree />
                 </div>
                 @if (showSourceFilePanel)
                 {
-                    <div @ref="sourceFilePanel" style="overflow-y:hidden" id="sourceFilePanel">
+                    <div @ref="sourceFilePanel" style="overflow: scroll; white-space: nowrap;" id="sourceFilePanel">
                         @DrawSourceFilePanel()
                     </div>
                 }

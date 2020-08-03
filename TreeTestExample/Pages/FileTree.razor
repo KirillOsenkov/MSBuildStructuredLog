@@ -32,6 +32,7 @@
 <br />
 @if (binLogSelected)
 {
+<center>
 <div id="fileTree">
     <RadzenTree Data="@fileTree" 
                 Style="word-break:break-all;overflow-y:scroll"
@@ -51,6 +52,12 @@
                                 })" />
     </RadzenTree>
 </div>
+</center>
+} else
+{
+<center>
+    <Directions />
+</center>
 }
 <RadzenNotification />
 

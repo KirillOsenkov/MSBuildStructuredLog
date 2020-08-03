@@ -1,9 +1,15 @@
 ﻿@import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
 html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    width:100%;
-    overflow-y:hidden;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif, monospace;
+    width: 100%;
+    overflow-y: hidden;
+}
+
+p.blocktext {
+    margin-left: auto;
+    margin-right: auto;
+    width: 8em
 }
 
 .monaco-scrollable-element editor-scrollable vs {
