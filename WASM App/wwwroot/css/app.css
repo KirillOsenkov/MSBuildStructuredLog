@@ -1,0 +1,236 @@
+﻿@import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
+
+html, body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif, monospace;
+    width: 100%;
+    overflow-y: hidden;
+    font-size: small;
+}
+
+.ui-tree {
+    width: 100%;
+}
+
+p.blocktext {
+    margin-left: auto;
+    margin-right: auto;
+    width: 8em
+}
+
+.p1-4, .px-4 {
+    padding-left: .35rem !important;
+    padding-right: .35rem !important;
+}
+
+.monaco-scrollable-element editor-scrollable vs {
+    width: 645px;
+}
+
+.ui-tabview-title {
+    color: rgb(5, 39, 103);
+}
+
+.btn.btn-primary {
+    background-color: rgb(5, 39, 103);
+    border-color: rgb(5, 39, 103);
+    color: #fff;
+}
+
+.ui-tabview-nav .ui-tabview-selected {
+    border-top-color: rgb(5, 39, 103);
+}
+
+
+.minimap slider-mouseover {
+    left:300px;
+}
+
+.decorationGlyphMarginClass {
+    background: lightblue;
+}
+
+.decorationContentClass {
+    background: lightblue;
+}
+
+.code {
+    font-family: Consolas, Courier New, Courier, monospace;
+    font-size: small;
+    color: black;
+    display: block;
+    white-space: pre;
+    padding: 8px;
+    overflow-x: auto;
+    overflow-y: scroll;
+    height: calc(100vh - 70px);
+    align-content:center;
+    width:600px;
+}
+
+a, .btn-link {
+    color: #0366d6;
+}
+
+
+app {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.main {
+    flex: 1;
+}
+
+element.Style {
+    width:3px;
+    background-color:white;
+}
+
+.split, .gutter.gutter-horizontal {
+    float: left;
+    height: calc(100vh - 50px);
+    word-break: break-all;
+}
+
+.gutter.gutter-horizontal {
+    cursor: ew-resize;
+    background-color:black;
+    min-height:100vh;
+    height:100vh;
+    max-width:3px;
+}
+
+.heading {
+    color: #d7d7d7;
+    padding-top: 0.5rem;
+    vertical-align: text-top;
+    top: -2px;
+    padding-bottom: 0.5rem;
+    height: 48px;
+    text-align: center;
+    margin: auto;
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.sidebar {
+        background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+}
+
+    .sidebar .top-row {
+        background-color: rgba(0,0,0,0.4);
+    }
+
+    .sidebar .navbar-brand {
+        font-size: 1.1rem;
+    }
+
+    .sidebar .oi {
+        width: 2rem;
+        font-size: 1.1rem;
+        vertical-align: text-top;
+        top: -2px;
+    }
+
+    .sidebar .nav-item {
+        font-size: 0.9rem;
+        padding-right: 1.10rem;
+    }
+
+        .sidebar .nav-item:first-of-type {
+            padding-left: 1rem;
+        }
+
+        .sidebar .nav-item:last-of-type {
+            padding-right: 1rem;
+        }
+
+        .sidebar .nav-item a {
+            color: #d7d7d7;
+            border-radius: 4px;
+            height: 3.5rem;
+            display: flex;
+            align-items: center;
+            line-height: 4rem;
+        }
+
+    .sidebar .nav-link {
+        padding: 1rem 1rem;
+    }
+
+            .sidebar .nav-item a.active {
+                background-color: rgba(255,255,255,0.25);
+                color: white;
+            }
+
+            .sidebar .nav-item a:hover {
+                background-color: rgba(255,255,255,0.1);
+                color: white;
+            }
+
+.content {
+    padding-top: 1.1rem;
+}
+
+.navbar-toggler {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.valid.modified:not([type=checkbox]) {
+    outline: 1px solid #26b050;
+}
+
+.invalid {
+    outline: 1px solid red;
+}
+
+.validation-message {
+    color: red;
+}
+
+#blazor-error-ui {
+    background: lightyellow;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}
+
+@media (min-width: 768px) {
+    app {
+        flex-direction: column;
+        height:100%;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: 50px;
+        position: sticky;
+        top: 0;
+    }
+
+    .main > div {
+        padding: .15rem;
+    }
+
+    .navbar-toggler {
+        display: none;
+    }
+
+    .sidebar .collapse {
+        /* Never collapse the sidebar for wide screens */
+        display: block;
+    }
+}

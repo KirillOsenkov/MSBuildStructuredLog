@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <RazorLangVersion>3.0</RazorLangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BlazorMonaco" Version="1.3.1" />
+    <PackageReference Include="BlazorSplit" Version="0.3.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="3.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Build" Version="3.2.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="3.2.0" PrivateAssets="all" />
+    <PackageReference Include="Radzen.Blazor" Version="2.10.6" />
+    <PackageReference Include="System.Net.Http.Json" Version="3.2.0" />
+	<PackageReference Include="Tewr.Blazor.FileReader" Version="1.6.0.20166" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\src\StructuredLogger\StructuredLogger.csproj" />
+    <ProjectReference Include="..\src\StructuredLogViewer.Core\StructuredLogViewer.Core.csproj" />
+    <ProjectReference Include="..\src\StructuredLogViewer\StructuredLogViewer.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\icons\" />
+  </ItemGroup>
+
+</Project>

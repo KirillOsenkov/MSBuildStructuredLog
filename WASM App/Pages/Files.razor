@@ -1,0 +1,60 @@
+﻿@*Displays the project files tree in the Files tab*@
+
+@page "/files"
+@using StructuredLogViewer
+@using StructuredLogViewer.Core
+@using System.IO
+@using Microsoft.Build.Logging.StructuredLogger
+
+    <RadzenTree Data="@ContainerSplit.projectFiles" 
+                Style="word-break:break-all;overflow-y:scroll;color:black" 
+                Expand="@((TreeExpandEventArgs args) => {ExpandResults(args);})"
+                Change="OnChange">
+        <RadzenTreeLevel Expanded="@((obj) => (obj is TreeNode && ((TreeNode)obj).HasChildren))" 
+                         Template="@TreeFormatting.TreeDesign" 
+                         Text="@TreeFormatting.TextSelector"
+                         HasChildren="@((node) => {
+                                    if (node is TreeNode)
+                                        return ((TreeNode)node).HasChildren;
+                                    else return false;
+                                })" />
+    </RadzenTree>
+
+@code {
+    [CascadingParameter]
+    public SplitPane ContainerSplit { get; set; }
+
+    /// <summary>
+    /// Fired when a user clicks on a tree node
+    /// Opens source file/ highlights line number if available
+    /// </summary>
+    /// <param name="args"> Holds the event (.Value is the tree node selected) </param>
+    void OnChange(TreeEventArgs args)
+    {
+        object[] sourceFileInfo = SourceFileHelper.SourceFileText(ContainerSplit.archiveFileResolver, (BaseNode)args.Value);
+        ContainerSplit.sourceFileName = (string)sourceFileInfo[0];
+        ContainerSplit.sourceFileText = (string)sourceFileInfo[1];
+        ContainerSplit.sourceFileLineNumber = (int)sourceFileInfo[2];
+
+        if (!ContainerSplit.showSourceFilePanel)
+        {
+            ContainerSplit.showSourceFilePanel = true;
+            ContainerSplit.Render();
+        }
+        ContainerSplit.SourceFileRender();
+    }
+
+    /// <summary>
+    /// Defines the expansion of the tree. 
+    /// Ensures that the results will be fully layed out to begin with.
+    /// </summary>
+    /// <param name="args"> Handler that holds the event (.Value is the tree node selected) </param>
+    public static void ExpandResults(TreeExpandEventArgs args)
+    {
+        TreeFormatting.OnExpand(args);
+        if (args.Value is TreeNode && ((TreeNode)(args.Value)).HasChildren)
+        {
+            args.Children.Expanded = (obj) => (obj is TreeNode && ((TreeNode)obj).HasChildren);
+        }
+    }
+}

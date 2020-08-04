@@ -1,0 +1,18 @@
+﻿@*This creates the layout of the tabs on the far left panel of the app*@
+
+@page "/tabs"
+@using Radzen
+@using Radzen.Blazor
+<RadzenTabs>
+    <Tabs>
+        <RadzenTabsItem Text="Search">
+            <SearchViewer />
+        </RadzenTabsItem>
+        <RadzenTabsItem Text="Files">
+            <Files />
+        </RadzenTabsItem>
+        <RadzenTabsItem Text="Find in Files">
+            <FindInFiles />
+        </RadzenTabsItem>
+    </Tabs>
+</RadzenTabs>
