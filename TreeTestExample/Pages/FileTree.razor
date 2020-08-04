@@ -10,7 +10,6 @@
 @inject NotificationService notificationService
 
 <center>
-    <h1>Structured Log Viewer</h1>
     <input type="file" @ref=fileToRead aria-label="Select a .binlog to begin"/>
     <button @onclick=ReadFile class="btn btn-primary">Read file</button>
     <button @onclick=ClearFile class="btn btn-primary">Clear</button>
@@ -33,7 +32,7 @@
 @if (binLogSelected)
 {
 <center>
-<div id="fileTree">
+<div id="fileTree" style="width: 100%">
     <RadzenTree Data="@fileTree" 
                 Style="word-break:break-all;overflow-y:scroll"
                 Expand="@((TreeExpandEventArgs args) => {TreeFormatting.OnExpandFiles(args);})"
@@ -68,7 +67,7 @@
     static ElementReference fileToRead;
     static bool reading;
     static string waitText;
-    double _progressValue = 0;
+    static double _progressValue = 0;
     static IEnumerable<BaseNode> fileTree = null;
 
     /// <summary>
@@ -129,7 +128,7 @@
         }
         ContainerSplit.Render();
         FindInFiles.searchKeyword = null;
-        SearchViewer.searchKeyword = null;
+        SearchViewer.SearchKeyword = null;
     }
 
     /// <summary>

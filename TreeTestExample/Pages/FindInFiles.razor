@@ -1,5 +1,5 @@
 ﻿@*This page constructs the Find In Files tab on the far left panel
-It allows users to search within the source/archive files*@
+    It allows users to search within the source/archive files*@
 
 @page "/findInFiles"
 @using StructuredLogViewer
@@ -8,26 +8,34 @@ It allows users to search within the source/archive files*@
 @using Microsoft.Build.Logging.StructuredLogger
 @using System.IO
 
-<RadzenTextBox Value=@searchKeyword 
-               Placeholder="Search..." 
-               Change="@(args => Change(args, "SearchBox"))" 
-               Style="margin-bottom: 20px" 
-               aria-label="Find in files"/>
+<RadzenTextBox Value=@searchKeyword
+               Placeholder="Search..."
+               Change="@(args => Change(args, "SearchBox"))"
+               Style="margin-bottom: 20px"
+               aria-label="Find in files" />
 <br />
 <br />
-<RadzenTree Data="@findResults" 
-            Style="word-break:break-all;overflow-y:scroll;color:black" 
-            Expand="@((TreeExpandEventArgs args) => {ExpandResults(args);})"
-            Change="@OnChange">
-    <RadzenTreeLevel Expanded="@((obj) => (obj is TreeNode && ((TreeNode)obj).HasChildren))" 
-                     Template="@TreeFormatting.TreeDesign" 
-                     Text="@TreeFormatting.TextSelector"
-                     HasChildren="@((node) => {
-                                    if (node is TreeNode)
-                                        return ((TreeNode)node).HasChildren;
-                                    else return false;
-                                })" />
-</RadzenTree>
+@if (String.IsNullOrEmpty(searchKeyword))
+{
+    <div>Search in files </div>
+}
+else
+{
+    <RadzenTree Data="@findResults"
+                Style="word-break:break-all;overflow-y:scroll;color:black"
+                Expand="@((TreeExpandEventArgs args) => { ExpandResults(args); })"
+                Change="@OnChange">
+        <RadzenTreeLevel Expanded="@((obj) => (obj is TreeNode && ((TreeNode)obj).HasChildren))"
+                         Template="@TreeFormatting.TreeDesign"
+                         Text="@TreeFormatting.TextSelector"
+                         HasChildren="@((node) =>
+                                    {
+                                        if (node is TreeNode)
+                                            return ((TreeNode)node).HasChildren;
+                                        else return false;
+                                    })" />
+    </RadzenTree>
+}
 
 @code {
     [CascadingParameter]
@@ -63,16 +71,13 @@ It allows users to search within the source/archive files*@
     /// <param name="name"> Name of search box that value is coming from </param>
     void Change(string value, string name)
     {
-        if (value != null)
-        {
-            searchKeyword = value;
-        }
+        searchKeyword = value;
         var results = SearchInFiles(value, 1000, new System.Threading.CancellationToken());
-        findResults = (IEnumerable<BaseNode>) BuildFindResults(results, value);
+        findResults = (IEnumerable<BaseNode>)BuildFindResults(results, value);
     }
 
     /// <summary>
-    /// Defines the expansion of the tree. 
+    /// Defines the expansion of the tree.
     /// Ensures that the results will be fully layed out to begin with.
     /// </summary>
     /// <param name="args"> Handler that holds the event (.Value is the tree node selected) </param>

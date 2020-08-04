@@ -1,5 +1,5 @@
 ﻿@*Creates the layout of the search panel on the far left panel of the app
-Allows the user to search through the File Tree*@
+    Allows the user to search through the File Tree*@
 
 @page "/SearchViewer"
 @using Microsoft.Build.Logging.StructuredLogger
@@ -9,33 +9,46 @@ Allows the user to search through the File Tree*@
 @using System.Collections
 @inject IJSRuntime JSRuntime
 
-<i class="fa fa-check"></i> 
-<RadzenTextBox Value=@searchKeyword 
-               Placeholder="Search..." 
-               Change="@(args => Change(args, "SearchBar"))" 
-               Style="margin-bottom: 20px" 
-               aria-label="Search through the File Tree"/>
+<i class="fa fa-check"></i>
+<RadzenTextBox Value=@SearchKeyword
+               Placeholder="Search..."
+               Change="@(args => Change(args, "SearchBar"))"
+               Style="margin-bottom: 20px"
+               aria-label="Search through the File Tree" />
 <br />
 <br />
-<RadzenTree Data="@searchResults" 
-            Style="word-break:break-all;overflow-y:scroll;color:black" 
-            Change="@OnChange" 
-            Expand="@((TreeExpandEventArgs args) => {ExpandResults(args);})">
-    <RadzenTreeLevel Expanded="@((obj) => (obj is TreeNode && ((TreeNode)obj).HasChildren))" 
-                     Template="@TreeFormatting.TreeDesign" 
-                     Text="@TreeFormatting.TextSelector"
-                     HasChildren="@((node) => {
-                                    if (node is TreeNode)
-                                        return ((TreeNode)node).HasChildren;
-                                    else return false;
-                                })" />
-</RadzenTree>
+
+@if (String.IsNullOrEmpty(SearchKeyword))
+{
+    <p style="white-space:normal;word-break:break-word">
+        Type in the search box to search. Results (up to 1000) will display here. <br /> <br />
+        Search for multiple words separated by space (space means AND). Enclose multiple words in double quotes "" to search for the exact phrase. <br /> <br />
+        Use syntaz like '$property Prop' to narrow results down by item kind. Supported kinds: $project, $target, $task, $warning, $message, $property, $item, $additem, $removeitem, $metadata, $copytask, $import, $noimport
+    </p>
+} else
+{
+    <RadzenTree Data="@searchResults"
+                Style="word-break:break-all;overflow-y:scroll;color:black"
+                Change="@OnChange"
+                Expand="@((TreeExpandEventArgs args) => { ExpandResults(args); })">
+        <RadzenTreeLevel Expanded="@((obj) => (obj is TreeNode && ((TreeNode)obj).HasChildren))"
+                         Template="@TreeFormatting.TreeDesign"
+                         Text="@TreeFormatting.TextSelector"
+                         HasChildren="@((node) =>
+                                    {
+                                        if (node is TreeNode)
+                                            return ((TreeNode)node).HasChildren;
+                                        else return false;
+                                    })" />
+    </RadzenTree>
+}
+
 @code {
     [CascadingParameter]
     public SplitPane ContainerSplit { get; set; }
     public static StructuredLogViewer.Search searcher;
     public static IEnumerable<BaseNode> searchResults;
-    public static string searchKeyword;
+    public static string SearchKeyword;
 
     /// <summary>
     /// Fired when a user click on a search element.
@@ -98,16 +111,16 @@ Allows the user to search through the File Tree*@
     /// <param name="name"> Name of textbox where value was written </param>
     void Change(string value, string name)
     {
-        if (value != null)
-        {
-            searchKeyword = value;
-        }
+        SearchKeyword = value;
         if (searcher == null)
         {
+            Console.WriteLine(String.IsNullOrEmpty(SearchKeyword));
+            this.StateHasChanged();
             return;
         }
         IEnumerable<StructuredLogViewer.SearchResult> results = searcher.FindNodes(value, new System.Threading.CancellationToken());
         searchResults = BuildResultTree(results) as IEnumerable<BaseNode>;
+        this.StateHasChanged();
     }
 
     /// <summary>

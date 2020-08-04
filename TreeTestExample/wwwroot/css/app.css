@@ -4,12 +4,22 @@ html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif, monospace;
     width: 100%;
     overflow-y: hidden;
+    font-size: small;
+}
+
+.ui-tree {
+    width: 100%;
 }
 
 p.blocktext {
     margin-left: auto;
     margin-right: auto;
     width: 8em
+}
+
+.p1-4, .px-4 {
+    padding-left: .35rem !important;
+    padding-right: .35rem !important;
 }
 
 .monaco-scrollable-element editor-scrollable vs {
@@ -77,13 +87,6 @@ element.Style {
     background-color:white;
 }
 
-#four {
-    overflow-x: hidden;
-}
-
-#one {
-    overflow-x: hidden;
-}
 .split, .gutter.gutter-horizontal {
     float: left;
     height: calc(100vh - 50px);
@@ -96,6 +99,19 @@ element.Style {
     min-height:100vh;
     height:100vh;
     max-width:3px;
+}
+
+.heading {
+    color: #d7d7d7;
+    padding-top: 0.5rem;
+    vertical-align: text-top;
+    top: -2px;
+    padding-bottom: 0.5rem;
+    height: 48px;
+    text-align: center;
+    margin: auto;
+    font-size: 2rem;
+    font-weight: bold;
 }
 
 .sidebar {
@@ -119,7 +135,7 @@ element.Style {
 
     .sidebar .nav-item {
         font-size: 0.9rem;
-        padding-right: 0.5rem;
+        padding-right: 1.10rem;
     }
 
         .sidebar .nav-item:first-of-type {
@@ -133,11 +149,15 @@ element.Style {
         .sidebar .nav-item a {
             color: #d7d7d7;
             border-radius: 4px;
-            height: 3rem;
+            height: 3.5rem;
             display: flex;
             align-items: center;
-            line-height: 3rem;
+            line-height: 4rem;
         }
+
+    .sidebar .nav-link {
+        padding: 1rem 1rem;
+    }
 
             .sidebar .nav-item a.active {
                 background-color: rgba(255,255,255,0.25);
@@ -202,8 +222,7 @@ element.Style {
     }
 
     .main > div {
-        padding-left: 2rem !important;
-        padding-right: 1.5rem !important;
+        padding: .15rem;
     }
 
     .navbar-toggler {
