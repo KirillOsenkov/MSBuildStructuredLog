@@ -18,7 +18,7 @@
     <PackageTags>MSBuild Log Logger Structure Structured</PackageTags>
   </PropertyGroup>
   <ItemGroup Condition=" '$(OS)' == 'Windows_NT' ">
-    <PackageReference Include="Nerdbank.GitVersioning" Version="2.3.38" PrivateAssets="all" />
+    <PackageReference Include="Nerdbank.GitVersioning" Version="$(NuGetVersionNerdbankGitVersioning)" PrivateAssets="all" />
   </ItemGroup>
   <PropertyGroup>
     <DefineConstants>$(DefineConstants);NETCORE</DefineConstants>

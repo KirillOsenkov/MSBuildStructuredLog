@@ -17,6 +17,7 @@
     <LangVersion>latest</LangVersion>
 
     <MSBuildPackageVersion>16.4.0</MSBuildPackageVersion>
+    <NuGetVersionNerdbankGitVersioning>3.2.31</NuGetVersionNerdbankGitVersioning>
   </PropertyGroup>
 
 </Project>
