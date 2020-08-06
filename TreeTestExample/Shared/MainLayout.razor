@@ -1,5 +1,5 @@
 ﻿@inherits LayoutComponentBase
-
+<CascadingValue Value=this>
         <div class="sidebar">
             <NavMenu />
         </div>
@@ -10,3 +10,13 @@
                 @Body
             </div>
         </div>
+></CascadingValue>
+
+@code {
+    public StructuredLogViewerWASM.Pages.SplitPane containerSplit;
+
+    public void Render()
+    {
+        this.StateHasChanged();
+    }
+}

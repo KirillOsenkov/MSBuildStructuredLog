@@ -15,7 +15,7 @@
                     <Tabs />
                 </div>
                 <div @ref="fileTreePanel" style="overflow: scroll; white-space: nowrap;" class="split" id="fileTreePanel">
-                    <FileTree />
+                    @DrawFileTreePanel()
                 </div>
                 @if (showSourceFilePanel)
                 {
@@ -30,11 +30,14 @@
 
 
         @code {
+            [CascadingParameter]
+            public MainLayout mainLayout { get; set; }
             public bool showSourceFilePanel;
             protected ElementReference tabPanel;
             protected ElementReference fileTreePanel;
             protected ElementReference sourceFilePanel;
             private SourceFile sourceFile;
+            public FileTree fileTree;
             public SourceFileResolver sourceFileResolver;
             public ArchiveFileResolver archiveFileResolver;
             public Build build;
@@ -50,6 +53,20 @@
             public void Render()
             {
                 this.StateHasChanged();
+            }
+
+            /// <summary>
+            /// Draws the FileTreePanel
+            /// </summary>
+            /// <returns> The RenderFragment to be used in the html code </returns>
+            public RenderFragment DrawFileTreePanel()
+            {
+                return new RenderFragment(builder =>
+                {
+                    builder.OpenComponent<FileTree>(0);
+                    builder.AddComponentReferenceCapture(1, inst => { fileTree = (FileTree)inst; });
+                    builder.CloseComponent();
+                });
             }
 
             /// <summary>
@@ -86,6 +103,11 @@
             /// <returns> Task to update the html </returns>
             protected override async System.Threading.Tasks.Task OnAfterRenderAsync(bool firstRender)
             {
+                if (firstRender)
+                {
+                    mainLayout.containerSplit = this;
+                }
+
                 if (!showSourceFilePanel && !searching)
                 {
                     if (!firstRender)

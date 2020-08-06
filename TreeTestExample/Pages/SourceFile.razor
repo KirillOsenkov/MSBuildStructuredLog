@@ -7,13 +7,12 @@
 @using BlazorMonaco
 @using BlazorMonaco.Bridge
 
-<button @onclick=Exit style="float:right" class="btn btn-primary">Close</button>
-<h3>@ContainerSplit.sourceFileName</h3>
+    <div class="flex-container">
+        <h3>@ContainerSplit.sourceFileName</h3>
+        <button @onclick=Exit class="btn btn-secondary" id="closeButton">Close</button>
+    </div>
 
 
-<br />
-<br />
-<br />
     <MonacoEditor @ref="_editor"
                   CssClass="code"
                   Id="monaco-editor"
@@ -72,8 +71,10 @@
                 }
             }
                 };
-            ContainerSplit.sourceFileLineNumber = -1;
+            await _editor.RevealLineInCenter(ContainerSplit.sourceFileLineNumber, ScrollType.Smooth);
             await _editor.DeltaDecorations(null, newDecorations);
+            await _editor.RevealLineInCenter(ContainerSplit.sourceFileLineNumber, ScrollType.Smooth);
+            ContainerSplit.sourceFileLineNumber = -1;
         }
 
 

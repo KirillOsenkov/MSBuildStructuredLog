@@ -7,6 +7,66 @@ html, body {
     font-size: small;
 }
 
+.buttonContainer {
+    display: flex;
+    justify-content: space-evenly;
+    width: 35%;
+    margin: 0;
+}
+
+.filePicker input[type=file] {
+    position: absolute;
+    width: 3rem;
+    height: 2rem;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.filePicker {
+    background-color: #fff;
+    border-color: #fff;
+    color: rgb(5, 39, 103);
+    font-weight: bold;
+    cursor: pointer;
+    display: inline-block;
+    text-align: center;
+    vertical-align: middle;
+    border: 1px solid transparent;
+    padding: .375rem .75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    border-radius: .25rem;
+    margin: auto;
+    font-family: inherit;
+    left: 0rem;
+    position: relative;
+    display: flex;
+    text-align: center;
+    justify-content: center;
+}
+
+.flex-container {
+    display: flex;
+    width: 100%;
+}
+
+    .flex-container > #closeButton {
+        margin-left: auto;
+    }
+
+#fileTree {
+    position: relative;
+    top: -2.5rem;
+}
+
+.split::-webkit-scrollbar {
+    width: 7px;
+}
+
+.split::-webkit-scrollbar-thumb {
+    background: DarkSlateBlue;
+}
+
 .ui-tree {
     width: 100%;
 }
@@ -31,9 +91,18 @@ p.blocktext {
 }
 
 .btn.btn-primary {
+    background-color: #fff;
+    border-color: #fff;
+    color: rgb(5, 39, 103);
+    font-weight: bold;
+    margin:auto;
+}
+
+.btn.btn-secondary {
     background-color: rgb(5, 39, 103);
     border-color: rgb(5, 39, 103);
     color: #fff;
+    font-weight: bold;
 }
 
 .ui-tabview-nav .ui-tabview-selected {
@@ -112,6 +181,14 @@ element.Style {
     margin: auto;
     font-size: 2rem;
     font-weight: bold;
+    overflow-x: hidden;
+    min-width: 659px;
+    display: flex;
+    margin: auto;
+    justify-content: center;
+    justify-content: space-between;
+    width: 5%;
+    padding-left: 12rem;
 }
 
 .sidebar {
