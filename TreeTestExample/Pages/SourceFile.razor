@@ -21,21 +21,22 @@
 
 
 @code {
-    [CascadingParameter]
-    public SplitPane ContainerSplit { get; set; }
-    public MonacoEditor _editor { get; set; }
+        [CascadingParameter]
+        public SplitPane ContainerSplit { get; set; }
+        public MonacoEditor _editor { get; set; }
 
-    /// <summary>
-    /// Defines how the monaco editor should look including what text to display
-    /// </summary>
-    /// <param name="editor"> The editor being created </param>
-    /// <returns> The construction options for the editor </returns>
-    private StandaloneEditorConstructionOptions EditorConstructionOptions(MonacoEditor editor)
-    {
-        return new StandaloneEditorConstructionOptions()
+        /// <summary>
+        /// Defines how the monaco editor should look including what text to display
+        /// </summary>
+        /// <param name="editor"> The editor being created </param>
+        /// <returns> The construction options for the editor </returns>
+        private StandaloneEditorConstructionOptions EditorConstructionOptions(MonacoEditor editor)
         {
-            ReadOnly = true,
-            Value = ContainerSplit.sourceFileText,
+            return new StandaloneEditorConstructionOptions()
+            {
+                ReadOnly = true,
+                Value = ContainerSplit.sourceFileText,
+                Language = ContainerSplit.sourceFileExtension
         };
 
     }
