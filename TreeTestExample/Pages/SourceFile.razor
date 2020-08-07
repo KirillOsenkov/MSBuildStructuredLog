@@ -75,6 +75,7 @@
             await _editor.RevealLineInCenter(ContainerSplit.sourceFileLineNumber, ScrollType.Smooth);
             await _editor.DeltaDecorations(null, newDecorations);
             await _editor.RevealLineInCenter(ContainerSplit.sourceFileLineNumber, ScrollType.Smooth);
+            
             ContainerSplit.sourceFileLineNumber = -1;
         }
 
