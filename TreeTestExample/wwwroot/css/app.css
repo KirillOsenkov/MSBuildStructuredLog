@@ -50,9 +50,6 @@ html, body {
     width: 100%;
 }
 
-    .flex-container > #closeButton {
-        margin-left: auto;
-    }
 
 #fileTree {
     position: relative;
@@ -77,13 +74,24 @@ p.blocktext {
     width: 8em
 }
 
+.flexSource {
+    display: flex;
+    flex-direction:column;
+    justify-content: center;
+    align-items: center;
+}
+
 .p1-4, .px-4 {
     padding-left: .35rem !important;
     padding-right: .35rem !important;
 }
 
+#monaco-editor {
+    margin:auto;
+}
+
 .monaco-scrollable-element editor-scrollable vs {
-    width: 645px;
+    width: 100%;
 }
 
 .ui-tabview-title {

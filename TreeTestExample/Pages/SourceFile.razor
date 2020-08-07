@@ -7,19 +7,18 @@
 @using BlazorMonaco
 @using BlazorMonaco.Bridge
 
-    <div class="flex-container">
-        <h3>@ContainerSplit.sourceFileName</h3>
-        <button @onclick=Exit class="btn btn-secondary" id="closeButton">Close</button>
+    <div class="flexSource">
+        <div class="flex-container">
+            <h1 style="margin:auto">@ContainerSplit.sourceFileName</h1>
+            <button @onclick=Exit class="btn btn-secondary" id="closeButton">Close</button>
+        </div>
+
+        <MonacoEditor @ref="_editor"
+                      CssClass="code"
+                      Id="monaco-editor"
+                      ConstructionOptions="EditorConstructionOptions"
+                      OnDidInit="EditorOnDidInit" />
     </div>
-
-
-    <MonacoEditor @ref="_editor"
-                  CssClass="code"
-                  Id="monaco-editor"
-                  ConstructionOptions="EditorConstructionOptions"
-                  OnDidInit="EditorOnDidInit" />
-
-
 @code {
     [CascadingParameter]
     public SplitPane ContainerSplit { get; set; }
