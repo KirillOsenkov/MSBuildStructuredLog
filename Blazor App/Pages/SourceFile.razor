@@ -17,7 +17,7 @@
                       CssClass="code"
                       Id="monaco-editor"
                       ConstructionOptions="EditorConstructionOptions"
-                      OnDidInit="EditorOnDidInit" />
+                      OnDidInit="@((editor) => EditorOnDidInit((MonacoEditor)editor))" />
     </div>
 @code {
     [CascadingParameter]

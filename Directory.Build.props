@@ -15,6 +15,7 @@
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)\key.snk</AssemblyOriginatorKeyFile>
     <!--<DebugType Condition="$(OS) == 'Windows_NT'">embedded</DebugType>-->
     <LangVersion>latest</LangVersion>
+    <ImportFrameworkWinFXTargets>true</ImportFrameworkWinFXTargets>
 
     <MSBuildPackageVersion>16.4.0</MSBuildPackageVersion>
   </PropertyGroup>

@@ -20,7 +20,6 @@
   <ItemGroup>
     <ProjectReference Include="..\src\StructuredLogger\StructuredLogger.csproj" />
     <ProjectReference Include="..\src\StructuredLogViewer.Core\StructuredLogViewer.Core.csproj" />
-    <ProjectReference Include="..\src\StructuredLogViewer\StructuredLogViewer.csproj" />
   </ItemGroup>
 
   <ItemGroup>
