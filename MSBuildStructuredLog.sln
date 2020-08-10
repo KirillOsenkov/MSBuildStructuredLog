@@ -26,7 +26,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StructuredLogViewer.Avaloni
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blazor.FileReader", "..\..\BlazorFileReader\src\Blazor.FileReader\Blazor.FileReader.csproj", "{E90CCA79-A697-4EC4-BE7A-7DE89B4B2874}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StructuredLogViewerWASM", "TreeTestExample\StructuredLogViewerWASM.csproj", "{14992688-2944-47EF-90D9-A2515B6D2CFD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StructuredLogViewerWASM", "Blazor App\StructuredLogViewerWASM.csproj", "{34B94D13-0B72-45E1-9A01-28F288921CFE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -122,18 +122,18 @@ Global
 		{E90CCA79-A697-4EC4-BE7A-7DE89B4B2874}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E90CCA79-A697-4EC4-BE7A-7DE89B4B2874}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{E90CCA79-A697-4EC4-BE7A-7DE89B4B2874}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{14992688-2944-47EF-90D9-A2515B6D2CFD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{14992688-2944-47EF-90D9-A2515B6D2CFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{14992688-2944-47EF-90D9-A2515B6D2CFD}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{14992688-2944-47EF-90D9-A2515B6D2CFD}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{14992688-2944-47EF-90D9-A2515B6D2CFD}.Ghpages|Any CPU.ActiveCfg = Debug|Any CPU
-		{14992688-2944-47EF-90D9-A2515B6D2CFD}.Ghpages|Any CPU.Build.0 = Debug|Any CPU
-		{14992688-2944-47EF-90D9-A2515B6D2CFD}.Ghpages|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{14992688-2944-47EF-90D9-A2515B6D2CFD}.Ghpages|Mixed Platforms.Build.0 = Debug|Any CPU
-		{14992688-2944-47EF-90D9-A2515B6D2CFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{14992688-2944-47EF-90D9-A2515B6D2CFD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{14992688-2944-47EF-90D9-A2515B6D2CFD}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{14992688-2944-47EF-90D9-A2515B6D2CFD}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{34B94D13-0B72-45E1-9A01-28F288921CFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{34B94D13-0B72-45E1-9A01-28F288921CFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{34B94D13-0B72-45E1-9A01-28F288921CFE}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{34B94D13-0B72-45E1-9A01-28F288921CFE}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{34B94D13-0B72-45E1-9A01-28F288921CFE}.Ghpages|Any CPU.ActiveCfg = Debug|Any CPU
+		{34B94D13-0B72-45E1-9A01-28F288921CFE}.Ghpages|Any CPU.Build.0 = Debug|Any CPU
+		{34B94D13-0B72-45E1-9A01-28F288921CFE}.Ghpages|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{34B94D13-0B72-45E1-9A01-28F288921CFE}.Ghpages|Mixed Platforms.Build.0 = Debug|Any CPU
+		{34B94D13-0B72-45E1-9A01-28F288921CFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{34B94D13-0B72-45E1-9A01-28F288921CFE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{34B94D13-0B72-45E1-9A01-28F288921CFE}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{34B94D13-0B72-45E1-9A01-28F288921CFE}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
