@@ -9,7 +9,7 @@
 
     <div class="flexSource">
         <div class="flex-container">
-            <h1 style="margin:auto">@ContainerSplit.sourceFileName</h1>
+            <h2 style="margin:auto">@ContainerSplit.sourceFileName</h2>
             <button @onclick=Exit class="btn btn-secondary" id="closeButton">Close</button>
         </div>
 
@@ -20,28 +20,30 @@
                       OnDidInit="@((editor) => EditorOnDidInit((MonacoEditor)editor))" />
     </div>
 @code {
-    [CascadingParameter]
-    public SplitPane ContainerSplit { get; set; }
-    public MonacoEditor _editor { get; set; }
+        [CascadingParameter]
+        public SplitPane ContainerSplit { get; set; }
+        public MonacoEditor _editor { get; set; }
 
-    /// <summary>
-    /// Defines how the monaco editor should look including what text to display
-    /// </summary>
-    /// <param name="editor"> The editor being created </param>
-    /// <returns> The construction options for the editor </returns>
-    private StandaloneEditorConstructionOptions EditorConstructionOptions(MonacoEditor editor)
-    {
-        return new StandaloneEditorConstructionOptions()
+        /// <summary>
+        /// Defines how the monaco editor should look including what text to display
+        /// </summary>
+        /// <param name="editor"> The editor being created </param>
+        /// <returns> The construction options for the editor </returns>
+        private StandaloneEditorConstructionOptions EditorConstructionOptions(MonacoEditor editor)
         {
-            ReadOnly = true,
-            Value = ContainerSplit.sourceFileText,
+            return new StandaloneEditorConstructionOptions()
+            {
+                ReadOnly = true,
+                Value = ContainerSplit.sourceFileText,
+                AutomaticLayout = true,
+                ScrollBeyondLastLine = false,
             Language = ContainerSplit.sourceFileExtension,
             Scrollbar = new ScrollbarOptions
             {
                 Vertical = "visible",
                 Horizontal = "visible"
             }
-        };
+            };
 
     }
 

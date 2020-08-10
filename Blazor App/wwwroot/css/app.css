@@ -56,6 +56,14 @@ html, body {
     top: -2.5rem;
 }
 
+#SourceFilePanel::-webkit-scrollbar {
+    width: 7px;
+}
+
+#SourceFilePanel::-webkit-scrollbar-thumb {
+    background: DarkSlateBlue;
+}
+
 .split::-webkit-scrollbar {
     width: 7px;
 }
@@ -64,9 +72,6 @@ html, body {
     background: DarkSlateBlue;
 }
 
-.ui-tree {
-    width: 100%;
-}
 
 p.blocktext {
     margin-left: auto;
@@ -79,6 +84,7 @@ p.blocktext {
     flex-direction:column;
     justify-content: center;
     align-items: center;
+    height:98%
 }
 
 .p1-4, .px-4 {
@@ -88,10 +94,6 @@ p.blocktext {
 
 #monaco-editor {
     margin:auto;
-}
-
-.monaco-scrollable-element editor-scrollable vs {
-    width: 100%;
 }
 
 .ui-tabview-title {
@@ -136,8 +138,7 @@ p.blocktext {
     color: black;
     display: block;
     white-space: pre;
-    padding: 8px;
-    overflow-x: auto;
+    overflow-x: scroll;
     overflow-y: scroll;
     height: calc(100vh - 70px);
     align-content:center;

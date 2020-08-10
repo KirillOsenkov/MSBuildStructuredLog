@@ -20,10 +20,8 @@
 <br />
 @if (binLogSelected)
 {
-<center>
 <div id="fileTree" style="width: 100%">
     <RadzenTree Data="@fileTree" 
-                Style="word-break:break-all;overflow-y:scroll"
                 Expand="@((TreeExpandEventArgs args) => { TreeFormatting.OnExpandFiles(args); })"
                 Change="@OnChange">
         <RadzenTreeLevel Template="@TreeFormatting.TreeDesignFiles"
@@ -40,7 +38,6 @@
                                         })" />
     </RadzenTree>
 </div>
-</center>
 } else
 {
 <center>
