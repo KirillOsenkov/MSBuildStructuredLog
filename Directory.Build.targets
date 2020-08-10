@@ -43,7 +43,7 @@
 
   <Target Name="BuildChocolatey"
           AfterTargets="ExtractVersion"
-          Condition="Exists('$(ChocolateyNuspecPath)') AND Exists('C:\ProgramData\chocolatey\choco.exe')"
+          Condition="Exists('$(ChocolateyNuspecPath)') AND Exists('C:\ProgramData\chocolatey\choco.exe') AND Exists('$(OutDir)Releases')"
           DependsOnTargets="ExtractVersion"
           Inputs="@(ChocolateyInput)"
           Outputs="$(ChocolateyNupkgPath)">
