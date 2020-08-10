@@ -21,15 +21,14 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AvalonEdit" Version="5.0.4" />
+    <PackageReference Include="AvalonEdit" Version="6.0.1" />
     <PackageReference Include="Microsoft.Build.Locator" Version="1.2.6" ExcludeAssets="build" />
-    <PackageReference Include="Microsoft.Language.Xml" Version="1.0.15" />
-    <PackageReference Include="Nerdbank.GitVersioning" Version="2.3.38" PrivateAssets="all" />
-    <PackageReference Include="squirrel.windows" Version="1.4.0" />
+    <PackageReference Include="Microsoft.Language.Xml" Version="1.1.20" />
+    <PackageReference Include="Nerdbank.GitVersioning" Version="3.2.31" PrivateAssets="all" />
+    <PackageReference Include="squirrel.windows" Version="1.9.1" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="System.IO.Compression" Version="4.3.0" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" />
-    <PackageReference Include="Tewr.Blazor.FileReader" Version="1.6.0.20166" />
     <PackageReference Include="WpfGraphControl" Version="1.0.0.3" />
   </ItemGroup>
   <ItemGroup>

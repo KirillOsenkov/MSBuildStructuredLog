@@ -9,8 +9,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="GuiLabs.Language.Xml" Version="1.2.27" />
-    <PackageReference Include="Nerdbank.GitVersioning" Version="2.3.38" PrivateAssets="all" />
+    <PackageReference Include="GuiLabs.Language.Xml" Version="1.2.46" />
+    <PackageReference Include="Nerdbank.GitVersioning" Version="3.2.31" PrivateAssets="all" />
 
     <PackageReference Include="MSAGL.netstandard" Version="1.0.0" />
 

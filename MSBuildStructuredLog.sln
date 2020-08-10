@@ -24,8 +24,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StructuredLogViewer.Core", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StructuredLogViewer.Avalonia", "src\StructuredLogViewer.Avalonia\StructuredLogViewer.Avalonia.csproj", "{B8DB3798-1636-417D-B57A-25C51C574F1E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blazor.FileReader", "..\..\BlazorFileReader\src\Blazor.FileReader\Blazor.FileReader.csproj", "{E90CCA79-A697-4EC4-BE7A-7DE89B4B2874}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StructuredLogViewerWASM", "Blazor App\StructuredLogViewerWASM.csproj", "{34B94D13-0B72-45E1-9A01-28F288921CFE}"
 EndProject
 Global
@@ -110,18 +108,6 @@ Global
 		{B8DB3798-1636-417D-B57A-25C51C574F1E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B8DB3798-1636-417D-B57A-25C51C574F1E}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{B8DB3798-1636-417D-B57A-25C51C574F1E}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{E90CCA79-A697-4EC4-BE7A-7DE89B4B2874}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E90CCA79-A697-4EC4-BE7A-7DE89B4B2874}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E90CCA79-A697-4EC4-BE7A-7DE89B4B2874}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{E90CCA79-A697-4EC4-BE7A-7DE89B4B2874}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{E90CCA79-A697-4EC4-BE7A-7DE89B4B2874}.Ghpages|Any CPU.ActiveCfg = Ghpages|Any CPU
-		{E90CCA79-A697-4EC4-BE7A-7DE89B4B2874}.Ghpages|Any CPU.Build.0 = Ghpages|Any CPU
-		{E90CCA79-A697-4EC4-BE7A-7DE89B4B2874}.Ghpages|Mixed Platforms.ActiveCfg = Ghpages|Any CPU
-		{E90CCA79-A697-4EC4-BE7A-7DE89B4B2874}.Ghpages|Mixed Platforms.Build.0 = Ghpages|Any CPU
-		{E90CCA79-A697-4EC4-BE7A-7DE89B4B2874}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E90CCA79-A697-4EC4-BE7A-7DE89B4B2874}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E90CCA79-A697-4EC4-BE7A-7DE89B4B2874}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{E90CCA79-A697-4EC4-BE7A-7DE89B4B2874}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{34B94D13-0B72-45E1-9A01-28F288921CFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{34B94D13-0B72-45E1-9A01-28F288921CFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{34B94D13-0B72-45E1-9A01-28F288921CFE}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
