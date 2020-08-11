@@ -84,7 +84,7 @@ p.blocktext {
     flex-direction:column;
     justify-content: center;
     align-items: center;
-    height:98%
+    height:90%
 }
 
 .p1-4, .px-4 {
@@ -138,8 +138,6 @@ p.blocktext {
     color: black;
     display: block;
     white-space: pre;
-    overflow-x: scroll;
-    overflow-y: scroll;
     height: calc(100vh - 70px);
     align-content:center;
     width:600px;
