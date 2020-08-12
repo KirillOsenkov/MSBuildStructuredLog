@@ -6,12 +6,7 @@
 
 <div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
     <ul class="nav flex-row">
-        <li class="nav-item px-3">
-            <NavLink class="nav-link" href="home">
-                <span class="oi oi-book" aria-hidden="true"></span> Read Bin Log
-            </NavLink>
-        </li>
-        <li style="width:calc(100% - 22rem)">
+        <li style="width:calc(94%)">
             <p class="heading">
                 <h1>
                     Structured Log Viewer
@@ -24,7 +19,11 @@
             <button @onclick=ClearFile class="btn btn-primary">Clear</button>
             </p>
             </p>
-
+        </li>
+        <li>
+            <p>
+                <button @onclick="darkMode" class="btn btn-primary" style="margin-top:0.6rem">@mode</button>
+            </p>
         </li>
     </ul>
     <RadzenNotification />
@@ -34,8 +33,25 @@
     private bool collapseNavMenu = true;
     static ElementReference fileToRead;
     ElementReference inputButton;
+    string mode = "Dark Mode";
     [CascadingParameter]
     public MainLayout mainLayout { get; set; }
+
+    /// <summary>
+    /// Changes the theme of the website to dark mode
+    /// </summary>
+    /// <returns>Task to update the application</returns>
+    public async System.Threading.Tasks.Task darkMode()
+    {
+        mainLayout.containerSplit.DarkMode();
+        if (mainLayout.containerSplit.darkMode)
+        {
+            mode = "Light Mode";
+        } else
+        {
+            mode = "Dark Mode";
+        }
+    }
 
     /// <summary>
     /// Fired when user selects the Clear button

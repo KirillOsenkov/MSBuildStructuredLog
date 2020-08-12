@@ -9,7 +9,7 @@
 
     <CascadingValue Value=this>
 
-        <body style="height:100%">
+        <body style="height:100%" id="mainLayout">
             <div>
                 <div @ref="tabPanel" style="overflow: scroll; white-space: nowrap;" class="split" id="tabPanel">
                     <Tabs />
@@ -47,7 +47,26 @@
             public string sourceFileName;
             public string sourceFileExtension;
             public bool searching;
+            public bool darkMode = false;
 
+            /// <summary>
+            /// Switches the application to dark mode
+            /// </summary>
+            public async void DarkMode()
+            {
+                darkMode = !darkMode;
+                if (showSourceFilePanel)
+                {
+                    sourceFile.changeTheme();
+                }
+                if (darkMode)
+                {
+                    await JSRuntime.InvokeVoidAsync("blazorHelpers.DarkMode");
+                } else
+                {
+                    await JSRuntime.InvokeVoidAsync("blazorHelpers.LightMode");
+                }
+            }
             /// <summary>
             /// Allows sub pages to re-render the entire app
             /// </summary>
