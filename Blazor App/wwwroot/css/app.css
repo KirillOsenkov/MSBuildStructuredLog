@@ -7,6 +7,12 @@ html, body {
     font-size: small;
 }
 
+.flexNav {
+    display: flex;
+    justify-content: flex-end;
+    text-align: center;
+}
+
 .buttonContainer {
     display: flex;
     justify-content: space-evenly;

@@ -6,11 +6,13 @@
 
 <div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
     <ul class="nav flex-row">
-        <li style="width:calc(94%)">
+        <li style="width:calc(100%)">
+            <p class="flexNav">
             <p class="heading">
                 <h1>
                     Structured Log Viewer
                 </h1>
+
             <p class="buttonContainer">
             <p class="filePicker">
                 <InputFile OnChange="ReadFile" aria-label="Choose File" style="width:7rem; top:0px" ElementId="myInput" />
@@ -18,13 +20,13 @@
             </p>
             <button @onclick=ClearFile class="btn btn-primary">Clear</button>
             </p>
+
             </p>
-        </li>
-        <li>
-            <p>
-                <button @onclick="darkMode" class="btn btn-primary" style="margin-top:0.6rem">@mode</button>
+            <button @onclick="darkMode" class="btn btn-primary" style="margin-top:0.6rem;margin-right: .5rem;">@mode</button>
             </p>
+
         </li>
+                
     </ul>
     <RadzenNotification />
 </div>
