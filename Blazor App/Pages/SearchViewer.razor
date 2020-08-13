@@ -27,7 +27,7 @@
 } else
 {
     <RadzenTree Data="@searchResults"
-                Style="word-break:break-all;overflow-y:scroll;color:black"
+                Style="word-break:break-all"
                 Change="@OnChange"
                 Expand="@((TreeExpandEventArgs args) => { ExpandResults(args); })">
         <RadzenTreeLevel Expanded="@((obj) => (obj is TreeNode && ((TreeNode)obj).HasChildren))"

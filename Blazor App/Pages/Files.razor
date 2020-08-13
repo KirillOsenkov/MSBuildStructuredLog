@@ -7,7 +7,7 @@
 @using Microsoft.Build.Logging.StructuredLogger
 
     <RadzenTree Data="@ContainerSplit.projectFiles" 
-                Style="word-break:break-all;overflow-y:scroll;color:black" 
+                Style="word-break:break-all" 
                 Expand="@((TreeExpandEventArgs args) => {ExpandResults(args);})"
                 Change="OnChange">
         <RadzenTreeLevel Expanded="@((obj) => (obj is TreeNode && ((TreeNode)obj).HasChildren))" 
