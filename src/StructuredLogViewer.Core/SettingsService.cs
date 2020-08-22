@@ -347,6 +347,28 @@ namespace StructuredLogViewer
             }
         }
 
+        private static bool useDarkTheme = false;
+
+        public static bool UseDarkTheme
+        {
+            get
+            {
+                EnsureSettingsRead();
+                return useDarkTheme;
+            }
+
+            set
+            {
+                if (useDarkTheme == value)
+                {
+                    return;
+                }
+
+                useDarkTheme = value;
+                SaveSettings();
+            }
+        }
+
         private static void EnsureSettingsRead()
         {
             if (!settingsRead)
@@ -359,6 +381,7 @@ namespace StructuredLogViewer
         const string Virtualization = "Virtualization=";
         const string ParentAllTargetsUnderProjectSetting = nameof(ParentAllTargetsUnderProject) + "=";
         const string MarkResultsInTreeSetting = "MarkResultsInTree=";
+        const string UseDarkThemeSetting = "UseDarkTheme=";
 
         private static void SaveSettings()
         {
@@ -366,6 +389,7 @@ namespace StructuredLogViewer
             sb.AppendLine(Virtualization + enableTreeViewVirtualization.ToString());
             sb.AppendLine(ParentAllTargetsUnderProjectSetting + parentAllTargetsUnderProject.ToString());
             sb.AppendLine(MarkResultsInTreeSetting + markResultsInTree.ToString());
+            sb.AppendLine(UseDarkThemeSetting + useDarkTheme.ToString());
 
             using (SingleGlobalInstance.Acquire(Path.GetFileName(settingsFilePath)))
             {
@@ -385,28 +409,22 @@ namespace StructuredLogViewer
                 var lines = File.ReadAllLines(settingsFilePath);
                 foreach (var line in lines)
                 {
-                    if (line.StartsWith(Virtualization))
+                    ProcessLine(Virtualization, line, ref enableTreeViewVirtualization);
+                    ProcessLine(ParentAllTargetsUnderProjectSetting, line, ref parentAllTargetsUnderProject);
+                    ProcessLine(MarkResultsInTreeSetting, line, ref markResultsInTree);
+                    ProcessLine(UseDarkThemeSetting, line, ref useDarkTheme);
+
+                    void ProcessLine(string setting, string text, ref bool variable)
                     {
-                        var value = line.Substring(Virtualization.Length);
-                        if (bool.TryParse(value, out bool boolValue))
+                        if (!text.StartsWith(setting))
                         {
-                            enableTreeViewVirtualization = boolValue;
+                            return;
                         }
-                    }
-                    else if (line.StartsWith(ParentAllTargetsUnderProjectSetting))
-                    {
-                        var value = line.Substring(ParentAllTargetsUnderProjectSetting.Length);
+
+                        var value = text.Substring(setting.Length);
                         if (bool.TryParse(value, out bool boolValue))
                         {
-                            parentAllTargetsUnderProject = boolValue;
-                        }
-                    }
-                    else if (line.StartsWith(MarkResultsInTreeSetting))
-                    {
-                        var value = line.Substring(MarkResultsInTreeSetting.Length);
-                        if (bool.TryParse(value, out bool boolValue))
-                        {
-                            markResultsInTree = boolValue;
+                            variable = boolValue;
                         }
                     }
                 }

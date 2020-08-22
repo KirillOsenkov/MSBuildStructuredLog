@@ -114,5 +114,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
             get => SettingsService.MarkResultsInTree;
             set => SettingsService.MarkResultsInTree = value;
         }
+
+        public bool UseDarkTheme
+        {
+            get => SettingsService.UseDarkTheme;
+            set
+            {
+                SettingsService.UseDarkTheme = value;
+                RaisePropertyChanged();
+            }
+        }
     }
 }
