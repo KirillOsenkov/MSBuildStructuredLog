@@ -60,17 +60,19 @@ namespace StructuredLogViewer
             }
         }
 
-        public static readonly Color Background = Color.FromRgb(40, 40, 40);
+        public static readonly Color Background = GetColor("#3D3D3D");
         public static readonly Brush BackgroundBrush = new SolidColorBrush(Background);
-        public static readonly Color LighterBackground = Color.FromRgb(80, 80, 80);
+        public static readonly Color LighterBackground = GetColor("#454545");
         public static readonly Brush LighterBackgroundBrush = new SolidColorBrush(LighterBackground);
         public static readonly Color ControlText = Color.FromRgb(153, 153, 153);
         public static readonly Brush ControlTextBrush = new SolidColorBrush(ControlText);
 
+        private static readonly BrushConverter brushConverter = new BrushConverter();
+        public static Brush GetBrush(string hex) => (Brush)brushConverter.ConvertFromString(hex);
+        public static Color GetColor(string hex) => (Color)ColorConverter.ConvertFromString(hex);
+
         public static void UpdateTheme()
         {
-            SetResource("Theme_InfoBarBackground", SystemColors.InfoBrush);
-
             if (SystemParameters.HighContrast)
             {
                 UseAdonisDarkTheme = false;
@@ -83,6 +85,7 @@ namespace StructuredLogViewer
                 SetResource("Theme_Background", LighterBackgroundBrush);
                 SetResource("Theme_WhiteBackground", BackgroundBrush);
                 SetResource("Theme_ToolWindowBackground", LighterBackgroundBrush);
+                SetResource("Theme_InfoBarBackground", GetBrush("#202040"));
 
                 UseAdonisDarkTheme = true;
 
@@ -118,6 +121,7 @@ namespace StructuredLogViewer
             SetResource(SystemColors.MenuHighlightColorKey, SystemColors.MenuHighlightColor);
             SetResource(SystemColors.MenuTextColorKey, SystemColors.MenuTextColor);
             SetResource(SystemColors.MenuColorKey, SystemColors.MenuColor);
+            SetResource("Theme_InfoBarBackground", SystemColors.InfoBrush);
         }
 
         private static void SetResource(object key, object value)

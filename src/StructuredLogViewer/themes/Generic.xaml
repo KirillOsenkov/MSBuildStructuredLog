@@ -21,8 +21,9 @@
     <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.WindowBrushKey}}" />
   </Style>
 
-  <Style x:Key="{x:Type GroupBox}" TargetType="{x:Type GroupBox}">
-    <Setter Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
+  <Style x:Key="{x:Type ToolTip}" TargetType="{x:Type ToolTip}">
+    <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"/>
+    <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
   </Style>
 
   <Style x:Key="{x:Type Menu}" TargetType="{x:Type Menu}">
@@ -867,6 +868,7 @@
       <TextBlock x:Name="text"
                  Text="{Binding ProgressText}"
                  HorizontalAlignment="Center"
+                 Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
                  TextWrapping="Wrap" />
       <ProgressBar Grid.Row="1" 
                    IsIndeterminate="True" 
