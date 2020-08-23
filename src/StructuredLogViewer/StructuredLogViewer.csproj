@@ -21,7 +21,9 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AvalonEdit" Version="5.0.4" />
+    <PackageReference Include="AdonisUI" Version="1.16.0" />
+    <PackageReference Include="AdonisUI.ClassicTheme" Version="1.16.0" />
+    <PackageReference Include="AvalonEdit" Version="6.0.1" />
     <PackageReference Include="Microsoft.Build.Locator" Version="1.2.6" ExcludeAssets="build" />
     <PackageReference Include="Microsoft.Language.Xml" Version="1.0.15" />
     <PackageReference Include="Nerdbank.GitVersioning" Version="$(NuGetVersionNerdbankGitVersioning)" PrivateAssets="all" />

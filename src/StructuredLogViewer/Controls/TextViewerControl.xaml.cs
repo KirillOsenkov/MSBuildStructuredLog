@@ -20,6 +20,7 @@ namespace StructuredLogViewer.Controls
     public partial class TextViewerControl : UserControl
     {
         private static readonly Regex solutionFileRegex = new Regex(@"^\s*Microsoft Visual Studio Solution File", RegexOptions.Compiled | RegexOptions.Singleline);
+        private FoldingManager foldingManager;
 
         public string FilePath { get; private set; }
         public string Text { get; private set; }
@@ -29,16 +30,33 @@ namespace StructuredLogViewer.Controls
         public TextViewerControl()
         {
             InitializeComponent();
-            SearchPanel.Install(textEditor.TextArea);
-            textEditor.TextArea.MouseRightButtonDown += TextAreaMouseRightButtonDown;
 
-            var textView = textEditor.TextArea.TextView;
+            var textArea = textEditor.TextArea;
+
+            SearchPanel.Install(textArea);
+
+            foldingManager = FoldingManager.Install(textEditor.TextArea);
+
+            textArea.MouseRightButtonDown += TextAreaMouseRightButtonDown;
+
+            var textView = textArea.TextView;
             textView.CurrentLineBackground = new SolidColorBrush(Color.FromRgb(224, 224, 224));
             textView.CurrentLineBorder = new Pen(Brushes.Transparent, 0);
             textView.Options.HighlightCurrentLine = true;
             textView.Options.EnableEmailHyperlinks = false;
             textView.Options.EnableHyperlinks = false;
             textEditor.IsReadOnly = true;
+
+            if (SettingsService.UseDarkTheme)
+            {
+                textEditor.Background = ThemeManager.BackgroundBrush;
+                textView.CurrentLineBackground = ThemeManager.LighterBackgroundBrush;
+                var foldingMargin = textArea.LeftMargins.OfType<FoldingMargin>().First();
+                foldingMargin.FoldingMarkerBackgroundBrush = ThemeManager.BackgroundBrush;
+                foldingMargin.FoldingMarkerBrush = ThemeManager.ControlTextBrush;
+                foldingMargin.SelectedFoldingMarkerBackgroundBrush = ThemeManager.BackgroundBrush;
+                foldingMargin.SelectedFoldingMarkerBrush = ThemeManager.ControlTextBrush;
+            }
         }
 
         public void DisplaySource(
@@ -97,10 +115,17 @@ namespace StructuredLogViewer.Controls
                 IsXml = true;
 
                 var highlighting = HighlightingManager.Instance.GetDefinition("XML");
-                highlighting.GetNamedColor("XmlTag").Foreground = new SimpleHighlightingBrush(Color.FromRgb(163, 21, 21));
+                if (SettingsService.UseDarkTheme)
+                {
+                    highlighting.GetNamedColor("XmlTag").Foreground = new SimpleHighlightingBrush(Color.FromRgb(163, 21, 21));
+                }
+                else
+                {
+                    highlighting.GetNamedColor("XmlTag").Foreground = new SimpleHighlightingBrush(Color.FromRgb(163, 21, 21));
+                }
+
                 textEditor.SyntaxHighlighting = highlighting;
 
-                var foldingManager = FoldingManager.Install(textEditor.TextArea);
                 var foldingStrategy = new XmlFoldingStrategy();
                 foldingStrategy.UpdateFoldings(foldingManager, textEditor.Document);
             }
