@@ -46,7 +46,7 @@ namespace StructuredLogViewer.Controls
 
         public TabItem Find(string filePath)
         {
-            return Tabs.FirstOrDefault(t => t.DataContext is SourceFileTab s && string.Equals(s.FilePath, filePath, StringComparison.OrdinalIgnoreCase));
+            return Tabs.FirstOrDefault(t => t.Tag is SourceFileTab s && string.Equals(s.FilePath, filePath, StringComparison.OrdinalIgnoreCase));
         }
 
         public void CloseAllTabs()
@@ -97,14 +97,14 @@ namespace StructuredLogViewer.Controls
             };
             var tabItem = new TabItem()
             {
-                DataContext = tab,
+                Tag = tab,
                 Content = textViewerControl
             };
             var header = new SourceFileTabHeader(tab);
             tabItem.Header = header;
             header.CloseRequested += t =>
             {
-                var tabItem = Tabs.FirstOrDefault(tabItem => tabItem.DataContext == t);
+                var tabItem = Tabs.FirstOrDefault(tabItem => tabItem.Tag == t);
                 if (tabItem != null)
                 {
                     Tabs.Remove(tabItem);
@@ -114,7 +114,7 @@ namespace StructuredLogViewer.Controls
             textViewerControl.SetPathDisplay(displayPath);
 
             Tabs.Add(tabItem);
-            tabControl.SelectedItem = tab;
+            tabControl.SelectedItem = tabItem;
         }
 
         private void closeButton_Click(object sender, RoutedEventArgs e)
