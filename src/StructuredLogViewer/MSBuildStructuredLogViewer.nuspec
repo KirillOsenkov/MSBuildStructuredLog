@@ -16,11 +16,13 @@
     <tags>MSBuild Log Structure Structured WPF Viewer Tree</tags>
   </metadata>
   <files>
+    <file src="AdonisUI.ClassicTheme.dll" target="lib\net472" />
+    <file src="AdonisUI.dll" target="lib\net472" />
     <file src="DeltaCompressionDotNet.dll" target="lib\net472" />
     <file src="DeltaCompressionDotNet.MsDelta.dll" target="lib\net472" />
     <file src="DeltaCompressionDotNet.PatchApi.dll" target="lib\net472" />
-    <file src="ICSharpCode.SharpZipLib.dll" target="lib\net472" />
     <file src="ICSharpCode.AvalonEdit.dll" target="lib\net472" />
+    <file src="ICSharpCode.SharpZipLib.dll" target="lib\net472" />
     <file src="Microsoft.Build.dll" target="lib\net472" />
     <file src="Microsoft.Build.Framework.dll" target="lib\net472" />
     <file src="Microsoft.Build.Locator.dll" target="lib\net472" />

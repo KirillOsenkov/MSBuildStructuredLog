@@ -52,6 +52,11 @@ namespace StructuredLogViewer
                         {
                             Source = new Uri("pack://application:,,,/AdonisUI.ClassicTheme;component/Resources.xaml")
                         });
+
+                    appResources[AdonisUI.Colors.Layer0BackgroundColor] = GetColor("#2A2B2F");
+                    appResources[AdonisUI.Colors.Layer0BorderColor] = GetColor("#2A2B2F");
+                    appResources[AdonisUI.Colors.Layer1BackgroundColor] = GetColor("#3D3D3D");
+                    appResources[AdonisUI.Colors.Layer2HighlightColor] = GetColor("#3D3D3D");
                 }
                 else
                 {

@@ -10,7 +10,7 @@
   <BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter" />
 
   <Style x:Key="{x:Type TextBlock}" TargetType="{x:Type TextBlock}">
-    <Setter Property="TextBlock.Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
+    <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
   </Style>
 
   <Style x:Key="{x:Type Button}" TargetType="{x:Type Button}">
@@ -802,6 +802,7 @@
       <StackPanel Grid.Row="0"
                   Margin="40,40,40,10">
         <TextBlock Text="Specify custom MSBuild command line arguments:" 
+                   Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
                    Margin="0,0,0,7"/>
         <WrapPanel Orientation="Horizontal">
           <ComboBox ItemsSource="{Binding MSBuildLocations}" 
@@ -822,6 +823,7 @@
           </Button>
           <TextBlock Text="{Binding PrefixArguments}" 
                      Margin="0,3,0,0"
+                     Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
                      TextWrapping="Wrap" />
           <TextBox x:Name="argumentsText"
                    Margin="4,0,4,0"
@@ -836,6 +838,7 @@
           </TextBox>
 
           <TextBlock Text="{Binding PostfixArguments}"
+                     Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
                      TextWrapping="Wrap"/>
         </WrapPanel>
         <Button Content="Copy command line to clipboard" 
@@ -879,12 +882,13 @@
       <StackPanel Grid.Row="2"
                   Margin="40"
                   Visibility="{Binding ShowCommandLine, Converter={StaticResource booleanToVisibilityConverter}}">
-        <TextBlock Text="Using command line (press Ctrl+C to copy):" Margin="0,0,0,7"/>
+        <TextBlock Text="Using command line (press Ctrl+C to copy):"
+                   Margin="0,0,0,7"
+                   Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
         <TextBox Text="{Binding MSBuildCommandLine}" 
                  IsReadOnly="True" 
                  TextWrapping="Wrap"
                  AcceptsReturn="True"
-                 Background="#E0E0E0"
                  MinHeight="23"
                  IsReadOnlyCaretVisible="True" />
       </StackPanel>

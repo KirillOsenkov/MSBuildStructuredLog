@@ -49,7 +49,7 @@ namespace StructuredLogViewer.Controls
             {
                 textEditor.Background = ThemeManager.BackgroundBrush;
                 textEditor.Foreground = ThemeManager.ControlTextBrush;
-                textView.CurrentLineBackground = (Brush)new BrushConverter().ConvertFromString("#404040");
+                textView.CurrentLineBackground = (Brush)new BrushConverter().ConvertFromString("#505050");
                 textArea.SelectionBrush = (Brush)new BrushConverter().ConvertFromString("#264F78");
                 textArea.SelectionForeground = (Brush)new BrushConverter().ConvertFromString("#C8C8C8");
                 var foldingMargin = textArea.LeftMargins.OfType<FoldingMargin>().First();
