@@ -20,7 +20,7 @@
     </Keywords>
 
     <!-- GUIDs -->
-    <Rule foreground="#0000ff">
+    <Rule foreground="#569CD6">
       \{[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\}
     </Rule>
 

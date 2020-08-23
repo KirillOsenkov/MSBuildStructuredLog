@@ -40,8 +40,6 @@ namespace StructuredLogViewer.Controls
             textArea.MouseRightButtonDown += TextAreaMouseRightButtonDown;
 
             var textView = textArea.TextView;
-            textView.CurrentLineBackground = new SolidColorBrush(Color.FromRgb(224, 224, 224));
-            textView.CurrentLineBorder = new Pen(Brushes.Transparent, 0);
             textView.Options.HighlightCurrentLine = true;
             textView.Options.EnableEmailHyperlinks = false;
             textView.Options.EnableHyperlinks = false;
@@ -50,12 +48,20 @@ namespace StructuredLogViewer.Controls
             if (SettingsService.UseDarkTheme)
             {
                 textEditor.Background = ThemeManager.BackgroundBrush;
-                textView.CurrentLineBackground = ThemeManager.LighterBackgroundBrush;
+                textEditor.Foreground = ThemeManager.ControlTextBrush;
+                textView.CurrentLineBackground = (Brush)new BrushConverter().ConvertFromString("#404040");
+                textArea.SelectionBrush = (Brush)new BrushConverter().ConvertFromString("#264F78");
+                textArea.SelectionForeground = (Brush)new BrushConverter().ConvertFromString("#C8C8C8");
                 var foldingMargin = textArea.LeftMargins.OfType<FoldingMargin>().First();
                 foldingMargin.FoldingMarkerBackgroundBrush = ThemeManager.BackgroundBrush;
                 foldingMargin.FoldingMarkerBrush = ThemeManager.ControlTextBrush;
                 foldingMargin.SelectedFoldingMarkerBackgroundBrush = ThemeManager.BackgroundBrush;
                 foldingMargin.SelectedFoldingMarkerBrush = ThemeManager.ControlTextBrush;
+            }
+            else
+            {
+                textView.CurrentLineBackground = new SolidColorBrush(Color.FromRgb(224, 224, 224));
+                textView.CurrentLineBorder = new Pen(Brushes.Transparent, 0);
             }
         }
 
@@ -117,11 +123,38 @@ namespace StructuredLogViewer.Controls
                 var highlighting = HighlightingManager.Instance.GetDefinition("XML");
                 if (SettingsService.UseDarkTheme)
                 {
-                    highlighting.GetNamedColor("XmlTag").Foreground = new SimpleHighlightingBrush(Color.FromRgb(163, 21, 21));
+                    SetColor("Comment", "#57A64A");
+                    SetColor("CData", "#E9D585");
+                    SetColor("DocType", "#92CAF4");
+                    SetColor("XmlDeclaration", "#92CAF4");
+                    SetColor("XmlTag", "#569CD6");
+                    SetColor("AttributeName", "#92CAF4");
+                    SetColor("AttributeValue", "#C8C8C8");
+                    SetColor("Entity", "#92CAF4");
+                    SetColor("BrokenEntity", "#92CAF4");
                 }
                 else
                 {
-                    highlighting.GetNamedColor("XmlTag").Foreground = new SimpleHighlightingBrush(Color.FromRgb(163, 21, 21));
+                    SetColor("Comment", "#008000");
+                    SetColor("CData", "#808080");
+                    SetColor("DocType", "#0000FF");
+                    SetColor("XmlDeclaration", "#0000FF");
+                    SetColorRgb("XmlTag", 163, 21, 21);
+                    SetColor("AttributeName", "#FF0000");
+                    SetColor("AttributeValue", "#0000FF");
+                    SetColor("Entity", "#FF0000");
+                    SetColor("BrokenEntity", "#FF0000");
+                }
+
+                void SetColorRgb(string name, byte r, byte g, byte b)
+                {
+                    highlighting.GetNamedColor(name).Foreground = new SimpleHighlightingBrush(Color.FromRgb(r, g, b));
+                }
+
+                void SetColor(string name, string hex)
+                {
+                    var color = (Color)ColorConverter.ConvertFromString(hex);
+                    SetColorRgb(name, color.R, color.G, color.B);
                 }
 
                 textEditor.SyntaxHighlighting = highlighting;
