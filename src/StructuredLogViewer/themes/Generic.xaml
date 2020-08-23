@@ -9,6 +9,33 @@
   <Geometry x:Key="SearchGeometry">F1 M 8.5,7.0 C 7.12,7.00 6.0,5.88 6.0,4.5 C 6.0,3.12 7.12,2.0 8.5,2.0 C 9.88,2.0 11.0,3.12 11.0,4.5 C 11.0,5.88 9.88,7.0 8.5,7.0 Z M 8.5,0.0 C 6.02,0.0 4.0,2.02 4.0,4.500 C 4.0,5.23 4.19,5.9 4.49,6.5 L 0.0,11.0 L 2.0,13.0 L 6.49,8.51 C 7.1,8.81 7.77,9.0 8.5,9.0 C 11.0,9.0 13.0,7.0 13.0,4.5 C 13.0,2.02 11.0,0.0 8.5,0.0 Z</Geometry>
   <BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter" />
 
+  <Style x:Key="{x:Type TextBlock}" TargetType="{x:Type TextBlock}">
+    <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
+  </Style>
+
+  <Style x:Key="{x:Type Button}" TargetType="{x:Type Button}">
+    <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" />
+  </Style>
+
+  <Style x:Key="{x:Type CheckBox}" TargetType="{x:Type CheckBox}">
+    <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.WindowBrushKey}}" />
+  </Style>
+
+  <Style x:Key="{x:Type ToolTip}" TargetType="{x:Type ToolTip}">
+    <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"/>
+    <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
+  </Style>
+
+  <Style x:Key="{x:Type Menu}" TargetType="{x:Type Menu}">
+    <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}"/>
+    <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
+  </Style>
+
+  <Style x:Key="{x:Type MenuItem}" TargetType="{x:Type MenuItem}">
+    <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}"/>
+    <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
+  </Style>
+
   <SolidColorBrush x:Key="FolderStroke" Color="Goldenrod" />
   <SolidColorBrush x:Key="TargetStroke" Color="MediumPurple" />
   <SolidColorBrush x:Key="TaskStroke" Color="DodgerBlue" />
@@ -714,7 +741,7 @@
               </StackPanel>
             </Button>
           </Grid>
-          <Grid x:Name="recentProjects" 
+          <Grid x:Name="recentProjects"
             Grid.Row="2"
             Visibility="{Binding ShowRecentProjects, Converter={StaticResource booleanToVisibilityConverter}}">
             <GroupBox Header="Recent projects and solutions"
@@ -753,6 +780,10 @@
                       Margin="10,0,10,10"
                       IsChecked="{Binding MarkResultsInTree}" 
                       ToolTip="Mark tree nodes that appear in search results with a dot"/>
+            <CheckBox Content="Dark Theme"
+                      Margin="10,0,10,10"
+                      IsChecked="{Binding UseDarkTheme}"
+                      ToolTip="Use dark theme"/>
           </StackPanel>
         </Grid>
       </Grid>
@@ -771,6 +802,7 @@
       <StackPanel Grid.Row="0"
                   Margin="40,40,40,10">
         <TextBlock Text="Specify custom MSBuild command line arguments:" 
+                   Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
                    Margin="0,0,0,7"/>
         <WrapPanel Orientation="Horizontal">
           <ComboBox ItemsSource="{Binding MSBuildLocations}" 
@@ -791,6 +823,7 @@
           </Button>
           <TextBlock Text="{Binding PrefixArguments}" 
                      Margin="0,3,0,0"
+                     Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
                      TextWrapping="Wrap" />
           <TextBox x:Name="argumentsText"
                    Margin="4,0,4,0"
@@ -805,6 +838,7 @@
           </TextBox>
 
           <TextBlock Text="{Binding PostfixArguments}"
+                     Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
                      TextWrapping="Wrap"/>
         </WrapPanel>
         <Button Content="Copy command line to clipboard" 
@@ -837,6 +871,7 @@
       <TextBlock x:Name="text"
                  Text="{Binding ProgressText}"
                  HorizontalAlignment="Center"
+                 Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
                  TextWrapping="Wrap" />
       <ProgressBar Grid.Row="1" 
                    IsIndeterminate="True" 
@@ -847,12 +882,13 @@
       <StackPanel Grid.Row="2"
                   Margin="40"
                   Visibility="{Binding ShowCommandLine, Converter={StaticResource booleanToVisibilityConverter}}">
-        <TextBlock Text="Using command line (press Ctrl+C to copy):" Margin="0,0,0,7"/>
+        <TextBlock Text="Using command line (press Ctrl+C to copy):"
+                   Margin="0,0,0,7"
+                   Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
         <TextBox Text="{Binding MSBuildCommandLine}" 
                  IsReadOnly="True" 
                  TextWrapping="Wrap"
                  AcceptsReturn="True"
-                 Background="#E0E0E0"
                  MinHeight="23"
                  IsReadOnlyCaretVisible="True" />
       </StackPanel>
@@ -1020,7 +1056,7 @@
                 <Condition Property="IsSelected" Value="true"/>
                 <Condition Property="IsSelectionActive" Value="false"/>
               </MultiTrigger.Conditions>
-              <Setter TargetName="Bd" Property="Background" Value="#D0D0D0"/>
+              <Setter TargetName="Bd" Property="Background" Value="{DynamicResource {x:Static SystemColors.InactiveSelectionHighlightBrushKey}}"/>
               <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}}"/>
             </MultiTrigger>
             <Trigger Property="IsEnabled" Value="false">

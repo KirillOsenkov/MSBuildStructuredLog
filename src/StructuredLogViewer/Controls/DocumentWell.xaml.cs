@@ -22,7 +22,8 @@ namespace StructuredLogViewer.Controls
             tabsView = CollectionViewSource.GetDefaultView(Tabs);
             Tabs.CollectionChanged += Tabs_CollectionChanged;
 
-            var style = new Style();
+            var existingStyle = Application.Current.FindResource(typeof(TabItem));
+            var style = new Style(typeof(TabItem), (Style)existingStyle);
             style.Setters.Add(new EventSetter(MouseDownEvent, (MouseButtonEventHandler)OnMouseDownEvent));
 
             tabControl.ItemContainerStyle = style;
@@ -30,7 +31,7 @@ namespace StructuredLogViewer.Controls
 
         private void OnMouseDownEvent(object sender, MouseButtonEventArgs args)
         {
-            if (args.MiddleButton == MouseButtonState.Pressed && sender is SourceFileTab sourceFileTab)
+            if (args.MiddleButton == MouseButtonState.Pressed && sender is TabItem sourceFileTab)
             {
                 Tabs.Remove(sourceFileTab);
             }
@@ -41,11 +42,11 @@ namespace StructuredLogViewer.Controls
             Visibility = Tabs.Any() ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        public ObservableCollection<SourceFileTab> Tabs { get; } = new ObservableCollection<SourceFileTab>();
+        public ObservableCollection<TabItem> Tabs { get; } = new ObservableCollection<TabItem>();
 
-        public SourceFileTab Find(string filePath)
+        public TabItem Find(string filePath)
         {
-            return Tabs.FirstOrDefault(t => string.Equals(t.FilePath, filePath, StringComparison.OrdinalIgnoreCase));
+            return Tabs.FirstOrDefault(t => t.Tag is SourceFileTab s && string.Equals(s.FilePath, filePath, StringComparison.OrdinalIgnoreCase));
         }
 
         public void CloseAllTabs()
@@ -92,17 +93,28 @@ namespace StructuredLogViewer.Controls
             var tab = new SourceFileTab()
             {
                 FilePath = sourceFilePath,
-                Text = text,
-                Content = textViewerControl,
+                Text = text
+            };
+            var tabItem = new TabItem()
+            {
+                Tag = tab,
+                Content = textViewerControl
             };
             var header = new SourceFileTabHeader(tab);
-            tab.Header = header;
-            header.CloseRequested += t => Tabs.Remove(t);
-            tab.HeaderTemplate = (DataTemplate)Application.Current.Resources["SourceFileTabHeaderTemplate"];
+            tabItem.Header = header;
+            header.CloseRequested += t =>
+            {
+                var tabItem = Tabs.FirstOrDefault(tabItem => tabItem.Tag == t);
+                if (tabItem != null)
+                {
+                    Tabs.Remove(tabItem);
+                }
+            };
+            tabItem.HeaderTemplate = (DataTemplate)Application.Current.Resources["SourceFileTabHeaderTemplate"];
             textViewerControl.SetPathDisplay(displayPath);
 
-            Tabs.Add(tab);
-            tabControl.SelectedItem = tab;
+            Tabs.Add(tabItem);
+            tabControl.SelectedItem = tabItem;
         }
 
         private void closeButton_Click(object sender, RoutedEventArgs e)
