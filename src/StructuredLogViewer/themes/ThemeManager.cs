@@ -96,6 +96,8 @@ namespace StructuredLogViewer
 
                 SetResource(SystemColors.ControlBrushKey, LighterBackgroundBrush);
                 SetResource(SystemColors.ControlTextBrushKey, ControlTextBrush);
+                SetResource(SystemColors.HighlightBrushKey, Brushes.SlateBlue);
+                SetResource(SystemColors.InactiveSelectionHighlightBrushKey, Brushes.DimGray);
                 SetResource(SystemColors.WindowBrushKey, BackgroundBrush);
                 SetResource(SystemColors.MenuBarBrushKey, LighterBackgroundBrush);
                 SetResource(SystemColors.MenuHighlightBrushKey, LighterBackgroundBrush);
@@ -118,6 +120,8 @@ namespace StructuredLogViewer
             SetResource(SystemColors.ControlBrushKey, SystemColors.ControlBrush);
             SetResource(SystemColors.ControlTextBrushKey, SystemColors.ControlTextBrush);
             SetResource(SystemColors.WindowBrushKey, SystemColors.WindowBrush);
+            SetResource(SystemColors.HighlightBrushKey, Brushes.LightSkyBlue);
+            SetResource(SystemColors.InactiveSelectionHighlightBrushKey, SystemColors.InactiveSelectionHighlightBrush);
             SetResource(SystemColors.MenuBarBrushKey, SystemColors.MenuBarBrush);
             SetResource(SystemColors.MenuHighlightBrushKey, SystemColors.MenuHighlightBrush);
             SetResource(SystemColors.MenuTextBrushKey, SystemColors.MenuTextBrush);
