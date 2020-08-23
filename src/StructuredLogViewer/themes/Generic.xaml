@@ -658,7 +658,12 @@
   </HierarchicalDataTemplate>
 
   <DataTemplate DataType="{x:Type core:WelcomeScreen}">
+    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
     <Grid x:Name="welcomeScreen">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition />
+      </Grid.RowDefinitions>
       <TextBlock Text="{Binding Version}" 
                  Foreground="Gray" 
                  FontSize="16" 
@@ -666,6 +671,7 @@
                  HorizontalAlignment="Right"
                  VerticalAlignment="Top"/>
       <Grid
+          Grid.Row="1"
           HorizontalAlignment="Center"
           VerticalAlignment="Center">
         <Rectangle Fill="Black">
@@ -788,6 +794,7 @@
         </Grid>
       </Grid>
     </Grid>
+    </ScrollViewer>
   </DataTemplate>
 
   <DataTemplate DataType="{x:Type local:BuildParametersScreen}">
