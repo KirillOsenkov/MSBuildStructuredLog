@@ -258,6 +258,8 @@ namespace StructuredLogViewer
                     }
                     else
                     {
+                        string directoryName = Path.GetDirectoryName(customArgumentsFilePath);
+                        Directory.CreateDirectory(directoryName);
                         File.WriteAllLines(customArgumentsFilePath, new[] {projectFilePath + "=" + newArguments});
                         return;
                     }
@@ -393,6 +395,8 @@ namespace StructuredLogViewer
 
             using (SingleGlobalInstance.Acquire(Path.GetFileName(settingsFilePath)))
             {
+                string directoryName = Path.GetDirectoryName(settingsFilePath);
+                Directory.CreateDirectory(directoryName);
                 File.WriteAllText(settingsFilePath, sb.ToString());
             }
         }
