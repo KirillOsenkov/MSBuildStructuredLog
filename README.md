@@ -5,7 +5,9 @@ A logger for MSBuild that records a structured representation of executed target
 [![NuGet package](https://img.shields.io/nuget/v/MSBuild.StructuredLogger.svg)](https://nuget.org/packages/MSBuild.StructuredLogger)
 [![Chocolatey](https://img.shields.io/chocolatey/v/msbuild-structured-log-viewer.svg)](https://chocolatey.org/packages/msbuild-structured-log-viewer)
 
-Homepage: http://msbuildlog.com
+Homepage: https://msbuildlog.com
+
+View binlogs in the Browser: https://live.msbuildlog.com
 
 Important: the NuGet package is now being published to https://nuget.org/packages/MSBuild.StructuredLogger (old location: https://nuget.org/packages/Microsoft.Build.Logging.StructuredLogger). Please update to use the new Package Id.
 
