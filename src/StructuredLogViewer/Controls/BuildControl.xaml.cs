@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -944,8 +944,7 @@ Recent:
         {
             if (treeView.SelectedItem is Import import)
             {
-                var preprocessContext = preprocessedFileManager.GetProjectEvaluationContext(import);
-                DisplayFile(import.ImportedProjectFilePath, preprocessContext: preprocessContext);
+                DisplayFile(import.ImportedProjectFilePath, evaluation: import.GetNearestParent<ProjectEvaluation>());
             }
         }
 
@@ -1181,7 +1180,14 @@ Recent:
                             line = hasLine.LineNumber ?? 0;
                         }
 
-                        return DisplayFile(hasSourceFile.SourceFilePath, line);
+                        ProjectEvaluation evaluation = null;
+                        if (hasSourceFile is TreeNode node)
+                        {
+                            // TODO: https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/392
+                            evaluation = node.GetNearestParentOrSelf<ProjectEvaluation>();
+                        }
+
+                        return DisplayFile(hasSourceFile.SourceFilePath, line, evaluation: evaluation);
                     case SourceFileLine sourceFileLine when sourceFileLine.Parent is SourceFile sourceFile && sourceFile.SourceFilePath != null:
                         return DisplayFile(sourceFile.SourceFilePath, sourceFileLine.LineNumber);
                     case NameValueNode nameValueNode when nameValueNode.IsValueShortened:
@@ -1200,7 +1206,7 @@ Recent:
             return false;
         }
 
-        public bool DisplayFile(string sourceFilePath, int lineNumber = 0, int column = 0, string preprocessContext = null)
+        public bool DisplayFile(string sourceFilePath, int lineNumber = 0, int column = 0, ProjectEvaluation evaluation = null)
         {
             var text = sourceFileResolver.GetSourceFileText(sourceFilePath);
             if (text == null)
@@ -1211,9 +1217,9 @@ Recent:
             string preprocessableFilePath = Utilities.InsertMissingDriveSeparator(sourceFilePath);
 
             Action preprocess = null;
-            if (preprocessContext != null)
+            if (evaluation != null)
             {
-                preprocess = preprocessedFileManager.GetPreprocessAction(preprocessableFilePath, preprocessContext);
+                preprocess = preprocessedFileManager.GetPreprocessAction(preprocessableFilePath, PreprocessedFileManager.GetEvaluationKey(evaluation));
             }
 
             documentWell.DisplaySource(preprocessableFilePath, text.Text, lineNumber, column, preprocess);

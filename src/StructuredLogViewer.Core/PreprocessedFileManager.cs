@@ -11,7 +11,7 @@ namespace StructuredLogViewer
     {
         private readonly Build build;
         private readonly SourceFileResolver sourceFileResolver;
-        private readonly Dictionary<string, Dictionary<string, Bucket>> importMapsPerProject = new Dictionary<string, Dictionary<string, Bucket>>();
+        private readonly Dictionary<string, Dictionary<string, Bucket>> importMapsPerEvaluation = new Dictionary<string, Dictionary<string, Bucket>>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, string> preprocessedFileCache = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         public PreprocessedFileManager(Build build, SourceFileResolver sourceFileResolver)
@@ -50,31 +50,39 @@ namespace StructuredLogViewer
             }
         }
 
-        private void VisitImport(Import import, ProjectEvaluation projectEvaluationContext)
+        private void VisitImport(Import import, ProjectEvaluation projectEvaluation)
         {
             if (sourceFileResolver.HasFile(import.ProjectFilePath) &&
                 sourceFileResolver.HasFile(import.ImportedProjectFilePath) &&
-                !string.IsNullOrEmpty(projectEvaluationContext.ProjectFile))
+                !string.IsNullOrEmpty(projectEvaluation.ProjectFile))
             {
-                var importMap = GetOrCreateImportMap(projectEvaluationContext.ProjectFile);
+                var importMap = GetOrCreateImportMap(GetEvaluationKey(projectEvaluation), import.ProjectFilePath);
                 AddImport(importMap, import.ProjectFilePath, import.ImportedProjectFilePath, import.Line, import.Column);
             }
         }
 
-        private Dictionary<string, Bucket> GetOrCreateImportMap(string projectFilePath)
+        public static string GetEvaluationKey(ProjectEvaluation evaluation) => evaluation == null ? null : evaluation.ProjectFile + evaluation.Id.ToString();
+
+        private Dictionary<string, Bucket> GetOrCreateImportMap(string key, string projectFilePath)
         {
-            if (!importMapsPerProject.TryGetValue(projectFilePath, out var importMap))
+            if (!importMapsPerEvaluation.TryGetValue(key, out var importMap))
             {
                 importMap = new Dictionary<string, Bucket>(StringComparer.OrdinalIgnoreCase);
-                importMapsPerProject[projectFilePath] = importMap;
+                importMapsPerEvaluation[key] = importMap;
+
+                // we want to have a "default" import map for each project, without specifying an evaluation id
+                // this is when we click on a project and want to preprocess (we currently don't know which
+                // evaluation id is associated with this project).
+                // TODO: improve this when https://github.com/dotnet/msbuild/issues/4926 is fixed.
+                importMapsPerEvaluation[projectFilePath] = importMap;
             }
 
             return importMap;
         }
 
-        private Dictionary<string, Bucket> GetImportMap(string projectFilePath)
+        private Dictionary<string, Bucket> GetImportMap(string projectEvaluationKey)
         {
-            if (projectFilePath != null && importMapsPerProject.TryGetValue(projectFilePath, out var importMap))
+            if (projectEvaluationKey != null && importMapsPerEvaluation.TryGetValue(projectEvaluationKey, out var importMap))
             {
                 return importMap;
             }
@@ -121,14 +129,14 @@ namespace StructuredLogViewer
             bucket.Add(new ProjectImport(importedProject, line, column));
         }
 
-        public Action GetPreprocessAction(string sourceFilePath, string preprocessContext)
+        public Action GetPreprocessAction(string sourceFilePath, string preprocessEvaluationContext)
         {
-            if (!CanPreprocess(sourceFilePath, preprocessContext))
+            if (!CanPreprocess(sourceFilePath, preprocessEvaluationContext))
             {
                 return null;
             }
 
-            return () => ShowPreprocessed(sourceFilePath, preprocessContext);
+            return () => ShowPreprocessed(sourceFilePath, preprocessEvaluationContext);
         }
 
         public string GetPreprocessedText(string sourceFilePath, string projectEvaluationContext)
@@ -256,14 +264,20 @@ namespace StructuredLogViewer
             return line;
         }
 
-        public string GetProjectEvaluationContext(object node)
+        public static string GetNodeEvaluationKey(object node)
         {
             if (node is TreeNode treeNode)
             {
-                var project = (IPreprocessable)treeNode.GetNearestParentOrSelf<Project>() ?? treeNode.GetNearestParentOrSelf<ProjectEvaluation>();
+                var project = (IPreprocessable)treeNode.GetNearestParentOrSelf<Project>();
                 if (project != null)
                 {
                     return project.RootFilePath;
+                }
+
+                var evaluation = treeNode.GetNearestParentOrSelf<ProjectEvaluation>();
+                if (evaluation != null)
+                {
+                    return GetEvaluationKey(evaluation);
                 }
             }
 
@@ -277,7 +291,7 @@ namespace StructuredLogViewer
                 return;
             }
 
-            ShowPreprocessed(preprocessable.RootFilePath, GetProjectEvaluationContext(preprocessable));
+            ShowPreprocessed(preprocessable.RootFilePath, GetNodeEvaluationKey(preprocessable));
         }
 
         public void ShowPreprocessed(string sourceFilePath, string projectContext)
@@ -300,15 +314,15 @@ namespace StructuredLogViewer
         public bool CanPreprocess(IPreprocessable preprocessable)
         {
             string sourceFilePath = preprocessable.RootFilePath;
-            string projectContext = GetProjectEvaluationContext(preprocessable);
+            string projectContext = GetNodeEvaluationKey(preprocessable);
             return CanPreprocess(sourceFilePath, projectContext);
         }
 
-        public bool CanPreprocess(string sourceFilePath, string projectContext)
+        public bool CanPreprocess(string sourceFilePath, string projectEvaluationKey)
         {
             return sourceFilePath != null
                 && sourceFileResolver.HasFile(sourceFilePath)
-                && GetImportMap(projectContext) is Dictionary<string, Bucket> importMap
+                && GetImportMap(projectEvaluationKey) is Dictionary<string, Bucket> importMap
                 && importMap.TryGetValue(sourceFilePath, out var bucket)
                 && bucket.Count > 0;
         }
