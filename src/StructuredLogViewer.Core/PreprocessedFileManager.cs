@@ -207,7 +207,8 @@ namespace StructuredLogViewer
                 InjectImportedProject(projectEvaluationContext, sb, import);
             }
 
-            for (; line < sourceText.Lines.Count; line++)
+            int count = sourceText.Lines.Count;
+            for (; line < count; line++)
             {
                 var lastLineText = sourceText.GetLineText(line);
                 if (lastLineText.Contains("</Project>"))
@@ -219,7 +220,7 @@ namespace StructuredLogViewer
                     }
                 }
 
-                if (lastLineText.Length > 0)
+                if (line < count - 1 || lastLineText.Length > 0)
                 {
                     sb.AppendLine(lastLineText);
                 }
@@ -235,7 +236,12 @@ namespace StructuredLogViewer
             string projectPath = import.ProjectPath;
             var importText = GetPreprocessedText(projectPath, projectEvaluationContext);
             sb.AppendLine($"<!-- ======== {projectPath} ======= -->");
-            sb.AppendLine(importText);
+            sb.Append(importText);
+            if (!importText.EndsWith("\n"))
+            {
+                sb.AppendLine();
+            }
+
             sb.AppendLine($"<!-- ======== END OF {projectPath} ======= -->");
         }
 
