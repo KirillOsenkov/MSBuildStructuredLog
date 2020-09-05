@@ -235,7 +235,7 @@ namespace StructuredLogViewer
             string projectPath = import.ProjectPath;
             var importText = GetPreprocessedText(projectPath, projectEvaluationContext);
             sb.AppendLine($"<!-- ======== {projectPath} ======= -->");
-            sb.Append(importText);
+            sb.AppendLine(importText);
             sb.AppendLine($"<!-- ======== END OF {projectPath} ======= -->");
         }
 
