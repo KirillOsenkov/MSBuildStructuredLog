@@ -82,7 +82,7 @@ namespace StructuredLogViewer
             return null;
         }
 
-        private int CorrectForMultilineImportElement(SourceText text, int lineNumber)
+        private int CorrectForMultilineTag(SourceText text, int lineNumber, string startText = "<Import", string endText = "/>")
         {
             // can happen for corrupt binlogs where some files have no text
             // see https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/258
@@ -91,18 +91,14 @@ namespace StructuredLogViewer
                 return 0;
             }
 
-            var line = text.Lines[lineNumber];
             var lineText = text.GetLineText(lineNumber);
-            if (lineText.Contains("<Import"))
+            if (lineText.Contains(startText))
             {
-                int lastElementLineNumber = lineNumber;
-                while (!lineText.Contains("/>") && lastElementLineNumber < text.Lines.Count - 1)
+                while (!lineText.Contains(endText) && lineNumber < text.Lines.Count - 1)
                 {
-                    lastElementLineNumber++;
-                    lineText = text.GetLineText(lastElementLineNumber);
+                    lineNumber++;
+                    lineText = text.GetLineText(lineNumber);
                 }
-
-                return lastElementLineNumber;
             }
 
             return lineNumber;
@@ -155,35 +151,7 @@ namespace StructuredLogViewer
                 imports.Count > 0 &&
                 !string.IsNullOrWhiteSpace(sourceText.Text))
             {
-                var sb = new StringBuilder();
-                int line = 0;
-
-                if (sourceText.GetLineText(line).Contains("<?xml"))
-                {
-                    line++;
-                }
-
-                foreach (var import in imports.OrderBy(i => i.Line).ToArray())
-                {
-                    var importEndLine = CorrectForMultilineImportElement(sourceText, import.Line);
-
-                    for (; line <= importEndLine; line++)
-                    {
-                        sb.AppendLine(sourceText.GetLineText(line));
-                    }
-
-                    var importText = GetPreprocessedText(import.ProjectPath, projectEvaluationContext);
-                    sb.AppendLine($"<!-- ======== {import.ProjectPath} ======= -->");
-                    sb.AppendLine(importText);
-                    sb.AppendLine($"<!-- ======== END OF {import.ProjectPath} ======= -->");
-                }
-
-                for (; line < sourceText.Lines.Count; line++)
-                {
-                    sb.AppendLine(sourceText.GetLineText(line));
-                }
-
-                result = sb.ToString();
+                result = GetPreprocessedTextCore(projectEvaluationContext, sourceText, imports);
             }
             else
             {
@@ -196,6 +164,90 @@ namespace StructuredLogViewer
 
             preprocessedFileCache[preprocessedFileCacheKey] = result;
             return result;
+        }
+
+        private string GetPreprocessedTextCore(string projectEvaluationContext, SourceText sourceText, Bucket imports)
+        {
+            string result;
+            var sb = new StringBuilder();
+            int line = 0;
+
+            if (sourceText.GetLineText(line).Contains("<?xml"))
+            {
+                line++;
+            }
+
+            var importsList = imports.OrderBy(i => i.Line).ToList();
+
+            var sdkProps = importsList.FirstOrDefault(i => i.ProjectPath.EndsWith("Sdk.props", StringComparison.OrdinalIgnoreCase) && i.Line == 0 && i.Column == 0);
+            if (sdkProps != default)
+            {
+                while (sourceText.GetLineText(line) is string firstLine && !firstLine.Contains("<Project"))
+                {
+                    sb.AppendLine(firstLine);
+                    line++;
+                }
+
+                line = SkipTag(sourceText, sb, line, line, "<Project", ">");
+
+                InjectImportedProject(projectEvaluationContext, sb, sdkProps);
+                importsList.Remove(sdkProps);
+            }
+
+            var sdkTargets = importsList.FirstOrDefault(i => i.ProjectPath.EndsWith("Sdk.targets", StringComparison.OrdinalIgnoreCase) && i.Line == 0 && i.Column == 0);
+            if (sdkTargets != default)
+            {
+                importsList.Remove(sdkTargets);
+            }
+
+            foreach (var import in importsList)
+            {
+                line = SkipTag(sourceText, sb, line, import.Line);
+
+                InjectImportedProject(projectEvaluationContext, sb, import);
+            }
+
+            for (; line < sourceText.Lines.Count; line++)
+            {
+                var lastLineText = sourceText.GetLineText(line);
+                if (lastLineText.Contains("</Project>"))
+                {
+                    if (sdkTargets != default)
+                    {
+                        InjectImportedProject(projectEvaluationContext, sb, sdkTargets);
+                        sdkTargets = default;
+                    }
+                }
+
+                if (lastLineText.Length > 0)
+                {
+                    sb.AppendLine(lastLineText);
+                }
+            }
+
+            result = sb.ToString();
+            
+            return result;
+        }
+
+        private void InjectImportedProject(string projectEvaluationContext, StringBuilder sb, ProjectImport import)
+        {
+            string projectPath = import.ProjectPath;
+            var importText = GetPreprocessedText(projectPath, projectEvaluationContext);
+            sb.AppendLine($"<!-- ======== {projectPath} ======= -->");
+            sb.Append(importText);
+            sb.AppendLine($"<!-- ======== END OF {projectPath} ======= -->");
+        }
+
+        private int SkipTag(SourceText sourceText, StringBuilder sb, int line, int lineNumber, string startText = "<Import", string endText = "/>")
+        {
+            var elementEndLine = CorrectForMultilineTag(sourceText, lineNumber, startText, endText);
+            for (; line <= elementEndLine; line++)
+            {
+                sb.AppendLine(sourceText.GetLineText(line));
+            }
+
+            return line;
         }
 
         public string GetProjectEvaluationContext(object node)

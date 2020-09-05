@@ -19,6 +19,9 @@ namespace StructuredLogViewer
         public int Line { get; set; }
         public int Column { get; set; }
 
+        public static bool operator ==(ProjectImport left, ProjectImport right) => left.Equals(right);
+        public static bool operator !=(ProjectImport left, ProjectImport right) => !(left == right);
+
         public bool Equals(ProjectImport other)
         {
             return ProjectPath == other.ProjectPath
