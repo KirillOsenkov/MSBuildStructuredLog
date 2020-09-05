@@ -174,6 +174,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             List<Record> blobs = new List<Record>();
 
             var reader = new BuildEventArgsReader(binaryReader, fileFormatVersion);
+            reader.OnBlobRead += OnBlobRead;
             reader.OnBlobRead += (kind, blob) =>
             {
                 var record = new Record
