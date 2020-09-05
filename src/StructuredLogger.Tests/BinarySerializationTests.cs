@@ -6,17 +6,47 @@ using System.Linq;
 using System.Text;
 using Microsoft.Build.Logging.StructuredLogger;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace StructuredLogger.Tests
 {
     public class BinarySerializationTests
     {
+        private readonly ITestOutputHelper output;
+
+        public BinarySerializationTests(ITestOutputHelper output)
+        {
+            this.output = output;
+        }
+
         public void DumpTimedNodes()
         {
             var build = Serialization.Read("1.binlog");
             var sb = new StringBuilder();
             build.VisitAllChildren<TimedNode>(t => sb.AppendLine($"{t.Index}: {t}"));
             System.Windows.Forms.Clipboard.SetText(sb.ToString());
+        }
+
+        //[Fact]
+        public void GetBlobSize()
+        {
+            var filePath = @"1.binlog";
+            long size = GetBinlogBlobSize(filePath);
+            output.WriteLine(size.ToString());
+        }
+
+        public static long GetBinlogBlobSize(string filePath)
+        {
+            long result = 0;
+            var reader = new BinLogReader();
+            reader.OnBlobRead += (kind, bytes) =>
+            {
+                result = bytes.LongLength;
+            };
+            var records = reader.ReadRecords(filePath);
+            foreach (var record in records) ;
+
+            return result;
         }
 
         //[Fact]
