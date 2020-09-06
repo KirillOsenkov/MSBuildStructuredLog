@@ -18,6 +18,7 @@ namespace StructuredLogViewer
         public bool IncludeStart { get; set; }
         public bool IncludeEnd { get; set; }
         public TimeSpan PrecalculationDuration { get; set; }
+        public bool DirectlyUnder { get; set; } = false;
 
         private string nameToSearch { get; set; }
         private string valueToSearch { get; set; }
@@ -95,6 +96,16 @@ namespace StructuredLogViewer
                     Words.RemoveAt(i);
                     var underMatcher = new NodeQueryMatcher(word, stringTable);
                     ExcludeMatchers.Add(underMatcher);
+                    continue;
+                }
+
+                if (word.StartsWith("directlyunder(", StringComparison.OrdinalIgnoreCase) && word.EndsWith(")"))
+                {
+                    word = word.Substring(14, word.Length - 15);
+                    Words.RemoveAt(i);
+                    var underMatcher = new NodeQueryMatcher(word, stringTable);
+                    underMatcher.DirectlyUnder = true;
+                    IncludeMatchers.Add(underMatcher);
                     continue;
                 }
 
@@ -431,7 +442,7 @@ namespace StructuredLogViewer
             {
                 if (!showResult)
                 {
-                    showResult = IsUnder(matcher, result);
+                    showResult = matcher.DirectlyUnder ? IsDirectlyUnder(matcher, result) : IsUnder(matcher, result);
                 }
             }
 
@@ -463,5 +474,32 @@ namespace StructuredLogViewer
 
             return false;
         }
+
+        private static bool IsDirectlyUnder(NodeQueryMatcher matcher, SearchResult result)
+        {
+            string underproject = String.Empty;
+            if (!String.IsNullOrEmpty(matcher.Query))
+            {
+                var words = matcher.Query.Split(new string[] { "=" }, StringSplitOptions.RemoveEmptyEntries);
+                if (words.Length > 1 && words[0].Equals("$project", StringComparison.OrdinalIgnoreCase))
+                {
+                    underproject = words[1];
+                }
+
+                if (!String.IsNullOrEmpty(underproject))
+                {
+                    var project = result.Node.GetNearestParent<Project>();
+                    if (project != null)
+                    {
+                        return project.Name.StartsWith(@"Project """ + underproject + @"""", StringComparison.OrdinalIgnoreCase);
+                    }
+                }
+            }
+
+            return false;
+        }
+
+
+
     }
 }
