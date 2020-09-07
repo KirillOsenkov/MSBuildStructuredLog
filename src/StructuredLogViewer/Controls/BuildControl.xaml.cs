@@ -330,6 +330,8 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             "$removeitem",
             "$metadata",
             "$copytask",
+            "$csc",
+            "$rar",
             "$import",
             "$noimport"
         };
@@ -370,9 +372,9 @@ Search for multiple words separated by space (space means AND). Enclose multiple
 
 Use syntax like '$property Prop' to narrow results down by item kind. Supported kinds: ";
 
-            string watermarkText2 = @"Use the under(FILTER) clause to filter results to only the nodes where any of the parent nodes in the parent chain matches the FILTER. Examples:
+            string watermarkText2 = @"Use the under(FILTER) clause to only include results where any of the nodes in the parent chain matches the FILTER. Use project(...) to filter by parent project. Examples:
  • $task csc under($project Core)
- • Copying file under(Parent)
+ • Copying file project(ProjectA)
 
 Append [[$time]], [[$start]] and/or [[$end]] to show times and/or durations and sort the results by start time or duration descending (for tasks, targets and projects).
 
