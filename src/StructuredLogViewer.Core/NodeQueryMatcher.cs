@@ -33,6 +33,8 @@ namespace StructuredLogViewer
 
         public NodeQueryMatcher(string query, IEnumerable<string> stringTable)
         {
+            query = PreprocessQuery(query);
+
             this.Query = query;
 
             this.Words = ParseIntoWords(query);
@@ -130,6 +132,19 @@ namespace StructuredLogViewer
             }
 
             PrecomputeMatchesInStrings(stringTable);
+        }
+
+        private string PreprocessQuery(string query)
+        {
+            if (string.IsNullOrEmpty(query))
+            {
+                return query;
+            }
+
+            query = query.Replace("$csc", "$task csc");
+            query = query.Replace("$rar", "$task ResolveAssemblyReference");
+
+            return query;
         }
 
         private void PrecomputeMatchesInStrings(IEnumerable<string> stringTable)
