@@ -18,7 +18,7 @@ namespace StructuredLogViewer
         public bool IncludeStart { get; set; }
         public bool IncludeEnd { get; set; }
         public TimeSpan PrecalculationDuration { get; set; }
-        public bool DirectlyUnder { get; set; } = false;
+        public bool UnderProject { get; set; } = false;
 
         private string nameToSearch { get; set; }
         private string valueToSearch { get; set; }
@@ -99,12 +99,13 @@ namespace StructuredLogViewer
                     continue;
                 }
 
-                if (word.StartsWith("directlyunder(", StringComparison.OrdinalIgnoreCase) && word.EndsWith(")"))
+                if (word.StartsWith("project(", StringComparison.OrdinalIgnoreCase) && word.EndsWith(")"))
                 {
-                    word = word.Substring(14, word.Length - 15);
+                    word = word.Substring(8, word.Length - 9);
                     Words.RemoveAt(i);
+
                     var underMatcher = new NodeQueryMatcher(word, stringTable);
-                    underMatcher.DirectlyUnder = true;
+                    underMatcher.UnderProject = true;
                     IncludeMatchers.Add(underMatcher);
                     continue;
                 }
@@ -442,7 +443,7 @@ namespace StructuredLogViewer
             {
                 if (!showResult)
                 {
-                    showResult = matcher.DirectlyUnder ? IsDirectlyUnder(matcher, result) : IsUnder(matcher, result);
+                    showResult = IsUnder(matcher, result);
                 }
             }
 
@@ -464,6 +465,17 @@ namespace StructuredLogViewer
 
         private static bool IsUnder(NodeQueryMatcher matcher, SearchResult result)
         {
+            if (matcher.UnderProject)
+            {
+                var project = result.Node.GetNearestParent<Project>();
+                if (project != null && matcher.IsMatch(project) != null)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+
             foreach (var parent in result.Node.GetParentChainExcludingThis())
             {
                 if (matcher.IsMatch(parent) != null)
@@ -474,32 +486,5 @@ namespace StructuredLogViewer
 
             return false;
         }
-
-        private static bool IsDirectlyUnder(NodeQueryMatcher matcher, SearchResult result)
-        {
-            string underproject = String.Empty;
-            if (!String.IsNullOrEmpty(matcher.Query))
-            {
-                var words = matcher.Query.Split(new string[] { "=" }, StringSplitOptions.RemoveEmptyEntries);
-                if (words.Length > 1 && words[0].Equals("$project", StringComparison.OrdinalIgnoreCase))
-                {
-                    underproject = words[1];
-                }
-
-                if (!String.IsNullOrEmpty(underproject))
-                {
-                    var project = result.Node.GetNearestParent<Project>();
-                    if (project != null)
-                    {
-                        return project.Name.StartsWith(@"Project """ + underproject + @"""", StringComparison.OrdinalIgnoreCase);
-                    }
-                }
-            }
-
-            return false;
-        }
-
-
-
     }
 }
