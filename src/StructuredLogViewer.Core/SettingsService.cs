@@ -304,7 +304,7 @@ namespace StructuredLogViewer
             }
         }
 
-        private static bool parentAllTargetsUnderProject = false;
+        private static bool parentAllTargetsUnderProject = true;
 
         public static bool ParentAllTargetsUnderProject
         {
