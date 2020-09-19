@@ -1373,11 +1373,12 @@ Recent:
             foreach (var result in results)
             {
                 TreeNode parent = root;
+                var resultNode = result.Node;
 
                 if (!includeDuration && !includeStart && !includeEnd)
                 {
-                    var project = result.Node.GetNearestParent<Project>();
-                    if (project != null)
+                    var project = resultNode.GetNearestParent<Project>();
+                    if (project != null && !(resultNode is Project))
                     {
                         var projectProxy = root.GetOrCreateNodeWithName<ProxyNode>(project.Name);
                         projectProxy.Original = project;
@@ -1390,8 +1391,8 @@ Recent:
                         parent.IsExpanded = true;
                     }
 
-                    var target = result.Node.GetNearestParent<Target>();
-                    if (target != null)
+                    var target = resultNode.GetNearestParent<Target>();
+                    if (target != null && !(resultNode is Target) && !(resultNode is Project))
                     {
                         var targetProxy = parent.GetOrCreateNodeWithName<ProxyNode>(target.TypeName + " " + target.Name);
                         targetProxy.Original = target;
@@ -1405,8 +1406,8 @@ Recent:
                     }
 
                     // nest under a Task, unless it's an MSBuild task higher up the parent chain
-                    var task = result.Node.GetNearestParent<Task>(t => !string.Equals(t.Name, "MSBuild", StringComparison.OrdinalIgnoreCase));
-                    if (task != null)
+                    var task = resultNode.GetNearestParent<Task>(t => !string.Equals(t.Name, "MSBuild", StringComparison.OrdinalIgnoreCase));
+                    if (task != null && !(resultNode is Target) && !(resultNode is Project))
                     {
                         var taskProxy = parent.GetOrCreateNodeWithName<ProxyNode>(task.TypeName + " " + task.Name);
                         taskProxy.Original = task;
@@ -1421,7 +1422,7 @@ Recent:
                 }
 
                 var proxy = new ProxyNode();
-                proxy.Original = result.Node;
+                proxy.Original = resultNode;
                 proxy.SearchResult = result;
                 parent.Children.Add(proxy);
             }
