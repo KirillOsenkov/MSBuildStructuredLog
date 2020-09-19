@@ -383,7 +383,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     var targetName = stringTable.Intern(TextUtilities.ParseQuotedSubstring(message));
                     if (targetName != null)
                     {
-                        node = project.GetOrAddTargetByName(targetName);
+                        node = project.GetOrAddTargetByName(targetName, args.Timestamp);
                         messageNode.IsLowRelevance = true;
                     }
                 }

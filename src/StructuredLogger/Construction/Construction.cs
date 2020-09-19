@@ -133,7 +133,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     {
                         foreach (var parent in parents)
                         {
-                            var parentNode = project.GetOrAddTargetByName(parent);
+                            var parentNode = project.GetOrAddTargetByName(parent, default);
                             if (parentNode != null && (parentNode.Id != -1 || parentNode.HasChildren))
                             {
                                 parentNode.TryAddTarget(unparentedTarget);
@@ -227,18 +227,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public void TargetStarted(object sender, TargetStartedEventArgs args)
         {
-            TargetBuiltReason targetBuiltReason = TargetBuiltReason.None;
-            if (args is TargetStartedEventArgs targetStartedArgs)
-            {
-                targetBuiltReason = targetStartedArgs.BuildReason;
-            }
-
             AddTargetCore(
                 args,
                 Intern(args.TargetName),
                 Intern(args.ParentTarget),
                 Intern(args.TargetFile),
-                targetBuiltReason);
+                args.BuildReason);
         }
 
         public static bool ParentAllTargetsUnderProject { get; set; }
@@ -258,12 +252,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     var target = project.CreateTarget(targetName, args.BuildEventContext.TargetId);
                     target.NodeId = args.BuildEventContext.NodeId;
                     target.StartTime = args.Timestamp;
+                    target.EndTime = target.StartTime; // will properly set later
                     target.ParentTarget = parentTargetName;
                     target.TargetBuiltReason = targetBuiltReason;
 
                     if (!ParentAllTargetsUnderProject && !string.IsNullOrEmpty(parentTargetName))
                     {
-                        var parentTarget = project.GetOrAddTargetByName(parentTargetName);
+                        var parentTarget = project.GetOrAddTargetByName(parentTargetName, args.Timestamp);
                         parentTarget.TryAddTarget(target);
                         //project.TryAddTarget(parentTarget);
                     }

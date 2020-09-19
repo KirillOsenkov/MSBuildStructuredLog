@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -68,6 +69,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 .Union(targetsById.Values)
                 .Where(t => t.Parent == null)
                 .OrderBy(t => t.StartTime)
+                // orphaned targets may share the exact same start time hint, so disambiguate by Index as well which is a counter
+                .ThenBy(t => t.Index)
                 .ToArray();
         }
 
@@ -92,7 +95,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             target = _targetNameToTargetMap.Values.FirstOrDefault(t => t.Id == id);
             if (target == null)
             {
-                target = CreateTargetInstance(null);
+                target = CreateTargetInstance(null, default);
             }
 
             AssociateTargetWithId(id, target);
@@ -107,9 +110,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        public Target GetOrAddTargetByName(string targetName)
+        public Target GetOrAddTargetByName(string targetName, DateTime startTimeHint)
         {
-            Target result = _targetNameToTargetMap.GetOrAdd(targetName, key => CreateTargetInstance(key));
+            Target result = _targetNameToTargetMap.GetOrAdd(targetName, key => CreateTargetInstance(key, startTimeHint));
             return result;
         }
 
@@ -134,7 +137,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     {
                         if (!targetsById.TryGetValue(id, out target))
                         {
-                            target = CreateTargetInstance(name);
+                            target = CreateTargetInstance(name, default);
                             target.Id = id;
                             AssociateTargetWithId(id, target);
                         }
@@ -153,7 +156,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
                 else
                 {
-                    target = CreateTargetInstance(name);
+                    target = CreateTargetInstance(name, default);
                     target.Id = id;
                     AssociateTargetWithId(id, target);
                 }
@@ -164,12 +167,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return target;
         }
 
-        private static Target CreateTargetInstance(string name)
+        private int unparentedTargetIndex = 0;
+
+        private Target CreateTargetInstance(string name, DateTime startTimeHint)
         {
+            Interlocked.Increment(ref unparentedTargetIndex);
+
             return new Target()
             {
                 Name = name,
-                Id = -1
+                Id = -1,
+                Index = unparentedTargetIndex, // additional sorting to preserve the order unparented targets are listed in
+                StartTime = startTimeHint,
+                EndTime = startTimeHint
             };
         }
 
