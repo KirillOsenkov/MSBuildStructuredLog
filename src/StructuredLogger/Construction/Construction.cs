@@ -565,8 +565,25 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private TreeNode FindParent(BuildEventContext buildEventContext)
         {
+            TreeNode result = null;
+
+            if (buildEventContext.ProjectContextId == -2)
+            {
+                var evaluationId = buildEventContext.EvaluationId;
+
+                result = EvaluationFolder;
+
+                var projectEvaluation = result.FindChild<ProjectEvaluation>(p => p.Id == evaluationId);
+                if (projectEvaluation != null)
+                {
+                    result = projectEvaluation;
+                }
+
+                return result;
+            }
+
             Project project = GetOrAddProject(buildEventContext.ProjectContextId);
-            TreeNode result = project;
+            result = project;
             if (buildEventContext.TargetId > 0)
             {
                 var target = project.GetTargetById(buildEventContext.TargetId);
