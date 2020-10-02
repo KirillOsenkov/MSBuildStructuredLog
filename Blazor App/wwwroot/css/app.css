@@ -16,39 +16,15 @@ html, body {
 .buttonContainer {
     display: flex;
     justify-content: space-evenly;
-    width: 35%;
-    margin: 0;
-}
-
-.filePicker input[type=file] {
-    position: absolute;
-    width: 3rem;
-    height: 2rem;
-    opacity: 0;
-    cursor: pointer;
+    margin-left: 8px;
+    margin-right: 8px;
 }
 
 .filePicker {
-    background-color: #fff;
-    border-color: #fff;
-    color: rgb(5, 39, 103);
-    font-weight: bold;
-    cursor: pointer;
-    display: inline-block;
-    text-align: center;
-    vertical-align: middle;
-    border: 1px solid transparent;
-    padding: .375rem .75rem;
-    font-size: 1rem;
-    line-height: 1.5;
-    border-radius: .25rem;
-    margin: auto;
-    font-family: inherit;
-    left: 0rem;
-    position: relative;
-    display: flex;
-    text-align: center;
-    justify-content: center;
+    opacity: 0;
+    position: absolute;
+    left: 0;
+    top: 0;
 }
 
 .flex-container {
@@ -111,7 +87,7 @@ p.blocktext {
     border-color: #fff;
     color: rgb(5, 39, 103);
     font-weight: bold;
-    margin:auto;
+    margin:0px 4px;
 }
 
 .btn.btn-secondary {
@@ -200,7 +176,6 @@ element.Style {
     margin: auto;
     justify-content: center;
     justify-content: space-between;
-    width: 5%;
     padding-left: 12rem;
 }
 
