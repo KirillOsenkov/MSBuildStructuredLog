@@ -8,26 +8,23 @@
 <div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
     <ul class="nav flex-row">
         <li style="width:calc(100%)">
-            <p class="flexNav">
-            <p class="heading">
-                <h1>
-                    Structured Log Viewer
-                </h1>
+            <div class="flexNav">
+                <div class="heading">
+                    <h1>
+                        Structured Log Viewer
+                    </h1>
 
-            <p class="buttonContainer">
-            <p class="filePicker">
-                <BlazorInputFile.InputFile OnChange="ReadFile" aria-label="Choose File" style="width:7rem; top:0px" ElementId="myInput" />
-                Open Binlog
-            </p>
-            <p>
-                <button @onclick=LoadSample class="btn btn-primary">Load Sample Log</button>
-            </p>
-            <button @onclick=ClearFile class="btn btn-primary">Clear</button>
-            </p>
+                    <div class="buttonContainer">
+                        <BlazorInputFile.InputFile OnChange="ReadFile" aria-label="Choose File" style="width:7rem; top:0px" ElementId="myInput" id="myInput" class="filePicker">hidden</BlazorInputFile.InputFile>
+                        <button class="btn btn-primary" onclick="document.getElementById('myInput').click();">Open Binlog</button>
+                        <button @onclick=LoadSample class="btn btn-primary">Load Sample Log</button>
+                        <button @onclick=ClearFile class="btn btn-primary">Clear</button>
+                    </div>
+                </div>
 
-            </p>
-            <button @onclick="darkMode" class="btn btn-primary" style="margin-top:0.6rem;margin-right: .5rem;">@mode</button>
-            </p>
+                <button @onclick="darkMode" class="btn btn-primary" style="margin-top:0.6rem;margin-right: .5rem;">@mode</button>
+
+            </div>
 
         </li>
                 
