@@ -49,8 +49,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     return string.Empty;
                 }
-
-                return " ← " + ParentTarget;
+                var connectingSymbol = TargetBuiltReason switch
+                {
+                    TargetBuiltReason.AfterTargets => "↑",
+                    TargetBuiltReason.BeforeTargets => "↓",
+                    TargetBuiltReason.DependsOn => "→",
+                    _ => "→",
+                };
+                return $" {connectingSymbol} " + ParentTarget;
             }
         }
 
