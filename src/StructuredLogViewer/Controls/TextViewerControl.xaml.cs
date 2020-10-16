@@ -83,6 +83,17 @@ namespace StructuredLogViewer.Controls
             DisplaySource(lineNumber, column);
         }
 
+        protected override void OnKeyUp(KeyEventArgs e)
+        {
+            // Mark Ctrl+F handle to not steal focus from search panel
+            if (e.Key == Key.F  && Keyboard.Modifiers == ModifierKeys.Control)
+            {
+                e.Handled = true;
+            }
+
+            base.OnKeyUp(e);
+        }
+
         private void TextAreaMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
             var position = textEditor.GetPositionFromPoint(e.GetPosition(textEditor));
