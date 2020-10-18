@@ -63,6 +63,21 @@ namespace StructuredLogViewer.Controls
                 textView.CurrentLineBackground = new SolidColorBrush(Color.FromRgb(224, 224, 224));
                 textView.CurrentLineBorder = new Pen(Brushes.Transparent, 0);
             }
+
+            textEditor.ApplyTemplate();
+
+            var scrollViewer = textEditor.FindVisualChild<ScrollViewer>();
+            if (scrollViewer != null)
+            {
+                textEditor.PreviewMouseWheel += (s, e) =>
+                {
+                    if (Keyboard.Modifiers == ModifierKeys.Shift)
+                    {
+                        scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset - e.Delta);
+                        e.Handled = true;
+                    }
+                };
+            }
         }
 
         public void DisplaySource(
