@@ -174,7 +174,7 @@ namespace StructuredLogViewer.Controls
         /// <typeparam name="T">The type of the queried item.</typeparam>
         /// <param name="element">The element in the visual tree to commence searching below from.</param>
         /// <returns>The first child item that matches the queried type, null is returned otherwise.</returns>
-        public static T FindVisualChild<T>(UIElement element) where T : UIElement
+        public static T FindVisualChild<T>(this UIElement element) where T : UIElement
         {
             for (int i = 0; i < VisualTreeHelper.GetChildrenCount(element); i++)
             {
