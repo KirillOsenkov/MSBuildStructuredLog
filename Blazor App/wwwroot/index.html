@@ -14,8 +14,8 @@
         window.handleDroppedFile = () => {
             event.preventDefault();
 
-            fileInput.files = event.dataTransfer.files;
-            fileInput.dispatchEvent(new Event('change'));
+            myInput.files = event.dataTransfer.files;
+            myInput.dispatchEvent(new Event('change'));
         };
     </script>
     <meta charset="utf-8" />

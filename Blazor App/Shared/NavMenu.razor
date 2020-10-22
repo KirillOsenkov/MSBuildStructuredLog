@@ -3,27 +3,28 @@
 @using Microsoft.Build.Logging.StructuredLogger
 @inject Blazor.FileReader.IFileReaderService fileReaderService
 @inject NotificationService notificationService
+@inject HttpClient _httpClient;
 
 <div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
     <ul class="nav flex-row">
         <li style="width:calc(100%)">
-            <p class="flexNav">
-            <p class="heading">
-                <h1>
-                    Structured Log Viewer
-                </h1>
+            <div class="flexNav">
+                <div class="heading">
+                    <h1>
+                        Structured Log Viewer
+                    </h1>
 
-            <p class="buttonContainer">
-            <p class="filePicker">
-                <InputFile OnChange="ReadFile" aria-label="Choose File" style="width:7rem; top:0px" ElementId="myInput" id="fileInput" />
-                Choose File
-            </p>
-            <button @onclick=ClearFile class="btn btn-primary">Clear</button>
-            </p>
+                    <div class="buttonContainer">
+                        <BlazorInputFile.InputFile OnChange="ReadFile" aria-label="Choose File" style="width:7rem; top:0px" ElementId="myInput" id="myInput" class="filePicker">hidden</BlazorInputFile.InputFile>
+                        <button class="btn btn-primary" onclick="document.getElementById('myInput').click();">Open Binlog</button>
+                        <button @onclick=LoadSample class="btn btn-primary">Load Sample Log</button>
+                        <button @onclick=ClearFile class="btn btn-primary">Clear</button>
+                    </div>
+                </div>
 
-            </p>
-            <button @onclick="darkMode" class="btn btn-primary" style="margin-top:0.6rem;margin-right: .5rem;">@mode</button>
-            </p>
+                <button @onclick="darkMode" class="btn btn-primary" style="margin-top:0.6rem;margin-right: .5rem;">@mode</button>
+
+            </div>
 
         </li>
                 
@@ -87,12 +88,90 @@
     /// </summary>
     /// <param name="message"> Message to be displayed to the user </param>
     /// <returns></returns>
-    async System.Threading.Tasks.Task ShowNotification(NotificationMessage message)
+    async System.Threading.Tasks.Task ShowError(string messageText)
     {
+        var message = new NotificationMessage();
         message.Severity = NotificationSeverity.Error;
-        message.Summary = "Wrong File Type!";
+        message.Summary = messageText;
         message.Duration = 4000;
         notificationService.Notify(message);
+    }
+
+    public async System.Threading.Tasks.Task LoadSample()
+    {
+        try
+        {
+            await PrepareForLoad();
+
+            var request = new HttpRequestMessage(HttpMethod.Get, "sample.binlog");
+            request.SetBrowserResponseStreamingEnabled(true);
+
+            var response = await _httpClient.SendAsync(request);
+
+            var memoryStream = new MemoryStream();
+            var responseStream = await response.Content.ReadAsStreamAsync();
+            await responseStream.CopyToAsync(memoryStream);
+            memoryStream.Position = 0;
+
+            await LoadBinlog(memoryStream);
+
+        }
+        catch (Exception ex)
+        {
+            await ShowError(ex.ToString());
+            await ClearFile();
+            return;
+        }
+    }
+
+    private async System.Threading.Tasks.Task PrepareForLoad()
+    {
+        //setting appropriate variables to display progress bar
+        FileTree.binLogSelected = false;
+
+        FileTree.reading = true;
+        FileTree.waitText = "Here we go...";
+        mainLayout.containerSplit.fileTree.Render();
+        FileTree.binLogSelected = true;
+    }
+
+    private async System.Threading.Tasks.Task LoadBinlog(MemoryStream memoryStream)
+    {
+        System.Diagnostics.Stopwatch timeSinceUpdate = System.Diagnostics.Stopwatch.StartNew();
+
+        //reading build and creating tree from the build
+        mainLayout.containerSplit.build = await BinaryLog.ReadBuild(memoryStream, progressFunc: async (current, total) =>
+        {
+            if (timeSinceUpdate.Elapsed.TotalSeconds > 0.1)
+            {
+                //waitText = current.ToString() + " / " + total.ToString();
+                //Console.WriteLine(waitText);
+                FileTree._progressValue = 100 * current / (double)total;
+                mainLayout.containerSplit.fileTree.Render();
+                await System.Threading.Tasks.Task.Delay(1);
+                timeSinceUpdate.Restart();
+            }
+        });
+        FileTree.waitText = "Trust me your computer wants this to be over more than you do...";
+        BuildAnalyzer.AnalyzeBuild(mainLayout.containerSplit.build);
+        FileTree.fileTree = (IEnumerable<BaseNode>)mainLayout.containerSplit.build.Children;
+
+        //creating a search object to be used in the Search tab
+        SearchViewer.searcher = new StructuredLogViewer.Search(mainLayout.containerSplit.build, StructuredLogViewer.Search.DefaultMaxResults);
+        mainLayout.containerSplit.fileTree.Render();
+        FileTree.waitText = "Not a joke...We're actually still reading...";
+        mainLayout.containerSplit.fileTree.Render();
+
+        //creating file resolvers to read/look through archive/source files
+        mainLayout.containerSplit.sourceFileResolver = new StructuredLogViewer.SourceFileResolver(mainLayout.containerSplit.build.SourceFilesArchive);
+        mainLayout.containerSplit.archiveFileResolver = mainLayout.containerSplit.sourceFileResolver.ArchiveFile;
+
+        //populates the Files tab with the projectFiles tree
+        PopulateFilesTab();
+        mainLayout.containerSplit.fileTree.Render();
+        FileTree.reading = false;
+        FileTree.waitText = "";
+        mainLayout.containerSplit.fileTree.Render();
     }
 
     /// <summary>
@@ -104,8 +183,7 @@
     {
         try
         {
-            //setting appropriate variables to display progress bar
-            FileTree.binLogSelected = false;
+
 
             //creating files list from the file selected
             var file = files.FirstOrDefault();
@@ -113,21 +191,17 @@
             {
                 return;
             }
-            FileTree.reading = true;
-            mainLayout.containerSplit.fileTree.Render();
-            FileTree.waitText = "Here we go...";
 
             //determining if file is of type .binlog (errors if not)
             String[] split = file.Name.Split(".");
             if (!String.Equals("binlog", split[split.Length - 1]))
             {
-                await ShowNotification(new NotificationMessage());
+                await ShowError("Wrong File Type!");
                 await ClearFile();
                 return;
             }
-            FileTree.waitText = "Still reading...";
-            mainLayout.containerSplit.fileTree.Render();
-            FileTree.binLogSelected = true;
+
+            await PrepareForLoad();
 
             //reading .binlog file using streams (must be put into memoryStream to properly read
             FileTree.waitText = "Teaching you patience...";
@@ -135,46 +209,15 @@
             var memoryStream = new MemoryStream();
             await file.Data.CopyToAsync(memoryStream);
             memoryStream.Position = 0;
-            System.Diagnostics.Stopwatch timeSinceUpdate = System.Diagnostics.Stopwatch.StartNew();
 
-            //reading build and creating tree from the build
-            mainLayout.containerSplit.build = await BinaryLog.ReadBuild(memoryStream, progressFunc: async (current, total) =>
-            {
-                if (timeSinceUpdate.Elapsed.TotalSeconds > 0.1)
-                {
-                    //waitText = current.ToString() + " / " + total.ToString();
-                    //Console.WriteLine(waitText);
-                    FileTree._progressValue = 100 * current / (double)total;
-                    mainLayout.containerSplit.fileTree.Render();
-                    await System.Threading.Tasks.Task.Delay(1);
-                    timeSinceUpdate.Restart();
-                }
-            });
-            FileTree.waitText = "Trust me you're computer wants this to be over more than you do...";
-            BuildAnalyzer.AnalyzeBuild(mainLayout.containerSplit.build);
-            FileTree.fileTree = (IEnumerable<BaseNode>)mainLayout.containerSplit.build.Children;
+            await LoadBinlog(memoryStream);
 
-            //creating a search object to be used in the Search tab
-            SearchViewer.searcher = new StructuredLogViewer.Search(mainLayout.containerSplit.build, StructuredLogViewer.Search.DefaultMaxResults);
-            mainLayout.containerSplit.fileTree.Render();
-            FileTree.waitText = "Not a joke...We're actually still reading...";
-            mainLayout.containerSplit.fileTree.Render();
-
-            //creating file resolvers to read/look through archive/source files
-            mainLayout.containerSplit.sourceFileResolver = new StructuredLogViewer.SourceFileResolver(mainLayout.containerSplit.build.SourceFilesArchive);
-            mainLayout.containerSplit.archiveFileResolver = mainLayout.containerSplit.sourceFileResolver.ArchiveFile;
-
-            //populates the Files tab with the projectFiles tree
-            PopulateFilesTab();
-            mainLayout.containerSplit.fileTree.Render();
-            FileTree.reading = false;
-            FileTree.waitText = "";
-            mainLayout.containerSplit.fileTree.Render();
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.ToString());
-            throw;
+            await ShowError(ex.ToString());
+            await ClearFile();
+            return;
         }
     }
 
