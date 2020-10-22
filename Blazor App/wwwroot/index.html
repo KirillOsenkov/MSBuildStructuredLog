@@ -10,7 +10,14 @@
       gtag('js', new Date());
       gtag('config', 'UA-115404565-7');
     </script>
+    <script>
+        window.handleDroppedFile = () => {
+            event.preventDefault();
 
+            fileInput.files = event.dataTransfer.files;
+            fileInput.dispatchEvent(new Event('change'));
+        };
+    </script>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Bin Log Reader</title>

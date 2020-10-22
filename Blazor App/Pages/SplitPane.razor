@@ -10,18 +10,29 @@
     <CascadingValue Value=this>
 
         <body style="height:100%" id="mainLayout">
-            <div>
-                <div @ref="tabPanel" style="overflow: scroll; white-space: nowrap;" class="split" id="tabPanel">
-                    <Tabs />
-                </div>
-                <div @ref="fileTreePanel" style="overflow: scroll; white-space: nowrap;" class="split" id="fileTreePanel">
-                    @DrawFileTreePanel()
-                </div>
-                @if (showSourceFilePanel)
+            <div draggable="true" @ondragenter="@(e => showDragDropContainer = true)" @ondragleave="@(e => showDragDropContainer = false)" @ondrop="OnDropFile" ondragover="event.preventDefault();">
+                @if (showDragDropContainer)
                 {
-                    <div @ref="sourceFilePanel" style="overflow: scroll; white-space: nowrap; height:100vh" id="sourceFilePanel">
-                        @DrawSourceFilePanel()
+                    <div style="overflow: scroll; white-space: nowrap; height: calc(100vh - 40px); padding: 15px; border: 1px solid #333; background: #74787d;">
+                        <div style="display: flex; height: 100%; border: 2px dashed #bbb; border-radius: 5px; padding: 50px; font-size: 21pt; font-weight: bold; color: #ebeef2;">
+                            <span style="margin: auto; pointer-events: none;">Drop .binlog file here</span>
+                        </div>
                     </div>
+                }
+                else
+                {
+                    <div @ref="tabPanel" style="overflow: scroll; white-space: nowrap;" class="split" id="tabPanel">
+                        <Tabs />
+                    </div>
+                    <div @ref="fileTreePanel" style="overflow: scroll; white-space: nowrap;" class="split" id="fileTreePanel">
+                        @DrawFileTreePanel()
+                    </div>
+                    @if (showSourceFilePanel)
+                    {
+                        <div @ref="sourceFilePanel" style="overflow: scroll; white-space: nowrap; height:100vh" id="sourceFilePanel">
+                            @DrawSourceFilePanel()
+                        </div>
+                    }
                 }
             </div>
         </body>   
@@ -33,6 +44,7 @@
             [CascadingParameter]
             public MainLayout mainLayout { get; set; }
             public bool showSourceFilePanel;
+            public bool showDragDropContainer;
             protected ElementReference tabPanel;
             protected ElementReference fileTreePanel;
             protected ElementReference sourceFilePanel;
@@ -116,6 +128,17 @@
             }
 
             /// <summary>
+            /// Handles the ondrop event for the file input
+            /// </summary>
+            public async System.Threading.Tasks.Task OnDropFile()
+            {
+                // Blazor doesn't fully support binding drop events yet, so we need to manually handle it in JS
+                // https://github.com/dotnet/aspnetcore/issues/25721
+                await JSRuntime.InvokeVoidAsync("handleDroppedFile");
+                showDragDropContainer = false;
+            }
+
+            /// <summary>
             /// Calls the Split/Destroy methods once the html elements have rendered
             /// Determines if the split is between 2 or 3 panels
             /// </summary>
@@ -123,6 +146,9 @@
             /// <returns> Task to update the html </returns>
             protected override async System.Threading.Tasks.Task OnAfterRenderAsync(bool firstRender)
             {
+                if (showDragDropContainer)
+                    return;
+
                 if (firstRender)
                 {
                     mainLayout.containerSplit = this;
