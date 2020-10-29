@@ -46,7 +46,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     throw new LoggerException($"Failed to create the source archive for log file {_logFile}", ex);
                 }
-            }           
+            }
 
             construction = new Construction();
 
