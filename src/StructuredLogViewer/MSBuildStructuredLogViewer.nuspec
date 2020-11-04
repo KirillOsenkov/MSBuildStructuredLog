@@ -33,7 +33,8 @@
     <file src="Mono.Cecil.Mdb.dll" target="lib\net472" />
     <file src="Mono.Cecil.Pdb.dll" target="lib\net472" />
     <file src="Mono.Cecil.Rocks.dll" target="lib\net472" />
-    <file src="MSAGL.netstandard.dll" target="lib\net472" />
+    <file src="AutomaticGraphLayout.dll" target="lib\net472" />
+    <file src="AutomaticGraphLayout.Drawing.dll" target="lib\net472" />
     <file src="NuGet.Squirrel.dll" target="lib\net472" />
     <file src="Splat.dll" target="lib\net472" />
     <file src="Squirrel.dll" target="lib\net472" />
@@ -45,6 +46,6 @@
     <file src="System.ValueTuple.dll" target="lib\net472" />
     <file src="TaskRunner.exe" target="lib\net472" />
     <file src="TaskRunner.exe.config" target="lib\net472" />
-    <file src="WpfGraphControl.dll" target="lib\net472" />
+    <file src="Microsoft.Msagl.WpfGraphControl.dll" target="lib\net472" />
   </files>
 </package>

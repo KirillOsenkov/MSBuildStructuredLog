@@ -1,10 +1,8 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Msagl.Drawing;
 using Microsoft.Msagl.WpfGraphControl;
-using StructuredLogViewer.Core.ProjectGraph;
 
 namespace StructuredLogViewer.Controls
 {
@@ -17,7 +15,7 @@ namespace StructuredLogViewer.Controls
 
         public BuildControl BuildControl { get; set; }
 
-        public void SetGraph(Graph graph)
+        public void SetGraph(Microsoft.Msagl.Drawing.Graph graph)
         {
             graph.IsVisible = true;
 
