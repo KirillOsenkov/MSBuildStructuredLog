@@ -41,7 +41,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 var importedProject = match.Groups["ImportedProject"].Value;
                 var line = int.Parse(match.Groups["Line"].Value);
                 var column = int.Parse(match.Groups["Column"].Value);
-               // var reason = match.Groups["Reason"].Value;
+                // var reason = match.Groups["Reason"].Value;
 
                 project = stringTable.Intern(project);
                 importedProject = stringTable.Intern(importedProject);
@@ -56,7 +56,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     imported: false,
                     reason: reason);
                 return;
-            }           
+            }
         }
 
         private static void AddImport(
@@ -96,7 +96,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 import = new NoImport(project, importedProject, line, column, reason);
             }
-            
+
             NamedNode parent = importsFolder;
 
             if (project != rootProjectNode.ProjectFile)
