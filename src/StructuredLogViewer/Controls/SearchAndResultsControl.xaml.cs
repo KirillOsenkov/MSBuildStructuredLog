@@ -15,6 +15,8 @@ namespace StructuredLogViewer.Controls
             InitializeComponent();
             typingConcurrentOperation.DisplayResults += (r, moreAvailable) => DisplaySearchResults(r, moreAvailable);
             typingConcurrentOperation.SearchComplete += TypingConcurrentOperation_SearchComplete;
+
+            VirtualizingPanel.SetIsVirtualizing(resultsList, SettingsService.EnableTreeViewVirtualization);
         }
 
         private void TypingConcurrentOperation_SearchComplete(string searchText, object arg2, TimeSpan elapsed)
