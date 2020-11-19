@@ -280,7 +280,9 @@
       <controls:NodeHyperlinkControl
             Text="{Binding ParentTargetText}"
             Foreground="LightBlue"
-            ToolTip="{Binding ParentTargetTooltip}" />
+            ToolTip="{Binding ParentTargetTooltip}"
+            ToolTipService.InitialShowDelay="0"
+            ToolTipService.ShowDuration="300000" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
       <DataTrigger Binding="{Binding IsLowRelevance}" Value="True">
