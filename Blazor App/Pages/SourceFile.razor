@@ -24,21 +24,15 @@
     public SplitPane ContainerSplit { get; set; }
     public MonacoEditor _editor { get; set; }
 
+    public string EditorTheme => ContainerSplit.darkMode ? "vs-dark" : "vs";
+
     /// <summary>
     /// Defines how the monaco editor should look including what text to display
     /// </summary>
     /// <param name="editor"> The editor being created </param>
     /// <returns> The construction options for the editor </returns>
-    private StandaloneEditorConstructionOptions EditorConstructionOptions(MonacoEditor editor)
+        private StandaloneEditorConstructionOptions EditorConstructionOptions(MonacoEditor editor)
     {
-        string theme;
-        if (ContainerSplit.darkMode)
-        {
-            theme = "vs-dark";
-        } else
-        {
-            theme = "vs";
-        }
         return new StandaloneEditorConstructionOptions()
         {
             ReadOnly = true,
@@ -46,7 +40,7 @@
             AutomaticLayout = true,
             ScrollBeyondLastLine = false,
             Language = ContainerSplit.sourceFileExtension,
-            Theme = theme,
+            Theme = EditorTheme,
             Scrollbar = new ScrollbarOptions
             {
                 Vertical = "visible",
@@ -63,8 +57,7 @@
     /// <returns></returns>
     public async System.Threading.Tasks.Task changeTheme()
     {
-        string theme = ContainerSplit.darkMode ? "vs-dark" : "vs";
-        await MonacoEditor.SetTheme(theme);
+        await MonacoEditor.SetTheme(EditorTheme);
     }
 
     /// <summary>

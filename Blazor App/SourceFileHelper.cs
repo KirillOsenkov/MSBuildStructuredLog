@@ -17,7 +17,7 @@ namespace StructuredLogViewerWASM
         public static object[] SourceFileText(ISourceFileResolver fileResolver, BaseNode bn)
         {
             string path = "";
-            string sourceFileText = null;
+            string sourceFileText = "No file to display";
             string sourceFileName = "";
             int sourceFileLineNumber = -1;
 
@@ -63,11 +63,10 @@ namespace StructuredLogViewerWASM
                 sourceFileName = file.SourceFilePath;
                 sourceFileText = fileResolver.GetSourceFileText(path).Text;
             }
-            else if (bn is SourceFileLine line && line.Parent is Microsoft.Build.Logging.StructuredLogger.SourceFile
-            && ((Microsoft.Build.Logging.StructuredLogger.SourceFile)line.Parent).SourceFilePath != null)
+            else if (bn is SourceFileLine line && line.Parent is Microsoft.Build.Logging.StructuredLogger.SourceFile sourceFile && sourceFile.SourceFilePath != null)
             {
-                path = ((Microsoft.Build.Logging.StructuredLogger.SourceFile)line.Parent).SourceFilePath;
-                sourceFileName = ((Microsoft.Build.Logging.StructuredLogger.SourceFile)line.Parent).Name;
+                path = sourceFile.SourceFilePath;
+                sourceFileName = sourceFile.Name;
                 sourceFileText = fileResolver.GetSourceFileText(path).Text;
                 sourceFileLineNumber = line.LineNumber;
             }
@@ -80,11 +79,6 @@ namespace StructuredLogViewerWASM
             {
                 sourceFileText = node1.Text;
                 sourceFileName = node1.Name;
-            }
-
-            if (sourceFileText == null)
-            {
-                sourceFileText = "No file to display";
             }
 
             string[] fileParts = path.Split(".");
@@ -149,10 +143,10 @@ namespace StructuredLogViewerWASM
 
                         if (taskName != null)
                         {
-                            var tasks = element.Elements.Where(e => e.Name == taskName).ToArray();
-                            if (tasks.Length == 1)
+                            var task = element.Elements.SingleOrDefault(e => e.Name == taskName);
+                            if (task != null)
                             {
-                                startPosition = tasks[0].AsSyntaxElement.NameNode.Start;
+                                startPosition = task.AsSyntaxElement.NameNode.Start;
                             }
                         }
 
