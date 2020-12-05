@@ -64,12 +64,12 @@
             /// <summary>
             /// Switches the application to dark mode
             /// </summary>
-            public async void DarkMode()
+            public async System.Threading.Tasks.Task DarkMode()
             {
                 darkMode = !darkMode;
                 if (showSourceFilePanel)
                 {
-                    sourceFile.changeTheme();
+                    await sourceFile.changeTheme();
                 }
                 if (darkMode)
                 {

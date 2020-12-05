@@ -17,7 +17,7 @@
                       CssClass="code"
                       Id="monaco-editor"
                       ConstructionOptions="EditorConstructionOptions"
-                      OnDidInit="@((editor) => EditorOnDidInit((MonacoEditor)editor))" />
+                      OnDidInit="@((editor) => EditorOnDidInit(editor))" />
     </div>
 @code {
     [CascadingParameter]
@@ -63,16 +63,8 @@
     /// <returns></returns>
     public async System.Threading.Tasks.Task changeTheme()
     {
-        string theme;
-        if (ContainerSplit.darkMode)
-        {
-            theme = "vs-dark";
-        }
-        else
-        {
-            theme = "vs";
-        }
-        MonacoEditor.SetTheme(theme);
+        string theme = ContainerSplit.darkMode ? "vs-dark" : "vs";
+        await MonacoEditor.SetTheme(theme);
     }
 
     /// <summary>
@@ -90,22 +82,22 @@
     /// </summary>
     /// <param name="editor"> editor to add highlighting to</param>
     /// <returns> task to update the app </returns>
-    private async System.Threading.Tasks.Task EditorOnDidInit(MonacoEditor editor)
+    private async System.Threading.Tasks.Task EditorOnDidInit(MonacoEditorBase editor)
     {
         if (ContainerSplit.sourceFileLineNumber != -1)
         {
             var newDecorations = new ModelDeltaDecoration[]
             {
-            new ModelDeltaDecoration
-            {
-                Range = new BlazorMonaco.Bridge.Range(ContainerSplit.sourceFileLineNumber,1,ContainerSplit.sourceFileLineNumber,1),
-                Options = new ModelDecorationOptions
+                new ModelDeltaDecoration
                 {
-                    IsWholeLine = true,
-                    ClassName = "decorationContentClass",
+                    Range = new BlazorMonaco.Bridge.Range(ContainerSplit.sourceFileLineNumber,1,ContainerSplit.sourceFileLineNumber,1),
+                    Options = new ModelDecorationOptions
+                    {
+                        IsWholeLine = true,
+                        ClassName = "decorationContentClass",
+                    }
                 }
-            }
-                };
+            };
             await _editor.RevealLineInCenter(ContainerSplit.sourceFileLineNumber, ScrollType.Smooth);
             await _editor.DeltaDecorations(null, newDecorations);
             await _editor.RevealLineInCenter(ContainerSplit.sourceFileLineNumber, ScrollType.Smooth);
@@ -130,7 +122,7 @@
     /// closes the third panel and sets the app back to 2 panels
     /// </summary>
     /// <returns></returns>
-    public async System.Threading.Tasks.Task Exit()
+    public void Exit()
     {
         ContainerSplit.showSourceFilePanel = false;
         ContainerSplit.Render();
