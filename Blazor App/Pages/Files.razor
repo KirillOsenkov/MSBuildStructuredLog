@@ -8,16 +8,12 @@
 
     <RadzenTree Data="@ContainerSplit.projectFiles" 
                 Style="word-break:break-all" 
-                Expand="@((TreeExpandEventArgs args) => {ExpandResults(args);})"
+                Expand="@ExpandResults"
                 Change="OnChange">
-        <RadzenTreeLevel Expanded="@((obj) => (obj is TreeNode && ((TreeNode)obj).HasChildren))" 
-                         Template="@TreeFormatting.TreeDesign" 
+        <RadzenTreeLevel Expanded="@(obj => obj is TreeNode treeNode && treeNode.HasChildren)"
+                         Template="@TreeFormatting.TreeDesign"
                          Text="@TreeFormatting.TextSelector"
-                         HasChildren="@((node) => {
-                                    if (node is TreeNode)
-                                        return ((TreeNode)node).HasChildren;
-                                    else return false;
-                                })" />
+                         HasChildren="@(obj => obj is TreeNode treeNode && treeNode.HasChildren)" />
     </RadzenTree>
 
 @code {
@@ -53,9 +49,9 @@
     public static void ExpandResults(TreeExpandEventArgs args)
     {
         TreeFormatting.OnExpand(args);
-        if (args.Value is TreeNode && ((TreeNode)(args.Value)).HasChildren)
+        if (args.Value is TreeNode treeNode && treeNode.HasChildren)
         {
-            args.Children.Expanded = (obj) => (obj is TreeNode && ((TreeNode)obj).HasChildren);
+            args.Children.Expanded = (obj) => obj is TreeNode childNode && childNode.HasChildren;
         }
     }
 }
