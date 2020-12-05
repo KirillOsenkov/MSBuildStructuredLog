@@ -7,7 +7,7 @@
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager 
 
-    <CascadingValue Value=this>
+    <CascadingValue Value=this IsFixed="true">
 
         <body style="height:100%" id="mainLayout">
             <div draggable="true" @ondragenter="@(e => showDragDropContainer = true)" @ondragleave="@(e => showDragDropContainer = false)" @ondrop="OnDropFile" ondragover="event.preventDefault();">
