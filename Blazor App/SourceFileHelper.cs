@@ -21,9 +21,8 @@ namespace StructuredLogViewerWASM
             string sourceFileName = "";
             int sourceFileLineNumber = -1;
 
-            if (bn is AbstractDiagnostic)
+            if (bn is AbstractDiagnostic ad)
             {
-                AbstractDiagnostic ad = (AbstractDiagnostic)bn;
                 path = ad.ProjectFile;
                 if (ad.IsTextShortened)
                 {
@@ -38,49 +37,49 @@ namespace StructuredLogViewerWASM
                 sourceFileLineNumber = ad.LineNumber;
 
             }
-            else if (bn is Project)
+            else if (bn is Project project)
             {
-                path = ((Project)bn).SourceFilePath;
-                sourceFileName = ((Project)bn).Name;
+                path = project.SourceFilePath;
+                sourceFileName = project.Name;
                 sourceFileText = fileResolver.GetSourceFileText(path).Text;
             }
-            else if (bn is Target)
+            else if (bn is Target target)
             {
-                path = ((Target)bn).SourceFilePath;
-                sourceFileName = ((Target)bn).Name;
+                path = target.SourceFilePath;
+                sourceFileName = target.Name;
                 sourceFileText = fileResolver.GetSourceFileText(path).Text;
                 sourceFileLineNumber = TargetLineNumber(fileResolver.GetSourceFileText(path), sourceFileName);
             }
-            else if (bn is Microsoft.Build.Logging.StructuredLogger.Task)
+            else if (bn is Task task)
             {
-                path = ((Microsoft.Build.Logging.StructuredLogger.Task)bn).SourceFilePath;
-                sourceFileName = ((Microsoft.Build.Logging.StructuredLogger.Task)bn).Name;
+                path = task.SourceFilePath;
+                sourceFileName = task.Name;
                 sourceFileText = fileResolver.GetSourceFileText(path).Text;
-                sourceFileLineNumber = TaskLineNumber(fileResolver.GetSourceFileText(path), ((Microsoft.Build.Logging.StructuredLogger.Task)bn).Parent, sourceFileName);
+                sourceFileLineNumber = TaskLineNumber(fileResolver.GetSourceFileText(path), task.Parent, sourceFileName);
             }
-            else if (bn is IHasSourceFile && ((IHasSourceFile)bn).SourceFilePath != null)
+            else if (bn is IHasSourceFile file && file.SourceFilePath != null)
             {
-                path = ((IHasSourceFile)bn).SourceFilePath;
-                sourceFileName = ((IHasSourceFile)bn).SourceFilePath;
+                path = file.SourceFilePath;
+                sourceFileName = file.SourceFilePath;
                 sourceFileText = fileResolver.GetSourceFileText(path).Text;
             }
-            else if (bn is SourceFileLine && ((SourceFileLine)bn).Parent is Microsoft.Build.Logging.StructuredLogger.SourceFile
-            && ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).SourceFilePath != null)
+            else if (bn is SourceFileLine line && line.Parent is Microsoft.Build.Logging.StructuredLogger.SourceFile
+            && ((Microsoft.Build.Logging.StructuredLogger.SourceFile)line.Parent).SourceFilePath != null)
             {
-                path = ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).SourceFilePath;
-                sourceFileName = ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).Name;
+                path = ((Microsoft.Build.Logging.StructuredLogger.SourceFile)line.Parent).SourceFilePath;
+                sourceFileName = ((Microsoft.Build.Logging.StructuredLogger.SourceFile)line.Parent).Name;
                 sourceFileText = fileResolver.GetSourceFileText(path).Text;
-                sourceFileLineNumber = ((SourceFileLine)bn).LineNumber;
+                sourceFileLineNumber = line.LineNumber;
             }
-            else if (bn is NameValueNode && ((NameValueNode)bn).IsValueShortened)
+            else if (bn is NameValueNode node && node.IsValueShortened)
             {
-                sourceFileText = ((NameValueNode)bn).Value;
-                sourceFileName = ((NameValueNode)bn).Name;
+                sourceFileText = node.Value;
+                sourceFileName = node.Name;
             }
-            else if (bn is TextNode && ((TextNode)bn).IsTextShortened)
+            else if (bn is TextNode node1 && node1.IsTextShortened)
             {
-                sourceFileText = ((TextNode)bn).Text;
-                sourceFileName = ((TextNode)bn).Name;
+                sourceFileText = node1.Text;
+                sourceFileName = node1.Name;
             }
 
             if (sourceFileText == null)
@@ -111,12 +110,11 @@ namespace StructuredLogViewerWASM
         /// <returns> Line number to highlight</returns>
         public static int  TaskLineNumber(SourceText text, TreeNode parent, string name)
         {
-            Target target = parent as Target;
-            if (target == null)
+            if (parent is Target target)
             {
-                return -1;
+                return TargetLineNumber(text, target.Name, name);
             }
-            return TargetLineNumber(text, target.Name, name);
+            return -1;
         }
 
         /// <summary>

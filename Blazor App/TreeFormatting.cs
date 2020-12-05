@@ -79,13 +79,7 @@ namespace StructuredLogViewerWASM
         {
             args.Children.Data = ((TreeNode)args.Value).Children;
             args.Children.Text = TextSelector;
-            args.Children.HasChildren = (node) =>
-            {
-                if (node is TreeNode)
-                    return ((TreeNode)node).HasChildren;
-                else
-                    return false;
-            };
+            args.Children.HasChildren = (node) => node is TreeNode treeNode && treeNode.HasChildren;
             args.Children.Template = TreeDesign;
             args.Children.Expanded = ((node) => { return ((BaseNode)node).IsExpanded; });
             ((BaseNode)(args.Value)).IsExpanded = true;
@@ -99,30 +93,35 @@ namespace StructuredLogViewerWASM
         public static string IconSelector(Object node)
         {
             string img = "/icons/";
-            if (node is ProxyNode)
+            if (node is ProxyNode proxyNode)
             {
-                node = ((ProxyNode)node).Original;
+                node = proxyNode.Original;
             }
 
             if (node is Folder)
             {
                 img += "FolderClosed.png";
-            } else if (node is Solution)
+            }
+            else if (node is Solution)
             {
                 img += "SolutionV15.png";
-            } else if (node is Project)
+            }
+            else if (node is Project project)
             {
-                string extension = ((Project)node).ProjectFileExtension;
+                string extension = project.ProjectFileExtension;
                 if (extension.Equals(".csproj"))
                 {
                     img += "CSProjectNode.png";
-                } else if (extension.Equals(".fsproj"))
+                }
+                else if (extension.Equals(".fsproj"))
                 {
                     img += "FSProjectNode.png";
-                } else if (extension.Equals(".vbproj"))
+                }
+                else if (extension.Equals(".vbproj"))
                 {
                     img += "VBProjectNode.png";
-                } else
+                }
+                else
                 {
                     img += "VisualStudio.png";
                 }
@@ -170,7 +169,8 @@ namespace StructuredLogViewerWASM
             else if (node is Warning)
             {
                 img += "StatusWarning.png";
-            } else
+            }
+            else
             {
                 img += "FilledRectangle.png";
             }
@@ -184,9 +184,9 @@ namespace StructuredLogViewerWASM
         /// <returns>name of the node to display on tree </returns>
         public static string TextSelector(Object node)
         {
-            if (node is ProxyNode)
+            if (node is ProxyNode proxyNode)
             {
-                node = ((ProxyNode)node).Original;
+                node = proxyNode.Original;
             }
             string text = node switch
             {
@@ -234,9 +234,9 @@ namespace StructuredLogViewerWASM
         /// <returns> selected color for the icon </returns>
         public static string ColorSelector(BaseNode node)
         {
-            if (node is ProxyNode)
+            if (node is ProxyNode proxyNode)
             {
-                node = ((ProxyNode)node).Original;
+                node = proxyNode.Original;
             }
             string color = "Black";
             if (node is Folder)
