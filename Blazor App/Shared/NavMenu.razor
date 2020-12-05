@@ -238,7 +238,7 @@
     /// <param name="parent"> parent folder to </param>
     private void CompressTree(Folder parent)
     {
-        if (parent.Children.Count == 1 && parent.Children[0] is Folder subfolder)
+        if (parent.Children.SingleOrDefault() is Folder subfolder)
         {
             parent.Children.Clear();
             var grandchildren = subfolder.Children.ToArray();
