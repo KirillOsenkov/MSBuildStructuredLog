@@ -22,7 +22,7 @@
 {
 <div id="fileTree" style="width: 100%">
     <RadzenTree Data="@fileTree" 
-                Expand="@((TreeExpandEventArgs args) => { TreeFormatting.OnExpandFiles(args); })"
+                Expand="@TreeFormatting.OnExpandFiles"
                 Change="@OnChange">
         <RadzenTreeLevel Template="@TreeFormatting.TreeDesignFiles"
                          Text="@TreeFormatting.TextSelector"
@@ -31,11 +31,7 @@
                                          ((BaseNode)node).SourceDisplayed = false;
                                          return temp; })"
                          Expanded="@((node) => { return ((BaseNode)node).IsExpanded; })"
-                         HasChildren="@((node) => {
-                                            if (node is TreeNode)
-                                                return ((TreeNode)node).HasChildren;
-                                            else return false;
-                                        })" />
+                         HasChildren="@(node => node is TreeNode treeNode && treeNode.HasChildren)" />
     </RadzenTree>
 </div>
 } else
@@ -62,11 +58,8 @@
     /// <param name="args"> Handler that holds the event (.Value is the tree node selected) </param>
     void OnChange(TreeEventArgs args)
     {
-        object[] sourceFileInfo = SourceFileHelper.SourceFileText(ContainerSplit.sourceFileResolver, (BaseNode)args.Value);
-        ContainerSplit.sourceFileName = (string)sourceFileInfo[0];
-        ContainerSplit.sourceFileText = (string)sourceFileInfo[1];
-        ContainerSplit.sourceFileLineNumber = (int)sourceFileInfo[2];
-        ContainerSplit.sourceFileExtension = (string)sourceFileInfo[3];
+        (ContainerSplit.sourceFileName, ContainerSplit.sourceFileText, ContainerSplit.sourceFileLineNumber, ContainerSplit.sourceFileExtension)
+            = SourceFileHelper.SourceFileText(ContainerSplit.sourceFileResolver, (BaseNode)args.Value);
 
         if (!ContainerSplit.showSourceFilePanel)
         {

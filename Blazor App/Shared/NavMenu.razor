@@ -230,7 +230,7 @@
     /// <param name="parent"> parent folder to </param>
     private void CompressTree(Folder parent)
     {
-        if (parent.Children.SingleOrDefault() is Folder subfolder)
+        if (parent.Children.Count == 1 && parent.Children[0] is Folder subfolder)
         {
             parent.Children.Clear();
             var grandchildren = subfolder.Children.ToArray();
@@ -272,8 +272,7 @@
         }
         else
         {
-            var subfolder = folder.GetOrCreateNodeWithName<Folder>
-                (parts[index]);
+            var subfolder = folder.GetOrCreateNodeWithName<Folder>(parts[index]);
             subfolder.IsExpanded = true;
             AddSourceFile(subfolder, filePath, parts, index + 1);
         }
