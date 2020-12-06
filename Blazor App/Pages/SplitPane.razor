@@ -4,12 +4,13 @@
 @page "/"
 @using Microsoft.Build.Logging.StructuredLogger
 @using StructuredLogViewer
+
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager 
 
-    <CascadingValue Value=this>
+    <CascadingValue Value=this IsFixed="true">
 
-        <body style="height:100%" id="mainLayout">
+        <body style="height:100%" id="mainLayout" class="@Theme.CssClass">
             <div draggable="true" @ondragenter="@(e => showDragDropContainer = true)" @ondragleave="@(e => showDragDropContainer = false)" @ondrop="OnDropFile" ondragover="event.preventDefault();">
                 @if (showDragDropContainer)
                 {
@@ -43,6 +44,10 @@
         @code {
             [CascadingParameter]
             public MainLayout mainLayout { get; set; }
+
+            [CascadingParameter]
+            protected Theme Theme { get; set; }
+
             public bool showSourceFilePanel;
             public bool showDragDropContainer;
             protected ElementReference tabPanel;
@@ -59,19 +64,13 @@
             public string sourceFileName;
             public string sourceFileExtension;
             public bool searching;
-            public bool darkMode = false;
 
             /// <summary>
             /// Switches the application to dark mode
             /// </summary>
-            public async void DarkMode()
+            public async System.Threading.Tasks.Task DarkMode()
             {
-                darkMode = !darkMode;
-                if (showSourceFilePanel)
-                {
-                    sourceFile.changeTheme();
-                }
-                if (darkMode)
+                if (Theme.DarkMode)
                 {
                     await JSRuntime.InvokeVoidAsync("blazorHelpers.DarkMode");
                 } else

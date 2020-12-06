@@ -3,7 +3,7 @@
 @using Microsoft.Build.Logging.StructuredLogger
 @inject Blazor.FileReader.IFileReaderService fileReaderService
 @inject NotificationService notificationService
-@inject HttpClient _httpClient;
+@inject HttpClient _httpClient
 
 <div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
     <ul class="nav flex-row">
@@ -22,7 +22,7 @@
                     </div>
                 </div>
 
-                <button @onclick="darkMode" class="btn btn-primary" style="margin-top:0.6rem;margin-right: .5rem;">@mode</button>
+                <button @onclick="Theme.FlipTheme" class="btn btn-primary" style="margin-top:0.6rem;margin-right: .5rem;">@Theme.AlternateThemeName</button>
 
             </div>
 
@@ -35,26 +35,11 @@
 @code {
     private bool collapseNavMenu = true;
     static ElementReference fileToRead;
-    ElementReference inputButton;
-    string mode = "Dark Mode";
     [CascadingParameter]
     public MainLayout mainLayout { get; set; }
 
-    /// <summary>
-    /// Changes the theme of the website to dark mode
-    /// </summary>
-    /// <returns>Task to update the application</returns>
-    public async System.Threading.Tasks.Task darkMode()
-    {
-        mainLayout.containerSplit.DarkMode();
-        if (mainLayout.containerSplit.darkMode)
-        {
-            mode = "Light Mode";
-        } else
-        {
-            mode = "Dark Mode";
-        }
-    }
+    [CascadingParameter]
+    protected Theme Theme { get; set; }
 
     /// <summary>
     /// Fired when user selects the Clear button
@@ -88,13 +73,9 @@
     /// </summary>
     /// <param name="message"> Message to be displayed to the user </param>
     /// <returns></returns>
-    async System.Threading.Tasks.Task ShowError(string messageText)
+    void ShowError(string messageText)
     {
-        var message = new NotificationMessage();
-        message.Severity = NotificationSeverity.Error;
-        message.Summary = messageText;
-        message.Duration = 4000;
-        notificationService.Notify(message);
+        notificationService.Notify(NotificationSeverity.Error, messageText, duration: 4000);
     }
 
     public async System.Threading.Tasks.Task LoadSample()
@@ -118,7 +99,7 @@
         }
         catch (Exception ex)
         {
-            await ShowError(ex.ToString());
+            ShowError(ex.ToString());
             await ClearFile();
             return;
         }
@@ -196,7 +177,7 @@
             String[] split = file.Name.Split(".");
             if (!String.Equals("binlog", split[split.Length - 1]))
             {
-                await ShowError("Wrong File Type!");
+                ShowError("Wrong File Type!");
                 await ClearFile();
                 return;
             }
@@ -215,7 +196,7 @@
         }
         catch (Exception ex)
         {
-            await ShowError(ex.ToString());
+            ShowError(ex.ToString());
             await ClearFile();
             return;
         }
@@ -249,7 +230,7 @@
     /// <param name="parent"> parent folder to </param>
     private void CompressTree(Folder parent)
     {
-        if (parent.Children.Count == 1 && parent.Children[0] is Folder subfolder)
+        if (parent.Children.SingleOrDefault() is Folder subfolder)
         {
             parent.Children.Clear();
             var grandchildren = subfolder.Children.ToArray();
@@ -264,8 +245,7 @@
         }
         else
         {
-            foreach (var subFolder in parent.Children.OfType<Folder>
-                ())
+            foreach (var subFolder in parent.Children.OfType<Folder>())
             {
                 CompressTree(subFolder);
             }

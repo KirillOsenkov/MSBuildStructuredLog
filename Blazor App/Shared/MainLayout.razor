@@ -1,22 +1,31 @@
 ﻿@inherits LayoutComponentBase
-<CascadingValue Value=this>
-        <div class="sidebar">
-            <NavMenu />
-        </div>
 
-        <div class="main">
+<CascadingValue Value=@this IsFixed="true">
+<CascadingValue Value=@theme>
+    <div class="sidebar">
+        <NavMenu />
+    </div>
 
-            <div class="content px-4">
-                @Body
-            </div>
+    <div class="main @theme.CssClass">
+
+        <div class="content px-4">
+            @Body
         </div>
-></CascadingValue>
+    </div>
+</CascadingValue>
+</CascadingValue>
 
 @code {
     public StructuredLogViewerWASM.Pages.SplitPane containerSplit;
 
-    public void Render()
+    private Theme theme = new Theme();
+
+    protected override void OnInitialized()
     {
-        this.StateHasChanged();
+        base.OnInitialized();
+
+        theme.Changed += StateHasChanged;
     }
+
+    public void Dispose() => theme.Changed -= StateHasChanged;
 }

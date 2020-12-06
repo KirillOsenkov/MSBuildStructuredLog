@@ -73,7 +73,7 @@ else
     void Change(string value, string name)
     {
         searchKeyword = value;
-        var results = SearchInFiles(value, 1000, new System.Threading.CancellationToken());
+        var results = SearchInFiles(value, 1000, CancellationToken.None);
         findResults = (IEnumerable<BaseNode>)BuildFindResults(results, value);
     }
 

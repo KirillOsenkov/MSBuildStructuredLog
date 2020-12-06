@@ -17,13 +17,12 @@ namespace StructuredLogViewerWASM
         public static object[] SourceFileText(ISourceFileResolver fileResolver, BaseNode bn)
         {
             string path = "";
-            string sourceFileText = null;
+            string sourceFileText = "No file to display";
             string sourceFileName = "";
             int sourceFileLineNumber = -1;
 
-            if (bn is AbstractDiagnostic)
+            if (bn is AbstractDiagnostic ad)
             {
-                AbstractDiagnostic ad = (AbstractDiagnostic)bn;
                 path = ad.ProjectFile;
                 if (ad.IsTextShortened)
                 {
@@ -38,54 +37,48 @@ namespace StructuredLogViewerWASM
                 sourceFileLineNumber = ad.LineNumber;
 
             }
-            else if (bn is Project)
+            else if (bn is Project project)
             {
-                path = ((Project)bn).SourceFilePath;
-                sourceFileName = ((Project)bn).Name;
+                path = project.SourceFilePath;
+                sourceFileName = project.Name;
                 sourceFileText = fileResolver.GetSourceFileText(path).Text;
             }
-            else if (bn is Target)
+            else if (bn is Target target)
             {
-                path = ((Target)bn).SourceFilePath;
-                sourceFileName = ((Target)bn).Name;
+                path = target.SourceFilePath;
+                sourceFileName = target.Name;
                 sourceFileText = fileResolver.GetSourceFileText(path).Text;
                 sourceFileLineNumber = TargetLineNumber(fileResolver.GetSourceFileText(path), sourceFileName);
             }
-            else if (bn is Microsoft.Build.Logging.StructuredLogger.Task)
+            else if (bn is Task task)
             {
-                path = ((Microsoft.Build.Logging.StructuredLogger.Task)bn).SourceFilePath;
-                sourceFileName = ((Microsoft.Build.Logging.StructuredLogger.Task)bn).Name;
+                path = task.SourceFilePath;
+                sourceFileName = task.Name;
                 sourceFileText = fileResolver.GetSourceFileText(path).Text;
-                sourceFileLineNumber = TaskLineNumber(fileResolver.GetSourceFileText(path), ((Microsoft.Build.Logging.StructuredLogger.Task)bn).Parent, sourceFileName);
+                sourceFileLineNumber = TaskLineNumber(fileResolver.GetSourceFileText(path), task.Parent, sourceFileName);
             }
-            else if (bn is IHasSourceFile && ((IHasSourceFile)bn).SourceFilePath != null)
+            else if (bn is IHasSourceFile file && file.SourceFilePath != null)
             {
-                path = ((IHasSourceFile)bn).SourceFilePath;
-                sourceFileName = ((IHasSourceFile)bn).SourceFilePath;
+                path = file.SourceFilePath;
+                sourceFileName = file.SourceFilePath;
                 sourceFileText = fileResolver.GetSourceFileText(path).Text;
             }
-            else if (bn is SourceFileLine && ((SourceFileLine)bn).Parent is Microsoft.Build.Logging.StructuredLogger.SourceFile
-            && ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).SourceFilePath != null)
+            else if (bn is SourceFileLine line && line.Parent is Microsoft.Build.Logging.StructuredLogger.SourceFile sourceFile && sourceFile.SourceFilePath != null)
             {
-                path = ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).SourceFilePath;
-                sourceFileName = ((Microsoft.Build.Logging.StructuredLogger.SourceFile)((SourceFileLine)bn).Parent).Name;
+                path = sourceFile.SourceFilePath;
+                sourceFileName = sourceFile.Name;
                 sourceFileText = fileResolver.GetSourceFileText(path).Text;
-                sourceFileLineNumber = ((SourceFileLine)bn).LineNumber;
+                sourceFileLineNumber = line.LineNumber;
             }
-            else if (bn is NameValueNode && ((NameValueNode)bn).IsValueShortened)
+            else if (bn is NameValueNode node && node.IsValueShortened)
             {
-                sourceFileText = ((NameValueNode)bn).Value;
-                sourceFileName = ((NameValueNode)bn).Name;
+                sourceFileText = node.Value;
+                sourceFileName = node.Name;
             }
-            else if (bn is TextNode && ((TextNode)bn).IsTextShortened)
+            else if (bn is TextNode node1 && node1.IsTextShortened)
             {
-                sourceFileText = ((TextNode)bn).Text;
-                sourceFileName = ((TextNode)bn).Name;
-            }
-
-            if (sourceFileText == null)
-            {
-                sourceFileText = "No file to display";
+                sourceFileText = node1.Text;
+                sourceFileName = node1.Name;
             }
 
             string[] fileParts = path.Split(".");
@@ -111,12 +104,11 @@ namespace StructuredLogViewerWASM
         /// <returns> Line number to highlight</returns>
         public static int  TaskLineNumber(SourceText text, TreeNode parent, string name)
         {
-            Target target = parent as Target;
-            if (target == null)
+            if (parent is Target target)
             {
-                return -1;
+                return TargetLineNumber(text, target.Name, name);
             }
-            return TargetLineNumber(text, target.Name, name);
+            return -1;
         }
 
         /// <summary>
@@ -151,10 +143,10 @@ namespace StructuredLogViewerWASM
 
                         if (taskName != null)
                         {
-                            var tasks = element.Elements.Where(e => e.Name == taskName).ToArray();
-                            if (tasks.Length == 1)
+                            var task = element.Elements.SingleOrDefault(e => e.Name == taskName);
+                            if (task != null)
                             {
-                                startPosition = tasks[0].AsSyntaxElement.NameNode.Start;
+                                startPosition = task.AsSyntaxElement.NameNode.Start;
                             }
                         }
 
