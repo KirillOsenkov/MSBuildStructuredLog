@@ -14,7 +14,7 @@ namespace StructuredLogViewerWASM
         /// </summary>
         /// <param name="fileResolver"> Either the Source or Archive File Resolver to read file from </param>
         /// <param name="bn">BaseNode to be reading file from</param>
-        public static object[] SourceFileText(ISourceFileResolver fileResolver, BaseNode bn)
+        public static (string Name, string Text, int LineNumber, string Extension) SourceFileText(ISourceFileResolver fileResolver, BaseNode bn)
         {
             string path = "";
             string sourceFileText = "No file to display";
@@ -87,12 +87,8 @@ namespace StructuredLogViewerWASM
             {
                 fileExtension = "xml";
             }
-            object[] sourceFileResults = new object[4];
-            sourceFileResults[0] = sourceFileName;
-            sourceFileResults[1] = sourceFileText;
-            sourceFileResults[2] = sourceFileLineNumber;
-            sourceFileResults[3] = fileExtension;
-            return sourceFileResults;
+
+            return (sourceFileName, sourceFileText, sourceFileLineNumber, fileExtension);
         }
 
         /// <summary>

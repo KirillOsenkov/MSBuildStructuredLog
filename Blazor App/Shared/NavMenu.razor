@@ -272,8 +272,7 @@
         }
         else
         {
-            var subfolder = folder.GetOrCreateNodeWithName<Folder>
-                (parts[index]);
+            var subfolder = folder.GetOrCreateNodeWithName<Folder>(parts[index]);
             subfolder.IsExpanded = true;
             AddSourceFile(subfolder, filePath, parts, index + 1);
         }

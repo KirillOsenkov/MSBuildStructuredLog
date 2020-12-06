@@ -123,29 +123,18 @@
     /// </summary>
     /// <param name="resultsObject"> results to form a tree from </param>
     /// <returns> The created tree </returns>
-    public IEnumerable BuildResultTree(object resultsObject)
+    public IEnumerable<BaseNode> BuildResultTree(IEnumerable<StructuredLogViewer.SearchResult> results)
     {
-        var results = resultsObject as ICollection<StructuredLogViewer.SearchResult>;
-        if (results == null)
-        {
-            return results;
-        }
-
         var root = new Folder();
+
+        int count = results.Count();
 
         root.Children.Add(new Message
         {
-            Text = $"{results.Count} result{(results.Count == 1 ? "" : "s")}."
+            Text = $"{count} result{(count == 1 ? "" : "s")}."
         });
 
-        bool includeDuration = results.Any(r => r.Duration != default);
-
-        if (includeDuration)
-        {
-            results = results.OrderByDescending(r => r.Duration).ToArray();
-        }
-
-        foreach (var result in results)
+        foreach (var result in OrderIfNeeded(results, out bool includeDuration))
         {
             TreeNode parent = root;
 
@@ -154,49 +143,32 @@
                 var project = result.Node.GetNearestParent<Project>();
                 if (project != null)
                 {
-                    var projectProxy = root.GetOrCreateNodeWithName<ProxyNode>(project.Name);
-                    projectProxy.Original = project;
-                    if (projectProxy.Highlights.Count == 0)
-                    {
-                        projectProxy.Highlights.Add(project.Name);
-                    }
-
-                    parent = projectProxy;
+                    parent = CreateProxy(project, root, project.Name);
                     parent.IsExpanded = true;
                 }
 
                 var target = result.Node.GetNearestParent<Target>();
                 if (target != null)
                 {
-                    var targetProxy = parent.GetOrCreateNodeWithName<ProxyNode>(target.TypeName + " " + target.Name);
-                    targetProxy.Original = target;
-                    if (targetProxy.Highlights.Count == 0)
-                    {
-                        targetProxy.Highlights.Add(targetProxy.Name);
-                    }
-
-                    parent = targetProxy;
+                    parent = CreateProxy(target, root, target.TypeName + " " + target.Name);
                     parent.IsExpanded = true;
                 }
+
                 // nest under a Task, unless it's an MSBuild task higher up the parent chain
                 var task = result.Node.GetNearestParent<Microsoft.Build.Logging.StructuredLogger.Task>(t => !string.Equals(t.Name, "MSBuild", StringComparison.OrdinalIgnoreCase));
                 if (task != null)
                 {
-                    var taskProxy = parent.GetOrCreateNodeWithName<ProxyNode>(task.TypeName + " " + task.Name);
-                    taskProxy.Original = task;
-                    if (taskProxy.Highlights.Count == 0)
-                    {
-                        taskProxy.Highlights.Add(taskProxy.Name);
-                    }
-
-                    parent = taskProxy;
+                    parent = CreateProxy(task, root, task.TypeName + " " + task.Name);
                     parent.IsExpanded = true;
                 }
             }
 
-            var proxy = new ProxyNode();
-            proxy.Original = result.Node;
-            proxy.SearchResult = result;
+            var proxy = new ProxyNode
+            {
+                Original = result.Node,
+                SearchResult = result,
+            };
+
             parent.Children.Add(proxy);
         }
 
@@ -206,5 +178,26 @@
         }
 
         return root.Children;
+
+        static ProxyNode CreateProxy(BaseNode original, Folder root, string name)
+        {
+            var projectProxy = root.GetOrCreateNodeWithName<ProxyNode>(name);
+            projectProxy.Original = original;
+            if (projectProxy.Highlights.Count == 0)
+            {
+                projectProxy.Highlights.Add(name);
+            }
+
+            return projectProxy;
+        }
+
+        static IEnumerable<StructuredLogViewer.SearchResult> OrderIfNeeded(IEnumerable<StructuredLogViewer.SearchResult> results, out bool includeDuration)
+        {
+            results ??= Enumerable.Empty<StructuredLogViewer.SearchResult>();
+
+            includeDuration = results.Any(r => r.Duration != default);
+
+            return includeDuration ? results.OrderByDescending(r => r.Duration) : results;
+        }
     }
 }
