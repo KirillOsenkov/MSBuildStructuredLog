@@ -27,11 +27,8 @@
     /// <param name="args"> Holds the event (.Value is the tree node selected) </param>
     void OnChange(TreeEventArgs args)
     {
-        object[] sourceFileInfo = SourceFileHelper.SourceFileText(ContainerSplit.archiveFileResolver, (BaseNode)args.Value);
-        ContainerSplit.sourceFileName = (string)sourceFileInfo[0];
-        ContainerSplit.sourceFileText = (string)sourceFileInfo[1];
-        ContainerSplit.sourceFileLineNumber = (int)sourceFileInfo[2];
-        ContainerSplit.sourceFileExtension = (string)sourceFileInfo[3];
+        (ContainerSplit.sourceFileName, ContainerSplit.sourceFileText, ContainerSplit.sourceFileLineNumber, ContainerSplit.sourceFileExtension)
+            = SourceFileHelper.SourceFileText(ContainerSplit.sourceFileResolver, (BaseNode)args.Value);
 
         if (!ContainerSplit.showSourceFilePanel)
         {
