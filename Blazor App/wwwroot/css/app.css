@@ -101,6 +101,10 @@ p.blocktext {
     border-top-color: rgb(5, 39, 103);
 }
 
+.ui-tabview-panels {
+    background-color: transparent;
+    color: inherit;
+}
 
 .minimap slider-mouseover {
     left:300px;
@@ -141,8 +145,8 @@ app {
 }
 
 element.Style {
-    width:3px;
-    background-color:white;
+    width: 3px;
+    /*background-color:white;*/
 }
 
 .split, .gutter.gutter-horizontal {
@@ -277,6 +281,16 @@ element.Style {
     app {
         flex-direction: column;
         height:100%;
+    }
+
+    .light-theme, app, body {
+        background-color: white;
+        color: black;
+    }
+
+    .dark-theme {
+        background-color: #202020;
+        color: #E0E0E0;
     }
 
     .sidebar {

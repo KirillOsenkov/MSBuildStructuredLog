@@ -3,7 +3,7 @@
 @page "/tabs"
 @using Radzen
 @using Radzen.Blazor
-<RadzenTabs>
+<RadzenTabs class="@Theme.CssClass">
     <Tabs>
         <RadzenTabsItem Text="Search">
             <SearchViewer />
@@ -16,3 +16,8 @@
         </RadzenTabsItem>
     </Tabs>
 </RadzenTabs>
+
+@code{
+    [CascadingParameter]
+    protected Theme Theme { get; set; }
+}

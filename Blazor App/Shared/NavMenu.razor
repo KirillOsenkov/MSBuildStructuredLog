@@ -3,7 +3,7 @@
 @using Microsoft.Build.Logging.StructuredLogger
 @inject Blazor.FileReader.IFileReaderService fileReaderService
 @inject NotificationService notificationService
-@inject HttpClient _httpClient;
+@inject HttpClient _httpClient
 
 <div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
     <ul class="nav flex-row">
@@ -22,7 +22,7 @@
                     </div>
                 </div>
 
-                <button @onclick="darkMode" class="btn btn-primary" style="margin-top:0.6rem;margin-right: .5rem;">@mode</button>
+                <button @onclick="Theme.FlipTheme" class="btn btn-primary" style="margin-top:0.6rem;margin-right: .5rem;">@Theme.AlternateThemeName</button>
 
             </div>
 
@@ -35,19 +35,11 @@
 @code {
     private bool collapseNavMenu = true;
     static ElementReference fileToRead;
-    string mode = "Dark Mode";
     [CascadingParameter]
     public MainLayout mainLayout { get; set; }
 
-    /// <summary>
-    /// Changes the theme of the website to dark mode
-    /// </summary>
-    /// <returns>Task to update the application</returns>
-    public async System.Threading.Tasks.Task darkMode()
-    {
-        await mainLayout.containerSplit.DarkMode();
-        mode = mainLayout.containerSplit.darkMode ? "Light Mode" : "Dark Mode";
-    }
+    [CascadingParameter]
+    protected Theme Theme { get; set; }
 
     /// <summary>
     /// Fired when user selects the Clear button

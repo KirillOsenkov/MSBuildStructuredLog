@@ -29,22 +29,17 @@
     <RadzenTree Data="@searchResults"
                 Style="word-break:break-all"
                 Change="@OnChange"
-                Expand="@((TreeExpandEventArgs args) => { ExpandResults(args); })">
-        <RadzenTreeLevel Expanded="@((obj) => (obj is TreeNode && ((TreeNode)obj).HasChildren))"
+                Expand="@ExpandResults">
+        <RadzenTreeLevel Expanded="@((obj) => obj is TreeNode treeNode && treeNode.HasChildren)"
                          Template="@TreeFormatting.TreeDesign"
                          Text="@TreeFormatting.TextSelector"
-                         HasChildren="@((node) =>
-                                    {
-                                        if (node is TreeNode)
-                                            return ((TreeNode)node).HasChildren;
-                                        else return false;
-                                    })" />
+                         HasChildren="@((node) => node is TreeNode treeNode && treeNode.HasChildren)" />
     </RadzenTree>
 }
 
 @code {
-    [CascadingParameter]
-    public SplitPane ContainerSplit { get; set; }
+        [CascadingParameter]
+        public SplitPane ContainerSplit { get; set; }
     public static StructuredLogViewer.Search searcher;
     public static IEnumerable<BaseNode> searchResults;
     public static string SearchKeyword;
@@ -96,9 +91,9 @@
     public static void ExpandResults(TreeExpandEventArgs args)
     {
         TreeFormatting.OnExpand(args);
-        if (args.Value is TreeNode && ((TreeNode)(args.Value)).HasChildren)
+        if (args.Value is TreeNode treeNode && treeNode.HasChildren)
         {
-            args.Children.Expanded = (obj) => (obj is TreeNode && ((TreeNode)obj).HasChildren);
+            args.Children.Expanded = (obj) => (obj is TreeNode childTreeNode && childTreeNode.HasChildren);
         }
     }
 
@@ -111,14 +106,15 @@
     void Change(string value, string name)
     {
         SearchKeyword = value;
-        if (searcher == null)
+
+        if (searcher != null)
+        {
+            searchResults = BuildResultTree(searcher.FindNodes(value, System.Threading.CancellationToken.None));
+        }
+        else
         {
             Console.WriteLine(String.IsNullOrEmpty(SearchKeyword));
-            this.StateHasChanged();
-            return;
         }
-        IEnumerable<StructuredLogViewer.SearchResult> results = searcher.FindNodes(value, new System.Threading.CancellationToken());
-        searchResults = BuildResultTree(results) as IEnumerable<BaseNode>;
         this.StateHasChanged();
     }
 

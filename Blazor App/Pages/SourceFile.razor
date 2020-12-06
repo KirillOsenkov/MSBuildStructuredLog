@@ -7,6 +7,8 @@
 @using BlazorMonaco
 @using BlazorMonaco.Bridge
 
+@implements IDisposable
+
     <div class="flexSource">
         <div class="flex-container">
             <h2 style="margin:auto">@ContainerSplit.sourceFileName</h2>
@@ -22,16 +24,33 @@
 @code {
     [CascadingParameter]
     public SplitPane ContainerSplit { get; set; }
+
+    [CascadingParameter]
+    protected Theme Theme { get; set; }
+
     public MonacoEditor _editor { get; set; }
 
-    public string EditorTheme => ContainerSplit.darkMode ? "vs-dark" : "vs";
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        Theme.Changed += OnThemeChanged;
+    }
+
+    async void OnThemeChanged()
+    {
+        await MonacoEditor.SetTheme(Theme.EditorTheme);
+    }
+
+    public void Dispose() => Theme.Changed -= OnThemeChanged;
+
 
     /// <summary>
     /// Defines how the monaco editor should look including what text to display
     /// </summary>
     /// <param name="editor"> The editor being created </param>
     /// <returns> The construction options for the editor </returns>
-        private StandaloneEditorConstructionOptions EditorConstructionOptions(MonacoEditor editor)
+    private StandaloneEditorConstructionOptions EditorConstructionOptions(MonacoEditor editor)
     {
         return new StandaloneEditorConstructionOptions()
         {
@@ -40,24 +59,13 @@
             AutomaticLayout = true,
             ScrollBeyondLastLine = false,
             Language = ContainerSplit.sourceFileExtension,
-            Theme = EditorTheme,
+            Theme = Theme.EditorTheme,
             Scrollbar = new ScrollbarOptions
             {
                 Vertical = "visible",
                 Horizontal = "visible"
             }
         };
-
-    }
-
-    /// <summary>
-    /// Changes theme to dark or light mode
-    /// </summary>
-    /// <param name="editor"></param>
-    /// <returns></returns>
-    public async System.Threading.Tasks.Task changeTheme()
-    {
-        await MonacoEditor.SetTheme(EditorTheme);
     }
 
     /// <summary>
