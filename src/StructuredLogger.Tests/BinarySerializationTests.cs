@@ -19,6 +19,13 @@ namespace StructuredLogger.Tests
             this.output = output;
         }
 
+        public void TimeRead()
+        {
+            var sw = Stopwatch.StartNew();
+            var build = Serialization.Read(@"1.binlog");
+            System.Windows.Forms.MessageBox.Show(sw.Elapsed.ToString());
+        }
+
         public void DumpTimedNodes()
         {
             var build = Serialization.Read("1.binlog");
