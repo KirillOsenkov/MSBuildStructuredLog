@@ -41,7 +41,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public void Replay(Stream stream)
         {
             var gzipStream = new GZipStream(stream, CompressionMode.Decompress, leaveOpen: true);
-            var binaryReader = new BinaryReader(gzipStream);
+            var bufferedStream = new BufferedStream(gzipStream);
+            var binaryReader = new BinaryReader(bufferedStream);
 
             int fileFormatVersion = binaryReader.ReadInt32();
 
@@ -150,7 +151,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public IEnumerable<Record> ReadRecords(Stream binaryLogStream)
         {
             var gzipStream = new GZipStream(binaryLogStream, CompressionMode.Decompress, leaveOpen: true);
-            return ReadRecordsFromDecompressedStream(gzipStream);
+            var bufferedStream = new BufferedStream(gzipStream);
+            return ReadRecordsFromDecompressedStream(bufferedStream);
         }
 
         public IEnumerable<Record> ReadRecordsFromDecompressedStream(Stream decompressedStream)
