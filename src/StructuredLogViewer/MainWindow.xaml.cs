@@ -508,7 +508,7 @@ namespace StructuredLogViewer
         private void OpenProjectOrSolution()
         {
             var openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = "MSBuild projects and solutions (*.sln;*.*proj)|*.sln;*.*proj";
+            openFileDialog.Filter = "MSBuild projects and solutions (*.sln;*.*proj)|*.sln;*.*proj|All files (*.*)|*";
             openFileDialog.Title = "Open a solution or project";
             openFileDialog.CheckFileExists = true;
             var result = openFileDialog.ShowDialog(this);
