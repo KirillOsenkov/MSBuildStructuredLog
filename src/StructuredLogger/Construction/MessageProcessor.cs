@@ -328,10 +328,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     else if (string.Equals(task.Name, "MSBuild", StringComparison.OrdinalIgnoreCase))
                     {
                         if (message.StartsWith(Strings.GlobalPropertiesPrefix) ||
-                        Strings.AdditionalPropertiesPrefix.IsMatch(message) ||
-                        Strings.OverridingGlobalPropertiesPrefix.IsMatch(message) ||
-                        message.StartsWith(Strings.RemovingPropertiesPrefix)
-                        || Strings.RemovingProjectProperties.IsMatch(message))
+                            Strings.AdditionalPropertiesPrefix.IsMatch(message) ||
+                            Strings.OverridingGlobalPropertiesPrefix.IsMatch(message) ||
+                            message.StartsWith(Strings.RemovingPropertiesPrefix) ||
+                            Strings.RemovingProjectProperties.IsMatch(message))
                         {
                             node.GetOrCreateNodeWithName<Folder>(message);
                             return;
@@ -358,6 +358,42 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                 Name = stringTable.Intern(kvp.Key),
                                 Value = stringTable.Intern(kvp.Value)
                             };
+                        }
+                    }
+                    else if (string.Equals(task.Name, "RestoreTask"))
+                    {
+                        // just throw these away to save space
+                        // https://github.com/NuGet/Home/issues/10383
+                        if (message.StartsWith(Strings.RestoreTask_CheckingCompatibilityFor))
+                        {
+                            return;
+                        }
+                        else if (message.StartsWith("  GET"))
+                        {
+                            node = node.GetOrCreateNodeWithName<Folder>("GET");
+                        }
+                        else if (message.StartsWith("  CACHE"))
+                        {
+                            node = node.GetOrCreateNodeWithName<Folder>("CACHE");
+                        }
+                        else if (message.StartsWith("  OK"))
+                        {
+                            node = node.GetOrCreateNodeWithName<Folder>("OK");
+                        }
+                        else if (message.StartsWith("  NotFound"))
+                        {
+                            node = node.GetOrCreateNodeWithName<Folder>("NotFound");
+                        }
+                        else if (
+                            message.StartsWith(Strings.RestoreTask_CheckingCompatibilityFor) ||
+                            message.StartsWith(Strings.RestoreTask_CheckingCompatibilityOfPackages) ||
+                            message.StartsWith(Strings.RestoreTask_AcquiringLockForTheInstallation) ||
+                            message.StartsWith(Strings.RestoreTask_AcquiredLockForTheInstallation) ||
+                            message.StartsWith(Strings.RestoreTask_CompletedInstallationOf) ||
+                            message.StartsWith(Strings.RestoreTask_ResolvingConflictsFor)
+                            )
+                        {
+                            return;
                         }
                     }
                 }

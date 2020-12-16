@@ -365,6 +365,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static string TotalAnalyzerExecutionTime => "Total analyzer execution time:";
 
+        /// <summary>
+        /// https://github.com/NuGet/Home/issues/10383
+        /// </summary>
+        public static string RestoreTask_CheckingCompatibilityFor = "Checking compatibility for";
+        public static string RestoreTask_CheckingCompatibilityOfPackages = "Checking compatibility of packages";
+        public static string RestoreTask_AcquiringLockForTheInstallation = "Acquiring lock for the installation";
+        public static string RestoreTask_AcquiredLockForTheInstallation = "Acquired lock for the installation";
+        public static string RestoreTask_CompletedInstallationOf = "Completed installation of";
+        public static string RestoreTask_ResolvingConflictsFor = "Resolving conflicts for";
+
         public static string Evaluation => "Evaluation";
         public static string Environment => "Environment";
         public static string Imports => "Imports";
