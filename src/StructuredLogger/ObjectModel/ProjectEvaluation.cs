@@ -23,5 +23,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         public override string ToString() => $"Project Name={Name} File={ProjectFile}";
+
+        public override string ToolTip
+        {
+            get
+            {
+                return GetTimeAndDurationText();
+            }
+        }
     }
 }

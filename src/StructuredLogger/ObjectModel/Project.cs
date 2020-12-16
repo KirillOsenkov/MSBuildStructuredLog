@@ -212,25 +212,29 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 sb.AppendLine(ProjectFile);
 
-                if (EntryTargets != null)
+                if (EntryTargets != null && EntryTargets.Any())
                 {
                     sb.AppendLine();
                     sb.AppendLine("Targets:");
-                    sb.AppendLine();
                     foreach (var target in EntryTargets.OrderBy(target => target, StringComparer.InvariantCultureIgnoreCase))
                     {
                         sb.AppendLine(target);
                     }
                 }
 
-                if (GlobalProperties != null)
+                if (GlobalProperties != null && GlobalProperties.Any())
                 {
+                    const int maxPropertiesToPrint = 5;
                     sb.AppendLine();
                     sb.AppendLine("Global Properties:");
-                    sb.AppendLine();
-                    foreach (var pair in GlobalProperties.OrderBy(pair => pair.Key, StringComparer.InvariantCultureIgnoreCase))
+                    foreach (var pair in GlobalProperties.OrderBy(pair => pair.Key, StringComparer.InvariantCultureIgnoreCase).Take(maxPropertiesToPrint))
                     {
-                        sb.AppendLine($"{pair.Key} = {pair.Value}");
+                        sb.AppendLine($"{pair.Key} = {TextUtilities.ShortenValue(pair.Value, "...", maxChars: 150)}");
+                    }
+
+                    if (GlobalProperties.Count > maxPropertiesToPrint)
+                    {
+                        sb.AppendLine("...");
                     }
                 }
 

@@ -253,7 +253,7 @@
       <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}"
                  Width="16" Height="16" Margin="2,2,6,2" StrokeThickness="0"
                  Fill="{StaticResource GenericProjectIcon}" />
-      <TextBlock Text="{Binding Name}" Margin="0,2,0,0" />
+      <TextBlock Text="{Binding Name}" Margin="0,2,0,0" ToolTip="{Binding ToolTip}" ToolTipService.ShowDuration="60000" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
       <DataTrigger Binding="{Binding IsLowRelevance}" Value="True">
