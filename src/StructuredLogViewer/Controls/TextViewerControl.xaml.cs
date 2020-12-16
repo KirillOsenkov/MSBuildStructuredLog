@@ -38,6 +38,7 @@ namespace StructuredLogViewer.Controls
             foldingManager = FoldingManager.Install(textEditor.TextArea);
 
             textArea.MouseRightButtonDown += TextAreaMouseRightButtonDown;
+            DataObject.AddSettingDataHandler(textArea, OnSettingData);
 
             var textView = textArea.TextView;
             textView.Options.HighlightCurrentLine = true;
@@ -77,6 +78,15 @@ namespace StructuredLogViewer.Controls
                         e.Handled = true;
                     }
                 };
+            }
+        }
+
+        private void OnSettingData(object sender, DataObjectSettingDataEventArgs e)
+        {
+            // disable copying HTML
+            if (e.Format == DataFormats.Html || e.Format == typeof(string).FullName)
+            {
+                e.CancelCommand();
             }
         }
 
