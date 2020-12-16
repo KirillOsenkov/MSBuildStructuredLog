@@ -488,6 +488,12 @@ namespace StructuredLogViewer
                     return true;
                 }
 
+                var projectEvaluation = result.Node.GetNearestParent<ProjectEvaluation>();
+                if (projectEvaluation != null && matcher.IsMatch(projectEvaluation) != null)
+                {
+                    return true;
+                }
+
                 return false;
             }
 
