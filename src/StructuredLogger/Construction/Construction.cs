@@ -443,16 +443,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                         projectEvaluation.Id = evaluationId;
                         projectEvaluation.NodeId = e.BuildEventContext.NodeId;
+                        projectEvaluation.StartTime = e.Timestamp;
+                        projectEvaluation.EndTime = e.Timestamp;
                     }
                     else if (e is ProjectEvaluationFinishedEventArgs projectEvaluationFinished)
                     {
                         var projectName = Intern(projectEvaluationFinished.ProjectFile);
+                        var evaluationId = projectEvaluationFinished.BuildEventContext.EvaluationId;
+                        var nodeName = Intern(GetEvaluationProjectName(evaluationId, projectName));
+                        var projectEvaluation = EvaluationFolder.GetOrCreateNodeWithName<ProjectEvaluation>(nodeName);
+                        projectEvaluation.EndTime = e.Timestamp;
+
                         var profilerResult = projectEvaluationFinished.ProfilerResult;
                         if (profilerResult != null && projectName != null)
                         {
-                            var evaluationId = projectEvaluationFinished.BuildEventContext.EvaluationId;
-                            var nodeName = Intern(GetEvaluationProjectName(evaluationId, projectName));
-                            var projectEvaluation = EvaluationFolder.GetOrCreateNodeWithName<ProjectEvaluation>(nodeName);
                             ConstructProfilerResult(projectEvaluation, profilerResult.Value);
                         }
                     }
