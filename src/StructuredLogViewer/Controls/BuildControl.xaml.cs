@@ -974,7 +974,7 @@ Recent:
             if (treeNode != null)
             {
                 centralTabControl.SelectedIndex = 1;
-                this.timeline.GoToTimeNode(treeNode);
+                this.timeline.GoToTimedNode(treeNode);
             }
         }
 

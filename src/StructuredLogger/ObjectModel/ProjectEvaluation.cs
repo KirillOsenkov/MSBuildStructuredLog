@@ -22,7 +22,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             set => SetFlag(NodeFlags.LowRelevance, value);
         }
 
-        public override string ToString() => $"Project Name={Name} File={ProjectFile}";
+        public override string ToString() => $"Evaluation Project={Name} File={ProjectFile}";
 
         public override string ToolTip
         {
