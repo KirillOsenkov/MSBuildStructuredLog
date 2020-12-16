@@ -84,6 +84,9 @@ namespace StructuredLogViewer
                 SetResource("Theme_Background", SystemColors.AppWorkspaceBrush);
                 SetResource("Theme_WhiteBackground", SystemColors.ControlBrush);
                 SetResource("Theme_ToolWindowBackground", SystemColors.ControlBrush);
+                SetResource("ImportStroke", Brushes.Sienna);
+                SetResource("NoImportStroke", GetBrush("#FF0000"));
+                SetResource("NoImportFill", Brushes.BlanchedAlmond);
             }
             else if (UseDarkTheme)
             {
@@ -107,6 +110,9 @@ namespace StructuredLogViewer
                 SetResource(SystemColors.MenuHighlightColorKey, LighterBackground);
                 SetResource(SystemColors.MenuTextColorKey, ControlText);
                 SetResource(SystemColors.MenuColorKey, Background);
+                SetResource("ImportStroke", GetBrush("#F08244"));
+                SetResource("NoImportStroke", GetBrush("#FFCCCC"));
+                SetResource("NoImportFill", GetBrush("#474138"));
                 return;
             }
             else
@@ -115,6 +121,9 @@ namespace StructuredLogViewer
                 SetResource("Theme_Background", new SolidColorBrush(Color.FromRgb(238, 238, 242)));
                 SetResource("Theme_WhiteBackground", Brushes.White);
                 SetResource("Theme_ToolWindowBackground", Brushes.WhiteSmoke);
+                SetResource("ImportStroke", Brushes.Sienna);
+                SetResource("NoImportStroke", GetBrush("#FF0000"));
+                SetResource("NoImportFill", Brushes.BlanchedAlmond);
             }
 
             SetResource(SystemColors.ControlBrushKey, SystemColors.ControlBrush);

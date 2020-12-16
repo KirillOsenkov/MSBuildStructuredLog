@@ -46,6 +46,7 @@
   <SolidColorBrush x:Key="MessageStroke" Color="LightGray" />
   <SolidColorBrush x:Key="ImportStroke" Color="Sienna" />
   <SolidColorBrush x:Key="NoImportStroke" Color="Red" />
+  <SolidColorBrush x:Key="NoImportFill" Color="BlanchedAlmond" />
   <SolidColorBrush x:Key="ErrorStroke" Color="Red" />
   <SolidColorBrush x:Key="WarningStroke" Color="Gold" />
   <SolidColorBrush x:Key="SearchResultStroke" Color="OrangeRed" />
@@ -458,7 +459,7 @@
   <HierarchicalDataTemplate DataType="{x:Type l:Import}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal" x:Name="importPanel">
-      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource ImportStroke}" Fill="{StaticResource ImportBrush}" />
+      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{DynamicResource ImportStroke}" Fill="{StaticResource ImportBrush}" />
       <TextBlock x:Name="label" Text="Import" Margin="0,0,6,0" />
       <TextBlock x:Name="name" Text="{Binding Name}" />
       <TextBlock x:Name="location" Text="{Binding Location}" />
@@ -468,7 +469,7 @@
         <Setter TargetName="importPanel" Property="Opacity" Value="0.25" />
       </DataTrigger>
       <DataTrigger Binding="{Binding IsSelected}" Value="False">
-        <Setter TargetName="label" Property="Foreground" Value="{StaticResource ImportStroke}" />
+        <Setter TargetName="label" Property="Foreground" Value="{DynamicResource ImportStroke}" />
       </DataTrigger>
     </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
@@ -476,7 +477,7 @@
   <HierarchicalDataTemplate DataType="{x:Type l:NoImport}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal" x:Name="importPanel">
-      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource NoImportStroke}" Fill="{StaticResource NoImportBrush}" />
+      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{DynamicResource NoImportStroke}" Fill="{DynamicResource NoImportBrush}" />
       <TextBlock x:Name="label" Text="NoImport" Margin="0,0,6,0" />
       <TextBlock x:Name="name" Text="{Binding Name}" />
       <TextBlock x:Name="location" Text="{Binding Location}" Margin="0,0,6,0" />
@@ -487,8 +488,8 @@
         <Setter TargetName="importPanel" Property="Opacity" Value="0.3" />
       </DataTrigger>
       <DataTrigger Binding="{Binding IsSelected}" Value="False">
-        <Setter TargetName="label" Property="Foreground" Value="{StaticResource NoImportStroke}" />
-        <Setter TargetName="reason" Property="Background" Value="BlanchedAlmond" />
+        <Setter TargetName="label" Property="Foreground" Value="{DynamicResource NoImportStroke}" />
+        <Setter TargetName="reason" Property="Background" Value="{DynamicResource NoImportFill}" />
       </DataTrigger>
     </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
@@ -625,12 +626,12 @@
         <Setter TargetName="icon" Property="Fill" Value="{StaticResource WarningBrush}" />
       </DataTrigger>
       <DataTrigger Binding="{Binding OriginalType}" Value="Import">
-        <Setter TargetName="icon" Property="Stroke" Value="{StaticResource ImportStroke}" />
-        <Setter TargetName="icon" Property="Fill" Value="{StaticResource ImportBrush}" />
+        <Setter TargetName="icon" Property="Stroke" Value="{DynamicResource ImportStroke}" />
+        <Setter TargetName="icon" Property="Fill" Value="{DynamicResource ImportBrush}" />
       </DataTrigger>
       <DataTrigger Binding="{Binding OriginalType}" Value="NoImport">
-        <Setter TargetName="icon" Property="Stroke" Value="{StaticResource NoImportStroke}" />
-        <Setter TargetName="icon" Property="Fill" Value="{StaticResource NoImportBrush}" />
+        <Setter TargetName="icon" Property="Stroke" Value="{DynamicResource NoImportStroke}" />
+        <Setter TargetName="icon" Property="Fill" Value="{DynamicResource NoImportBrush}" />
       </DataTrigger>
       <DataTrigger Binding="{Binding ProjectExtension}" Value=".sln">
         <Setter TargetName="icon" Property="Fill" Value="{StaticResource SlnIcon}" />

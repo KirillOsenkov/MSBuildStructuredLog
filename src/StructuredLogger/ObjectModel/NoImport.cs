@@ -9,7 +9,7 @@
 
         public NoImport()
         {
-            IsLowRelevance = true;
+            //IsLowRelevance = true;
         }
 
         public override string TypeName => nameof(NoImport);
