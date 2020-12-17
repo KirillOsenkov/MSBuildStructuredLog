@@ -1,6 +1,7 @@
 {
   "en-US": {
     "OutputItemParameterMessagePrefix": "Output Item(s): ",
+    "General.ProjectUndefineProperties": "Removing Properties for project \"{0}\":",
     "ProjectImportSkippedEmptyFile": "Project \"{0}\" was not imported by \"{1}\" at ({2},{3}), due to the file being empty.",
     "TaskFound": "Using \"{0}\" task from assembly \"{1}\".",
     "ToolsVersionInEffectForBuild": "Building with tools version \"{0}\".",
@@ -45,6 +46,7 @@
   },
   "de-DE": {
     "OutputItemParameterMessagePrefix": "Ausgegebene Elemente: ",
+    "General.ProjectUndefineProperties": "Eigenschaften für Projekt \"{0}\" werden entfernt:",
     "ProjectImportSkippedEmptyFile": "Das Projekt \"{0}\" wurde von \"{1}\" nicht in ({2},{3}) importiert, da die Datei leer war.",
     "TaskFound": "Die {0}-Aufgabe aus der {1}-Assembly wird verwendet.",
     "ToolsVersionInEffectForBuild": "Erstellung mit der Toolsversion \"{0}\".",
@@ -89,6 +91,7 @@
   },
   "it-IT": {
     "OutputItemParameterMessagePrefix": "Elementi di output: ",
+    "General.ProjectUndefineProperties": "Rimozione delle proprietà per il progetto \"{0}\":",
     "ProjectImportSkippedEmptyFile": "Il progetto \"{0}\" non è stato importato da \"{1}\" a ({2},{3}) perché il file è vuoto.",
     "TaskFound": "Verrà usata l'attività \"{0}\" dall'assembly \"{1}\".",
     "ToolsVersionInEffectForBuild": "Compilazione con la versione degli strumenti \"{0}\".",
@@ -133,6 +136,7 @@
   },
   "es-ES": {
     "OutputItemParameterMessagePrefix": "Elementos de salida: ",
+    "General.ProjectUndefineProperties": "Quitando propiedades del proyecto \"{0}\":",
     "ProjectImportSkippedEmptyFile": "\"{1}\" no importó el proyecto \"{0}\" en ({2},{3}) porque el archivo estaba vacío.",
     "TaskFound": "Usando la tarea \"{0}\" del ensamblado \"{1}\".",
     "ToolsVersionInEffectForBuild": "Compilando con la versión de herramientas \"{0}\".",
@@ -177,6 +181,7 @@
   },
   "fr-FR": {
     "OutputItemParameterMessagePrefix": "Élément(s) en sortie : ",
+    "General.ProjectUndefineProperties": "Suppression des propriétés du projet \"{0}\" :",
     "ProjectImportSkippedEmptyFile": "Le projet \"{0}\" n’a pas été importé par \"{1}\" sur ({2},{3}), car le fichier est vide.",
     "TaskFound": "Utilisation de la tâche \"{0}\" à partir de l'assembly \"{1}\".",
     "ToolsVersionInEffectForBuild": "Génération à l'aide des outils version \"{0}\".",
@@ -221,6 +226,7 @@
   },
   "cs-CZ": {
     "OutputItemParameterMessagePrefix": "Výstupní položky: ",
+    "General.ProjectUndefineProperties": "Odstraňování vlastností projektu {0}:",
     "ProjectImportSkippedEmptyFile": "{1} neimportoval projekt {0} v ({2},{3}), protože soubor je prázdný.",
     "TaskFound": "Probíhá použití úlohy {0} ze sestavení {1}.",
     "ToolsVersionInEffectForBuild": "Probíhá sestavení s verzí nástrojů {0}.",
@@ -265,6 +271,7 @@
   },
   "ja-JP": {
     "OutputItemParameterMessagePrefix": "出力項目: ",
+    "General.ProjectUndefineProperties": "プロジェクト \"{0}\" のプロパティの削除:",
     "ProjectImportSkippedEmptyFile": "ファイルが空であるため、プロジェクト \"{0}\" は \"{1}\" によって ({2},{3}) でインポートされませんでした。",
     "TaskFound": "\"{0}\" タスクをアセンブリ \"{1}\" から使用しています。",
     "ToolsVersionInEffectForBuild": "ツール バージョン \"{0}\" でビルドしています。",
@@ -309,6 +316,7 @@
   },
   "ko-KR": {
     "OutputItemParameterMessagePrefix": "출력 항목: ",
+    "General.ProjectUndefineProperties": "\"{0}\" 프로젝트에 대한 속성 제거:",
     "ProjectImportSkippedEmptyFile": "파일이 비어 있어 ({2},{3})의 \"{1}\"이(가) \"{0}\" 프로젝트를 가져오지 않았습니다.",
     "TaskFound": "\"{1}\" 어셈블리에서 \"{0}\" 작업을 사용합니다.",
     "ToolsVersionInEffectForBuild": "도구 버전 \"{0}\"(을)를 사용하여 빌드하고 있습니다.",
@@ -353,6 +361,7 @@
   },
   "ru-RU": {
     "OutputItemParameterMessagePrefix": "Выходных элементов: ",
+    "General.ProjectUndefineProperties": "Удаление свойств для проекта \"{0}\":",
     "ProjectImportSkippedEmptyFile": "Проект \"{0}\" не был импортирован \"{1}\" в ({2},{3}), так как файл пуст.",
     "TaskFound": "Используется задача \"{0}\" из сборки \"{1}\".",
     "ToolsVersionInEffectForBuild": "Сборка с инструментами версии \"{0}\".",
@@ -397,6 +406,7 @@
   },
   "pl-PL": {
     "OutputItemParameterMessagePrefix": "Elementy wyjściowe: ",
+    "General.ProjectUndefineProperties": "Usuwanie właściwości projektu {0}:",
     "ProjectImportSkippedEmptyFile": "Projekt „{0}” nie został zaimportowany przez projekt „{1}” o ({2},{3}), ponieważ plik był pusty.",
     "TaskFound": "Używanie zadania „{0}” z zestawu „{1}”.",
     "ToolsVersionInEffectForBuild": "Kompilowanie przy użyciu wersji narzędzi „{0}”.",
@@ -441,6 +451,7 @@
   },
   "pt-BR": {
     "OutputItemParameterMessagePrefix": "Itens de Saída(s): ",
+    "General.ProjectUndefineProperties": "Removendo Propriedades do projeto \"{0}\":",
     "ProjectImportSkippedEmptyFile": "O projeto \"{0}\" não foi importado por \"{1}\" em ({2},{3}), devido ao arquivo estar vazio.",
     "TaskFound": "Usando a tarefa \"{0}\" do assembly \"{1}\".",
     "ToolsVersionInEffectForBuild": "Compilando com a versão das ferramentas \"{0}\".",
@@ -485,6 +496,7 @@
   },
   "tr-TR": {
     "OutputItemParameterMessagePrefix": "Çıkış Öğeleri: ",
+    "General.ProjectUndefineProperties": "\"{0}\" projesinin Özellikleri kaldırılıyor:",
     "ProjectImportSkippedEmptyFile": "\"{0}\" adlı proje, dosyanın boş olması nedeniyle ({2},{3}) konumundaki \"{1}\" tarafından içeri aktarılmadı.",
     "TaskFound": "\"{1}\" derlemesindeki \"{0}\" görevi kullanılıyor.",
     "ToolsVersionInEffectForBuild": "Araçlar sürümü \"{0}\" ile oluşturuluyor.",
@@ -529,6 +541,7 @@
   },
   "zh-Hans": {
     "OutputItemParameterMessagePrefix": "输出项: ",
+    "General.ProjectUndefineProperties": "移除项目“{0}”的属性:",
     "ProjectImportSkippedEmptyFile": "由于文件为空，项目“{0}”不由 ({2}、{3}) 处的“{1}”导入。",
     "TaskFound": "正在使用程序集“{1}”中的“{0}”任务。",
     "ToolsVersionInEffectForBuild": "正在使用工具版本“{0}”进行生成。",

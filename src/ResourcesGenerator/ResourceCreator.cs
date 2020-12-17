@@ -40,6 +40,7 @@ namespace ResourcesGenerator
             "General.AdditionalProperties",
             "General.OverridingProperties",
             "General.UndefineProperties",
+            "General.ProjectUndefineProperties",
             "Copy.FileComment",
             "Copy.HardLinkComment",
             "Copy.DidNotCopyBecauseOfFileMatch",
