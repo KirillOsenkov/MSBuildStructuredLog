@@ -277,6 +277,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
         private static string[] nodeKinds = new[]
         {
             "$project",
+            "$projectevaluation",
             "$target",
             "$task",
             "$error",
@@ -297,7 +298,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
         {
             string watermarkText1 = @"Type in the search box to search. Press Ctrl+F to focus the search box. Results (up to 1000) will display here.
 
-Search for multiple words separated by space (space means AND). Enclose multiple words in double-quotes """" to search for the exact phrase.
+Search for multiple words separated by space (space means AND). Enclose multiple words in double-quotes """" to search for the exact phrase. Enclose a single word in quotes to search for exact match (turns off substring search).
 
 Use syntax like '$property Prop' to narrow results down by item kind. Supported kinds: ";
 
