@@ -419,7 +419,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     var targetName = stringTable.Intern(TextUtilities.ParseQuotedSubstring(message));
                     if (targetName != null)
                     {
-                        node = project.GetOrAddTargetByName(targetName, args.Timestamp);
+                        var skippedTarget = project.GetOrAddTargetByName(targetName, args.Timestamp);
+                        skippedTarget.StartTime = args.Timestamp;
+                        skippedTarget.EndTime = args.Timestamp;
+                        node = skippedTarget;
                         messageNode.IsLowRelevance = true;
                     }
                 }
