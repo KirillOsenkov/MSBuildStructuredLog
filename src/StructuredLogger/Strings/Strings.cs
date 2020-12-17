@@ -63,6 +63,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 .Replace("{2}", @".*?")
                 );
 
+            TaskSkippedFalseCondition = new Regex(ResourceSet.GetString("TaskSkippedFalseCondition")
+                .Replace("{0}", @".*?")
+                .Replace("{1}", @".*?")
+                .Replace("{2}", @".*?")
+                );
+
             TargetDoesNotExistBeforeTargetMessage = new Regex(ResourceSet.GetString("TargetDoesNotExistBeforeTargetMessage")
                 .Replace("{0}", @".*?")
                 .Replace("{1}", @".*?")
@@ -84,12 +90,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                .Replace("{2}", ".*?")
                .Replace("{3}", ".*?")
                );
-
-            string taskSkipped = ResourceSet.GetString("TaskSkippedFalseCondition")
-                .Replace("{0}", ".*?")
-                .Replace("{1}", ".*?")
-                .Replace("{2}", ".*?");
-            IsTaskSkipped = new Regex(taskSkipped);
 
             string importProject = ResourceSet.GetString("ProjectImported")
                 .Replace("{0}", @"(?<ImportedProject>[^\""]+)")
@@ -191,7 +191,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static Regex ProjectImported { get; set; }
         public static Regex BuildingWithToolsVersionPrefix { get; set; }
         public static Regex ForSearchPathPrefix { get; set; }
-        public static Regex IsTaskSkipped { get; set; }
         public static Regex ProjectImportSkippedMissingFile { get; set; }
         public static Regex ProjectImportSkippedInvalidFile { get; set; }
         public static Regex ProjectImportSkippedEmptyFile { get; set; }
@@ -216,6 +215,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static Regex TargetDoesNotExistBeforeTargetMessage { get; set; }
         public static Regex TargetAlreadyCompleteSuccess { get; set; }
         public static Regex TargetSkippedFalseCondition { get; set; }
+        public static Regex TaskSkippedFalseCondition { get; set; }
         public static Regex TargetAlreadyCompleteFailure { get; set; }
         public static Regex TargetSkippedWhenSkipNonexistentTargets { get; set; }
         public static Regex TaskFoundFromFactory { get; set; }

@@ -404,7 +404,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     .GetOrAddProject(args.BuildEventContext.ProjectContextId)
                     .GetTargetById(args.BuildEventContext.TargetId);
 
-                if (Strings.IsTaskSkipped.Match(message).Success)
+                if (Strings.TaskSkippedFalseCondition.Match(message).Success)
                 {
                     messageNode.IsLowRelevance = true;
                 }
