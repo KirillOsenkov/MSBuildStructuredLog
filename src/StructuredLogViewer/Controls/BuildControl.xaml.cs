@@ -52,6 +52,7 @@ namespace StructuredLogViewer.Controls
         private MenuItem copyAllItem;
         private MenuItem showTimeItem;
         private ContextMenu sharedTreeContextMenu;
+        private ContextMenu filesTreeContextMenu;
 
         public TreeView ActiveTreeView;
 
@@ -94,6 +95,14 @@ namespace StructuredLogViewer.Controls
             copyAllItem = new MenuItem() { Header = "Copy All" };
             copyAllItem.Click += (s, a) => CopyAll();
             sharedTreeContextMenu.Items.Add(copyAllItem);
+
+            filesTreeContextMenu = new ContextMenu();
+            var filesCopyAll = new MenuItem { Header = "Copy All" };
+            filesCopyAll.Click += (s, a) => CopyAll(filesTree.ResultsList);
+            var filesCopyPaths = new MenuItem { Header = "Copy file paths" };
+            filesCopyPaths.Click += (s, a) => CopyPaths(filesTree.ResultsList);
+            filesTreeContextMenu.Items.Add(filesCopyAll);
+            filesTreeContextMenu.Items.Add(filesCopyPaths);
 
             var contextMenu = new ContextMenu();
             contextMenu.Opened += ContextMenu_Opened;
@@ -609,7 +618,7 @@ Recent:
 
             filesTree.DisplayItems(root.Children);
             filesTree.GotFocus += (s, a) => ActiveTreeView = filesTree.ResultsList;
-            filesTree.ContextMenu = sharedTreeContextMenu;
+            filesTree.ContextMenu = filesTreeContextMenu;
         }
 
         private SourceFile AddSourceFile(Folder folder, string filePath)
@@ -1036,9 +1045,9 @@ Recent:
             }
         }
 
-        private void CopyAll()
+        private void CopyAll(TreeView tree = null)
         {
-            var tree = ActiveTreeView;
+            tree = tree ?? ActiveTreeView;
             if (tree == null)
             {
                 return;
@@ -1053,6 +1062,29 @@ Recent:
                 {
                     sb.AppendLine();
                 }
+            }
+
+            CopyToClipboard(sb.ToString());
+        }
+
+        private void CopyPaths(TreeView tree = null)
+        {
+            tree = tree ?? ActiveTreeView;
+            if (tree == null)
+            {
+                return;
+            }
+
+            var sb = new StringBuilder();
+            foreach (var item in tree.Items.OfType<TreeNode>())
+            {
+                item.VisitAllChildren<BaseNode>(s =>
+                {
+                    if (s is SourceFile file && !string.IsNullOrEmpty(file.SourceFilePath))
+                    {
+                        sb.AppendLine(file.SourceFilePath);
+                    }
+                });
             }
 
             CopyToClipboard(sb.ToString());
