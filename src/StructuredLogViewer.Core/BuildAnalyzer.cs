@@ -111,7 +111,23 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (folder.Name == "Evaluation")
                 {
                     ImportTreeAnalyzer.Analyze(folder, build.StringTable);
+
+                    AnalyzeEvaluation(folder);
                 }
+            }
+        }
+
+        private void AnalyzeEvaluation(NamedNode folder)
+        {
+            foreach (var projectEvaluation in folder.Children.OfType<ProjectEvaluation>())
+            {
+                var properties = projectEvaluation.FindChild<NamedNode>(Strings.Properties);
+                if (properties == null)
+                {
+                    continue;
+                }
+
+                properties.SortChildren();
             }
         }
 
