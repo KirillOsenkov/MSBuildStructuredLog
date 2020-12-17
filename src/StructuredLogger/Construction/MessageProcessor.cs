@@ -338,7 +338,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         }
 
                         node = node.FindLastChild<Folder>();
-                        if (message[0] == ' ' && message[1] == ' ')
+                        if (message.Length > 2 && message[0] == ' ' && message[1] == ' ')
                         {
                             message = message.Substring(2);
                         }
