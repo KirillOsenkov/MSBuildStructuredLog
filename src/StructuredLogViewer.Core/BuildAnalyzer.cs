@@ -214,6 +214,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (!string.IsNullOrEmpty(task.FromAssembly))
             {
                 task.AddChildAtBeginning(new Property { Name = "Assembly", Value = task.FromAssembly });
+                build.RegisterTask(task);
             }
 
             taskDurations.TryGetValue(task.Name, out var duration);

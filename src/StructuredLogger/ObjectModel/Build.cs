@@ -1,4 +1,6 @@
-﻿using System.Threading;
+using System;
+using System.Collections.Generic;
+using System.Threading;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -16,6 +18,25 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public byte[] SourceFilesArchive { get; set; }
 
         public BuildStatistics Statistics { get; set; } = new BuildStatistics();
+
+        public Dictionary<string, HashSet<string>> TaskAssemblies { get; } = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
+
+        public void RegisterTask(Task task)
+        {
+            if (task.FromAssembly is string assemblyPath)
+            {
+                lock (TaskAssemblies)
+                {
+                    if (!TaskAssemblies.TryGetValue(assemblyPath, out var bucket))
+                    {
+                        bucket = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                        TaskAssemblies[assemblyPath] = bucket;
+                    }
+
+                    bucket.Add(task.Name);
+                }
+            }
+        }
 
         public override string TypeName => nameof(Build);
 

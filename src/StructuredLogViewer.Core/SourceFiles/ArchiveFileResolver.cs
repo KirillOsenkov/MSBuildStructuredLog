@@ -51,7 +51,7 @@ namespace StructuredLogViewer
             }
         }
 
-        private static string CalculateArchivePath(string filePath)
+        public static string CalculateArchivePath(string filePath)
         {
             string archivePath = filePath;
 

@@ -258,6 +258,23 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                     {
                         file.IsVisible = false;
                     }
+
+                    var subItems = file.Children.OfType<NamedNode>();
+                    var fileVisibility = UpdateFileVisibility(subItems, text);
+                    file.IsVisible |= fileVisibility;
+                    visible |= fileVisibility;
+                }
+                else if (item is Target || item is Task)
+                {
+                    if (string.IsNullOrEmpty(text) || item.Name.IndexOf(text, StringComparison.OrdinalIgnoreCase) > -1)
+                    {
+                        visible = true;
+                        item.IsVisible = true;
+                    }
+                    else
+                    {
+                        item.IsVisible = false;
+                    }
                 }
             }
 
@@ -567,8 +584,21 @@ Recent:
 
             foreach (var file in archiveFile.Files.OrderBy(kvp => kvp.Key, StringComparer.OrdinalIgnoreCase))
             {
-                var parts = file.Key.Split('\\');
-                AddSourceFile(root, file.Key, parts, 0);
+                AddSourceFile(root, file.Key);
+            }
+
+            foreach (var taskAssembly in Build.TaskAssemblies)
+            {
+                var filePath = ArchiveFileResolver.CalculateArchivePath(taskAssembly.Key);
+                var sourceFile = AddSourceFile(root, filePath);
+                foreach (var taskName in taskAssembly.Value.OrderBy(s => s))
+                {
+                    var task = new Task
+                    {
+                        Name = taskName
+                    };
+                    sourceFile.AddChild(task);
+                }
             }
 
             foreach (var subFolder in root.Children.OfType<Folder>())
@@ -579,6 +609,12 @@ Recent:
             filesTree.DisplayItems(root.Children);
             filesTree.GotFocus += (s, a) => ActiveTreeView = filesTree.ResultsList;
             filesTree.ContextMenu = sharedTreeContextMenu;
+        }
+
+        private SourceFile AddSourceFile(Folder folder, string filePath)
+        {
+            var parts = filePath.Split('\\', '/');
+            return AddSourceFile(folder, filePath, parts, 0);
         }
 
         private void CompressTree(Folder parent)
@@ -605,7 +641,7 @@ Recent:
             }
         }
 
-        private void AddSourceFile(Folder folder, string filePath, string[] parts, int index)
+        private SourceFile AddSourceFile(Folder folder, string filePath, string[] parts, int index)
         {
             if (index == parts.Length - 1)
             {
@@ -617,7 +653,7 @@ Recent:
 
                 foreach (var target in GetTargets(filePath))
                 {
-                    file.Children.Add(new Target()
+                    file.AddChild(new Target()
                     {
                         Name = target,
                         SourceFilePath = filePath
@@ -625,12 +661,13 @@ Recent:
                 }
 
                 folder.AddChild(file);
+                return file;
             }
             else
             {
                 var subfolder = folder.GetOrCreateNodeWithName<Folder>(parts[index]);
                 subfolder.IsExpanded = true;
-                AddSourceFile(subfolder, filePath, parts, index + 1);
+                return AddSourceFile(subfolder, filePath, parts, index + 1);
             }
         }
 

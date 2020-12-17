@@ -465,8 +465,21 @@ Recent:
 
             foreach (var file in archiveFile.Files.OrderBy(kvp => kvp.Key, StringComparer.OrdinalIgnoreCase))
             {
-                var parts = file.Key.Split('\\');
-                AddSourceFile(root, file.Key, parts, 0);
+                AddSourceFile(root, file.Key);
+            }
+
+            foreach (var taskAssembly in Build.TaskAssemblies)
+            {
+                var filePath = ArchiveFileResolver.CalculateArchivePath(taskAssembly.Key);
+                var sourceFile = AddSourceFile(root, filePath);
+                foreach (var taskName in taskAssembly.Value.OrderBy(s => s))
+                {
+                    var task = new Task
+                    {
+                        Name = taskName
+                    };
+                    sourceFile.AddChild(task);
+                }
             }
 
             foreach (var subFolder in root.Children.OfType<Folder>())
@@ -503,7 +516,13 @@ Recent:
             }
         }
 
-        private void AddSourceFile(Folder folder, string filePath, string[] parts, int index)
+        private SourceFile AddSourceFile(Folder folder, string filePath)
+        {
+            var parts = filePath.Split('\\', '/');
+            return AddSourceFile(folder, filePath, parts, 0);
+        }
+
+        private SourceFile AddSourceFile(Folder folder, string filePath, string[] parts, int index)
         {
             if (index == parts.Length - 1)
             {
@@ -513,12 +532,13 @@ Recent:
                     Name = parts[index]
                 };
                 folder.AddChild(file);
+                return file;
             }
             else
             {
                 var subfolder = folder.GetOrCreateNodeWithName<Folder>(parts[index]);
                 subfolder.IsExpanded = true;
-                AddSourceFile(subfolder, filePath, parts, index + 1);
+                return AddSourceFile(subfolder, filePath, parts, index + 1);
             }
         }
 
