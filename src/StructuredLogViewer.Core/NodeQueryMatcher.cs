@@ -7,10 +7,22 @@ using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogViewer
 {
+    public struct Term
+    {
+        public string Word;
+        public bool Quotes;
+
+        public Term(string word, bool quotes = false)
+        {
+            Word = word;
+            Quotes = quotes;
+        }
+    }
+
     public class NodeQueryMatcher
     {
         public string Query { get; private set; }
-        public List<string> Words { get; private set; }
+        public List<Term> Words { get; private set; }
         public string TypeKeyword { get; private set; }
         public int NodeIndex { get; private set; } = -1;
         private HashSet<string>[] MatchesInStrings { get; set; }
@@ -37,10 +49,23 @@ namespace StructuredLogViewer
 
             this.Query = query;
 
-            this.Words = ParseIntoWords(query);
+            var rawWords = ParseIntoWords(query);
+            this.Words = new List<Term>(rawWords.Count);
+            foreach (var rawWord in rawWords)
+            {
+                var trimmed = TrimQuotes(rawWord);
+                if (trimmed == rawWord)
+                {
+                    Words.Add(new Term(rawWord));
+                }
+                else if (!string.IsNullOrWhiteSpace(trimmed))
+                {
+                    Words.Add(new Term(trimmed, quotes: true));
+                }
+            }
 
             if (Words.Count == 1 &&
-                Words[0] is string potentialNodeIndex &&
+                Words[0].Word is string potentialNodeIndex &&
                 potentialNodeIndex.Length > 1 &&
                 potentialNodeIndex[0] == '$')
             {
@@ -55,7 +80,7 @@ namespace StructuredLogViewer
 
             for (int i = Words.Count - 1; i >= 0; i--)
             {
-                var word = Words[i];
+                var word = Words[i].Word;
 
                 if (word == "$time" || word == "$duration")
                 {
@@ -116,7 +141,7 @@ namespace StructuredLogViewer
                 {
                     word = word.Substring(5, word.Length - 5);
                     Words.RemoveAt(i);
-                    Words.Insert(i, word);
+                    Words.Insert(i, new Term(word));
                     nameToSearch = word;
                     continue;
                 }
@@ -125,7 +150,7 @@ namespace StructuredLogViewer
                 {
                     word = word.Substring(6, word.Length - 6);
                     Words.RemoveAt(i);
-                    Words.Insert(i, word);
+                    Words.Insert(i, new Term(word));
                     valueToSearch = word;
                     continue;
                 }
@@ -188,7 +213,13 @@ namespace StructuredLogViewer
             {
                 for (int i = 0; i < Words.Count; i++)
                 {
-                    var word = Words[i];
+                    var term = Words[i];
+                    if (term.Quotes)
+                    {
+                        continue;
+                    }
+
+                    var word = term.Word;
                     if (stringInstance.IndexOf(word, StringComparison.OrdinalIgnoreCase) != -1)
                     {
                         var matches = MatchesInStrings[i];
@@ -218,7 +249,7 @@ namespace StructuredLogViewer
                 switch (c)
                 {
                     case ' ' when !isInParentheses && !isInQuotes:
-                        var wordToAdd = TrimQuotes(currentWord.ToString());
+                        var wordToAdd = currentWord.ToString();
                         if (!string.IsNullOrWhiteSpace(wordToAdd))
                         {
                             result.Add(wordToAdd);
@@ -244,7 +275,7 @@ namespace StructuredLogViewer
                 }
             }
 
-            var word = TrimQuotes(currentWord.ToString());
+            var word = currentWord.ToString();
             if (!string.IsNullOrWhiteSpace(word))
             {
                 result.Add(word);
@@ -382,16 +413,27 @@ namespace StructuredLogViewer
             for (int i = 0; i < Words.Count; i++)
             {
                 bool anyFieldMatched = false;
-                var word = Words[i];
+                var term = Words[i];
+                var word = term.Word;
 
                 for (int j = 0; j < searchFields.Count; j++)
                 {
                     var field = searchFields[j];
 
-                    if (!MatchesInStrings[i].Contains(field))
+                    if (term.Quotes)
                     {
-                        // no point looking here, we know this string doesn't match anything
-                        continue;
+                        if (!string.Equals(field, word, StringComparison.OrdinalIgnoreCase))
+                        {
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        if (!MatchesInStrings[i].Contains(field))
+                        {
+                            // no point looking here, we know this string doesn't match anything
+                            continue;
+                        }
                     }
 
                     if (result == null)
