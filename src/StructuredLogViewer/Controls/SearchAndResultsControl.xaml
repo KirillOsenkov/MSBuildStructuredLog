@@ -41,7 +41,7 @@
                 BorderThickness="0"
                 Background="{DynamicResource Theme_ToolWindowBackground}"
                 local:ScrollViewerHelper.ShiftWheelScrollsHorizontally="True" />
-      <ScrollViewer 
+      <ScrollViewer x:Name="watermarkScrollViewer"
           HorizontalScrollBarVisibility="Disabled" 
           VerticalScrollBarVisibility="Auto">
         <ContentPresenter x:Name="watermark"
