@@ -541,6 +541,7 @@ Recent:
             Visibility canRun = Build?.LogFilePath != null && node is Task ? Visibility.Visible : Visibility.Collapsed;
             runItem.Visibility = canRun;
             debugItem.Visibility = canRun;
+            hideItem.Visibility = node is TreeNode ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private object FindInFiles(string searchText, int maxResults, CancellationToken cancellationToken)
