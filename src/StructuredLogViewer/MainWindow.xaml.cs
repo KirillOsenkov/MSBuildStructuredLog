@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Net.Http;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -178,6 +179,11 @@ namespace StructuredLogViewer
                     if (text.Contains("Update.exe not found"))
                     {
                         text = "Update.exe not found; app will not update.";
+                    }
+
+                    if (ex is HttpRequestException)
+                    {
+                        text = "Unable to update the app (no internet connection?)";
                     }
 
                     welcomeScreen.Message = text;
