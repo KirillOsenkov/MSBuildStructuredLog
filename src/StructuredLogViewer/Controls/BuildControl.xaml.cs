@@ -91,6 +91,11 @@ namespace StructuredLogViewer.Controls
                 sourceFileResolver = new SourceFileResolver(logFilePath);
             }
 
+            if (Build.Statistics.TimedNodeCount > 1000)
+            {
+                projectGraphTab.Visibility = Visibility.Collapsed;
+            }
+
             sharedTreeContextMenu = new ContextMenu();
             copyAllItem = new MenuItem() { Header = "Copy All" };
             copyAllItem.Click += (s, a) => CopyAll();
@@ -220,13 +225,23 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             preprocessedFileManager.DisplayFile += filePath => DisplayFile(filePath);
 
             centralTabControl.SelectionChanged += CentralTabControl_SelectionChanged;
-
-            PopulateTimeline();
         }
 
         private void CentralTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            PopulateProjectGraph();
+            var selectedItem = centralTabControl.SelectedItem as TabItem;
+            if (selectedItem == null)
+            {
+                return;
+            }
+            else if (selectedItem.Name == nameof(timelineTab))
+            {
+                PopulateTimeline();
+            }
+            else if (selectedItem.Name == nameof(projectGraphTab))
+            {
+                PopulateProjectGraph();
+            }
         }
 
         private void FilesTree_SearchTextChanged(string text)
@@ -272,8 +287,8 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                     var fileVisibility = UpdateFileVisibility(subItems, text);
                     file.IsVisible |= fileVisibility;
                     visible |= fileVisibility;
-                }
-                else if (item is Target || item is Task)
+    }
+    else if (item is Target || item is Task)
                 {
                     if (string.IsNullOrEmpty(text) || item.Name.IndexOf(text, StringComparison.OrdinalIgnoreCase) > -1)
                     {
@@ -302,6 +317,8 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                 var timeline = new Timeline(Build);
                 this.timeline.BuildControl = this;
                 this.timeline.SetTimeline(timeline);
+                this.timelineWatermark.Visibility = Visibility.Hidden;
+                this.timeline.Visibility = Visibility.Visible;
             }
         }
 
@@ -325,6 +342,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             }
 
             projectGraphControl.SetGraph(graph);
+            projectGraphControl.Visibility = Visibility.Visible;
         }
 
         private static string[] searchExamples = new[]

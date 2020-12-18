@@ -49,12 +49,21 @@
                 </TabItem>
 
                 <TabItem x:Name="timelineTab" Header="Timeline">
-                  <local:TimelineControl x:Name="timeline"
-                                         structuredLogViewer:ScrollViewerHelper.ShiftWheelScrollsHorizontally="True" />
+                  <Grid>
+                    <TextBlock x:Name="timelineWatermark" HorizontalAlignment="Center"
+                               VerticalAlignment="Center">Rendering timeline...</TextBlock>
+                    <local:TimelineControl x:Name="timeline"
+                                           Visibility="Hidden"
+                                           structuredLogViewer:ScrollViewerHelper.ShiftWheelScrollsHorizontally="True" />
+                  </Grid>
                 </TabItem>
                 
                 <TabItem x:Name="projectGraphTab" Header="Project Graph">
-                    <local:ProjectGraphControl x:Name="projectGraphControl" />
+                  <Grid>
+                    <TextBlock HorizontalAlignment="Center"
+                               VerticalAlignment="Center">Rendering graph...</TextBlock>
+                    <local:ProjectGraphControl x:Name="projectGraphControl" Visibility="Hidden"/>
+                  </Grid>
                 </TabItem>
               </TabControl>
             </local:SplitterPanel.FirstChild>

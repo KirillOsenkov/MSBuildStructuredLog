@@ -53,11 +53,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     index++;
                 }
             });
+
+            build.Statistics.TimedNodeCount = index;
         }
 
         private void Analyze()
         {
             Visit(build);
+            build.Statistics.TimedNodeCount = index;
             foreach (var property in typeof(Strings)
                 .GetProperties()
                 .Where(p => p.PropertyType == typeof(string))
