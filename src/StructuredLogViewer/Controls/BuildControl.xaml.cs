@@ -343,6 +343,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
             projectGraphControl.SetGraph(graph);
             projectGraphControl.Visibility = Visibility.Visible;
+            projectGraphWatermark.Visibility = Visibility.Collapsed;
         }
 
         private static string[] searchExamples = new[]

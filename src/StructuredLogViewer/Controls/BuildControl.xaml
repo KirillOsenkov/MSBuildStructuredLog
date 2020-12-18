@@ -60,7 +60,7 @@
                 
                 <TabItem x:Name="projectGraphTab" Header="Project Graph">
                   <Grid>
-                    <TextBlock HorizontalAlignment="Center"
+                    <TextBlock x:Name="projectGraphWatermark" HorizontalAlignment="Center"
                                VerticalAlignment="Center">Rendering graph...</TextBlock>
                     <local:ProjectGraphControl x:Name="projectGraphControl" Visibility="Hidden"/>
                   </Grid>
