@@ -42,14 +42,17 @@ namespace StructuredLogViewer.Core.ProjectGraph
                 {
                     return xPriority - yPriority;
                 }
+
                 if (xIsHighPriority)
                 {
                     return 1;
                 }
+
                 if (yIsHighPriority)
                 {
                     return -1;
                 }
+
                 return string.Compare(x, y, StringComparison.OrdinalIgnoreCase);
             }
         }
@@ -75,7 +78,6 @@ namespace StructuredLogViewer.Core.ProjectGraph
             {
                 AddNodeForCommonGlobalProperties(commonGlobalProperties, graph);
             }
-
 
             return graph;
         }
@@ -281,10 +283,9 @@ namespace StructuredLogViewer.Core.ProjectGraph
         {
             foreach (var globalProperty in globalProperties)
             {
-                sb.AppendLine($"{globalProperty.Key} = {globalProperty.Value}");
+                sb.AppendLine($"{globalProperty.Key} = {TextUtilities.ShortenValue(globalProperty.Value, "...", 100)}");
             }
         }
-
 
         private string GetProjectInvocationIdAsDurableString(Project invocation)
         {
