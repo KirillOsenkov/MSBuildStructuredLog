@@ -45,6 +45,7 @@ namespace StructuredLogViewer.Controls
         private MenuItem copyValueItem;
         private MenuItem viewItem;
         private MenuItem openFileItem;
+        private MenuItem copyFilePathItem;
         private MenuItem preprocessItem;
         private MenuItem runItem;
         private MenuItem debugItem;
@@ -124,6 +125,7 @@ namespace StructuredLogViewer.Controls
             viewItem = new MenuItem() { Header = "View" };
             showTimeItem = new MenuItem() { Header = "Show time and duration" };
             openFileItem = new MenuItem() { Header = "Open File" };
+            copyFilePathItem = new MenuItem() { Header = "Copy file path" };
             preprocessItem = new MenuItem() { Header = "Preprocess" };
             hideItem = new MenuItem() { Header = "Hide" };
             runItem = new MenuItem() { Header = "Run" };
@@ -141,6 +143,7 @@ namespace StructuredLogViewer.Controls
             viewItem.Click += (s, a) => Invoke(treeView.SelectedItem as BaseNode);
             showTimeItem.Click += (s, a) => ShowTimeAndDuration();
             openFileItem.Click += (s, a) => OpenFile();
+            copyFilePathItem.Click += (s, a) => CopyFilePath();
             preprocessItem.Click += (s, a) => Preprocess(treeView.SelectedItem as IPreprocessable);
             runItem.Click += (s, a) => Run(treeView.SelectedItem as Task, debug: false);
             debugItem.Click += (s, a) => Run(treeView.SelectedItem as Task, debug: true);
@@ -156,6 +159,7 @@ namespace StructuredLogViewer.Controls
             contextMenu.Items.Add(goToTimeLineItem);
             contextMenu.Items.Add(copyItem);
             contextMenu.Items.Add(copySubtreeItem);
+            contextMenu.Items.Add(copyFilePathItem);
             contextMenu.Items.Add(viewSubtreeTextItem);
             contextMenu.Items.Add(copyChildrenItem);
             contextMenu.Items.Add(sortChildrenItem);
@@ -523,6 +527,7 @@ Recent:
             copyValueItem.Visibility = visibility;
             viewItem.Visibility = CanView(node) ? Visibility.Visible : Visibility.Collapsed;
             openFileItem.Visibility = CanOpenFile(node) ? Visibility.Visible : Visibility.Collapsed;
+            copyFilePathItem.Visibility = node is IHasSourceFile ? Visibility.Visible : Visibility.Collapsed;
             var hasChildren = node is TreeNode t && t.HasChildren;
             copySubtreeItem.Visibility = hasChildren ? Visibility.Visible : Visibility.Collapsed;
             viewSubtreeTextItem.Visibility = copySubtreeItem.Visibility;
@@ -1013,6 +1018,24 @@ Recent:
             if (treeView.SelectedItem is Import import)
             {
                 DisplayFile(import.ImportedProjectFilePath, evaluation: import.GetNearestParent<ProjectEvaluation>());
+            }
+        }
+
+        public void CopyFilePath()
+        {
+            string toCopy = null;
+            if (treeView.SelectedItem is Import import)
+            {
+                toCopy = import.ImportedProjectFilePath;
+            }
+            else if (treeView.SelectedItem is IHasSourceFile file)
+            {
+                toCopy = file.SourceFilePath;
+            }
+
+            if (toCopy != null)
+            {
+                CopyToClipboard(toCopy);
             }
         }
 
