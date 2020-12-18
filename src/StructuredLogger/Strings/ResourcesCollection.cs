@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
+﻿using System.Collections.Generic;
 using System.Runtime.Serialization.Json;
 using ResourcesDictionary = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, string>>;
 
@@ -8,34 +6,37 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class StringsSet
     {
-        private static Dictionary<string, string> CurrentSet;
-        private static ResourcesDictionary ResourcesCollection;
+        private Dictionary<string, string> currentSet;
+        public string Culture { get; set; }
 
-        public void InitializeCollection(CultureInfo cultureInfo)
+        public StringsSet(string culture)
         {
-            if (ResourcesCollection == null)
-            {
-                var assembly = typeof(StructuredLogger).Assembly;
-                var stream = assembly.GetManifestResourceStream(@"Strings.json");
+            Culture = culture;
+            currentSet = ResourcesCollection[culture];
+        }
 
-                var settings = new DataContractJsonSerializerSettings() { UseSimpleDictionaryFormat = true };
-                var d = new DataContractJsonSerializer(typeof(ResourcesDictionary), settings);
-                ResourcesCollection = (ResourcesDictionary)d.ReadObject(stream);
-            }
+        private static ResourcesDictionary resourcesCollection;
+        public static ResourcesDictionary ResourcesCollection
+        {
+            get
+            {
+                if (resourcesCollection == null)
+                {
+                    var assembly = typeof(StructuredLogger).Assembly;
+                    var stream = assembly.GetManifestResourceStream(@"Strings.json");
 
-            if (ResourcesCollection.ContainsKey(cultureInfo.Name))
-            {
-                CurrentSet = ResourcesCollection[cultureInfo.Name];
-            }
-            else
-            {
-                CurrentSet = ResourcesCollection["en-US"];
+                    var settings = new DataContractJsonSerializerSettings() { UseSimpleDictionaryFormat = true };
+                    var deserializer = new DataContractJsonSerializer(typeof(ResourcesDictionary), settings);
+                    resourcesCollection = (ResourcesDictionary)deserializer.ReadObject(stream);
+                }
+
+                return resourcesCollection;
             }
         }
 
         public string GetString(string key)
         {
-            if (CurrentSet.TryGetValue(key, out var value))
+            if (currentSet.TryGetValue(key, out var value))
             {
                 return value;
             }

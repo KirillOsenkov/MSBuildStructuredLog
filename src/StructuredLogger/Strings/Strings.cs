@@ -8,136 +8,149 @@ namespace Microsoft.Build.Logging.StructuredLogger
     {
         public static StringsSet ResourceSet { get; private set; }
 
-        public static void SetCultureInfo(CultureInfo cultureInfo)
-        {  
-            ResourceSet.InitializeCollection(cultureInfo);
-            InitializeRegex();
+        public static void Initialize(string culture = "en-US")
+        {
+            if (!StringsSet.ResourcesCollection.ContainsKey(culture))
+            {
+                culture = "en-US";
+            }
+
+            if (ResourceSet == null || ResourceSet.Culture != culture)
+            {
+                ResourceSet = new StringsSet(culture);
+                InitializeRegex();
+            }
+        }
+
+        public static string GetString(string key)
+        {
+            return ResourceSet.GetString(key);
         }
 
         private static void InitializeRegex()
         {
-            OutputPropertyMessagePrefix = ResourceSet.GetString("OutputPropertyLogMessage").Replace("{0}={1}", "");
-            BuildingWithToolsVersionPrefix = new Regex(ResourceSet.GetString("ToolsVersionInEffectForBuild").Replace("{0}", ".*?"));
-            PropertyGroupMessagePrefix = ResourceSet.GetString("PropertyGroupLogMessage").Replace("{0}={1}", "");
-            ForSearchPathPrefix = new Regex(ResourceSet.GetString("ResolveAssemblyReference.SearchPath").Replace("{0}", ".*?"));
-            UnifiedPrimaryReferencePrefix = new Regex(ResourceSet.GetString("ResolveAssemblyReference.UnifiedPrimaryReference").Replace("{0}", ".*?"));
-            PrimaryReferencePrefix = new Regex(ResourceSet.GetString("ResolveAssemblyReference.PrimaryReference").Replace("{0}", ".*?"));
-            DependencyPrefix = new Regex(ResourceSet.GetString("ResolveAssemblyReference.Dependency").Replace("{0}", ".*?"));
-            UnifiedDependencyPrefix = new Regex(ResourceSet.GetString("ResolveAssemblyReference.UnifiedDependency").Replace("{0}", ".*?"));
-            AssemblyFoldersExLocation = new Regex(ResourceSet.GetString("ResolveAssemblyReference.AssemblyFoldersExSearchLocations").Replace("{0}", ".*?"));
-            AdditionalPropertiesPrefix = new Regex(ResourceSet.GetString("General.AdditionalProperties").Replace("{0}", ".*?"));
-            OverridingGlobalPropertiesPrefix = new Regex(ResourceSet.GetString("General.OverridingProperties").Replace("{0}", ".*?"));
-            TargetAlreadyCompleteSuccess = new Regex(ResourceSet.GetString("TargetAlreadyCompleteSuccess").Replace("{0}", @".*?"));
-            TargetAlreadyCompleteFailure = new Regex(ResourceSet.GetString("TargetAlreadyCompleteFailure").Replace("{0}", @".*?"));
-            TargetSkippedWhenSkipNonexistentTargets = new Regex(ResourceSet.GetString("TargetSkippedWhenSkipNonexistentTargets").Replace("{0}", @".*?"));
-            RemovingProjectProperties = new Regex(ResourceSet.GetString("General.ProjectUndefineProperties").Replace("{0}", @".*?"));
+            OutputPropertyMessagePrefix = GetString("OutputPropertyLogMessage").Replace("{0}={1}", "");
+            BuildingWithToolsVersionPrefix = new Regex(GetString("ToolsVersionInEffectForBuild").Replace("{0}", ".*?"));
+            PropertyGroupMessagePrefix = GetString("PropertyGroupLogMessage").Replace("{0}={1}", "");
+            ForSearchPathPrefix = new Regex(GetString("ResolveAssemblyReference.SearchPath").Replace("{0}", ".*?"));
+            UnifiedPrimaryReferencePrefix = new Regex(GetString("ResolveAssemblyReference.UnifiedPrimaryReference").Replace("{0}", ".*?"));
+            PrimaryReferencePrefix = new Regex(GetString("ResolveAssemblyReference.PrimaryReference").Replace("{0}", ".*?"));
+            DependencyPrefix = new Regex(GetString("ResolveAssemblyReference.Dependency").Replace("{0}", ".*?"));
+            UnifiedDependencyPrefix = new Regex(GetString("ResolveAssemblyReference.UnifiedDependency").Replace("{0}", ".*?"));
+            AssemblyFoldersExLocation = new Regex(GetString("ResolveAssemblyReference.AssemblyFoldersExSearchLocations").Replace("{0}", ".*?"));
+            AdditionalPropertiesPrefix = new Regex(GetString("General.AdditionalProperties").Replace("{0}", ".*?"));
+            OverridingGlobalPropertiesPrefix = new Regex(GetString("General.OverridingProperties").Replace("{0}", ".*?"));
+            TargetAlreadyCompleteSuccess = new Regex(GetString("TargetAlreadyCompleteSuccess").Replace("{0}", @".*?"));
+            TargetAlreadyCompleteFailure = new Regex(GetString("TargetAlreadyCompleteFailure").Replace("{0}", @".*?"));
+            TargetSkippedWhenSkipNonexistentTargets = new Regex(GetString("TargetSkippedWhenSkipNonexistentTargets").Replace("{0}", @".*?"));
+            RemovingProjectProperties = new Regex(GetString("General.ProjectUndefineProperties").Replace("{0}", @".*?"));
 
-            DuplicateImport = new Regex(ResourceSet.GetString("SearchPathsForMSBuildExtensionsPath")
+            DuplicateImport = new Regex(GetString("SearchPathsForMSBuildExtensionsPath")
                 .Replace("{0}", @".*?")
                 .Replace("{1}", @".*?")
                 .Replace("{2}", @".*?"));
 
-            SearchPathsForMSBuildExtensionsPath = new Regex(ResourceSet.GetString("SearchPathsForMSBuildExtensionsPath")
+            SearchPathsForMSBuildExtensionsPath = new Regex(GetString("SearchPathsForMSBuildExtensionsPath")
                 .Replace("{0}", @".*?")
                 .Replace("{1}", @".*?"));
 
-            OverridingTarget = new Regex(ResourceSet.GetString("OverridingTarget")
+            OverridingTarget = new Regex(GetString("OverridingTarget")
                 .Replace("{0}", @".*?")
                 .Replace("{1}", @".*?")
                 .Replace("{2}", @".*?")
                 .Replace("{3}", @".*?"));
 
-            TryingExtensionsPath = new Regex(ResourceSet.GetString("TryingExtensionsPath")
+            TryingExtensionsPath = new Regex(GetString("TryingExtensionsPath")
                  .Replace("{0}", @".*?")
                  .Replace("{1}", @".*?"));
 
-            ProjectImported = new Regex(ResourceSet.GetString("ProjectImported")
+            ProjectImported = new Regex(GetString("ProjectImported")
                 .Replace("{0}", @".*?")
                 .Replace("{1}", @".*?")
                 .Replace("{2}", @".*?")
                 .Replace("{3}", @".*?"));
 
-            TargetSkippedFalseCondition = new Regex(ResourceSet.GetString("TargetSkippedFalseCondition")
+            TargetSkippedFalseCondition = new Regex(GetString("TargetSkippedFalseCondition")
                 .Replace("{0}", @".*?")
                 .Replace("{1}", @".*?")
                 .Replace("{2}", @".*?")
                 );
 
-            TaskSkippedFalseCondition = new Regex(ResourceSet.GetString("TaskSkippedFalseCondition")
+            TaskSkippedFalseCondition = new Regex(GetString("TaskSkippedFalseCondition")
                 .Replace("{0}", @".*?")
                 .Replace("{1}", @".*?")
                 .Replace("{2}", @".*?")
                 );
 
-            TargetDoesNotExistBeforeTargetMessage = new Regex(ResourceSet.GetString("TargetDoesNotExistBeforeTargetMessage")
+            TargetDoesNotExistBeforeTargetMessage = new Regex(GetString("TargetDoesNotExistBeforeTargetMessage")
                 .Replace("{0}", @".*?")
                 .Replace("{1}", @".*?")
                 );
 
-            CopyingFileFrom = new Regex(ResourceSet.GetString("Copy.FileComment")
+            CopyingFileFrom = new Regex(GetString("Copy.FileComment")
                 .Replace("{0}", @"(?<From>[^\""]+)")
                 .Replace("{1}", @"(?<To>[^\""]+)")
                 );
 
-            CreatingHardLink = new Regex(ResourceSet.GetString("Copy.HardLinkComment")
+            CreatingHardLink = new Regex(GetString("Copy.HardLinkComment")
                 .Replace("{0}", @"(?<From>[^\""]+)")
                 .Replace("{1}", @"(?<To>[^\""]+)")
                 );
 
-            DidNotCopy = new Regex(ResourceSet.GetString("Copy.DidNotCopyBecauseOfFileMatch")
+            DidNotCopy = new Regex(GetString("Copy.DidNotCopyBecauseOfFileMatch")
                .Replace("{0}", @"(?<From>[^\""]+)")
                .Replace("{1}", @"(?<To>[^\""]+)")
                .Replace("{2}", ".*?")
                .Replace("{3}", ".*?")
                );
 
-            string importProject = ResourceSet.GetString("ProjectImported")
+            string importProject = GetString("ProjectImported")
                 .Replace("{0}", @"(?<ImportedProject>[^\""]+)")
                 .Replace("{1}", @"(?<File>[^\""]+)")
                 .Replace("({2},{3})", @"\((?<Line>\d+),(?<Column>\d+)\)\.$");
             ImportingProjectRegex = new Regex(@"^" + importProject.Substring(0, importProject.Length - 1), RegexOptions.Compiled);
 
-            string skippedMissingFile = ResourceSet.GetString("ProjectImportSkippedMissingFile")
+            string skippedMissingFile = GetString("ProjectImportSkippedMissingFile")
                 .Replace("{0}", @"(?<ImportedProject>[^\""]+)")
                 .Replace("{1}", @"(?<File>[^\""]+)")
                 .Replace("({2},{3})", @"\((?<Line>\d+),(?<Column>\d+)\)\.");
             ProjectImportSkippedMissingFile = new Regex(@"^" + skippedMissingFile.Substring(0, skippedMissingFile.Length - 1), RegexOptions.Compiled);
 
-            string skippedInvalidFile = ResourceSet.GetString("ProjectImportSkippedInvalidFile")
+            string skippedInvalidFile = GetString("ProjectImportSkippedInvalidFile")
                .Replace("{0}", @"(?<ImportedProject>[^\""]+)")
                .Replace("{1}", @"(?<File>[^\""]+)")
                .Replace("({2},{3})", @"\((?<Line>\d+),(?<Column>\d+)\)\.");
             ProjectImportSkippedInvalidFile = new Regex(@"^" + skippedMissingFile.Substring(0, skippedMissingFile.Length - 1), RegexOptions.Compiled);
 
-            string skippedEmptyFile = ResourceSet.GetString("ProjectImportSkippedEmptyFile")
+            string skippedEmptyFile = GetString("ProjectImportSkippedEmptyFile")
              .Replace("{0}", @"(?<ImportedProject>[^\""]+)")
              .Replace("{1}", @"(?<File>[^\""]+)")
              .Replace("({2},{3})", @"\((?<Line>\d+),(?<Column>\d+)\)\.");
             ProjectImportSkippedEmptyFile = new Regex(@"^" + skippedEmptyFile.Substring(0, skippedEmptyFile.Length - 1), RegexOptions.Compiled);
 
-            string skippedNoMatches = ResourceSet.GetString("ProjectImportSkippedNoMatches")
+            string skippedNoMatches = GetString("ProjectImportSkippedNoMatches")
              .Replace("{0}", @"(?<ImportedProject>[^\""]+)")
              .Replace("{1}", @"(?<File>.*)")
              .Replace("({2},{3})", @"\((?<Line>\d+),(?<Column>\d+)\)\.");
             ProjectImportSkippedNoMatches = new Regex(@"^" + skippedNoMatches.Substring(0, skippedNoMatches.Length - 1), RegexOptions.Compiled);
 
-            string propertyReassignment = ResourceSet.GetString("PropertyReassignment")
+            string propertyReassignment = GetString("PropertyReassignment")
              .Replace(@"$({0})=""{1}"" (", @"\$\(\w+\)=.*? \(")
              .Replace(@"""{2}"")", @".*?""\)")
              .Replace("{3}", @"(?<File>.*) \((?<Line>\d+),(\d+)\)$");
             PropertyReassignmentRegex = new Regex("^" + propertyReassignment, RegexOptions.Compiled | RegexOptions.Singleline);
 
-            string taskFoundFromFactory = ResourceSet.GetString("TaskFoundFromFactory")
+            string taskFoundFromFactory = GetString("TaskFoundFromFactory")
                 .Replace(@"""{0}""", @"\""(?<task>.+)\""")
                 .Replace(@"""{1}""", @"\""(?<assembly>.+)\""");
             TaskFoundFromFactory = new Regex("^" + taskFoundFromFactory, RegexOptions.Compiled);
 
-            string taskFound = ResourceSet.GetString("TaskFound")
+            string taskFound = GetString("TaskFound")
                .Replace(@"""{0}""", @"\""(?<task>.+)\""")
                .Replace(@"""{1}""", @"\""(?<assembly>.+)\""");
             TaskFound = new Regex("^" + taskFound, RegexOptions.Compiled);
 
-            string skippedFalseCondition = ResourceSet.GetString("ProjectImportSkippedFalseCondition")
+            string skippedFalseCondition = GetString("ProjectImportSkippedFalseCondition")
                .Replace("{0}", @"(?<ImportedProject>[^\""]+)")
                .Replace("{1}", @"(?<File>[^\""]+)")
                .Replace("({2},{3})", @"\((?<Line>\d+),(?<Column>\d+)\)")
@@ -145,7 +158,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                .Replace("{5}", "(?<Evaluated>.+)");
             ProjectImportSkippedFalseCondition = new Regex(@"^" + skippedFalseCondition.Substring(0, skippedFalseCondition.Length - 1), RegexOptions.Compiled);
 
-            PropertyReassignment = new Regex(ResourceSet.GetString("PropertyReassignment")
+            PropertyReassignment = new Regex(GetString("PropertyReassignment")
                 .Replace("{0}", ".*?")
                 .Replace("{1}", ".*?")
                 .Replace("{2}", ".*?")
@@ -154,13 +167,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 .Replace("(", @"\(")
                 .Replace(")", @"\)"), RegexOptions.Singleline);
 
-            ConflictReferenceSameSDK = new Regex(ResourceSet.GetString("GetSDKReferenceFiles.ConflictReferenceSameSDK")
+            ConflictReferenceSameSDK = new Regex(GetString("GetSDKReferenceFiles.ConflictReferenceSameSDK")
                .Replace("{0}", ".*?")
                .Replace("{1}", ".*?")
                .Replace("{2}", ".*?")
                );
 
-            ConflictRedistDifferentSDK = new Regex(ResourceSet.GetString("GetSDKReferenceFiles.ConflictRedistDifferentSDK")
+            ConflictRedistDifferentSDK = new Regex(GetString("GetSDKReferenceFiles.ConflictRedistDifferentSDK")
                .Replace("{0}", ".*?")
                .Replace("{1}", ".*?")
                .Replace("{2}", ".*?")
@@ -168,19 +181,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
                .Replace("{4}", ".*?")
                );
 
-            ConflictReferenceDifferentSDK = new Regex(ResourceSet.GetString("GetSDKReferenceFiles.ConflictRedistDifferentSDK")
+            ConflictReferenceDifferentSDK = new Regex(GetString("GetSDKReferenceFiles.ConflictRedistDifferentSDK")
                .Replace("{0}", ".*?")
                .Replace("{1}", ".*?")
                .Replace("{2}", ".*?")
                .Replace("{3}", ".*?")
                );
 
-            TaskParameterMessagePrefix = ResourceSet.GetString("TaskParameterPrefix");
-            OutputItemsMessagePrefix = ResourceSet.GetString("OutputItemParameterMessagePrefix");
-            ItemGroupIncludeMessagePrefix = ResourceSet.GetString("ItemGroupIncludeLogMessagePrefix");
-            ItemGroupRemoveMessagePrefix = ResourceSet.GetString("ItemGroupRemoveLogMessage");
-            GlobalPropertiesPrefix = ResourceSet.GetString("General.GlobalProperties");
-            RemovingPropertiesPrefix = ResourceSet.GetString("General.UndefineProperties");
+            TaskParameterMessagePrefix = GetString("TaskParameterPrefix");
+            OutputItemsMessagePrefix = GetString("OutputItemParameterMessagePrefix");
+            ItemGroupIncludeMessagePrefix = GetString("ItemGroupIncludeLogMessagePrefix");
+            ItemGroupRemoveMessagePrefix = GetString("ItemGroupRemoveLogMessage");
+            GlobalPropertiesPrefix = GetString("General.GlobalProperties");
+            RemovingPropertiesPrefix = GetString("General.UndefineProperties");
         }
 
         public static Regex RemovingProjectProperties { get; set; }
@@ -268,15 +281,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static bool IsTargetDoesNotExistAndWillBeSkipped(string message)
         {
             return TargetDoesNotExistBeforeTargetMessage.IsMatch(message);
-        }
-
-        public static void Initialize(string culture = "en-US", bool force = false)
-        {
-            if (ResourceSet == null || force)
-            {
-                ResourceSet = new StringsSet();
-                SetCultureInfo(CultureInfo.GetCultureInfo(culture));
-            }
         }
 
         public static Match ProjectWasNotImportedRegex(string message, out string reason)

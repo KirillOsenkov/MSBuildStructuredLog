@@ -388,9 +388,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             string culture = args.Message.Substring(equalsIndex + 1, args.Message.Length - 1 - equalsIndex);
 
                             // read language from log and initialize resource strings
-                            if (!String.IsNullOrEmpty(culture))
+                            if (!string.IsNullOrEmpty(culture))
                             {
-                                Strings.Initialize(culture, force: true);
+                                Strings.Initialize(culture);
                             }
                         }
                     }
