@@ -37,7 +37,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             for (int i = 0; i < text.Length; i++)
             {
-                if (text[i] == '\r')
+                var ch = text[i];
+                if (ch == '\r')
                 {
                     if (previousWasCarriageReturn)
                     {
@@ -58,7 +59,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         previousWasCarriageReturn = true;
                     }
                 }
-                else if (text[i] == '\n')
+                else if (ch == '\n')
                 {
                     var lineLength = currentLineLength;
                     if (previousWasCarriageReturn)
@@ -90,10 +91,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         spans.Add(new Span(currentPosition, lineLength));
                         currentPosition += currentLineLength;
                         currentLineLength = 0;
+                        previousWasCarriageReturn = false;
                     }
 
                     currentLineLength++;
-                    previousWasCarriageReturn = false;
                 }
             }
 
