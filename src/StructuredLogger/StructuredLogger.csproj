@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+	<TargetFrameworks>net472;netcoreapp2.1</TargetFrameworks>
     <NBGV_DoNotEmitNonVersionCustomAttributes>true</NBGV_DoNotEmitNonVersionCustomAttributes>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
   </PropertyGroup>
@@ -47,7 +47,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <None Include="$(IconFilePath)" Pack="true" PackagePath=""/>
+    <None Include="$(IconFilePath)" Pack="true" PackagePath="" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
     <StartAction>Program</StartAction>
