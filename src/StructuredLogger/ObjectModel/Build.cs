@@ -72,6 +72,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     foreach (var entry in zipArchive.Entries)
                     {
                         var file = ArchiveFile.From(entry);
+                        result.Add(file);
                     }
                 }
             }
