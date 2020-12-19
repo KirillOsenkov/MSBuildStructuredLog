@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Prefer32Bit>true</Prefer32Bit>
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\StructuredLogger\StructuredLogger.csproj" />
+  </ItemGroup>
+
+</Project>
