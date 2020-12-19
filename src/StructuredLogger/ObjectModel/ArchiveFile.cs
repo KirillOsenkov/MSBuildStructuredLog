@@ -30,5 +30,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return text;
             }
         }
+
+        public static string CalculateArchivePath(string filePath)
+        {
+            string archivePath = filePath;
+
+            archivePath = archivePath.Replace(":", "");
+            archivePath = archivePath.Replace("\\\\", "\\");
+            archivePath = archivePath.Replace("/", "\\");
+
+            return archivePath;
+        }
     }
 }

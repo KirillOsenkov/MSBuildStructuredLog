@@ -158,7 +158,7 @@ namespace Microsoft.Build.Logging
             return archiveEntry.Open();
         }
 
-        private static string CalculateArchivePath(string filePath)
+        public static string CalculateArchivePath(string filePath)
         {
             string archivePath = filePath;
 

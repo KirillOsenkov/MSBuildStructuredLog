@@ -18,20 +18,9 @@ namespace StructuredLogViewer
             }
         }
 
-        public static string CalculateArchivePath(string filePath)
-        {
-            string archivePath = filePath;
-
-            archivePath = archivePath.Replace(":", "");
-            archivePath = archivePath.Replace("\\\\", "\\");
-            archivePath = archivePath.Replace("/", "\\");
-
-            return archivePath;
-        }
-
         public SourceText GetSourceFileText(string filePath)
         {
-            filePath = CalculateArchivePath(filePath);
+            filePath = ArchiveFile.CalculateArchivePath(filePath);
             fileContents.TryGetValue(filePath, out SourceText result);
             return result;
         }

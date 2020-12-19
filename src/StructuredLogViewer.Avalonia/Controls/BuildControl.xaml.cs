@@ -471,7 +471,7 @@ Recent:
 
             foreach (var taskAssembly in Build.TaskAssemblies)
             {
-                var filePath = ArchiveFileResolver.CalculateArchivePath(taskAssembly.Key);
+                var filePath = ArchiveFile.CalculateArchivePath(taskAssembly.Key);
                 var sourceFile = AddSourceFile(root, filePath);
                 foreach (var taskName in taskAssembly.Value.OrderBy(s => s))
                 {
