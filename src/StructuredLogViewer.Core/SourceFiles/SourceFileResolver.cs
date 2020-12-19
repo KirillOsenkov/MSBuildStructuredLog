@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogViewer
 {
@@ -17,9 +18,9 @@ namespace StructuredLogViewer
 
         public ArchiveFileResolver ArchiveFile { get; private set; }
 
-        public SourceFileResolver(byte[] sourceFilesArchive)
+        public SourceFileResolver(IEnumerable<ArchiveFile> files)
         {
-            ArchiveFile = new ArchiveFileResolver(sourceFilesArchive);
+            ArchiveFile = new ArchiveFileResolver(files);
             resolvers.Insert(0, ArchiveFile);
         }
 
@@ -30,7 +31,8 @@ namespace StructuredLogViewer
                 var buildSources = Path.ChangeExtension(logFilePath, buildsourceszip);
                 if (File.Exists(buildSources))
                 {
-                    ArchiveFile = new ArchiveFileResolver(buildSources);
+                    var files = Build.ReadSourceFiles(buildSources);
+                    ArchiveFile = new ArchiveFileResolver(files);
                     resolvers.Insert(0, ArchiveFile);
                 }
             }

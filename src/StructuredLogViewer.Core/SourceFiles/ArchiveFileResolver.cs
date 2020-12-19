@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
+using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogViewer
 {
@@ -11,43 +10,11 @@ namespace StructuredLogViewer
 
         public Dictionary<string, SourceText> Files => fileContents;
 
-        public ArchiveFileResolver(string zipFullPath)
+        public ArchiveFileResolver(IEnumerable<ArchiveFile> files)
         {
-            using (var stream = new FileStream(zipFullPath, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete))
+            foreach (var file in files)
             {
-                ExtractFilesFromStream(stream);
-            }
-        }
-
-        public ArchiveFileResolver(byte[] sourceFilesArchive)
-        {
-            using (var stream = new MemoryStream(sourceFilesArchive))
-            {
-                ExtractFilesFromStream(stream);
-            }
-        }
-
-        private void ExtractFilesFromStream(Stream stream)
-        {
-            try
-            {
-                using (var zipArchive = new ZipArchive(stream, ZipArchiveMode.Read))
-                {
-                    foreach (var entry in zipArchive.Entries)
-                    {
-                        using (var contentStream = entry.Open())
-                        using (var reader = new StreamReader(contentStream))
-                        {
-                            var text = reader.ReadToEnd();
-                            AddFile(entry.FullName, text);
-                        }
-                    }
-                }
-            }
-            catch
-            {
-                // The archive is likely incomplete (corrupt) because the build crashed.
-                // Tolerate this situation.
+                AddFile(file.FullPath, file.Text);
             }
         }
 

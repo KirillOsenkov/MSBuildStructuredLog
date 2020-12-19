@@ -91,7 +91,7 @@ namespace StructuredLogViewer.Avalonia.Controls
             if (build.SourceFilesArchive != null)
             {
                 // first try to see if the source archive was embedded in the log
-                sourceFileResolver = new SourceFileResolver(build.SourceFilesArchive);
+                sourceFileResolver = new SourceFileResolver(build.SourceFiles.Values);
             }
             else
             {
