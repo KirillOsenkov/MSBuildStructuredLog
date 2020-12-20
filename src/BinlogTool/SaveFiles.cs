@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 using Microsoft.Build.Logging.StructuredLogger;
 
 namespace BinlogTool
@@ -80,7 +81,6 @@ namespace BinlogTool
 
         private void WriteEmptyAssembly(string physicalReferencePath)
         {
-            var assemblyName = Path.GetFileNameWithoutExtension(physicalReferencePath);
             var directory = Path.GetDirectoryName(physicalReferencePath);
             if (File.Exists(physicalReferencePath))
             {
@@ -129,12 +129,56 @@ namespace BinlogTool
                 try
                 {
                     string pathOnDisk = GetPhysicalPath(outputDirectory, filePath);
-                    WriteFile(pathOnDisk, file.Text);
+                    string text = file.Text;
+                    text = ProcessProjectFileText(outputDirectory, filePath, pathOnDisk, text);
+                    WriteFile(pathOnDisk, text);
                 }
                 catch
                 {
                 }
             }
+        }
+
+        private string ProcessProjectFileText(string outputDirectory, string virtualPath, string physicalPath, string text)
+        {
+            if (virtualPath.EndsWith("proj.nuget.g.props", StringComparison.OrdinalIgnoreCase))
+            {
+                text = ProcessElementValue(text, nugetPackageRoot =>
+                {
+                    int numberOfUp = virtualPath.Count(c => c == '\\') - 1;
+                    string ups = string.Concat(Enumerable.Range(1, numberOfUp).Select(i => "..\\"));
+                    return $@"$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine($(MSBuildThisFileDirectory), ""{ups}"", ""{nugetPackageRoot.TrimStart('/')}""))))";
+                });
+            }
+
+            return text;
+        }
+
+        private string ProcessElementValue(string text, Func<string, string> processor)
+        {
+            var document = XDocument.Parse(text, LoadOptions.PreserveWhitespace);
+            var root = document.Root;
+            var propertyGroup = GetElement(root, "PropertyGroup");
+
+            var nugetPackageRoot = GetElement(propertyGroup, "NuGetPackageRoot");
+            ReplaceElementValue(nugetPackageRoot, processor);
+
+            var nugetPackageFolders = GetElement(propertyGroup, "NuGetPackageFolders");
+            ReplaceElementValue(nugetPackageFolders, processor);
+
+            return document.ToString();
+        }
+
+        private void ReplaceElementValue(XElement element, Func<string, string> processor)
+        {
+            var value = element.Value;
+            value = processor(value);
+            element.Value = value;
+        }
+
+        private XElement GetElement(XElement parent, string name)
+        {
+            return parent.Elements().FirstOrDefault(e => e.Name.LocalName == name);
         }
 
         public static string GetPhysicalPath(string outputDirectory, string archiveFilePath)
