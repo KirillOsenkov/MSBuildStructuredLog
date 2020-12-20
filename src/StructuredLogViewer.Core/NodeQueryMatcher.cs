@@ -49,11 +49,11 @@ namespace StructuredLogViewer
 
             this.Query = query;
 
-            var rawWords = ParseIntoWords(query);
+            var rawWords = TextUtilities.Tokenize(query);
             this.Words = new List<Term>(rawWords.Count);
             foreach (var rawWord in rawWords)
             {
-                var trimmed = TrimQuotes(rawWord);
+                var trimmed = rawWord.TrimQuotes();
                 if (trimmed == rawWord)
                 {
                     Words.Add(new Term(rawWord));
@@ -234,64 +234,6 @@ namespace StructuredLogViewer
 
             var elapsed = sw.Elapsed;
             PrecalculationDuration = elapsed;
-        }
-
-        private static List<string> ParseIntoWords(string query)
-        {
-            var result = new List<string>();
-
-            StringBuilder currentWord = new StringBuilder();
-            bool isInParentheses = false;
-            bool isInQuotes = false;
-            for (int i = 0; i < query.Length; i++)
-            {
-                char c = query[i];
-                switch (c)
-                {
-                    case ' ' when !isInParentheses && !isInQuotes:
-                        var wordToAdd = currentWord.ToString();
-                        if (!string.IsNullOrWhiteSpace(wordToAdd))
-                        {
-                            result.Add(wordToAdd);
-                        }
-
-                        currentWord.Clear();
-                        break;
-                    case '(' when !isInParentheses && !isInQuotes:
-                        isInParentheses = true;
-                        currentWord.Append(c);
-                        break;
-                    case ')' when isInParentheses && !isInQuotes:
-                        isInParentheses = false;
-                        currentWord.Append(c);
-                        break;
-                    case '"' when !isInParentheses:
-                        isInQuotes = !isInQuotes;
-                        currentWord.Append(c);
-                        break;
-                    default:
-                        currentWord.Append(c);
-                        break;
-                }
-            }
-
-            var word = currentWord.ToString();
-            if (!string.IsNullOrWhiteSpace(word))
-            {
-                result.Add(word);
-            }
-
-            return result;
-        }
-
-        private static string TrimQuotes(string word)
-        {
-            if (word.Length > 2 && word[0] == '"' && word[word.Length - 1] == '"')
-            {
-                word = word.Substring(1, word.Length - 2);
-            }
-
-            return word;
         }
 
         public static List<string> PopulateSearchFields(BaseNode node)

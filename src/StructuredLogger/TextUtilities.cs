@@ -136,6 +136,57 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 .ToArray();
         }
 
+        /// <summary>
+        /// Splits a string into words by spaces, keeping quoted strings as a single token
+        /// </summary>
+        public static IReadOnlyList<string> Tokenize(this string text)
+        {
+            var result = new List<string>();
+
+            StringBuilder currentWord = new StringBuilder();
+            bool isInParentheses = false;
+            bool isInQuotes = false;
+            for (int i = 0; i < text.Length; i++)
+            {
+                char c = text[i];
+                switch (c)
+                {
+                    case ' ' when !isInParentheses && !isInQuotes:
+                        var wordToAdd = currentWord.ToString();
+                        if (!string.IsNullOrWhiteSpace(wordToAdd))
+                        {
+                            result.Add(wordToAdd);
+                        }
+
+                        currentWord.Clear();
+                        break;
+                    case '(' when !isInParentheses && !isInQuotes:
+                        isInParentheses = true;
+                        currentWord.Append(c);
+                        break;
+                    case ')' when isInParentheses && !isInQuotes:
+                        isInParentheses = false;
+                        currentWord.Append(c);
+                        break;
+                    case '"' when !isInParentheses:
+                        isInQuotes = !isInQuotes;
+                        currentWord.Append(c);
+                        break;
+                    default:
+                        currentWord.Append(c);
+                        break;
+                }
+            }
+
+            var word = currentWord.ToString();
+            if (!string.IsNullOrWhiteSpace(word))
+            {
+                result.Add(word);
+            }
+
+            return result;
+        }
+
         public static string Substring(this string text, Span span)
         {
             return text.Substring(span.Start, span.Length);
@@ -162,6 +213,31 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static bool IsLineBreakChar(this char c)
         {
             return c == '\r' || c == '\n';
+        }
+
+        public static string TrimQuotes(this string word)
+        {
+            if (word != null && word.Length > 2 && word[0] == '"' && word[word.Length - 1] == '"')
+            {
+                word = word.Substring(1, word.Length - 2);
+            }
+
+            return word;
+        }
+
+        public static string QuoteIfNeeded(this string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return text;
+            }
+
+            if (text.Contains(" "))
+            {
+                text = "\"" + text + "\"";
+            }
+
+            return text;
         }
 
         public static bool ContainsLineBreak(string text)

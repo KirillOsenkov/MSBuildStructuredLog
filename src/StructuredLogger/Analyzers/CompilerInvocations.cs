@@ -156,6 +156,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             var commandLine = task.CommandLineArguments;
+            if (commandLine == null)
+            {
+                // Fsc seems to have it null
+                return null;
+            }
+
             commandLine = TrimCompilerExeFromCommandLine(commandLine, language);
 
             return new CompilerInvocation
