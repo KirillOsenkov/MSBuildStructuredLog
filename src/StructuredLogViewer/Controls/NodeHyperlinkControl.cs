@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -32,9 +33,18 @@ namespace StructuredLogViewer.Controls
                     var project = target.Project;
                     if (project != null)
                     {
-                        var parentTarget = project.FindFirstDescendant<Target>(t => t.Name == parentTargetName);
+                        var parentTarget = project.FindFirstDescendant<Target>(t => t.Name == parentTargetName && t.Project == project);
                         return parentTarget;
                     }
+                }
+            }
+            else if (DataContext is Project project)
+            {
+                var targetName = project.EntryTargets.FirstOrDefault();
+                if (targetName != null)
+                {
+                    var firstTarget = project.FindFirstDescendant<Target>(t => t.Name == targetName && t.Project == project);
+                    return firstTarget;
                 }
             }
 

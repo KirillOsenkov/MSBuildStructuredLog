@@ -42,14 +42,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var sb = new StringBuilder();
 
             sb.Append($"Project Name={Name} File={ProjectFile}");
-            if (EntryTargets != null)
+            if (EntryTargets != null && EntryTargets.Any())
             {
-                sb.Append($" Targets=[{string.Join(",", EntryTargets)}]");
+                sb.Append($" Targets=[{string.Join(", ", EntryTargets)}]");
             }
 
             if (GlobalProperties != null)
             {
-                sb.Append($" GlobalProperties=[{string.Join(",", GlobalProperties.Select(kvp => $"{kvp.Key}={kvp.Value}"))}]");
+                sb.Append($" GlobalProperties=[{string.Join(", ", GlobalProperties.Select(kvp => $"{kvp.Key}={TextUtilities.ShortenValue(kvp.Value, "...", maxChars: 150)}"))}]");
             }
 
             return sb.ToString();
@@ -202,6 +202,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         public IReadOnlyList<string> EntryTargets { get; set; } = Array.Empty<string>();
+        public string TargetsText { get; set; }
+
+        public string TargetsDisplayText
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(TargetsText))
+                {
+                    return string.Empty;
+                }
+
+                return $" → {TargetsText}";
+            }
+        }
+
         public IDictionary<string, string> GlobalProperties { get; set; } = ImmutableDictionary<string, string>.Empty;
 
         public override string ToolTip

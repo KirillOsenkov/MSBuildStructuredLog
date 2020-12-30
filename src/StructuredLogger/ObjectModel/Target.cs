@@ -31,9 +31,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 var cause = TargetBuiltReason switch
                 {
-                    TargetBuiltReason.AfterTargets => $"The AfterTargets list of '{Name}' directly or indirectly depends on '{ParentTarget}' which caused it to build",
-                    TargetBuiltReason.BeforeTargets => $"The BeforeTargets list of target '{ParentTarget}' contained '{Name}'",
-                    TargetBuiltReason.DependsOn => $"The DependsOnTargets list of target '{ParentTarget}' contained '{Name}'",
+                    TargetBuiltReason.AfterTargets => $"Target '{Name}' had AfterTargets='{ParentTarget}' directly or indirectly",
+                    TargetBuiltReason.BeforeTargets => $"Target '{Name}' had BeforeTargets='{ParentTarget}'",
+                    TargetBuiltReason.DependsOn => $"Target '{ParentTarget}' had DependsOnTargets='{Name}'",
                     _ => ""
                 };
 

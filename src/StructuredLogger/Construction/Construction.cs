@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Build.Execution;
@@ -720,11 +721,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (project.Name == null && args != null)
             {
                 project.StartTime = args.Timestamp;
-                project.Name = Intern(args.Message);
+                project.Name = Intern(Path.GetFileName(args.ProjectFile));
                 project.ProjectFile = Intern(args.ProjectFile);
                 project.EntryTargets = string.IsNullOrWhiteSpace(args.TargetNames)
                     ? ImmutableArray<string>.Empty
                     : stringTable.InternList(TextUtilities.SplitSemicolonDelimitedList(args.TargetNames));
+                project.TargetsText = args.TargetNames;
 
                 project.GlobalProperties = stringTable.InternStringDictionary(args.GlobalProperties) ?? ImmutableDictionary<string, string>.Empty;
 
@@ -740,7 +742,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 if (args.Properties != null)
                 {
-                    var properties = project.GetOrCreateNodeWithName<Folder>(Intern("Properties"));
+                    var properties = project.GetOrCreateNodeWithName<Folder>(Strings.Properties);
                     AddProperties(properties, args
                         .Properties
                         .Cast<DictionaryEntry>()

@@ -227,6 +227,12 @@
                  Width="16" Height="16" Margin="2,2,6,2" StrokeThickness="0"
                  Fill="{StaticResource GenericProjectIcon}" />
       <TextBlock Text="{Binding Name}" Margin="0,2,0,0" ToolTip="{Binding ToolTip}" ToolTipService.ShowDuration="60000" />
+      <controls:NodeHyperlinkControl
+            Margin="0,2,0,0"
+            Text="{Binding TargetsDisplayText}"
+            Foreground="{DynamicResource TargetStroke}"
+            ToolTip="Initial targets" 
+            Visibility="{Binding TargetsDisplayText, Converter={x:Static s:StringEmptinessToVisibilityConverter.Instance}}" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
       <DataTrigger Binding="{Binding IsLowRelevance}" Value="True">
@@ -280,9 +286,9 @@
       <TextBlock x:Name="duration" Text="{Binding DurationText}" Margin="6,0,0,0" ToolTip="{Binding ToolTip}" />
       <controls:NodeHyperlinkControl
             Text="{Binding ParentTargetText}"
-            Foreground="LightBlue"
+            Foreground="{DynamicResource TargetStroke}"
             ToolTip="{Binding ParentTargetTooltip}"
-            ToolTipService.InitialShowDelay="0"
+            ToolTipService.InitialShowDelay="500"
             ToolTipService.ShowDuration="300000" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
