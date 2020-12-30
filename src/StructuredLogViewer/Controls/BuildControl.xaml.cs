@@ -928,7 +928,7 @@ Recent:
                     if (char.ToLowerInvariant(character) == ch)
                     {
                         characterMatchPrefixLength++;
-                        item.IsSelected = true;
+                        SelectItem(item);
                         return;
                     }
                 }
