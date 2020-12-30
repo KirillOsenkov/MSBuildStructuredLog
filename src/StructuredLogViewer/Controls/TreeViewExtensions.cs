@@ -47,11 +47,15 @@ namespace StructuredLogViewer.Controls
                     SelectItem = delegate (ItemsControl container, SelectInfo<T> info)
                     {
                         var treeItem = (TreeViewItem)container;
+                        if (treeItem == null)
+                        {
+                            return;
+                        }
 
                         //treeItem.Focus();
                         treeItem.IsSelected = true;
                         //treeItem.IsExpanded = true;
-                        var header = (FrameworkElement)treeItem.Template.FindName("PART_Header", treeItem);
+                        var header = (FrameworkElement)treeItem.Template?.FindName("PART_Header", treeItem);
                         if (header == null || !header.IsOnScreen(treeView))
                         {
                             treeItem.BringIntoView();
@@ -59,7 +63,10 @@ namespace StructuredLogViewer.Controls
                     },
                     NeedMoreItems = delegate (ItemsControl container, SelectInfo<T> info)
                     {
-                        ((TreeViewItem)container).IsExpanded = true;
+                        if (container is TreeViewItem treeViewItem)
+                        {
+                            treeViewItem.IsExpanded = true;
+                        }
                     }
                 },
                 treeView
@@ -138,7 +145,10 @@ namespace StructuredLogViewer.Controls
                     }
 
                     var containerParent = (ItemsControl)itemContainerGenerator.ContainerFromItem(item);
-                    Debug.Assert(containerParent != null, "Failed to find the parent container for the selected item.");
+                    if (containerParent == null)
+                    {
+                        return;
+                    }
 
                     // Replace with the remaining items in the chain
                     selectInfo.Items = selectInfo.Items.Skip(1);
