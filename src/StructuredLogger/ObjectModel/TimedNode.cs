@@ -15,7 +15,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
-        public TimeSpan Duration => EndTime - StartTime;
+        public TimeSpan Duration
+        {
+            get
+            {
+                if (EndTime >= StartTime)
+                {
+                    return EndTime - StartTime;
+                }
+
+                return TimeSpan.Zero;
+            }
+        }
 
         public string DurationText => TextUtilities.DisplayDuration(Duration);
 
