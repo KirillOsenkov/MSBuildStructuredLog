@@ -28,7 +28,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             get
             {
-                return GetTimeAndDurationText();
+                return $"{ProjectFile}\n{GetTimeAndDurationText()}";
             }
         }
     }

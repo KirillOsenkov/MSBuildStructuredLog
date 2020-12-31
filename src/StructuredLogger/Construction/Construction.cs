@@ -434,12 +434,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     if (e is ProjectEvaluationStartedEventArgs projectEvaluationStarted)
                     {
                         var evaluationId = projectEvaluationStarted.BuildEventContext.EvaluationId;
-                        var projectName = Intern(projectEvaluationStarted.ProjectFile);
+                        var projectFilePath = Intern(projectEvaluationStarted.ProjectFile);
+                        var projectName = Intern(Path.GetFileName(projectFilePath));
                         var nodeName = Intern(GetEvaluationProjectName(evaluationId, projectName));
                         var projectEvaluation = EvaluationFolder.GetOrCreateNodeWithName<ProjectEvaluation>(nodeName);
                         if (projectEvaluation.ProjectFile == null)
                         {
-                            projectEvaluation.ProjectFile = projectName;
+                            projectEvaluation.ProjectFile = projectFilePath;
                         }
 
                         projectEvaluation.Id = evaluationId;
@@ -449,8 +450,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                     else if (e is ProjectEvaluationFinishedEventArgs projectEvaluationFinished)
                     {
-                        var projectName = Intern(projectEvaluationFinished.ProjectFile);
                         var evaluationId = projectEvaluationFinished.BuildEventContext.EvaluationId;
+                        var projectFilePath = Intern(projectEvaluationFinished.ProjectFile);
+                        var projectName = Intern(Path.GetFileName(projectFilePath));
                         var nodeName = Intern(GetEvaluationProjectName(evaluationId, projectName));
                         var projectEvaluation = EvaluationFolder.GetOrCreateNodeWithName<ProjectEvaluation>(nodeName);
                         projectEvaluation.EndTime = e.Timestamp;

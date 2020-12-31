@@ -32,6 +32,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 return t.Name;
             }
+            else if (node is Project project)
+            {
+                return $"{project.Name}{project.TargetsDisplayText}";
+            }
+            else if (node is ProjectEvaluation evaluation)
+            {
+                return $"{evaluation.Name}";
+            }
 
             return node.ToString();
         }
@@ -43,10 +51,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
+            var node = result.Node;
+
             if (result.MatchedByType && result.WordsInFields.Count == 0)
             {
                 Highlights.Add(new HighlightedText { Text = OriginalType });
-                Highlights.Add(" " + TextUtilities.ShortenValue(GetNodeText(result.Node), "..."));
+                Highlights.Add(" " + TextUtilities.ShortenValue(GetNodeText(node), "..."));
 
                 AddDuration(result);
 
@@ -56,19 +66,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Highlights.Add(OriginalType);
 
             // NameValueNode is special case: have to show name=value when searched only in one (name or value)
-            var named = SearchResult.Node as NameValueNode;
+            var nameValueNode = node as NameValueNode;
             bool nameFound = false;
             bool valueFound = false;
-            if (named != null)
+            if (nameValueNode != null)
             {
-                foreach (var fieldText in result.WordsInFields.GroupBy(t => t.field))
+                foreach (var fieldText in result.WordsInFields)
                 {
-                    if (fieldText.Key.Equals(named.Name))
+                    if (fieldText.field.Equals(nameValueNode.Name))
                     {
                         nameFound = true;
                     }
 
-                    if (fieldText.Key.Equals(named.Value))
+                    if (fieldText.field.Equals(nameValueNode.Value))
                     {
                         valueFound = true;
                     }
@@ -77,13 +87,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             foreach (var wordsInField in result.WordsInFields.GroupBy(t => t.field, t => t.match))
             {
+                var fieldText = wordsInField.Key;
+                if (fieldText == OriginalType)
+                {
+                    // OriginalType already added above
+                    continue;
+                }
+
                 Highlights.Add(" ");
 
-                var fieldText = wordsInField.Key;
-
-                if (named != null && wordsInField.Key.Equals(named.Value) && !nameFound)
+                if (nameValueNode != null && fieldText.Equals(nameValueNode.Value) && !nameFound)
                 {
-                    Highlights.Add(named.Name + " = ");
+                    Highlights.Add(nameValueNode.Name + " = ");
                 }
 
                 fieldText = TextUtilities.ShortenValue(fieldText, "...");
@@ -106,20 +121,42 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     Highlights.Add(fieldText.Substring(index, fieldText.Length - index));
                 }
 
-                if (named != null && wordsInField.Key.Equals(named.Name))
+                if (nameValueNode != null && wordsInField.Key.Equals(nameValueNode.Name))
                 {
                     if (!valueFound)
                     {
-                        Highlights.Add(" = " + TextUtilities.ShortenValue(named.Value, "..."));
+                        Highlights.Add(" = " + TextUtilities.ShortenValue(nameValueNode.Value, "..."));
                     }
                     else
                     {
                         Highlights.Add(" = ");
                     }
                 }
+
+                if (nameValueNode == null && node is NamedNode named && named.Name == wordsInField.Key)
+                {
+                    var differentiator = GetNodeDifferentiator(node);
+                    if (differentiator != null)
+                    {
+                        Highlights.Add(differentiator);
+                    }
+                }
             }
 
             AddDuration(result);
+        }
+
+        private object GetNodeDifferentiator(BaseNode node)
+        {
+            if (node is Project project)
+            {
+                if (!string.IsNullOrEmpty(project.TargetsDisplayText))
+                {
+                    return project.TargetsDisplayText;
+                }
+            }
+
+            return null;
         }
 
         private void AddDuration(SearchResult result)
