@@ -762,7 +762,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     RetrieveProjectInstance(project, args);
 
                     var items = project.GetOrCreateNodeWithName<Folder>("Items");
-                    foreach (DictionaryEntry kvp in args.Items)
+                    foreach (DictionaryEntry kvp in args.Items.OfType<DictionaryEntry>().OrderBy(i => i.Key))
                     {
                         var itemName = Intern(Convert.ToString(kvp.Key));
                         var itemGroup = items.GetOrCreateNodeWithName<Folder>(itemName);
