@@ -327,12 +327,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                     else if (string.Equals(task.Name, "MSBuild", StringComparison.OrdinalIgnoreCase))
                     {
+                        var additionalPropertiesMatch = Strings.AdditionalPropertiesPrefix.Match(message);
                         if (message.StartsWith(Strings.GlobalPropertiesPrefix) ||
-                            Strings.AdditionalPropertiesPrefix.IsMatch(message) ||
+                            additionalPropertiesMatch.Success ||
                             Strings.OverridingGlobalPropertiesPrefix.IsMatch(message) ||
                             message.StartsWith(Strings.RemovingPropertiesPrefix) ||
                             Strings.RemovingProjectProperties.IsMatch(message))
                         {
+                            if (additionalPropertiesMatch.Success)
+                            {
+                                node = node.GetOrCreateNodeWithName<Folder>(Strings.AdditionalProperties);
+                            }
+
                             node.GetOrCreateNodeWithName<Folder>(message);
                             return;
                         }
@@ -340,6 +346,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         node = node.FindLastChild<Folder>() ?? node;
                         if (message.Length > 2 && message[0] == ' ' && message[1] == ' ')
                         {
+                            if (node is Folder f && f.Name == Strings.AdditionalProperties)
+                            {
+                                node = f.FindLastChild<Folder>() ?? node;
+                            }
+
                             message = message.Substring(2);
                         }
 
