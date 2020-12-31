@@ -32,6 +32,7 @@ artifacts:
 
 on_failure:
 - appveyor PushArtifact msbuild.binlog
+- ps: Get-ChildItem *.received.* -recurse | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
 
 deploy:
   - provider: Webhook
