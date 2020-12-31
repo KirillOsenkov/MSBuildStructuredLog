@@ -378,6 +378,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string RestoreTask_AcquiredLockForTheInstallation = "Acquired lock for the installation";
         public static string RestoreTask_CompletedInstallationOf = "Completed installation of";
         public static string RestoreTask_ResolvingConflictsFor = "Resolving conflicts for";
+        public static string RestoreTask_AllPackagesAndProjectsAreCompatible = "All packages and projects are compatible";
+        public static string RestoreTask_Committing = "Committing restore";
 
         public static string Evaluation => "Evaluation";
         public static string Environment => "Environment";

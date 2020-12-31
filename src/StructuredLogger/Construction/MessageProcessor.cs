@@ -395,13 +395,59 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         {
                             node = node.GetOrCreateNodeWithName<Folder>("NotFound");
                         }
+                        else if (message.StartsWith("PackageSignatureVerificationLog:"))
+                        {
+                            node = node.GetOrCreateNodeWithName<Folder>("PackageSignatureVerificationLog");
+                        }
+                        else if (message.StartsWith("Writing assets file to disk"))
+                        {
+                            node = node.GetOrCreateNodeWithName<Folder>("Assets file");
+                        }
+                        else if (message.StartsWith("Writing cache file to disk"))
+                        {
+                            node = node.GetOrCreateNodeWithName<Folder>("Cache file");
+                        }
+                        else if (message.StartsWith("Persisting dg to"))
+                        {
+                            node = node.GetOrCreateNodeWithName<Folder>("dg file");
+                        }
+                        else if (message.StartsWith("Generating MSBuild file"))
+                        {
+                            node = node.GetOrCreateNodeWithName<Folder>("MSBuild file");
+                        }
+                        else if (message.StartsWith("Lock not required"))
+                        {
+                            node = node.GetOrCreateNodeWithName<Folder>("Lock not required");
+                        }
+                        else if (message.StartsWith("Installing"))
+                        {
+                            node = node.GetOrCreateNodeWithName<Folder>("Installing");
+                        }
+                        else if (message.StartsWith("Restoring packages for"))
+                        {
+                            node = node.GetOrCreateNodeWithName<Folder>("Restoring packages for");
+                        }
+                        else if (message.StartsWith("Reading project file"))
+                        {
+                            node = node.GetOrCreateNodeWithName<Folder>("Reading project file");
+                        }
+                        else if (message.StartsWith("Scanning packages for"))
+                        {
+                            node = node.GetOrCreateNodeWithName<Folder>("Scanning packages for");
+                        }
+                        else if (message.StartsWith("Merging in runtimes"))
+                        {
+                            node = node.GetOrCreateNodeWithName<Folder>("Merging in runtimes");
+                        }
                         else if (
                             message.StartsWith(Strings.RestoreTask_CheckingCompatibilityFor) ||
                             message.StartsWith(Strings.RestoreTask_CheckingCompatibilityOfPackages) ||
                             message.StartsWith(Strings.RestoreTask_AcquiringLockForTheInstallation) ||
                             message.StartsWith(Strings.RestoreTask_AcquiredLockForTheInstallation) ||
                             message.StartsWith(Strings.RestoreTask_CompletedInstallationOf) ||
-                            message.StartsWith(Strings.RestoreTask_ResolvingConflictsFor)
+                            message.StartsWith(Strings.RestoreTask_ResolvingConflictsFor) ||
+                            message.StartsWith(Strings.RestoreTask_AllPackagesAndProjectsAreCompatible) ||
+                            message.StartsWith(Strings.RestoreTask_Committing)
                             )
                         {
                             return;
