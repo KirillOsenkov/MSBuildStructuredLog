@@ -246,3 +246,6 @@ _Pvt_Extensions
 launchSettings.json
 
 *.binlog
+
+
+*.received.*
