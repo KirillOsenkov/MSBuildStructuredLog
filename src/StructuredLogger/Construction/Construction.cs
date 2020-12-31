@@ -745,13 +745,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (args.Properties != null)
                 {
                     var properties = project.GetOrCreateNodeWithName<Folder>(Strings.Properties);
-                    AddProperties(properties, args
-                        .Properties
-                        .Cast<DictionaryEntry>()
-                        .OrderBy(d => d.Key)
-                        .Select(d => new KeyValuePair<string, string>(
-                            Intern(Convert.ToString(d.Key)),
-                            Intern(Convert.ToString(d.Value)))));
+                    AddProperties(
+                        properties,
+                        args
+                            .Properties
+                            .Cast<DictionaryEntry>()
+                            .OrderBy(d => d.Key)
+                            .Select(d => new KeyValuePair<string, string>(
+                                Intern(Convert.ToString(d.Key)),
+                                Intern(Convert.ToString(d.Value)))),
+                        project);
                 }
 
                 if (args.Items != null)
@@ -927,18 +930,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void AddGlobalProperties(Project project)
         {
-            var propertiesNode = project.GetOrCreateNodeWithName<Folder>("Properties");
+            var propertiesNode = project.GetOrCreateNodeWithName<Folder>(Strings.Properties);
             var properties = project.GlobalProperties;
             if (properties != null && properties.Any())
             {
-                var global = propertiesNode.GetOrCreateNodeWithName<Folder>("Global");
-                AddProperties(global, properties);
+                var global = propertiesNode.GetOrCreateNodeWithName<Folder>(Strings.Global);
+                AddProperties(global, properties, project);
             }
         }
 
         private static void AddEntryTargets(Project project)
         {
-            var targetsNode = project.GetOrCreateNodeWithName<Folder>("Entry Targets");
+            var targetsNode = project.GetOrCreateNodeWithName<Folder>(Strings.EntryTargets);
             var entryTargets = project.EntryTargets;
             if (entryTargets != null)
             {
@@ -953,7 +956,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private void AddProperties(TreeNode parent, IEnumerable<KeyValuePair<string, string>> properties)
+        private void AddProperties(TreeNode parent, IEnumerable<KeyValuePair<string, string>> properties, Project project = null)
         {
             if (properties == null)
             {
@@ -968,6 +971,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     Value = Intern(kvp.Value)
                 };
                 parent.AddChild(property);
+
+                if (project != null)
+                {
+                    if (kvp.Key == Strings.TargetFramework)
+                    {
+                        project.TargetFramework = kvp.Value;
+                    }
+                    else if (kvp.Key == Strings.TargetFrameworks)
+                    {
+                        // we want TargetFramework to take precedence over TargetFrameworks when both are present
+                        if (string.IsNullOrEmpty(project.TargetFramework) && !string.IsNullOrEmpty(kvp.Value))
+                        {
+                            project.TargetFramework = kvp.Value;
+                        }
+                    }
+                }
             }
         }
     }

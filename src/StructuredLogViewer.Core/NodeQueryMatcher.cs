@@ -331,6 +331,19 @@ namespace StructuredLogViewer
             if (node is NamedNode named && !string.IsNullOrEmpty(named.Name))
             {
                 searchFields.Add(named.Name);
+
+                if (node is Project project)
+                {
+                    if (!string.IsNullOrEmpty(project.TargetFramework))
+                    {
+                        searchFields.Add(project.TargetFramework);
+                    }
+
+                    if (!string.IsNullOrEmpty(project.TargetsText))
+                    {
+                        searchFields.Add(project.TargetsText);
+                    }
+                }
             }
 
             if (node is TextNode textNode && !string.IsNullOrEmpty(textNode.Text))

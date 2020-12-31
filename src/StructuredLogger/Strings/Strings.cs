@@ -390,6 +390,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string TargetOutputs => "TargetOutputs";
         public static string AnalyzerReport => "Analyzer Report";
         public static string Properties => "Properties";
+        public static string Global => "Global";
+        public static string EntryTargets => "Entry targets";
+        public static string TargetFramework => "TargetFramework";
+        public static string TargetFrameworks => "TargetFrameworks";
 
         public static string GetPropertyName(string message) => message.Substring(message.IndexOf("$") + 2, message.IndexOf("=") - message.IndexOf("$") - 3);
 

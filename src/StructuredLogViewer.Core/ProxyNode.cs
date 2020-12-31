@@ -150,9 +150,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             if (node is Project project)
             {
+                var result = "";
+
+                if (!string.IsNullOrEmpty(project.TargetFramework))
+                {
+                    result += " " + project.TargetFramework;
+                }
+
                 if (!string.IsNullOrEmpty(project.TargetsDisplayText))
                 {
-                    return project.TargetsDisplayText;
+                    result += " " + project.TargetsDisplayText;
+                }
+
+                if (!string.IsNullOrEmpty(result))
+                {
+                    return result;
                 }
             }
 
