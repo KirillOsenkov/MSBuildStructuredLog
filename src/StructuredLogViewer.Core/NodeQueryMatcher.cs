@@ -343,6 +343,11 @@ namespace StructuredLogViewer
                     {
                         searchFields.Add(project.TargetsText);
                     }
+
+                    if (!string.IsNullOrEmpty(project.EvaluationText))
+                    {
+                        searchFields.Add(project.EvaluationText);
+                    }
                 }
             }
 

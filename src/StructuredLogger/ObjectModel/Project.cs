@@ -219,6 +219,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public string TargetFramework { get; set; }
 
+        public int EvaluationId { get; set; }
+        public string EvaluationText { get; set; } = "";
+
         public IDictionary<string, string> GlobalProperties { get; set; } = ImmutableDictionary<string, string>.Empty;
 
         public override string ToolTip

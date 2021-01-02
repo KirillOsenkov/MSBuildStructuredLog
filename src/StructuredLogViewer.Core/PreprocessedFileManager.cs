@@ -62,6 +62,7 @@ namespace StructuredLogViewer
         }
 
         public static string GetEvaluationKey(ProjectEvaluation evaluation) => evaluation == null ? null : evaluation.ProjectFile + evaluation.Id.ToString();
+        public static string GetEvaluationKey(Project project) => project == null ? null : project.ProjectFile + project.EvaluationId.ToString();
 
         private Dictionary<string, Bucket> GetOrCreateImportMap(string key, string projectFilePath)
         {
@@ -268,10 +269,10 @@ namespace StructuredLogViewer
         {
             if (node is TreeNode treeNode)
             {
-                var project = (IPreprocessable)treeNode.GetNearestParentOrSelf<Project>();
+                var project = treeNode.GetNearestParentOrSelf<Project>();
                 if (project != null)
                 {
-                    return project.RootFilePath;
+                    return GetEvaluationKey(project);
                 }
 
                 var evaluation = treeNode.GetNearestParentOrSelf<ProjectEvaluation>();

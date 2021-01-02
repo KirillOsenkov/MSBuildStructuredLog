@@ -730,6 +730,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     : stringTable.InternList(TextUtilities.SplitSemicolonDelimitedList(args.TargetNames));
                 project.TargetsText = args.TargetNames;
 
+                var evaluationId = BuildEventContext.InvalidEvaluationId;
+                if (args.BuildEventContext.EvaluationId > BuildEventContext.InvalidEvaluationId)
+                {
+                    evaluationId = args.BuildEventContext.EvaluationId;
+                }
+                else if (args.ParentProjectBuildEventContext != null && args.ParentProjectBuildEventContext.EvaluationId > BuildEventContext.InvalidEvaluationId)
+                {
+                    evaluationId = args.ParentProjectBuildEventContext.EvaluationId;
+                }
+
+                project.EvaluationId = evaluationId;
+                if (evaluationId != BuildEventContext.InvalidEvaluationId)
+                {
+                    project.EvaluationText = stringTable.Intern("id:" + evaluationId);
+                }
+
                 project.GlobalProperties = stringTable.InternStringDictionary(args.GlobalProperties) ?? ImmutableDictionary<string, string>.Empty;
 
                 if (args.GlobalProperties != null)

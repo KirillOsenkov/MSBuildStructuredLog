@@ -244,6 +244,12 @@
             Foreground="{DynamicResource TargetStroke}"
             ToolTip="Initial targets" 
             Visibility="{Binding TargetsDisplayText, Converter={x:Static s:StringEmptinessToVisibilityConverter.Instance}}" />
+      <TextBlock
+          Text="{Binding EvaluationText}"
+          Margin="6,2,0,0"
+          Opacity="0.5"
+          ToolTip="Evaluation Id"
+          Visibility="{Binding EvaluationText, Converter={x:Static s:StringEmptinessToVisibilityConverter.Instance}}" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
       <DataTrigger Binding="{Binding IsLowRelevance}" Value="True">
