@@ -276,7 +276,7 @@
       <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}"
                  Width="16" Height="16" Margin="2,2,6,2" StrokeThickness="0"
                  Fill="{StaticResource GenericProjectIcon}" />
-      <ProgressBar Width="40"
+<!--      <ProgressBar Width="40"
                    Height="9"
                    Margin="2,1,6,0"
                    Minimum="0"
@@ -284,7 +284,7 @@
                    Value="{Binding RelativeDuration}"
                    VerticalAlignment="Center"
                    ToolTip="{Binding ToolTip}"
-                   ToolTipService.ShowDuration="60000" />
+                   ToolTipService.ShowDuration="60000" />-->
       <TextBlock Text="{Binding Name}" Margin="0,2,0,0" ToolTip="{Binding ToolTip}" ToolTipService.ShowDuration="60000" />
       <TextBlock
           Text="{Binding EvaluationText}"
