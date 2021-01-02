@@ -1493,11 +1493,12 @@ Recent:
                     var project = resultNode.GetNearestParent<Project>();
                     if (project != null && !(resultNode is Project))
                     {
-                        var projectProxy = root.GetOrCreateNodeWithName<ProxyNode>(project.Name);
+                        var projectName = ProxyNode.GetNodeText(project);
+                        var projectProxy = root.GetOrCreateNodeWithName<ProxyNode>(projectName);
                         projectProxy.Original = project;
                         if (projectProxy.Highlights.Count == 0)
                         {
-                            projectProxy.Highlights.Add(project.Name);
+                            projectProxy.Highlights.Add(projectName);
                         }
 
                         parent = projectProxy;
@@ -1530,6 +1531,21 @@ Recent:
                         }
 
                         parent = taskProxy;
+                        parent.IsExpanded = true;
+                    }
+
+                    if (resultNode is Item item &&
+                        item.Parent is NamedNode itemParent &&
+                        (itemParent is Folder || itemParent is AddItem || itemParent is RemoveItem))
+                    {
+                        var folderProxy = parent.GetOrCreateNodeWithName<ProxyNode>(itemParent.Name);
+                        folderProxy.Original = itemParent;
+                        if (folderProxy.Highlights.Count == 0)
+                        {
+                            folderProxy.Highlights.Add(itemParent.Name);
+                        }
+
+                        parent = folderProxy;
                         parent.IsExpanded = true;
                     }
                 }

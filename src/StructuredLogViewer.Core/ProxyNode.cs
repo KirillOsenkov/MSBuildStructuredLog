@@ -26,7 +26,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        public string GetNodeText(BaseNode node)
+        public static string GetNodeText(BaseNode node)
         {
             if (node is Target t)
             {
@@ -34,7 +34,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
             else if (node is Project project)
             {
-                return $"{project.Name}{project.TargetsDisplayText}";
+                return $"{project.Name} {project.TargetFramework}{project.TargetsDisplayText}";
             }
             else if (node is ProjectEvaluation evaluation)
             {
@@ -77,17 +77,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 if (nameValueNode != null)
                 {
-                    if (fieldText.field.Equals(nameValueNode.Name))
+                    if (!nameFound && fieldText.field.Equals(nameValueNode.Name))
                     {
                         nameFound = true;
                     }
 
-                    if (fieldText.field.Equals(nameValueNode.Value))
+                    if (!valueFound && fieldText.field.Equals(nameValueNode.Value))
                     {
                         valueFound = true;
                     }
                 }
-                else if (namedNode != null)
+                else if (namedNode != null && !namedNodeNameFound)
                 {
                     if (fieldText.field.Equals(namedNode.Name))
                     {
@@ -96,7 +96,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
-            if (!namedNodeNameFound)
+            if (namedNode != null && !namedNodeNameFound)
             {
                 Highlights.Add(" " + namedNode.Name);
                 if (GetNodeDifferentiator(node) is object differentiator)
