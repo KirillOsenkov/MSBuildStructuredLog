@@ -122,7 +122,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void AnalyzeEvaluation(NamedNode folder)
         {
-            foreach (var projectEvaluation in folder.Children.OfType<ProjectEvaluation>())
+            var evaluations = folder.Children.OfType<ProjectEvaluation>().ToArray();
+            var longestDuration = evaluations.Max(e => e.Duration.TotalMilliseconds);
+            if (longestDuration == 0)
+            {
+                longestDuration = 1;
+            }
+
+            foreach (var projectEvaluation in evaluations)
             {
                 var properties = projectEvaluation.FindChild<NamedNode>(Strings.Properties);
                 if (properties == null)
@@ -131,6 +138,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
 
                 properties.SortChildren();
+                projectEvaluation.RelativeDuration = projectEvaluation.Duration.TotalMilliseconds * 100.0 / longestDuration;
             }
         }
 

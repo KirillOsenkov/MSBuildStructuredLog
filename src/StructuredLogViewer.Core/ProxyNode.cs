@@ -67,11 +67,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             // NameValueNode is special case: have to show name=value when searched only in one (name or value)
             var nameValueNode = node as NameValueNode;
+            var namedNode = node as NamedNode;
+
             bool nameFound = false;
             bool valueFound = false;
-            if (nameValueNode != null)
+            bool namedNodeNameFound = false;
+
+            foreach (var fieldText in result.WordsInFields)
             {
-                foreach (var fieldText in result.WordsInFields)
+                if (nameValueNode != null)
                 {
                     if (fieldText.field.Equals(nameValueNode.Name))
                     {
@@ -82,6 +86,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     {
                         valueFound = true;
                     }
+                }
+                else if (namedNode != null)
+                {
+                    if (fieldText.field.Equals(namedNode.Name))
+                    {
+                        namedNodeNameFound = true;
+                    }
+                }
+            }
+
+            if (!namedNodeNameFound)
+            {
+                Highlights.Add(" " + namedNode.Name);
+                if (GetNodeDifferentiator(node) is object differentiator)
+                {
+                    Highlights.Add(differentiator);
                 }
             }
 
@@ -133,10 +153,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                 }
 
-                if (nameValueNode == null && node is NamedNode named && named.Name == wordsInField.Key)
+                if (namedNode != null && namedNode.Name == wordsInField.Key)
                 {
-                    var differentiator = GetNodeDifferentiator(node);
-                    if (differentiator != null)
+                    if (GetNodeDifferentiator(node) is object differentiator)
                     {
                         Highlights.Add(differentiator);
                     }
@@ -190,12 +209,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         public string OriginalType => Original.GetType().Name;
-        public string ProjectExtension => Original is Project ? GetProjectFileExtension() : null;
+        public string ProjectExtension => GetProjectFileExtension();
 
         private string GetProjectFileExtension()
         {
-            var result = ((Project)Original).ProjectFileExtension;
-            if (result != ".sln" && result != ".csproj")
+            string result = null;
+
+            if (Original is Project project)
+            {
+                result = project.ProjectFileExtension;
+            }
+            else if (Original is ProjectEvaluation evaluation)
+            {
+                result = evaluation.ProjectFileExtension;
+            }
+
+            if (result != null && result != ".sln" && result != ".csproj")
             {
                 result = "other";
             }

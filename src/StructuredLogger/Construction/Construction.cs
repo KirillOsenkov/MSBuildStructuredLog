@@ -430,20 +430,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 lock (syncLock)
                 {
-                    // This happens when we consume args created by us (deserialized)
                     if (e is ProjectEvaluationStartedEventArgs projectEvaluationStarted)
                     {
                         var evaluationId = projectEvaluationStarted.BuildEventContext.EvaluationId;
                         var projectFilePath = Intern(projectEvaluationStarted.ProjectFile);
                         var projectName = Intern(Path.GetFileName(projectFilePath));
                         var nodeName = Intern(GetEvaluationProjectName(evaluationId, projectName));
-                        var projectEvaluation = EvaluationFolder.GetOrCreateNodeWithName<ProjectEvaluation>(nodeName);
-                        if (projectEvaluation.ProjectFile == null)
-                        {
-                            projectEvaluation.ProjectFile = projectFilePath;
-                        }
+                        var projectEvaluation = new ProjectEvaluation { Name = nodeName };
+                        EvaluationFolder.AddChild(projectEvaluation);
+                        projectEvaluation.ProjectFile = projectFilePath;
 
                         projectEvaluation.Id = evaluationId;
+                        projectEvaluation.EvaluationText = Intern("id:" + evaluationId);
                         projectEvaluation.NodeId = e.BuildEventContext.NodeId;
                         projectEvaluation.StartTime = e.Timestamp;
                         projectEvaluation.EndTime = e.Timestamp;
@@ -454,7 +452,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         var projectFilePath = Intern(projectEvaluationFinished.ProjectFile);
                         var projectName = Intern(Path.GetFileName(projectFilePath));
                         var nodeName = Intern(GetEvaluationProjectName(evaluationId, projectName));
-                        var projectEvaluation = EvaluationFolder.GetOrCreateNodeWithName<ProjectEvaluation>(nodeName);
+                        var projectEvaluation = EvaluationFolder.FindLastChild<ProjectEvaluation>(e => e.Id == evaluationId);
+                        if (projectEvaluation == null)
+                        {
+                            // no matching ProjectEvaluationStarted
+                            return;
+                        }
+
                         projectEvaluation.EndTime = e.Timestamp;
 
                         var profilerResult = projectEvaluationFinished.ProfilerResult;
@@ -471,10 +475,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private static string GetEvaluationProjectName(int evaluationId, string projectName)
-        {
-            return projectName + " id:" + evaluationId;
-        }
+        private static string GetEvaluationProjectName(int evaluationId, string projectName) => projectName;
 
         private void ConstructProfilerResult(ProjectEvaluation projectEvaluation, ProfilerResult profilerResult)
         {

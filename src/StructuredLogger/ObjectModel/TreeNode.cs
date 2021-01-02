@@ -147,13 +147,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return FindChild<T>(c => string.Equals(c.LookupKey, name, StringComparison.OrdinalIgnoreCase));
         }
 
-        public virtual T FindChild<T>(Predicate<T> predicate) where T : BaseNode
+        public virtual T FindChild<T>(Predicate<T> predicate = null) where T : BaseNode
         {
             if (HasChildren)
             {
                 for (int i = 0; i < Children.Count; i++)
                 {
-                    if (Children[i] is T child && predicate(child))
+                    if (Children[i] is T child && (predicate == null || predicate(child)))
                     {
                         return child;
                     }
@@ -230,15 +230,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return default;
         }
 
-        public virtual T FindLastChild<T>() where T : BaseNode
+        public virtual T FindLastChild<T>(Predicate<T> predicate = null) where T : BaseNode
         {
             if (HasChildren)
             {
                 for (int i = Children.Count - 1; i >= 0; i--)
                 {
-                    if (Children[i] is T t)
+                    if (Children[i] is T child && (predicate == null || predicate(child)))
                     {
-                        return t;
+                        return child;
                     }
                 }
             }

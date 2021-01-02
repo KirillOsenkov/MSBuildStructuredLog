@@ -276,7 +276,22 @@
       <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}"
                  Width="16" Height="16" Margin="2,2,6,2" StrokeThickness="0"
                  Fill="{StaticResource GenericProjectIcon}" />
+      <ProgressBar Width="40"
+                   Height="9"
+                   Margin="2,1,6,0"
+                   Minimum="0"
+                   Maximum="100"
+                   Value="{Binding RelativeDuration}"
+                   VerticalAlignment="Center"
+                   ToolTip="{Binding ToolTip}"
+                   ToolTipService.ShowDuration="60000" />
       <TextBlock Text="{Binding Name}" Margin="0,2,0,0" ToolTip="{Binding ToolTip}" ToolTipService.ShowDuration="60000" />
+      <TextBlock
+          Text="{Binding EvaluationText}"
+          Margin="6,2,0,0"
+          Opacity="0.5"
+          ToolTip="Evaluation Id"
+          Visibility="{Binding EvaluationText, Converter={x:Static s:StringEmptinessToVisibilityConverter.Instance}}" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
       <DataTrigger Binding="{Binding IsLowRelevance}" Value="True">
@@ -412,9 +427,9 @@
   <HierarchicalDataTemplate DataType="{x:Type l:EvaluationProfileEntry}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
-      <ProgressBar Width="40" 
-                   Height="9" 
-                   Margin="2,1,6,0" 
+      <ProgressBar Width="40"
+                   Height="9"
+                   Margin="2,1,6,0"
                    Minimum="0"
                    Maximum="100"
                    Value="{Binding Value}"

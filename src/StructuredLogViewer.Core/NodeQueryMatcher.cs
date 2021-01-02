@@ -349,6 +349,13 @@ namespace StructuredLogViewer
                         searchFields.Add(project.EvaluationText);
                     }
                 }
+                else if (node is ProjectEvaluation evaluation)
+                {
+                    if (!string.IsNullOrEmpty(evaluation.EvaluationText))
+                    {
+                        searchFields.Add(evaluation.EvaluationText);
+                    }
+                }
             }
 
             if (node is TextNode textNode && !string.IsNullOrEmpty(textNode.Text))
