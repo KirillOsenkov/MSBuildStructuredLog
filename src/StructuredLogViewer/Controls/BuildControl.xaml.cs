@@ -1488,10 +1488,13 @@ Recent:
                 TreeNode parent = root;
                 var resultNode = result.Node;
 
-                if (!includeDuration && !includeStart && !includeEnd)
+                bool isProject = resultNode is Project;
+                bool isTarget = resultNode is Target;
+
+                if (!includeDuration && !includeStart && !includeEnd && !isProject)
                 {
                     var project = resultNode.GetNearestParent<Project>();
-                    if (project != null && !(resultNode is Project))
+                    if (project != null)
                     {
                         var projectName = ProxyNode.GetNodeText(project);
                         var projectProxy = root.GetOrCreateNodeWithName<ProxyNode>(projectName);
@@ -1506,7 +1509,7 @@ Recent:
                     }
 
                     var target = resultNode.GetNearestParent<Target>();
-                    if (target != null && !(resultNode is Target) && !(resultNode is Project))
+                    if (!isTarget && project != null && target != null && target.Project == project)
                     {
                         var targetProxy = parent.GetOrCreateNodeWithName<ProxyNode>(target.TypeName + " " + target.Name);
                         targetProxy.Original = target;
@@ -1521,7 +1524,7 @@ Recent:
 
                     // nest under a Task, unless it's an MSBuild task higher up the parent chain
                     var task = resultNode.GetNearestParent<Task>(t => !string.Equals(t.Name, "MSBuild", StringComparison.OrdinalIgnoreCase));
-                    if (task != null && !(resultNode is Target) && !(resultNode is Project))
+                    if (task != null && !isTarget && project != null && task.GetNearestParent<Project>() == project)
                     {
                         var taskProxy = parent.GetOrCreateNodeWithName<ProxyNode>(task.TypeName + " " + task.Name);
                         taskProxy.Original = task;
@@ -1547,6 +1550,24 @@ Recent:
 
                         parent = folderProxy;
                         parent.IsExpanded = true;
+                    }
+
+                    if (parent == root)
+                    {
+                        var evaluation = resultNode.GetNearestParent<ProjectEvaluation>();
+                        if (evaluation != null)
+                        {
+                            var evaluationName = ProxyNode.GetNodeText(evaluation);
+                            var evaluationProxy = parent.GetOrCreateNodeWithName<ProxyNode>(evaluationName);
+                            evaluationProxy.Original = evaluation;
+                            if (evaluationProxy.Highlights.Count == 0)
+                            {
+                                evaluationProxy.Highlights.Add(evaluationName);
+                            }
+
+                            parent = evaluationProxy;
+                            parent.IsExpanded = true;
+                        }
                     }
                 }
 
