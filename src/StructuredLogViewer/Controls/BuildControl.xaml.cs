@@ -291,8 +291,8 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                     var fileVisibility = UpdateFileVisibility(subItems, text);
                     file.IsVisible |= fileVisibility;
                     visible |= fileVisibility;
-    }
-    else if (item is Target || item is Task)
+                }
+                else if (item is Target || item is Task)
                 {
                     if (string.IsNullOrEmpty(text) || item.Name.IndexOf(text, StringComparison.OrdinalIgnoreCase) > -1)
                     {
@@ -1631,7 +1631,7 @@ Recent:
             var stats = BinlogStats.Calculate(this.LogFilePath).CategorizedRecords;
 
             Build.Unseal();
-            
+
             DisplayStats(stats, Build);
 
             Build.Seal();
