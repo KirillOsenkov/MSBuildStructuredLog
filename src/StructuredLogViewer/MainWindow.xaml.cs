@@ -698,6 +698,14 @@ namespace StructuredLogViewer
             }
         }
 
+        private void Stats_Click(object sender, RoutedEventArgs e)
+        {
+            if (currentBuild != null)
+            {
+                currentBuild.DisplayStats();
+            }
+        }
+
         private void SaveAs_Click(object sender, RoutedEventArgs e)
         {
             SaveAs();

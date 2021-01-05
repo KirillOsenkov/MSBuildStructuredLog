@@ -134,6 +134,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 this.AddChild(newNode);
             }
+
             return newNode;
         }
 

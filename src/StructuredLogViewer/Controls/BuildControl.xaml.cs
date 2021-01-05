@@ -1619,5 +1619,32 @@ Recent:
         {
             SelectedTreeViewItem = e.OriginalSource as TreeViewItem;
         }
+
+        public void DisplayStats()
+        {
+            var statsRoot = Build.FindChild<Folder>("Statistics");
+            if (statsRoot != null)
+            {
+                return;
+            }
+
+            Build.Unseal();
+            statsRoot = Build.GetOrCreateNodeWithName<Folder>("Statistics");
+            var stats = BinlogStats.Calculate(this.LogFilePath);
+
+            foreach (var records in stats.CategorizedRecords)
+            {
+                var recordsRoot = statsRoot.GetOrCreateNodeWithName<Folder>(records.ToString());
+                if (records is BinlogStats.MessageRecords messages)
+                {
+                    foreach (var messageType in messages.CategorizedRecords)
+                    {
+                        var messageNode = recordsRoot.GetOrCreateNodeWithName<Folder>(messageType.ToString());
+                    }
+                }
+            }
+
+            Build.Seal();
+        }
     }
 }
