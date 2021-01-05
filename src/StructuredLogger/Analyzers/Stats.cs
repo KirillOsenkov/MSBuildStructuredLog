@@ -48,15 +48,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 if (type != null)
                 {
-                    type = GetMessageType(type, record.Args);
-
                     if (!recordsByType.TryGetValue(type, out var bucket))
                     {
                         bucket = Create(type);
                         recordsByType[type] = bucket;
                     }
 
-                    bucket.Add(record);
+                    type = GetMessageSubType(type, record.Args);
+                    bucket.Add(record, type);
                 }
                 else
                 {
@@ -112,17 +111,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
             CategorizedRecords = recordsByType;
         }
 
-        private static string GetMessageType(string message, BuildEventArgs args)
+        private static string GetMessageSubType(string message, BuildEventArgs args)
         {
             if (message != "BuildMessage")
             {
-                return message; 
+                return null;
             }
 
             message = args.Message;
             if (message == null || message.Length < 50)
             {
-                return "BuildMessage";
+                return null;
             }
 
             var first = message.Substring(0, 10);
@@ -140,7 +139,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     break;
             }
 
-            return "BuildMessage";
+            return null;
         }
     }
 }
