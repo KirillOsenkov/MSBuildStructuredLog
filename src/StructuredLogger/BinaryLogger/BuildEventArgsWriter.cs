@@ -890,7 +890,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         private readonly Dictionary<HashKey, int> stringHashes = new Dictionary<HashKey, int>();
-        private int stringRecordId = 0;
+
+        internal const int StringStartIndex = 10;
+
+        /// <summary>
+        /// 0 is null, 1 is empty string
+        /// 2-9 are reserved for future use.
+        /// Start indexing at 10.
+        /// </summary>
+        private int stringRecordId = StringStartIndex;
 
         private void WriteDeduplicatedString(string text)
         {

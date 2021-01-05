@@ -1048,7 +1048,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 return string.Empty;
             }
-            else if (index > 0 && index < this.stringRecords.Count)
+
+            // we reserve numbers 2-9 for future use.
+            // the writer assigns 10 as the index of the first string
+            index -= BuildEventArgsWriter.StringStartIndex;
+            if (index >= 0 && index < this.stringRecords.Count)
             {
                 return this.stringRecords[index];
             }
@@ -1139,8 +1143,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (hasParent)
                 {
                     parentId = ReadInt64();
-
                 }
+
                 return new EvaluationLocation(id, parentId, evaluationPass, evaluationDescription, file, line, elementName, description, kind);
             }
 
