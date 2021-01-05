@@ -42,6 +42,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         public event Action<BinaryLogRecordKind, byte[]> OnBlobRead;
 
+        public event Action<string> OnStringRead;
+
+        public event Action<IReadOnlyList<KeyValuePair<string, string>>> OnNameValueListRead;
+
         /// <summary>
         /// Reads the next log record from the binary reader. If there are no more records, returns null.
         /// </summary>
@@ -175,12 +179,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             nameValueLists.Add(list);
+            OnNameValueListRead?.Invoke(list);
         }
 
         private void ReadStringRecord()
         {
             string text = ReadString();
             stringRecords.Add(text);
+            OnStringRead?.Invoke(text);
         }
 
         private BuildEventArgs ReadProjectImportedEventArgs()

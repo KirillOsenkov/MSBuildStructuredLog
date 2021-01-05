@@ -1628,22 +1628,55 @@ Recent:
                 return;
             }
 
-            var stats = BinlogStats.Calculate(this.LogFilePath).CategorizedRecords;
+            var recordStats = BinlogStats.Calculate(this.LogFilePath);
+            var records = recordStats.CategorizedRecords;
 
             Build.Unseal();
 
-            DisplayStats(stats, Build);
+            statsRoot = DisplayRecordStats(records, Build);
+
+            var treeStats = Build.Statistics;
+            DisplayTreeStats(statsRoot, treeStats, recordStats);
 
             Build.Seal();
         }
 
-        private void DisplayStats(BinlogStats.RecordsByType stats, TreeNode parent, string titlePrefix = "")
+        private void DisplayTreeStats(Folder statsRoot, BuildStatistics treeStats, BinlogStats recordStats)
+        {
+            var buildMessageNode = statsRoot.FindChild<Folder>(n => n.Name.StartsWith("BuildMessage"));
+            var taskInputsNode = buildMessageNode.FindChild<Folder>(n => n.Name.StartsWith("Task Input"));
+            var taskOutputsNode = buildMessageNode.FindChild<Folder>(n => n.Name.StartsWith("Task Output"));
+
+            AddTopTasks(treeStats.TaskParameterMessagesByTask, taskInputsNode);
+            AddTopTasks(treeStats.OutputItemMessagesByTask, taskOutputsNode);
+
+            statsRoot.AddChild(new Message { Text = BinlogStats.GetString("Strings", recordStats.StringTotalSize, recordStats.StringCount) });
+            statsRoot.AddChild(new Message { Text = BinlogStats.GetString("NameValueLists", recordStats.NameValueListTotalSize, recordStats.NameValueListCount) });
+            statsRoot.AddChild(new Message { Text = BinlogStats.GetString("Blobs", recordStats.BlobTotalSize, recordStats.BlobCount) });
+        }
+
+        private static void AddTopTasks(Dictionary<string, List<string>> messagesByTask, Folder node)
+        {
+            var topTaskParameters = messagesByTask
+                .Select(kvp => (taskName: kvp.Key, count: kvp.Value.Count, totalSize: kvp.Value.Sum(s => s.Length * 2)))
+                .OrderByDescending(kvp => kvp.totalSize)
+                .Take(20);
+            foreach (var task in topTaskParameters)
+            {
+                var name = BinlogStats.GetString(task.taskName, task.totalSize, task.count);
+                node.AddChild(new Folder { Name = name });
+            }
+        }
+
+        private Folder DisplayRecordStats(BinlogStats.RecordsByType stats, TreeNode parent, string titlePrefix = "")
         {
             var node = parent.GetOrCreateNodeWithName<Folder>(titlePrefix + stats.ToString());
             foreach (var records in stats.CategorizedRecords)
             {
-                DisplayStats(records, node);
+                DisplayRecordStats(records, node);
             }
+
+            return node;
         }
     }
 }

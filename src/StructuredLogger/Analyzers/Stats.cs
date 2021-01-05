@@ -9,16 +9,44 @@ namespace Microsoft.Build.Logging.StructuredLogger
     {
         public static BinlogStats Calculate(string binlogFilePath)
         {
-            var reader = new BinLogReader();
-            var records = reader.ReadRecords(binlogFilePath);
-            return Calculate(records);
-        }
-
-        public static BinlogStats Calculate(IEnumerable<Record> records)
-        {
             var stats = new BinlogStats();
+
+            var reader = new BinLogReader();
+            reader.OnBlobRead += (kind, bytes) => stats.OnBlobRead(kind, bytes);
+            reader.OnStringRead += text => stats.OnStringRead(text);
+            reader.OnNameValueListRead += list => stats.OnNameValueListRead(list);
+
+            var records = reader.ReadRecords(binlogFilePath);
             stats.Process(records);
             return stats;
+        }
+
+        public int NameValueListCount;
+        public long NameValueListTotalSize;
+
+        public int StringCount;
+        public long StringTotalSize;
+
+        public int BlobCount;
+        public int BlobTotalSize;
+
+        private void OnNameValueListRead(IReadOnlyList<KeyValuePair<string, string>> list)
+        {
+            NameValueListCount += 1;
+            var size = list.Sum(kvp => kvp.Key.Length * 2 + kvp.Value.Length * 2);
+            NameValueListTotalSize += size;
+        }
+
+        private void OnStringRead(string text)
+        {
+            StringCount += 1;
+            StringTotalSize += text.Length * 2;
+        }
+
+        private void OnBlobRead(BinaryLogRecordKind kind, byte[] bytes)
+        {
+            BlobCount += 1;
+            BlobTotalSize += bytes.Length;
         }
 
         public RecordsByType CategorizedRecords { get; private set; }
@@ -80,8 +108,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             public override string ToString()
             {
-                return $"{Type.PadRight(30, ' ')}\t\t\tTotal size: {TotalLength:N0}\t\t\tCount: {Count:N0}";
+                return GetString(Type, TotalLength, Count);
             }
+        }
+
+        public static string GetString(string name, long total, int count)
+        {
+            return $"{name.PadRight(60, ' ')}\t\t\tTotal size: {total:N0}\t\t\tCount: {count:N0}";
         }
 
         private void Process(IEnumerable<Record> records)
@@ -121,7 +154,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             message = args.Message;
             if (message == null || message.Length < 50)
             {
-                return null;
+                return "Other";
             }
 
             var first = message.Substring(0, 10);
@@ -136,10 +169,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 case "Removed It":
                     return "Removed Item";
                 default:
-                    break;
+                    return "Other";
             }
-
-            return null;
         }
     }
 }

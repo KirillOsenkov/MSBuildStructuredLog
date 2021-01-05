@@ -20,6 +20,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// The arguments include the blob kind and the byte buffer with the contents.
         /// </summary>
         public event Action<BinaryLogRecordKind, byte[]> OnBlobRead;
+        public event Action<string> OnStringRead;
+        public event Action<IReadOnlyList<KeyValuePair<string, string>>> OnNameValueListRead;
 
         /// <summary>
         /// Raised when there was an exception reading a record from the file.
@@ -176,7 +178,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             List<Record> blobs = new List<Record>();
 
             var reader = new BuildEventArgsReader(binaryReader, fileFormatVersion);
+
+            // forward the events from the reader to the subscribers of this class
             reader.OnBlobRead += OnBlobRead;
+            reader.OnStringRead += OnStringRead;
+            reader.OnNameValueListRead += OnNameValueListRead;
+
             reader.OnBlobRead += (kind, blob) =>
             {
                 var record = new Record
