@@ -1628,23 +1628,22 @@ Recent:
                 return;
             }
 
-            Build.Unseal();
-            statsRoot = Build.GetOrCreateNodeWithName<Folder>("Statistics");
-            var stats = BinlogStats.Calculate(this.LogFilePath);
+            var stats = BinlogStats.Calculate(this.LogFilePath).CategorizedRecords;
 
-            foreach (var records in stats.CategorizedRecords)
-            {
-                var recordsRoot = statsRoot.GetOrCreateNodeWithName<Folder>(records.ToString());
-                if (records is BinlogStats.MessageRecords messages)
-                {
-                    foreach (var messageType in messages.CategorizedRecords)
-                    {
-                        var messageNode = recordsRoot.GetOrCreateNodeWithName<Folder>(messageType.ToString());
-                    }
-                }
-            }
+            Build.Unseal();
+            
+            DisplayStats(stats, Build);
 
             Build.Seal();
+        }
+
+        private void DisplayStats(BinlogStats.RecordsByType stats, TreeNode parent, string titlePrefix = "")
+        {
+            var node = parent.GetOrCreateNodeWithName<Folder>(titlePrefix + stats.ToString());
+            foreach (var records in stats.CategorizedRecords)
+            {
+                DisplayStats(records, node);
+            }
         }
     }
 }
