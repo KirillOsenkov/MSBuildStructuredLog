@@ -7,6 +7,7 @@ using System.Linq;
 using Microsoft.Build.Exceptions;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Framework.Profiler;
+using Microsoft.Build.Internal;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -15,7 +16,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
     /// </summary>
     internal class BuildEventArgsWriter
     {
-        private readonly BinaryWriter binaryWriter;
+        private readonly Stream originalStream;
+        private readonly MemoryStream currentRecordStream;
+
+        private readonly BinaryWriter originalBinaryWriter;
+        private readonly BinaryWriter currentRecordWriter;
+        private BinaryWriter binaryWriter;
 
         /// <summary>
         /// Initializes a new instance of BuildEventArgsWriter with a BinaryWriter
@@ -23,13 +29,26 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <param name="binaryWriter">A BinaryWriter to write the BuildEventArgs instances to</param>
         public BuildEventArgsWriter(BinaryWriter binaryWriter)
         {
-            this.binaryWriter = binaryWriter;
+            this.originalStream = binaryWriter.BaseStream;
+            this.currentRecordStream = new MemoryStream(65536);
+
+            this.originalBinaryWriter = binaryWriter;
+            this.currentRecordWriter = new BinaryWriter(currentRecordStream);
+
+            this.binaryWriter = currentRecordWriter;
         }
 
         /// <summary>
         /// Write a provided instance of BuildEventArgs to the BinaryWriter
         /// </summary>
         public void Write(BuildEventArgs e)
+        {
+            WriteCore(e);
+            currentRecordStream.WriteTo(originalStream);
+            currentRecordStream.SetLength(0);
+        }
+
+        private void WriteCore(BuildEventArgs e)
         {
             // the cases are ordered by most used first for performance
             if (e is BuildMessageEventArgs)
@@ -130,7 +149,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private void Write(ProjectEvaluationFinishedEventArgs e)
         {
             Write(BinaryLogRecordKind.ProjectEvaluationFinished);
-            
+
             WriteBuildEventArgsFields(e);
             Write(e.ProjectFile);
 
@@ -162,11 +181,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 Write(e.ParentProjectBuildEventContext);
             }
 
-            WriteOptionalString(e.ProjectFile);
+            WriteDeduplicatedString(e.ProjectFile);
 
             Write(e.ProjectId);
-            Write(e.TargetNames);
-            WriteOptionalString(e.ToolsVersion);
+            WriteDeduplicatedString(e.TargetNames);
+            WriteDeduplicatedString(e.ToolsVersion);
 
             if (e.GlobalProperties == null)
             {
@@ -180,7 +199,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             WriteProperties(e.Properties);
 
-            WriteItems(e.Items);
+            WriteProjectItems(e.Items);
         }
 
         private void Write(ProjectFinishedEventArgs e)
@@ -210,7 +229,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             WriteOptionalString(e.ProjectFile);
             WriteOptionalString(e.TargetFile);
             WriteOptionalString(e.TargetName);
-            WriteItemList(e.TargetOutputs);
+            WriteTaskItemList(e.TargetOutputs);
         }
 
         private void Write(TaskStartedEventArgs e)
@@ -391,7 +410,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             if ((flags & BuildEventArgsFieldFlags.Message) != 0)
             {
-                Write(e.Message);
+                WriteDeduplicatedString(e.Message);
             }
 
             if ((flags & BuildEventArgsFieldFlags.BuildEventContext) != 0)
@@ -431,22 +450,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if ((flags & BuildEventArgsFieldFlags.Subcategory) != 0)
             {
-                Write(e.Subcategory);
+                WriteDeduplicatedString(e.Subcategory);
             }
 
             if ((flags & BuildEventArgsFieldFlags.Code) != 0)
             {
-                Write(e.Code);
+                WriteDeduplicatedString(e.Code);
             }
 
             if ((flags & BuildEventArgsFieldFlags.File) != 0)
             {
-                Write(e.File);
+                WriteDeduplicatedString(e.File);
             }
 
             if ((flags & BuildEventArgsFieldFlags.ProjectFile) != 0)
             {
-                Write(e.ProjectFile);
+                WriteDeduplicatedString(e.ProjectFile);
             }
 
             if ((flags & BuildEventArgsFieldFlags.LineNumber) != 0)
@@ -554,25 +573,24 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return flags;
         }
 
-        private void WriteItemList(IEnumerable items)
+        private void WriteTaskItemList(IEnumerable items)
         {
             var taskItems = items as IEnumerable<ITaskItem>;
-            if (taskItems != null)
+            if (taskItems == null)
             {
-                Write(taskItems.Count());
-
-                foreach (var item in taskItems)
-                {
-                    Write(item);
-                }
-
+                Write(false);
                 return;
             }
 
-            Write(0);
+            Write(taskItems.Count());
+
+            foreach (var item in taskItems)
+            {
+                Write(item);
+            }
         }
 
-        private void WriteItems(IEnumerable items)
+        private void WriteProjectItems(IEnumerable items)
         {
             if (items == null)
             {
@@ -580,29 +598,34 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            var entries = items.OfType<DictionaryEntry>()
-                .Where(e => e.Key is string && e.Value is ITaskItem)
+            var groups = items
+                .OfType<DictionaryEntry>()
+                .GroupBy(entry => entry.Key as string, entry => entry.Value as ITaskItem)
+                .Where(group => !string.IsNullOrEmpty(group.Key))
                 .ToArray();
-            Write(entries.Length);
 
-            foreach (DictionaryEntry entry in entries)
+            Write(groups.Length);
+
+            foreach (var group in groups)
             {
-                string key = entry.Key as string;
-                ITaskItem item = entry.Value as ITaskItem;
-                Write(key);
-                Write(item);
+                Write(group.Key);
+                WriteTaskItemList(group);
             }
         }
 
         private void Write(ITaskItem item)
         {
             Write(item.ItemSpec);
+
+            if (nameValueList.Count > 0)
+            {
+                nameValueList.Clear();
+            }
+
             IDictionary customMetadata = item.CloneCustomMetadata();
-            Write(customMetadata.Count);
 
             foreach (string metadataName in customMetadata.Keys)
             {
-                Write(metadataName);
                 string valueOrError;
 
                 try
@@ -623,8 +646,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     Debug.Fail(e.ToString());
                 }
 
-                Write(valueOrError);
+                nameValueList.Add(new KeyValuePair<string, string>(metadataName, valueOrError));
             }
+
+            WriteNameValueList();
         }
 
         private void WriteProperties(IEnumerable properties)
@@ -635,26 +660,29 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
+            if (nameValueList.Count > 0)
+            {
+                nameValueList.Clear();
+            }
+
             // there are no guarantees that the properties iterator won't change, so 
             // take a snapshot and work with the readonly copy
             var propertiesArray = properties.OfType<DictionaryEntry>().ToArray();
 
-            Write(propertiesArray.Length);
-
-            foreach (DictionaryEntry entry in propertiesArray)
+            for (int i = 0; i < propertiesArray.Length; i++)
             {
-                if (entry.Key is string && entry.Value is string)
+                DictionaryEntry entry = propertiesArray[i];
+                if (entry.Key is string key && entry.Value is string value)
                 {
-                    Write((string)entry.Key);
-                    Write((string)entry.Value);
+                    nameValueList.Add(new KeyValuePair<string, string>(key, value));
                 }
                 else
                 {
-                    // to keep the count accurate
-                    Write("");
-                    Write("");
+                    nameValueList.Add(new KeyValuePair<string, string>(string.Empty, string.Empty));
                 }
             }
+
+            WriteNameValueList();
         }
 
         private void Write(BuildEventContext buildEventContext)
@@ -668,21 +696,154 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Write(buildEventContext.EvaluationId);
         }
 
-        private void Write<TKey, TValue>(IEnumerable<KeyValuePair<TKey, TValue>> keyValuePairs)
+        private readonly List<KeyValuePair<string, string>> nameValueList = new List<KeyValuePair<string, string>>(1024);
+        private readonly Dictionary<HashKey, int> hashes = new Dictionary<HashKey, int>();
+        private int nameValueRecordId = 0;
+
+        internal struct HashKey : IEquatable<HashKey>
         {
-            if (keyValuePairs != null && keyValuePairs.Any())
+            private int Int32;
+
+            private HashKey(int i)
             {
-                Write(keyValuePairs.Count());
-                foreach (var kvp in keyValuePairs)
+                Int32 = i;
+            }
+
+            public HashKey(string text)
+            {
+                if (text == null)
                 {
-                    Write(kvp.Key.ToString());
-                    Write(kvp.Value.ToString());
+                    Int32 = -1;
+                }
+                else
+                {
+                    Int32 = text.GetHashCode();
                 }
             }
-            else
+
+            public static HashKey Combine(HashKey left, HashKey right)
             {
-                Write(false);
+                return new HashKey((left.Int32, right.Int32).GetHashCode());
             }
+
+            public HashKey Add(HashKey other) => Combine(this, other);
+
+            public bool Equals(HashKey other)
+            {
+                return Int32 == other.Int32;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (obj is HashKey other)
+                {
+                    return Equals(other);
+                }
+
+                return false;
+            }
+
+            public override int GetHashCode()
+            {
+                return Int32;
+            }
+
+            public override string ToString()
+            {
+                return Int32.ToString();
+            }
+        }
+
+        private void Write(IEnumerable<KeyValuePair<string, string>> keyValuePairs)
+        {
+            if (nameValueList.Count > 0)
+            {
+                nameValueList.Clear();
+            }
+
+            foreach (var kvp in keyValuePairs)
+            {
+                nameValueList.Add(kvp);
+            }
+
+            WriteNameValueList();
+        }
+
+        private void WriteNameValueList()
+        {
+            if (nameValueList.Count == 0)
+            {
+                Write((byte)0);
+                return;
+            }
+
+            HashKey hash = GetHash(nameValueList);
+            if (!hashes.TryGetValue(hash, out var recordId))
+            {
+                recordId = nameValueRecordId;
+                hashes[hash] = nameValueRecordId;
+
+                WriteNameValueListRecord();
+
+                nameValueRecordId += 1;
+            }
+
+            // length of our fake list is 1
+            Write(1);
+
+            // A special convention to reference a previously written list:
+            // write a list with a single item where the key is a string consisting of a single 0 byte
+            // and the value is the hash of the previous record
+            Write((byte)1);
+            Write((byte)0);
+            Write(recordId.ToString());
+        }
+
+        /// <summary>
+        /// In the middle of writing the current record we may discover that we want to write another record
+        /// preceding the current one, specifically the list of names and values we want to reuse in the
+        /// future. As we are writing the current record to a MemoryStream first, it's OK to temporarily
+        /// switch to the direct underlying stream and write the NameValueList record first.
+        /// When the current record is done writing, the MemoryStream will flush to the underlying stream
+        /// and the current record will end up after the NameValueList record, as desired.
+        /// </summary>
+        private void WriteNameValueListRecord()
+        {
+            try
+            {
+                // Switch the binaryWriter used by the Write* methods to the direct underlying stream writer.
+                // We want this record to precede the record we're currently writing to currentRecordWriter
+                // which is backed by a MemoryStream buffer
+                binaryWriter = this.originalBinaryWriter;
+
+                Write(BinaryLogRecordKind.NameValueList);
+                Write(nameValueList.Count);
+                for (int i = 0; i < nameValueList.Count; i++)
+                {
+                    var kvp = nameValueList[i];
+                    Write(kvp.Key ?? string.Empty);
+                    Write(kvp.Value ?? string.Empty);
+                }
+            }
+            finally
+            {
+                // switch back to continue writing the current record to the memory stream
+                binaryWriter = this.currentRecordWriter;
+            }
+        }
+
+        private HashKey GetHash(List<KeyValuePair<string, string>> nameValueList)
+        {
+            HashKey hash = new HashKey();
+
+            for (int i = 0; i < nameValueList.Count; i++)
+            {
+                var kvp = nameValueList[i];
+                hash = hash.Add(new HashKey(kvp.Key));
+                hash = hash.Add(new HashKey(kvp.Value));
+            }
+
+            return hash;
         }
 
         private void Write(BinaryLogRecordKind kind)
@@ -718,21 +879,74 @@ namespace Microsoft.Build.Logging.StructuredLogger
             binaryWriter.Write(bytes);
         }
 
+        private void Write(byte b)
+        {
+            binaryWriter.Write(b);
+        }
+
         private void Write(bool boolean)
         {
             binaryWriter.Write(boolean);
         }
 
+        private readonly Dictionary<HashKey, int> stringHashes = new Dictionary<HashKey, int>();
+        private int stringRecordId = 0;
+
+        private void WriteDeduplicatedString(string text)
+        {
+            if (text == null)
+            {
+                binaryWriter.Write((byte)0);
+                return;
+            }
+            else if (text.Length == 0)
+            {
+                binaryWriter.Write((byte)1);
+                return;
+            }
+
+            var hash = new HashKey(text);
+            if (!stringHashes.TryGetValue(hash, out var recordId))
+            {
+                recordId = stringRecordId;
+                stringHashes[hash] = stringRecordId;
+
+                WriteStringRecord(text);
+
+                stringRecordId += 1;
+            }
+
+            Write(recordId);
+        }
+
+        private void WriteStringRecord(string text)
+        {
+            try
+            {
+                // Switch the binaryWriter used by the Write* methods to the direct underlying stream writer.
+                // We want this record to precede the record we're currently writing to currentRecordWriter
+                // which is backed by a MemoryStream buffer
+                binaryWriter = this.originalBinaryWriter;
+
+                Write(BinaryLogRecordKind.String);
+                Write(text);
+            }
+            finally
+            {
+                // switch back to continue writing the current record to the memory stream
+                binaryWriter = this.currentRecordWriter;
+            }
+        }
+
         private void Write(string text)
         {
-            if (text != null)
+            if (string.IsNullOrEmpty(text))
             {
-                binaryWriter.Write(text);
+                binaryWriter.Write((byte)0);
+                return;
             }
-            else
-            {
-                binaryWriter.Write(false);
-            }
+
+            binaryWriter.Write(text);
         }
 
         private void WriteOptionalString(string text)

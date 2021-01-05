@@ -49,9 +49,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             BinaryLogRecordKind recordKind = (BinaryLogRecordKind)ReadInt32();
 
-            while (IsBlob(recordKind))
+            // Skip over data storage records since they don't result in a BuildEventArgs.
+            // just ingest their data and continue.
+            while (IsAuxiliaryRecord(recordKind))
             {
-                ReadBlob(recordKind);
+                if (recordKind == BinaryLogRecordKind.ProjectImportArchive)
+                {
+                    ReadBlob(recordKind);
+                }
+                else if (recordKind == BinaryLogRecordKind.NameValueList)
+                {
+                    ReadNameValueList();
+                }
+                else if (recordKind == BinaryLogRecordKind.String)
+                {
+                    ReadStringRecord();
+                }
 
                 recordKind = (BinaryLogRecordKind)ReadInt32();
             }
@@ -131,12 +144,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return result;
         }
 
-        /// <summary>
-        /// For now it's just the ProjectImportArchive.
-        /// </summary>
-        private static bool IsBlob(BinaryLogRecordKind recordKind)
+        private static bool IsAuxiliaryRecord(BinaryLogRecordKind recordKind)
         {
-            return recordKind == BinaryLogRecordKind.ProjectImportArchive;
+            return recordKind == BinaryLogRecordKind.ProjectImportArchive
+                || recordKind == BinaryLogRecordKind.NameValueList
+                || recordKind == BinaryLogRecordKind.String;
         }
 
         private void ReadBlob(BinaryLogRecordKind kind)
@@ -144,6 +156,31 @@ namespace Microsoft.Build.Logging.StructuredLogger
             int length = ReadInt32();
             byte[] bytes = binaryReader.ReadBytes(length);
             OnBlobRead?.Invoke(kind, bytes);
+        }
+
+        private readonly List<IReadOnlyList<KeyValuePair<string, string>>> nameValueLists = new List<IReadOnlyList<KeyValuePair<string, string>>>();
+        private readonly List<string> stringRecords = new List<string>();
+
+        private void ReadNameValueList()
+        {
+            var list = new List<KeyValuePair<string, string>>();
+
+            int count = ReadInt32();
+            for (int i = 0; i < count; i++)
+            {
+                string key = ReadString();
+                string value = ReadString();
+                var kvp = new KeyValuePair<string, string>(key, value);
+                list.Add(kvp);
+            }
+
+            nameValueLists.Add(list);
+        }
+
+        private void ReadStringRecord()
+        {
+            string text = ReadString();
+            stringRecords.Add(text);
         }
 
         private BuildEventArgs ReadProjectImportedEventArgs()
@@ -282,10 +319,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 parentContext = ReadBuildEventContext();
             }
 
-            var projectFile = ReadOptionalString();
+            var projectFile = ReadOptionalDeduplicatedString();
             var projectId = ReadInt32();
-            var targetNames = ReadString();
-            var toolsVersion = ReadOptionalString();
+            var targetNames = ReadDeduplicatedString();
+            var toolsVersion = ReadOptionalDeduplicatedString();
 
             Dictionary<string, string> globalProperties = null;
 
@@ -361,7 +398,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var projectFile = ReadOptionalString();
             var targetFile = ReadOptionalString();
             var targetName = ReadOptionalString();
-            var targetOutputItemList = ReadItemList();
+            var targetOutputItemList = ReadTaskItemList();
 
             var e = new TargetFinishedEventArgs(
                 fields.Message,
@@ -625,7 +662,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if ((flags & BuildEventArgsFieldFlags.Message) != 0)
             {
-                result.Message = ReadString();
+                result.Message = ReadDeduplicatedString();
             }
 
             if ((flags & BuildEventArgsFieldFlags.BuildEventContext) != 0)
@@ -655,22 +692,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if ((flags & BuildEventArgsFieldFlags.Subcategory) != 0)
             {
-                result.Subcategory = ReadString();
+                result.Subcategory = ReadDeduplicatedString();
             }
 
             if ((flags & BuildEventArgsFieldFlags.Code) != 0)
             {
-                result.Code = ReadString();
+                result.Code = ReadDeduplicatedString();
             }
 
             if ((flags & BuildEventArgsFieldFlags.File) != 0)
             {
-                result.File = ReadString();
+                result.File = ReadDeduplicatedString();
             }
 
             if ((flags & BuildEventArgsFieldFlags.ProjectFile) != 0)
             {
-                result.ProjectFile = ReadString();
+                result.ProjectFile = ReadDeduplicatedString();
             }
 
             if ((flags & BuildEventArgsFieldFlags.LineNumber) != 0)
@@ -764,13 +801,36 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private Dictionary<string, string> ReadStringDictionary()
         {
             int count = ReadInt32();
-
             if (count == 0)
             {
                 return null;
             }
 
-            Dictionary<string, string> result = new Dictionary<string, string>(count);
+            var result = new Dictionary<string, string>(count);
+
+            if (count == 1)
+            {
+                string name = ReadString();
+                string value = ReadString();
+                if (name == "\0")
+                {
+                    var record = GetNameValueList(value);
+                    if (record != null)
+                    {
+                        foreach (var property in record)
+                        {
+                            result[property.Key] = property.Value;
+                        }
+                    }
+                }
+                else
+                {
+                    result[name] = value;
+                }
+
+                return result;
+            }
+
             for (int i = 0; i < count; i++)
             {
                 string key = ReadString();
@@ -781,20 +841,93 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return result;
         }
 
-        private ITaskItem ReadItem(bool skip = false)
+        private class TaskItem : ITaskItem
+        {
+            public string ItemSpec { get; set; }
+            public Dictionary<string, string> Metadata { get; } = new Dictionary<string, string>();
+
+            public int MetadataCount => Metadata.Count;
+
+            public ICollection MetadataNames => Metadata.Keys;
+
+            public IDictionary CloneCustomMetadata()
+            {
+                return Metadata;
+            }
+
+            public void CopyMetadataTo(ITaskItem destinationItem)
+            {
+                throw new NotImplementedException();
+            }
+
+            public string GetMetadata(string metadataName)
+            {
+                return Metadata[metadataName];
+            }
+
+            public void RemoveMetadata(string metadataName)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void SetMetadata(string metadataName, string metadataValue)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        private IReadOnlyList<KeyValuePair<string, string>> GetNameValueList(string id)
+        {
+            if (int.TryParse(id, out int nameValueRecordIndex) &&
+                nameValueRecordIndex >= 0 &&
+                nameValueRecordIndex < this.nameValueLists.Count)
+            {
+                var list = this.nameValueLists[nameValueRecordIndex];
+                return list;
+            }
+
+            return Array.Empty<KeyValuePair<string, string>>();
+        }
+
+        private ITaskItem ReadTaskItem(bool skip = false)
         {
             var item = new TaskItem();
             item.ItemSpec = ReadString(skip);
 
             int count = ReadInt32();
-            for (int i = 0; i < count; i++)
+            if (count == 0)
+            {
+                return item;
+            }
+
+            if (count == 1)
             {
                 string name = ReadString(skip);
                 string value = ReadString(skip);
-                if (!skip)
+                if (name == "\0")
+                {
+                    var record = GetNameValueList(value);
+                    if (record != null)
+                    {
+                        foreach (var metadata in record)
+                        {
+                            item.Metadata[metadata.Key] = metadata.Value;
+                        }
+                    }
+                }
+                else
                 {
                     item.Metadata[name] = value;
                 }
+
+                return item;
+            }
+
+            for (int i = 0; i < count; i++)
+            {
+                string name = ReadString();
+                string value = ReadString();
+                item.Metadata[name] = value;
             }
 
             return item;
@@ -808,22 +941,34 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return null;
             }
 
-            var list = new List<DictionaryEntry>(count);
+            var list = new List<DictionaryEntry>();
 
-            for (int i = 0; i < count; i++)
+            if (fileFormatVersion < 10)
             {
-                string key = ReadString(skip);
-                ITaskItem item = ReadItem(skip);
-                if (!skip)
+                for (int i = 0; i < count; i++)
                 {
+                    string key = ReadString(skip);
+                    ITaskItem item = ReadTaskItem(skip);
                     list.Add(new DictionaryEntry(key, item));
+                }
+            }
+            else
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    string itemName = ReadString();
+                    var items = ReadTaskItemList();
+                    foreach (var item in items)
+                    {
+                        list.Add(new DictionaryEntry(itemName, item));
+                    }
                 }
             }
 
             return list;
         }
 
-        private IEnumerable ReadItemList()
+        private IEnumerable ReadTaskItemList()
         {
             int count = ReadInt32();
             if (count == 0)
@@ -835,7 +980,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             for (int i = 0; i < count; i++)
             {
-                ITaskItem item = ReadItem();
+                ITaskItem item = ReadTaskItem();
                 list.Add(item);
             }
 
@@ -869,6 +1014,40 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private void SkipBytes(BinaryReader binaryReader, int count)
         {
             binaryReader.BaseStream.Seek(count, SeekOrigin.Current);
+        }
+
+        private string ReadOptionalDeduplicatedString()
+        {
+            if (fileFormatVersion < 10)
+            {
+                return ReadOptionalString();
+            }
+
+            return ReadDeduplicatedString();
+        }
+
+        private string ReadDeduplicatedString()
+        {
+            if (fileFormatVersion < 10)
+            {
+                return ReadString();
+            }
+
+            int index = ReadInt32();
+            if (index == 0)
+            {
+                return null;
+            }
+            else if (index == 1)
+            {
+                return string.Empty;
+            }
+            else if (index > 0 && index < this.stringRecords.Count)
+            {
+                return this.stringRecords[index];
+            }
+
+            return string.Empty;
         }
 
         private int ReadInt32()

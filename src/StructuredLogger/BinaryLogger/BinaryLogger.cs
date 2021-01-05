@@ -39,7 +39,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
         //   - This was used in a now-reverted change but is the same as 9.
         // version 9:
         //   - new record kinds: EnvironmentVariableRead, PropertyReassignment, UninitializedPropertyRead
-        internal const int FileFormatVersion = 9;
+        // version 10:
+        //   - new record kind: NameValueList
+        //     hash and reuse name value lists such as properties, items and metadata
+        //     in a separate record and refer to those records from regular records
+        //     where a list used to be written in-place
+        internal const int FileFormatVersion = 10;
 
         private Stream stream;
         private BinaryWriter binaryWriter;
@@ -123,7 +128,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 if (CollectProjectImports != ProjectImportsCollectionMode.None)
                 {
-                    projectImportsCollector = new ProjectImportsCollector(FilePath);
+                    projectImportsCollector = new ProjectImportsCollector(FilePath, CollectProjectImports == ProjectImportsCollectionMode.ZipFile);
                 }
 
                 if (eventSource is IEventSource3 eventSource3)
@@ -153,6 +158,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private void LogInitialInfo()
         {
             LogMessage("BinLogFilePath=" + FilePath);
+            LogMessage("CurrentUICulture=" + System.Globalization.CultureInfo.CurrentUICulture.Name);
         }
 
         private void LogMessage(string text)
@@ -167,26 +173,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         public void Shutdown()
         {
+            LogMessage("Binlog overhead: " + stopwatch.Elapsed);
+
             Environment.SetEnvironmentVariable("MSBUILDTARGETOUTPUTLOGGING", _initialTargetOutputLogging);
             Environment.SetEnvironmentVariable("MSBUILDLOGIMPORTS", _initialLogImports);
 
             if (projectImportsCollector != null)
             {
-                projectImportsCollector.Close();
-
                 if (CollectProjectImports == ProjectImportsCollectionMode.Embed)
                 {
-                    var archiveFilePath = projectImportsCollector.ArchiveFilePath;
-
-                    // It is possible that the archive couldn't be created for some reason.
-                    // Only embed it if it actually exists.
-                    if (File.Exists(archiveFilePath))
-                    {
-                        eventArgsWriter.WriteBlob(BinaryLogRecordKind.ProjectImportArchive, File.ReadAllBytes(archiveFilePath));
-                        File.Delete(archiveFilePath);
-                    }
+                    eventArgsWriter.WriteBlob(BinaryLogRecordKind.ProjectImportArchive, projectImportsCollector.GetAllBytes());
                 }
 
+                projectImportsCollector.Close();
                 projectImportsCollector = null;
             }
 
@@ -206,10 +205,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Write(e);
         }
 
+        private Stopwatch stopwatch = new Stopwatch();
+
         private void Write(BuildEventArgs e)
         {
             if (stream != null)
             {
+                stopwatch.Start();
+
                 // TODO: think about queuing to avoid contention
                 lock (eventArgsWriter)
                 {
@@ -220,6 +223,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     CollectImports(e);
                 }
+
+                stopwatch.Stop();
             }
         }
 
@@ -236,14 +241,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             else if (e is MetaprojectGeneratedEventArgs metaprojectArgs)
             {
                 projectImportsCollector.AddFileFromMemory(metaprojectArgs.ProjectFile, metaprojectArgs.metaprojectXml);
-            }
-            else
-            {
-                // This is different from the official MSBuild because we want to run on MSBuild 14
-                // and still collect source files mentioned in targets and tasks.
-                // We don't need this in official MSBuild because there we have the ProjectImportedEventArgs
-                // that tells us about all the files.
-                projectImportsCollector.IncludeSourceFiles(e);
             }
         }
 
