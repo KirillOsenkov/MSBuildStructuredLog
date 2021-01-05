@@ -1650,20 +1650,20 @@ Recent:
             AddTopTasks(treeStats.TaskParameterMessagesByTask, taskInputsNode);
             AddTopTasks(treeStats.OutputItemMessagesByTask, taskOutputsNode);
 
-            statsRoot.AddChild(new Message { Text = BinlogStats.GetString("Strings", recordStats.StringTotalSize, recordStats.StringCount) });
-            statsRoot.AddChild(new Message { Text = BinlogStats.GetString("NameValueLists", recordStats.NameValueListTotalSize, recordStats.NameValueListCount) });
-            statsRoot.AddChild(new Message { Text = BinlogStats.GetString("Blobs", recordStats.BlobTotalSize, recordStats.BlobCount) });
+            statsRoot.AddChild(new Message { Text = BinlogStats.GetString("Strings", recordStats.StringTotalSize, recordStats.StringCount, recordStats.StringLargest) });
+            statsRoot.AddChild(new Message { Text = BinlogStats.GetString("NameValueLists", recordStats.NameValueListTotalSize, recordStats.NameValueListCount, recordStats.NameValueListLargest) });
+            statsRoot.AddChild(new Message { Text = BinlogStats.GetString("Blobs", recordStats.BlobTotalSize, recordStats.BlobCount, recordStats.BlobLargest) });
         }
 
         private static void AddTopTasks(Dictionary<string, List<string>> messagesByTask, Folder node)
         {
             var topTaskParameters = messagesByTask
-                .Select(kvp => (taskName: kvp.Key, count: kvp.Value.Count, totalSize: kvp.Value.Sum(s => s.Length * 2)))
+                .Select(kvp => (taskName: kvp.Key, count: kvp.Value.Count, totalSize: kvp.Value.Sum(s => s.Length * 2), largest: kvp.Value.Max(s => s.Length) * 2))
                 .OrderByDescending(kvp => kvp.totalSize)
                 .Take(20);
             foreach (var task in topTaskParameters)
             {
-                var name = BinlogStats.GetString(task.taskName, task.totalSize, task.count);
+                var name = BinlogStats.GetString(task.taskName, task.totalSize, task.count, task.largest);
                 node.AddChild(new Folder { Name = name });
             }
         }
