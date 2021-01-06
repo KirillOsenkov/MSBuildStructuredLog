@@ -172,8 +172,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             int count = ReadInt32();
             for (int i = 0; i < count; i++)
             {
-                string key = ReadString();
-                string value = ReadString();
+                string key = ReadDeduplicatedString();
+                string value = ReadDeduplicatedString();
                 var kvp = new KeyValuePair<string, string>(key, value);
                 list.Add(kvp);
             }
@@ -884,12 +884,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private IReadOnlyList<KeyValuePair<string, string>> GetNameValueList(string id)
         {
-            if (int.TryParse(id, out int nameValueRecordIndex) &&
-                nameValueRecordIndex >= 0 &&
-                nameValueRecordIndex < this.nameValueLists.Count)
+            if (int.TryParse(id, out int nameValueRecordIndex))
             {
-                var list = this.nameValueLists[nameValueRecordIndex];
-                return list;
+                nameValueRecordIndex -= BuildEventArgsWriter.NameValueRecordStartIndex;
+                if (nameValueRecordIndex >= 0 && nameValueRecordIndex < this.nameValueLists.Count)
+                {
+                    var list = this.nameValueLists[nameValueRecordIndex];
+                    return list;
+                }
             }
 
             return Array.Empty<KeyValuePair<string, string>>();
@@ -1144,7 +1146,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     parentId = ReadInt64();
                 }
-
                 return new EvaluationLocation(id, parentId, evaluationPass, evaluationDescription, file, line, elementName, description, kind);
             }
 

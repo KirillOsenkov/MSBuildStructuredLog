@@ -697,8 +697,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         private readonly List<KeyValuePair<string, string>> nameValueList = new List<KeyValuePair<string, string>>(1024);
+        private readonly List<KeyValuePair<int, int>> nameValueIndexList = new List<KeyValuePair<int, int>>(1024);
         private readonly Dictionary<HashKey, int> hashes = new Dictionary<HashKey, int>();
-        private int nameValueRecordId = 0;
+
+        internal const int NameValueRecordStartIndex = 10;
+        private int nameValueRecordId = NameValueRecordStartIndex;
 
         internal struct HashKey : IEquatable<HashKey>
         {
@@ -777,7 +780,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            HashKey hash = GetHash(nameValueList);
+            HashKey hash = HashAllStrings(nameValueList);
             if (!hashes.TryGetValue(hash, out var recordId))
             {
                 recordId = nameValueRecordId;
@@ -817,12 +820,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 binaryWriter = this.originalBinaryWriter;
 
                 Write(BinaryLogRecordKind.NameValueList);
-                Write(nameValueList.Count);
+                Write(nameValueIndexList.Count);
                 for (int i = 0; i < nameValueList.Count; i++)
                 {
-                    var kvp = nameValueList[i];
-                    Write(kvp.Key ?? string.Empty);
-                    Write(kvp.Value ?? string.Empty);
+                    var kvp = nameValueIndexList[i];
+                    Write(kvp.Key);
+                    Write(kvp.Value);
                 }
             }
             finally
@@ -832,15 +835,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private HashKey GetHash(List<KeyValuePair<string, string>> nameValueList)
+        private HashKey HashAllStrings(List<KeyValuePair<string, string>> nameValueList)
         {
             HashKey hash = new HashKey();
+
+            nameValueIndexList.Clear();
 
             for (int i = 0; i < nameValueList.Count; i++)
             {
                 var kvp = nameValueList[i];
-                hash = hash.Add(new HashKey(kvp.Key));
-                hash = hash.Add(new HashKey(kvp.Value));
+                var (keyIndex, keyHash) = HashString(kvp.Key);
+                var (valueIndex, valueHash) = HashString(kvp.Value);
+                hash = hash.Add(keyHash);
+                hash = hash.Add(valueHash);
+                nameValueIndexList.Add(new KeyValuePair<int, int>(keyIndex, valueIndex));
             }
 
             return hash;
@@ -902,15 +910,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void WriteDeduplicatedString(string text)
         {
+            var (recordId, _) = HashString(text);
+            Write(recordId);
+        }
+
+        private (int index, HashKey hash) HashString(string text)
+        {
             if (text == null)
             {
-                binaryWriter.Write((byte)0);
-                return;
+                return (0, default);
             }
             else if (text.Length == 0)
             {
-                binaryWriter.Write((byte)1);
-                return;
+                return (1, default);
             }
 
             var hash = new HashKey(text);
@@ -924,7 +936,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 stringRecordId += 1;
             }
 
-            Write(recordId);
+            return (recordId, hash);
         }
 
         private void WriteStringRecord(string text)
