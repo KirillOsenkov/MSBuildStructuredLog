@@ -218,7 +218,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             WriteOptionalString(e.ProjectFile);
             WriteOptionalString(e.TargetFile);
             WriteOptionalString(e.ParentTarget);
-            Write((int) e.BuildReason);
+            Write((int)e.BuildReason);
         }
 
         private void Write(TargetFinishedEventArgs e)
@@ -705,35 +705,35 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         internal struct HashKey : IEquatable<HashKey>
         {
-            private int Int32;
+            private ulong value;
 
-            private HashKey(int i)
+            private HashKey(ulong i)
             {
-                Int32 = i;
+                value = i;
             }
 
             public HashKey(string text)
             {
                 if (text == null)
                 {
-                    Int32 = -1;
+                    value = 0;
                 }
                 else
                 {
-                    Int32 = text.GetHashCode();
+                    value = FnvHash64.GetHashCode(text);
                 }
             }
 
             public static HashKey Combine(HashKey left, HashKey right)
             {
-                return new HashKey((left.Int32, right.Int32).GetHashCode());
+                return new HashKey(FnvHash64.Combine(left.value, right.value));
             }
 
             public HashKey Add(HashKey other) => Combine(this, other);
 
             public bool Equals(HashKey other)
             {
-                return Int32 == other.Int32;
+                return value == other.value;
             }
 
             public override bool Equals(object obj)
@@ -748,12 +748,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             public override int GetHashCode()
             {
-                return Int32;
+                return (int)value;
             }
 
             public override string ToString()
             {
-                return Int32.ToString();
+                return value.ToString();
             }
         }
 
@@ -1021,6 +1021,36 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Write(e.NumberOfHits);
             Write(e.ExclusiveTime);
             Write(e.InclusiveTime);
+        }
+
+        private static class FnvHash64
+        {
+            public const ulong Offset = 14695981039346656037;
+            public const ulong Prime = 1099511628211;
+
+            public static ulong GetHashCode(string text)
+            {
+                ulong hash = Offset;
+
+                unchecked
+                {
+                    for (int i = 0; i < text.Length; i++)
+                    {
+                        char ch = text[i];
+                        hash = (hash ^ ch) * Prime;
+                    }
+                }
+
+                return hash;
+            }
+
+            public static ulong Combine(ulong left, ulong right)
+            {
+                unchecked
+                {
+                    return (left ^ right) * Prime;
+                }
+            }
         }
     }
 }
