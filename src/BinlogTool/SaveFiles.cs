@@ -60,7 +60,7 @@ namespace BinlogTool
             var arguments = invocation.CommandLineArguments.Tokenize();
             foreach (var argument in arguments)
             {
-                if (argument.StartsWith('/'))
+                if (argument.StartsWith("/"))
                 {
                     var reference = TryGetReference(argument);
                     if (reference != null)
