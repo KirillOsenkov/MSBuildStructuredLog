@@ -398,6 +398,8 @@ namespace StructuredLogViewer
 
             bool shouldAnalyze = true;
 
+            var stopwatch = Stopwatch.StartNew();
+
             Build build = await System.Threading.Tasks.Task.Run(() =>
             {
                 try
@@ -428,6 +430,12 @@ namespace StructuredLogViewer
             await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Loaded); // let the progress message be rendered before we block the UI again
 
             DisplayBuild(build);
+
+            var elapsed = stopwatch.Elapsed;
+            if (currentBuild != null)
+            {
+                currentBuild.UpdateBreadcrumb($"Load time: {elapsed}");
+            }
         }
 
         private static Build GetErrorBuild(string filePath, string message)
