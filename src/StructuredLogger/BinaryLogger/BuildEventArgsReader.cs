@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Framework.Profiler;
 
@@ -11,7 +12,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
     /// <summary>
     /// Deserializes and returns BuildEventArgs-derived objects from a BinaryReader
     /// </summary>
-    internal class BuildEventArgsReader
+    internal class BuildEventArgsReader : IDisposable
     {
         private readonly BinaryReader binaryReader;
         private readonly int fileFormatVersion;
@@ -36,6 +37,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
             this.fileFormatVersion = fileFormatVersion;
         }
 
+        public void Dispose()
+        {
+            if (stringStorage != null)
+            {
+                stringStorage.Dispose();
+                stringStorage = null;
+            }
+        }
+
         /// <summary>
         /// Raised when the log reader encounters a binary blob embedded in the stream.
         /// The arguments include the blob kind and the byte buffer with the contents.
@@ -57,17 +67,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
             // just ingest their data and continue.
             while (IsAuxiliaryRecord(recordKind))
             {
-                if (recordKind == BinaryLogRecordKind.ProjectImportArchive)
+                // these are ordered by commonality
+                if (recordKind == BinaryLogRecordKind.String)
                 {
-                    ReadBlob(recordKind);
+                    ReadStringRecord();
                 }
                 else if (recordKind == BinaryLogRecordKind.NameValueList)
                 {
                     ReadNameValueList();
                 }
-                else if (recordKind == BinaryLogRecordKind.String)
+                else if (recordKind == BinaryLogRecordKind.ProjectImportArchive)
                 {
-                    ReadStringRecord();
+                    ReadBlob(recordKind);
                 }
 
                 recordKind = (BinaryLogRecordKind)ReadInt32();
@@ -163,7 +174,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         private readonly List<IDictionary<string, string>> nameValueLists = new List<IDictionary<string, string>>();
-        private readonly List<string> stringRecords = new List<string>();
+        private readonly List<object> stringRecords = new List<object>();
+        private StringStorage stringStorage = new StringStorage();
 
         private void ReadNameValueList()
         {
@@ -184,7 +196,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private void ReadStringRecord()
         {
             string text = ReadString();
-            stringRecords.Add(text);
+            object storedString = stringStorage.Add(text);
+            stringRecords.Add(storedString);
             OnStringRead?.Invoke(text);
         }
 
@@ -1021,7 +1034,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             index -= BuildEventArgsWriter.StringStartIndex;
             if (index >= 0 && index < this.stringRecords.Count)
             {
-                return this.stringRecords[index];
+                object storedString = stringRecords[index];
+                string result = stringStorage.Get(storedString);
+                return result;
             }
 
             return string.Empty;
@@ -1111,10 +1126,110 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     parentId = ReadInt64();
                 }
+
                 return new EvaluationLocation(id, parentId, evaluationPass, evaluationDescription, file, line, elementName, description, kind);
             }
 
             return new EvaluationLocation(0, null, evaluationPass, evaluationDescription, file, line, elementName, description, kind);
+        }
+
+        internal class StringPosition
+        {
+            public long FilePosition;
+            public int StringLength;
+        }
+
+        internal class StringStorage : IDisposable
+        {
+            private string filePath;
+            private FileStream stream;
+            private StreamWriter streamWriter;
+            private StreamReader streamReader;
+            private StringBuilder stringBuilder;
+
+            public const int StringSizeThreshold = 1024;
+
+            public StringStorage()
+            {
+                if (!Environment.Is64BitProcess)
+                {
+                    filePath = Path.GetTempFileName();
+                    var utf8noBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+                    stream = new FileStream(
+                        filePath,
+                        FileMode.OpenOrCreate,
+                        FileAccess.ReadWrite,
+                        FileShare.None,
+                        bufferSize: 4096,
+                        FileOptions.RandomAccess | FileOptions.DeleteOnClose);
+                    streamWriter = new StreamWriter(stream, utf8noBom, 65536);
+                    streamWriter.AutoFlush = true;
+                    streamReader = new StreamReader(stream, utf8noBom);
+                    stringBuilder = new StringBuilder();
+                }
+            }
+
+            public object Add(string text)
+            {
+                if (filePath == null || text.Length <= StringSizeThreshold)
+                {
+                    return text;
+                }
+
+                var stringPosition = new StringPosition();
+
+                stringPosition.FilePosition = stream.Position;
+
+                streamWriter.Write(text);
+
+                stringPosition.StringLength = text.Length;
+                return stringPosition;
+            }
+
+            public string Get(object storedString)
+            {
+                if (storedString is string text)
+                {
+                    return text;
+                }
+
+                var position = (StringPosition)storedString;
+
+                stream.Position = position.FilePosition;
+                stringBuilder.Length = position.StringLength;
+                for (int i = 0; i < position.StringLength; i++)
+                {
+                    char ch = (char)streamReader.Read();
+                    stringBuilder[i] = ch;
+                }
+
+                stream.Position = stream.Length;
+
+                string result = stringBuilder.ToString();
+                stringBuilder.Clear();
+                return result;
+            }
+
+            public void Dispose()
+            {
+                try
+                {
+                    if (streamWriter != null)
+                    {
+                        streamWriter.Dispose();
+                        streamWriter = null;
+                    }
+
+                    if (stream != null)
+                    {
+                        stream.Dispose();
+                        stream = null;
+                    }
+                }
+                catch
+                {
+                }
+            }
         }
     }
 }

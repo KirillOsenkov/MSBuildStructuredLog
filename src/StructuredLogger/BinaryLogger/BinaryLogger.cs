@@ -32,7 +32,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         // version 5:
         //   - new EvaluationFinished.ProfilerResult
         // version 6:
-        //   -  Ids and parent ids for the evaluation locations
+        //   - Ids and parent ids for the evaluation locations
         // version 7:
         //   - Include ProjectStartedEventArgs.GlobalProperties
         // version 8:
@@ -145,6 +145,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             stream = new GZipStream(stream, CompressionLevel.Optimal);
+            stream = new BufferedStream(stream, bufferSize: 32768);
             binaryWriter = new BinaryWriter(stream);
             eventArgsWriter = new BuildEventArgsWriter(binaryWriter);
 
@@ -173,7 +174,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         public void Shutdown()
         {
-            LogMessage("Binlog overhead: " + stopwatch.Elapsed);
+            LogMessage("Binlog overhead=" + stopwatch.Elapsed);
 
             Environment.SetEnvironmentVariable("MSBUILDTARGETOUTPUTLOGGING", _initialTargetOutputLogging);
             Environment.SetEnvironmentVariable("MSBUILDLOGIMPORTS", _initialLogImports);
