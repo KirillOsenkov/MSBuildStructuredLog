@@ -44,7 +44,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public event Action<string> OnStringRead;
 
-        public event Action<IReadOnlyList<KeyValuePair<string, string>>> OnNameValueListRead;
+        public event Action<IDictionary<string, string>> OnNameValueListRead;
 
         /// <summary>
         /// Reads the next log record from the binary reader. If there are no more records, returns null.
@@ -162,20 +162,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
             OnBlobRead?.Invoke(kind, bytes);
         }
 
-        private readonly List<IReadOnlyList<KeyValuePair<string, string>>> nameValueLists = new List<IReadOnlyList<KeyValuePair<string, string>>>();
+        private readonly List<IDictionary<string, string>> nameValueLists = new List<IDictionary<string, string>>();
         private readonly List<string> stringRecords = new List<string>();
 
         private void ReadNameValueList()
         {
-            var list = new List<KeyValuePair<string, string>>();
+            var list = new Dictionary<string, string>();
 
             int count = ReadInt32();
             for (int i = 0; i < count; i++)
             {
                 string key = ReadDeduplicatedString();
                 string value = ReadDeduplicatedString();
-                var kvp = new KeyValuePair<string, string>(key, value);
-                list.Add(kvp);
+                list[key] = value;
             }
 
             nameValueLists.Add(list);
@@ -307,8 +306,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     var d = new Dictionary<EvaluationLocation, ProfiledLocation>(count);
                     for (int i = 0; i < count; i++)
                     {
-                        d.Add(ReadEvaluationLocation(), ReadProfiledLocation());
+                        var evaluationLocation = ReadEvaluationLocation();
+                        var profiledLocation = ReadProfiledLocation();
+                        d[evaluationLocation] = profiledLocation;
                     }
+
                     e.ProfilerResult = new ProfilerResult(d);
                 }
             }
@@ -330,7 +332,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var targetNames = ReadDeduplicatedString();
             var toolsVersion = ReadOptionalDeduplicatedString();
 
-            Dictionary<string, string> globalProperties = null;
+            IDictionary<string, string> globalProperties = null;
 
             if (fileFormatVersion > 6)
             {
@@ -804,7 +806,29 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return result;
         }
 
-        private Dictionary<string, string> ReadStringDictionary()
+        private IDictionary<string, string> ReadStringDictionary()
+        {
+            if (fileFormatVersion < 10)
+            {
+                return ReadLegacyStringDictionary();
+            }
+
+            int index = ReadInt32();
+            if (index == 0)
+            {
+                return null;
+            }
+
+            var record = GetNameValueList(index);
+            if (record != null)
+            {
+                return record;
+            }
+
+            return null;
+        }
+
+        private IDictionary<string, string> ReadLegacyStringDictionary()
         {
             int count = ReadInt32();
             if (count == 0)
@@ -813,29 +837,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             var result = new Dictionary<string, string>(count);
-
-            if (count == 1)
-            {
-                string name = ReadString();
-                string value = ReadString();
-                if (name == "\0")
-                {
-                    var record = GetNameValueList(value);
-                    if (record != null)
-                    {
-                        foreach (var property in record)
-                        {
-                            result[property.Key] = property.Value;
-                        }
-                    }
-                }
-                else
-                {
-                    result[name] = value;
-                }
-
-                return result;
-            }
 
             for (int i = 0; i < count; i++)
             {
@@ -849,16 +850,29 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private class TaskItem : ITaskItem
         {
+            private static readonly Dictionary<string, string> emptyMetadata = new Dictionary<string, string>();
+
             public string ItemSpec { get; set; }
-            public Dictionary<string, string> Metadata { get; } = new Dictionary<string, string>();
+            public IDictionary<string, string> Metadata { get; }
+
+            public TaskItem()
+            {
+                Metadata = new Dictionary<string, string>();
+            }
+
+            public TaskItem(string itemSpec, IDictionary<string, string> metadata)
+            {
+                ItemSpec = itemSpec;
+                Metadata = metadata ?? emptyMetadata;
+            }
 
             public int MetadataCount => Metadata.Count;
 
-            public ICollection MetadataNames => Metadata.Keys;
+            public ICollection MetadataNames => (ICollection)Metadata.Keys;
 
             public IDictionary CloneCustomMetadata()
             {
-                return Metadata;
+                return (IDictionary)Metadata;
             }
 
             public void CopyMetadataTo(ITaskItem destinationItem)
@@ -880,68 +894,35 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 throw new NotImplementedException();
             }
+
+            public override string ToString()
+            {
+                return $"{ItemSpec} Metadata: {MetadataCount}";
+            }
         }
 
-        private IReadOnlyList<KeyValuePair<string, string>> GetNameValueList(string id)
+        private IDictionary<string, string> GetNameValueList(int id)
         {
-            if (int.TryParse(id, out int nameValueRecordIndex))
+            id -= BuildEventArgsWriter.NameValueRecordStartIndex;
+            if (id >= 0 && id < this.nameValueLists.Count)
             {
-                nameValueRecordIndex -= BuildEventArgsWriter.NameValueRecordStartIndex;
-                if (nameValueRecordIndex >= 0 && nameValueRecordIndex < this.nameValueLists.Count)
-                {
-                    var list = this.nameValueLists[nameValueRecordIndex];
-                    return list;
-                }
+                var list = this.nameValueLists[id];
+                return list;
             }
 
-            return Array.Empty<KeyValuePair<string, string>>();
+            return new Dictionary<string, string>();
         }
 
-        private ITaskItem ReadTaskItem(bool skip = false)
+        private ITaskItem ReadTaskItem()
         {
-            var item = new TaskItem();
-            item.ItemSpec = ReadString(skip);
+            string itemSpec = ReadString();
+            var metadata = ReadStringDictionary();
 
-            int count = ReadInt32();
-            if (count == 0)
-            {
-                return item;
-            }
-
-            if (count == 1)
-            {
-                string name = ReadString(skip);
-                string value = ReadString(skip);
-                if (name == "\0")
-                {
-                    var record = GetNameValueList(value);
-                    if (record != null)
-                    {
-                        foreach (var metadata in record)
-                        {
-                            item.Metadata[metadata.Key] = metadata.Value;
-                        }
-                    }
-                }
-                else
-                {
-                    item.Metadata[name] = value;
-                }
-
-                return item;
-            }
-
-            for (int i = 0; i < count; i++)
-            {
-                string name = ReadString();
-                string value = ReadString();
-                item.Metadata[name] = value;
-            }
-
-            return item;
+            var taskItem = new TaskItem(itemSpec, metadata);
+            return taskItem;
         }
 
-        private IEnumerable ReadItems(bool skip = false)
+        private IEnumerable ReadItems()
         {
             int count = ReadInt32();
             if (count == 0)
@@ -949,19 +930,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return null;
             }
 
-            var list = new List<DictionaryEntry>();
-
+            List<DictionaryEntry> list;
             if (fileFormatVersion < 10)
             {
+                list = new List<DictionaryEntry>(count);
                 for (int i = 0; i < count; i++)
                 {
-                    string key = ReadString(skip);
-                    ITaskItem item = ReadTaskItem(skip);
+                    string key = ReadString();
+                    ITaskItem item = ReadTaskItem();
                     list.Add(new DictionaryEntry(key, item));
                 }
             }
             else
             {
+                list = new List<DictionaryEntry>();
                 for (int i = 0; i < count; i++)
                 {
                     string itemName = ReadString();
@@ -1007,21 +989,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private string ReadString(bool skip = false)
+        private string ReadString()
         {
-            if (skip)
-            {
-                var length = Read7BitEncodedInt(binaryReader);
-                SkipBytes(binaryReader, length);
-                return null;
-            }
-
             return binaryReader.ReadString();
-        }
-
-        private void SkipBytes(BinaryReader binaryReader, int count)
-        {
-            binaryReader.BaseStream.Seek(count, SeekOrigin.Current);
         }
 
         private string ReadOptionalDeduplicatedString()

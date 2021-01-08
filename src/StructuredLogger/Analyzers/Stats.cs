@@ -33,7 +33,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public int BlobTotalSize;
         public int BlobLargest;
 
-        private void OnNameValueListRead(IReadOnlyList<KeyValuePair<string, string>> list)
+        private void OnNameValueListRead(IDictionary<string, string> list)
         {
             NameValueListCount += 1;
             var size = list.Sum(kvp => kvp.Key.Length * 2 + kvp.Value.Length * 2);

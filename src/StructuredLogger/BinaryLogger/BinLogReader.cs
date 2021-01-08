@@ -21,7 +21,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         public event Action<BinaryLogRecordKind, byte[]> OnBlobRead;
         public event Action<string> OnStringRead;
-        public event Action<IReadOnlyList<KeyValuePair<string, string>>> OnNameValueListRead;
+        public event Action<IDictionary<string, string>> OnNameValueListRead;
 
         /// <summary>
         /// Raised when there was an exception reading a record from the file.
