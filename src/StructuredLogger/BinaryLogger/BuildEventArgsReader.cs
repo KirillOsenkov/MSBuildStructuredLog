@@ -274,7 +274,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private BuildEventArgs ReadProjectEvaluationStartedEventArgs()
         {
             var fields = ReadBuildEventArgsFields();
-            var projectFile = ReadString();
+            var projectFile = ReadDeduplicatedString();
 
             var e = new ProjectEvaluationStartedEventArgs(fields.Message)
             {
@@ -287,7 +287,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private BuildEventArgs ReadProjectEvaluationFinishedEventArgs()
         {
             var fields = ReadBuildEventArgsFields();
-            var projectFile = ReadString();
+            var projectFile = ReadDeduplicatedString();
 
             var e = new ProjectEvaluationFinishedEventArgs(fields.Message)
             {
@@ -327,10 +327,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 parentContext = ReadBuildEventContext();
             }
 
-            var projectFile = ReadOptionalDeduplicatedString();
+            var projectFile = ReadOptionalString();
             var projectId = ReadInt32();
             var targetNames = ReadDeduplicatedString();
-            var toolsVersion = ReadOptionalDeduplicatedString();
+            var toolsVersion = ReadOptionalString();
 
             IDictionary<string, string> globalProperties = null;
 
@@ -570,7 +570,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var fields = ReadBuildEventArgsFields();
             var importance = (MessageImportance)ReadInt32();
 
-            var environmentVariableName = ReadString();
+            var environmentVariableName = ReadDeduplicatedString();
 
             var e = new EnvironmentVariableReadEventArgs(
                 environmentVariableName,
@@ -587,10 +587,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             var fields = ReadBuildEventArgsFields();
             var importance = (MessageImportance)ReadInt32();
-            string propertyName = ReadString();
-            string previousValue = ReadString();
-            string newValue = ReadString();
-            string location = ReadString();
+            string propertyName = ReadDeduplicatedString();
+            string previousValue = ReadDeduplicatedString();
+            string newValue = ReadDeduplicatedString();
+            string location = ReadDeduplicatedString();
 
             var e = new PropertyReassignmentEventArgs(
                 propertyName,
@@ -610,7 +610,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             var fields = ReadBuildEventArgsFields();
             var importance = (MessageImportance)ReadInt32();
-            string propertyName = ReadString();
+            string propertyName = ReadDeduplicatedString();
 
             var e = new UninitializedPropertyReadEventArgs(
                 propertyName,
@@ -627,9 +627,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             var fields = ReadBuildEventArgsFields();
             var importance = (MessageImportance)ReadInt32();
-            string propertyName = ReadString();
-            string propertyValue = ReadString();
-            string propertySource = ReadString();
+            string propertyName = ReadDeduplicatedString();
+            string propertyValue = ReadDeduplicatedString();
+            string propertySource = ReadDeduplicatedString();
 
             var e = new PropertyInitialValueSetEventArgs(
                 propertyName,
@@ -685,12 +685,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if ((flags & BuildEventArgsFieldFlags.HelpHeyword) != 0)
             {
-                result.HelpKeyword = ReadString();
+                result.HelpKeyword = ReadDeduplicatedString();
             }
 
             if ((flags & BuildEventArgsFieldFlags.SenderName) != 0)
             {
-                result.SenderName = ReadString();
+                result.SenderName = ReadDeduplicatedString();
             }
 
             if ((flags & BuildEventArgsFieldFlags.Timestamp) != 0)
@@ -915,7 +915,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private ITaskItem ReadTaskItem()
         {
-            string itemSpec = ReadString();
+            string itemSpec = ReadDeduplicatedString();
             var metadata = ReadStringDictionary();
 
             var taskItem = new TaskItem(itemSpec, metadata);
@@ -946,7 +946,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 list = new List<DictionaryEntry>();
                 for (int i = 0; i < count; i++)
                 {
-                    string itemName = ReadString();
+                    string itemName = ReadDeduplicatedString();
                     var items = ReadTaskItemList();
                     foreach (var item in items)
                     {
@@ -977,28 +977,23 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return list;
         }
 
-        private string ReadOptionalString()
-        {
-            if (ReadBoolean())
-            {
-                return ReadString();
-            }
-            else
-            {
-                return null;
-            }
-        }
-
         private string ReadString()
         {
             return binaryReader.ReadString();
         }
 
-        private string ReadOptionalDeduplicatedString()
+        private string ReadOptionalString()
         {
             if (fileFormatVersion < 10)
             {
-                return ReadOptionalString();
+                if (ReadBoolean())
+                {
+                    return ReadString();
+                }
+                else
+                {
+                    return null;
+                }
             }
 
             return ReadDeduplicatedString();

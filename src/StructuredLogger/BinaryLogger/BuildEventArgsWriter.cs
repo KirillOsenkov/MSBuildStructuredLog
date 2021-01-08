@@ -9,7 +9,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Framework.Profiler;
 using Microsoft.Build.Internal;
 
-namespace Microsoft.Build.Logging.StructuredLogger
+namespace Microsoft.Build.Logging
 {
     /// <summary>
     /// Serializes BuildEventArgs-derived objects into a provided BinaryWriter
@@ -143,7 +143,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             Write(BinaryLogRecordKind.ProjectEvaluationStarted);
             WriteBuildEventArgsFields(e);
-            Write(e.ProjectFile);
+            WriteDeduplicatedString(e.ProjectFile);
         }
 
         private void Write(ProjectEvaluationFinishedEventArgs e)
@@ -151,7 +151,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Write(BinaryLogRecordKind.ProjectEvaluationFinished);
 
             WriteBuildEventArgsFields(e);
-            Write(e.ProjectFile);
+            WriteDeduplicatedString(e.ProjectFile);
 
             Write(e.ProfilerResult.HasValue);
             if (e.ProfilerResult.HasValue)
@@ -206,7 +206,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             Write(BinaryLogRecordKind.ProjectFinished);
             WriteBuildEventArgsFields(e);
-            WriteOptionalString(e.ProjectFile);
+            WriteDeduplicatedString(e.ProjectFile);
             Write(e.Succeeded);
         }
 
@@ -214,10 +214,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             Write(BinaryLogRecordKind.TargetStarted);
             WriteBuildEventArgsFields(e);
-            WriteOptionalString(e.TargetName);
-            WriteOptionalString(e.ProjectFile);
-            WriteOptionalString(e.TargetFile);
-            WriteOptionalString(e.ParentTarget);
+            WriteDeduplicatedString(e.TargetName);
+            WriteDeduplicatedString(e.ProjectFile);
+            WriteDeduplicatedString(e.TargetFile);
+            WriteDeduplicatedString(e.ParentTarget);
             Write((int)e.BuildReason);
         }
 
@@ -226,9 +226,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Write(BinaryLogRecordKind.TargetFinished);
             WriteBuildEventArgsFields(e);
             Write(e.Succeeded);
-            WriteOptionalString(e.ProjectFile);
-            WriteOptionalString(e.TargetFile);
-            WriteOptionalString(e.TargetName);
+            WriteDeduplicatedString(e.ProjectFile);
+            WriteDeduplicatedString(e.TargetFile);
+            WriteDeduplicatedString(e.TargetName);
             WriteTaskItemList(e.TargetOutputs);
         }
 
@@ -236,9 +236,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             Write(BinaryLogRecordKind.TaskStarted);
             WriteBuildEventArgsFields(e);
-            WriteOptionalString(e.TaskName);
-            WriteOptionalString(e.ProjectFile);
-            WriteOptionalString(e.TaskFile);
+            WriteDeduplicatedString(e.TaskName);
+            WriteDeduplicatedString(e.ProjectFile);
+            WriteDeduplicatedString(e.TaskFile);
         }
 
         private void Write(TaskFinishedEventArgs e)
@@ -246,19 +246,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Write(BinaryLogRecordKind.TaskFinished);
             WriteBuildEventArgsFields(e);
             Write(e.Succeeded);
-            WriteOptionalString(e.TaskName);
-            WriteOptionalString(e.ProjectFile);
-            WriteOptionalString(e.TaskFile);
+            WriteDeduplicatedString(e.TaskName);
+            WriteDeduplicatedString(e.ProjectFile);
+            WriteDeduplicatedString(e.TaskFile);
         }
 
         private void Write(BuildErrorEventArgs e)
         {
             Write(BinaryLogRecordKind.Error);
             WriteBuildEventArgsFields(e);
-            WriteOptionalString(e.Subcategory);
-            WriteOptionalString(e.Code);
-            WriteOptionalString(e.File);
-            WriteOptionalString(e.ProjectFile);
+            WriteDeduplicatedString(e.Subcategory);
+            WriteDeduplicatedString(e.Code);
+            WriteDeduplicatedString(e.File);
+            WriteDeduplicatedString(e.ProjectFile);
             Write(e.LineNumber);
             Write(e.ColumnNumber);
             Write(e.EndLineNumber);
@@ -269,10 +269,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             Write(BinaryLogRecordKind.Warning);
             WriteBuildEventArgsFields(e);
-            WriteOptionalString(e.Subcategory);
-            WriteOptionalString(e.Code);
-            WriteOptionalString(e.File);
-            WriteOptionalString(e.ProjectFile);
+            WriteDeduplicatedString(e.Subcategory);
+            WriteDeduplicatedString(e.Code);
+            WriteDeduplicatedString(e.File);
+            WriteDeduplicatedString(e.ProjectFile);
             Write(e.LineNumber);
             Write(e.ColumnNumber);
             Write(e.EndLineNumber);
@@ -338,17 +338,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Write(BinaryLogRecordKind.ProjectImported);
             WriteMessageFields(e);
             Write(e.ImportIgnored);
-            WriteOptionalString(e.ImportedProjectFile);
-            WriteOptionalString(e.UnexpandedProject);
+            WriteDeduplicatedString(e.ImportedProjectFile);
+            WriteDeduplicatedString(e.UnexpandedProject);
         }
 
         private void Write(TargetSkippedEventArgs e)
         {
             Write(BinaryLogRecordKind.TargetSkipped);
             WriteMessageFields(e);
-            WriteOptionalString(e.TargetFile);
-            WriteOptionalString(e.TargetName);
-            WriteOptionalString(e.ParentTarget);
+            WriteDeduplicatedString(e.TargetFile);
+            WriteDeduplicatedString(e.TargetName);
+            WriteDeduplicatedString (e.ParentTarget);
             Write((int)e.BuildReason);
         }
 
@@ -362,41 +362,41 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             Write(BinaryLogRecordKind.PropertyReassignment);
             WriteMessageFields(e);
-            Write(e.PropertyName);
-            Write(e.PreviousValue);
-            Write(e.NewValue);
-            Write(e.Location);
+            WriteDeduplicatedString(e.PropertyName);
+            WriteDeduplicatedString(e.PreviousValue);
+            WriteDeduplicatedString(e.NewValue);
+            WriteDeduplicatedString(e.Location);
         }
 
         private void Write(UninitializedPropertyReadEventArgs e)
         {
             Write(BinaryLogRecordKind.UninitializedPropertyRead);
             WriteMessageFields(e);
-            Write(e.PropertyName);
+            WriteDeduplicatedString(e.PropertyName);
         }
 
         private void Write(PropertyInitialValueSetEventArgs e)
         {
             Write(BinaryLogRecordKind.PropertyInitialValueSet);
             WriteMessageFields(e);
-            Write(e.PropertyName);
-            Write(e.PropertyValue);
-            Write(e.PropertySource);
+            WriteDeduplicatedString(e.PropertyName);
+            WriteDeduplicatedString(e.PropertyValue);
+            WriteDeduplicatedString(e.PropertySource);
         }
 
         private void Write(EnvironmentVariableReadEventArgs e)
         {
             Write(BinaryLogRecordKind.EnvironmentVariableRead);
             WriteMessageFields(e);
-            Write(e.EnvironmentVariableName);
+            WriteDeduplicatedString(e.EnvironmentVariableName);
         }
 
         private void Write(TaskCommandLineEventArgs e)
         {
             Write(BinaryLogRecordKind.TaskCommandLine);
             WriteMessageFields(e);
-            WriteOptionalString(e.CommandLine);
-            WriteOptionalString(e.TaskName);
+            WriteDeduplicatedString(e.CommandLine);
+            WriteDeduplicatedString(e.TaskName);
         }
 
         private void WriteBuildEventArgsFields(BuildEventArgs e)
@@ -425,12 +425,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if ((flags & BuildEventArgsFieldFlags.HelpHeyword) != 0)
             {
-                Write(e.HelpKeyword);
+                WriteDeduplicatedString(e.HelpKeyword);
             }
 
             if ((flags & BuildEventArgsFieldFlags.SenderName) != 0)
             {
-                Write(e.SenderName);
+                WriteDeduplicatedString(e.SenderName);
             }
 
             if ((flags & BuildEventArgsFieldFlags.Timestamp) != 0)
@@ -608,14 +608,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             foreach (var group in groups)
             {
-                Write(group.Key);
+                WriteDeduplicatedString(group.Key);
                 WriteTaskItemList(group);
             }
         }
 
         private void Write(ITaskItem item)
         {
-            Write(item.ItemSpec);
+            WriteDeduplicatedString(item.ItemSpec);
 
             if (nameValueList.Count > 0)
             {
@@ -941,36 +941,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 binaryWriter = this.originalBinaryWriter;
 
                 Write(BinaryLogRecordKind.String);
-                Write(text);
+                binaryWriter.Write(text);
             }
             finally
             {
                 // switch back to continue writing the current record to the memory stream
                 binaryWriter = this.currentRecordWriter;
-            }
-        }
-
-        private void Write(string text)
-        {
-            if (string.IsNullOrEmpty(text))
-            {
-                binaryWriter.Write((byte)0);
-                return;
-            }
-
-            binaryWriter.Write(text);
-        }
-
-        private void WriteOptionalString(string text)
-        {
-            if (text == null)
-            {
-                Write(false);
-            }
-            else
-            {
-                Write(true);
-                Write(text);
             }
         }
 
@@ -987,10 +963,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void Write(EvaluationLocation item)
         {
-            WriteOptionalString(item.ElementName);
-            WriteOptionalString(item.ElementDescription);
-            WriteOptionalString(item.EvaluationPassDescription);
-            WriteOptionalString(item.File);
+            WriteDeduplicatedString(item.ElementName);
+            WriteDeduplicatedString(item.ElementDescription);
+            WriteDeduplicatedString(item.EvaluationPassDescription);
+            WriteDeduplicatedString(item.File);
             Write((int)item.Kind);
             Write((int)item.EvaluationPass);
 
