@@ -70,7 +70,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             int recordsRead = 0;
 
-            var reader = new BuildEventArgsReader(binaryReader, fileFormatVersion);
+            using var reader = new BuildEventArgsReader(binaryReader, fileFormatVersion);
             reader.OnBlobRead += OnBlobRead;
             while (true)
             {
@@ -177,7 +177,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             List<Record> blobs = new List<Record>();
 
-            var reader = new BuildEventArgsReader(binaryReader, fileFormatVersion);
+            using var reader = new BuildEventArgsReader(binaryReader, fileFormatVersion);
 
             // forward the events from the reader to the subscribers of this class
             reader.OnBlobRead += OnBlobRead;

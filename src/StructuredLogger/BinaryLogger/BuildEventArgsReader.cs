@@ -17,6 +17,25 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private readonly BinaryReader binaryReader;
         private readonly int fileFormatVersion;
 
+        /// <summary>
+        /// A list of string records we've encountered so far. If it's a small string, it will be the string directly.
+        /// If it's a large string, it will be a pointer into a temporary page file where the string content will be
+        /// written out to. This is necessary so we don't keep all the strings in memory when reading large binlogs.
+        /// We will OOM otherwise.
+        /// </summary>
+        private readonly List<object> stringRecords = new List<object>();
+
+        /// <summary>
+        /// A list of dictionaries we've encountered so far. Dictionaries are referred to by their order in this list.
+        /// </summary>
+        private readonly List<(int keyIndex, int valueIndex)[]> nameValueListRecords = new List<(int, int)[]>();
+
+        /// <summary>
+        /// A "page-file" for storing strings we've read so far. Keeping them in memory would OOM the 32-bit MSBuild
+        /// when reading large binlogs. This is a no-op in a 64-bit process.
+        /// </summary>
+        private StringStorage stringStorage = new StringStorage();
+
         // reflection is needed to set these three fields because public constructors don't provide
         // a way to set these from the outside
         private static FieldInfo buildEventArgsFieldThreadId =
@@ -161,9 +180,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private static bool IsAuxiliaryRecord(BinaryLogRecordKind recordKind)
         {
-            return recordKind == BinaryLogRecordKind.ProjectImportArchive
+            return recordKind == BinaryLogRecordKind.String
                 || recordKind == BinaryLogRecordKind.NameValueList
-                || recordKind == BinaryLogRecordKind.String;
+                || recordKind == BinaryLogRecordKind.ProjectImportArchive;
         }
 
         private void ReadBlob(BinaryLogRecordKind kind)
@@ -173,24 +192,43 @@ namespace Microsoft.Build.Logging.StructuredLogger
             OnBlobRead?.Invoke(kind, bytes);
         }
 
-        private readonly List<IDictionary<string, string>> nameValueLists = new List<IDictionary<string, string>>();
-        private readonly List<object> stringRecords = new List<object>();
-        private StringStorage stringStorage = new StringStorage();
-
         private void ReadNameValueList()
         {
-            var list = new Dictionary<string, string>();
-
             int count = ReadInt32();
+
+            var list = new (int, int)[count];
             for (int i = 0; i < count; i++)
             {
-                string key = ReadDeduplicatedString();
-                string value = ReadDeduplicatedString();
-                list[key] = value;
+                int key = ReadInt32();
+                int value = ReadInt32();
+                list[i] = (key, value);
             }
 
-            nameValueLists.Add(list);
-            OnNameValueListRead?.Invoke(list);
+            nameValueListRecords.Add(list);
+        }
+
+        private IDictionary<string, string> GetNameValueList(int id)
+        {
+            id -= BuildEventArgsWriter.NameValueRecordStartIndex;
+            if (id >= 0 && id < nameValueListRecords.Count)
+            {
+                var list = nameValueListRecords[id];
+
+                var dictionary = new Dictionary<string, string>(list.Length);
+                for (int i = 0; i < list.Length; i++)
+                {
+                    string key = GetStringFromRecord(list[i].keyIndex);
+                    string value = GetStringFromRecord(list[i].valueIndex);
+                    if (key != null)
+                    {
+                        dictionary[key] = value;
+                    }
+                }
+
+                return dictionary;
+            }
+
+            return new Dictionary<string, string>();
         }
 
         private void ReadStringRecord()
@@ -356,7 +394,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             var propertyList = ReadPropertyList();
-            var itemList = ReadItems();
+            var itemList = ReadProjectItems();
 
             var e = new ProjectStartedEventArgs(
                 projectId,
@@ -833,12 +871,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             var record = GetNameValueList(index);
-            if (record != null)
-            {
-                return record;
-            }
-
-            return null;
+            return record;
         }
 
         private IDictionary<string, string> ReadLegacyStringDictionary()
@@ -914,18 +947,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private IDictionary<string, string> GetNameValueList(int id)
-        {
-            id -= BuildEventArgsWriter.NameValueRecordStartIndex;
-            if (id >= 0 && id < this.nameValueLists.Count)
-            {
-                var list = this.nameValueLists[id];
-                return list;
-            }
-
-            return new Dictionary<string, string>();
-        }
-
         private ITaskItem ReadTaskItem()
         {
             string itemSpec = ReadDeduplicatedString();
@@ -935,7 +956,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return taskItem;
         }
 
-        private IEnumerable ReadItems()
+        private IEnumerable ReadProjectItems()
         {
             int count = ReadInt32();
             if (count == 0)
@@ -944,14 +965,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             List<DictionaryEntry> list;
+
+            // starting with format version 10 project items are grouped by name
+            // so we only have to write the name once, and then the count of items
+            // with that name. When reading a legacy binlog we need to read the
+            // old style flat list where the name is duplicated for each item.
             if (fileFormatVersion < 10)
             {
                 list = new List<DictionaryEntry>(count);
                 for (int i = 0; i < count; i++)
                 {
-                    string key = ReadString();
+                    string itemName = ReadString();
                     ITaskItem item = ReadTaskItem();
-                    list.Add(new DictionaryEntry(key, item));
+                    list.Add(new DictionaryEntry(itemName, item));
                 }
             }
             else
@@ -1020,6 +1046,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             int index = ReadInt32();
+            return GetStringFromRecord(index);
+        }
+
+        private string GetStringFromRecord(int index)
+        {
             if (index == 0)
             {
                 return null;
@@ -1133,12 +1164,26 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return new EvaluationLocation(0, null, evaluationPass, evaluationDescription, file, line, elementName, description, kind);
         }
 
+        /// <summary>
+        /// Locates the string in the page file.
+        /// </summary>
         internal class StringPosition
         {
+            /// <summary>
+            /// Offset in the file.
+            /// </summary>
             public long FilePosition;
+
+            /// <summary>
+            /// The length of the string in chars (not bytes).
+            /// </summary>
             public int StringLength;
         }
 
+        /// <summary>
+        /// Stores large strings in a temp file on disk, to avoid keeping all strings in memory.
+        /// Only creates a file for 32-bit MSBuild.exe, just returns the string directly on 64-bit.
+        /// </summary>
         internal class StringStorage : IDisposable
         {
             private string filePath;
@@ -1169,10 +1214,30 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
+            private long totalAllocatedShortStrings = 0;
+
             public object Add(string text)
             {
-                if (filePath == null || text.Length <= StringSizeThreshold)
+                if (filePath == null)
                 {
+                    // on 64-bit, we have as much memory as we want
+                    // so no need to write to the file at all
+                    return text;
+                }
+
+                // Tradeoff between not crashing with OOM on large binlogs and
+                // keeping the playback of smaller binlogs relatively fast.
+                // It is slow to store all small strings in the file and constantly
+                // seek to retrieve them. Instead we'll keep storing small strings
+                // in memory until we allocate 2 GB. After that, all strings go to
+                // the file.
+                // Win-win: small binlog playback is fast and large binlog playback
+                // doesn't OOM.
+                if (text.Length <= StringSizeThreshold && totalAllocatedShortStrings < 2_000_000_000)
+                {
+                    // note that we write strings in UTF8 so we don't need to multiply by 2 as chars
+                    // will be 1 byte on average
+                    totalAllocatedShortStrings += text.Length;
                     return text;
                 }
 
@@ -1204,6 +1269,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
 
                 stream.Position = stream.Length;
+                streamReader.DiscardBufferedData();
 
                 string result = stringBuilder.ToString();
                 stringBuilder.Clear();

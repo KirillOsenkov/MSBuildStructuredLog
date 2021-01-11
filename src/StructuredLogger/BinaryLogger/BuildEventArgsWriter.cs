@@ -17,11 +17,84 @@ namespace Microsoft.Build.Logging.StructuredLogger
     internal class BuildEventArgsWriter
     {
         private readonly Stream originalStream;
+
+        /// <summary>
+        /// When writing the current record, first write it to a memory stream,
+        /// then flush to the originalStream. This is need so that if we discover
+        /// that we need to write a string record in the middle of writing the
+        /// current record, we will write the string record to the original stream
+        /// and the current record will end up after the string record.
+        /// </summary>
         private readonly MemoryStream currentRecordStream;
 
+        /// <summary>
+        /// The binary writer around the originalStream.
+        /// </summary>
         private readonly BinaryWriter originalBinaryWriter;
+
+        /// <summary>
+        /// The binary writer around the currentRecordStream.
+        /// </summary>
         private readonly BinaryWriter currentRecordWriter;
+
+        /// <summary>
+        /// The binary writer we're currently using. Is pointing at the currentRecordWriter usually,
+        /// but sometimes we repoint it to the originalBinaryWriter temporarily, when writing string
+        /// and name-value records.
+        /// </summary>
         private BinaryWriter binaryWriter;
+
+        /// <summary>
+        /// Hashtable used for deduplicating strings. When we need to write a string,
+        /// we check in this hashtable first, and if we've seen the string before,
+        /// just write out its index. Otherwise write out a string record, and then
+        /// write the string index. A string record is guaranteed to precede its first
+        /// usage.
+        /// The reader will read the string records first and then be able to retrieve
+        /// a string by its index. This allows us to keep the format streaming instead
+        /// of writing one giant string table at the end. If a binlog is interrupted
+        /// we'll be able to use all the information we've discovered thus far.
+        /// </summary>
+        private readonly Dictionary<HashKey, int> stringHashes = new Dictionary<HashKey, int>();
+
+        /// <summary>
+        /// Hashtable used for deduplicating name-value lists. Same as strings.
+        /// </summary>
+        private readonly Dictionary<HashKey, int> nameValueListHashes = new Dictionary<HashKey, int>();
+
+        /// <summary>
+        /// Index 0 is null, Index 1 is the empty string.
+        /// Reserve indices 2-9 for future use. Start indexing actual strings at 10.
+        /// </summary>
+        internal const int StringStartIndex = 10;
+
+        /// <summary>
+        /// Let's reserve a few indices for future use.
+        /// </summary>
+        internal const int NameValueRecordStartIndex = 10;
+
+        /// <summary>
+        /// 0 is null, 1 is empty string
+        /// 2-9 are reserved for future use.
+        /// Start indexing at 10.
+        /// </summary>
+        private int stringRecordId = StringStartIndex;
+
+        /// <summary>
+        /// The index of the next record to be written.
+        /// </summary>
+        private int nameValueRecordId = NameValueRecordStartIndex;
+
+        /// <summary>
+        /// A temporary buffer we use when writing a NameValueList record. Avoids allocating a list each time.
+        /// </summary>
+        private readonly List<KeyValuePair<string, string>> nameValueListBuffer = new List<KeyValuePair<string, string>>(1024);
+
+        /// <summary>
+        /// A temporary buffer we use when hashing a NameValueList record. Stores the indices of hashed strings
+        /// instead of the actual names and values.
+        /// </summary>
+        private readonly List<KeyValuePair<int, int>> nameValueIndexListBuffer = new List<KeyValuePair<int, int>>(1024);
 
         /// <summary>
         /// Initializes a new instance of BuildEventArgsWriter with a BinaryWriter
@@ -44,6 +117,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public void Write(BuildEventArgs e)
         {
             WriteCore(e);
+
+            // flush the current record and clear the MemoryStream to prepare for next use
             currentRecordStream.WriteTo(originalStream);
             currentRecordStream.SetLength(0);
         }
@@ -120,20 +195,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public void WriteBlob(BinaryLogRecordKind kind, byte[] bytes)
         {
-            try
-            {
-                // write the blob directly to the underlying writer,
-                // bypassing the memory stream
-                binaryWriter = originalBinaryWriter;
+            // write the blob directly to the underlying writer,
+            // bypassing the memory stream
+            binaryWriter = originalBinaryWriter;
 
-                Write(kind);
-                Write(bytes.Length);
-                Write(bytes);
-            }
-            finally
-            {
-                binaryWriter = currentRecordWriter;
-            }
+            Write(kind);
+            Write(bytes.Length);
+            Write(bytes);
+
+            binaryWriter = currentRecordWriter;
         }
 
         private void Write(BuildStartedEventArgs e)
@@ -628,9 +698,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             WriteDeduplicatedString(item.ItemSpec);
 
-            if (nameValueList.Count > 0)
+            if (nameValueListBuffer.Count > 0)
             {
-                nameValueList.Clear();
+                nameValueListBuffer.Clear();
             }
 
             IDictionary customMetadata = item.CloneCustomMetadata();
@@ -657,7 +727,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     Debug.Fail(e.ToString());
                 }
 
-                nameValueList.Add(new KeyValuePair<string, string>(metadataName, valueOrError));
+                nameValueListBuffer.Add(new KeyValuePair<string, string>(metadataName, valueOrError));
             }
 
             WriteNameValueList();
@@ -671,9 +741,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            if (nameValueList.Count > 0)
+            if (nameValueListBuffer.Count > 0)
             {
-                nameValueList.Clear();
+                nameValueListBuffer.Clear();
             }
 
             // there are no guarantees that the properties iterator won't change, so 
@@ -685,11 +755,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 DictionaryEntry entry = propertiesArray[i];
                 if (entry.Key is string key && entry.Value is string value)
                 {
-                    nameValueList.Add(new KeyValuePair<string, string>(key, value));
+                    nameValueListBuffer.Add(new KeyValuePair<string, string>(key, value));
                 }
                 else
                 {
-                    nameValueList.Add(new KeyValuePair<string, string>(string.Empty, string.Empty));
+                    nameValueListBuffer.Add(new KeyValuePair<string, string>(string.Empty, string.Empty));
                 }
             }
 
@@ -707,12 +777,229 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Write(buildEventContext.EvaluationId);
         }
 
-        private readonly List<KeyValuePair<string, string>> nameValueList = new List<KeyValuePair<string, string>>(1024);
-        private readonly List<KeyValuePair<int, int>> nameValueIndexList = new List<KeyValuePair<int, int>>(1024);
-        private readonly Dictionary<HashKey, int> hashes = new Dictionary<HashKey, int>();
+        private void Write(IEnumerable<KeyValuePair<string, string>> keyValuePairs)
+        {
+            if (nameValueListBuffer.Count > 0)
+            {
+                nameValueListBuffer.Clear();
+            }
 
-        internal const int NameValueRecordStartIndex = 10;
-        private int nameValueRecordId = NameValueRecordStartIndex;
+            foreach (var kvp in keyValuePairs)
+            {
+                nameValueListBuffer.Add(kvp);
+            }
+
+            WriteNameValueList();
+        }
+
+        private void WriteNameValueList()
+        {
+            if (nameValueListBuffer.Count == 0)
+            {
+                Write((byte)0);
+                return;
+            }
+
+            HashKey hash = HashAllStrings(nameValueListBuffer);
+            if (!nameValueListHashes.TryGetValue(hash, out var recordId))
+            {
+                recordId = nameValueRecordId;
+                nameValueListHashes[hash] = nameValueRecordId;
+
+                WriteNameValueListRecord();
+
+                nameValueRecordId += 1;
+            }
+
+            Write(recordId);
+        }
+
+        /// <summary>
+        /// In the middle of writing the current record we may discover that we want to write another record
+        /// preceding the current one, specifically the list of names and values we want to reuse in the
+        /// future. As we are writing the current record to a MemoryStream first, it's OK to temporarily
+        /// switch to the direct underlying stream and write the NameValueList record first.
+        /// When the current record is done writing, the MemoryStream will flush to the underlying stream
+        /// and the current record will end up after the NameValueList record, as desired.
+        /// </summary>
+        private void WriteNameValueListRecord()
+        {
+            // Switch the binaryWriter used by the Write* methods to the direct underlying stream writer.
+            // We want this record to precede the record we're currently writing to currentRecordWriter
+            // which is backed by a MemoryStream buffer
+            binaryWriter = this.originalBinaryWriter;
+
+            Write(BinaryLogRecordKind.NameValueList);
+            Write(nameValueIndexListBuffer.Count);
+            for (int i = 0; i < nameValueListBuffer.Count; i++)
+            {
+                var kvp = nameValueIndexListBuffer[i];
+                Write(kvp.Key);
+                Write(kvp.Value);
+            }
+
+            // switch back to continue writing the current record to the memory stream
+            binaryWriter = this.currentRecordWriter;
+        }
+
+        /// <summary>
+        /// Compute the total hash of all items in the nameValueList
+        /// while simultaneously filling the nameValueIndexListBuffer with the individual
+        /// hashes of the strings, mirroring the strings in the original nameValueList.
+        /// This helps us avoid hashing strings twice (once to hash the string individually
+        /// and the second time when hashing it as part of the nameValueList)
+        /// </summary>
+        private HashKey HashAllStrings(List<KeyValuePair<string, string>> nameValueList)
+        {
+            HashKey hash = new HashKey();
+
+            nameValueIndexListBuffer.Clear();
+
+            for (int i = 0; i < nameValueList.Count; i++)
+            {
+                var kvp = nameValueList[i];
+                var (keyIndex, keyHash) = HashString(kvp.Key);
+                var (valueIndex, valueHash) = HashString(kvp.Value);
+                hash = hash.Add(keyHash);
+                hash = hash.Add(valueHash);
+                nameValueIndexListBuffer.Add(new KeyValuePair<int, int>(keyIndex, valueIndex));
+            }
+
+            return hash;
+        }
+
+        private void Write(BinaryLogRecordKind kind)
+        {
+            Write((int)kind);
+        }
+
+        private void Write(int value)
+        {
+            Write7BitEncodedInt(binaryWriter, value);
+        }
+
+        private void Write(long value)
+        {
+            binaryWriter.Write(value);
+        }
+
+        private void Write7BitEncodedInt(BinaryWriter writer, int value)
+        {
+            // Write out an int 7 bits at a time.  The high bit of the byte,
+            // when on, tells reader to continue reading more bytes.
+            uint v = (uint)value;   // support negative numbers
+            while (v >= 0x80)
+            {
+                writer.Write((byte)(v | 0x80));
+                v >>= 7;
+            }
+            writer.Write((byte)v);
+        }
+
+        private void Write(byte[] bytes)
+        {
+            binaryWriter.Write(bytes);
+        }
+
+        private void Write(byte b)
+        {
+            binaryWriter.Write(b);
+        }
+
+        private void Write(bool boolean)
+        {
+            binaryWriter.Write(boolean);
+        }
+
+        private void WriteDeduplicatedString(string text)
+        {
+            var (recordId, _) = HashString(text);
+            Write(recordId);
+        }
+
+        /// <summary>
+        /// Hash the string and write a String record if not already hashed.
+        /// </summary>
+        /// <returns>Returns the string record index as well as the hash.</returns>
+        private (int index, HashKey hash) HashString(string text)
+        {
+            if (text == null)
+            {
+                return (0, default);
+            }
+            else if (text.Length == 0)
+            {
+                return (1, default);
+            }
+
+            var hash = new HashKey(text);
+            if (!stringHashes.TryGetValue(hash, out var recordId))
+            {
+                recordId = stringRecordId;
+                stringHashes[hash] = stringRecordId;
+
+                WriteStringRecord(text);
+
+                stringRecordId += 1;
+            }
+
+            return (recordId, hash);
+        }
+
+        private void WriteStringRecord(string text)
+        {
+            // Switch the binaryWriter used by the Write* methods to the direct underlying stream writer.
+            // We want this record to precede the record we're currently writing to currentRecordWriter
+            // which is backed by a MemoryStream buffer
+            binaryWriter = this.originalBinaryWriter;
+
+            Write(BinaryLogRecordKind.String);
+            binaryWriter.Write(text);
+
+            // switch back to continue writing the current record to the memory stream
+            binaryWriter = this.currentRecordWriter;
+        }
+
+        private void Write(DateTime timestamp)
+        {
+            binaryWriter.Write(timestamp.Ticks);
+            Write((int)timestamp.Kind);
+        }
+
+        private void Write(TimeSpan timeSpan)
+        {
+            binaryWriter.Write(timeSpan.Ticks);
+        }
+
+        private void Write(EvaluationLocation item)
+        {
+            WriteDeduplicatedString(item.ElementName);
+            WriteDeduplicatedString(item.ElementDescription);
+            WriteDeduplicatedString(item.EvaluationPassDescription);
+            WriteDeduplicatedString(item.File);
+            Write((int)item.Kind);
+            Write((int)item.EvaluationPass);
+
+            Write(item.Line.HasValue);
+            if (item.Line.HasValue)
+            {
+                Write(item.Line.Value);
+            }
+
+            Write(item.Id);
+            Write(item.ParentId.HasValue);
+            if (item.ParentId.HasValue)
+            {
+                Write(item.ParentId.Value);
+            }
+        }
+
+        private void Write(ProfiledLocation e)
+        {
+            Write(e.NumberOfHits);
+            Write(e.ExclusiveTime);
+            Write(e.InclusiveTime);
+        }
 
         internal struct HashKey : IEquatable<HashKey>
         {
@@ -768,241 +1055,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private void Write(IEnumerable<KeyValuePair<string, string>> keyValuePairs)
-        {
-            if (nameValueList.Count > 0)
-            {
-                nameValueList.Clear();
-            }
-
-            foreach (var kvp in keyValuePairs)
-            {
-                nameValueList.Add(kvp);
-            }
-
-            WriteNameValueList();
-        }
-
-        private void WriteNameValueList()
-        {
-            if (nameValueList.Count == 0)
-            {
-                Write((byte)0);
-                return;
-            }
-
-            HashKey hash = HashAllStrings(nameValueList);
-            if (!hashes.TryGetValue(hash, out var recordId))
-            {
-                recordId = nameValueRecordId;
-                hashes[hash] = nameValueRecordId;
-
-                WriteNameValueListRecord();
-
-                nameValueRecordId += 1;
-            }
-
-            Write(recordId);
-        }
-
-        /// <summary>
-        /// In the middle of writing the current record we may discover that we want to write another record
-        /// preceding the current one, specifically the list of names and values we want to reuse in the
-        /// future. As we are writing the current record to a MemoryStream first, it's OK to temporarily
-        /// switch to the direct underlying stream and write the NameValueList record first.
-        /// When the current record is done writing, the MemoryStream will flush to the underlying stream
-        /// and the current record will end up after the NameValueList record, as desired.
-        /// </summary>
-        private void WriteNameValueListRecord()
-        {
-            try
-            {
-                // Switch the binaryWriter used by the Write* methods to the direct underlying stream writer.
-                // We want this record to precede the record we're currently writing to currentRecordWriter
-                // which is backed by a MemoryStream buffer
-                binaryWriter = this.originalBinaryWriter;
-
-                Write(BinaryLogRecordKind.NameValueList);
-                Write(nameValueIndexList.Count);
-                for (int i = 0; i < nameValueList.Count; i++)
-                {
-                    var kvp = nameValueIndexList[i];
-                    Write(kvp.Key);
-                    Write(kvp.Value);
-                }
-            }
-            finally
-            {
-                // switch back to continue writing the current record to the memory stream
-                binaryWriter = this.currentRecordWriter;
-            }
-        }
-
-        private HashKey HashAllStrings(List<KeyValuePair<string, string>> nameValueList)
-        {
-            HashKey hash = new HashKey();
-
-            nameValueIndexList.Clear();
-
-            for (int i = 0; i < nameValueList.Count; i++)
-            {
-                var kvp = nameValueList[i];
-                var (keyIndex, keyHash) = HashString(kvp.Key);
-                var (valueIndex, valueHash) = HashString(kvp.Value);
-                hash = hash.Add(keyHash);
-                hash = hash.Add(valueHash);
-                nameValueIndexList.Add(new KeyValuePair<int, int>(keyIndex, valueIndex));
-            }
-
-            return hash;
-        }
-
-        private void Write(BinaryLogRecordKind kind)
-        {
-            Write((int)kind);
-        }
-
-        private void Write(int value)
-        {
-            Write7BitEncodedInt(binaryWriter, value);
-        }
-
-        private void Write(long value)
-        {
-            binaryWriter.Write(value);
-        }
-
-        private void Write7BitEncodedInt(BinaryWriter writer, int value)
-        {
-            // Write out an int 7 bits at a time.  The high bit of the byte,
-            // when on, tells reader to continue reading more bytes.
-            uint v = (uint)value;   // support negative numbers
-            while (v >= 0x80)
-            {
-                writer.Write((byte)(v | 0x80));
-                v >>= 7;
-            }
-            writer.Write((byte)v);
-        }
-
-        private void Write(byte[] bytes)
-        {
-            binaryWriter.Write(bytes);
-        }
-
-        private void Write(byte b)
-        {
-            binaryWriter.Write(b);
-        }
-
-        private void Write(bool boolean)
-        {
-            binaryWriter.Write(boolean);
-        }
-
-        private readonly Dictionary<HashKey, int> stringHashes = new Dictionary<HashKey, int>();
-
-        internal const int StringStartIndex = 10;
-
-        /// <summary>
-        /// 0 is null, 1 is empty string
-        /// 2-9 are reserved for future use.
-        /// Start indexing at 10.
-        /// </summary>
-        private int stringRecordId = StringStartIndex;
-
-        private void WriteDeduplicatedString(string text)
-        {
-            var (recordId, _) = HashString(text);
-            Write(recordId);
-        }
-
-        private (int index, HashKey hash) HashString(string text)
-        {
-            if (text == null)
-            {
-                return (0, default);
-            }
-            else if (text.Length == 0)
-            {
-                return (1, default);
-            }
-
-            var hash = new HashKey(text);
-            if (!stringHashes.TryGetValue(hash, out var recordId))
-            {
-                recordId = stringRecordId;
-                stringHashes[hash] = stringRecordId;
-
-                WriteStringRecord(text);
-
-                stringRecordId += 1;
-            }
-
-            return (recordId, hash);
-        }
-
-        private void WriteStringRecord(string text)
-        {
-            try
-            {
-                // Switch the binaryWriter used by the Write* methods to the direct underlying stream writer.
-                // We want this record to precede the record we're currently writing to currentRecordWriter
-                // which is backed by a MemoryStream buffer
-                binaryWriter = this.originalBinaryWriter;
-
-                Write(BinaryLogRecordKind.String);
-                binaryWriter.Write(text);
-            }
-            finally
-            {
-                // switch back to continue writing the current record to the memory stream
-                binaryWriter = this.currentRecordWriter;
-            }
-        }
-
-        private void Write(DateTime timestamp)
-        {
-            binaryWriter.Write(timestamp.Ticks);
-            Write((int)timestamp.Kind);
-        }
-
-        private void Write(TimeSpan timeSpan)
-        {
-            binaryWriter.Write(timeSpan.Ticks);
-        }
-
-        private void Write(EvaluationLocation item)
-        {
-            WriteDeduplicatedString(item.ElementName);
-            WriteDeduplicatedString(item.ElementDescription);
-            WriteDeduplicatedString(item.EvaluationPassDescription);
-            WriteDeduplicatedString(item.File);
-            Write((int)item.Kind);
-            Write((int)item.EvaluationPass);
-
-            Write(item.Line.HasValue);
-            if (item.Line.HasValue)
-            {
-                Write(item.Line.Value);
-            }
-
-            Write(item.Id);
-            Write(item.ParentId.HasValue);
-            if (item.ParentId.HasValue)
-            {
-                Write(item.ParentId.Value);
-            }
-        }
-
-        private void Write(ProfiledLocation e)
-        {
-            Write(e.NumberOfHits);
-            Write(e.ExclusiveTime);
-            Write(e.InclusiveTime);
-        }
-
-        private static class FnvHash64
+        internal static class FnvHash64
         {
             public const ulong Offset = 14695981039346656037;
             public const ulong Prime = 1099511628211;
