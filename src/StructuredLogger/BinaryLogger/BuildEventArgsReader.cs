@@ -16,6 +16,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
     {
         private readonly BinaryReader binaryReader;
         private readonly int fileFormatVersion;
+        private long recordNumber = 0;
 
         /// <summary>
         /// A list of string records we've encountered so far. If it's a small string, it will be the string directly.
@@ -100,6 +101,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     ReadBlob(recordKind);
                 }
 
+                recordNumber += 1;
+
                 recordKind = (BinaryLogRecordKind)ReadInt32();
             }
 
@@ -175,6 +178,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     break;
             }
 
+            recordNumber += 1;
+
             return result;
         }
 
@@ -228,7 +233,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return dictionary;
             }
 
-            return new Dictionary<string, string>();
+            // this should never happen for valid binlogs
+            throw new InvalidDataException(
+                $"NameValueList record number {recordNumber} is invalid: index {id} is not within {stringRecords.Count}.");
         }
 
         private void ReadStringRecord()
@@ -1070,7 +1077,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return result;
             }
 
-            return string.Empty;
+            // this should never happen for valid binlogs
+            throw new InvalidDataException(
+                $"String record number {recordNumber} is invalid: string index {index} is not within {stringRecords.Count}.");
         }
 
         private int ReadInt32()
@@ -1205,8 +1214,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         FileMode.OpenOrCreate,
                         FileAccess.ReadWrite,
                         FileShare.None,
-                        bufferSize: 4096,
+                        bufferSize: 4096, // 4096 seems to have the best performance on SSD
                         FileOptions.RandomAccess | FileOptions.DeleteOnClose);
+
+                    // 65536 has no particular significance, and maybe could be tuned
+                    // but 65536 performs well enough and isn't a lot of memory for a singleton
                     streamWriter = new StreamWriter(stream, utf8noBom, 65536);
                     streamWriter.AutoFlush = true;
                     streamReader = new StreamReader(stream, utf8noBom);
@@ -1294,6 +1306,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
                 catch
                 {
+                    // The StringStorage class is not crucial for other functionality and if 
+                    // there are exceptions when closing the temp file, it's too late to do anything about it.
+                    // Since we don't want to disrupt anything and the file is in the TEMP directory, it will
+                    // get cleaned up at some point anyway.
                 }
             }
         }

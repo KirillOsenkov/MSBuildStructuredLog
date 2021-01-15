@@ -40,10 +40,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
         // version 9:
         //   - new record kinds: EnvironmentVariableRead, PropertyReassignment, UninitializedPropertyRead
         // version 10:
-        //   - new record kind: NameValueList
-        //     hash and reuse name value lists such as properties, items and metadata
-        //     in a separate record and refer to those records from regular records
-        //     where a list used to be written in-place
+        //   - new record kinds:
+        //      * String - deduplicate strings by hashing and write a string record before it's used
+        //      * NameValueList - deduplicate arrays of name-value pairs such as properties, items and metadata
+        //                        in a separate record and refer to those records from regular records
+        //                        where a list used to be written in-place
         internal const int FileFormatVersion = 10;
 
         private Stream stream;
@@ -145,6 +146,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             stream = new GZipStream(stream, CompressionLevel.Optimal);
+
+            // wrapping the GZipStream in a buffered stream significantly improves performance
+            // and the max throughput is reached with a 32K buffer. See details here:
+            // https://github.com/dotnet/runtime/issues/39233#issuecomment-745598847
             stream = new BufferedStream(stream, bufferSize: 32768);
             binaryWriter = new BinaryWriter(stream);
             eventArgsWriter = new BuildEventArgsWriter(binaryWriter);
@@ -174,8 +179,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         public void Shutdown()
         {
-            LogMessage("Binlog overhead=" + stopwatch.Elapsed);
-
             Environment.SetEnvironmentVariable("MSBUILDTARGETOUTPUTLOGGING", _initialTargetOutputLogging);
             Environment.SetEnvironmentVariable("MSBUILDLOGIMPORTS", _initialLogImports);
 
@@ -206,14 +209,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Write(e);
         }
 
-        private Stopwatch stopwatch = new Stopwatch();
-
         private void Write(BuildEventArgs e)
         {
             if (stream != null)
             {
-                stopwatch.Start();
-
                 // TODO: think about queuing to avoid contention
                 lock (eventArgsWriter)
                 {
@@ -224,8 +223,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     CollectImports(e);
                 }
-
-                stopwatch.Stop();
             }
         }
 

@@ -20,7 +20,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         /// <summary>
         /// When writing the current record, first write it to a memory stream,
-        /// then flush to the originalStream. This is need so that if we discover
+        /// then flush to the originalStream. This is needed so that if we discover
         /// that we need to write a string record in the middle of writing the
         /// current record, we will write the string record to the original stream
         /// and the current record will end up after the string record.
@@ -103,6 +103,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public BuildEventArgsWriter(BinaryWriter binaryWriter)
         {
             this.originalStream = binaryWriter.BaseStream;
+
+            // this doesn't exceed 30K for smaller binlogs so seems like a reasonable
+            // starting point to avoid reallocations in the common case
             this.currentRecordStream = new MemoryStream(65536);
 
             this.originalBinaryWriter = binaryWriter;
@@ -784,9 +787,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 nameValueListBuffer.Clear();
             }
 
-            foreach (var kvp in keyValuePairs)
+            if (keyValuePairs != null)
             {
-                nameValueListBuffer.Add(kvp);
+                foreach (var kvp in keyValuePairs)
+                {
+                    nameValueListBuffer.Add(kvp);
+                }
             }
 
             WriteNameValueList();
@@ -1001,9 +1007,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Write(e.InclusiveTime);
         }
 
-        internal struct HashKey : IEquatable<HashKey>
+        internal readonly struct HashKey : IEquatable<HashKey>
         {
-            private ulong value;
+            private readonly ulong value;
 
             private HashKey(ulong i)
             {
@@ -1046,7 +1052,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             public override int GetHashCode()
             {
-                return (int)value;
+                return unchecked((int)value);
             }
 
             public override string ToString()
