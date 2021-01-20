@@ -123,6 +123,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private void AnalyzeEvaluation(NamedNode folder)
         {
             var evaluations = folder.Children.OfType<ProjectEvaluation>().ToArray();
+            if (!evaluations.Any())
+            {
+                return;
+            }
+
             var longestDuration = evaluations.Max(e => e.Duration.TotalMilliseconds);
             if (longestDuration == 0)
             {
