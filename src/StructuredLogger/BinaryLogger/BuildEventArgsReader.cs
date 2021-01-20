@@ -1195,11 +1195,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         internal class StringStorage : IDisposable
         {
-            private string filePath;
+            private readonly string filePath;
             private FileStream stream;
             private StreamWriter streamWriter;
-            private StreamReader streamReader;
-            private StringBuilder stringBuilder;
+            private readonly StreamReader streamReader;
+            private readonly StringBuilder stringBuilder;
 
             public const int StringSizeThreshold = 1024;
 
@@ -1245,10 +1245,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 // the file.
                 // Win-win: small binlog playback is fast and large binlog playback
                 // doesn't OOM.
-                if (text.Length <= StringSizeThreshold && totalAllocatedShortStrings < 2_000_000_000)
+                if (text.Length <= StringSizeThreshold && totalAllocatedShortStrings < 1_000_000_000)
                 {
-                    // note that we write strings in UTF8 so we don't need to multiply by 2 as chars
-                    // will be 1 byte on average
                     totalAllocatedShortStrings += text.Length;
                     return text;
                 }

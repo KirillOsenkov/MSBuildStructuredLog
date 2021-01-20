@@ -200,13 +200,37 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             // write the blob directly to the underlying writer,
             // bypassing the memory stream
-            binaryWriter = originalBinaryWriter;
+            using var redirection = RedirectWritesToOriginalWriter();
 
             Write(kind);
             Write(bytes.Length);
             Write(bytes);
+        }
 
-            binaryWriter = currentRecordWriter;
+        /// <summary>
+        /// Switches the binaryWriter used by the Write* methods to the direct underlying stream writer
+        /// until the disposable is disposed. Useful to bypass the currentRecordWriter to write a string,
+        /// blob or NameValueRecord that should precede the record being currently written.
+        /// </summary>
+        private IDisposable RedirectWritesToOriginalWriter()
+        {
+            binaryWriter = originalBinaryWriter;
+            return new RedirectionScope(this);
+        }
+
+        private struct RedirectionScope : IDisposable
+        {
+            private readonly BuildEventArgsWriter _writer;
+
+            public RedirectionScope(BuildEventArgsWriter buildEventArgsWriter)
+            {
+                _writer = buildEventArgsWriter;
+            }
+
+            public void Dispose()
+            {
+                _writer.binaryWriter = _writer.currentRecordWriter;
+            }
         }
 
         private void Write(BuildStartedEventArgs e)
@@ -701,10 +725,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             WriteDeduplicatedString(item.ItemSpec);
 
-            if (nameValueListBuffer.Count > 0)
-            {
-                nameValueListBuffer.Clear();
-            }
+            nameValueListBuffer.Clear();
 
             IDictionary customMetadata = item.CloneCustomMetadata();
 
@@ -744,10 +765,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            if (nameValueListBuffer.Count > 0)
-            {
-                nameValueListBuffer.Clear();
-            }
+            nameValueListBuffer.Clear();
 
             // there are no guarantees that the properties iterator won't change, so 
             // take a snapshot and work with the readonly copy
@@ -782,10 +800,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void Write(IEnumerable<KeyValuePair<string, string>> keyValuePairs)
         {
-            if (nameValueListBuffer.Count > 0)
-            {
-                nameValueListBuffer.Clear();
-            }
+            nameValueListBuffer.Clear();
 
             if (keyValuePairs != null)
             {
@@ -833,7 +848,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             // Switch the binaryWriter used by the Write* methods to the direct underlying stream writer.
             // We want this record to precede the record we're currently writing to currentRecordWriter
             // which is backed by a MemoryStream buffer
-            binaryWriter = this.originalBinaryWriter;
+            using var redirectionScope = RedirectWritesToOriginalWriter();
 
             Write(BinaryLogRecordKind.NameValueList);
             Write(nameValueIndexListBuffer.Count);
@@ -843,9 +858,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 Write(kvp.Key);
                 Write(kvp.Value);
             }
-
-            // switch back to continue writing the current record to the memory stream
-            binaryWriter = this.currentRecordWriter;
         }
 
         /// <summary>
@@ -954,16 +966,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void WriteStringRecord(string text)
         {
-            // Switch the binaryWriter used by the Write* methods to the direct underlying stream writer.
-            // We want this record to precede the record we're currently writing to currentRecordWriter
-            // which is backed by a MemoryStream buffer
-            binaryWriter = this.originalBinaryWriter;
+            using var redirectionScope = RedirectWritesToOriginalWriter();
 
             Write(BinaryLogRecordKind.String);
             binaryWriter.Write(text);
-
-            // switch back to continue writing the current record to the memory stream
-            binaryWriter = this.currentRecordWriter;
         }
 
         private void Write(DateTime timestamp)
