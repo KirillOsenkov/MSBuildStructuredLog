@@ -8,7 +8,7 @@ namespace StructuredLogViewer.Controls
 {
     public partial class SearchAndResultsControl : UserControl
     {
-        private TypingConcurrentOperation typingConcurrentOperation = new TypingConcurrentOperation();
+        private readonly TypingConcurrentOperation typingConcurrentOperation = new TypingConcurrentOperation();
 
         public SearchAndResultsControl()
         {
@@ -23,11 +23,7 @@ namespace StructuredLogViewer.Controls
 
         private void SearchAndResultsControl_Unloaded(object sender, RoutedEventArgs e)
         {
-            if (typingConcurrentOperation != null)
-            {
-                typingConcurrentOperation.Dispose();
-                typingConcurrentOperation = null;
-            }
+            typingConcurrentOperation.ReleaseTimer();
         }
 
         private void TypingConcurrentOperation_SearchComplete(string searchText, object arg2, TimeSpan elapsed)
