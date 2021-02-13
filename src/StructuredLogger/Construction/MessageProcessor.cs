@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -23,6 +23,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             if (args == null)
             {
+                return;
+            }
+
+            if (args is TaskParameterEventArgs taskParameter)
+            {
+                ProcessTaskParameter(taskParameter);
                 return;
             }
 
@@ -51,7 +57,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 //this.construction.Build.Statistics.ReportOutputItemMessage(task, message);
 
-                var folder = task.GetOrCreateNodeWithName<Folder>("OutputItems");
+                var folder = task.GetOrCreateNodeWithName<Folder>(Strings.OutputItems);
                 var parameter = ItemGroupParser.ParsePropertyOrItemList(message, Strings.OutputItemsMessagePrefix, stringTable);
                 folder.AddChild(parameter);
                 return;
@@ -60,7 +66,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (message.StartsWith(Strings.OutputPropertyMessagePrefix))
             {
                 var task = GetTask(args);
-                var folder = task.GetOrCreateNodeWithName<Folder>("OutputProperties");
+                var folder = task.GetOrCreateNodeWithName<Folder>(Strings.OutputProperties);
                 var parameter = ItemGroupParser.ParsePropertyOrItemList(message, Strings.OutputPropertyMessagePrefix, stringTable);
                 folder.AddChild(parameter);
                 return;
@@ -116,6 +122,91 @@ namespace Microsoft.Build.Logging.StructuredLogger
             AddMessage(args, message);
         }
 
+        private void ProcessTaskParameter(TaskParameterEventArgs args)
+        {
+            string itemName = args.ItemName;
+            var items = args.Items.OfType<ITaskItem>().ToArray();
+
+            NamedNode parent = null;
+            BaseNode node = null;
+            if (args.Kind == TaskParameterMessageKind.TaskInput || args.Kind == TaskParameterMessageKind.TaskOutput)
+            {
+                var task = GetTask(args);
+                if (task == null || IgnoreParameters(task))
+                {
+                    return;
+                }
+
+                string folderName = args.Kind == TaskParameterMessageKind.TaskInput ? Strings.Parameters : Strings.OutputItems;
+                parent = task.GetOrCreateNodeWithName<Folder>(folderName);
+
+                node = CreateParameterNode(itemName, items);
+            }
+            else if (args.Kind == TaskParameterMessageKind.AddItem || args.Kind == TaskParameterMessageKind.RemoveItem)
+            {
+                parent = GetTarget(args);
+
+                NamedNode named;
+                if (args.Kind == TaskParameterMessageKind.AddItem)
+                {
+                    named = new AddItem();
+                }
+                else
+                {
+                    named = new RemoveItem();
+                }
+
+                named.Name = itemName;
+
+                AddItems(items, named);
+                node = named;
+            }
+
+            if (node != null && parent != null)
+            {
+                parent.AddChild(node);
+            }
+        }
+
+        private BaseNode CreateParameterNode(string itemName, ITaskItem[] items)
+        {
+            if (items.Length == 1 && items[0] is ITaskItem scalar && scalar.MetadataCount == 0)
+            {
+                var property = new Property
+                {
+                    Name = stringTable.Intern(itemName),
+                    Value = stringTable.Intern(scalar.ItemSpec)
+                };
+                return property;
+            }
+
+            var parameter = new Parameter { Name = itemName };
+
+            AddItems(items, parameter);
+
+            return parameter;
+        }
+
+        private void AddItems(ITaskItem[] items, TreeNode parent)
+        {
+            foreach (var item in items)
+            {
+                var itemNode = new Item { Text = item.ItemSpec };
+                foreach (string metadataName in item.MetadataNames)
+                {
+                    var value = item.GetMetadata(metadataName);
+                    var metadataNode = new Metadata
+                    {
+                        Name = stringTable.Intern(metadataName),
+                        Value = stringTable.Intern(value)
+                    };
+                    itemNode.AddChild(metadataNode);
+                }
+
+                parent.AddChild(itemNode);
+            }
+        }
+
         private bool IgnoreParameters(Task task)
         {
             string taskName = task.Name;
@@ -127,12 +218,32 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return false;
         }
 
-        private Task GetTask(BuildMessageEventArgs args)
+        private Task GetTask(BuildEventArgs args) => GetTask(args.BuildEventContext);
+
+        private Task GetTask(BuildEventContext buildEventContext)
         {
-            var project = construction.GetOrAddProject(args.BuildEventContext.ProjectContextId);
-            var target = project.GetTargetById(args.BuildEventContext.TargetId);
-            var task = target.GetTaskById(args.BuildEventContext.TaskId);
+            Target target = GetTarget(buildEventContext);
+            if (target == null)
+            {
+                return null;
+            }
+
+            var task = target.GetTaskById(buildEventContext.TaskId);
             return task;
+        }
+
+        private Target GetTarget(BuildEventArgs args) => GetTarget(args.BuildEventContext);
+
+        private Target GetTarget(BuildEventContext buildEventContext)
+        {
+            var project = construction.GetOrAddProject(buildEventContext.ProjectContextId);
+            if (project == null)
+            {
+                return null;
+            }
+
+            var target = project.GetTargetById(buildEventContext.TargetId);
+            return target;
         }
 
         /// <summary>
@@ -144,8 +255,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             string message = args.Message.Substring(prefix.Length);
 
-            var project = construction.GetOrAddProject(args.BuildEventContext.ProjectContextId);
-            var target = project.GetTargetById(args.BuildEventContext.TargetId);
+            var target = GetTarget(args);
 
             var kvp = TextUtilities.ParseNameValue(message);
             target.AddChild(new Property
@@ -162,8 +272,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <param name="prefix">The prefix string.</param>
         public void AddItemGroup(BuildMessageEventArgs args, string prefix, NamedNode containerNode)
         {
-            var project = construction.GetOrAddProject(args.BuildEventContext.ProjectContextId);
-            var target = project.GetTargetById(args.BuildEventContext.TargetId);
+            var target = GetTarget(args);
 
             var itemGroup = ItemGroupParser.ParsePropertyOrItemList(args.Message, prefix, stringTable);
             if (itemGroup is Property property)
@@ -223,12 +332,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (args.BuildEventContext?.TaskId > 0)
             {
-                node = construction
-                    .GetOrAddProject(args.BuildEventContext.ProjectContextId)
-                    .GetTargetById(args.BuildEventContext.TargetId)
-                    .GetTaskById(args.BuildEventContext.TaskId);
-                var task = node as Task;
-                if (task != null)
+                node = GetTask(args);
+                if (node is Task task)
                 {
                     if (task.Name == "ResolveAssemblyReference")
                     {
@@ -457,9 +562,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
             else if (args.BuildEventContext?.TargetId > 0)
             {
-                node = construction
-                    .GetOrAddProject(args.BuildEventContext.ProjectContextId)
-                    .GetTargetById(args.BuildEventContext.TargetId);
+                node = GetTarget(args);
 
                 if (Strings.TaskSkippedFalseCondition.Match(message).Success)
                 {
@@ -627,11 +730,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return false;
             }
 
-            var project = construction.GetOrAddProject(args.BuildEventContext.ProjectContextId);
-            var target = project.GetTargetById(args.BuildEventContext.TargetId);
-
             // task can be null as per https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/136
-            var task = target.GetTaskById(args.BuildEventContext.TaskId);
+            var task = GetTask(args);
             if (task != null)
             {
                 task.CommandLineArguments = stringTable.Intern(args.CommandLine);
