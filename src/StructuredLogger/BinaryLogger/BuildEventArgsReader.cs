@@ -611,7 +611,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             ReadInt32();
 
             var kind = (TaskParameterMessageKind)ReadInt32();
-            var itemName = ReadString();
+            var itemName = ReadDeduplicatedString();
             var items = ReadTaskItemList() as IList;
 
             var e = new TaskParameterEventArgs(
