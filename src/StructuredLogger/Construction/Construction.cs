@@ -88,7 +88,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     if (messageProcessor.DetailedSummary.Length > 0)
                     {
-                        var summary = Build.GetOrCreateNodeWithName<Message>(stringTable.Intern(Strings.DetailedSummary));
+                        var summary = Build.GetOrCreateNodeWithName<Message>(Intern(Strings.DetailedSummary));
                         if (messageProcessor.DetailedSummary[0] == '\n')
                         {
                             messageProcessor.DetailedSummary.Remove(0, 1);
@@ -745,7 +745,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 project.EvaluationId = evaluationId;
                 if (evaluationId != BuildEventContext.InvalidEvaluationId)
                 {
-                    project.EvaluationText = stringTable.Intern("id:" + evaluationId);
+                    project.EvaluationText = Intern("id:" + evaluationId);
                 }
 
                 project.GlobalProperties = stringTable.InternStringDictionary(args.GlobalProperties) ?? ImmutableDictionary<string, string>.Empty;

@@ -19,6 +19,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             this.stringTable = stringTable;
         }
 
+        private string Intern(string text) => stringTable.Intern(text);
+
         public void Process(BuildMessageEventArgs args)
         {
             if (args == null)
@@ -105,8 +107,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (match.Success)
             {
                 construction.SetTaskAssembly(
-                    stringTable.Intern(match.Groups["task"].Value),
-                    stringTable.Intern(match.Groups["assembly"].Value));
+                    Intern(match.Groups["task"].Value),
+                    Intern(match.Groups["assembly"].Value));
                 return;
             }
 
@@ -174,8 +176,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 var property = new Property
                 {
-                    Name = stringTable.Intern(itemName),
-                    Value = stringTable.Intern(scalar.ItemSpec)
+                    Name = Intern(itemName),
+                    Value = Intern(scalar.ItemSpec)
                 };
                 return property;
             }
@@ -197,8 +199,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     var value = item.GetMetadata(metadataName);
                     var metadataNode = new Metadata
                     {
-                        Name = stringTable.Intern(metadataName),
-                        Value = stringTable.Intern(value)
+                        Name = Intern(metadataName),
+                        Value = Intern(value)
                     };
                     itemNode.AddChild(metadataNode);
                 }
@@ -260,8 +262,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var kvp = TextUtilities.ParseNameValue(message);
             target.AddChild(new Property
             {
-                Name = stringTable.Intern(kvp.Key),
-                Value = stringTable.Intern(kvp.Value)
+                Name = Intern(kvp.Key),
+                Value = Intern(kvp.Value)
             });
         }
 
@@ -320,7 +322,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <param name="args">The <see cref="BuildMessageEventArgs"/> instance containing the event data.</param>
         public void AddMessage(LazyFormattedBuildEventArgs args, string message)
         {
-            message = stringTable.Intern(message);
+            message = Intern(message);
 
             TreeNode node = null;
             var messageNode = new Message
@@ -383,15 +385,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                             var kvp = TextUtilities.ParseNameValue(message);
                                             node.AddChild(new Metadata
                                             {
-                                                Name = stringTable.Intern(kvp.Key.TrimEnd(space)),
-                                                Value = stringTable.Intern(kvp.Value.TrimStart(space))
+                                                Name = Intern(kvp.Key.TrimEnd(space)),
+                                                Value = Intern(kvp.Value.TrimStart(space))
                                             });
                                         }
                                         else
                                         {
                                             node.AddChild(new Item()
                                             {
-                                                Text = stringTable.Intern(message)
+                                                Text = Intern(message)
                                             });
                                         }
                                     }
@@ -426,7 +428,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                 node = results;
                             }
 
-                            node.GetOrCreateNodeWithName<Parameter>(stringTable.Intern(message.TrimEnd(':')));
+                            node.GetOrCreateNodeWithName<Parameter>(Intern(message.TrimEnd(':')));
                             return;
                         }
                     }
@@ -464,15 +466,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         {
                             nodeToAdd = new Item
                             {
-                                Text = stringTable.Intern(kvp.Key)
+                                Text = Intern(kvp.Key)
                             };
                         }
                         else
                         {
                             nodeToAdd = new Property
                             {
-                                Name = stringTable.Intern(kvp.Key),
-                                Value = stringTable.Intern(kvp.Value)
+                                Name = Intern(kvp.Key),
+                                Value = Intern(kvp.Value)
                             };
                         }
                     }
@@ -576,7 +578,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 if (Strings.IsTargetSkipped(message))
                 {
-                    var targetName = stringTable.Intern(TextUtilities.ParseQuotedSubstring(message));
+                    var targetName = Intern(TextUtilities.ParseQuotedSubstring(message));
                     if (targetName != null)
                     {
                         var skippedTarget = project.GetOrAddTargetByName(targetName, args.Timestamp);
@@ -734,7 +736,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var task = GetTask(args);
             if (task != null)
             {
-                task.CommandLineArguments = stringTable.Intern(args.CommandLine);
+                task.CommandLineArguments = Intern(args.CommandLine);
                 return true;
             }
 
