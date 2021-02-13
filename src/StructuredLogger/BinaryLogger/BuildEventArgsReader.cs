@@ -26,10 +26,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         private readonly List<object> stringRecords = new List<object>();
 
+        private struct NameValueRecord
+        {
+            public (int keyIndex, int valueIndex)[] Array;
+            public IDictionary<string, string> Dictionary;
+        }
+
         /// <summary>
         /// A list of dictionaries we've encountered so far. Dictionaries are referred to by their order in this list.
         /// </summary>
-        private readonly List<(int keyIndex, int valueIndex)[]> nameValueListRecords = new List<(int, int)[]>();
+        private readonly List<NameValueRecord> nameValueListRecords = new List<NameValueRecord>();
 
         /// <summary>
         /// A "page-file" for storing strings we've read so far. Keeping them in memory would OOM the 32-bit MSBuild
@@ -212,7 +218,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 list[i] = (key, value);
             }
 
-            nameValueListRecords.Add(list);
+            var record = new NameValueRecord()
+            {
+                Array = list,
+                Dictionary = CreateDictionary(list)
+            };
+            nameValueListRecords.Add(record);
         }
 
         private IDictionary<string, string> GetNameValueList(int id)
@@ -221,24 +232,28 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (id >= 0 && id < nameValueListRecords.Count)
             {
                 var list = nameValueListRecords[id];
-
-                var dictionary = new Dictionary<string, string>(list.Length);
-                for (int i = 0; i < list.Length; i++)
-                {
-                    string key = GetStringFromRecord(list[i].keyIndex);
-                    string value = GetStringFromRecord(list[i].valueIndex);
-                    if (key != null)
-                    {
-                        dictionary[key] = value;
-                    }
-                }
-
-                return dictionary;
+                return list.Dictionary;
             }
 
             // this should never happen for valid binlogs
             throw new InvalidDataException(
                 $"NameValueList record number {recordNumber} is invalid: index {id} is not within {stringRecords.Count}.");
+        }
+
+        private IDictionary<string, string> CreateDictionary((int keyIndex, int valueIndex)[] list)
+        {
+            var dictionary = new Dictionary<string, string>(list.Length);
+            for (int i = 0; i < list.Length; i++)
+            {
+                string key = GetStringFromRecord(list[i].keyIndex);
+                string value = GetStringFromRecord(list[i].valueIndex);
+                if (key != null)
+                {
+                    dictionary[key] = value;
+                }
+            }
+
+            return dictionary;
         }
 
         private void ReadStringRecord()
