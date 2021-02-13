@@ -8,6 +8,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public IEnumerable<string> Instances => deduplicationMap.Keys;
 
+        public bool DisableDeduplication { get; set; }
+
         public string Intern(string text)
         {
             if (text == null)
@@ -23,6 +25,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             // if it has line breaks, save some more space
             text = text.Replace("\r\n", "\n");
             text = text.Replace("\r", "\n");
+
+            if (DisableDeduplication)
+            {
+                return text;
+            }
 
             string existing;
             if (deduplicationMap.TryGetValue(text, out existing))

@@ -32,6 +32,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private readonly MessageProcessor messageProcessor;
         private readonly StringCache stringTable;
 
+        public StringCache StringTable => stringTable;
+
         private NamedNode evaluationFolder;
 
         public NamedNode EvaluationFolder

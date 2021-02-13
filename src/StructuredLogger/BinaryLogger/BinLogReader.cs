@@ -22,6 +22,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public event Action<BinaryLogRecordKind, byte[]> OnBlobRead;
         public event Action<string> OnStringRead;
         public event Action<IDictionary<string, string>> OnNameValueListRead;
+        public event Action<int> OnFileFormatVersionRead;
 
         /// <summary>
         /// Raised when there was an exception reading a record from the file.
@@ -47,6 +48,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var binaryReader = new BinaryReader(bufferedStream);
 
             int fileFormatVersion = binaryReader.ReadInt32();
+
+            OnFileFormatVersionRead?.Invoke(fileFormatVersion);
 
             // the log file is written using a newer version of file format
             // that we don't know how to read
