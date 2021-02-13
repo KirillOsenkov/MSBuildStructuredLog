@@ -129,57 +129,61 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private void WriteCore(BuildEventArgs e)
         {
             // the cases are ordered by most used first for performance
-            if (e is BuildMessageEventArgs)
+            if (e is BuildMessageEventArgs buildMessage)
             {
-                Write((BuildMessageEventArgs)e);
+                Write(buildMessage);
             }
-            else if (e is TaskStartedEventArgs)
+            else if (e is TaskParameterEventArgs taskParameter)
             {
-                Write((TaskStartedEventArgs)e);
+                Write(taskParameter);
             }
-            else if (e is TaskFinishedEventArgs)
+            else if (e is TaskStartedEventArgs taskStarted)
             {
-                Write((TaskFinishedEventArgs)e);
+                Write(taskStarted);
             }
-            else if (e is TargetStartedEventArgs)
+            else if (e is TaskFinishedEventArgs taskFinished)
             {
-                Write((TargetStartedEventArgs)e);
+                Write(taskFinished);
             }
-            else if (e is TargetFinishedEventArgs)
+            else if (e is TargetStartedEventArgs targetStarted)
             {
-                Write((TargetFinishedEventArgs)e);
+                Write(targetStarted);
             }
-            else if (e is BuildErrorEventArgs)
+            else if (e is TargetFinishedEventArgs targetFinished)
             {
-                Write((BuildErrorEventArgs)e);
+                Write(targetFinished);
             }
-            else if (e is BuildWarningEventArgs)
+            else if (e is BuildErrorEventArgs buildError)
             {
-                Write((BuildWarningEventArgs)e);
+                Write(buildError);
             }
-            else if (e is ProjectStartedEventArgs)
+            else if (e is BuildWarningEventArgs buildWarning)
             {
-                Write((ProjectStartedEventArgs)e);
+                Write(buildWarning);
             }
-            else if (e is ProjectFinishedEventArgs)
+            else if (e is ProjectStartedEventArgs projectStarted)
             {
-                Write((ProjectFinishedEventArgs)e);
+                Write(projectStarted);
             }
-            else if (e is BuildStartedEventArgs)
+            else if (e is ProjectFinishedEventArgs projectFinished)
             {
-                Write((BuildStartedEventArgs)e);
+                Write(projectFinished);
             }
-            else if (e is BuildFinishedEventArgs)
+            else if (e is BuildStartedEventArgs buildStarted)
             {
-                Write((BuildFinishedEventArgs)e);
+                Write(buildStarted);
             }
-            else if (e is ProjectEvaluationStartedEventArgs)
+            else if (e is BuildFinishedEventArgs buildFinished)
             {
-                Write((ProjectEvaluationStartedEventArgs)e);
+                Write(buildFinished);
             }
-            else if (e is ProjectEvaluationFinishedEventArgs)
+            else if (e is ProjectEvaluationStartedEventArgs projectEvaluationStarted)
             {
-                Write((ProjectEvaluationFinishedEventArgs)e);
+                Write(projectEvaluationStarted);
+            }
+            else if (e is ProjectEvaluationFinishedEventArgs projectEvaluationFinished)
+            {
+                Write(projectEvaluationFinished);
             }
             else
             {
@@ -389,51 +393,51 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void Write(BuildMessageEventArgs e)
         {
-            if (e is CriticalBuildMessageEventArgs)
+            if (e is CriticalBuildMessageEventArgs criticalBuildMessage)
             {
-                Write((CriticalBuildMessageEventArgs)e);
+                Write(criticalBuildMessage);
                 return;
             }
 
-            if (e is TaskCommandLineEventArgs)
+            if (e is TaskCommandLineEventArgs taskCommandLine)
             {
-                Write((TaskCommandLineEventArgs)e);
+                Write(taskCommandLine);
                 return;
             }
 
-            if (e is ProjectImportedEventArgs)
+            if (e is ProjectImportedEventArgs projectImported)
             {
-                Write((ProjectImportedEventArgs)e);
+                Write(projectImported);
                 return;
             }
 
-            if (e is TargetSkippedEventArgs)
+            if (e is TargetSkippedEventArgs targetSkipped)
             {
-                Write((TargetSkippedEventArgs)e);
+                Write(targetSkipped);
                 return;
             }
 
-            if (e is PropertyReassignmentEventArgs)
+            if (e is PropertyReassignmentEventArgs propertyReassignment)
             {
-                Write((PropertyReassignmentEventArgs)e);
+                Write(propertyReassignment);
                 return;
             }
 
-            if (e is UninitializedPropertyReadEventArgs)
+            if (e is UninitializedPropertyReadEventArgs uninitializedPropertyRead)
             {
-                Write((UninitializedPropertyReadEventArgs)e);
+                Write(uninitializedPropertyRead);
                 return;
             }
 
-            if (e is EnvironmentVariableReadEventArgs)
+            if (e is EnvironmentVariableReadEventArgs environmentVariableRead)
             {
-                Write((EnvironmentVariableReadEventArgs)e);
+                Write(environmentVariableRead);
                 return;
             }
 
-            if (e is PropertyInitialValueSetEventArgs)
+            if (e is PropertyInitialValueSetEventArgs propertyInitialValueSet)
             {
-                Write((PropertyInitialValueSetEventArgs)e);
+                Write(propertyInitialValueSet);
                 return;
             }
 
@@ -507,9 +511,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
             WriteDeduplicatedString(e.TaskName);
         }
 
-        private void WriteBuildEventArgsFields(BuildEventArgs e)
+        private void Write(TaskParameterEventArgs e)
         {
-            var flags = GetBuildEventArgsFieldFlags(e);
+            Write(BinaryLogRecordKind.TaskParameter);
+            WriteMessageFields(e, writeMessage: false);
+            Write((int)e.Kind);
+            WriteDeduplicatedString(e.ItemName);
+            WriteTaskItemList(e.Items);
+        }
+
+        private void WriteBuildEventArgsFields(BuildEventArgs e, bool writeMessage = true)
+        {
+            var flags = GetBuildEventArgsFieldFlags(e, writeMessage);
             Write((int)flags);
             WriteBaseFields(e, flags);
         }
@@ -547,9 +560,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private void WriteMessageFields(BuildMessageEventArgs e)
+        private void WriteMessageFields(BuildMessageEventArgs e, bool writeMessage = true)
         {
-            var flags = GetBuildEventArgsFieldFlags(e);
+            var flags = GetBuildEventArgsFieldFlags(e, writeMessage);
             flags = GetMessageFlags(e, flags);
 
             Write((int)flags);
@@ -644,7 +657,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return flags;
         }
 
-        private static BuildEventArgsFieldFlags GetBuildEventArgsFieldFlags(BuildEventArgs e)
+        private static BuildEventArgsFieldFlags GetBuildEventArgsFieldFlags(BuildEventArgs e, bool writeMessage = true)
         {
             var flags = BuildEventArgsFieldFlags.None;
             if (e.BuildEventContext != null)
@@ -657,7 +670,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 flags |= BuildEventArgsFieldFlags.HelpHeyword;
             }
 
-            if (!string.IsNullOrEmpty(e.Message))
+            if (writeMessage)
             {
                 flags |= BuildEventArgsFieldFlags.Message;
             }
@@ -683,18 +696,31 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void WriteTaskItemList(IEnumerable items)
         {
-            var taskItems = items as IEnumerable<ITaskItem>;
-            if (taskItems == null)
+            if (items == null)
             {
                 Write(false);
                 return;
             }
 
-            Write(taskItems.Count());
-
-            foreach (var item in taskItems)
+            int count = 0;
+            foreach (var item in items)
             {
-                Write(item);
+                count += 1;
+            }
+
+            Write(count);
+
+            foreach (var item in items)
+            {
+                if (item is ITaskItem taskItem)
+                {
+                    Write(taskItem);
+                }
+                else
+                {
+                    WriteDeduplicatedString(item?.ToString() ?? ""); // itemspec
+                    Write(0); // no metadata
+                }
             }
         }
 
@@ -893,25 +919,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void Write(int value)
         {
-            Write7BitEncodedInt(binaryWriter, value);
+            binaryWriter.Write7BitEncodedInt(value);
         }
 
         private void Write(long value)
         {
             binaryWriter.Write(value);
-        }
-
-        private void Write7BitEncodedInt(BinaryWriter writer, int value)
-        {
-            // Write out an int 7 bits at a time.  The high bit of the byte,
-            // when on, tells reader to continue reading more bytes.
-            uint v = (uint)value;   // support negative numbers
-            while (v >= 0x80)
-            {
-                writer.Write((byte)(v | 0x80));
-                v >>= 7;
-            }
-            writer.Write((byte)v);
         }
 
         private void Write(byte[] bytes)

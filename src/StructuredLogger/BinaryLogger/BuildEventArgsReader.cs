@@ -150,6 +150,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 case BinaryLogRecordKind.TaskCommandLine:
                     result = ReadTaskCommandLineEventArgs();
                     break;
+                case BinaryLogRecordKind.TaskParameter:
+                    result = ReadTaskParameterEventArgs();
+                    break;
                 case BinaryLogRecordKind.ProjectEvaluationStarted:
                     result = ReadProjectEvaluationStartedEventArgs();
                     break;
@@ -442,7 +445,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var targetFile = ReadOptionalString();
             var parentTarget = ReadOptionalString();
             // BuildReason was introduced in version 4
-            var buildReason = fileFormatVersion > 3 ? (TargetBuiltReason) ReadInt32() : TargetBuiltReason.None;
+            var buildReason = fileFormatVersion > 3 ? (TargetBuiltReason)ReadInt32() : TargetBuiltReason.None;
 
             var e = new TargetStartedEventArgs(
                 fields.Message,
@@ -596,6 +599,28 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 taskName,
                 importance,
                 fields.Timestamp);
+            e.BuildEventContext = fields.BuildEventContext;
+            e.ProjectFile = fields.ProjectFile;
+            return e;
+        }
+
+        private BuildEventArgs ReadTaskParameterEventArgs()
+        {
+            var fields = ReadBuildEventArgsFields();
+            // Read unused Importance, it defaults to Low
+            ReadInt32();
+
+            var kind = (TaskParameterMessageKind)ReadInt32();
+            var itemName = ReadString();
+            var items = ReadTaskItemList() as IList;
+
+            var e = new TaskParameterEventArgs(
+                kind,
+                itemName,
+                items,
+                logItemMetadata: true,
+                fields.Timestamp,
+                a => "");
             e.BuildEventContext = fields.BuildEventContext;
             e.ProjectFile = fields.ProjectFile;
             return e;
@@ -901,65 +926,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return result;
         }
 
-        private class TaskItem : ITaskItem
-        {
-            private static readonly Dictionary<string, string> emptyMetadata = new Dictionary<string, string>();
-
-            public string ItemSpec { get; set; }
-            public IDictionary<string, string> Metadata { get; }
-
-            public TaskItem()
-            {
-                Metadata = new Dictionary<string, string>();
-            }
-
-            public TaskItem(string itemSpec, IDictionary<string, string> metadata)
-            {
-                ItemSpec = itemSpec;
-                Metadata = metadata ?? emptyMetadata;
-            }
-
-            public int MetadataCount => Metadata.Count;
-
-            public ICollection MetadataNames => (ICollection)Metadata.Keys;
-
-            public IDictionary CloneCustomMetadata()
-            {
-                return (IDictionary)Metadata;
-            }
-
-            public void CopyMetadataTo(ITaskItem destinationItem)
-            {
-                throw new NotImplementedException();
-            }
-
-            public string GetMetadata(string metadataName)
-            {
-                return Metadata[metadataName];
-            }
-
-            public void RemoveMetadata(string metadataName)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void SetMetadata(string metadataName, string metadataValue)
-            {
-                throw new NotImplementedException();
-            }
-
-            public override string ToString()
-            {
-                return $"{ItemSpec} Metadata: {MetadataCount}";
-            }
-        }
-
         private ITaskItem ReadTaskItem()
         {
             string itemSpec = ReadDeduplicatedString();
             var metadata = ReadStringDictionary();
 
-            var taskItem = new TaskItem(itemSpec, metadata);
+            var taskItem = new TaskItemData(itemSpec, metadata);
             return taskItem;
         }
 
@@ -1084,7 +1056,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private int ReadInt32()
         {
-            return Read7BitEncodedInt(binaryReader);
+            return binaryReader.Read7BitEncodedInt();
         }
 
         private long ReadInt64()
@@ -1105,30 +1077,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private TimeSpan ReadTimeSpan()
         {
             return new TimeSpan(binaryReader.ReadInt64());
-        }
-
-        private int Read7BitEncodedInt(BinaryReader reader)
-        {
-            // Read out an Int32 7 bits at a time.  The high bit
-            // of the byte when on means to continue reading more bytes.
-            int count = 0;
-            int shift = 0;
-            byte b;
-            do
-            {
-                // Check for a corrupted stream.  Read a max of 5 bytes.
-                // In a future version, add a DataFormatException.
-                if (shift == 5 * 7)  // 5 bytes max per Int32, shift += 7
-                {
-                    throw new FormatException();
-                }
-
-                // ReadByte handles end of stream cases for us.
-                b = reader.ReadByte();
-                count |= (b & 0x7F) << shift;
-                shift += 7;
-            } while ((b & 0x80) != 0);
-            return count;
         }
 
         private ProfiledLocation ReadProfiledLocation()
@@ -1153,7 +1101,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var hasLine = ReadBoolean();
             if (hasLine)
             {
-                line = ReadInt32(); 
+                line = ReadInt32();
             }
 
             // Id and parent Id were introduced in version 6
