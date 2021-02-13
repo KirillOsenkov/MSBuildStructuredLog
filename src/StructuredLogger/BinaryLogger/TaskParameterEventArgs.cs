@@ -6,7 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using Microsoft.Build.Shared;
+using Microsoft.Build.Logging.StructuredLogger;
 
 namespace Microsoft.Build.Framework
 {
@@ -61,15 +61,6 @@ namespace Microsoft.Build.Framework
 
         private readonly Func<TaskParameterEventArgs, string> messageGetter;
 
-        internal override void CreateFromStream(BinaryReader reader, int version)
-        {
-            RawTimestamp = reader.ReadTimestamp();
-            BuildEventContext = reader.ReadOptionalBuildEventContext();
-            Kind = (TaskParameterMessageKind)reader.Read7BitEncodedInt();
-            ItemName = reader.ReadString();
-            Items = ReadItems(reader);
-        }
-
         private IList ReadItems(BinaryReader reader)
         {
             var list = new ArrayList();
@@ -106,15 +97,6 @@ namespace Microsoft.Build.Framework
 
             var taskItem = new TaskItemData(itemSpec, metadata);
             return taskItem;
-        }
-
-        internal override void WriteToStream(BinaryWriter writer)
-        {
-            writer.WriteTimestamp(RawTimestamp);
-            writer.WriteOptionalBuildEventContext(BuildEventContext);
-            writer.Write7BitEncodedInt((int)Kind);
-            writer.Write(ItemName);
-            WriteItems(writer, Items);
         }
 
         private void WriteItems(BinaryWriter writer, IList items)
