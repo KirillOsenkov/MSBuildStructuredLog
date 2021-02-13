@@ -181,7 +181,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         int parentTaskId = parentContext.TaskId;
                         if (parentProject != null && parentTaskId > 0)
                         {
-                            parentNode = parentProject.FindFirstDescendant<Task>(t => t.Id == parentTaskId && t.GetNearestParent<Project>().Id == parentProjectId);
+                            parentNode = parentProject.GetTaskById(parentTaskId);
                         }
                     }
 
@@ -339,6 +339,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     var task = CreateTask(args);
                     target.AddChild(task);
+                    project.OnTaskAdded(task);
                 }
             }
             catch (Exception ex)

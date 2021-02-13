@@ -34,6 +34,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         private readonly ConcurrentDictionary<string, Target> _targetNameToTargetMap = new ConcurrentDictionary<string, Target>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<int, Target> targetsById = new Dictionary<int, Target>();
+        private readonly Dictionary<int, Task> tasksById = new Dictionary<int, Task>();
 
         public override string TypeName => nameof(Project);
 
@@ -263,6 +264,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 return sb.ToString();
             }
+        }
+
+        public void OnTaskAdded(Task task)
+        {
+            tasksById[task.Id] = task;
+        }
+
+        public Task GetTaskById(int id)
+        {
+            tasksById.TryGetValue(id, out var task);
+            return task;
         }
     }
 }
