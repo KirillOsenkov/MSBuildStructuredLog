@@ -585,6 +585,12 @@
     </StackPanel>
   </DataTemplate>
 
+  <DataTemplate DataType="{x:Type core:CustomContentNode}">
+    <StackPanel Orientation="Horizontal">
+      <ContentControl Content="{Binding Content}" />
+    </StackPanel>
+  </DataTemplate>
+
   <HierarchicalDataTemplate DataType="{x:Type l:SourceFile}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">

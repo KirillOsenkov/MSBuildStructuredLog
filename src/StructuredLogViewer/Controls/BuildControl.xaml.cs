@@ -12,6 +12,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 using System.Xml;
 using Microsoft.Build.Logging.StructuredLogger;
@@ -1638,7 +1639,86 @@ Recent:
             var treeStats = Build.Statistics;
             DisplayTreeStats(statsRoot, treeStats, recordStats);
 
+            //var histogram = GetHistogram(recordStats.StringSizes);
+            //var histogramNode = new CustomContentNode { Content = histogram };
+            //statsRoot.AddChild(histogramNode);
+
             Build.Seal();
+        }
+
+        private UIElement GetHistogram(List<int> values)
+        {
+            double width = 800;
+            double height = 200;
+            var fill = Brushes.AliceBlue;
+            var border = Brushes.LightBlue;
+
+            var canvas = new Canvas()
+            {
+                Width = width,
+                Height = height,
+                Background = Brushes.Azure
+            };
+
+            double max = values.Max();
+            int count = values.Count;
+
+            for (double x = 0; x < width; x++)
+            {
+                int startIndex = (int)(x / width * count);
+                int endIndex = (int)((x + 1) / width * count);
+                if (startIndex < 0)
+                {
+                    startIndex = 0;
+                }
+
+                if (endIndex >= count)
+                {
+                    endIndex = count;
+                }
+
+                if (startIndex >= endIndex)
+                {
+                    continue;
+                }
+
+                int sum = 0;
+                int maxInBucket = 0;
+                for (int i = startIndex; i < endIndex; i++)
+                {
+                    int value = values[i];
+                    sum += value;
+                    if (maxInBucket < value)
+                    {
+                        maxInBucket = value;
+                    }
+                }
+
+                if (sum == 0)
+                {
+                    continue;
+                }
+
+                double y = height * maxInBucket / max;
+                if (y < height / 2)
+                {
+                    y += 5;
+                }
+
+                var rect = new System.Windows.Shapes.Rectangle
+                {
+                    Width = 1,
+                    Height = y,
+                    Fill = fill,
+                    Stroke = border
+                };
+                Canvas.SetLeft(rect, x);
+                Canvas.SetTop(rect, height - y);
+
+                canvas.Children.Add(rect);
+            }
+
+            return canvas;
         }
 
         private void DisplayTreeStats(Folder statsRoot, BuildStatistics treeStats, BinlogStats recordStats)

@@ -41,10 +41,23 @@ namespace Microsoft.Build.Logging.StructuredLogger
             NameValueListLargest = Math.Max(NameValueListLargest, size);
         }
 
+        public List<int> StringSizes = new List<int>();
+
         private void OnStringRead(string text, long lengthInBytes)
         {
-            StringCount += 1;
             int length = (int)lengthInBytes;
+
+            if (StringSizes.Count <= length)
+            {
+                for (int i = StringSizes.Count; i <= length; i++)
+                {
+                    StringSizes.Add(0);
+                }
+            }
+
+            StringSizes[length] += 1;
+
+            StringCount += 1;
             StringTotalSize += length;
             StringLargest = Math.Max(StringLargest, length);
         }
