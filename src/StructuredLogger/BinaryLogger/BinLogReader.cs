@@ -20,8 +20,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// The arguments include the blob kind and the byte buffer with the contents.
         /// </summary>
         public event Action<BinaryLogRecordKind, byte[]> OnBlobRead;
-        public event Action<string> OnStringRead;
-        public event Action<IDictionary<string, string>> OnNameValueListRead;
+        public event Action<string, long> OnStringRead;
+        public event Action<IDictionary<string, string>, long> OnNameValueListRead;
         public event Action<int> OnFileFormatVersionRead;
 
         /// <summary>
@@ -184,16 +184,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             // forward the events from the reader to the subscribers of this class
             reader.OnBlobRead += OnBlobRead;
-            reader.OnStringRead += OnStringRead;
-            reader.OnNameValueListRead += OnNameValueListRead;
+
+            long start = 0;
 
             reader.OnBlobRead += (kind, blob) =>
             {
+                start = wrapper.Position;
+
                 var record = new Record
                 {
                     Bytes = blob,
                     Args = null,
-                    Start = 0, // TODO: see if we can re-add that
+                    Start = start - blob.Length, // TODO: check if this is accurate
                     Length = blob.Length
                 };
 
@@ -201,11 +203,29 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 lengthOfBlobsAddedLastTime += blob.Length;
             };
 
+            reader.OnStringRead += text =>
+            {
+                long length = wrapper.Position - start;
+
+                // re-read the current position as we're just about to start reading
+                // the actual BuildEventArgs record
+                start = wrapper.Position;
+
+                OnStringRead?.Invoke(text, length);
+            };
+
+            reader.OnNameValueListRead += list =>
+            {
+                long length = wrapper.Position - start;
+                start = wrapper.Position;
+                OnNameValueListRead?.Invoke(list, length);
+            };
+
             while (true)
             {
                 BuildEventArgs instance = null;
 
-                long start = wrapper.Position;
+                start = wrapper.Position;
 
                 instance = reader.Read();
                 if (instance == null)

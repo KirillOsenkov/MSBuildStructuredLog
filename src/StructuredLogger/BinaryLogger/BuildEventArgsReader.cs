@@ -224,6 +224,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 Dictionary = CreateDictionary(list)
             };
             nameValueListRecords.Add(record);
+
+            OnNameValueListRead?.Invoke(record.Dictionary);
         }
 
         private IDictionary<string, string> GetNameValueList(int id)

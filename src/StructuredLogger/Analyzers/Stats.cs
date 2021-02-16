@@ -13,8 +13,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             var reader = new BinLogReader();
             reader.OnBlobRead += (kind, bytes) => stats.OnBlobRead(kind, bytes);
-            reader.OnStringRead += text => stats.OnStringRead(text);
-            reader.OnNameValueListRead += list => stats.OnNameValueListRead(list);
+            reader.OnStringRead += (text, lengthBytes) => stats.OnStringRead(text, lengthBytes);
+            reader.OnNameValueListRead += (list, recordLengthBytes) => stats.OnNameValueListRead(list, recordLengthBytes);
 
             var records = reader.ReadRecords(binlogFilePath);
             stats.Process(records);
@@ -33,18 +33,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public int BlobTotalSize;
         public int BlobLargest;
 
-        private void OnNameValueListRead(IDictionary<string, string> list)
+        private void OnNameValueListRead(IDictionary<string, string> list, long recordLengthBytes)
         {
             NameValueListCount += 1;
-            var size = list.Sum(kvp => kvp.Key.Length * 2 + kvp.Value.Length * 2);
+            var size = (int)recordLengthBytes;
             NameValueListTotalSize += size;
             NameValueListLargest = Math.Max(NameValueListLargest, size);
         }
 
-        private void OnStringRead(string text)
+        private void OnStringRead(string text, long lengthInBytes)
         {
             StringCount += 1;
-            int length = text.Length * 2;
+            int length = (int)lengthInBytes;
             StringTotalSize += length;
             StringLargest = Math.Max(StringLargest, length);
         }
@@ -123,7 +123,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static string GetString(string name, long total, int count, int largest)
         {
-            return $"{name.PadRight(60, ' ')}\t\t\tTotal size: {total:N0}\t\t\tCount: {count:N0}\t\t\tLargest: {largest:N0}";
+            return $"{name.PadRight(30, ' ')}\t\t\tTotal size: {total:N0}\t\t\tCount: {count:N0}\t\t\tLargest: {largest:N0}";
         }
 
         private void Process(IEnumerable<Record> records)
