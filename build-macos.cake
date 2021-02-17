@@ -7,9 +7,6 @@ var configuration = Argument("configuration", "Release");
 var version = EnvironmentVariable("APPVEYOR_BUILD_VERSION") ?? Argument("version", "0.0.1");
 
 var artifactsDir = (DirectoryPath)Directory("./artifacts");
-var zipRootDir = artifactsDir.Combine("zips");
-
-var fileZipSuffix = ".zip";
 
 var netCoreAppsRoot= "./src";
 var netCoreApp = "StructuredLogViewer.Avalonia";
