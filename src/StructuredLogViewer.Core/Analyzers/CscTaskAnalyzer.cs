@@ -25,6 +25,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     lastAssembly.Name = text;
                     analyzerReport.AddChild(lastAssembly);
                     parent = lastAssembly;
+
+                    // Remove the message since we are already using the same text for the containing folder
+                    message.Parent.Children.Remove(message);
+                    continue;
                 }
 
                 if (parent != null)
