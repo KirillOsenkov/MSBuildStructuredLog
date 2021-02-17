@@ -14,6 +14,9 @@
     <description>A logger that can be passed to MSBuild to record a detailed log file and a WPF viewer app to view the log files in a tree form.</description>
     <summary>Structured logger and viewer to investigate MSBuild builds</summary>
     <tags>MSBuild Log Structure Structured WPF Viewer Tree</tags>
+    <dependencies>
+      <group targetFramework=".NETFramework4.7.2" />
+    </dependencies>
   </metadata>
   <files>
     <file src="AdonisUI.ClassicTheme.dll" target="lib\net472" />
