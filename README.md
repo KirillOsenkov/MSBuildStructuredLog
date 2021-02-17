@@ -21,7 +21,20 @@ The app updates automatically via [Squirrel](https://github.com/Squirrel/Squirre
 
 ![Screenshot1](http://msbuildlog.com/Screenshot1.png)
 
-## Running the Avalonia version on Mac:
+## Installing the Avalonia version on Mac:
+
+There are a couple of extra steps to get the .app running on macOS since it's currently distributed as an unsigned application:
+
+1. In _System Preferences -> Security & Privacy_ ensure _Allow apps downloaded from:_ is set to `App Store and identified developers`.
+2. Download the _Structured Log Viewer.zip_ file from the latest [Release](https://github.com/KirillOsenkov/MSBuildStructuredLog/releases).
+3. If necessary, unzip the file (Safari does this for you after downloading automatically).
+4. Move the `Structured Log Viewer.app` into your `Applications` folder.
+5. In terminal run: `chmod +x /Applications/Structured\ Log\ Viewer.app/Contents/MacOS/StructuredLogViewer.Avalonia` to give the app execution permissions
+6. Run the app.  You will be prompted that the app is not signed by a known developer.  Click `cancel`.
+7. In _System Preferences -> Security & Privacy_ click `Open anyway` where the app should now be visible near the setting from step 1.
+
+
+## Building & Running the Avalonia version on Mac:
 
 ```
 git clone https://github.com/KirillOsenkov/MSBuildStructuredLog
