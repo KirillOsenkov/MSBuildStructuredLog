@@ -380,11 +380,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return text.Substring(firstQuote + 1, secondQuote - firstQuote - 1);
         }
 
-        public static string DisplayDuration(TimeSpan span)
+        public static string DisplayDuration(TimeSpan span, bool showZero = false)
         {
             if (span.TotalMilliseconds < 1)
             {
-                return "";
+                return showZero ? "0 ms" : "";
             }
 
             if (span.TotalSeconds > 3600)

@@ -65,10 +65,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             foreach (var data in assemblyData.OrderByDescending(data => data.Value.TotalTime))
             {
-                var folder = new Folder { Name = $"{TextUtilities.DisplayDuration(data.Value.TotalTime)}   {data.Value.Name}" };
+                var folder = new Folder { Name = $"{TextUtilities.DisplayDuration(data.Value.TotalTime, showZero: true)}   {data.Value.Name}" };
                 foreach (var analyzer in data.Value.AnalyzerTimes.OrderByDescending(analyzer => analyzer.Value).ThenBy(analyzer => analyzer.Key, StringComparer.OrdinalIgnoreCase))
                 {
-                    folder.AddChild(new Item { Name = analyzer.Key, Text = TextUtilities.DisplayDuration(analyzer.Value) });
+                    folder.AddChild(new Item { Name = analyzer.Key, Text = TextUtilities.DisplayDuration(analyzer.Value, showZero: true) });
                 }
 
                 destination.AddChild(folder);
