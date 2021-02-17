@@ -1,6 +1,10 @@
+#addin "Cake.Plist"
+
 var target = Argument("target", "Default");
 var platform = Argument("platform", "AnyCPU");
 var configuration = Argument("configuration", "Release");
+
+var version = EnvironmentVariable("APPVEYOR_BUILD_VERSION") ?? Argument("version", "0.0.1");
 
 var artifactsDir = (DirectoryPath)Directory("./artifacts");
 var zipRootDir = artifactsDir.Combine("zips");
@@ -9,6 +13,7 @@ var fileZipSuffix = ".zip";
 
 var netCoreAppsRoot= "./src";
 var netCoreApp = "StructuredLogViewer.Avalonia";
+var macAppName = "Structured Log Viewer";
 
 var buildDirs = 
     GetDirectories($"{netCoreAppsRoot}/**/bin/**") + 
@@ -51,6 +56,9 @@ var netCoreProject = new {
  {
     foreach(var runtime in netCoreProject.Runtimes)
     {
+        if (!runtime.Contains("osx"))
+            continue;
+
         var outputDir = artifactsDir.Combine(runtime);
 
         Information("Publishing: {0}, runtime: {1}", netCoreProject.Name, runtime);
@@ -79,6 +87,13 @@ var netCoreProject = new {
         EnsureDirectoryExists(tempDir.Combine("Contents"));
         MoveFiles(workingDir.Combine("Info.plist").FullPath, tempDir.Combine("Contents"));
 
+        // Update versions in Info.plist
+        var plistFile = tempDir.Combine("Contents").CombineWithFilePath("Info.plist");
+        dynamic plist = DeserializePlist(plistFile);
+        plist["CFBundleShortVersionString"] = version;
+        plist["CFBundleVersion"] = version;
+        SerializePlist(plistFile, plist);
+
         Information("Copying App Icons");
         EnsureDirectoryExists(tempDir.Combine("Contents/Resources"));
         MoveFiles(workingDir.Combine("StructuredLogViewer.icns").FullPath, tempDir.Combine("Contents/Resources"));
@@ -88,27 +103,13 @@ var netCoreProject = new {
 
         Information("Finish packaging");
         EnsureDirectoryExists(workingDir);
-        MoveDirectory(tempDir, workingDir.Combine($"{netCoreProject.Name}.app"));
-    }
- });
-
- Task("Zip-NetCore")
-     .IsDependentOn("Publish-NetCore")
-     .IsDependentOn("Package-Mac")
-     .Does(() =>
- {
-    EnsureDirectoryExists(zipRootDir);
-    foreach(var runtime in netCoreProject.Runtimes)
-    {
-        var workingDir = artifactsDir.Combine(runtime);
-        Information("Zipping {0} artifacts to {1}", runtime, zipRootDir);
-        Zip(workingDir.FullPath, zipRootDir.CombineWithFilePath(netCoreProject.Name + "-" + runtime + "-" + configuration + fileZipSuffix));
+        MoveDirectory(tempDir, workingDir.Combine($"../{macAppName}.app"));
     }
  });
 
  Task("Default")
      .IsDependentOn("Restore-NetCore")
      .IsDependentOn("Publish-NetCore")
-     .IsDependentOn("Zip-NetCore");
+     .IsDependentOn("Package-Mac");
 
  RunTarget(target);
