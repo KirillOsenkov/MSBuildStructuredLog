@@ -34,8 +34,6 @@
     <Resource Include="StructuredLogger.ico" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
-    <None Include="MSBuildStructuredLogViewer.nuspec" />
     <EmbeddedResource Include="Resources\SolutionFile.xshd" />
   </ItemGroup>
 </Project>
