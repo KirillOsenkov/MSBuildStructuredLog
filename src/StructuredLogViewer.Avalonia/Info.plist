@@ -15,9 +15,9 @@
 	<key>CFBundleIdentifier</key>
 	<string>structuredlogviewer</string>
 	<key>CFBundleVersion</key>
-	<string>4.0</string>
+	<string>0.0.1</string>
 	<key>CFBundleShortVersionString</key>
-	<string>4.0</string>
+	<string>0.0.1</string>
 	<key>NSHighResolutionCapable</key>
 	<string>True</string>
 </dict>
