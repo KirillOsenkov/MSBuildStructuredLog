@@ -100,7 +100,9 @@ var netCoreProject = new {
 
         Information("Finish packaging");
         EnsureDirectoryExists(workingDir);
-        MoveDirectory(tempDir, workingDir.Combine($"../{macAppName}.app"));
+        MoveDirectory(tempDir, workingDir.Combine($"{macAppName}.app"));
+
+        Zip(workingDir.FullPath, workingDir.CombineWithFilePath($"../{macAppName}.zip"));
     }
  });
 
