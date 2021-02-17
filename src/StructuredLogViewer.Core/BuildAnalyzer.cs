@@ -12,6 +12,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private ResolveAssemblyReferenceAnalyzer resolveAssemblyReferenceAnalyzer;
         private int index;
         private Dictionary<string, TimeSpan> taskDurations = new Dictionary<string, TimeSpan>();
+        private readonly List<Folder> analyzerReports = new List<Folder>();
 
         public BuildAnalyzer(Build build)
         {
@@ -204,6 +205,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     top10Tasks.AddChild(new Item { Name = kvp.Key, Text = TextUtilities.DisplayDuration(kvp.Value) });
                 }
             }
+
+            if (analyzerReports.Count > 0)
+            {
+                var analyzerReportSummary = build.GetOrCreateNodeWithName<Folder>($"Analyzer Summary");
+                CscTaskAnalyzer.CreateMergedReport(analyzerReportSummary, analyzerReports.ToArray());
+            }
         }
 
         private void PostAnalyzeProject(Project project)
@@ -263,7 +270,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
             else if (task.Name == "Csc")
             {
-                CscTaskAnalyzer.Analyze(task);
+                var analyzerReport = CscTaskAnalyzer.Analyze(task);
+                if (analyzerReport is not null)
+                {
+                    analyzerReports.Add(analyzerReport);
+                }
             }
 
             doubleWritesAnalyzer.AnalyzeTask(task);
