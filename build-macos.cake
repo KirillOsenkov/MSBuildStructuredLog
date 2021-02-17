@@ -82,8 +82,8 @@ var netCoreProject = new {
 
         Information("Copying Info.plist");
         EnsureDirectoryExists(tempDir.Combine("Contents"));
-        MoveFiles(workingDir.Combine("Info.plist").FullPath, tempDir.Combine("Contents"));
-
+        CopyFileToDirectory($"{netCoreAppsRoot}/{netCoreApp}/Info.plist", tempDir.Combine("Contents"));
+        
         // Update versions in Info.plist
         var plistFile = tempDir.Combine("Contents").CombineWithFilePath("Info.plist");
         dynamic plist = DeserializePlist(plistFile);
@@ -93,8 +93,8 @@ var netCoreProject = new {
 
         Information("Copying App Icons");
         EnsureDirectoryExists(tempDir.Combine("Contents/Resources"));
-        MoveFiles(workingDir.Combine("StructuredLogViewer.icns").FullPath, tempDir.Combine("Contents/Resources"));
-
+        CopyFileToDirectory($"{netCoreAppsRoot}/{netCoreApp}/StructuredLogViewer.icns", tempDir.Combine("Contents/Resources"));
+        
         Information("Copying executables");
         MoveDirectory(workingDir, tempDir.Combine("Contents/MacOS"));
 
