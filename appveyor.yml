@@ -6,6 +6,7 @@ install:
 build_script: 
 - cmd: >-
     msbuild /r /m /p:Configuration=Release /clp:v=m MSBuildStructuredLog.sln /bl /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+
     dotnet cake ./build-macos.cake --settings_skippackageversioncheck=true
 
 after_build:
