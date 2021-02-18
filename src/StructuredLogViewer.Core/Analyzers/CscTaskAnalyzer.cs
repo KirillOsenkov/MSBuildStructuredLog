@@ -112,13 +112,23 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 static (string name, TimeSpan time) ParseLine(string line)
                 {
-                    var columns = line.Split(new[] { "   " }, StringSplitOptions.RemoveEmptyEntries);
+                    var columns = line.Split(twoSpaces, StringSplitOptions.RemoveEmptyEntries);
+                    if (columns.Length != 3)
+                    {
+                        // The string wasn't in the format we expect
+                        return (line, TimeSpan.Zero);
+                    }
+
                     if (!double.TryParse(columns[0].Trim(), out var totalTimeSeconds))
+                    {
                         totalTimeSeconds = 0;
+                    }
 
                     return (columns[2].Trim(), TimeSpan.FromSeconds(totalTimeSeconds));
                 }
             }
+
+            private static readonly string[] twoSpaces = new[] { "  " };
         }
     }
 }
