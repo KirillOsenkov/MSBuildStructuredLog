@@ -15,6 +15,15 @@
     </AvaloniaResource>
   </ItemGroup>
 
+  <ItemGroup Condition="'$(NETCoreSdkRuntimeIdentifier)' == 'osx-x64'">
+    <Content Include="StructuredLogViewer.icns">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Info.plist">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" Version="0.9.3" />
     <PackageReference Include="Avalonia.AvaloniaEdit" Version="0.9.0-preview1" />
