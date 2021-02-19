@@ -15,20 +15,36 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
-        public TimeSpan Duration => EndTime - StartTime;
+        public TimeSpan Duration
+        {
+            get
+            {
+                if (EndTime >= StartTime)
+                {
+                    return EndTime - StartTime;
+                }
+
+                return TimeSpan.Zero;
+            }
+        }
 
         public string DurationText => TextUtilities.DisplayDuration(Duration);
 
         public override string TypeName => nameof(TimedNode);
 
-        public override string ToolTip
+        public string GetTimeAndDurationText()
         {
-            get
+            var duration = DurationText;
+            if (string.IsNullOrEmpty(duration))
             {
-                return $@"Start: {TextUtilities.Display(StartTime, displayDate: true)}
-End: {TextUtilities.Display(EndTime, displayDate: true)}
-Duration: {DurationText}";
+                duration = "0";
             }
+
+            return $@"Start: {TextUtilities.Display(StartTime, displayDate: true)}
+End: {TextUtilities.Display(EndTime, displayDate: true)}
+Duration: {duration}";
         }
+
+        public override string ToolTip => GetTimeAndDurationText();
     }
 }

@@ -156,6 +156,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             var commandLine = task.CommandLineArguments;
+            if (commandLine == null)
+            {
+                // Fsc seems to have it null
+                return null;
+            }
+
             commandLine = TrimCompilerExeFromCommandLine(commandLine, language);
 
             return new CompilerInvocation
@@ -166,47 +172,51 @@ namespace Microsoft.Build.Logging.StructuredLogger
             };
         }
 
-        public string TrimCompilerExeFromCommandLine(string commandLine, string language)
+        public static string TrimCompilerExeFromCommandLine(string commandLine, string language)
         {
-            int occurrence = -1;
+            int occurrence;
+            int length = 8;
 
-            if (language == CompilerInvocation.CSharp)
+            var compilerName = language switch
             {
-                occurrence = commandLine.IndexOf("csc.exe ", StringComparison.OrdinalIgnoreCase);
-                if (occurrence == -1)
-                {
-                    occurrence = commandLine.IndexOf("csc.dll ", StringComparison.OrdinalIgnoreCase);
-                }
-            }
-            else if (language == CompilerInvocation.VisualBasic)
+                CompilerInvocation.CSharp => "csc",
+                CompilerInvocation.VisualBasic => "vbc",
+                CompilerInvocation.FSharp => "fsc",
+                CompilerInvocation.TypeScript => "tsc",
+                _ => null
+            };
+
+            if (compilerName == null)
             {
-                occurrence = commandLine.IndexOf("vbc.exe ", StringComparison.OrdinalIgnoreCase);
-                if (occurrence == -1)
-                {
-                    occurrence = commandLine.IndexOf("vbc.dll ", StringComparison.OrdinalIgnoreCase);
-                }
-            }
-            else if (language == CompilerInvocation.FSharp)
-            {
-                occurrence = commandLine.IndexOf("fsc.exe ", StringComparison.OrdinalIgnoreCase);
-                if (occurrence == -1)
-                {
-                    occurrence = commandLine.IndexOf("fsc.dll ", StringComparison.OrdinalIgnoreCase);
-                }
-            }
-            else if (language == CompilerInvocation.TypeScript)
-            {
-                occurrence = commandLine.IndexOf("tsc.exe ", StringComparison.OrdinalIgnoreCase);
-                if (occurrence == -1)
-                {
-                    occurrence = commandLine.IndexOf("tsc.dll ", StringComparison.OrdinalIgnoreCase);
-                }
+                return commandLine;
             }
 
-            if (occurrence > -1)
+            if (TryParse(compilerName))
             {
-                // fortunately they're all the same length
-                commandLine = commandLine.Substring(occurrence + "csc.exe ".Length);
+                commandLine = commandLine.Substring(occurrence + length);
+            }
+
+            bool TryParse(string compilerName)
+            {
+                occurrence = commandLine.IndexOf($"{compilerName}.exe ", StringComparison.OrdinalIgnoreCase);
+                if (occurrence == -1)
+                {
+                    occurrence = commandLine.IndexOf($"{compilerName}.dll ", StringComparison.OrdinalIgnoreCase);
+                }
+
+                if (occurrence == -1)
+                {
+                    occurrence = commandLine.IndexOf($"{compilerName}.exe\" ", StringComparison.OrdinalIgnoreCase);
+                    length = 9;
+                }
+
+                if (occurrence == -1)
+                {
+                    occurrence = commandLine.IndexOf($"{compilerName}.dll\" ", StringComparison.OrdinalIgnoreCase);
+                    length = 9;
+                }
+
+                return occurrence >= 0;
             }
 
             return commandLine;

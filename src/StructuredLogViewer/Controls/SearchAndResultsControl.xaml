@@ -41,18 +41,22 @@
                 BorderThickness="0"
                 Background="{DynamicResource Theme_ToolWindowBackground}"
                 local:ScrollViewerHelper.ShiftWheelScrollsHorizontally="True" />
-      <ContentPresenter x:Name="watermark"
-                 Margin="40"
-                 HorizontalAlignment="Center"
-                 Content="{Binding WatermarkText}"
-                 VerticalAlignment="Center">
-        <ContentPresenter.Resources>
-          <Style TargetType="{x:Type TextBlock}">
-            <Setter Property="TextWrapping" Value="Wrap" />
-            <Setter Property="Foreground" Value="Gray" />
-          </Style>
-        </ContentPresenter.Resources>
-      </ContentPresenter>
+      <ScrollViewer x:Name="watermarkScrollViewer"
+          HorizontalScrollBarVisibility="Disabled" 
+          VerticalScrollBarVisibility="Auto">
+        <ContentPresenter x:Name="watermark"
+                   Margin="40"
+                   HorizontalAlignment="Center"
+                   Content="{Binding WatermarkText}"
+                   VerticalAlignment="Center">
+          <ContentPresenter.Resources>
+            <Style TargetType="{x:Type TextBlock}">
+              <Setter Property="TextWrapping" Value="Wrap" />
+              <Setter Property="Foreground" Value="Gray" />
+            </Style>
+          </ContentPresenter.Resources>
+        </ContentPresenter>
+      </ScrollViewer>
     </Grid>
   </DockPanel>
 

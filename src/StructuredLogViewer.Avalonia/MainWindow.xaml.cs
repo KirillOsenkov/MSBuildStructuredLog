@@ -364,7 +364,7 @@ namespace StructuredLogViewer.Avalonia
             string customArguments = SettingsService.GetCustomArguments(filePath);
             var parametersScreen = new BuildParametersScreen();
             //parametersScreen.BrowseForMSBuild += async () => await BrowseForMSBuildExe();
-            parametersScreen.PrefixArguments = Utilities.QuoteIfNeeded(filePath);
+            parametersScreen.PrefixArguments = filePath.QuoteIfNeeded();
             parametersScreen.MSBuildArguments = customArguments;
             parametersScreen.PostfixArguments = HostedBuild.GetPostfixArguments();
             parametersScreen.BuildRequested += () =>

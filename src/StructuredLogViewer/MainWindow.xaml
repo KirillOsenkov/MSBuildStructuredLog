@@ -31,6 +31,8 @@
         <MenuItem x:Name="ReloadMenu" Header="_Reload" Click="Reload_Click" InputGestureText="F5" />
         <MenuItem x:Name="SaveAsMenu" Header="_Save Log As..." Click="SaveAs_Click" InputGestureText="Ctrl+S" />
         <Separator />
+        <MenuItem x:Name="StatsMenu" Header="_Statistics..." Click="Stats_Click" />
+        <Separator />
         <MenuItem x:Name="RecentProjectsMenu" Header="Recent Projects" Visibility="Collapsed">
         </MenuItem>
         <MenuItem x:Name="RecentLogsMenu" Header="Recent Logs" Visibility="Collapsed">

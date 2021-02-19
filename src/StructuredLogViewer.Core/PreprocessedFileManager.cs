@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Logging.StructuredLogger;
 using Bucket = System.Collections.Generic.HashSet<StructuredLogViewer.ProjectImport>;
 
@@ -11,7 +12,7 @@ namespace StructuredLogViewer
     {
         private readonly Build build;
         private readonly SourceFileResolver sourceFileResolver;
-        private readonly Dictionary<string, Dictionary<string, Bucket>> importMapsPerProject = new Dictionary<string, Dictionary<string, Bucket>>();
+        private readonly Dictionary<string, Dictionary<string, Bucket>> importMapsPerEvaluation = new Dictionary<string, Dictionary<string, Bucket>>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, string> preprocessedFileCache = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         public PreprocessedFileManager(Build build, SourceFileResolver sourceFileResolver)
@@ -50,31 +51,54 @@ namespace StructuredLogViewer
             }
         }
 
-        private void VisitImport(Import import, ProjectEvaluation projectEvaluationContext)
+        private void VisitImport(Import import, ProjectEvaluation projectEvaluation)
         {
             if (sourceFileResolver.HasFile(import.ProjectFilePath) &&
                 sourceFileResolver.HasFile(import.ImportedProjectFilePath) &&
-                !string.IsNullOrEmpty(projectEvaluationContext.ProjectFile))
+                !string.IsNullOrEmpty(projectEvaluation.ProjectFile))
             {
-                var importMap = GetOrCreateImportMap(projectEvaluationContext.ProjectFile);
+                var importMap = GetOrCreateImportMap(GetEvaluationKey(projectEvaluation), import.ProjectFilePath);
                 AddImport(importMap, import.ProjectFilePath, import.ImportedProjectFilePath, import.Line, import.Column);
             }
         }
 
-        private Dictionary<string, Bucket> GetOrCreateImportMap(string projectFilePath)
+        public static string GetEvaluationKey(ProjectEvaluation evaluation) => evaluation == null ? null : evaluation.ProjectFile + evaluation.Id.ToString();
+
+        public static string GetEvaluationKey(Project project)
         {
-            if (!importMapsPerProject.TryGetValue(projectFilePath, out var importMap))
+            if (project == null)
+            {
+                return null;
+            }
+
+            if (project.EvaluationId == BuildEventContext.InvalidEvaluationId)
+            {
+                return project.ProjectFile;
+            }
+
+            return project.ProjectFile + project.EvaluationId.ToString();
+        }
+
+        private Dictionary<string, Bucket> GetOrCreateImportMap(string key, string projectFilePath)
+        {
+            if (!importMapsPerEvaluation.TryGetValue(key, out var importMap))
             {
                 importMap = new Dictionary<string, Bucket>(StringComparer.OrdinalIgnoreCase);
-                importMapsPerProject[projectFilePath] = importMap;
+                importMapsPerEvaluation[key] = importMap;
+
+                // we want to have a "default" import map for each project, without specifying an evaluation id
+                // this is when we click on a project and want to preprocess (we currently don't know which
+                // evaluation id is associated with this project).
+                // TODO: improve this when https://github.com/dotnet/msbuild/issues/4926 is fixed.
+                importMapsPerEvaluation[projectFilePath] = importMap;
             }
 
             return importMap;
         }
 
-        private Dictionary<string, Bucket> GetImportMap(string projectFilePath)
+        private Dictionary<string, Bucket> GetImportMap(string projectEvaluationKey)
         {
-            if (projectFilePath != null && importMapsPerProject.TryGetValue(projectFilePath, out var importMap))
+            if (projectEvaluationKey != null && importMapsPerEvaluation.TryGetValue(projectEvaluationKey, out var importMap))
             {
                 return importMap;
             }
@@ -82,7 +106,7 @@ namespace StructuredLogViewer
             return null;
         }
 
-        private int CorrectForMultilineImportElement(SourceText text, int lineNumber)
+        private int CorrectForMultilineTag(SourceText text, int lineNumber, string startText = "<Import", string endText = "/>")
         {
             // can happen for corrupt binlogs where some files have no text
             // see https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/258
@@ -91,18 +115,14 @@ namespace StructuredLogViewer
                 return 0;
             }
 
-            var line = text.Lines[lineNumber];
             var lineText = text.GetLineText(lineNumber);
-            if (lineText.Contains("<Import"))
+            if (lineText.Contains(startText))
             {
-                int lastElementLineNumber = lineNumber;
-                while (!lineText.Contains("/>") && lastElementLineNumber < text.Lines.Count - 1)
+                while (!lineText.Contains(endText) && lineNumber < text.Lines.Count - 1)
                 {
-                    lastElementLineNumber++;
-                    lineText = text.GetLineText(lastElementLineNumber);
+                    lineNumber++;
+                    lineText = text.GetLineText(lineNumber);
                 }
-
-                return lastElementLineNumber;
             }
 
             return lineNumber;
@@ -125,14 +145,14 @@ namespace StructuredLogViewer
             bucket.Add(new ProjectImport(importedProject, line, column));
         }
 
-        public Action GetPreprocessAction(string sourceFilePath, string preprocessContext)
+        public Action GetPreprocessAction(string sourceFilePath, string preprocessEvaluationContext)
         {
-            if (!CanPreprocess(sourceFilePath, preprocessContext))
+            if (!CanPreprocess(sourceFilePath, preprocessEvaluationContext))
             {
                 return null;
             }
 
-            return () => ShowPreprocessed(sourceFilePath, preprocessContext);
+            return () => ShowPreprocessed(sourceFilePath, preprocessEvaluationContext);
         }
 
         public string GetPreprocessedText(string sourceFilePath, string projectEvaluationContext)
@@ -155,35 +175,7 @@ namespace StructuredLogViewer
                 imports.Count > 0 &&
                 !string.IsNullOrWhiteSpace(sourceText.Text))
             {
-                var sb = new StringBuilder();
-                int line = 0;
-
-                if (sourceText.GetLineText(line).Contains("<?xml"))
-                {
-                    line++;
-                }
-
-                foreach (var import in imports.OrderBy(i => i.Line).ToArray())
-                {
-                    var importEndLine = CorrectForMultilineImportElement(sourceText, import.Line);
-
-                    for (; line <= importEndLine; line++)
-                    {
-                        sb.AppendLine(sourceText.GetLineText(line));
-                    }
-
-                    var importText = GetPreprocessedText(import.ProjectPath, projectEvaluationContext);
-                    sb.AppendLine($"<!-- ======== {import.ProjectPath} ======= -->");
-                    sb.AppendLine(importText);
-                    sb.AppendLine($"<!-- ======== END OF {import.ProjectPath} ======= -->");
-                }
-
-                for (; line < sourceText.Lines.Count; line++)
-                {
-                    sb.AppendLine(sourceText.GetLineText(line));
-                }
-
-                result = sb.ToString();
+                result = GetPreprocessedTextCore(projectEvaluationContext, sourceText, imports);
             }
             else
             {
@@ -198,14 +190,110 @@ namespace StructuredLogViewer
             return result;
         }
 
-        public string GetProjectEvaluationContext(object node)
+        private string GetPreprocessedTextCore(string projectEvaluationContext, SourceText sourceText, Bucket imports)
+        {
+            string result;
+            var sb = new StringBuilder();
+            int line = 0;
+
+            if (sourceText.GetLineText(line).Contains("<?xml"))
+            {
+                line++;
+            }
+
+            var importsList = imports.OrderBy(i => i.Line).ToList();
+
+            var sdkProps = importsList.FirstOrDefault(i => i.ProjectPath.EndsWith("Sdk.props", StringComparison.OrdinalIgnoreCase) && i.Line == 0 && i.Column == 0);
+            if (sdkProps != default)
+            {
+                while (sourceText.GetLineText(line) is string firstLine && !firstLine.Contains("<Project"))
+                {
+                    sb.AppendLine(firstLine);
+                    line++;
+                }
+
+                line = SkipTag(sourceText, sb, line, line, "<Project", ">");
+
+                InjectImportedProject(projectEvaluationContext, sb, sdkProps);
+                importsList.Remove(sdkProps);
+            }
+
+            var sdkTargets = importsList.FirstOrDefault(i => i.ProjectPath.EndsWith("Sdk.targets", StringComparison.OrdinalIgnoreCase) && i.Line == 0 && i.Column == 0);
+            if (sdkTargets != default)
+            {
+                importsList.Remove(sdkTargets);
+            }
+
+            foreach (var import in importsList)
+            {
+                line = SkipTag(sourceText, sb, line, import.Line);
+
+                InjectImportedProject(projectEvaluationContext, sb, import);
+            }
+
+            int count = sourceText.Lines.Count;
+            for (; line < count; line++)
+            {
+                var lastLineText = sourceText.GetLineText(line);
+                if (lastLineText.Contains("</Project>"))
+                {
+                    if (sdkTargets != default)
+                    {
+                        InjectImportedProject(projectEvaluationContext, sb, sdkTargets);
+                        sdkTargets = default;
+                    }
+                }
+
+                if (line < count - 1 || lastLineText.Length > 0)
+                {
+                    sb.AppendLine(lastLineText);
+                }
+            }
+
+            result = sb.ToString();
+            
+            return result;
+        }
+
+        private void InjectImportedProject(string projectEvaluationContext, StringBuilder sb, ProjectImport import)
+        {
+            string projectPath = import.ProjectPath;
+            var importText = GetPreprocessedText(projectPath, projectEvaluationContext);
+            sb.AppendLine($"<!-- ======== {projectPath} ======= -->");
+            sb.Append(importText);
+            if (!importText.EndsWith("\n"))
+            {
+                sb.AppendLine();
+            }
+
+            sb.AppendLine($"<!-- ======== END OF {projectPath} ======= -->");
+        }
+
+        private int SkipTag(SourceText sourceText, StringBuilder sb, int line, int lineNumber, string startText = "<Import", string endText = "/>")
+        {
+            var elementEndLine = CorrectForMultilineTag(sourceText, lineNumber, startText, endText);
+            for (; line <= elementEndLine; line++)
+            {
+                sb.AppendLine(sourceText.GetLineText(line));
+            }
+
+            return line;
+        }
+
+        public static string GetNodeEvaluationKey(object node)
         {
             if (node is TreeNode treeNode)
             {
-                var project = (IPreprocessable)treeNode.GetNearestParentOrSelf<Project>() ?? treeNode.GetNearestParentOrSelf<ProjectEvaluation>();
+                var project = treeNode.GetNearestParentOrSelf<Project>();
                 if (project != null)
                 {
-                    return project.RootFilePath;
+                    return GetEvaluationKey(project);
+                }
+
+                var evaluation = treeNode.GetNearestParentOrSelf<ProjectEvaluation>();
+                if (evaluation != null)
+                {
+                    return GetEvaluationKey(evaluation);
                 }
             }
 
@@ -219,7 +307,7 @@ namespace StructuredLogViewer
                 return;
             }
 
-            ShowPreprocessed(preprocessable.RootFilePath, GetProjectEvaluationContext(preprocessable));
+            ShowPreprocessed(preprocessable.RootFilePath, GetNodeEvaluationKey(preprocessable));
         }
 
         public void ShowPreprocessed(string sourceFilePath, string projectContext)
@@ -242,15 +330,15 @@ namespace StructuredLogViewer
         public bool CanPreprocess(IPreprocessable preprocessable)
         {
             string sourceFilePath = preprocessable.RootFilePath;
-            string projectContext = GetProjectEvaluationContext(preprocessable);
+            string projectContext = GetNodeEvaluationKey(preprocessable);
             return CanPreprocess(sourceFilePath, projectContext);
         }
 
-        public bool CanPreprocess(string sourceFilePath, string projectContext)
+        public bool CanPreprocess(string sourceFilePath, string projectEvaluationKey)
         {
             return sourceFilePath != null
                 && sourceFileResolver.HasFile(sourceFilePath)
-                && GetImportMap(projectContext) is Dictionary<string, Bucket> importMap
+                && GetImportMap(projectEvaluationKey) is Dictionary<string, Bucket> importMap
                 && importMap.TryGetValue(sourceFilePath, out var bucket)
                 && bucket.Count > 0;
         }

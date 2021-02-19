@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -33,6 +34,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         private readonly ConcurrentDictionary<string, Target> _targetNameToTargetMap = new ConcurrentDictionary<string, Target>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<int, Target> targetsById = new Dictionary<int, Target>();
+        private readonly Dictionary<int, Task> tasksById = new Dictionary<int, Task>();
 
         public override string TypeName => nameof(Project);
 
@@ -41,14 +43,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var sb = new StringBuilder();
 
             sb.Append($"Project Name={Name} File={ProjectFile}");
-            if (EntryTargets != null)
+            if (EntryTargets != null && EntryTargets.Any())
             {
-                sb.Append($" Targets=[{string.Join(",", EntryTargets)}]");
+                sb.Append($" Targets=[{string.Join(", ", EntryTargets)}]");
             }
 
             if (GlobalProperties != null)
             {
-                sb.Append($" GlobalProperties=[{string.Join(",", GlobalProperties.Select(kvp => $"{kvp.Key}={kvp.Value}"))}]");
+                sb.Append($" GlobalProperties=[{string.Join(", ", GlobalProperties.Select(kvp => $"{kvp.Key}={TextUtilities.ShortenValue(kvp.Value, "...", maxChars: 150)}"))}]");
             }
 
             return sb.ToString();
@@ -68,6 +70,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 .Union(targetsById.Values)
                 .Where(t => t.Parent == null)
                 .OrderBy(t => t.StartTime)
+                // orphaned targets may share the exact same start time hint, so disambiguate by Index as well which is a counter
+                .ThenBy(t => t.Index)
                 .ToArray();
         }
 
@@ -92,7 +96,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             target = _targetNameToTargetMap.Values.FirstOrDefault(t => t.Id == id);
             if (target == null)
             {
-                target = CreateTargetInstance(null);
+                target = CreateTargetInstance(null, default);
             }
 
             AssociateTargetWithId(id, target);
@@ -107,9 +111,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        public Target GetOrAddTargetByName(string targetName)
+        public Target GetOrAddTargetByName(string targetName, DateTime startTimeHint)
         {
-            Target result = _targetNameToTargetMap.GetOrAdd(targetName, key => CreateTargetInstance(key));
+            Target result = _targetNameToTargetMap.GetOrAdd(targetName, key => CreateTargetInstance(key, startTimeHint));
             return result;
         }
 
@@ -134,7 +138,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     {
                         if (!targetsById.TryGetValue(id, out target))
                         {
-                            target = CreateTargetInstance(name);
+                            target = CreateTargetInstance(name, default);
                             target.Id = id;
                             AssociateTargetWithId(id, target);
                         }
@@ -153,7 +157,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
                 else
                 {
-                    target = CreateTargetInstance(name);
+                    target = CreateTargetInstance(name, default);
                     target.Id = id;
                     AssociateTargetWithId(id, target);
                 }
@@ -164,12 +168,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return target;
         }
 
-        private static Target CreateTargetInstance(string name)
+        private int unparentedTargetIndex = 0;
+
+        private Target CreateTargetInstance(string name, DateTime startTimeHint)
         {
+            Interlocked.Increment(ref unparentedTargetIndex);
+
             return new Target()
             {
                 Name = name,
-                Id = -1
+                Id = -1,
+                Index = unparentedTargetIndex, // additional sorting to preserve the order unparented targets are listed in
+                StartTime = startTimeHint,
+                EndTime = startTimeHint
             };
         }
 
@@ -192,6 +203,78 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         public IReadOnlyList<string> EntryTargets { get; set; } = Array.Empty<string>();
+        public string TargetsText { get; set; }
+
+        public string TargetsDisplayText
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(TargetsText))
+                {
+                    return string.Empty;
+                }
+
+                return $" → {TargetsText}";
+            }
+        }
+
+        public string TargetFramework { get; set; }
+
+        public int EvaluationId { get; set; }
+        public string EvaluationText { get; set; } = "";
+
         public IDictionary<string, string> GlobalProperties { get; set; } = ImmutableDictionary<string, string>.Empty;
+
+        public override string ToolTip
+        {
+            get
+            {
+                var sb = new StringBuilder();
+
+                sb.AppendLine(ProjectFile);
+
+                if (EntryTargets != null && EntryTargets.Any())
+                {
+                    sb.AppendLine();
+                    sb.AppendLine("Targets:");
+                    foreach (var target in EntryTargets.OrderBy(target => target, StringComparer.InvariantCultureIgnoreCase))
+                    {
+                        sb.AppendLine(target);
+                    }
+                }
+
+                if (GlobalProperties != null && GlobalProperties.Any())
+                {
+                    const int maxPropertiesToPrint = 5;
+                    sb.AppendLine();
+                    sb.AppendLine("Global Properties:");
+                    foreach (var pair in GlobalProperties.OrderBy(pair => pair.Key, StringComparer.InvariantCultureIgnoreCase).Take(maxPropertiesToPrint))
+                    {
+                        sb.AppendLine($"{pair.Key} = {TextUtilities.ShortenValue(pair.Value, "...", maxChars: 150)}");
+                    }
+
+                    if (GlobalProperties.Count > maxPropertiesToPrint)
+                    {
+                        sb.AppendLine("...");
+                    }
+                }
+
+                sb.AppendLine();
+                sb.Append(GetTimeAndDurationText());
+
+                return sb.ToString();
+            }
+        }
+
+        public void OnTaskAdded(Task task)
+        {
+            tasksById[task.Id] = task;
+        }
+
+        public Task GetTaskById(int id)
+        {
+            tasksById.TryGetValue(id, out var task);
+            return task;
+        }
     }
 }

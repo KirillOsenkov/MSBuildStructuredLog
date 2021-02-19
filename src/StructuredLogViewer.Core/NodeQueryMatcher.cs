@@ -1,24 +1,101 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogViewer
 {
+    public struct Term : IEquatable<Term>
+    {
+        public string Word;
+        public bool Quotes;
+
+        public Term(string word, bool quotes = false)
+        {
+            Word = word;
+            Quotes = quotes;
+        }
+
+        public static Term Get(string input)
+        {
+            var trimmed = input.TrimQuotes();
+            if (trimmed == input)
+            {
+                return new Term(input);
+            }
+            else if (!string.IsNullOrWhiteSpace(trimmed))
+            {
+                if (trimmed.Contains(" "))
+                {
+                    // multi-word
+                    return new Term(trimmed);
+                }
+                else
+                {
+                    // exact match
+                    return new Term(trimmed, quotes: true);
+                }
+            }
+
+            return default;
+        }
+
+        public bool IsMatch(string field, HashSet<string> superstrings)
+        {
+            if (Quotes)
+            {
+                return string.Equals(field, Word, StringComparison.OrdinalIgnoreCase);
+            }
+            else
+            {
+                return superstrings.Contains(field);
+            }
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is Term other)
+            {
+                return Equals(other);
+            }
+
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return (Word, Quotes).GetHashCode();
+        }
+
+        public bool Equals(Term other)
+        {
+            return other.Word == Word && other.Quotes == Quotes;
+        }
+
+        public static bool operator ==(Term left, Term right) => left.Equals(right);
+        public static bool operator !=(Term left, Term right) => !left.Equals(right);
+
+        public override string ToString()
+        {
+            return $"'{Word}' Quotes={Quotes}";
+        }
+    }
+
     public class NodeQueryMatcher
     {
         public string Query { get; private set; }
-        public List<string> Words { get; private set; }
+        public List<Term> Words { get; private set; }
         public string TypeKeyword { get; private set; }
         public int NodeIndex { get; private set; } = -1;
         private HashSet<string>[] MatchesInStrings { get; set; }
         public bool IncludeDuration { get; set; }
+        public bool IncludeStart { get; set; }
+        public bool IncludeEnd { get; set; }
         public TimeSpan PrecalculationDuration { get; set; }
+        public bool UnderProject { get; set; } = false;
 
-        private string nameToSearch { get; set; }
-        private string valueToSearch { get; set; }
+        private Term nameToSearch { get; set; }
+        private Term valueToSearch { get; set; }
         private List<NodeQueryMatcher> IncludeMatchers { get; set; } = new List<NodeQueryMatcher>();
         private List<NodeQueryMatcher> ExcludeMatchers { get; set; } = new List<NodeQueryMatcher>();
 
@@ -30,12 +107,23 @@ namespace StructuredLogViewer
 
         public NodeQueryMatcher(string query, IEnumerable<string> stringTable)
         {
+            query = PreprocessQuery(query);
+
             this.Query = query;
 
-            this.Words = ParseIntoWords(query);
+            var rawWords = TextUtilities.Tokenize(query);
+            this.Words = new List<Term>(rawWords.Count);
+            foreach (var rawWord in rawWords)
+            {
+                var term = Term.Get(rawWord);
+                if (term != default)
+                {
+                    Words.Add(term);
+                }
+            }
 
             if (Words.Count == 1 &&
-                Words[0] is string potentialNodeIndex &&
+                Words[0].Word is string potentialNodeIndex &&
                 potentialNodeIndex.Length > 1 &&
                 potentialNodeIndex[0] == '$')
             {
@@ -50,12 +138,24 @@ namespace StructuredLogViewer
 
             for (int i = Words.Count - 1; i >= 0; i--)
             {
-                var word = Words[i];
+                var word = Words[i].Word;
 
-                if (word == "$time")
+                if (word == "$time" || word == "$duration")
                 {
                     Words.RemoveAt(i);
                     IncludeDuration = true;
+                    continue;
+                }
+                else if (word == "$start" || word == "$starttime")
+                {
+                    Words.RemoveAt(i);
+                    IncludeStart = true;
+                    continue;
+                }
+                else if (word == "$end" || word == "$endtime")
+                {
+                    Words.RemoveAt(i);
+                    IncludeEnd = true;
                     continue;
                 }
 
@@ -84,12 +184,28 @@ namespace StructuredLogViewer
                     continue;
                 }
 
+                if (word.StartsWith("project(", StringComparison.OrdinalIgnoreCase) && word.EndsWith(")"))
+                {
+                    word = word.Substring(8, word.Length - 9);
+                    Words.RemoveAt(i);
+
+                    var underMatcher = new NodeQueryMatcher(word, stringTable);
+                    underMatcher.UnderProject = true;
+                    IncludeMatchers.Add(underMatcher);
+                    continue;
+                }
+
                 if (word.StartsWith("name=", StringComparison.OrdinalIgnoreCase) && word.Length > 5)
                 {
                     word = word.Substring(5, word.Length - 5);
                     Words.RemoveAt(i);
-                    Words.Insert(i, word);
-                    nameToSearch = word;
+                    var term = Term.Get(word);
+                    if (term != default)
+                    {
+                        Words.Insert(i, term);
+                        nameToSearch = term;
+                    }
+
                     continue;
                 }
 
@@ -97,13 +213,31 @@ namespace StructuredLogViewer
                 {
                     word = word.Substring(6, word.Length - 6);
                     Words.RemoveAt(i);
-                    Words.Insert(i, word);
-                    valueToSearch = word;
+                    var term = Term.Get(word);
+                    if (term != default)
+                    {
+                        Words.Insert(i, term);
+                        valueToSearch = term;
+                    }
+
                     continue;
                 }
             }
 
             PrecomputeMatchesInStrings(stringTable);
+        }
+
+        private string PreprocessQuery(string query)
+        {
+            if (string.IsNullOrEmpty(query))
+            {
+                return query;
+            }
+
+            query = query.Replace("$csc", "$task csc");
+            query = query.Replace("$rar", "$task ResolveAssemblyReference");
+
+            return query;
         }
 
         private void PrecomputeMatchesInStrings(IEnumerable<string> stringTable)
@@ -147,7 +281,13 @@ namespace StructuredLogViewer
             {
                 for (int i = 0; i < Words.Count; i++)
                 {
-                    var word = Words[i];
+                    var term = Words[i];
+                    if (term.Quotes)
+                    {
+                        continue;
+                    }
+
+                    var word = term.Word;
                     if (stringInstance.IndexOf(word, StringComparison.OrdinalIgnoreCase) != -1)
                     {
                         var matches = MatchesInStrings[i];
@@ -162,64 +302,6 @@ namespace StructuredLogViewer
 
             var elapsed = sw.Elapsed;
             PrecalculationDuration = elapsed;
-        }
-
-        private static List<string> ParseIntoWords(string query)
-        {
-            var result = new List<string>();
-
-            StringBuilder currentWord = new StringBuilder();
-            bool isInParentheses = false;
-            bool isInQuotes = false;
-            for (int i = 0; i < query.Length; i++)
-            {
-                char c = query[i];
-                switch (c)
-                {
-                    case ' ' when !isInParentheses && !isInQuotes:
-                        var wordToAdd = TrimQuotes(currentWord.ToString());
-                        if (!string.IsNullOrWhiteSpace(wordToAdd))
-                        {
-                            result.Add(wordToAdd);
-                        }
-
-                        currentWord.Clear();
-                        break;
-                    case '(' when !isInParentheses && !isInQuotes:
-                        isInParentheses = true;
-                        currentWord.Append(c);
-                        break;
-                    case ')' when isInParentheses && !isInQuotes:
-                        isInParentheses = false;
-                        currentWord.Append(c);
-                        break;
-                    case '"' when !isInParentheses:
-                        isInQuotes = !isInQuotes;
-                        currentWord.Append(c);
-                        break;
-                    default:
-                        currentWord.Append(c);
-                        break;
-                }
-            }
-
-            var word = TrimQuotes(currentWord.ToString());
-            if (!string.IsNullOrWhiteSpace(word))
-            {
-                result.Add(word);
-            }
-
-            return result;
-        }
-
-        private static string TrimQuotes(string word)
-        {
-            if (word.Length > 2 && word[0] == '"' && word[word.Length - 1] == '"')
-            {
-                word = word.Substring(1, word.Length - 2);
-            }
-
-            return word;
         }
 
         public static List<string> PopulateSearchFields(BaseNode node)
@@ -249,6 +331,31 @@ namespace StructuredLogViewer
             if (node is NamedNode named && !string.IsNullOrEmpty(named.Name))
             {
                 searchFields.Add(named.Name);
+
+                if (node is Project project)
+                {
+                    if (!string.IsNullOrEmpty(project.TargetFramework))
+                    {
+                        searchFields.Add(project.TargetFramework);
+                    }
+
+                    if (!string.IsNullOrEmpty(project.TargetsText))
+                    {
+                        searchFields.Add(project.TargetsText);
+                    }
+
+                    if (!string.IsNullOrEmpty(project.EvaluationText))
+                    {
+                        searchFields.Add(project.EvaluationText);
+                    }
+                }
+                else if (node is ProjectEvaluation evaluation)
+                {
+                    if (!string.IsNullOrEmpty(evaluation.EvaluationText))
+                    {
+                        searchFields.Add(evaluation.EvaluationText);
+                    }
+                }
             }
 
             if (node is TextNode textNode && !string.IsNullOrEmpty(textNode.Text))
@@ -325,7 +432,7 @@ namespace StructuredLogViewer
                     // this node is of the type that we need, search other fields
                     if (result == null)
                     {
-                        result = new SearchResult(node, IncludeDuration);
+                        result = new SearchResult(node, IncludeDuration, IncludeStart, IncludeEnd);
                     }
 
                     result.AddMatchByNodeType();
@@ -341,21 +448,21 @@ namespace StructuredLogViewer
             for (int i = 0; i < Words.Count; i++)
             {
                 bool anyFieldMatched = false;
-                var word = Words[i];
+                var term = Words[i];
+                var word = term.Word;
 
                 for (int j = 0; j < searchFields.Count; j++)
                 {
                     var field = searchFields[j];
 
-                    if (!MatchesInStrings[i].Contains(field))
+                    if (!term.IsMatch(field, MatchesInStrings[i]))
                     {
-                        // no point looking here, we know this string doesn't match anything
                         continue;
                     }
 
                     if (result == null)
                     {
-                        result = new SearchResult(node, IncludeDuration);
+                        result = new SearchResult(node, IncludeDuration, IncludeStart, IncludeEnd);
                     }
 
                     // if matched on the type of the node (always field 0), special case it
@@ -366,12 +473,12 @@ namespace StructuredLogViewer
                     else
                     {
                         string fullText = field;
-                        var named = node as NameValueNode;
+                        var nameValueNode = node as NameValueNode;
 
-                        // NameValueNode is special case have to check in which field to search
-                        if (named != null && (nameToSearch != null || valueToSearch != null))
+                        // NameValueNode is a special case: have to check in which field to search
+                        if (nameValueNode != null && (nameToSearch != default || valueToSearch != default))
                         {
-                            if (j == 1 && word == nameToSearch)
+                            if (j == 1 && term == nameToSearch)
                             {
                                 result.AddMatch(fullText, word, addAtBeginning: true);
                                 nameMatched = true;
@@ -379,7 +486,7 @@ namespace StructuredLogViewer
                                 break;
                             }
 
-                            if (j == 2 && word == valueToSearch)
+                            if (j == 2 && term == valueToSearch)
                             {
                                 result.AddMatch(fullText, word);
                                 valueMatched = true;
@@ -407,7 +514,7 @@ namespace StructuredLogViewer
                 return null;
             }
 
-            if (nameToSearch != null && valueToSearch != null && (!nameMatched || !valueMatched))
+            if (nameToSearch != default && valueToSearch != default && (!nameMatched || !valueMatched))
             {
                 return null;
             }
@@ -439,6 +546,23 @@ namespace StructuredLogViewer
 
         private static bool IsUnder(NodeQueryMatcher matcher, SearchResult result)
         {
+            if (matcher.UnderProject)
+            {
+                var project = result.Node.GetNearestParent<Project>();
+                if (project != null && matcher.IsMatch(project) != null)
+                {
+                    return true;
+                }
+
+                var projectEvaluation = result.Node.GetNearestParent<ProjectEvaluation>();
+                if (projectEvaluation != null && matcher.IsMatch(projectEvaluation) != null)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+
             foreach (var parent in result.Node.GetParentChainExcludingThis())
             {
                 if (matcher.IsMatch(parent) != null)

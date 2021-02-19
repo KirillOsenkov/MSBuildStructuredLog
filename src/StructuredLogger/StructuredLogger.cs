@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Reflection;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
@@ -41,7 +40,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 try
                 {
-                    projectImportsCollector = new ProjectImportsCollector(_logFile);
+                    projectImportsCollector = new ProjectImportsCollector(_logFile, createFile: false);
                 }
                 catch (Exception ex)
                 {
@@ -50,6 +49,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             construction = new Construction();
+
+            Strings.Initialize();
 
             eventSource.BuildStarted += construction.BuildStarted;
             eventSource.BuildFinished += construction.BuildFinished;
@@ -101,17 +102,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (projectImportsCollector != null)
             {
-                var archiveFilePath = projectImportsCollector.ArchiveFilePath;
+                var bytes = projectImportsCollector.GetAllBytes();
+                construction.Build.SourceFilesArchive = bytes;
 
                 projectImportsCollector.Close();
                 projectImportsCollector = null;
-
-                if (File.Exists(archiveFilePath))
-                {
-                    var bytes = File.ReadAllBytes(archiveFilePath);
-                    construction.Build.SourceFilesArchive = bytes;
-                    File.Delete(archiveFilePath);
-                }
             }
 
             if (SaveLogToDisk)

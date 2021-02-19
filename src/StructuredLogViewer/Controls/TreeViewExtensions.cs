@@ -38,7 +38,8 @@ namespace StructuredLogViewer.Controls
             IEnumerable<T> items,
             Func<T, T, bool> compareMethod)
         {
-            SelectContainerFromItem(treeView,
+            SelectContainerFromItem(
+                treeView,
                 new SelectInfo<T>()
                 {
                     Items = items,
@@ -46,17 +47,29 @@ namespace StructuredLogViewer.Controls
                     SelectItem = delegate (ItemsControl container, SelectInfo<T> info)
                     {
                         var treeItem = (TreeViewItem)container;
+                        if (treeItem == null)
+                        {
+                            return;
+                        }
 
                         //treeItem.Focus();
                         treeItem.IsSelected = true;
                         //treeItem.IsExpanded = true;
-                        treeItem.BringIntoView();
+                        var header = (FrameworkElement)treeItem.Template?.FindName("PART_Header", treeItem);
+                        if (header == null || !header.IsOnScreen(treeView))
+                        {
+                            treeItem.BringIntoView();
+                        }
                     },
                     NeedMoreItems = delegate (ItemsControl container, SelectInfo<T> info)
                     {
-                        ((TreeViewItem)container).IsExpanded = true;
+                        if (container is TreeViewItem treeViewItem)
+                        {
+                            treeViewItem.IsExpanded = true;
+                        }
                     }
-                }
+                },
+                treeView
             );
         }
 
@@ -66,11 +79,12 @@ namespace StructuredLogViewer.Controls
         /// <typeparam name="T">The type of item to match.</typeparam>
         /// <param name="container">The <see cref="ItemsControl"/> in which to dumpster dive.</param>
         /// <param name="info">Control parameters used in the search.</param>
-        private static void SelectContainerFromItem<T>(this ItemsControl container, SelectInfo<T> selectInfo)
+        private static void SelectContainerFromItem<T>(this ItemsControl container, SelectInfo<T> selectInfo, TreeView treeView)
         {
             var currentItem = selectInfo.Items.First();
+            var itemContainerGenerator = container.ItemContainerGenerator;
 
-            if (container.ItemContainerGenerator.Status != GeneratorStatus.ContainersGenerated)
+            if (itemContainerGenerator.Status != GeneratorStatus.ContainersGenerated)
             {
                 // If the item containers haven't been generated yet, attach an event
                 // and wait for the status to change.
@@ -78,22 +92,22 @@ namespace StructuredLogViewer.Controls
 
                 selectWhenReadyMethod = (ds, de) =>
                 {
-                    if (container.ItemContainerGenerator.Status == GeneratorStatus.ContainersGenerated)
+                    if (itemContainerGenerator.Status == GeneratorStatus.ContainersGenerated)
                     {
                         // Stop listening for status changes on this container
-                        container.ItemContainerGenerator.StatusChanged -= selectWhenReadyMethod;
+                        itemContainerGenerator.StatusChanged -= selectWhenReadyMethod;
 
                         // Search the container for the item chain
-                        SelectContainerFromItem(container, selectInfo);
+                        SelectContainerFromItem(container, selectInfo, treeView);
                     }
                 };
 
-                container.ItemContainerGenerator.StatusChanged += selectWhenReadyMethod;
+                itemContainerGenerator.StatusChanged += selectWhenReadyMethod;
 
                 return;
             }
 
-            Debug.Assert(container.ItemContainerGenerator.Status == GeneratorStatus.ContainersGenerated);
+            Debug.Assert(itemContainerGenerator.Status == GeneratorStatus.ContainersGenerated);
 
             // Compare each item in the container and look for the next item
             // in the chain.
@@ -107,7 +121,8 @@ namespace StructuredLogViewer.Controls
                     // Since the TreeViewItems are in a virtualized panel, the item to be selected may not be realized,
                     // need to ensure it is brought into view, so it can be selected.
                     ItemsPresenter itemsPresenter = FindVisualChild<ItemsPresenter>(container);
-                    if (itemsPresenter != null)
+                    var containerFromItem = itemContainerGenerator.ContainerFromItem(item) as FrameworkElement;
+                    if (itemsPresenter != null && (containerFromItem == null || !containerFromItem.IsOnScreen(treeView)))
                     {
                         int index = container.Items.IndexOf(currentItem);
 
@@ -119,11 +134,9 @@ namespace StructuredLogViewer.Controls
                         }
                         else
                         {
-                            var stackPanel = child as StackPanel;
-                            if (stackPanel != null)
+                            if (child is StackPanel stackPanel)
                             {
-                                var frameworkElement = stackPanel.Children[index] as FrameworkElement;
-                                if (frameworkElement != null)
+                                if (stackPanel.Children[index] is FrameworkElement frameworkElement)
                                 {
                                     frameworkElement.BringIntoView();
                                 }
@@ -131,8 +144,11 @@ namespace StructuredLogViewer.Controls
                         }
                     }
 
-                    var containerParent = (ItemsControl)container.ItemContainerGenerator.ContainerFromItem(item);
-                    Debug.Assert(containerParent != null, "Failed to find the parent container for the selected item.");
+                    var containerParent = (ItemsControl)itemContainerGenerator.ContainerFromItem(item);
+                    if (containerParent == null)
+                    {
+                        return;
+                    }
 
                     // Replace with the remaining items in the chain
                     selectInfo.Items = selectInfo.Items.Skip(1);
@@ -159,7 +175,7 @@ namespace StructuredLogViewer.Controls
                         if (selectInfo.NeedMoreItems != null)
                         {
                             selectInfo.NeedMoreItems(containerParent, selectInfo);
-                            SelectContainerFromItem(containerParent, selectInfo);
+                            SelectContainerFromItem(containerParent, selectInfo, treeView);
                         }
                     }
 
@@ -174,7 +190,7 @@ namespace StructuredLogViewer.Controls
         /// <typeparam name="T">The type of the queried item.</typeparam>
         /// <param name="element">The element in the visual tree to commence searching below from.</param>
         /// <returns>The first child item that matches the queried type, null is returned otherwise.</returns>
-        public static T FindVisualChild<T>(UIElement element) where T : UIElement
+        public static T FindVisualChild<T>(this UIElement element) where T : UIElement
         {
             for (int i = 0; i < VisualTreeHelper.GetChildrenCount(element); i++)
             {

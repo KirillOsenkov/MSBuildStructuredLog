@@ -12,6 +12,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private ResolveAssemblyReferenceAnalyzer resolveAssemblyReferenceAnalyzer;
         private int index;
         private Dictionary<string, TimeSpan> taskDurations = new Dictionary<string, TimeSpan>();
+        private readonly List<Folder> analyzerReports = new List<Folder>();
 
         public BuildAnalyzer(Build build)
         {
@@ -53,11 +54,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     index++;
                 }
             });
+
+            build.Statistics.TimedNodeCount = index;
         }
 
         private void Analyze()
         {
             Visit(build);
+            build.Statistics.TimedNodeCount = index;
             foreach (var property in typeof(Strings)
                 .GetProperties()
                 .Where(p => p.PropertyType == typeof(string))
@@ -111,13 +115,42 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (folder.Name == "Evaluation")
                 {
                     ImportTreeAnalyzer.Analyze(folder, build.StringTable);
+
+                    AnalyzeEvaluation(folder);
                 }
+            }
+        }
+
+        private void AnalyzeEvaluation(NamedNode folder)
+        {
+            var evaluations = folder.Children.OfType<ProjectEvaluation>().ToArray();
+            if (!evaluations.Any())
+            {
+                return;
+            }
+
+            var longestDuration = evaluations.Max(e => e.Duration.TotalMilliseconds);
+            if (longestDuration == 0)
+            {
+                longestDuration = 1;
+            }
+
+            foreach (var projectEvaluation in evaluations)
+            {
+                var properties = projectEvaluation.FindChild<NamedNode>(Strings.Properties);
+                if (properties == null)
+                {
+                    continue;
+                }
+
+                properties.SortChildren();
+                projectEvaluation.RelativeDuration = projectEvaluation.Duration.TotalMilliseconds * 100.0 / longestDuration;
             }
         }
 
         private void AnalyzeMessage(Message message)
         {
-            if (message.Text != null && message.Text.StartsWith(Strings.BuildingWithToolsVersionPrefix))
+            if (message.Text != null && Strings.BuildingWithToolsVersionPrefix != null && Strings.BuildingWithToolsVersionPrefix.Match(message.Text).Success)
             {
                 message.IsLowRelevance = true;
             }
@@ -158,7 +191,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             var durations = taskDurations
                 .OrderByDescending(kvp => kvp.Value)
-                .Where(kvp => !string.Equals(kvp.Key, "MSBuild", StringComparison.OrdinalIgnoreCase)) // no need to include MSBuild task as it's not a "terminal leaf" task
+                .Where(kvp => // no need to include MSBuild and CallTarget tasks as they are not "terminal leaf" tasks
+                    !string.Equals(kvp.Key, "MSBuild", StringComparison.OrdinalIgnoreCase) &&
+                    !string.Equals(kvp.Key, "CallTarget", StringComparison.OrdinalIgnoreCase))
                 .Take(10)
                 .ToArray();
 
@@ -169,6 +204,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     top10Tasks.AddChild(new Item { Name = kvp.Key, Text = TextUtilities.DisplayDuration(kvp.Value) });
                 }
+            }
+
+            if (analyzerReports.Count > 0)
+            {
+                var analyzerReportSummary = build.GetOrCreateNodeWithName<Folder>($"Analyzer Summary");
+                CscTaskAnalyzer.CreateMergedReport(analyzerReportSummary, analyzerReports.ToArray());
             }
         }
 
@@ -212,6 +253,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (!string.IsNullOrEmpty(task.FromAssembly))
             {
                 task.AddChildAtBeginning(new Property { Name = "Assembly", Value = task.FromAssembly });
+                build.RegisterTask(task);
             }
 
             taskDurations.TryGetValue(task.Name, out var duration);
@@ -228,7 +270,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
             else if (task.Name == "Csc")
             {
-                CscTaskAnalyzer.Analyze(task);
+                var analyzerReport = CscTaskAnalyzer.Analyze(task);
+                if (analyzerReport is not null)
+                {
+                    analyzerReports.Add(analyzerReport);
+                }
             }
 
             doubleWritesAnalyzer.AnalyzeTask(task);

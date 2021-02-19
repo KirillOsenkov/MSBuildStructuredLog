@@ -8,13 +8,22 @@ namespace StructuredLogViewer.Controls
 {
     public partial class SearchAndResultsControl : UserControl
     {
-        private TypingConcurrentOperation typingConcurrentOperation = new TypingConcurrentOperation();
+        private readonly TypingConcurrentOperation typingConcurrentOperation = new TypingConcurrentOperation();
 
         public SearchAndResultsControl()
         {
             InitializeComponent();
             typingConcurrentOperation.DisplayResults += (r, moreAvailable) => DisplaySearchResults(r, moreAvailable);
             typingConcurrentOperation.SearchComplete += TypingConcurrentOperation_SearchComplete;
+
+            VirtualizingPanel.SetIsVirtualizing(resultsList, SettingsService.EnableTreeViewVirtualization);
+
+            this.Unloaded += SearchAndResultsControl_Unloaded;
+        }
+
+        private void SearchAndResultsControl_Unloaded(object sender, RoutedEventArgs e)
+        {
+            typingConcurrentOperation.ReleaseTimer();
         }
 
         private void TypingConcurrentOperation_SearchComplete(string searchText, object arg2, TimeSpan elapsed)
@@ -74,15 +83,15 @@ namespace StructuredLogViewer.Controls
         {
             if ((content == null || !content.OfType<object>().Any()) && WatermarkContent != null)
             {
-                if (watermark.Visibility != Visibility.Visible)
+                if (watermarkScrollViewer.Visibility != Visibility.Visible)
                 {
-                    watermark.Visibility = Visibility.Visible;
+                    watermarkScrollViewer.Visibility = Visibility.Visible;
                     WatermarkDisplayed?.Invoke();
                 }
             }
             else
             {
-                watermark.Visibility = Visibility.Collapsed;
+                watermarkScrollViewer.Visibility = Visibility.Collapsed;
             }
 
             resultsList.ItemsSource = content;

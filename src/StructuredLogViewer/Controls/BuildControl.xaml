@@ -5,7 +5,9 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:StructuredLogViewer.Controls"
              xmlns:structuredLogViewer="clr-namespace:StructuredLogViewer"
+             xmlns:structuredLogger="clr-namespace:Microsoft.Build.Logging.StructuredLogger;assembly=StructuredLogger"
              mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance structuredLogger:Build}"
              d:DesignHeight="300" d:DesignWidth="300">
 
   <local:SplitterPanel Orientation="Vertical" FirstChildRelativeSize="*" SecondChildRelativeSize="50">
@@ -47,12 +49,21 @@
                 </TabItem>
 
                 <TabItem x:Name="timelineTab" Header="Timeline">
-                  <local:TimelineControl x:Name="timeline"
-                                         structuredLogViewer:ScrollViewerHelper.ShiftWheelScrollsHorizontally="True" />
+                  <Grid>
+                    <TextBlock x:Name="timelineWatermark" HorizontalAlignment="Center"
+                               VerticalAlignment="Center">Rendering timeline...</TextBlock>
+                    <local:TimelineControl x:Name="timeline"
+                                           Visibility="Hidden"
+                                           structuredLogViewer:ScrollViewerHelper.ShiftWheelScrollsHorizontally="True" />
+                  </Grid>
                 </TabItem>
                 
                 <TabItem x:Name="projectGraphTab" Header="Project Graph">
-                    <local:ProjectGraphControl x:Name="projectGraphControl" />
+                  <Grid>
+                    <TextBlock x:Name="projectGraphWatermark" HorizontalAlignment="Center"
+                               VerticalAlignment="Center">Rendering graph...</TextBlock>
+                    <local:ProjectGraphControl x:Name="projectGraphControl" Visibility="Hidden"/>
+                  </Grid>
                 </TabItem>
               </TabControl>
             </local:SplitterPanel.FirstChild>

@@ -67,5 +67,27 @@ namespace StructuredLogViewer
 
             return null;
         }
+
+        public static bool IsOnScreen(this FrameworkElement element, FrameworkElement container)
+        {
+            if (PresentationSource.FromVisual(element) == null)
+            {
+                return false;
+            }
+
+            if (element.ActualWidth == 0 || double.IsNaN(element.ActualWidth) || element.ActualHeight == 0 || double.IsNaN(element.ActualHeight))
+            {
+                return false;
+            }
+
+            Rect bounds = element
+                .TransformToAncestor(container)
+                .TransformBounds(new Rect(0.0, 0.0, element.ActualWidth, element.ActualHeight));
+
+            Rect viewport = new Rect(0.0, 0.0, container.ActualWidth, container.ActualHeight);
+            viewport.Inflate(-20, -20);
+
+            return viewport.IntersectsWith(bounds);
+        }
     }
 }

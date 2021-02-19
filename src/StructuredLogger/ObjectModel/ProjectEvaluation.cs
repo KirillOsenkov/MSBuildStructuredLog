@@ -14,6 +14,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             ? Path.GetExtension(ProjectFile).ToLowerInvariant()
             : "";
 
+        public string EvaluationText { get; set; } = "";
+
+        public double RelativeDuration { get; set; }
+
         public override string TypeName => nameof(ProjectEvaluation);
 
         public bool IsLowRelevance
@@ -22,6 +26,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             set => SetFlag(NodeFlags.LowRelevance, value);
         }
 
-        public override string ToString() => $"Project Name={Name} File={ProjectFile}";
+        public override string ToString() => $"Evaluation Project={Name} File={ProjectFile}";
+
+        public override string ToolTip
+        {
+            get
+            {
+                return $"{ProjectFile}\n{GetTimeAndDurationText()}";
+            }
+        }
     }
 }

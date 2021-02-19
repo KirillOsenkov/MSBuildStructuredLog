@@ -20,6 +20,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// The arguments include the blob kind and the byte buffer with the contents.
         /// </summary>
         public event Action<BinaryLogRecordKind, byte[]> OnBlobRead;
+        public event Action<string, long> OnStringRead;
+        public event Action<IDictionary<string, string>, long> OnNameValueListRead;
+        public event Action<int> OnFileFormatVersionRead;
 
         /// <summary>
         /// Raised when there was an exception reading a record from the file.
@@ -41,9 +44,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public async System.Threading.Tasks.Task Replay(Stream stream, Func<long, long, System.Threading.Tasks.Task> progressFunc = null)
         {
             var gzipStream = new GZipStream(stream, CompressionMode.Decompress, leaveOpen: true);
-            var binaryReader = new BinaryReader(gzipStream);
+            var bufferedStream = new BufferedStream(gzipStream, 32768);
+            var binaryReader = new BinaryReader(bufferedStream);
 
             int fileFormatVersion = binaryReader.ReadInt32();
+
+            OnFileFormatVersionRead?.Invoke(fileFormatVersion);
 
             // the log file is written using a newer version of file format
             // that we don't know how to read
@@ -67,7 +73,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             int recordsRead = 0;
 
-            var reader = new BuildEventArgsReader(binaryReader, fileFormatVersion);
+            using var reader = new BuildEventArgsReader(binaryReader, fileFormatVersion);
             reader.OnBlobRead += OnBlobRead;
             while (true)
             {
@@ -154,7 +160,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public IEnumerable<Record> ReadRecords(Stream binaryLogStream)
         {
             var gzipStream = new GZipStream(binaryLogStream, CompressionMode.Decompress, leaveOpen: true);
-            return ReadRecordsFromDecompressedStream(gzipStream);
+            var bufferedStream = new BufferedStream(gzipStream, 32768);
+            return ReadRecordsFromDecompressedStream(bufferedStream);
         }
 
         public IEnumerable<Record> ReadRecordsFromDecompressedStream(Stream decompressedStream)
@@ -177,14 +184,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             List<Record> blobs = new List<Record>();
 
-            var reader = new BuildEventArgsReader(binaryReader, fileFormatVersion);
+            using var reader = new BuildEventArgsReader(binaryReader, fileFormatVersion);
+
+            // forward the events from the reader to the subscribers of this class
+            reader.OnBlobRead += OnBlobRead;
+
+            long start = 0;
+
             reader.OnBlobRead += (kind, blob) =>
             {
+                start = wrapper.Position;
+
                 var record = new Record
                 {
                     Bytes = blob,
                     Args = null,
-                    Start = 0, // TODO: see if we can re-add that
+                    Start = start - blob.Length, // TODO: check if this is accurate
                     Length = blob.Length
                 };
 
@@ -192,11 +207,29 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 lengthOfBlobsAddedLastTime += blob.Length;
             };
 
+            reader.OnStringRead += text =>
+            {
+                long length = wrapper.Position - start;
+
+                // re-read the current position as we're just about to start reading
+                // the actual BuildEventArgs record
+                start = wrapper.Position;
+
+                OnStringRead?.Invoke(text, length);
+            };
+
+            reader.OnNameValueListRead += list =>
+            {
+                long length = wrapper.Position - start;
+                start = wrapper.Position;
+                OnNameValueListRead?.Invoke(list, length);
+            };
+
             while (true)
             {
                 BuildEventArgs instance = null;
 
-                long start = wrapper.Position;
+                start = wrapper.Position;
 
                 instance = reader.Read();
                 if (instance == null)

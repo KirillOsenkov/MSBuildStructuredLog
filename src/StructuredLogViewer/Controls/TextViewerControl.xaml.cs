@@ -20,6 +20,7 @@ namespace StructuredLogViewer.Controls
     public partial class TextViewerControl : UserControl
     {
         private static readonly Regex solutionFileRegex = new Regex(@"^\s*Microsoft Visual Studio Solution File", RegexOptions.Compiled | RegexOptions.Singleline);
+        private FoldingManager foldingManager;
 
         public string FilePath { get; private set; }
         public string Text { get; private set; }
@@ -29,16 +30,64 @@ namespace StructuredLogViewer.Controls
         public TextViewerControl()
         {
             InitializeComponent();
-            SearchPanel.Install(textEditor.TextArea);
-            textEditor.TextArea.MouseRightButtonDown += TextAreaMouseRightButtonDown;
 
-            var textView = textEditor.TextArea.TextView;
-            textView.CurrentLineBackground = new SolidColorBrush(Color.FromRgb(224, 224, 224));
-            textView.CurrentLineBorder = new Pen(Brushes.Transparent, 0);
+            var textArea = textEditor.TextArea;
+
+            SearchPanel.Install(textArea);
+
+            foldingManager = FoldingManager.Install(textEditor.TextArea);
+
+            textArea.MouseRightButtonDown += TextAreaMouseRightButtonDown;
+            DataObject.AddSettingDataHandler(textArea, OnSettingData);
+
+            var textView = textArea.TextView;
             textView.Options.HighlightCurrentLine = true;
             textView.Options.EnableEmailHyperlinks = false;
             textView.Options.EnableHyperlinks = false;
             textEditor.IsReadOnly = true;
+
+            if (SettingsService.UseDarkTheme)
+            {
+                textEditor.Background = ThemeManager.BackgroundBrush;
+                textEditor.Foreground = ThemeManager.ControlTextBrush;
+                textView.CurrentLineBackground = (Brush)new BrushConverter().ConvertFromString("#505050");
+                textArea.SelectionBrush = (Brush)new BrushConverter().ConvertFromString("#264F78");
+                textArea.SelectionForeground = (Brush)new BrushConverter().ConvertFromString("#C8C8C8");
+                var foldingMargin = textArea.LeftMargins.OfType<FoldingMargin>().First();
+                foldingMargin.FoldingMarkerBackgroundBrush = ThemeManager.BackgroundBrush;
+                foldingMargin.FoldingMarkerBrush = ThemeManager.ControlTextBrush;
+                foldingMargin.SelectedFoldingMarkerBackgroundBrush = ThemeManager.BackgroundBrush;
+                foldingMargin.SelectedFoldingMarkerBrush = ThemeManager.ControlTextBrush;
+            }
+            else
+            {
+                textView.CurrentLineBackground = new SolidColorBrush(Color.FromRgb(224, 224, 224));
+                textView.CurrentLineBorder = new Pen(Brushes.Transparent, 0);
+            }
+
+            textEditor.ApplyTemplate();
+
+            var scrollViewer = textEditor.FindVisualChild<ScrollViewer>();
+            if (scrollViewer != null)
+            {
+                textEditor.PreviewMouseWheel += (s, e) =>
+                {
+                    if (Keyboard.Modifiers == ModifierKeys.Shift)
+                    {
+                        scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset - e.Delta);
+                        e.Handled = true;
+                    }
+                };
+            }
+        }
+
+        private void OnSettingData(object sender, DataObjectSettingDataEventArgs e)
+        {
+            // disable copying HTML
+            if (e.Format == DataFormats.Html || e.Format == typeof(string).FullName)
+            {
+                e.CancelCommand();
+            }
         }
 
         public void DisplaySource(
@@ -57,6 +106,17 @@ namespace StructuredLogViewer.Controls
 
             SetText(text);
             DisplaySource(lineNumber, column);
+        }
+
+        protected override void OnKeyUp(KeyEventArgs e)
+        {
+            // Mark Ctrl+F handle to not steal focus from search panel
+            if (e.Key == Key.F  && Keyboard.Modifiers == ModifierKeys.Control)
+            {
+                e.Handled = true;
+            }
+
+            base.OnKeyUp(e);
         }
 
         private void TextAreaMouseRightButtonDown(object sender, MouseButtonEventArgs e)
@@ -97,10 +157,44 @@ namespace StructuredLogViewer.Controls
                 IsXml = true;
 
                 var highlighting = HighlightingManager.Instance.GetDefinition("XML");
-                highlighting.GetNamedColor("XmlTag").Foreground = new SimpleHighlightingBrush(Color.FromRgb(163, 21, 21));
+                if (SettingsService.UseDarkTheme)
+                {
+                    SetColor("Comment", "#57A64A");
+                    SetColor("CData", "#E9D585");
+                    SetColor("DocType", "#92CAF4");
+                    SetColor("XmlDeclaration", "#92CAF4");
+                    SetColor("XmlTag", "#569CD6");
+                    SetColor("AttributeName", "#92CAF4");
+                    SetColor("AttributeValue", "#C8C8C8");
+                    SetColor("Entity", "#92CAF4");
+                    SetColor("BrokenEntity", "#92CAF4");
+                }
+                else
+                {
+                    SetColor("Comment", "#008000");
+                    SetColor("CData", "#808080");
+                    SetColor("DocType", "#0000FF");
+                    SetColor("XmlDeclaration", "#0000FF");
+                    SetColorRgb("XmlTag", 163, 21, 21);
+                    SetColor("AttributeName", "#FF0000");
+                    SetColor("AttributeValue", "#0000FF");
+                    SetColor("Entity", "#FF0000");
+                    SetColor("BrokenEntity", "#FF0000");
+                }
+
+                void SetColorRgb(string name, byte r, byte g, byte b)
+                {
+                    highlighting.GetNamedColor(name).Foreground = new SimpleHighlightingBrush(Color.FromRgb(r, g, b));
+                }
+
+                void SetColor(string name, string hex)
+                {
+                    var color = (Color)ColorConverter.ConvertFromString(hex);
+                    SetColorRgb(name, color.R, color.G, color.B);
+                }
+
                 textEditor.SyntaxHighlighting = highlighting;
 
-                var foldingManager = FoldingManager.Install(textEditor.TextArea);
                 var foldingStrategy = new XmlFoldingStrategy();
                 foldingStrategy.UpdateFoldings(foldingManager, textEditor.Document);
             }

@@ -33,14 +33,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            match = Strings.ProjectWasNotImportedRegex.Match(message.Text);
-            if (match.Success && match.Groups.Count == 6)
+            string reason;
+            match = Strings.ProjectWasNotImportedRegex(message.Text, out reason);
+            if (match.Success && match.Groups.Count > 4)
             {
                 var project = match.Groups["File"].Value;
                 var importedProject = match.Groups["ImportedProject"].Value;
                 var line = int.Parse(match.Groups["Line"].Value);
                 var column = int.Parse(match.Groups["Column"].Value);
-                var reason = match.Groups["Reason"].Value;
+                // var reason = match.Groups["Reason"].Value;
 
                 project = stringTable.Intern(project);
                 importedProject = stringTable.Intern(importedProject);
@@ -95,7 +96,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 import = new NoImport(project, importedProject, line, column, reason);
             }
-            
+
             NamedNode parent = importsFolder;
 
             if (project != rootProjectNode.ProjectFile)

@@ -5,7 +5,9 @@ A logger for MSBuild that records a structured representation of executed target
 [![NuGet package](https://img.shields.io/nuget/v/MSBuild.StructuredLogger.svg)](https://nuget.org/packages/MSBuild.StructuredLogger)
 [![Chocolatey](https://img.shields.io/chocolatey/v/msbuild-structured-log-viewer.svg)](https://chocolatey.org/packages/msbuild-structured-log-viewer)
 
-Homepage: http://msbuildlog.com
+Homepage: https://msbuildlog.com
+
+View binlogs in the Browser: https://live.msbuildlog.com
 
 Important: the NuGet package is now being published to https://nuget.org/packages/MSBuild.StructuredLogger (old location: https://nuget.org/packages/Microsoft.Build.Logging.StructuredLogger). Please update to use the new Package Id.
 
@@ -13,13 +15,26 @@ Thanks to https://signpath.io for generously providing a certificate to sign the
 ![signpath.io](https://about.signpath.io/wp-content/uploads/2018/11/logo_signpath_500.png)
 
 ## Install:
-https://github.com/KirillOsenkov/MSBuildStructuredLog/releases/download/v2.1.133/MSBuildStructuredLogSetup.exe
+https://github.com/KirillOsenkov/MSBuildStructuredLog/releases/download/v2.1.305/MSBuildStructuredLogSetup.exe
 
 The app updates automatically via [Squirrel](https://github.com/Squirrel/Squirrel.Windows) (after launch it checks for updates in background), next launch starts the newly downloaded latest version.
 
 ![Screenshot1](http://msbuildlog.com/Screenshot1.png)
 
-## Running the Avalonia version on Mac:
+## Installing the Avalonia version on Mac:
+
+There are a couple of extra steps to get the .app running on macOS since it's currently distributed as an unsigned application:
+
+1. In _System Preferences -> Security & Privacy_ ensure _Allow apps downloaded from:_ is set to `App Store and identified developers`.
+2. Download the _Structured Log Viewer.zip_ file from the latest [Release](https://github.com/KirillOsenkov/MSBuildStructuredLog/releases).
+3. If necessary, unzip the file (Safari does this for you after downloading automatically).
+4. Move the `Structured Log Viewer.app` into your `Applications` folder.
+5. In terminal run: `chmod +x /Applications/Structured\ Log\ Viewer.app/Contents/MacOS/StructuredLogViewer.Avalonia` to give the app execution permissions
+6. Run the app.  You will be prompted that the app is not signed by a known developer.  Click `cancel`.
+7. In _System Preferences -> Security & Privacy_ click `Open anyway` where the app should now be visible near the setting from step 1.
+
+
+## Building & Running the Avalonia version on Mac:
 
 ```
 git clone https://github.com/KirillOsenkov/MSBuildStructuredLog
@@ -61,15 +76,15 @@ Alternatively (useful for older versions of MSBuild) you can attach the logger t
 https://www.nuget.org/packages/MSBuild.StructuredLogger
 
 ```
-msbuild solution.sln /t:Rebuild /v:diag /noconlog /logger:BinaryLogger,%localappdata%\MSBuildStructuredLogViewer\app-2.1.133\StructuredLogger.dll;1.binlog
+msbuild solution.sln /t:Rebuild /v:diag /noconlog /logger:BinaryLogger,%localappdata%\MSBuildStructuredLogViewer\app-2.1.305\StructuredLogger.dll;1.binlog
 ```
 
 To use a portable version of the logger (e.g. with the `dotnet msbuild` command) you need a .NET Standard version of `StructuredLogger.dll`, not the .NET Framework (Desktop) version.
 
-Download this NuGet package: https://www.nuget.org/packages/MSBuild.StructuredLogger/2.1.88
+Download this NuGet package: https://www.nuget.org/packages/MSBuild.StructuredLogger/2.1.303
 and inside it there's the `lib\netstandard2.0\StructuredLogger.dll`. Try passing that to `dotnet build` like this:
 ```
-dotnet msbuild Some.sln /v:diag /nologo /logger:BinaryLogger,"packages\MSBuild.StructuredLogger.2.1.133\lib\netstandard2.0\StructuredLogger.dll";"C:\Users\SomeUser\Desktop\binarylog.binlog"
+dotnet msbuild Some.sln /v:diag /nologo /logger:BinaryLogger,"packages\MSBuild.StructuredLogger.2.1.303\lib\netstandard2.0\StructuredLogger.dll";"C:\Users\SomeUser\Desktop\binarylog.binlog"
 ```
 
 The logger supports three file formats:

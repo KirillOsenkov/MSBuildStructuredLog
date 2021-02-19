@@ -9,6 +9,33 @@
   <Geometry x:Key="SearchGeometry">F1 M 8.5,7.0 C 7.12,7.00 6.0,5.88 6.0,4.5 C 6.0,3.12 7.12,2.0 8.5,2.0 C 9.88,2.0 11.0,3.12 11.0,4.5 C 11.0,5.88 9.88,7.0 8.5,7.0 Z M 8.5,0.0 C 6.02,0.0 4.0,2.02 4.0,4.500 C 4.0,5.23 4.19,5.9 4.49,6.5 L 0.0,11.0 L 2.0,13.0 L 6.49,8.51 C 7.1,8.81 7.77,9.0 8.5,9.0 C 11.0,9.0 13.0,7.0 13.0,4.5 C 13.0,2.02 11.0,0.0 8.5,0.0 Z</Geometry>
   <BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter" />
 
+  <Style x:Key="{x:Type TextBlock}" TargetType="{x:Type TextBlock}">
+    <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
+  </Style>
+
+  <Style x:Key="{x:Type Button}" TargetType="{x:Type Button}">
+    <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" />
+  </Style>
+
+  <Style x:Key="{x:Type CheckBox}" TargetType="{x:Type CheckBox}">
+    <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.WindowBrushKey}}" />
+  </Style>
+
+  <Style x:Key="{x:Type ToolTip}" TargetType="{x:Type ToolTip}">
+    <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"/>
+    <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
+  </Style>
+
+  <Style x:Key="{x:Type Menu}" TargetType="{x:Type Menu}">
+    <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}"/>
+    <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
+  </Style>
+
+  <Style x:Key="{x:Type MenuItem}" TargetType="{x:Type MenuItem}">
+    <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}"/>
+    <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
+  </Style>
+
   <SolidColorBrush x:Key="FolderStroke" Color="Goldenrod" />
   <SolidColorBrush x:Key="TargetStroke" Color="MediumPurple" />
   <SolidColorBrush x:Key="TaskStroke" Color="DodgerBlue" />
@@ -19,10 +46,13 @@
   <SolidColorBrush x:Key="MessageStroke" Color="LightGray" />
   <SolidColorBrush x:Key="ImportStroke" Color="Sienna" />
   <SolidColorBrush x:Key="NoImportStroke" Color="Red" />
+  <SolidColorBrush x:Key="NoImportFill" Color="BlanchedAlmond" />
   <SolidColorBrush x:Key="ErrorStroke" Color="Red" />
   <SolidColorBrush x:Key="WarningStroke" Color="Gold" />
   <SolidColorBrush x:Key="SearchResultStroke" Color="OrangeRed" />
   <SolidColorBrush x:Key="ContainsSearchResultStroke" Color="LightCoral" />
+  <SolidColorBrush x:Key="TargetFrameworkBackground" Color="#E5F0E5" />
+  <SolidColorBrush x:Key="TargetFrameworkForeground" Color="#274E13" />
 
   <LinearGradientBrush x:Key="ClosedFolderBrush" StartPoint="0,0" EndPoint="1,1">
     <GradientStop Color="FloralWhite" Offset="0" />
@@ -198,7 +228,28 @@
       <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}"
                  Width="16" Height="16" Margin="2,2,6,2" StrokeThickness="0"
                  Fill="{StaticResource GenericProjectIcon}" />
-      <TextBlock Text="{Binding Name}" Margin="0,2,0,0" />
+      <TextBlock Text="{Binding Name}" Margin="0,2,0,0" ToolTip="{Binding ToolTip}" ToolTipService.ShowDuration="60000" />
+      <TextBlock
+          Text="{Binding TargetFramework}"
+          Margin="6,0,0,0"
+          Padding="2,0,2,0"
+          FontSize="10"
+          VerticalAlignment="Center"
+          Foreground="{DynamicResource TargetFrameworkForeground}"
+          Background="{DynamicResource TargetFrameworkBackground}"
+          Visibility="{Binding TargetFramework, Converter={x:Static s:StringEmptinessToVisibilityConverter.Instance}}"/>
+      <controls:NodeHyperlinkControl
+            Margin="0,2,0,0"
+            Text="{Binding TargetsDisplayText}"
+            Foreground="{DynamicResource TargetStroke}"
+            ToolTip="Initial targets" 
+            Visibility="{Binding TargetsDisplayText, Converter={x:Static s:StringEmptinessToVisibilityConverter.Instance}}" />
+      <TextBlock
+          Text="{Binding EvaluationText}"
+          Margin="6,2,0,0"
+          Opacity="0.5"
+          ToolTip="Evaluation Id"
+          Visibility="{Binding EvaluationText, Converter={x:Static s:StringEmptinessToVisibilityConverter.Instance}}" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
       <DataTrigger Binding="{Binding IsLowRelevance}" Value="True">
@@ -225,7 +276,22 @@
       <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}"
                  Width="16" Height="16" Margin="2,2,6,2" StrokeThickness="0"
                  Fill="{StaticResource GenericProjectIcon}" />
-      <TextBlock Text="{Binding Name}" Margin="0,2,0,0" />
+<!--      <ProgressBar Width="40"
+                   Height="9"
+                   Margin="2,1,6,0"
+                   Minimum="0"
+                   Maximum="100"
+                   Value="{Binding RelativeDuration}"
+                   VerticalAlignment="Center"
+                   ToolTip="{Binding ToolTip}"
+                   ToolTipService.ShowDuration="60000" />-->
+      <TextBlock Text="{Binding Name}" Margin="0,2,0,0" ToolTip="{Binding ToolTip}" ToolTipService.ShowDuration="60000" />
+      <TextBlock
+          Text="{Binding EvaluationText}"
+          Margin="6,2,0,0"
+          Opacity="0.5"
+          ToolTip="Evaluation Id"
+          Visibility="{Binding EvaluationText, Converter={x:Static s:StringEmptinessToVisibilityConverter.Instance}}" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
       <DataTrigger Binding="{Binding IsLowRelevance}" Value="True">
@@ -249,10 +315,13 @@
       <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource TargetStroke}" Fill="{StaticResource TargetBrush}" />
       <TextBlock x:Name="label" Text="Target " />
       <TextBlock Text="{Binding Name}" />
+      <TextBlock x:Name="duration" Text="{Binding DurationText}" Margin="6,0,0,0" ToolTip="{Binding ToolTip}" />
       <controls:NodeHyperlinkControl
             Text="{Binding ParentTargetText}"
-            Foreground="LightBlue"
-            ToolTip="{Binding ParentTargetTooltip}" />
+            Foreground="{DynamicResource TargetStroke}"
+            ToolTip="{Binding ParentTargetTooltip}"
+            ToolTipService.InitialShowDelay="500"
+            ToolTipService.ShowDuration="300000" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
       <DataTrigger Binding="{Binding IsLowRelevance}" Value="True">
@@ -260,9 +329,29 @@
       </DataTrigger>
       <DataTrigger Binding="{Binding IsSelected}" Value="False">
         <Setter TargetName="label" Property="Foreground" Value="{StaticResource TargetStroke}" />
+        <Setter TargetName="duration" Property="Foreground" Value="LightGray" />
       </DataTrigger>
     </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
+
+  <DataTemplate DataType="{x:Type l:EntryTarget}">
+    <StackPanel Orientation="Horizontal" x:Name="entryTargetRoot">
+      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource TargetStroke}" Fill="{StaticResource TargetBrush}" />
+      <TextBlock Text="{Binding Name}" />
+      <TextBlock x:Name="duration" Text="{Binding DurationText}" Margin="6,0,0,0" ToolTip="{Binding ToolTip}" />
+      <controls:NodeHyperlinkControl
+          Text=" → Show"
+          Foreground="LightBlue" />
+    </StackPanel>
+    <DataTemplate.Triggers>
+      <DataTrigger Binding="{Binding IsLowRelevance}" Value="True">
+        <Setter TargetName="entryTargetRoot" Property="Opacity" Value="0.25" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding IsSelected}" Value="False">
+        <Setter TargetName="duration" Property="Foreground" Value="LightGray" />
+      </DataTrigger>
+    </DataTemplate.Triggers>
+  </DataTemplate>
 
   <HierarchicalDataTemplate DataType="{x:Type l:Task}"
                             ItemsSource="{Binding Children}">
@@ -283,7 +372,14 @@
   <HierarchicalDataTemplate DataType="{x:Type l:AddItem}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
-      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource ItemStroke}" Fill="{StaticResource ItemBrush}" />
+      <Path x:Name="icon"
+          Data="M 0 0 L 3 0 L 3 -3 L 6 -3 L 6 0 L 9 0 L 9 3 L 6 3 L 6 6 L 3 6 L 3 3 L 0 3 Z"
+          VerticalAlignment="Center"
+          Width="14"
+          Height="11"
+          Margin="5,5,5,-3"
+          Stroke="{StaticResource ItemStroke}"
+          Fill="{StaticResource ItemBrush}" />
       <TextBlock x:Name="label" Text="Add Item " />
       <TextBlock Text="{Binding Name}" />
     </StackPanel>
@@ -297,7 +393,14 @@
   <HierarchicalDataTemplate DataType="{x:Type l:RemoveItem}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
-      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource ItemStroke}" Fill="{StaticResource ItemBrush}" />
+      <Path x:Name="icon"
+          Data="M 0 0 L 9 0 L 9 3 L 0 3 Z"
+          VerticalAlignment="Center"
+          Width="14"
+          Height="11"
+          Margin="5,5,5,-3"
+          Stroke="{StaticResource ItemStroke}"
+          Fill="{StaticResource ItemBrush}" />
       <TextBlock x:Name="label" Text="Remove Item " />
       <TextBlock Text="{Binding Name}" />
     </StackPanel>
@@ -338,9 +441,9 @@
   <HierarchicalDataTemplate DataType="{x:Type l:EvaluationProfileEntry}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
-      <ProgressBar Width="40" 
-                   Height="9" 
-                   Margin="2,1,6,0" 
+      <ProgressBar Width="40"
+                   Height="9"
+                   Margin="2,1,6,0"
                    Minimum="0"
                    Maximum="100"
                    Value="{Binding Value}"
@@ -408,7 +511,7 @@
   <HierarchicalDataTemplate DataType="{x:Type l:Import}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal" x:Name="importPanel">
-      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource ImportStroke}" Fill="{StaticResource ImportBrush}" />
+      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{DynamicResource ImportStroke}" Fill="{StaticResource ImportBrush}" />
       <TextBlock x:Name="label" Text="Import" Margin="0,0,6,0" />
       <TextBlock x:Name="name" Text="{Binding Name}" />
       <TextBlock x:Name="location" Text="{Binding Location}" />
@@ -418,7 +521,7 @@
         <Setter TargetName="importPanel" Property="Opacity" Value="0.25" />
       </DataTrigger>
       <DataTrigger Binding="{Binding IsSelected}" Value="False">
-        <Setter TargetName="label" Property="Foreground" Value="{StaticResource ImportStroke}" />
+        <Setter TargetName="label" Property="Foreground" Value="{DynamicResource ImportStroke}" />
       </DataTrigger>
     </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
@@ -426,7 +529,7 @@
   <HierarchicalDataTemplate DataType="{x:Type l:NoImport}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal" x:Name="importPanel">
-      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource NoImportStroke}" Fill="{StaticResource NoImportBrush}" />
+      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{DynamicResource NoImportStroke}" Fill="{DynamicResource NoImportBrush}" />
       <TextBlock x:Name="label" Text="NoImport" Margin="0,0,6,0" />
       <TextBlock x:Name="name" Text="{Binding Name}" />
       <TextBlock x:Name="location" Text="{Binding Location}" Margin="0,0,6,0" />
@@ -437,8 +540,8 @@
         <Setter TargetName="importPanel" Property="Opacity" Value="0.3" />
       </DataTrigger>
       <DataTrigger Binding="{Binding IsSelected}" Value="False">
-        <Setter TargetName="label" Property="Foreground" Value="{StaticResource NoImportStroke}" />
-        <Setter TargetName="reason" Property="Background" Value="BlanchedAlmond" />
+        <Setter TargetName="label" Property="Foreground" Value="{DynamicResource NoImportStroke}" />
+        <Setter TargetName="reason" Property="Background" Value="{DynamicResource NoImportFill}" />
       </DataTrigger>
     </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
@@ -482,6 +585,12 @@
     </StackPanel>
   </DataTemplate>
 
+  <DataTemplate DataType="{x:Type core:CustomContentNode}">
+    <StackPanel Orientation="Horizontal">
+      <ContentControl Content="{Binding Content}" />
+    </StackPanel>
+  </DataTemplate>
+
   <HierarchicalDataTemplate DataType="{x:Type l:SourceFile}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
@@ -502,15 +611,21 @@
     </DataTemplate.Triggers>
   </DataTemplate>
 
+  <DataTemplate DataType="{x:Type core:HighlightedText}">
+    <TextBlock x:Name="text" Foreground="Black" Background="Yellow" Text="{Binding Text}" />
+    <DataTemplate.Triggers>
+      <DataTrigger Binding="{Binding Style}" Value="time">
+        <Setter TargetName="text" Property="Background" Value="Lavender" />
+      </DataTrigger>
+    </DataTemplate.Triggers>
+  </DataTemplate>
+
   <HierarchicalDataTemplate DataType="{x:Type core:ProxyNode}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
       <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource ParameterStroke}" Fill="{StaticResource ParameterBrush}" />
       <ItemsControl x:Name="text" ItemsSource="{Binding Highlights}" Focusable="False">
         <ItemsControl.Resources>
-          <DataTemplate DataType="{x:Type core:HighlightedText}">
-            <TextBlock Foreground="Black" Background="Yellow" Text="{Binding Text}" />
-          </DataTemplate>
         </ItemsControl.Resources>
         <ItemsControl.ItemsPanel>
           <ItemsPanelTemplate>
@@ -569,12 +684,12 @@
         <Setter TargetName="icon" Property="Fill" Value="{StaticResource WarningBrush}" />
       </DataTrigger>
       <DataTrigger Binding="{Binding OriginalType}" Value="Import">
-        <Setter TargetName="icon" Property="Stroke" Value="{StaticResource ImportStroke}" />
-        <Setter TargetName="icon" Property="Fill" Value="{StaticResource ImportBrush}" />
+        <Setter TargetName="icon" Property="Stroke" Value="{DynamicResource ImportStroke}" />
+        <Setter TargetName="icon" Property="Fill" Value="{DynamicResource ImportBrush}" />
       </DataTrigger>
       <DataTrigger Binding="{Binding OriginalType}" Value="NoImport">
-        <Setter TargetName="icon" Property="Stroke" Value="{StaticResource NoImportStroke}" />
-        <Setter TargetName="icon" Property="Fill" Value="{StaticResource NoImportBrush}" />
+        <Setter TargetName="icon" Property="Stroke" Value="{DynamicResource NoImportStroke}" />
+        <Setter TargetName="icon" Property="Fill" Value="{DynamicResource NoImportBrush}" />
       </DataTrigger>
       <DataTrigger Binding="{Binding ProjectExtension}" Value=".sln">
         <Setter TargetName="icon" Property="Fill" Value="{StaticResource SlnIcon}" />
@@ -604,7 +719,12 @@
   </HierarchicalDataTemplate>
 
   <DataTemplate DataType="{x:Type core:WelcomeScreen}">
+    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
     <Grid x:Name="welcomeScreen">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition />
+      </Grid.RowDefinitions>
       <TextBlock Text="{Binding Version}" 
                  Foreground="Gray" 
                  FontSize="16" 
@@ -612,6 +732,7 @@
                  HorizontalAlignment="Right"
                  VerticalAlignment="Top"/>
       <Grid
+          Grid.Row="1"
           HorizontalAlignment="Center"
           VerticalAlignment="Center">
         <Rectangle Fill="Black">
@@ -687,7 +808,7 @@
               </StackPanel>
             </Button>
           </Grid>
-          <Grid x:Name="recentProjects" 
+          <Grid x:Name="recentProjects"
             Grid.Row="2"
             Visibility="{Binding ShowRecentProjects, Converter={StaticResource booleanToVisibilityConverter}}">
             <GroupBox Header="Recent projects and solutions"
@@ -726,10 +847,15 @@
                       Margin="10,0,10,10"
                       IsChecked="{Binding MarkResultsInTree}" 
                       ToolTip="Mark tree nodes that appear in search results with a dot"/>
+            <CheckBox Content="Dark Theme"
+                      Margin="10,0,10,10"
+                      IsChecked="{Binding UseDarkTheme}"
+                      ToolTip="Use dark theme"/>
           </StackPanel>
         </Grid>
       </Grid>
     </Grid>
+    </ScrollViewer>
   </DataTemplate>
 
   <DataTemplate DataType="{x:Type local:BuildParametersScreen}">
@@ -744,6 +870,7 @@
       <StackPanel Grid.Row="0"
                   Margin="40,40,40,10">
         <TextBlock Text="Specify custom MSBuild command line arguments:" 
+                   Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
                    Margin="0,0,0,7"/>
         <WrapPanel Orientation="Horizontal">
           <ComboBox ItemsSource="{Binding MSBuildLocations}" 
@@ -764,6 +891,7 @@
           </Button>
           <TextBlock Text="{Binding PrefixArguments}" 
                      Margin="0,3,0,0"
+                     Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
                      TextWrapping="Wrap" />
           <TextBox x:Name="argumentsText"
                    Margin="4,0,4,0"
@@ -778,6 +906,7 @@
           </TextBox>
 
           <TextBlock Text="{Binding PostfixArguments}"
+                     Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
                      TextWrapping="Wrap"/>
         </WrapPanel>
         <Button Content="Copy command line to clipboard" 
@@ -810,6 +939,7 @@
       <TextBlock x:Name="text"
                  Text="{Binding ProgressText}"
                  HorizontalAlignment="Center"
+                 Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
                  TextWrapping="Wrap" />
       <ProgressBar Grid.Row="1" 
                    IsIndeterminate="True" 
@@ -820,12 +950,13 @@
       <StackPanel Grid.Row="2"
                   Margin="40"
                   Visibility="{Binding ShowCommandLine, Converter={StaticResource booleanToVisibilityConverter}}">
-        <TextBlock Text="Using command line (press Ctrl+C to copy):" Margin="0,0,0,7"/>
+        <TextBlock Text="Using command line (press Ctrl+C to copy):"
+                   Margin="0,0,0,7"
+                   Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
         <TextBox Text="{Binding MSBuildCommandLine}" 
                  IsReadOnly="True" 
                  TextWrapping="Wrap"
                  AcceptsReturn="True"
-                 Background="#E0E0E0"
                  MinHeight="23"
                  IsReadOnlyCaretVisible="True" />
       </StackPanel>
@@ -993,7 +1124,7 @@
                 <Condition Property="IsSelected" Value="true"/>
                 <Condition Property="IsSelectionActive" Value="false"/>
               </MultiTrigger.Conditions>
-              <Setter TargetName="Bd" Property="Background" Value="#D0D0D0"/>
+              <Setter TargetName="Bd" Property="Background" Value="{DynamicResource {x:Static SystemColors.InactiveSelectionHighlightBrushKey}}"/>
               <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}}"/>
             </MultiTrigger>
             <Trigger Property="IsEnabled" Value="false">

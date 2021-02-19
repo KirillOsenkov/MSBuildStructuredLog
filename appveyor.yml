@@ -2,9 +2,12 @@ version: 1.1.{build}
 image: Visual Studio 2019
 install:
   - choco upgrade chocolatey # Need at least 0.10.8 to avoid packaging error
+  - dotnet tool install --global Cake.Tool --version 1.0.0
 build_script: 
 - cmd: >-
     msbuild /r /m /p:Configuration=Release /clp:v=m MSBuildStructuredLog.sln /bl /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+
+    dotnet cake ./build-macos.cake --settings_skippackageversioncheck=true
 
 after_build:
 - ps: >-
@@ -29,7 +32,8 @@ artifacts:
   name: StructuredLogger.dll
 - path: 'MSBuildStructuredLog-*.zip'
   name: Bundle
-
+- path: 'artifacts\Structured Log Viewer.zip'
+  name: 'Structured Log Viewer macOS app'
 on_failure:
 - appveyor PushArtifact msbuild.binlog
 

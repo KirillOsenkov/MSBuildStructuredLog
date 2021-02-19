@@ -37,7 +37,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             for (int i = 0; i < text.Length; i++)
             {
-                if (text[i] == '\r')
+                var ch = text[i];
+                if (ch == '\r')
                 {
                     if (previousWasCarriageReturn)
                     {
@@ -58,7 +59,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         previousWasCarriageReturn = true;
                     }
                 }
-                else if (text[i] == '\n')
+                else if (ch == '\n')
                 {
                     var lineLength = currentLineLength;
                     if (previousWasCarriageReturn)
@@ -90,10 +91,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         spans.Add(new Span(currentPosition, lineLength));
                         currentPosition += currentLineLength;
                         currentLineLength = 0;
+                        previousWasCarriageReturn = false;
                     }
 
                     currentLineLength++;
-                    previousWasCarriageReturn = false;
                 }
             }
 
@@ -135,6 +136,57 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 .ToArray();
         }
 
+        /// <summary>
+        /// Splits a string into words by spaces, keeping quoted strings as a single token
+        /// </summary>
+        public static IReadOnlyList<string> Tokenize(this string text)
+        {
+            var result = new List<string>();
+
+            StringBuilder currentWord = new StringBuilder();
+            bool isInParentheses = false;
+            bool isInQuotes = false;
+            for (int i = 0; i < text.Length; i++)
+            {
+                char c = text[i];
+                switch (c)
+                {
+                    case ' ' when !isInParentheses && !isInQuotes:
+                        var wordToAdd = currentWord.ToString();
+                        if (!string.IsNullOrWhiteSpace(wordToAdd))
+                        {
+                            result.Add(wordToAdd);
+                        }
+
+                        currentWord.Clear();
+                        break;
+                    case '(' when !isInParentheses && !isInQuotes:
+                        isInParentheses = true;
+                        currentWord.Append(c);
+                        break;
+                    case ')' when isInParentheses && !isInQuotes:
+                        isInParentheses = false;
+                        currentWord.Append(c);
+                        break;
+                    case '"' when !isInParentheses:
+                        isInQuotes = !isInQuotes;
+                        currentWord.Append(c);
+                        break;
+                    default:
+                        currentWord.Append(c);
+                        break;
+                }
+            }
+
+            var word = currentWord.ToString();
+            if (!string.IsNullOrWhiteSpace(word))
+            {
+                result.Add(word);
+            }
+
+            return result;
+        }
+
         public static string Substring(this string text, Span span)
         {
             return text.Substring(span.Start, span.Length);
@@ -161,6 +213,31 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static bool IsLineBreakChar(this char c)
         {
             return c == '\r' || c == '\n';
+        }
+
+        public static string TrimQuotes(this string word)
+        {
+            if (word != null && word.Length > 2 && word[0] == '"' && word[word.Length - 1] == '"')
+            {
+                word = word.Substring(1, word.Length - 2);
+            }
+
+            return word;
+        }
+
+        public static string QuoteIfNeeded(this string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return text;
+            }
+
+            if (text.Contains(" "))
+            {
+                text = "\"" + text + "\"";
+            }
+
+            return text;
         }
 
         public static bool ContainsLineBreak(string text)
@@ -303,11 +380,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return text.Substring(firstQuote + 1, secondQuote - firstQuote - 1);
         }
 
-        public static string DisplayDuration(TimeSpan span)
+        public static string DisplayDuration(TimeSpan span, bool showZero = false)
         {
             if (span.TotalMilliseconds < 1)
             {
-                return "";
+                return showZero ? "0 ms" : "";
             }
 
             if (span.TotalSeconds > 3600)
@@ -427,6 +504,54 @@ namespace Microsoft.Build.Logging.StructuredLogger
             final.Add(current);
 
             return final;
+        }
+
+        public static IReadOnlyList<string> SplitIntoParenthesizedSpans(string text, string openParen, string closeParen)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return Array.Empty<string>();
+            }
+
+            var list = new List<string>();
+
+            void Add(int start, int end)
+            {
+                if (end > start)
+                {
+                    var chunk = text.Substring(start, end - start);
+                    list.Add(chunk);
+                }
+            }
+
+            int previous = 0;
+            for (int i = 0; i > -1 && i < text.Length; )
+            {
+                i = text.IndexOf(openParen, i);
+                if (i == -1)
+                {
+                    Add(previous, text.Length);
+                    return list;
+                }
+
+                Add(previous, i);
+                previous = i;
+
+                i = text.IndexOf(closeParen, i);
+                if (i == -1)
+                {
+                    Add(previous, text.Length);
+                    return list;
+                }
+
+                i += closeParen.Length;
+
+                Add(previous, i);
+                previous = i;
+            }
+
+            Add(previous, text.Length);
+            return list;
         }
     }
 }

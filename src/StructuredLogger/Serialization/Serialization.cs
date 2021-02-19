@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Xml.Linq;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class Serialization
+    public static class Serialization
     {
         public static readonly string FileDialogFilter = "Structured Log (*.buildlog)|*.buildlog|Readable (large) XML Log (*.xml)|*.xml";
         public static readonly string BinlogFileDialogFilter = "Binary Log (*.binlog)|*.binlog|Structured Log (*.buildlog)|*.buildlog|Readable (large) XML Log (*.xml)|*.xml";
@@ -204,6 +205,46 @@ namespace Microsoft.Build.Logging.StructuredLogger
             int result;
             int.TryParse(text, out result);
             return result;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int Read7BitEncodedInt(this BinaryReader reader)
+        {
+            // Read out an Int32 7 bits at a time.  The high bit
+            // of the byte when on means to continue reading more bytes.
+            int count = 0;
+            int shift = 0;
+            byte b;
+            do
+            {
+                // Check for a corrupted stream.  Read a max of 5 bytes.
+                // In a future version, add a DataFormatException.
+                if (shift == 5 * 7)  // 5 bytes max per Int32, shift += 7
+                {
+                    throw new FormatException();
+                }
+
+                // ReadByte handles end of stream cases for us.
+                b = reader.ReadByte();
+                count |= (b & 0x7F) << shift;
+                shift += 7;
+            } while ((b & 0x80) != 0);
+            return count;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Write7BitEncodedInt(this BinaryWriter writer, int value)
+        {
+            // Write out an int 7 bits at a time.  The high bit of the byte,
+            // when on, tells reader to continue reading more bytes.
+            uint v = (uint)value;   // support negative numbers
+            while (v >= 0x80)
+            {
+                writer.Write((byte)(v | 0x80));
+                v >>= 7;
+            }
+
+            writer.Write((byte)v);
         }
     }
 }

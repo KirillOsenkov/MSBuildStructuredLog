@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Net.Http;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -20,7 +21,7 @@ namespace StructuredLogViewer
         private string logFilePath;
         private string projectFilePath;
         private BuildControl currentBuild;
-        private BuildControl secondToLastBuild;
+        private string lastSearchText;
         private double scale = 1.0;
 
         public const string DefaultTitle = "MSBuild Structured Log Viewer";
@@ -31,14 +32,14 @@ namespace StructuredLogViewer
         {
             InitializeComponent();
             var uri = new Uri("StructuredLogViewer;component/themes/Generic.xaml", UriKind.Relative);
-            var generic = (ResourceDictionary)Application.LoadComponent(uri);
+            var generic = new ResourceDictionary { Source = uri };
             Application.Current.Resources.MergedDictionaries.Add(generic);
 
             Loaded += MainWindow_Loaded;
             Drop += MainWindow_Drop;
 
-            SystemParameters.StaticPropertyChanged += SystemParameters_StaticPropertyChanged;
-            UpdateTheme();
+            ThemeManager.UseDarkTheme = SettingsService.UseDarkTheme;
+            ThemeManager.UpdateTheme();
 
             Construction.ParentAllTargetsUnderProject = SettingsService.ParentAllTargetsUnderProject;
         }
@@ -77,37 +78,6 @@ namespace StructuredLogViewer
             }
 
             scaleTransform.ScaleX = scaleTransform.ScaleY = zoom;
-        }
-
-        private void SystemParameters_StaticPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == nameof(SystemParameters.HighContrast))
-            {
-                UpdateTheme();
-            }
-        }
-
-        private void UpdateTheme()
-        {
-            if (SystemParameters.HighContrast)
-            {
-                SetResource("Theme_Background", SystemColors.AppWorkspaceBrush);
-                SetResource("Theme_WhiteBackground", SystemColors.ControlBrush);
-                SetResource("Theme_ToolWindowBackground", SystemColors.ControlBrush);
-            }
-            else
-            {
-                SetResource("Theme_Background", new SolidColorBrush(Color.FromRgb(238, 238, 242)));
-                SetResource("Theme_WhiteBackground", Brushes.White);
-                SetResource("Theme_ToolWindowBackground", Brushes.WhiteSmoke);
-            }
-
-            SetResource("Theme_InfoBarBackground", SystemColors.InfoBrush);
-        }
-
-        private void SetResource(object key, object value)
-        {
-            Application.Current.Resources[key] = value;
         }
 
         private const string ClipboardFileFormat = "FileDrop";
@@ -176,7 +146,17 @@ namespace StructuredLogViewer
             welcomeScreen.RecentProjectSelected += project => BuildProject(project);
             welcomeScreen.OpenProjectRequested += () => OpenProjectOrSolution();
             welcomeScreen.OpenLogFileRequested += () => OpenLogFile();
+            welcomeScreen.PropertyChanged += WelcomeScreen_PropertyChanged;
             UpdateRecentItemsMenu();
+        }
+
+        private void WelcomeScreen_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(WelcomeScreen.UseDarkTheme))
+            {
+                ThemeManager.UseDarkTheme = SettingsService.UseDarkTheme;
+                ThemeManager.UpdateTheme();
+            }
         }
 
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
@@ -199,6 +179,11 @@ namespace StructuredLogViewer
                     if (text.Contains("Update.exe not found"))
                     {
                         text = "Update.exe not found; app will not update.";
+                    }
+
+                    if (ex is HttpRequestException)
+                    {
+                        text = "Unable to update the app (no internet connection?)";
                     }
 
                     welcomeScreen.Message = text;
@@ -352,7 +337,7 @@ namespace StructuredLogViewer
             // We save build control to allow to bring back states to new one
             if (mainContent.Content is BuildControl current)
             {
-                secondToLastBuild = current;
+                lastSearchText = current.searchLogControl.SearchText;
             }
 
             mainContent.Content = content;
@@ -376,9 +361,9 @@ namespace StructuredLogViewer
             }
 
             // If we had text inside search log control bring it back
-            if (mainContent.Content != null && secondToLastBuild != null && mainContent.Content is BuildControl currentContent && currentContent != secondToLastBuild && !string.IsNullOrEmpty(secondToLastBuild.searchLogControl.SearchText))
+            if (mainContent.Content is BuildControl currentContent && !string.IsNullOrEmpty(lastSearchText))
             {
-                currentContent.searchLogControl.searchTextBox.SelectedText = secondToLastBuild.searchLogControl.SearchText;
+                currentContent.searchLogControl.searchTextBox.SelectedText = lastSearchText;
             }
         }
 
@@ -413,6 +398,8 @@ namespace StructuredLogViewer
 
             bool shouldAnalyze = true;
 
+            var stopwatch = Stopwatch.StartNew();
+
             Build build = await System.Threading.Tasks.Task.Run(() =>
             {
                 try
@@ -443,6 +430,12 @@ namespace StructuredLogViewer
             await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Loaded); // let the progress message be rendered before we block the UI again
 
             DisplayBuild(build);
+
+            var elapsed = stopwatch.Elapsed;
+            if (currentBuild != null)
+            {
+                currentBuild.UpdateBreadcrumb($"Load time: {elapsed}");
+            }
         }
 
         private static Build GetErrorBuild(string filePath, string message)
@@ -529,7 +522,7 @@ namespace StructuredLogViewer
         private void OpenProjectOrSolution()
         {
             var openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = "MSBuild projects and solutions (*.sln;*.*proj)|*.sln;*.*proj";
+            openFileDialog.Filter = "MSBuild projects and solutions (*.sln;*.*proj)|*.sln;*.*proj|All files (*.*)|*";
             openFileDialog.Title = "Open a solution or project";
             openFileDialog.CheckFileExists = true;
             var result = openFileDialog.ShowDialog(this);
@@ -710,6 +703,14 @@ namespace StructuredLogViewer
             if (buildParametersScreen != null)
             {
                 buildParametersScreen.UpdateMSBuildLocations();
+            }
+        }
+
+        private void Stats_Click(object sender, RoutedEventArgs e)
+        {
+            if (currentBuild != null)
+            {
+                currentBuild.DisplayStats();
             }
         }
 

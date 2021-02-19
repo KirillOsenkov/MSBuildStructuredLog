@@ -6,11 +6,26 @@ using System.Linq;
 using System.Text;
 using Microsoft.Build.Logging.StructuredLogger;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace StructuredLogger.Tests
 {
     public class BinarySerializationTests
     {
+        private readonly ITestOutputHelper output;
+
+        public BinarySerializationTests(ITestOutputHelper output)
+        {
+            this.output = output;
+        }
+
+        public void TimeRead()
+        {
+            var sw = Stopwatch.StartNew();
+            var build = Serialization.Read(@"1.binlog");
+            System.Windows.Forms.MessageBox.Show(sw.Elapsed.ToString());
+        }
+
         public void DumpTimedNodes()
         {
             var build = Serialization.Read("1.binlog");
@@ -20,10 +35,32 @@ namespace StructuredLogger.Tests
         }
 
         //[Fact]
+        public void GetBlobSize()
+        {
+            var filePath = @"1.binlog";
+            long size = GetBinlogBlobSize(filePath);
+            output.WriteLine(size.ToString());
+        }
+
+        public static long GetBinlogBlobSize(string filePath)
+        {
+            long result = 0;
+            var reader = new BinLogReader();
+            reader.OnBlobRead += (kind, bytes) =>
+            {
+                result = bytes.LongLength;
+            };
+            var records = reader.ReadRecords(filePath);
+            foreach (var record in records) ;
+
+            return result;
+        }
+
+        //[Fact]
         public void RecordStats()
         {
             var reader = new BinLogReader();
-            var records = reader.ReadRecords(@"C:\temp\vsmac.binlog");
+            var records = reader.ReadRecords(@"C:\msbuild\msbuild.binlog");
 
             var recordsByType = new Dictionary<string, List<Microsoft.Build.Logging.Record>>();
 
@@ -56,13 +93,11 @@ namespace StructuredLogger.Tests
                 type.list.Sort((l, r) => Math.Sign(r.Length - l.Length));
             }
 
-            var messages = mostRecords[0].list;
+            var messages = mostRecords[1].list;
             var messageGroups = messages.GroupBy(m => GetMessageType(m.Args?.Message))
-                .Select(g => (g.Key, g.Count(), g.Sum(m => m.Args?.Message?.Length ?? 0), g.OrderByDescending(r => r.Length).ToArray()))
+                .Select(g => (messageType: g.Key, count: g.Count(), totalLength: g.Sum(m => m.Args?.Message?.Length ?? 0), messages: g.OrderByDescending(r => r.Length).ToArray()))
                 .OrderByDescending(g => g.Item3)
                 .ToArray();
-
-            var projectStarted = mostRecords[1].list;
         }
 
         private string GetMessageType(string message)
@@ -75,6 +110,16 @@ namespace StructuredLogger.Tests
             var first = message.Substring(0, 10);
             switch (first)
             {
+                case "Did not co":
+                    return "Did not copy";
+                case "Input file":
+                    return "Input files";
+                case "Output fil":
+                    return "Output files";
+                case "Primary re":
+                    return "Primary reference";
+                case "Encountere":
+                    return "Encountered conflict";
                 case "Output Ite":
                     return "Output Item";
                 case "Task Param":
@@ -83,11 +128,23 @@ namespace StructuredLogger.Tests
                     return "Added Item";
                 case "Removed It":
                     return "Removed Item";
+                case "Overriding":
+                    return "Overriding target";
+                case "Removing P":
+                    return "Removing Property";
+                case "Using Task":
+                    return "Using Task";
+                case "Property r":
+                    return "Property reassignment";
+                case "    Resolv":
+                    return "Resolved file path";
+                case "    This r":
+                    return "This reference is not";
                 default:
                     break;
             }
 
-            return "Misc";
+            return first;
         }
 
         //[Fact]

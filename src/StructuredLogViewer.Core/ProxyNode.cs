@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using StructuredLogViewer;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -25,6 +26,24 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        public static string GetNodeText(BaseNode node)
+        {
+            if (node is Target t)
+            {
+                return t.Name;
+            }
+            else if (node is Project project)
+            {
+                return $"{project.Name} {project.TargetFramework}{project.TargetsDisplayText}";
+            }
+            else if (node is ProjectEvaluation evaluation)
+            {
+                return $"{evaluation.Name} {evaluation.EvaluationText}";
+            }
+
+            return node.ToString();
+        }
+
         public void Populate(SearchResult result)
         {
             if (result == null)
@@ -32,10 +51,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
+            var node = result.Node;
+
             if (result.MatchedByType && result.WordsInFields.Count == 0)
             {
                 Highlights.Add(new HighlightedText { Text = OriginalType });
-                Highlights.Add(" " + TextUtilities.ShortenValue(result.Node.ToString(), "..."));
+                Highlights.Add(" " + TextUtilities.ShortenValue(GetNodeText(node), "..."));
 
                 AddDuration(result);
 
@@ -44,35 +65,60 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             Highlights.Add(OriginalType);
 
-            //NameValueNode is speial case: have to show name=value when seached only in one (name or value)
-            var named = SearchResult.Node as NameValueNode;
+            // NameValueNode is special case: have to show name=value when searched only in one (name or value)
+            var nameValueNode = node as NameValueNode;
+            var namedNode = node as NamedNode;
+
             bool nameFound = false;
             bool valueFound = false;
-            if (named != null)
+            bool namedNodeNameFound = false;
+
+            foreach (var fieldText in result.WordsInFields)
             {
-                foreach (var fieldText in result.WordsInFields.GroupBy(t => t.field))
+                if (nameValueNode != null)
                 {
-                    if (fieldText.Key.Equals(named.Name))
-                    { 
+                    if (!nameFound && fieldText.field.Equals(nameValueNode.Name))
+                    {
                         nameFound = true;
                     }
 
-                    if (fieldText.Key.Equals(named.Value))
+                    if (!valueFound && fieldText.field.Equals(nameValueNode.Value))
                     {
                         valueFound = true;
                     }
+                }
+                else if (namedNode != null && !namedNodeNameFound)
+                {
+                    if (fieldText.field.Equals(namedNode.Name))
+                    {
+                        namedNodeNameFound = true;
+                    }
+                }
+            }
+
+            if (namedNode != null && !namedNodeNameFound)
+            {
+                Highlights.Add(" " + namedNode.Name);
+                if (GetNodeDifferentiator(node) is object differentiator)
+                {
+                    Highlights.Add(differentiator);
                 }
             }
 
             foreach (var wordsInField in result.WordsInFields.GroupBy(t => t.field, t => t.match))
             {
+                var fieldText = wordsInField.Key;
+                if (fieldText == OriginalType)
+                {
+                    // OriginalType already added above
+                    continue;
+                }
+
                 Highlights.Add(" ");
 
-                var fieldText = wordsInField.Key;
-
-                if (named != null && wordsInField.Key.Equals(named.Value) && !nameFound)
+                if (nameValueNode != null && fieldText.Equals(nameValueNode.Value) && !nameFound)
                 {
-                    Highlights.Add(named.Name + " = ");
+                    Highlights.Add(nameValueNode.Name + " = ");
                 }
 
                 fieldText = TextUtilities.ShortenValue(fieldText, "...");
@@ -95,15 +141,23 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     Highlights.Add(fieldText.Substring(index, fieldText.Length - index));
                 }
 
-                if (named != null && wordsInField.Key.Equals(named.Name) )
+                if (nameValueNode != null && wordsInField.Key.Equals(nameValueNode.Name))
                 {
                     if (!valueFound)
                     {
-                        Highlights.Add(" = " + TextUtilities.ShortenValue(named.Value, "..."));
+                        Highlights.Add(" = " + TextUtilities.ShortenValue(nameValueNode.Value, "..."));
                     }
                     else
                     {
                         Highlights.Add(" = ");
+                    }
+                }
+
+                if (namedNode != null && namedNode.Name == wordsInField.Key)
+                {
+                    if (GetNodeDifferentiator(node) is object differentiator)
+                    {
+                        Highlights.Add(differentiator);
                     }
                 }
             }
@@ -111,21 +165,66 @@ namespace Microsoft.Build.Logging.StructuredLogger
             AddDuration(result);
         }
 
+        private object GetNodeDifferentiator(BaseNode node)
+        {
+            if (node is Project project)
+            {
+                var result = "";
+
+                if (!string.IsNullOrEmpty(project.TargetFramework))
+                {
+                    result += " " + project.TargetFramework;
+                }
+
+                if (!string.IsNullOrEmpty(project.TargetsDisplayText))
+                {
+                    result += " " + project.TargetsDisplayText;
+                }
+
+                if (!string.IsNullOrEmpty(result))
+                {
+                    return result;
+                }
+            }
+
+            return null;
+        }
+
         private void AddDuration(SearchResult result)
         {
+            if (result.StartTime != default)
+            {
+                Highlights.Add(new HighlightedText { Text = " " + TextUtilities.Display(result.StartTime), Style = "time" });
+            }
+
+            if (result.EndTime != default)
+            {
+                Highlights.Add(new HighlightedText { Text = " " + TextUtilities.Display(result.EndTime), Style = "time" });
+            }
+
             if (result.Duration != default)
             {
-                Highlights.Add(new HighlightedText { Text = " " + TextUtilities.DisplayDuration(result.Duration) });
+                Highlights.Add(new HighlightedText { Text = " " + TextUtilities.DisplayDuration(result.Duration), Style = "time" });
             }
         }
 
         public string OriginalType => Original.GetType().Name;
-        public string ProjectExtension => Original is Project ? GetProjectFileExtension() : null;
+        public string ProjectExtension => GetProjectFileExtension();
 
         private string GetProjectFileExtension()
         {
-            var result = ((Project)Original).ProjectFileExtension;
-            if (result != ".sln" && result != ".csproj")
+            string result = null;
+
+            if (Original is Project project)
+            {
+                result = project.ProjectFileExtension;
+            }
+            else if (Original is ProjectEvaluation evaluation)
+            {
+                result = evaluation.ProjectFileExtension;
+            }
+
+            if (result != null && result != ".sln" && result != ".csproj")
             {
                 result = "other";
             }
@@ -135,6 +234,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public override string TypeName => nameof(ProxyNode);
 
-        public override string ToString() => Original.ToString();
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+
+            foreach (var highlight in Highlights)
+            {
+                sb.Append(highlight.ToString());
+            }
+
+            return sb.ToString();
+        }
     }
 }

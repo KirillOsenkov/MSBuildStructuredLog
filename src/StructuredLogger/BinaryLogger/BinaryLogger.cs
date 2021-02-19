@@ -32,14 +32,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
         // version 5:
         //   - new EvaluationFinished.ProfilerResult
         // version 6:
-        //   -  Ids and parent ids for the evaluation locations
+        //   - Ids and parent ids for the evaluation locations
         // version 7:
         //   - Include ProjectStartedEventArgs.GlobalProperties
         // version 8:
         //   - This was used in a now-reverted change but is the same as 9.
         // version 9:
         //   - new record kinds: EnvironmentVariableRead, PropertyReassignment, UninitializedPropertyRead
-        internal const int FileFormatVersion = 9;
+        // version 10:
+        //   - new record kinds:
+        //      * String - deduplicate strings by hashing and write a string record before it's used
+        //      * NameValueList - deduplicate arrays of name-value pairs such as properties, items and metadata
+        //                        in a separate record and refer to those records from regular records
+        //                        where a list used to be written in-place
+        // version 11:
+        //   - new record kind: TaskParameterEventArgs
+        internal const int FileFormatVersion = 11;
 
         private Stream stream;
         private BinaryWriter binaryWriter;
@@ -123,7 +131,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 if (CollectProjectImports != ProjectImportsCollectionMode.None)
                 {
-                    projectImportsCollector = new ProjectImportsCollector(FilePath);
+                    projectImportsCollector = new ProjectImportsCollector(FilePath, CollectProjectImports == ProjectImportsCollectionMode.ZipFile);
                 }
 
                 if (eventSource is IEventSource3 eventSource3)
@@ -140,6 +148,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             stream = new GZipStream(stream, CompressionLevel.Optimal);
+
+            // wrapping the GZipStream in a buffered stream significantly improves performance
+            // and the max throughput is reached with a 32K buffer. See details here:
+            // https://github.com/dotnet/runtime/issues/39233#issuecomment-745598847
+            stream = new BufferedStream(stream, bufferSize: 32768);
             binaryWriter = new BinaryWriter(stream);
             eventArgsWriter = new BuildEventArgsWriter(binaryWriter);
 
@@ -153,6 +166,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private void LogInitialInfo()
         {
             LogMessage("BinLogFilePath=" + FilePath);
+            LogMessage("CurrentUICulture=" + System.Globalization.CultureInfo.CurrentUICulture.Name);
         }
 
         private void LogMessage(string text)
@@ -172,21 +186,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (projectImportsCollector != null)
             {
-                projectImportsCollector.Close();
-
                 if (CollectProjectImports == ProjectImportsCollectionMode.Embed)
                 {
-                    var archiveFilePath = projectImportsCollector.ArchiveFilePath;
-
-                    // It is possible that the archive couldn't be created for some reason.
-                    // Only embed it if it actually exists.
-                    if (File.Exists(archiveFilePath))
-                    {
-                        eventArgsWriter.WriteBlob(BinaryLogRecordKind.ProjectImportArchive, File.ReadAllBytes(archiveFilePath));
-                        File.Delete(archiveFilePath);
-                    }
+                    eventArgsWriter.WriteBlob(BinaryLogRecordKind.ProjectImportArchive, projectImportsCollector.GetAllBytes());
                 }
 
+                projectImportsCollector.Close();
                 projectImportsCollector = null;
             }
 
@@ -236,14 +241,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             else if (e is MetaprojectGeneratedEventArgs metaprojectArgs)
             {
                 projectImportsCollector.AddFileFromMemory(metaprojectArgs.ProjectFile, metaprojectArgs.metaprojectXml);
-            }
-            else
-            {
-                // This is different from the official MSBuild because we want to run on MSBuild 14
-                // and still collect source files mentioned in targets and tasks.
-                // We don't need this in official MSBuild because there we have the ProjectImportedEventArgs
-                // that tells us about all the files.
-                projectImportsCollector.IncludeSourceFiles(e);
             }
         }
 

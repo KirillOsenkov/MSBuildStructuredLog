@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
@@ -44,9 +45,9 @@ namespace StructuredLogViewer
             AddRecentItem(filePath, recentMSBuildLocationsFilePath);
         }
 
-        private static IEnumerable<string> cachedRecentMSBuildLocations;
+        private static IEnumerable<string>? cachedRecentMSBuildLocations;
 
-        public static IEnumerable<string> GetRecentMSBuildLocations(IEnumerable<string> extraLocations = null)
+        public static IEnumerable<string> GetRecentMSBuildLocations(IEnumerable<string>? extraLocations = null)
         {
             extraLocations = extraLocations ?? Enumerable.Empty<string>();
 
@@ -198,7 +199,7 @@ namespace StructuredLogViewer
                 lines = File.ReadAllLines(customArgumentsFilePath);
             }
 
-            if (FindArguments(lines, filePath, out string arguments, out int index))
+            if (FindArguments(lines, filePath, out string? arguments, out int index))
             {
                 return arguments;
             }
@@ -214,7 +215,7 @@ namespace StructuredLogViewer
         /// </summary>
         public static bool DisableUpdates => File.Exists(disableUpdatesFilePath);
 
-        private static bool FindArguments(IList<string> lines, string projectFilePath, out string existingArguments, out int index)
+        private static bool FindArguments(IList<string> lines, string projectFilePath, [NotNullWhen(returnValue: true)] out string? existingArguments, out int index)
         {
             for (int i = 0; i < lines.Count; i++)
             {
@@ -257,6 +258,8 @@ namespace StructuredLogViewer
                     }
                     else
                     {
+                        string directoryName = Path.GetDirectoryName(customArgumentsFilePath);
+                        Directory.CreateDirectory(directoryName);
                         File.WriteAllLines(customArgumentsFilePath, new[] {projectFilePath + "=" + newArguments});
                         return;
                     }
@@ -264,9 +267,7 @@ namespace StructuredLogViewer
 
                 var list = File.ReadAllLines(customArgumentsFilePath).ToList();
 
-                string arguments;
-                int index;
-                if (FindArguments(list, projectFilePath, out arguments, out index))
+                if (FindArguments(list, projectFilePath, out string? arguments, out int index))
                 {
                     list.RemoveAt(index);
                 }
@@ -303,7 +304,7 @@ namespace StructuredLogViewer
             }
         }
 
-        private static bool parentAllTargetsUnderProject = false;
+        private static bool parentAllTargetsUnderProject = true;
 
         public static bool ParentAllTargetsUnderProject
         {
@@ -348,6 +349,28 @@ namespace StructuredLogViewer
             }
         }
 
+        private static bool useDarkTheme = false;
+
+        public static bool UseDarkTheme
+        {
+            get
+            {
+                EnsureSettingsRead();
+                return useDarkTheme;
+            }
+
+            set
+            {
+                if (useDarkTheme == value)
+                {
+                    return;
+                }
+
+                useDarkTheme = value;
+                SaveSettings();
+            }
+        }
+
         private static void EnsureSettingsRead()
         {
             if (!settingsRead)
@@ -360,6 +383,7 @@ namespace StructuredLogViewer
         const string Virtualization = "Virtualization=";
         const string ParentAllTargetsUnderProjectSetting = nameof(ParentAllTargetsUnderProject) + "=";
         const string MarkResultsInTreeSetting = "MarkResultsInTree=";
+        const string UseDarkThemeSetting = "UseDarkTheme=";
 
         private static void SaveSettings()
         {
@@ -367,9 +391,12 @@ namespace StructuredLogViewer
             sb.AppendLine(Virtualization + enableTreeViewVirtualization.ToString());
             sb.AppendLine(ParentAllTargetsUnderProjectSetting + parentAllTargetsUnderProject.ToString());
             sb.AppendLine(MarkResultsInTreeSetting + markResultsInTree.ToString());
+            sb.AppendLine(UseDarkThemeSetting + useDarkTheme.ToString());
 
             using (SingleGlobalInstance.Acquire(Path.GetFileName(settingsFilePath)))
             {
+                string directoryName = Path.GetDirectoryName(settingsFilePath);
+                Directory.CreateDirectory(directoryName);
                 File.WriteAllText(settingsFilePath, sb.ToString());
             }
         }
@@ -386,28 +413,22 @@ namespace StructuredLogViewer
                 var lines = File.ReadAllLines(settingsFilePath);
                 foreach (var line in lines)
                 {
-                    if (line.StartsWith(Virtualization))
+                    ProcessLine(Virtualization, line, ref enableTreeViewVirtualization);
+                    ProcessLine(ParentAllTargetsUnderProjectSetting, line, ref parentAllTargetsUnderProject);
+                    ProcessLine(MarkResultsInTreeSetting, line, ref markResultsInTree);
+                    ProcessLine(UseDarkThemeSetting, line, ref useDarkTheme);
+
+                    void ProcessLine(string setting, string text, ref bool variable)
                     {
-                        var value = line.Substring(Virtualization.Length);
-                        if (bool.TryParse(value, out bool boolValue))
+                        if (!text.StartsWith(setting))
                         {
-                            enableTreeViewVirtualization = boolValue;
+                            return;
                         }
-                    }
-                    else if (line.StartsWith(ParentAllTargetsUnderProjectSetting))
-                    {
-                        var value = line.Substring(ParentAllTargetsUnderProjectSetting.Length);
+
+                        var value = text.Substring(setting.Length);
                         if (bool.TryParse(value, out bool boolValue))
                         {
-                            parentAllTargetsUnderProject = boolValue;
-                        }
-                    }
-                    else if (line.StartsWith(MarkResultsInTreeSetting))
-                    {
-                        var value = line.Substring(MarkResultsInTreeSetting.Length);
-                        if (bool.TryParse(value, out bool boolValue))
-                        {
-                            markResultsInTree = boolValue;
+                            variable = boolValue;
                         }
                     }
                 }

@@ -110,7 +110,7 @@ namespace StructuredLogViewer.Controls
             }
         }
 
-        public void GoToTimeNode(TimedNode node)
+        public void GoToTimedNode(TimedNode node)
         {
             TextBlock textblock = null;
             foreach (TimedNode timedNode in node.GetParentChainIncludingThis().OfType<TimedNode>().Reverse())
@@ -367,6 +367,7 @@ namespace StructuredLogViewer.Controls
         }
 
         private static readonly Brush projectBackground = new SolidColorBrush(Color.FromArgb(10, 180, 180, 180));
+        private static readonly Brush projectEvaluationBackground = new SolidColorBrush(Color.FromArgb(20, 100, 255, 150));
         private static readonly Brush targetBackground = new SolidColorBrush(Color.FromArgb(20, 255, 100, 255));
         private static readonly Brush taskBackground = new SolidColorBrush(Color.FromArgb(30, 100, 255, 255));
         private readonly ScaleTransform scaleTransform;
@@ -376,6 +377,7 @@ namespace StructuredLogViewer.Controls
             switch (block.Node)
             {
                 case Project _: return projectBackground;
+                case ProjectEvaluation _: return projectEvaluationBackground;
                 case Target _: return targetBackground;
                 case Task _: return taskBackground;
             }

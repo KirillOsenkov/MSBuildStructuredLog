@@ -50,6 +50,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
             structuredLogger.Parameters = "build.buildlog";
             structuredLogger.Initialize(eventSource);
 
+            eventSource.OnFileFormatVersionRead += fileFormatVersion =>
+            {
+                if (fileFormatVersion >= 10)
+                {
+                    // since strings are already deduplicated in the file, no need to do it again
+                    // TODO: but search will not work if the string table is empty
+                    // structuredLogger.Construction.StringTable.DisableDeduplication = true;
+                }
+            };
+
             build = structuredLogger.Construction.Build;
 
             var sw = Stopwatch.StartNew();
