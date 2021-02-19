@@ -60,7 +60,7 @@ namespace StructuredLogger.Tests
         public void RecordStats()
         {
             var reader = new BinLogReader();
-            var records = reader.ReadRecords(@"C:\temp\vsmac.binlog");
+            var records = reader.ReadRecords(@"C:\msbuild\msbuild.binlog");
 
             var recordsByType = new Dictionary<string, List<Microsoft.Build.Logging.Record>>();
 
@@ -93,13 +93,11 @@ namespace StructuredLogger.Tests
                 type.list.Sort((l, r) => Math.Sign(r.Length - l.Length));
             }
 
-            var messages = mostRecords[0].list;
+            var messages = mostRecords[1].list;
             var messageGroups = messages.GroupBy(m => GetMessageType(m.Args?.Message))
-                .Select(g => (g.Key, g.Count(), g.Sum(m => m.Args?.Message?.Length ?? 0), g.OrderByDescending(r => r.Length).ToArray()))
+                .Select(g => (messageType: g.Key, count: g.Count(), totalLength: g.Sum(m => m.Args?.Message?.Length ?? 0), messages: g.OrderByDescending(r => r.Length).ToArray()))
                 .OrderByDescending(g => g.Item3)
                 .ToArray();
-
-            var projectStarted = mostRecords[1].list;
         }
 
         private string GetMessageType(string message)
@@ -124,7 +122,7 @@ namespace StructuredLogger.Tests
                     break;
             }
 
-            return "Misc";
+            return first;
         }
 
         //[Fact]
