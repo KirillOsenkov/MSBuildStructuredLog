@@ -144,7 +144,8 @@
         mainLayout.containerSplit.fileTree.Render();
 
         //creating file resolvers to read/look through archive/source files
-        mainLayout.containerSplit.sourceFileResolver = new StructuredLogViewer.SourceFileResolver(mainLayout.containerSplit.build.SourceFilesArchive);
+        var files = Build.ReadSourceFiles(mainLayout.containerSplit.build.SourceFilesArchive);
+        mainLayout.containerSplit.sourceFileResolver = new StructuredLogViewer.SourceFileResolver(files);
         mainLayout.containerSplit.archiveFileResolver = mainLayout.containerSplit.sourceFileResolver.ArchiveFile;
 
         //populates the Files tab with the projectFiles tree
