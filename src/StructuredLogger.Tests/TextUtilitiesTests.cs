@@ -143,5 +143,11 @@ namespace StructuredLogger.Tests
             var actual = TextUtilities.SplitIntoParenthesizedSpans(haystack, "[[", "]]");
             AssertEqual(expectedChunks, actual);
         }
+
+        [Fact]
+        public void TestJson()
+        {
+            var strings = StringsSet.ResourcesCollection;
+        }
     }
 }

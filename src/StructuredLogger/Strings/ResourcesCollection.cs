@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Runtime.Serialization.Json;
+using System.IO;
 using ResourcesDictionary = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, string>>;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -25,9 +25,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     var assembly = typeof(StructuredLogger).Assembly;
                     var stream = assembly.GetManifestResourceStream(@"Strings.json");
 
-                    var settings = new DataContractJsonSerializerSettings() { UseSimpleDictionaryFormat = true };
-                    var deserializer = new DataContractJsonSerializer(typeof(ResourcesDictionary), settings);
-                    resourcesCollection = (ResourcesDictionary)deserializer.ReadObject(stream);
+                    var reader = new StreamReader(stream);
+                    var text = reader.ReadToEnd();
+                    resourcesCollection = TinyJson.JSONParser.FromJson<ResourcesDictionary>(text);
                 }
 
                 return resourcesCollection;
