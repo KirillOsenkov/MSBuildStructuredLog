@@ -110,6 +110,16 @@ namespace StructuredLogger.Tests
             var first = message.Substring(0, 10);
             switch (first)
             {
+                case "Did not co":
+                    return "Did not copy";
+                case "Input file":
+                    return "Input files";
+                case "Output fil":
+                    return "Output files";
+                case "Primary re":
+                    return "Primary reference";
+                case "Encountere":
+                    return "Encountered conflict";
                 case "Output Ite":
                     return "Output Item";
                 case "Task Param":
@@ -118,6 +128,18 @@ namespace StructuredLogger.Tests
                     return "Added Item";
                 case "Removed It":
                     return "Removed Item";
+                case "Overriding":
+                    return "Overriding target";
+                case "Removing P":
+                    return "Removing Property";
+                case "Using Task":
+                    return "Using Task";
+                case "Property r":
+                    return "Property reassignment";
+                case "    Resolv":
+                    return "Resolved file path";
+                case "    This r":
+                    return "This reference is not";
                 default:
                     break;
             }
