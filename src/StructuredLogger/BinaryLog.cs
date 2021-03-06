@@ -1,10 +1,29 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class BinaryLog
     {
+        public static IEnumerable<Record> ReadRecords(string binLogFilePath)
+        {
+            var reader = new BinLogReader();
+            return reader.ReadRecords(binLogFilePath);
+        }
+
+        public static IEnumerable<Record> ReadRecords(Stream binlogStream)
+        {
+            var reader = new BinLogReader();
+            return reader.ReadRecords(binlogStream);
+        }
+
+        public static IEnumerable<Record> ReadRecords(byte[] binlogBytes)
+        {
+            var reader = new BinLogReader();
+            return reader.ReadRecords(binlogBytes);
+        }
+
         public static Build ReadBuild(string filePath)
         {
             using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
