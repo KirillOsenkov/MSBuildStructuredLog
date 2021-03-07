@@ -126,7 +126,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void ProcessTaskParameter(TaskParameterEventArgs args)
         {
-            string itemName = args.ItemName;
+            string itemType = args.ItemType;
             var items = args.Items.OfType<ITaskItem>().ToArray();
 
             NamedNode parent = null;
@@ -142,7 +142,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 string folderName = args.Kind == TaskParameterMessageKind.TaskInput ? Strings.Parameters : Strings.OutputItems;
                 parent = task.GetOrCreateNodeWithName<Folder>(folderName);
 
-                node = CreateParameterNode(itemName, items);
+                node = CreateParameterNode(itemType, items);
             }
             else if (args.Kind == TaskParameterMessageKind.AddItem || args.Kind == TaskParameterMessageKind.RemoveItem)
             {
@@ -158,7 +158,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     named = new RemoveItem();
                 }
 
-                named.Name = itemName;
+                named.Name = itemType;
 
                 AddItems(items, named);
                 node = named;
