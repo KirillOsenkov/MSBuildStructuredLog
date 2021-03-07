@@ -2,7 +2,7 @@
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class ProjectEvaluation : TimedNode, IPreprocessable, IHasSourceFile, IHasRelevance
+    public class ProjectEvaluation : TimedNode, IPreprocessable, IHasSourceFile, IHasRelevance, IProjectOrEvaluation
     {
         /// <summary>
         /// The full path to the MSBuild project file for this project.
@@ -15,6 +15,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             : "";
 
         public string EvaluationText { get; set; } = "";
+
+        public string TargetFramework { get; set; }
 
         public double RelativeDuration { get; set; }
 

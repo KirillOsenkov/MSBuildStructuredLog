@@ -287,6 +287,15 @@
                    ToolTipService.ShowDuration="60000" />-->
       <TextBlock Text="{Binding Name}" Margin="0,2,0,0" ToolTip="{Binding ToolTip}" ToolTipService.ShowDuration="60000" />
       <TextBlock
+          Text="{Binding TargetFramework}"
+          Margin="6,0,0,0"
+          Padding="2,0,2,0"
+          FontSize="10"
+          VerticalAlignment="Center"
+          Foreground="{DynamicResource TargetFrameworkForeground}"
+          Background="{DynamicResource TargetFrameworkBackground}"
+          Visibility="{Binding TargetFramework, Converter={x:Static s:StringEmptinessToVisibilityConverter.Instance}}"/>
+      <TextBlock
           Text="{Binding EvaluationText}"
           Margin="6,2,0,0"
           Opacity="0.5"

@@ -403,6 +403,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string AdditionalProperties => "Additional properties";
         public static string OutputItems => "OutputItems";
         public static string OutputProperties => "OutputProperties";
+        public static string Items = "Items";
 
         public static string GetPropertyName(string message) => message.Substring(message.IndexOf("$") + 2, message.IndexOf("=") - message.IndexOf("$") - 3);
 
