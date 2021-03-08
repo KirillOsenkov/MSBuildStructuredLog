@@ -782,7 +782,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            var itemsNode = parent.GetOrCreateNodeWithName<Folder>(Strings.OutputItems);
+            var itemsNode = parent.GetOrCreateNodeWithName<Folder>(Strings.Items, addAtBeginning: true);
             foreach (DictionaryEntry kvp in itemList.OfType<DictionaryEntry>().OrderBy(i => i.Key))
             {
                 var itemType = Intern(Convert.ToString(kvp.Key));
@@ -815,7 +815,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            var propertiesFolder = project.GetOrCreateNodeWithName<Folder>(Strings.Properties);
+            var propertiesFolder = project.GetOrCreateNodeWithName<Folder>(Strings.Properties, addAtBeginning: true);
             var list = (IEnumerable<KeyValuePair<string, string>>)properties;
 
             AddProperties(
@@ -970,8 +970,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            var propertiesNode = project.GetOrCreateNodeWithName<Folder>(Strings.Properties);
-            var globalNode = propertiesNode.GetOrCreateNodeWithName<Folder>(Strings.Global);
+            var propertiesNode = project.GetOrCreateNodeWithName<Folder>(Strings.Properties, addAtBeginning: true);
+            var globalNode = propertiesNode.GetOrCreateNodeWithName<Folder>(Strings.Global, addAtBeginning: true);
             AddProperties(globalNode, (IEnumerable<KeyValuePair<string, string>>)globalProperties, project as IProjectOrEvaluation);
         }
 

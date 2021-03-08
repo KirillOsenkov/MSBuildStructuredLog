@@ -601,7 +601,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 if (Strings.PropertyReassignment.IsMatch(message))
                 {
-                    var properties = node.GetOrCreateNodeWithName<Folder>(Strings.Properties, true);
+                    var properties = node.GetOrCreateNodeWithName<Folder>(Strings.PropertyReassignmentFolder, addAtBeginning: true);
                     node = properties.GetOrCreateNodeWithName<Folder>(Strings.GetPropertyName(message));
                 }
 
@@ -632,7 +632,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         return;
                     }
 
-                    var properties = construction.EvaluationFolder.GetOrCreateNodeWithName<Folder>(Strings.Properties);
+                    var properties = construction.EvaluationFolder.GetOrCreateNodeWithName<Folder>(Strings.PropertyReassignmentFolder);
                     node = properties.GetOrCreateNodeWithName<Folder>(Strings.GetPropertyName(message));
                 }
                 else if (Strings.IsTargetDoesNotExistAndWillBeSkipped(message))

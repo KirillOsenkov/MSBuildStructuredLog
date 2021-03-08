@@ -396,6 +396,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string TargetOutputs => "TargetOutputs";
         public static string AnalyzerReport => "Analyzer Report";
         public static string Properties => "Properties";
+        public static string PropertyReassignmentFolder => "Property reassignment";
         public static string Global => "Global";
         public static string EntryTargets => "Entry targets";
         public static string TargetFramework => "TargetFramework";

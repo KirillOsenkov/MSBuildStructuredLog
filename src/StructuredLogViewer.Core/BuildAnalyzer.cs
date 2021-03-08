@@ -137,7 +137,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             foreach (var projectEvaluation in evaluations)
             {
-                var properties = projectEvaluation.FindChild<NamedNode>(Strings.Properties);
+                var properties = projectEvaluation.FindChild<NamedNode>(Strings.PropertyReassignmentFolder);
                 if (properties == null)
                 {
                     continue;
