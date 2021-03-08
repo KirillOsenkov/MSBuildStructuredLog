@@ -5,8 +5,8 @@
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
   </PropertyGroup>
   <PropertyGroup>
-    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
-    <PackageId>MSBuild.StructuredLogger</PackageId>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>MSBuild.StructuredLogger.net45</PackageId>
     <Authors>Kirill Osenkov, Microsoft</Authors>
     <Company>Microsoft</Company>
     <Description>An MSBuild logger that can be passed to MSBuild to record a detailed structured log file. See usage example at: https://github.com/KirillOsenkov/MSBuildStructuredLog/blob/master/README.md#usage</Description>
@@ -21,7 +21,7 @@
     <MSBuild45>C:\temp\msbuild4.5</MSBuild45>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="$(MSBuild45)\Microsoft.Build.Framework.dll" />
