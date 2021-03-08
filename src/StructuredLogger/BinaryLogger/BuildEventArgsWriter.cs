@@ -1,13 +1,20 @@
-﻿using System;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Microsoft.Build.BackEnd.Logging;
+using Microsoft.Build.Evaluation;
 using Microsoft.Build.Exceptions;
+using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Framework.Profiler;
 using Microsoft.Build.Internal;
+using Microsoft.Build.Shared;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -128,75 +135,33 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void WriteCore(BuildEventArgs e)
         {
-            // the cases are ordered by most used first for performance
-            if (e is BuildMessageEventArgs buildMessage)
+            switch (e)
             {
-                Write(buildMessage);
-            }
-            else if (e is TaskParameterEventArgs taskParameter)
-            {
-                Write(taskParameter);
-            }
-            else if (e is TaskStartedEventArgs taskStarted)
-            {
-                Write(taskStarted);
-            }
-            else if (e is TaskFinishedEventArgs taskFinished)
-            {
-                Write(taskFinished);
-            }
-            else if (e is TargetStartedEventArgs targetStarted)
-            {
-                Write(targetStarted);
-            }
-            else if (e is TargetFinishedEventArgs targetFinished)
-            {
-                Write(targetFinished);
-            }
-            else if (e is BuildErrorEventArgs buildError)
-            {
-                Write(buildError);
-            }
-            else if (e is BuildWarningEventArgs buildWarning)
-            {
-                Write(buildWarning);
-            }
-            else if (e is ProjectStartedEventArgs projectStarted)
-            {
-                Write(projectStarted);
-            }
-            else if (e is ProjectFinishedEventArgs projectFinished)
-            {
-                Write(projectFinished);
-            }
-            else if (e is BuildStartedEventArgs buildStarted)
-            {
-                Write(buildStarted);
-            }
-            else if (e is BuildFinishedEventArgs buildFinished)
-            {
-                Write(buildFinished);
-            }
-            else if (e is ProjectEvaluationStartedEventArgs projectEvaluationStarted)
-            {
-                Write(projectEvaluationStarted);
-            }
-            else if (e is ProjectEvaluationFinishedEventArgs projectEvaluationFinished)
-            {
-                Write(projectEvaluationFinished);
-            }
-            else
-            {
-                // convert all unrecognized objects to message
-                // and just preserve the message
-                var buildMessageEventArgs = new BuildMessageEventArgs(
-                    e.Message,
-                    e.HelpKeyword,
-                    e.SenderName,
-                    MessageImportance.Normal,
-                    e.Timestamp);
-                buildMessageEventArgs.BuildEventContext = e.BuildEventContext ?? BuildEventContext.Invalid;
-                Write(buildMessageEventArgs);
+                case BuildMessageEventArgs buildMessage: Write(buildMessage); break;
+                case TaskStartedEventArgs taskStarted: Write(taskStarted); break;
+                case TaskFinishedEventArgs taskFinished: Write(taskFinished); break;
+                case TargetStartedEventArgs targetStarted: Write(targetStarted); break;
+                case TargetFinishedEventArgs targetFinished: Write(targetFinished); break;
+                case BuildErrorEventArgs buildError: Write(buildError); break;
+                case BuildWarningEventArgs buildWarning: Write(buildWarning); break;
+                case ProjectStartedEventArgs projectStarted: Write(projectStarted); break;
+                case ProjectFinishedEventArgs projectFinished: Write(projectFinished); break;
+                case BuildStartedEventArgs buildStarted: Write(buildStarted); break;
+                case BuildFinishedEventArgs buildFinished: Write(buildFinished); break;
+                case ProjectEvaluationStartedEventArgs projectEvaluationStarted: Write(projectEvaluationStarted); break;
+                case ProjectEvaluationFinishedEventArgs projectEvaluationFinished: Write(projectEvaluationFinished); break;
+                default:
+                    // convert all unrecognized objects to message
+                    // and just preserve the message
+                    var buildMessageEventArgs = new BuildMessageEventArgs(
+                        e.Message,
+                        e.HelpKeyword,
+                        e.SenderName,
+                        MessageImportance.Normal,
+                        e.Timestamp);
+                    buildMessageEventArgs.BuildEventContext = e.BuildEventContext ?? BuildEventContext.Invalid;
+                    Write(buildMessageEventArgs);
+                    break;
             }
         }
 
@@ -254,7 +219,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private void Write(ProjectEvaluationStartedEventArgs e)
         {
             Write(BinaryLogRecordKind.ProjectEvaluationStarted);
-            WriteBuildEventArgsFields(e);
+            WriteBuildEventArgsFields(e, writeMessage: false);
             WriteDeduplicatedString(e.ProjectFile);
         }
 
@@ -262,15 +227,30 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             Write(BinaryLogRecordKind.ProjectEvaluationFinished);
 
-            WriteBuildEventArgsFields(e);
+            WriteBuildEventArgsFields(e, writeMessage: false);
             WriteDeduplicatedString(e.ProjectFile);
 
-            Write(e.ProfilerResult.HasValue);
-            if (e.ProfilerResult.HasValue)
+            if (e.GlobalProperties == null)
             {
-                Write(e.ProfilerResult.Value.ProfiledLocations.Count);
+                Write(false);
+            }
+            else
+            {
+                Write(true);
+                WriteProperties(e.GlobalProperties);
+            }
 
-                foreach (var item in e.ProfilerResult.Value.ProfiledLocations)
+            WriteProperties(e.Properties);
+
+            WriteProjectItems(e.Items);
+
+            var result = e.ProfilerResult;
+            Write(result.HasValue);
+            if (result.HasValue)
+            {
+                Write(result.Value.ProfiledLocations.Count);
+
+                foreach (var item in result.Value.ProfiledLocations)
                 {
                     Write(item.Key);
                     Write(item.Value);
@@ -393,6 +373,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void Write(BuildMessageEventArgs e)
         {
+            if (e is TaskParameterEventArgs taskParameter)
+            {
+                Write(taskParameter);
+                return;
+            }
+
             if (e is CriticalBuildMessageEventArgs criticalBuildMessage)
             {
                 Write(criticalBuildMessage);
@@ -516,8 +502,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Write(BinaryLogRecordKind.TaskParameter);
             WriteMessageFields(e, writeMessage: false);
             Write((int)e.Kind);
-            WriteDeduplicatedString(e.ItemName);
-            WriteTaskItemList(e.Items);
+            WriteDeduplicatedString(e.ItemType);
+            WriteTaskItemList(e.Items, e.LogItemMetadata);
         }
 
         private void WriteBuildEventArgsFields(BuildEventArgs e, bool writeMessage = true)
@@ -694,7 +680,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return flags;
         }
 
-        private void WriteTaskItemList(IEnumerable items)
+        private readonly List<object> reusableItemsList = new List<object>();
+
+        private void WriteTaskItemList(IEnumerable items, bool writeMetadata = true)
         {
             if (items == null)
             {
@@ -702,10 +690,29 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            int count = 0;
-            foreach (var item in items)
+            int count;
+
+            if (items is ICollection arrayList)
             {
-                count += 1;
+                count = arrayList.Count;
+            }
+            else if (items is ICollection<ITaskItem> genericList)
+            {
+                count = genericList.Count;
+            }
+            else
+            {
+                // enumerate only once
+                foreach (var item in items)
+                {
+                    if (item != null)
+                    {
+                        reusableItemsList.Add(item);
+                    }
+                }
+
+                items = reusableItemsList;
+                count = reusableItemsList.Count;
             }
 
             Write(count);
@@ -714,7 +721,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 if (item is ITaskItem taskItem)
                 {
-                    Write(taskItem);
+                    Write(taskItem, writeMetadata);
                 }
                 else
                 {
@@ -722,7 +729,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     Write(0); // no metadata
                 }
             }
+
+            reusableItemsList.Clear();
         }
+
+        private readonly List<(string Key, ITaskItem Value)> reusableProjectItemList = new List<(string, ITaskItem)>();
 
         private void WriteProjectItems(IEnumerable items)
         {
@@ -732,10 +743,30 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            var groups = items
-                .OfType<DictionaryEntry>()
-                .GroupBy(entry => entry.Key as string, entry => entry.Value as ITaskItem)
-                .Where(group => !string.IsNullOrEmpty(group.Key))
+            foreach (var item in items)
+            {
+                string itemType = default;
+
+                //if (item is IItem iitem)
+                //{
+                //    itemType = iitem.Key;
+                //}
+                //else 
+                if (item is DictionaryEntry dictionaryEntry)
+                {
+                    itemType = dictionaryEntry.Key as string;
+                }
+
+                if (string.IsNullOrEmpty(itemType) || !(item is ITaskItem taskItem))
+                {
+                    continue;
+                }
+
+                reusableProjectItemList.Add((itemType, taskItem));
+            }
+
+            var groups = reusableProjectItemList
+                .GroupBy(entry => entry.Key, entry => entry.Value)
                 .ToArray();
 
             Write(groups.Length);
@@ -745,15 +776,51 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 WriteDeduplicatedString(group.Key);
                 WriteTaskItemList(group);
             }
+
+            reusableProjectItemList.Clear();
         }
 
-        private void Write(ITaskItem item)
+        private void Write(ITaskItem taskItem, bool writeMetadata = true)
         {
-            WriteDeduplicatedString(item.ItemSpec);
+            WriteDeduplicatedString(taskItem.ItemSpec);
+            if (!writeMetadata)
+            {
+                Write((byte)0);
+                return;
+            }
+
+            // WARNING: Can't use AddRange here because CopyOnWriteDictionary in Microsoft.Build.Utilities.v4.0.dll
+            // is broken. Microsoft.Build.Utilities.v4.0.dll loads from the GAC by XAML markup tooling and it's
+            // implementation doesn't work with AddRange because AddRange special-cases ICollection<T> and
+            // CopyOnWriteDictionary doesn't implement it properly.
+            foreach (var kvp in EnumerateMetadata(taskItem))
+            {
+                nameValueListBuffer.Add(kvp);
+            }
+
+            if (nameValueListBuffer.Count > 1)
+            {
+                nameValueListBuffer.Sort((l, r) => StringComparer.OrdinalIgnoreCase.Compare(l.Key, r.Key));
+            }
+
+            WriteNameValueList();
 
             nameValueListBuffer.Clear();
+        }
 
-            IDictionary customMetadata = item.CloneCustomMetadata();
+        public static IEnumerable<KeyValuePair<string, string>> EnumerateMetadata(ITaskItem taskItem)
+        {
+            // This runs if ITaskItem is Microsoft.Build.Utilities.TaskItem from Microsoft.Build.Utilities.v4.0.dll
+            // that is loaded from the GAC.
+            IDictionary customMetadata = taskItem.CloneCustomMetadata();
+            if (customMetadata is IEnumerable<KeyValuePair<string, string>> enumerableMetadata)
+            {
+                return enumerableMetadata;
+            }
+
+            // In theory this should never be reachable.
+            var list = new KeyValuePair<string, string>[customMetadata.Count];
+            int i = 0;
 
             foreach (string metadataName in customMetadata.Keys)
             {
@@ -761,26 +828,23 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 try
                 {
-                    valueOrError = item.GetMetadata(metadataName);
-                }
-                catch (InvalidProjectFileException e)
-                {
-                    valueOrError = e.Message;
+                    valueOrError = taskItem.GetMetadata(metadataName);
                 }
                 // Temporarily try catch all to mitigate frequent NullReferenceExceptions in
                 // the logging code until CopyOnWritePropertyDictionary is replaced with
                 // ImmutableDictionary. Calling into Debug.Fail to crash the process in case
-                // the exception occures in Debug builds.
+                // the exception occurres in Debug builds.
                 catch (Exception e)
                 {
                     valueOrError = e.Message;
                     Debug.Fail(e.ToString());
                 }
 
-                nameValueListBuffer.Add(new KeyValuePair<string, string>(metadataName, valueOrError));
+                list[i] = new KeyValuePair<string, string>(metadataName, valueOrError);
+                i += 1;
             }
 
-            WriteNameValueList();
+            return list;
         }
 
         private void WriteProperties(IEnumerable properties)
@@ -791,26 +855,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            nameValueListBuffer.Clear();
-
-            // there are no guarantees that the properties iterator won't change, so 
-            // take a snapshot and work with the readonly copy
-            var propertiesArray = properties.OfType<DictionaryEntry>().ToArray();
-
-            for (int i = 0; i < propertiesArray.Length; i++)
+            foreach (var item in properties)
             {
-                DictionaryEntry entry = propertiesArray[i];
-                if (entry.Key is string key && entry.Value is string value)
+                //if (item is IProperty property && !string.IsNullOrEmpty(property.Name))
+                //{
+                //    nameValueListBuffer.Add(new KeyValuePair<string, string>(property.Name, property.EvaluatedValue ?? string.Empty));
+                //}
+                //else 
+                if (item is DictionaryEntry dictionaryEntry && dictionaryEntry.Key is string key && !string.IsNullOrEmpty(key))
                 {
-                    nameValueListBuffer.Add(new KeyValuePair<string, string>(key, value));
-                }
-                else
-                {
-                    nameValueListBuffer.Add(new KeyValuePair<string, string>(string.Empty, string.Empty));
+                    nameValueListBuffer.Add(new KeyValuePair<string, string>(key, dictionaryEntry.Value as string ?? string.Empty));
                 }
             }
 
             WriteNameValueList();
+
+            nameValueListBuffer.Clear();
         }
 
         private void Write(BuildEventContext buildEventContext)
@@ -826,8 +886,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void Write(IEnumerable<KeyValuePair<string, string>> keyValuePairs)
         {
-            nameValueListBuffer.Clear();
-
             if (keyValuePairs != null)
             {
                 foreach (var kvp in keyValuePairs)
@@ -837,6 +895,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             WriteNameValueList();
+
+            nameValueListBuffer.Clear();
         }
 
         private void WriteNameValueList()

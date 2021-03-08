@@ -47,7 +47,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         //                        where a list used to be written in-place
         // version 11:
         //   - new record kind: TaskParameterEventArgs
-        internal const int FileFormatVersion = 11;
+        // version 12:
+        //   - add GlobalProperties, Properties and Items on ProjectEvaluationFinished
+        internal const int FileFormatVersion = 12;
 
         private Stream stream;
         private BinaryWriter binaryWriter;

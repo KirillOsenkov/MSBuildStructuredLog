@@ -469,6 +469,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         {
                             ConstructProfilerResult(projectEvaluation, profilerResult.Value);
                         }
+
+                        if (projectEvaluationFinished.GlobalProperties != null)
+                        {
+                            AddGlobalProperties(projectEvaluation, projectEvaluationFinished.GlobalProperties);
+                        }
+
+                        AddProperties(projectEvaluation, projectEvaluationFinished.Properties);
+                        AddItems(projectEvaluation, projectEvaluationFinished.Items);
                     }
                 }
             }
@@ -754,7 +762,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 if (args.GlobalProperties != null)
                 {
-                    AddGlobalProperties(project);
+                    AddGlobalProperties(project, project.GlobalProperties);
                 }
 
                 if (!string.IsNullOrEmpty(args.TargetNames))
@@ -762,51 +770,58 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     AddEntryTargets(project);
                 }
 
-                if (args.Properties != null)
-                {
-                    var properties = project.GetOrCreateNodeWithName<Folder>(Strings.Properties);
-                    AddProperties(
-                        properties,
-                        args
-                            .Properties
-                            .Cast<DictionaryEntry>()
-                            .OrderBy(d => d.Key)
-                            .Select(d => new KeyValuePair<string, string>(
-                                Intern(Convert.ToString(d.Key)),
-                                Intern(Convert.ToString(d.Value)))),
-                        project);
-                }
+                AddProperties(project, args.Properties);
+                AddItems(project, args.Items);
+            }
+        }
 
-                if (args.Items != null)
-                {
-                    RetrieveProjectInstance(project, args);
+        private void AddItems(TreeNode parent, IEnumerable itemList)
+        {
+            if (itemList == null)
+            {
+                return;
+            }
 
-                    var items = project.GetOrCreateNodeWithName<Folder>("Items");
-                    foreach (DictionaryEntry kvp in args.Items.OfType<DictionaryEntry>().OrderBy(i => i.Key))
+            var itemsNode = parent.GetOrCreateNodeWithName<Folder>(Strings.OutputItems);
+            foreach (DictionaryEntry kvp in itemList.OfType<DictionaryEntry>().OrderBy(i => i.Key))
+            {
+                var itemType = Intern(Convert.ToString(kvp.Key));
+                var itemTypeNode = itemsNode.GetOrCreateNodeWithName<Folder>(itemType);
+
+                var itemNode = new Item();
+
+                var taskItem = kvp.Value as ITaskItem;
+                if (taskItem != null)
+                {
+                    itemNode.Text = Intern(taskItem.ItemSpec);
+                    foreach (DictionaryEntry metadataName in taskItem.CloneCustomMetadata())
                     {
-                        var itemName = Intern(Convert.ToString(kvp.Key));
-                        var itemGroup = items.GetOrCreateNodeWithName<Folder>(itemName);
-
-                        var item = new Item();
-
-                        var taskItem = kvp.Value as ITaskItem;
-                        if (taskItem != null)
+                        itemNode.AddChild(new Metadata
                         {
-                            item.Text = Intern(taskItem.ItemSpec);
-                            foreach (DictionaryEntry metadataName in taskItem.CloneCustomMetadata())
-                            {
-                                item.AddChild(new Metadata
-                                {
-                                    Name = Intern(Convert.ToString(metadataName.Key)),
-                                    Value = Intern(Convert.ToString(metadataName.Value))
-                                });
-                            }
-
-                            itemGroup.AddChild(item);
-                        }
+                            Name = Intern(Convert.ToString(metadataName.Key)),
+                            Value = Intern(Convert.ToString(metadataName.Value))
+                        });
                     }
+
+                    itemTypeNode.AddChild(itemNode);
                 }
             }
+        }
+
+        private void AddProperties(TreeNode project, IEnumerable properties)
+        {
+            if (properties == null)
+            {
+                return;
+            }
+
+            var propertiesFolder = project.GetOrCreateNodeWithName<Folder>(Strings.Properties);
+            var list = (IEnumerable<KeyValuePair<string, string>>)properties;
+
+            AddProperties(
+                propertiesFolder,
+                list.OrderBy(d => d.Key),
+                project as IProjectOrEvaluation);
         }
 
         // normally MSBuild internal data structures aren't available to loggers, but we really want access
@@ -948,15 +963,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
             _taskToAssemblyMap.GetOrAdd(taskName, t => assembly);
         }
 
-        private void AddGlobalProperties(Project project)
+        private void AddGlobalProperties(TreeNode project, IEnumerable globalProperties)
         {
-            var propertiesNode = project.GetOrCreateNodeWithName<Folder>(Strings.Properties);
-            var properties = project.GlobalProperties;
-            if (properties != null && properties.Any())
+            if (globalProperties == null)
             {
-                var global = propertiesNode.GetOrCreateNodeWithName<Folder>(Strings.Global);
-                AddProperties(global, properties, project);
+                return;
             }
+
+            var propertiesNode = project.GetOrCreateNodeWithName<Folder>(Strings.Properties);
+            var globalNode = propertiesNode.GetOrCreateNodeWithName<Folder>(Strings.Global);
+            AddProperties(globalNode, (IEnumerable<KeyValuePair<string, string>>)globalProperties, project as IProjectOrEvaluation);
         }
 
         private static void AddEntryTargets(Project project)
@@ -976,7 +992,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private void AddProperties(TreeNode parent, IEnumerable<KeyValuePair<string, string>> properties, Project project = null)
+        private void AddProperties(TreeNode parent, IEnumerable<KeyValuePair<string, string>> properties, IProjectOrEvaluation project = null)
         {
             if (properties == null)
             {
