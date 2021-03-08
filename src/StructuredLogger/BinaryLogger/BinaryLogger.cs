@@ -6,7 +6,6 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Shared;
-using Microsoft.Build.Shared.FileSystem;
 using Microsoft.Build.Utilities;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -135,11 +134,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     projectImportsCollector = new ProjectImportsCollector(FilePath, CollectProjectImports == ProjectImportsCollectionMode.ZipFile);
                 }
-
-                if (eventSource is IEventSource3 eventSource3)
-                {
-                    eventSource3.IncludeEvaluationMetaprojects();
-                }
             }
             catch (Exception e)
             {
@@ -232,17 +226,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void CollectImports(BuildEventArgs e)
         {
-            if (e is ProjectImportedEventArgs importArgs && importArgs.ImportedProjectFile != null)
-            {
-                projectImportsCollector.AddFile(importArgs.ImportedProjectFile);
-            }
-            else if (e is ProjectStartedEventArgs projectArgs)
+            if (e is ProjectStartedEventArgs projectArgs)
             {
                 projectImportsCollector.AddFile(projectArgs.ProjectFile);
-            }
-            else if (e is MetaprojectGeneratedEventArgs metaprojectArgs)
-            {
-                projectImportsCollector.AddFileFromMemory(metaprojectArgs.ProjectFile, metaprojectArgs.metaprojectXml);
             }
         }
 

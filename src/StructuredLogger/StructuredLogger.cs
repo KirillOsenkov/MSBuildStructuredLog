@@ -76,19 +76,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             try
             {
-                if (e is ProjectImportedEventArgs projectImportedEventArgs)
-                {
-                    string importedProjectFile = projectImportedEventArgs.ImportedProjectFile;
-                    projectImportsCollector.AddFile(importedProjectFile);
-                    return;
-                }
-                else if (e is ProjectEvaluationFinishedEventArgs projectEvaluationFinishedEventArgs)
-                {
-                    string projectFile = projectEvaluationFinishedEventArgs.ProjectFile;
-                    object profilerResult = projectEvaluationFinishedEventArgs.ProfilerResult;
-                    return;
-                }
-
                 projectImportsCollector?.IncludeSourceFiles(e);
             }
             catch

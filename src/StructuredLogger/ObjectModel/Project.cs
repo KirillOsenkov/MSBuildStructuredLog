@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -202,7 +201,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             set => SetFlag(NodeFlags.LowRelevance, value);
         }
 
-        public IReadOnlyList<string> EntryTargets { get; set; } = Array.Empty<string>();
+        public IReadOnlyList<string> EntryTargets { get; set; } = new string[0];
         public string TargetsText { get; set; }
 
         public string TargetsDisplayText
@@ -223,7 +222,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public int EvaluationId { get; set; }
         public string EvaluationText { get; set; } = "";
 
-        public IDictionary<string, string> GlobalProperties { get; set; } = ImmutableDictionary<string, string>.Empty;
+        public IDictionary<string, string> GlobalProperties { get; set; }
 
         public override string ToolTip
         {

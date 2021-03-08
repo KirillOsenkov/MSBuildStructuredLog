@@ -52,7 +52,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             var invocations = new List<CompilerInvocation>();
             var reader = new BinLogReader();
-            var taskIdToInvocationMap = new Dictionary<(int, int), CompilerInvocation>();
+            var taskIdToInvocationMap = new Dictionary<KeyValuePair<int, int>, CompilerInvocation>();
 
             void TryGetInvocationFromEvent(object sender, BuildEventArgs args)
             {
@@ -92,7 +92,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return Read(build);
         }
 
-        public CompilerInvocation TryGetInvocationFromRecord(BuildEventArgs args, Dictionary<(int, int), CompilerInvocation> taskIdToInvocationMap)
+        public CompilerInvocation TryGetInvocationFromRecord(BuildEventArgs args, Dictionary<KeyValuePair<int, int>, CompilerInvocation> taskIdToInvocationMap)
         {
             int targetId = args.BuildEventContext?.TargetId ?? -1;
             int projectId = args.BuildEventContext?.ProjectInstanceId ?? -1;
@@ -105,7 +105,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (targetStarted != null && string.Equals(targetStarted.TargetName, "CoreCompile", StringComparison.OrdinalIgnoreCase))
             {
                 var invocation = new CompilerInvocation();
-                taskIdToInvocationMap[(targetId, projectId)] = invocation;
+                taskIdToInvocationMap[new KeyValuePair<int, int>(targetId, projectId)] = invocation;
                 invocation.ProjectFilePath = targetStarted.ProjectFile;
                 return null;
             }
@@ -121,11 +121,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return null;
             }
 
-            if (taskIdToInvocationMap.TryGetValue((targetId, projectId), out CompilerInvocation compilerInvocation))
+            if (taskIdToInvocationMap.TryGetValue(new KeyValuePair<int, int>(targetId, projectId), out CompilerInvocation compilerInvocation))
             {
                 compilerInvocation.Language = language;
                 compilerInvocation.CommandLineArguments = commandLine;
-                taskIdToInvocationMap.Remove((targetId, projectId));
+                taskIdToInvocationMap.Remove(new KeyValuePair<int, int>(targetId, projectId));
             }
 
             return compilerInvocation;

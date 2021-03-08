@@ -2,13 +2,11 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Framework.Profiler;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -234,8 +232,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 args,
                 Intern(args.TargetName),
                 Intern(args.ParentTarget),
-                Intern(args.TargetFile),
-                args.BuildReason);
+                Intern(args.TargetFile));
         }
 
         public static bool ParentAllTargetsUnderProject { get; set; }
@@ -244,8 +241,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             BuildEventArgs args,
             string targetName,
             string parentTargetName,
-            string targetFile,
-            TargetBuiltReason targetBuiltReason)
+            string targetFile)
         {
             try
             {
@@ -257,7 +253,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     target.StartTime = args.Timestamp;
                     target.EndTime = target.StartTime; // will properly set later
                     target.ParentTarget = parentTargetName;
-                    target.TargetBuiltReason = targetBuiltReason;
 
                     if (!ParentAllTargetsUnderProject && !string.IsNullOrEmpty(parentTargetName))
                     {
@@ -318,16 +313,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private void TargetSkipped(TargetSkippedEventArgs args)
-        {
-            AddTargetCore(
-                args,
-                Intern(args.TargetName),
-                Intern(args.ParentTarget),
-                Intern(args.TargetFile),
-                args.BuildReason);
-        }
-
         public void TaskStarted(object sender, TaskStartedEventArgs args)
         {
             try
@@ -377,12 +362,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 lock (syncLock)
                 {
-                    if (args is TargetSkippedEventArgs targetSkipped)
-                    {
-                        TargetSkipped(targetSkipped);
-                        return;
-                    }
-
                     if (!sawCulture && args.SenderName == "BinaryLogger" && args.Message.StartsWith("CurrentUICulture"))
                     {
                         sawCulture = true;
@@ -433,51 +412,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 lock (syncLock)
                 {
-                    if (e is ProjectEvaluationStartedEventArgs projectEvaluationStarted)
-                    {
-                        var evaluationId = projectEvaluationStarted.BuildEventContext.EvaluationId;
-                        var projectFilePath = Intern(projectEvaluationStarted.ProjectFile);
-                        var projectName = Intern(Path.GetFileName(projectFilePath));
-                        var nodeName = Intern(GetEvaluationProjectName(evaluationId, projectName));
-                        var projectEvaluation = new ProjectEvaluation { Name = nodeName };
-                        EvaluationFolder.AddChild(projectEvaluation);
-                        projectEvaluation.ProjectFile = projectFilePath;
-
-                        projectEvaluation.Id = evaluationId;
-                        projectEvaluation.EvaluationText = Intern("id:" + evaluationId);
-                        projectEvaluation.NodeId = e.BuildEventContext.NodeId;
-                        projectEvaluation.StartTime = e.Timestamp;
-                        projectEvaluation.EndTime = e.Timestamp;
-                    }
-                    else if (e is ProjectEvaluationFinishedEventArgs projectEvaluationFinished)
-                    {
-                        var evaluationId = projectEvaluationFinished.BuildEventContext.EvaluationId;
-                        var projectFilePath = Intern(projectEvaluationFinished.ProjectFile);
-                        var projectName = Intern(Path.GetFileName(projectFilePath));
-                        var nodeName = Intern(GetEvaluationProjectName(evaluationId, projectName));
-                        var projectEvaluation = EvaluationFolder.FindLastChild<ProjectEvaluation>(e => e.Id == evaluationId);
-                        if (projectEvaluation == null)
-                        {
-                            // no matching ProjectEvaluationStarted
-                            return;
-                        }
-
-                        projectEvaluation.EndTime = e.Timestamp;
-
-                        var profilerResult = projectEvaluationFinished.ProfilerResult;
-                        if (profilerResult != null && projectName != null)
-                        {
-                            ConstructProfilerResult(projectEvaluation, profilerResult.Value);
-                        }
-
-                        if (projectEvaluationFinished.GlobalProperties != null)
-                        {
-                            AddGlobalProperties(projectEvaluation, projectEvaluationFinished.GlobalProperties);
-                        }
-
-                        AddProperties(projectEvaluation, projectEvaluationFinished.Properties);
-                        AddItems(projectEvaluation, projectEvaluationFinished.Items);
-                    }
                 }
             }
             catch (Exception ex)
@@ -487,57 +421,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         private static string GetEvaluationProjectName(int evaluationId, string projectName) => projectName;
-
-        private void ConstructProfilerResult(ProjectEvaluation projectEvaluation, ProfilerResult profilerResult)
-        {
-            var nodes = new Dictionary<long, EvaluationProfileEntry>();
-
-            foreach (var kvp in profilerResult.ProfiledLocations)
-            {
-                var location = kvp.Key;
-                var result = kvp.Value;
-
-                if (!nodes.TryGetValue(location.Id, out var node))
-                {
-                    node = new EvaluationProfileEntry();
-                    nodes[location.Id] = node;
-
-                    node.ElementName = location.ElementName;
-                    node.ElementDescription = location.ElementDescription;
-                    node.EvaluationPassDescription = location.EvaluationPassDescription;
-                    node.Kind = location.Kind;
-                    node.SourceFilePath = location.File;
-                    node.LineNumber = location.Line ?? 0;
-
-                    node.AddEntry(result);
-                }
-            }
-
-            foreach (var kvp in profilerResult.ProfiledLocations)
-            {
-                var location = kvp.Key;
-
-                if (nodes.TryGetValue(location.Id, out var node))
-                {
-                    if (location.ParentId.HasValue && nodes.TryGetValue(location.ParentId.Value, out var parentNode))
-                    {
-                        parentNode.AddChild(node);
-
-                        var parentDuration = parentNode.ProfiledLocation.InclusiveTime.TotalMilliseconds;
-                        var duration = node.ProfiledLocation.InclusiveTime.TotalMilliseconds;
-
-                        double ratio = GetRatio(parentDuration, duration);
-
-                        node.Value = ratio;
-                    }
-                    else
-                    {
-                        projectEvaluation.AddChildAtBeginning(node);
-                        node.Value = 100;
-                    }
-                }
-            }
-        }
 
         private static double GetRatio(double parentDuration, double duration)
         {
@@ -588,7 +471,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (buildEventContext.ProjectContextId == -2)
             {
-                var evaluationId = buildEventContext.EvaluationId;
+                var evaluationId = -1;
 
                 result = EvaluationFolder;
 
@@ -738,27 +621,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 project.Name = Intern(Path.GetFileName(args.ProjectFile));
                 project.ProjectFile = Intern(args.ProjectFile);
                 project.EntryTargets = string.IsNullOrWhiteSpace(args.TargetNames)
-                    ? ImmutableArray<string>.Empty
+                    ? new string[0]
                     : stringTable.InternList(TextUtilities.SplitSemicolonDelimitedList(args.TargetNames));
                 project.TargetsText = args.TargetNames;
 
-                var evaluationId = BuildEventContext.InvalidEvaluationId;
-                if (args.BuildEventContext.EvaluationId > BuildEventContext.InvalidEvaluationId)
-                {
-                    evaluationId = args.BuildEventContext.EvaluationId;
-                }
-                else if (args.ParentProjectBuildEventContext != null && args.ParentProjectBuildEventContext.EvaluationId > BuildEventContext.InvalidEvaluationId)
-                {
-                    evaluationId = args.ParentProjectBuildEventContext.EvaluationId;
-                }
+                var evaluationId = -1;
 
                 project.EvaluationId = evaluationId;
-                if (evaluationId != BuildEventContext.InvalidEvaluationId)
+                if (evaluationId != -1)
                 {
                     project.EvaluationText = Intern("id:" + evaluationId);
                 }
 
-                project.GlobalProperties = stringTable.InternStringDictionary(args.GlobalProperties) ?? ImmutableDictionary<string, string>.Empty;
+                project.GlobalProperties = stringTable.InternStringDictionary(args.GlobalProperties) ?? null;
 
                 if (args.GlobalProperties != null)
                 {

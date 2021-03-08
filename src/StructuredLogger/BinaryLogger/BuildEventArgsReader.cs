@@ -9,7 +9,6 @@ using System.Reflection;
 using System.Text;
 using Microsoft.Build.Collections;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Framework.Profiler;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -32,7 +31,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private struct NameValueRecord
         {
-            public (int keyIndex, int valueIndex)[] Array;
+            public KeyValuePair<int, int>[] Array;
             public IDictionary<string, string> Dictionary;
         }
 
@@ -214,12 +213,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             int count = ReadInt32();
 
-            var list = new (int, int)[count];
+            var list = new KeyValuePair<int, int>[count];
             for (int i = 0; i < count; i++)
             {
                 int key = ReadInt32();
                 int value = ReadInt32();
-                list[i] = (key, value);
+                list[i] = new KeyValuePair<int, int>(key, value);
             }
 
             var record = new NameValueRecord()
@@ -246,13 +245,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 $"NameValueList record number {recordNumber} is invalid: index {id} is not within {stringRecords.Count}.");
         }
 
-        private IDictionary<string, string> CreateDictionary((int keyIndex, int valueIndex)[] list)
+        private IDictionary<string, string> CreateDictionary(KeyValuePair<int, int>[] list)
         {
             var dictionary = new ArrayDictionary<string, string>(list.Length);
             for (int i = 0; i < list.Length; i++)
             {
-                string key = GetStringFromRecord(list[i].keyIndex);
-                string value = GetStringFromRecord(list[i].valueIndex);
+                string key = GetStringFromRecord(list[i].Key);
+                string value = GetStringFromRecord(list[i].Value);
                 if (key != null)
                 {
                     dictionary.Add(key, value);
@@ -287,19 +286,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var importedProjectFile = ReadOptionalString();
             var unexpandedProject = ReadOptionalString();
 
-            var e = new ProjectImportedEventArgs(
-                fields.LineNumber,
-                fields.ColumnNumber,
-                fields.Message);
-
-            SetCommonFields(e, fields);
-
-            e.ProjectFile = fields.ProjectFile;
-
-            e.ImportedProjectFile = importedProjectFile;
-            e.UnexpandedProject = unexpandedProject;
-            e.ImportIgnored = importIgnored;
-            return e;
+            return null;
         }
 
         private BuildEventArgs ReadTargetSkippedEventArgs()
@@ -310,20 +297,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var targetFile = ReadOptionalString();
             var targetName = ReadOptionalString();
             var parentTarget = ReadOptionalString();
-            var buildReason = (TargetBuiltReason)ReadInt32();
 
-            var e = new TargetSkippedEventArgs(
-                fields.Message);
-
-            SetCommonFields(e, fields);
-
-            e.ProjectFile = fields.ProjectFile;
-            e.TargetFile = targetFile;
-            e.TargetName = targetName;
-            e.ParentTarget = parentTarget;
-            e.BuildReason = buildReason;
-
-            return e;
+            return null;
         }
 
         private BuildEventArgs ReadBuildStartedEventArgs()
@@ -358,14 +333,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var fields = ReadBuildEventArgsFields();
             var projectFile = ReadDeduplicatedString();
 
-            var e = new ProjectEvaluationStartedEventArgs(
-                Strings.EvaluationStarted,
-                projectFile)
-            {
-                ProjectFile = projectFile
-            };
-            SetCommonFields(e, fields);
-            return e;
+            return null;
         }
 
         private BuildEventArgs ReadProjectEvaluationFinishedEventArgs()
@@ -373,51 +341,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var fields = ReadBuildEventArgsFields();
             var projectFile = ReadDeduplicatedString();
 
-            var e = new ProjectEvaluationFinishedEventArgs(
-                Strings.EvaluationFinished,
-                projectFile)
-            {
-                ProjectFile = projectFile
-            };
-            SetCommonFields(e, fields);
-
-            if (fileFormatVersion >= 12)
-            {
-                IEnumerable globalProperties = null;
-                if (ReadBoolean())
-                {
-                    globalProperties = ReadStringDictionary();
-                }
-
-                var propertyList = ReadPropertyList();
-                var itemList = ReadProjectItems();
-
-                e.GlobalProperties = globalProperties;
-                e.Properties = propertyList;
-                e.Items = itemList;
-            }
-
-            // ProfilerResult was introduced in version 5
-            if (fileFormatVersion > 4)
-            {
-                var hasProfileData = ReadBoolean();
-                if (hasProfileData)
-                {
-                    var count = ReadInt32();
-
-                    var d = new Dictionary<EvaluationLocation, ProfiledLocation>(count);
-                    for (int i = 0; i < count; i++)
-                    {
-                        var evaluationLocation = ReadEvaluationLocation();
-                        var profiledLocation = ReadProfiledLocation();
-                        d[evaluationLocation] = profiledLocation;
-                    }
-
-                    e.ProfilerResult = new ProfilerResult(d);
-                }
-            }
-
-            return e;
+            return null;
         }
 
         private BuildEventArgs ReadProjectStartedEventArgs()
@@ -486,7 +410,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var targetFile = ReadOptionalString();
             var parentTarget = ReadOptionalString();
             // BuildReason was introduced in version 4
-            var buildReason = fileFormatVersion > 3 ? (TargetBuiltReason)ReadInt32() : TargetBuiltReason.None;
+            var buildReason = fileFormatVersion > 3 ? ReadInt32() : 0;
 
             var e = new TargetStartedEventArgs(
                 fields.Message,
@@ -495,7 +419,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 projectFile,
                 targetFile,
                 parentTarget,
-                buildReason,
                 fields.Timestamp);
             SetCommonFields(e, fields);
             return e;
@@ -900,7 +823,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             int projectInstanceId = ReadInt32();
 
             // evaluationId was introduced in format version 2
-            int evaluationId = BuildEventContext.InvalidEvaluationId;
+            int evaluationId = -1;
             if (fileFormatVersion > 1)
             {
                 evaluationId = ReadInt32();
@@ -909,7 +832,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var result = new BuildEventContext(
                 submissionId,
                 nodeId,
-                evaluationId,
                 projectInstanceId,
                 projectContextId,
                 targetId,
@@ -1108,48 +1030,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private TimeSpan ReadTimeSpan()
         {
             return new TimeSpan(binaryReader.ReadInt64());
-        }
-
-        private ProfiledLocation ReadProfiledLocation()
-        {
-            var numberOfHits = ReadInt32();
-            var exclusiveTime = ReadTimeSpan();
-            var inclusiveTime = ReadTimeSpan();
-
-            return new ProfiledLocation(inclusiveTime, exclusiveTime, numberOfHits);
-        }
-
-        private EvaluationLocation ReadEvaluationLocation()
-        {
-            var elementName = ReadOptionalString();
-            var description = ReadOptionalString();
-            var evaluationDescription = ReadOptionalString();
-            var file = ReadOptionalString();
-            var kind = (EvaluationLocationKind)ReadInt32();
-            var evaluationPass = (EvaluationPass)ReadInt32();
-
-            int? line = null;
-            var hasLine = ReadBoolean();
-            if (hasLine)
-            {
-                line = ReadInt32();
-            }
-
-            // Id and parent Id were introduced in version 6
-            if (fileFormatVersion > 5)
-            {
-                var id = ReadInt64();
-                long? parentId = null;
-                var hasParent = ReadBoolean();
-                if (hasParent)
-                {
-                    parentId = ReadInt64();
-                }
-
-                return new EvaluationLocation(id, parentId, evaluationPass, evaluationDescription, file, line, elementName, description, kind);
-            }
-
-            return new EvaluationLocation(0, null, evaluationPass, evaluationDescription, file, line, elementName, description, kind);
         }
 
         /// <summary>

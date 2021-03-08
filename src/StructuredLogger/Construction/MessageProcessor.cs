@@ -589,28 +589,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                 }
             }
-            else if (args.BuildEventContext.EvaluationId != -1)
-            {
-                node = construction.EvaluationFolder;
-
-                var project = node.FindChild<ProjectEvaluation>(p => p.Id == args.BuildEventContext.EvaluationId);
-                if (project != null)
-                {
-                    node = project;
-                }
-
-                if (Strings.PropertyReassignment.IsMatch(message))
-                {
-                    var properties = node.GetOrCreateNodeWithName<Folder>(Strings.PropertyReassignmentFolder, addAtBeginning: true);
-                    node = properties.GetOrCreateNodeWithName<Folder>(Strings.GetPropertyName(message));
-                }
-
-                if (node != null && node.FindChild<Message>(message) != null)
-                {
-                    // avoid duplicate messages
-                    return;
-                }
-            }
 
             if (node == null)
             {

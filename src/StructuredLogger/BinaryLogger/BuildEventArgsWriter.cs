@@ -12,7 +12,6 @@ using Microsoft.Build.Evaluation;
 using Microsoft.Build.Exceptions;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Framework.Profiler;
 using Microsoft.Build.Internal;
 using Microsoft.Build.Shared;
 
@@ -148,8 +147,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 case ProjectFinishedEventArgs projectFinished: Write(projectFinished); break;
                 case BuildStartedEventArgs buildStarted: Write(buildStarted); break;
                 case BuildFinishedEventArgs buildFinished: Write(buildFinished); break;
-                case ProjectEvaluationStartedEventArgs projectEvaluationStarted: Write(projectEvaluationStarted); break;
-                case ProjectEvaluationFinishedEventArgs projectEvaluationFinished: Write(projectEvaluationFinished); break;
                 default:
                     // convert all unrecognized objects to message
                     // and just preserve the message
@@ -216,48 +213,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Write(e.Succeeded);
         }
 
-        private void Write(ProjectEvaluationStartedEventArgs e)
-        {
-            Write(BinaryLogRecordKind.ProjectEvaluationStarted);
-            WriteBuildEventArgsFields(e, writeMessage: false);
-            WriteDeduplicatedString(e.ProjectFile);
-        }
-
-        private void Write(ProjectEvaluationFinishedEventArgs e)
-        {
-            Write(BinaryLogRecordKind.ProjectEvaluationFinished);
-
-            WriteBuildEventArgsFields(e, writeMessage: false);
-            WriteDeduplicatedString(e.ProjectFile);
-
-            if (e.GlobalProperties == null)
-            {
-                Write(false);
-            }
-            else
-            {
-                Write(true);
-                WriteProperties(e.GlobalProperties);
-            }
-
-            WriteProperties(e.Properties);
-
-            WriteProjectItems(e.Items);
-
-            var result = e.ProfilerResult;
-            Write(result.HasValue);
-            if (result.HasValue)
-            {
-                Write(result.Value.ProfiledLocations.Count);
-
-                foreach (var item in result.Value.ProfiledLocations)
-                {
-                    Write(item.Key);
-                    Write(item.Value);
-                }
-            }
-        }
-
         private void Write(ProjectStartedEventArgs e)
         {
             Write(BinaryLogRecordKind.ProjectStarted);
@@ -310,7 +265,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             WriteDeduplicatedString(e.ProjectFile);
             WriteDeduplicatedString(e.TargetFile);
             WriteDeduplicatedString(e.ParentTarget);
-            Write((int)e.BuildReason);
+            Write(0);
         }
 
         private void Write(TargetFinishedEventArgs e)
@@ -391,18 +346,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            if (e is ProjectImportedEventArgs projectImported)
-            {
-                Write(projectImported);
-                return;
-            }
-
-            if (e is TargetSkippedEventArgs targetSkipped)
-            {
-                Write(targetSkipped);
-                return;
-            }
-
             if (e is PropertyReassignmentEventArgs propertyReassignment)
             {
                 Write(propertyReassignment);
@@ -429,25 +372,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             Write(BinaryLogRecordKind.Message);
             WriteMessageFields(e);
-        }
-
-        private void Write(ProjectImportedEventArgs e)
-        {
-            Write(BinaryLogRecordKind.ProjectImported);
-            WriteMessageFields(e);
-            Write(e.ImportIgnored);
-            WriteDeduplicatedString(e.ImportedProjectFile);
-            WriteDeduplicatedString(e.UnexpandedProject);
-        }
-
-        private void Write(TargetSkippedEventArgs e)
-        {
-            Write(BinaryLogRecordKind.TargetSkipped);
-            WriteMessageFields(e);
-            WriteDeduplicatedString(e.TargetFile);
-            WriteDeduplicatedString(e.TargetName);
-            WriteDeduplicatedString(e.ParentTarget);
-            Write((int)e.BuildReason);
         }
 
         private void Write(CriticalBuildMessageEventArgs e)
@@ -733,7 +657,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             reusableItemsList.Clear();
         }
 
-        private readonly List<(string Key, ITaskItem Value)> reusableProjectItemList = new List<(string, ITaskItem)>();
+        private readonly List<KeyValuePair<string, ITaskItem>> reusableProjectItemList = new List<KeyValuePair<string, ITaskItem>>();
 
         private void WriteProjectItems(IEnumerable items)
         {
@@ -762,7 +686,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     continue;
                 }
 
-                reusableProjectItemList.Add((itemType, taskItem));
+                reusableProjectItemList.Add(new KeyValuePair<string, ITaskItem>(itemType, taskItem));
             }
 
             var groups = reusableProjectItemList
@@ -881,7 +805,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Write(buildEventContext.TaskId);
             Write(buildEventContext.SubmissionId);
             Write(buildEventContext.ProjectInstanceId);
-            Write(buildEventContext.EvaluationId);
+            Write(-1);
         }
 
         private void Write(IEnumerable<KeyValuePair<string, string>> keyValuePairs)
@@ -962,11 +886,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             for (int i = 0; i < nameValueList.Count; i++)
             {
                 var kvp = nameValueList[i];
-                var (keyIndex, keyHash) = HashString(kvp.Key);
-                var (valueIndex, valueHash) = HashString(kvp.Value);
-                hash = hash.Add(keyHash);
-                hash = hash.Add(valueHash);
-                nameValueIndexListBuffer.Add(new KeyValuePair<int, int>(keyIndex, valueIndex));
+                var keyHash = HashString(kvp.Key);
+                var valueHash = HashString(kvp.Value);
+                hash = hash.Add(keyHash.Value);
+                hash = hash.Add(valueHash.Value);
+                nameValueIndexListBuffer.Add(new KeyValuePair<int, int>(keyHash.Key, valueHash.Key));
             }
 
             return hash;
@@ -1004,23 +928,23 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void WriteDeduplicatedString(string text)
         {
-            var (recordId, _) = HashString(text);
-            Write(recordId);
+            var recordId = HashString(text);
+            Write(recordId.Key);
         }
 
         /// <summary>
         /// Hash the string and write a String record if not already hashed.
         /// </summary>
         /// <returns>Returns the string record index as well as the hash.</returns>
-        private (int index, HashKey hash) HashString(string text)
+        private KeyValuePair<int, HashKey> HashString(string text)
         {
             if (text == null)
             {
-                return (0, default);
+                return new KeyValuePair<int, HashKey>(0, default);
             }
             else if (text.Length == 0)
             {
-                return (1, default);
+                return new KeyValuePair<int, HashKey>(1, default);
             }
 
             var hash = new HashKey(text);
@@ -1034,7 +958,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 stringRecordId += 1;
             }
 
-            return (recordId, hash);
+            return new KeyValuePair<int, HashKey>(recordId, hash);
         }
 
         private void WriteStringRecord(string text)
@@ -1054,36 +978,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private void Write(TimeSpan timeSpan)
         {
             binaryWriter.Write(timeSpan.Ticks);
-        }
-
-        private void Write(EvaluationLocation item)
-        {
-            WriteDeduplicatedString(item.ElementName);
-            WriteDeduplicatedString(item.ElementDescription);
-            WriteDeduplicatedString(item.EvaluationPassDescription);
-            WriteDeduplicatedString(item.File);
-            Write((int)item.Kind);
-            Write((int)item.EvaluationPass);
-
-            Write(item.Line.HasValue);
-            if (item.Line.HasValue)
-            {
-                Write(item.Line.Value);
-            }
-
-            Write(item.Id);
-            Write(item.ParentId.HasValue);
-            if (item.ParentId.HasValue)
-            {
-                Write(item.ParentId.Value);
-            }
-        }
-
-        private void Write(ProfiledLocation e)
-        {
-            Write(e.NumberOfHits);
-            Write(e.ExclusiveTime);
-            Write(e.InclusiveTime);
         }
 
         internal readonly struct HashKey : IEquatable<HashKey>

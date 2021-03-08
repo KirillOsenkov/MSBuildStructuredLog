@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net45</TargetFramework>
     <NBGV_DoNotEmitNonVersionCustomAttributes>true</NBGV_DoNotEmitNonVersionCustomAttributes>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
   </PropertyGroup>
   <PropertyGroup>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
     <PackageId>MSBuild.StructuredLogger</PackageId>
     <Authors>Kirill Osenkov, Microsoft</Authors>
     <Company>Microsoft</Company>
@@ -17,18 +17,19 @@
     <RepositoryUrl>https://github.com/KirillOsenkov/MSBuildStructuredLog</RepositoryUrl>
     <PackageTags>MSBuild Log Logger Structure Structured</PackageTags>
   </PropertyGroup>
-  <ItemGroup Condition=" '$(OS)' == 'Windows_NT' ">
-    <PackageReference Include="Nerdbank.GitVersioning" Version="$(NuGetVersionNerdbankGitVersioning)" PrivateAssets="all" />
-  </ItemGroup>
   <PropertyGroup>
-    <DefineConstants>$(DefineConstants);NETCORE</DefineConstants>
+    <MSBuild45>C:\temp\msbuild4.5</MSBuild45>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build" Version="$(MSBuildPackageVersion)" />
-    <PackageReference Include="Microsoft.Build.Framework" Version="$(MSBuildPackageVersion)" />
-    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MSBuildPackageVersion)" />
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MSBuildPackageVersion)" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="$(MSBuild45)\Microsoft.Build.Framework.dll" />
+    <Reference Include="$(MSBuild45)\Microsoft.Build.dll" />
+    <Reference Include="$(MSBuild45)\Microsoft.Build.Tasks.dll" />
+    <Reference Include="$(MSBuild45)\Microsoft.Build.Tasks.v4.0.dll" />
+    <Reference Include="$(MSBuild45)\Microsoft.Build.Utilities.v4.0.dll" />
+    <Reference Include="System.IO.Compression" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="Properties\Resources.Designer.cs">

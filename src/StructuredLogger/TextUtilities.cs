@@ -510,7 +510,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             if (string.IsNullOrEmpty(text))
             {
-                return Array.Empty<string>();
+                return new string[0];
             }
 
             var list = new List<string>();

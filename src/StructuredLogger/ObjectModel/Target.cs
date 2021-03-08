@@ -11,7 +11,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public Project Project => GetNearestParent<Project>();
         public string SourceFilePath { get; set; }
         public string ParentTarget { get; set; }
-        public TargetBuiltReason TargetBuiltReason { get; set; }
+        public int TargetBuiltReason { get; set; }
 
         public override string TypeName => nameof(Target);
 
@@ -24,20 +24,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     return string.Empty;
                 }
 
-                if (TargetBuiltReason == TargetBuiltReason.None)
+                if (TargetBuiltReason == 0)
                 {
                     return $"{Name} was built because of {ParentTarget}";
                 }
 
-                var cause = TargetBuiltReason switch
-                {
-                    TargetBuiltReason.AfterTargets => $"Target '{Name}' had AfterTargets='{ParentTarget}' directly or indirectly",
-                    TargetBuiltReason.BeforeTargets => $"Target '{Name}' had BeforeTargets='{ParentTarget}'",
-                    TargetBuiltReason.DependsOn => $"Target '{ParentTarget}' had DependsOnTargets='{Name}'",
-                    _ => ""
-                };
-
-                return cause;
+                return "";
             }
         }
 
@@ -51,9 +43,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
                 var connectingSymbol = TargetBuiltReason switch
                 {
-                    TargetBuiltReason.AfterTargets => "↑",
-                    TargetBuiltReason.BeforeTargets => "↓",
-                    TargetBuiltReason.DependsOn => "→",
                     _ => "→",
                 };
                 return $" {connectingSymbol} " + ParentTarget;

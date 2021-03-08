@@ -20,7 +20,7 @@ namespace Microsoft.Build.Logging
         {
             if (_stream == null)
             {
-                return Array.Empty<byte>();
+                return new byte[0];
             }
             else if (ArchiveFilePath == null)
             {
@@ -46,7 +46,7 @@ namespace Microsoft.Build.Logging
         private readonly HashSet<string> _processedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         // this will form a chain of file write tasks, running sequentially on a background thread
-        private Task _currentTask = Task.CompletedTask;
+        private Task _currentTask = Task.FromResult<int>(0);
 
         public ProjectImportsCollector(string logFilePath, bool createFile, string sourcesArchiveExtension = ".ProjectImports.zip")
         {
@@ -61,6 +61,7 @@ namespace Microsoft.Build.Logging
                 {
                     _stream = new MemoryStream();
                 }
+
                 _zipArchive = new ZipArchive(_stream, ZipArchiveMode.Create, true);
             }
             catch
