@@ -236,7 +236,7 @@ namespace StructuredLogger.Tests
             build = Serialization.Read(buildLogFile);
             Serialization.Write(build, xmlFile2);
             Serialization.Write(build, @"2.buildlog");
-            Differ.AreDifferent(xmlFile1, xmlFile2);
+            AssertEx.EqualOrDiff(File.ReadAllText(xmlFile1), File.ReadAllText(xmlFile2));
         }
     }
 }

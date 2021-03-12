@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.Build.Logging.StructuredLogger;
 using StructuredLogger.Tests;
@@ -108,16 +109,16 @@ namespace Microsoft.Build.UnitTests
 
             Serialization.Write(build, xml2);
 
-            Assert.False(Differ.AreDifferent(xml1, xml2));
+            AssertEx.EqualOrDiff(File.ReadAllText(xml1), File.ReadAllText(xml2));
 
             build = XlinqLogReader.ReadFromXml(xml1);
             Serialization.Write(build, GetTestFile("3.xml"));
-            Assert.False(Differ.AreDifferent(xml1, GetTestFile("3.xml")));
+            AssertEx.EqualOrDiff(File.ReadAllText(xml1), File.ReadAllText(GetTestFile("3.xml")));
 
             build = Serialization.Read(xml1);
             Serialization.Write(build, GetTestFile("4.xml"));
 
-            Assert.False(Differ.AreDifferent(xml1, GetTestFile("4.xml")));
+            AssertEx.EqualOrDiff(File.ReadAllText(xml1), File.ReadAllText(GetTestFile("4.xml")));
         }
 
         private static string GetProperty(Logging.StructuredLogger.Build build)
