@@ -271,7 +271,8 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             "was not imported by ",
             "out-of-date",
             "csc $task",
-            "ResolveAssemblyReference $task"
+            "ResolveAssemblyReference $task",
+            "$message CompilerServer failed",
         };
 
         private static string[] nodeKinds = new[]

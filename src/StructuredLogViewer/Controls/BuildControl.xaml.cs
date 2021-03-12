@@ -363,7 +363,8 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             "out-of-date",
             "csc $task",
             "ResolveAssemblyReference $task",
-            "$task $time"
+            "$task $time",
+            "$message CompilerServer failed",
         };
 
         private static string[] nodeKinds = new[]
