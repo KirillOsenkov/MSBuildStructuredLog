@@ -65,6 +65,7 @@ namespace Microsoft.Build.UnitTests
             Assert.True(buildSuccessful);
 
             var build = Serialization.Read(binLog);
+            BuildAnalyzer.AnalyzeBuild(build);
 
             var projectEvaluations = build.FindChildrenRecursive<ProjectEvaluation>();
             Assert.Equal(3, projectEvaluations.Count);
