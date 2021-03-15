@@ -219,6 +219,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (project.HasChildren)
             {
                 bool allLowRelevance = true;
+
+                var entryTargets = project.FindChild<Folder>(Strings.EntryTargets);
+                if (entryTargets != null)
+                {
+                    if (entryTargets.Children.OfType<IHasRelevance>().All(c => c.IsLowRelevance))
+                    {
+                        entryTargets.IsLowRelevance = true;
+                    }
+                }
+
                 foreach (var child in project.Children)
                 {
                     if (child is IHasRelevance hasRelevance)

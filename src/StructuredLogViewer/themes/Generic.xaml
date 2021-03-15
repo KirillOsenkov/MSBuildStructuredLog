@@ -194,11 +194,14 @@
 
   <HierarchicalDataTemplate DataType="{x:Type l:Folder}"
                             ItemsSource="{Binding Children}">
-    <StackPanel Orientation="Horizontal">
+    <StackPanel Orientation="Horizontal" x:Name="folderRoot">
       <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource FolderStroke}" Fill="{StaticResource ClosedFolderBrush}" />
       <TextBlock x:Name="nameText" Text="{Binding Name}" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
+      <DataTrigger Binding="{Binding IsLowRelevance}" Value="True">
+        <Setter TargetName="folderRoot" Property="Opacity" Value="0.25" />
+      </DataTrigger>
       <DataTrigger Binding="{Binding IsSelected}" Value="False">
         <Setter TargetName="nameText" Property="Foreground" Value="DarkGoldenrod" />
       </DataTrigger>
