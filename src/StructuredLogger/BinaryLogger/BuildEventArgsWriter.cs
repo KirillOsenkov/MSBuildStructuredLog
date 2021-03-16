@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -680,7 +680,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return flags;
         }
 
+        // Both of these are used simultaneously so can't just have a single list
         private readonly List<object> reusableItemsList = new List<object>();
+        private readonly List<object> reusableProjectItemList = new List<object>();
 
         private void WriteTaskItemList(IEnumerable items, bool writeMetadata = true)
         {
@@ -689,6 +691,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 Write(false);
                 return;
             }
+
+            // For target outputs bypass copying of all items to save on performance.
+            // The proxy creates a deep clone of each item to protect against writes,
+            // but since we're not writing we don't need the deep cloning.
+            // Additionally, it is safe to access the underlying List<ITaskItem> as it's allocated
+            // in a single location and noboby else mutates it after that:
+            // https://github.com/dotnet/msbuild/blob/f0eebf2872d76ab0cd43fdc4153ba636232b222f/src/Build/BackEnd/Components/RequestBuilder/TargetEntry.cs#L564
+            //if (items is TargetLoggingContext.TargetOutputItemsInstanceEnumeratorProxy proxy)
+            //{
+            //    items = proxy.BackingItems;
+            //}
 
             int count;
 
@@ -733,8 +746,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             reusableItemsList.Clear();
         }
 
-        private readonly List<(string Key, ITaskItem Value)> reusableProjectItemList = new List<(string, ITaskItem)>();
-
         private void WriteProjectItems(IEnumerable items)
         {
             if (items == null)
@@ -743,46 +754,65 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            foreach (var item in items)
+            //if (items is ItemDictionary<ProjectItemInstance> itemDictionary)
+            //{
+            //    // If we have access to the live data from evaluation, it exposes a special method
+            //    // to iterate the data structure under a lock and return results grouped by item type.
+            //    // There's no need to allocate or call GroupBy this way.
+            //    itemDictionary.EnumerateItemsPerType((itemType, itemList) =>
+            //    {
+            //        WriteDeduplicatedString(itemType);
+            //        WriteTaskItemList(itemList);
+            //    });
+            //
+            //    // signal the end
+            //    Write(0);
+            //}
+            //else
             {
-                string itemType = default;
+                string currentItemType = null;
 
-                //if (item is IItem iitem)
-                //{
-                //    itemType = iitem.Key;
-                //}
-                //else 
-                if (item is DictionaryEntry dictionaryEntry)
+                // Write out a sequence of items for each item type while avoiding GroupBy
+                // and associated allocations. We rely on the fact that items of each type
+                // are contiguous. For each item type, write the item type name and the list
+                // of items. Write 0 at the end (which would correspond to item type null).
+                // This is how the reader will know how to stop. We can't write out the
+                // count of item types at the beginning because we don't know how many there
+                // will be (we'd have to enumerate twice to calculate that). This scheme
+                // allows us to stream in a single pass with no allocations for intermediate
+                // results.
+                Internal.Utilities.EnumerateItems(items, dictionaryEntry =>
                 {
-                    itemType = dictionaryEntry.Key as string;
+                    string key = (string)dictionaryEntry.Key;
+
+                    // boundary between item types
+                    if (currentItemType != null && currentItemType != key)
+                    {
+                        WriteDeduplicatedString(currentItemType);
+                        WriteTaskItemList(reusableProjectItemList);
+                        reusableProjectItemList.Clear();
+                    }
+
+                    reusableProjectItemList.Add(dictionaryEntry.Value);
+                    currentItemType = key;
+                });
+
+                // write out the last item type
+                if (reusableProjectItemList.Count > 0)
+                {
+                    WriteDeduplicatedString(currentItemType);
+                    WriteTaskItemList(reusableProjectItemList);
+                    reusableProjectItemList.Clear();
                 }
 
-                if (string.IsNullOrEmpty(itemType) || !(item is ITaskItem taskItem))
-                {
-                    continue;
-                }
-
-                reusableProjectItemList.Add((itemType, taskItem));
+                // signal the end
+                Write(0);
             }
-
-            var groups = reusableProjectItemList
-                .GroupBy(entry => entry.Key, entry => entry.Value)
-                .ToArray();
-
-            Write(groups.Length);
-
-            foreach (var group in groups)
-            {
-                WriteDeduplicatedString(group.Key);
-                WriteTaskItemList(group);
-            }
-
-            reusableProjectItemList.Clear();
         }
 
-        private void Write(ITaskItem taskItem, bool writeMetadata = true)
+        private void Write(ITaskItem item, bool writeMetadata = true)
         {
-            WriteDeduplicatedString(taskItem.ItemSpec);
+            WriteDeduplicatedString(item.ItemSpec);
             if (!writeMetadata)
             {
                 Write((byte)0);
@@ -793,7 +823,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             // is broken. Microsoft.Build.Utilities.v4.0.dll loads from the GAC by XAML markup tooling and it's
             // implementation doesn't work with AddRange because AddRange special-cases ICollection<T> and
             // CopyOnWriteDictionary doesn't implement it properly.
-            foreach (var kvp in EnumerateMetadata(taskItem))
+            foreach (var kvp in item.EnumerateMetadata())
             {
                 nameValueListBuffer.Add(kvp);
             }
@@ -808,45 +838,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             nameValueListBuffer.Clear();
         }
 
-        public static IEnumerable<KeyValuePair<string, string>> EnumerateMetadata(ITaskItem taskItem)
-        {
-            // This runs if ITaskItem is Microsoft.Build.Utilities.TaskItem from Microsoft.Build.Utilities.v4.0.dll
-            // that is loaded from the GAC.
-            IDictionary customMetadata = taskItem.CloneCustomMetadata();
-            if (customMetadata is IEnumerable<KeyValuePair<string, string>> enumerableMetadata)
-            {
-                return enumerableMetadata;
-            }
-
-            // In theory this should never be reachable.
-            var list = new KeyValuePair<string, string>[customMetadata.Count];
-            int i = 0;
-
-            foreach (string metadataName in customMetadata.Keys)
-            {
-                string valueOrError;
-
-                try
-                {
-                    valueOrError = taskItem.GetMetadata(metadataName);
-                }
-                // Temporarily try catch all to mitigate frequent NullReferenceExceptions in
-                // the logging code until CopyOnWritePropertyDictionary is replaced with
-                // ImmutableDictionary. Calling into Debug.Fail to crash the process in case
-                // the exception occurres in Debug builds.
-                catch (Exception e)
-                {
-                    valueOrError = e.Message;
-                    Debug.Fail(e.ToString());
-                }
-
-                list[i] = new KeyValuePair<string, string>(metadataName, valueOrError);
-                i += 1;
-            }
-
-            return list;
-        }
-
         private void WriteProperties(IEnumerable properties)
         {
             if (properties == null)
@@ -855,18 +846,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            foreach (var item in properties)
-            {
-                //if (item is IProperty property && !string.IsNullOrEmpty(property.Name))
-                //{
-                //    nameValueListBuffer.Add(new KeyValuePair<string, string>(property.Name, property.EvaluatedValue ?? string.Empty));
-                //}
-                //else 
-                if (item is DictionaryEntry dictionaryEntry && dictionaryEntry.Key is string key && !string.IsNullOrEmpty(key))
-                {
-                    nameValueListBuffer.Add(new KeyValuePair<string, string>(key, dictionaryEntry.Value as string ?? string.Empty));
-                }
-            }
+            Internal.Utilities.EnumerateProperties(properties, kvp => nameValueListBuffer.Add(kvp));
 
             WriteNameValueList();
 

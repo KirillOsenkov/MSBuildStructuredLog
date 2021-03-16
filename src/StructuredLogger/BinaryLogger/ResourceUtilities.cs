@@ -13,5 +13,7 @@
         {
             return v1;
         }
+
+        internal static string GetResourceString(string s) => s;
     }
 }
