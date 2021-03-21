@@ -1644,6 +1644,8 @@ Recent:
             //var histogramNode = new CustomContentNode { Content = histogram };
             //statsRoot.AddChild(histogramNode);
 
+            statsRoot.AddChild(new Property { Name = "BinlogFileFormatVersion", Value = Build.FileFormatVersion.ToString() });
+
             Build.Seal();
         }
 

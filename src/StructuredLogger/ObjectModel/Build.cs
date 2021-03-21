@@ -18,6 +18,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public bool Succeeded { get; set; }
 
         public string LogFilePath { get; set; }
+        public int FileFormatVersion { get; set; }
         public byte[] SourceFilesArchive { get; set; }
 
         private Dictionary<string, ArchiveFile> sourceFiles;
