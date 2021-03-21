@@ -1624,7 +1624,7 @@ Recent:
 
         public void DisplayStats()
         {
-            var statsRoot = Build.FindChild<Folder>(f => f.Name.StartsWith("Statistics"));
+            var statsRoot = Build.FindChild<Folder>(f => f.Name.StartsWith(Strings.Statistics));
             if (statsRoot != null)
             {
                 return;

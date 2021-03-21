@@ -141,7 +141,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void Process(IEnumerable<Record> records)
         {
-            var recordsByType = new RecordsByType("Statistics:");
+            var recordsByType = new RecordsByType(Strings.Statistics + ":");
 
             foreach (var record in records)
             {
