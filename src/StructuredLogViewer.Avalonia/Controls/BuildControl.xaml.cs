@@ -70,7 +70,7 @@ namespace StructuredLogViewer.Avalonia.Controls
 
             searchLogControl.ExecuteSearch = (searchText, maxResults, cancellationToken) =>
             {
-                var search = new Search(Build, maxResults);
+                var search = new Search(new[] { Build }, Build.StringTable.Instances, maxResults, SettingsService.MarkResultsInTree);
                 var results = search.FindNodes(searchText, cancellationToken);
                 return results;
             };

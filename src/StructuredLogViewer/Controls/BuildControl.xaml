@@ -32,7 +32,7 @@
                     MinHeight="27">
                   <DockPanel>
                     <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Text="Project: " />
-                    <ContentControl DockPanel.Dock="Top" VerticalAlignment="Center" x:Name="propertiesAndItemsContext" />
+                    <ContentControl Focusable="false" DockPanel.Dock="Top" VerticalAlignment="Center" x:Name="propertiesAndItemsContext" />
                   </DockPanel>
                 </Border>
                 <local:SearchAndResultsControl x:Name="propertiesAndItemsControl"></local:SearchAndResultsControl>
