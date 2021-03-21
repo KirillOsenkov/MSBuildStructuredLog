@@ -20,6 +20,25 @@
               <local:SearchAndResultsControl x:Name="searchLogControl"></local:SearchAndResultsControl>
             </TabItem>
 
+            <TabItem x:Name="propertiesAndItemsTab" Header="Properties and items">
+              <DockPanel>
+                <Border DockPanel.Dock="Top"
+                    BorderThickness="0,0,0,1"
+                    Background="{DynamicResource Theme_InfoBarBackground}"
+                    BorderBrush="Gray"
+                    x:Name="projectContextBorder"
+                    Visibility="Collapsed"
+                    Padding="4,2,4,2"
+                    MinHeight="27">
+                  <DockPanel>
+                    <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Text="Project: " />
+                    <ContentControl DockPanel.Dock="Top" VerticalAlignment="Center" x:Name="propertiesAndItemsContext" />
+                  </DockPanel>
+                </Border>
+                <local:SearchAndResultsControl x:Name="propertiesAndItemsControl"></local:SearchAndResultsControl>
+              </DockPanel>
+            </TabItem>
+
             <TabItem x:Name="filesTab" Header="Files" Visibility="Collapsed">
               <local:SearchAndResultsControl x:Name="filesTree"></local:SearchAndResultsControl>
             </TabItem>

@@ -103,8 +103,6 @@ namespace StructuredLogViewer
         [ThreadStatic]
         private static List<string> searchFieldsThreadStatic;
 
-        private static readonly char[] space = { ' ' };
-
         public NodeQueryMatcher(string query, IEnumerable<string> stringTable)
         {
             query = PreprocessQuery(query);

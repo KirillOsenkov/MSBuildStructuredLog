@@ -46,6 +46,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        private NamedNode evaluationFolder;
+        public NamedNode EvaluationFolder
+        {
+            get
+            {
+                if (evaluationFolder == null)
+                {
+                    evaluationFolder = GetOrCreateNodeWithName<TimedNode>(Strings.Evaluation);
+                }
+
+                return evaluationFolder;
+            }
+        }
+
         public static IReadOnlyList<ArchiveFile> ReadSourceFiles(byte[] sourceFilesArchive)
         {
             using (var stream = new MemoryStream(sourceFilesArchive))
@@ -127,6 +141,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }, cts.Token);
 
             return found;
+        }
+
+        public ProjectEvaluation FindEvaluation(int id)
+        {
+            var evaluation = EvaluationFolder;
+            if (evaluation == null)
+            {
+                return null;
+            }
+
+            var child = evaluation.FindChild<ProjectEvaluation>(e => e.Id == id);
+            return child;
         }
     }
 }

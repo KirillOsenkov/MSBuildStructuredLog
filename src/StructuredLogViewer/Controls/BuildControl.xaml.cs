@@ -77,6 +77,24 @@ namespace StructuredLogViewer.Controls
                 UpdateWatermark();
             };
 
+            propertiesAndItemsControl.ExecuteSearch = (searchText, maxResults, cancellationToken) =>
+            {
+                var context = GetProjectContext();
+                if (context == null)
+                {
+                    return null;
+                }
+
+                return FindPropertiesAndItems(context, searchText);
+            };
+            propertiesAndItemsControl.ResultsTreeBuilder = BuildResultTree;
+            propertiesAndItemsControl.WatermarkDisplayed += () =>
+            {
+            };
+            propertiesAndItemsControl.WatermarkContent =
+                $@"Look up a property or items for the selected project "
+                + " or a node within a project or evaluation.";
+
             VirtualizingPanel.SetIsVirtualizing(treeView, SettingsService.EnableTreeViewVirtualization);
 
             DataContext = build;
@@ -174,6 +192,7 @@ namespace StructuredLogViewer.Controls
             treeViewItemStyle.Setters.Add(new Setter(TreeViewItem.IsExpandedProperty, new Binding("IsExpanded") { Mode = BindingMode.TwoWay }));
             treeViewItemStyle.Setters.Add(new Setter(TreeViewItem.IsSelectedProperty, new Binding("IsSelected") { Mode = BindingMode.TwoWay }));
             treeViewItemStyle.Setters.Add(new Setter(TreeViewItem.VisibilityProperty, new Binding("IsVisible") { Mode = BindingMode.TwoWay, Converter = new BooleanToVisibilityConverter() }));
+
             treeViewItemStyle.Setters.Add(new EventSetter(MouseDoubleClickEvent, (MouseButtonEventHandler)OnItemDoubleClick));
             treeViewItemStyle.Setters.Add(new EventSetter(PreviewMouseRightButtonDownEvent, (MouseButtonEventHandler)OnPreviewMouseRightButtonDown));
             treeViewItemStyle.Setters.Add(new EventSetter(RequestBringIntoViewEvent, (RequestBringIntoViewEventHandler)TreeViewItem_RequestBringIntoView));
@@ -191,6 +210,8 @@ namespace StructuredLogViewer.Controls
             searchLogControl.ResultsList.SelectedItemChanged += ResultsList_SelectionChanged;
             searchLogControl.ResultsList.GotFocus += (s, a) => ActiveTreeView = searchLogControl.ResultsList;
             searchLogControl.ResultsList.ContextMenu = sharedTreeContextMenu;
+
+            propertiesAndItemsControl.ResultsList.ItemContainerStyle = treeViewItemStyle;
 
             if (archiveFile != null)
             {
@@ -230,6 +251,16 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             preprocessedFileManager.DisplayFile += filePath => DisplayFile(filePath);
 
             centralTabControl.SelectionChanged += CentralTabControl_SelectionChanged;
+        }
+
+        private IEnumerable<SearchResult> FindPropertiesAndItems(IProjectOrEvaluation projectOrEvaluation, string searchText)
+        {
+            if (projectOrEvaluation is not TimedNode node)
+            {
+                return null;
+            }
+
+            return null;
         }
 
         private void CentralTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -788,6 +819,7 @@ Recent:
             if (item != null)
             {
                 UpdateBreadcrumb(item);
+                UpdateProjectContext(item);
             }
         }
 
@@ -802,6 +834,58 @@ Recent:
                     SelectItem(item);
                 }
             }
+        }
+
+        public void UpdateProjectContext(object item)
+        {
+            if (item is not BaseNode node)
+            {
+                return;
+            }
+
+            ProjectEvaluation projectEvaluation;
+
+            var project = node.GetNearestParentOrSelf<Project>();
+            if (project != null)
+            {
+                if (project.FindChild<Folder>(Strings.Items) != null)
+                {
+                    SetProjectContext(project);
+                    return;
+                }
+
+                projectEvaluation = Build.FindEvaluation(project.EvaluationId);
+                if (projectEvaluation != null && projectEvaluation.FindChild<Folder>(Strings.Items) != null)
+                {
+                    SetProjectContext(projectEvaluation);
+                    return;
+                }
+
+                SetProjectContext(null);
+                return;
+            }
+
+            projectEvaluation = node.GetNearestParentOrSelf<ProjectEvaluation>();
+            if (projectEvaluation != null && projectEvaluation.FindChild<Folder>(Strings.Items) != null)
+            {
+                SetProjectContext(projectEvaluation);
+                return;
+            }
+
+            SetProjectContext(null);
+        }
+
+        public void SetProjectContext(object contents)
+        {
+            propertiesAndItemsContext.Content = contents;
+            var visibility = contents != null ? Visibility.Visible : Visibility.Collapsed;
+            projectContextBorder.Visibility = visibility;
+            propertiesAndItemsControl.TopPanel.Visibility = visibility;
+        }
+
+        public IProjectOrEvaluation GetProjectContext()
+        {
+            return propertiesAndItemsContext.Content as IProjectOrEvaluation;
         }
 
         public void UpdateBreadcrumb(object item)
@@ -969,6 +1053,11 @@ Recent:
             }
         }
 
+        public void SelectSearchTab()
+        {
+            leftPaneTabControl.SelectedItem = searchLogTab;
+        }
+
         public void Delete()
         {
             var node = treeView.SelectedItem as TreeNode;
@@ -1044,19 +1133,19 @@ Recent:
 
         public void SearchInSubtree()
         {
-            var treeNode = treeView.SelectedItem as TimedNode;
-            if (treeNode != null)
+            if (treeView.SelectedItem is TimedNode treeNode)
             {
                 searchLogControl.SearchText += $" under(${treeNode.Index})";
+                SelectSearchTab();
             }
         }
 
         public void ExcludeSubtreeFromSearch()
         {
-            var treeNode = treeView.SelectedItem as TimedNode;
-            if (treeNode != null)
+            if (treeView.SelectedItem is TimedNode treeNode)
             {
                 searchLogControl.SearchText += $" notunder(${treeNode.Index})";
+                SelectSearchTab();
             }
         }
 
@@ -1233,8 +1322,7 @@ Recent:
 
         private void OnPreviewMouseRightButtonDown(object sender, MouseButtonEventArgs args)
         {
-            var treeViewItem = sender as TreeViewItem;
-            if (treeViewItem != null)
+            if (sender is TreeViewItem treeViewItem)
             {
                 treeViewItem.IsSelected = true;
             }

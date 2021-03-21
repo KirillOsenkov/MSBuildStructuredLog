@@ -37,6 +37,8 @@ namespace StructuredLogViewer.Controls
         public event Action WatermarkDisplayed;
         public event Action<string> TextChanged;
 
+        public Grid TopPanel => topPanel;
+
         public ExecuteSearchFunc ExecuteSearch
         {
             get => typingConcurrentOperation.ExecuteSearch;

@@ -34,20 +34,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public StringCache StringTable => stringTable;
 
-        private NamedNode evaluationFolder;
-
-        public NamedNode EvaluationFolder
-        {
-            get
-            {
-                if (evaluationFolder == null)
-                {
-                    evaluationFolder = Build.GetOrCreateNodeWithName<TimedNode>(Intern(Strings.Evaluation));
-                }
-
-                return evaluationFolder;
-            }
-        }
+        public NamedNode EvaluationFolder => Build.EvaluationFolder;
 
         public Construction()
         {
@@ -55,6 +42,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Build.Name = "Build";
             this.stringTable = Build.StringTable;
             this.messageProcessor = new MessageProcessor(this, stringTable);
+            Intern(Strings.Evaluation);
         }
 
         private string Intern(string text) => stringTable.Intern(text);
