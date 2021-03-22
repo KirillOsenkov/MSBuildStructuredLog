@@ -138,7 +138,11 @@
         FileTree.fileTree = (IEnumerable<BaseNode>)mainLayout.containerSplit.build.Children;
 
         //creating a search object to be used in the Search tab
-        SearchViewer.searcher = new StructuredLogViewer.Search(mainLayout.containerSplit.build, StructuredLogViewer.Search.DefaultMaxResults);
+        SearchViewer.searcher = new StructuredLogViewer.Search(
+            new[] { mainLayout.containerSplit.build },
+            mainLayout.containerSplit.build.StringTable.Instances,
+            StructuredLogViewer.Search.DefaultMaxResults,
+            markResultsInTree: false);
         mainLayout.containerSplit.fileTree.Render();
         FileTree.waitText = "Not a joke...We're actually still reading...";
         mainLayout.containerSplit.fileTree.Render();
