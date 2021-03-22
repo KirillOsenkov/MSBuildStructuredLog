@@ -6,12 +6,14 @@
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
     <Prefer32Bit Condition="$(Prefer32Bit)==''">false</Prefer32Bit>
     <ApplicationIcon>StructuredLogger.ico</ApplicationIcon>
-    <NuspecFileName>MSBuildStructuredLogViewer</NuspecFileName>
-    <ChocolateyFileName>msbuild-structured-log-viewer</ChocolateyFileName>
     <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
     <Company>Microsoft</Company>
     <Product>MSBuild Structured Log Viewer</Product>
     <AssemblyTitle>MSBuild Structured Log Viewer</AssemblyTitle>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net472'">
+	<NuspecFileName>MSBuildStructuredLogViewer</NuspecFileName>
+	<ChocolateyFileName>msbuild-structured-log-viewer</ChocolateyFileName>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AdonisUI" Version="1.16.0" />
