@@ -260,10 +260,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (evaluation != null)
                 {
                     project.TargetFramework = evaluation.TargetFramework;
-                    project.AddChildAtBeginning(new Note
-                    { 
-                        Text = $"Properties and items are available at evaluation id:{project.EvaluationId}. Use the hyperlink above or the new 'Properties and items' tab."
-                    });
+                    if (!string.IsNullOrEmpty(project.TargetFramework))
+                    {
+                        project.AddChildAtBeginning(new Note
+                        {
+                            Text = $"Properties and items are available at evaluation id:{project.EvaluationId}. Use the hyperlink above or the new 'Properties and items' tab."
+                        });
+                    }
                 }
             }
         }
