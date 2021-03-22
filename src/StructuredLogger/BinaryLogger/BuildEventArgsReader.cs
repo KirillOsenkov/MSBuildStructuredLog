@@ -1,11 +1,17 @@
-﻿using System;
+﻿// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using Microsoft.Build.BackEnd;
+using Microsoft.Build.Collections;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Framework.Profiler;
+using Microsoft.Build.Shared;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -35,6 +41,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <summary>
         /// A list of dictionaries we've encountered so far. Dictionaries are referred to by their order in this list.
         /// </summary>
+        /// <remarks>This is designed to not hold on to strings. We just store the string indices and
+        /// hydrate the dictionary on demand before returning.</remarks>
         private readonly List<NameValueRecord> nameValueListRecords = new List<NameValueRecord>();
 
         /// <summary>
@@ -244,14 +252,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private IDictionary<string, string> CreateDictionary((int keyIndex, int valueIndex)[] list)
         {
-            var dictionary = new Dictionary<string, string>(list.Length);
+            var dictionary = new ArrayDictionary<string, string>(list.Length);
             for (int i = 0; i < list.Length; i++)
             {
                 string key = GetStringFromRecord(list[i].keyIndex);
                 string value = GetStringFromRecord(list[i].valueIndex);
                 if (key != null)
                 {
-                    dictionary[key] = value;
+                    dictionary.Add(key, value);
                 }
             }
 
@@ -354,7 +362,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var fields = ReadBuildEventArgsFields();
             var projectFile = ReadDeduplicatedString();
 
-            var e = new ProjectEvaluationStartedEventArgs(fields.Message)
+            var e = new ProjectEvaluationStartedEventArgs(
+                ResourceUtilities.GetResourceString("EvaluationStarted"),
+                projectFile)
             {
                 ProjectFile = projectFile
             };
@@ -367,11 +377,29 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var fields = ReadBuildEventArgsFields();
             var projectFile = ReadDeduplicatedString();
 
-            var e = new ProjectEvaluationFinishedEventArgs(fields.Message)
+            var e = new ProjectEvaluationFinishedEventArgs(
+                ResourceUtilities.GetResourceString("EvaluationFinished"),
+                projectFile)
             {
                 ProjectFile = projectFile
             };
             SetCommonFields(e, fields);
+
+            if (fileFormatVersion >= 12)
+            {
+                IEnumerable globalProperties = null;
+                if (ReadBoolean())
+                {
+                    globalProperties = ReadStringDictionary();
+                }
+
+                var propertyList = ReadPropertyList();
+                var itemList = ReadProjectItems();
+
+                e.GlobalProperties = globalProperties;
+                e.Properties = propertyList;
+                e.Items = itemList;
+            }
 
             // ProfilerResult was introduced in version 5
             if (fileFormatVersion > 4)
@@ -628,17 +656,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
             ReadInt32();
 
             var kind = (TaskParameterMessageKind)ReadInt32();
-            var itemName = ReadDeduplicatedString();
+            var itemType = ReadDeduplicatedString();
             var items = ReadTaskItemList() as IList;
 
-            var e = new TaskParameterEventArgs(
+            var e = ItemGroupLoggingHelper.CreateTaskParameterEventArgs(
+                fields.BuildEventContext,
                 kind,
-                itemName,
+                itemType,
                 items,
                 logItemMetadata: true,
-                fields.Timestamp,
-                a => "");
-            e.BuildEventContext = fields.BuildEventContext;
+                fields.Timestamp);
             e.ProjectFile = fields.ProjectFile;
             return e;
         }
@@ -861,22 +888,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private ArrayList ReadPropertyList()
+        private IEnumerable ReadPropertyList()
         {
             var properties = ReadStringDictionary();
-            if (properties == null)
-            {
-                return null;
-            }
-
-            var list = new ArrayList();
-            foreach (var property in properties)
-            {
-                var entry = new DictionaryEntry(property.Key, property.Value);
-                list.Add(entry);
-            }
-
-            return list;
+            return properties;
         }
 
         private BuildEventContext ReadBuildEventContext()
@@ -954,13 +969,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private IEnumerable ReadProjectItems()
         {
-            int count = ReadInt32();
-            if (count == 0)
-            {
-                return null;
-            }
-
-            List<DictionaryEntry> list;
+            IList<DictionaryEntry> list;
 
             // starting with format version 10 project items are grouped by name
             // so we only have to write the name once, and then the count of items
@@ -968,25 +977,67 @@ namespace Microsoft.Build.Logging.StructuredLogger
             // old style flat list where the name is duplicated for each item.
             if (fileFormatVersion < 10)
             {
-                list = new List<DictionaryEntry>(count);
+                int count = ReadInt32();
+                if (count == 0)
+                {
+                    return null;
+                }
+
+                list = new DictionaryEntry[count];
                 for (int i = 0; i < count; i++)
                 {
                     string itemName = ReadString();
                     ITaskItem item = ReadTaskItem();
-                    list.Add(new DictionaryEntry(itemName, item));
+                    list[i] = new DictionaryEntry(itemName, item);
+                }
+            }
+            else if (fileFormatVersion < 12)
+            {
+                int count = ReadInt32();
+                if (count == 0)
+                {
+                    return null;
+                }
+
+                list = new List<DictionaryEntry>();
+                for (int i = 0; i < count; i++)
+                {
+                    string itemType = ReadDeduplicatedString();
+                    var items = ReadTaskItemList();
+                    if (items != null)
+                    {
+                        foreach (var item in items)
+                        {
+                            list.Add(new DictionaryEntry(itemType, item));
+                        }
+                    }
                 }
             }
             else
             {
                 list = new List<DictionaryEntry>();
-                for (int i = 0; i < count; i++)
+
+                while (true)
                 {
-                    string itemName = ReadDeduplicatedString();
-                    var items = ReadTaskItemList();
-                    foreach (var item in items)
+                    string itemType = ReadDeduplicatedString();
+                    if (string.IsNullOrEmpty(itemType))
                     {
-                        list.Add(new DictionaryEntry(itemName, item));
+                        break;
                     }
+
+                    var items = ReadTaskItemList();
+                    if (items != null)
+                    {
+                        foreach (var item in items)
+                        {
+                            list.Add(new DictionaryEntry(itemType, item));
+                        }
+                    }
+                }
+
+                if (list.Count == 0)
+                {
+                    list = null;
                 }
             }
 
@@ -1001,12 +1052,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return null;
             }
 
-            var list = new List<ITaskItem>(count);
+            var list = new ITaskItem[count];
 
             for (int i = 0; i < count; i++)
             {
                 ITaskItem item = ReadTaskItem();
-                list.Add(item);
+                list[i] = item;
             }
 
             return list;
@@ -1073,6 +1124,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private int ReadInt32()
         {
+            // on some platforms (net5) this method was added to BinaryReader
+            // but it's not available on others. Call our own extension method
+            // explicitly to avoid ambiguity.
             return binaryReader.Read7BitEncodedInt();
         }
 

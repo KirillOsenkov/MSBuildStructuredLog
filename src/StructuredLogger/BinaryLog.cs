@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System;
 
@@ -6,6 +7,24 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class BinaryLog
     {
+        public static IEnumerable<Record> ReadRecords(string binLogFilePath)
+        {
+            var reader = new BinLogReader();
+            return reader.ReadRecords(binLogFilePath);
+        }
+
+        public static IEnumerable<Record> ReadRecords(Stream binlogStream)
+        {
+            var reader = new BinLogReader();
+            return reader.ReadRecords(binlogStream);
+        }
+
+        public static IEnumerable<Record> ReadRecords(byte[] binlogBytes)
+        {
+            var reader = new BinLogReader();
+            return reader.ReadRecords(binlogBytes);
+        }
+
         public static Build ReadBuild(string filePath)
         {
             using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
@@ -61,6 +80,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
             };
 
             build = structuredLogger.Construction.Build;
+
+            eventSource.OnFileFormatVersionRead += fileFormatVersion =>
+            {
+                if (fileFormatVersion >= 10)
+                {
+                    // since strings are already deduplicated in the file, no need to do it again
+                    // TODO: but search will not work if the string table is empty
+                    // structuredLogger.Construction.StringTable.DisableDeduplication = true;
+                }
+
+                build.FileFormatVersion = fileFormatVersion;
+            };
 
             var sw = Stopwatch.StartNew();
             await eventSource.Replay(stream, progressFunc);

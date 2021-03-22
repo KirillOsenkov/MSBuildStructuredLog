@@ -194,6 +194,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             ItemGroupRemoveMessagePrefix = GetString("ItemGroupRemoveLogMessage");
             GlobalPropertiesPrefix = GetString("General.GlobalProperties");
             RemovingPropertiesPrefix = GetString("General.UndefineProperties");
+            EvaluationStarted = GetString("EvaluationStarted");
+            EvaluationFinished = GetString("EvaluationFinished");
         }
 
         public static Regex RemovingProjectProperties { get; set; }
@@ -348,9 +350,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             //GetSDKReferenceFiles.ConflictReferenceDifferentSDK $:$ There was a conflict between two references with the same file name between the "{0}" and "{1}" SDKs. Choosing "{2}" over "{3}" because it was resolved first.
         }
 
-        public static String PropertyGroupMessagePrefix { get; set; }
-        public static String OutputPropertyMessagePrefix { get; set; }
-
+        public static string PropertyGroupMessagePrefix { get; set; }
+        public static string OutputPropertyMessagePrefix { get; set; }
 
         public static string UsedAssemblySearchPathsLocations => "Used AssemblySearchPaths locations";
         public static string UnusedAssemblySearchPathsLocations => "Unused AssemblySearchPaths locations";
@@ -363,6 +364,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string ItemGroupRemoveMessagePrefix { get; set; }
         public static string GlobalPropertiesPrefix { get; set; }
         public static string RemovingPropertiesPrefix { get; set; }
+
+        public static string EvaluationStarted { get; set; }
+        public static string EvaluationFinished { get; set; }
 
         public static string To => "\" to \"";
         public static string ToFile => "\" to file \"";
@@ -392,6 +396,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string TargetOutputs => "TargetOutputs";
         public static string AnalyzerReport => "Analyzer Report";
         public static string Properties => "Properties";
+        public static string PropertyReassignmentFolder => "Property reassignment";
         public static string Global => "Global";
         public static string EntryTargets => "Entry targets";
         public static string TargetFramework => "TargetFramework";
@@ -399,6 +404,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string AdditionalProperties => "Additional properties";
         public static string OutputItems => "OutputItems";
         public static string OutputProperties => "OutputProperties";
+        public static string Items = "Items";
+        public static string Statistics = "Statistics";
+        public static string Folder = "Folder";
 
         public static string GetPropertyName(string message) => message.Substring(message.IndexOf("$") + 2, message.IndexOf("=") - message.IndexOf("$") - 3);
 

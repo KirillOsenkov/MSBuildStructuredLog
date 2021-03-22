@@ -53,21 +53,29 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             var node = result.Node;
 
-            if (result.MatchedByType && result.WordsInFields.Count == 0)
+            if (result.WordsInFields.Count == 0)
             {
-                Highlights.Add(new HighlightedText { Text = OriginalType });
-                Highlights.Add(" " + TextUtilities.ShortenValue(GetNodeText(node), "..."));
+                if (result.MatchedByType)
+                {
+                    Highlights.Add(new HighlightedText { Text = OriginalType });
+                }
+
+                Highlights.Add((Highlights.Count > 0 ? " " : "") + TextUtilities.ShortenValue(GetNodeText(node), "..."));
 
                 AddDuration(result);
 
                 return;
             }
 
-            Highlights.Add(OriginalType);
+            if (OriginalType != Strings.Folder)
+            {
+                Highlights.Add(OriginalType);
+            }
 
             // NameValueNode is special case: have to show name=value when searched only in one (name or value)
             var nameValueNode = node as NameValueNode;
             var namedNode = node as NamedNode;
+
 
             bool nameFound = false;
             bool valueFound = false;
@@ -98,7 +106,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (namedNode != null && !namedNodeNameFound)
             {
-                Highlights.Add(" " + namedNode.Name);
+                Highlights.Add((Highlights.Count > 0 ? " " : "") + namedNode.Name);
                 if (GetNodeDifferentiator(node) is object differentiator)
                 {
                     Highlights.Add(differentiator);
@@ -114,7 +122,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     continue;
                 }
 
-                Highlights.Add(" ");
+                if (Highlights.Count > 0)
+                {
+                    Highlights.Add(" ");
+                }
 
                 if (nameValueNode != null && fieldText.Equals(nameValueNode.Value) && !nameFound)
                 {

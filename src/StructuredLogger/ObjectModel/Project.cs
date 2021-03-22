@@ -10,7 +10,7 @@ using System.Threading;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class Project : TimedNode, IPreprocessable, IHasSourceFile, IHasRelevance
+    public class Project : TimedNode, IPreprocessable, IHasSourceFile, IHasRelevance, IProjectOrEvaluation
     {
         /// <summary>
         /// The full path to the MSBuild project file for this project.

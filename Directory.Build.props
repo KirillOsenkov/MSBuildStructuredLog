@@ -1,7 +1,10 @@
 <Project>
 
   <PropertyGroup Label="Output directory">
-    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+    <IsWpfInnerTempProject Condition="$(MSBuildProjectName.EndsWith('_wpftmp'))">true</IsWpfInnerTempProject>
+    <BasePathProjectName>$(MSBuildProjectName)</BasePathProjectName>
+    <BasePathProjectName Condition="'$(IsWpfInnerTempProject)' == 'true'">$([System.Text.RegularExpressions.Regex]::Replace($(MSBuildProjectName), '_[^_]+_wpftmp', '', System.Text.RegularExpressions.RegexOptions.IgnoreCase))</BasePathProjectName>
+    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)obj\$(BasePathProjectName)\</BaseIntermediateOutputPath>
     <BaseOutputPath>$(MSBuildThisFileDirectory)bin\$(MSBuildProjectName)\</BaseOutputPath>
     <BuildToCommonOutputDirectory>true</BuildToCommonOutputDirectory>
     <_FindDependencies>false</_FindDependencies>

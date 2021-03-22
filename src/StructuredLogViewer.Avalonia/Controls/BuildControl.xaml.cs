@@ -70,7 +70,7 @@ namespace StructuredLogViewer.Avalonia.Controls
 
             searchLogControl.ExecuteSearch = (searchText, maxResults, cancellationToken) =>
             {
-                var search = new Search(Build, maxResults);
+                var search = new Search(new[] { Build }, Build.StringTable.Instances, maxResults, SettingsService.MarkResultsInTree);
                 var results = search.FindNodes(searchText, cancellationToken);
                 return results;
             };
@@ -271,7 +271,8 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             "was not imported by ",
             "out-of-date",
             "csc $task",
-            "ResolveAssemblyReference $task"
+            "ResolveAssemblyReference $task",
+            "$message CompilerServer failed",
         };
 
         private static string[] nodeKinds = new[]

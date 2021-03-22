@@ -21,7 +21,7 @@ namespace StructuredLogViewer
         private static readonly string recentLogsFilePath = Path.Combine(GetRootPath(), "RecentLogs.txt");
         private static readonly string recentProjectsFilePath = Path.Combine(GetRootPath(), "RecentProjects.txt");
         private static readonly string recentMSBuildLocationsFilePath = Path.Combine(GetRootPath(), "RecentMSBuildLocations.txt");
-        private static readonly string recentSearchesFilePath = Path.Combine(GetRootPath(), "RecentSearches.txt");
+        private static readonly string recentSearchesFilePath = Path.Combine(GetRootPath(), "Recent$Searches.txt");
         private static readonly string customArgumentsFilePath = Path.Combine(GetRootPath(), "CustomMSBuildArguments.txt");
         private static readonly string disableUpdatesFilePath = Path.Combine(GetRootPath(), "DisableUpdates.txt");
         private static readonly string settingsFilePath = Path.Combine(GetRootPath(), "Settings.txt");
@@ -63,14 +63,15 @@ namespace StructuredLogViewer
             return cachedRecentMSBuildLocations;
         }
 
-        public static void AddRecentSearchText(string searchText, bool discardPrefixes = false)
+        public static void AddRecentSearchText(string searchText, bool discardPrefixes = false, string? recentItemsCategory = null)
         {
             if (string.IsNullOrWhiteSpace(searchText))
             {
                 return;
             }
 
-            AddRecentItem(searchText, recentSearchesFilePath, discardPrefixes);
+            var filePath = GetRecentSearchFilePath(recentItemsCategory ?? "");
+            AddRecentItem(searchText, filePath, discardPrefixes);
         }
 
         public static IEnumerable<string> GetRecentLogFiles()
@@ -93,9 +94,15 @@ namespace StructuredLogViewer
             RemoveRecentItem(filePath, recentProjectsFilePath);
         }
 
-        public static IEnumerable<string> GetRecentSearchStrings()
+        private static string GetRecentSearchFilePath(string category = "")
         {
-            return GetRecentItems(recentSearchesFilePath);
+            return recentSearchesFilePath.Replace("$", category);
+        }
+
+        public static IEnumerable<string> GetRecentSearchStrings(string category = "")
+        {
+            var filePath = GetRecentSearchFilePath(category);
+            return GetRecentItems(filePath);
         }
 
         private static void AddRecentItem(string item, string storageFilePath, bool discardPrefixes = false)

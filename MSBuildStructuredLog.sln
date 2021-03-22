@@ -2,6 +2,7 @@
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30128.74
 MinimumVisualStudioVersion = 10.0.40219.1
+
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StructuredLogger", "src\StructuredLogger\StructuredLogger.csproj", "{A939886E-A191-4A46-A84B-21AD670081B9}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StructuredLogger.Tests", "src\StructuredLogger.Tests\StructuredLogger.Tests.csproj", "{8A327073-0811-49D6-B1AA-1FB0157E750A}"

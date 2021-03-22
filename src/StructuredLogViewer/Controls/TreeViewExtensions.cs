@@ -38,6 +38,9 @@ namespace StructuredLogViewer.Controls
             IEnumerable<T> items,
             Func<T, T, bool> compareMethod)
         {
+            // attempt to fix https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/453
+            items = items.ToArray();
+
             SelectContainerFromItem(
                 treeView,
                 new SelectInfo<T>()
@@ -97,8 +100,12 @@ namespace StructuredLogViewer.Controls
                         // Stop listening for status changes on this container
                         itemContainerGenerator.StatusChanged -= selectWhenReadyMethod;
 
-                        // Search the container for the item chain
-                        SelectContainerFromItem(container, selectInfo, treeView);
+                        // Attempt to fix https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/453
+                        container.Dispatcher.BeginInvoke((Action)delegate
+                        {
+                            // Search the container for the item chain
+                            SelectContainerFromItem(container, selectInfo, treeView);
+                        }, DispatcherPriority.Render);
                     }
                 };
 

@@ -53,5 +53,10 @@ namespace StructuredLogViewer
         {
             MatchedByType = true;
         }
+
+        public override string ToString()
+        {
+            return Node?.ToString();
+        }
     }
 }

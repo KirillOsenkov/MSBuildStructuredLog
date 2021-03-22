@@ -9,24 +9,30 @@ namespace StructuredLogViewer
     {
         public const int DefaultMaxResults = 1000;
 
-        private readonly Build build;
+        private readonly IEnumerable<TreeNode> roots;
+        private readonly IEnumerable<string> strings;
         private readonly int maxResults;
         private int resultCount;
         private bool markResultsInTree = false;
 
-        public Search(Build build, int maxResults)
+        public Search(IEnumerable<TreeNode> roots, IEnumerable<string> strings, int maxResults, bool markResultsInTree)
         {
-            this.build = build;
+            this.roots = roots;
+            this.strings = strings;
             this.maxResults = maxResults;
-            this.markResultsInTree = false;
+            this.markResultsInTree = markResultsInTree;
         }
 
         public IEnumerable<SearchResult> FindNodes(string query, CancellationToken cancellationToken)
         {
-            var matcher = new NodeQueryMatcher(query, build.StringTable.Instances);
+            var matcher = new NodeQueryMatcher(query, strings);
 
             var resultSet = new List<SearchResult>();
-            Visit(build, matcher, resultSet, cancellationToken);
+            foreach (var root in roots)
+            {
+                Visit(root, matcher, resultSet, cancellationToken);
+            }
+
             return resultSet;
         }
 
