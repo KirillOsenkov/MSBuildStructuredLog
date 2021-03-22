@@ -251,6 +251,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     project.IsLowRelevance = true;
                 }
             }
+
+            if (string.IsNullOrEmpty(project.TargetFramework))
+            {
+                var evaluation = build.FindEvaluation(project.EvaluationId);
+                if (evaluation != null)
+                {
+                    project.TargetFramework = evaluation.TargetFramework;
+                }
+            }
         }
 
         private void AnalyzeTask(Task task)
