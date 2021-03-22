@@ -186,7 +186,7 @@ namespace StructuredLogViewer.Avalonia.Controls
                 filePath = SettingsService.WriteContentToTempFileAndGetPath(Text, extension);
             }
 
-            Process.Start(filePath);
+            Process.Start(new ProcessStartInfo(filePath) { UseShellExecute = true });
         }
 
         private void copyFullPath_Click(object sender, RoutedEventArgs e)
