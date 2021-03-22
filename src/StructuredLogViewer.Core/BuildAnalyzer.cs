@@ -114,6 +114,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 if (folder.Name == "Evaluation")
                 {
+                    folder.SortChildren();
+
                     ImportTreeAnalyzer.Analyze(folder, build.StringTable);
 
                     AnalyzeEvaluation(folder);
@@ -258,6 +260,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (evaluation != null)
                 {
                     project.TargetFramework = evaluation.TargetFramework;
+                    project.AddChildAtBeginning(new Note
+                    { 
+                        Text = $"Properties and items are available at evaluation id:{project.EvaluationId}. Use the hyperlink above or the new 'Properties and items' tab."
+                    });
                 }
             }
         }
