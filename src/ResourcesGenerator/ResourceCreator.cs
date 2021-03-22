@@ -70,7 +70,9 @@ namespace ResourcesGenerator
             "ProjectImportSkippedNoMatches",
             "ProjectImportSkippedMissingFile",
             "ProjectImportSkippedInvalidFile",
-            "PropertyReassignment"
+            "PropertyReassignment",
+            "EvaluationStarted",
+            "EvaluationFinished"
         };
 
         public static Dictionary<string, string> Cultures = new Dictionary<string, string>

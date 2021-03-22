@@ -139,33 +139,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             foreach (var projectEvaluation in evaluations)
             {
-                var properties = projectEvaluation.FindChild<NamedNode>(Strings.PropertyReassignmentFolder);
-                if (properties == null)
-                {
-                    continue;
-                }
-
-                properties.SortChildren();
-                projectEvaluation.RelativeDuration = projectEvaluation.Duration.TotalMilliseconds * 100.0 / longestDuration;
-            }
-        }
-
-        private void AnalyzeEvaluation(NamedNode folder)
-        {
-            var evaluations = folder.Children.OfType<ProjectEvaluation>().ToArray();
-            if (!evaluations.Any())
-            {
-                return;
-            }
-
-            var longestDuration = evaluations.Max(e => e.Duration.TotalMilliseconds);
-            if (longestDuration == 0)
-            {
-                longestDuration = 1;
-            }
-
-            foreach (var projectEvaluation in evaluations)
-            {
                 var properties = projectEvaluation.FindChild<NamedNode>(Strings.Properties);
                 if (properties == null)
                 {

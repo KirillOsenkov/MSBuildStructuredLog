@@ -1764,39 +1764,6 @@ Recent:
                             parent = InsertParent(parent, evaluation, evaluationName);
                         }
                     }
-
-                    if (resultNode is Item item &&
-                        item.Parent is NamedNode itemParent &&
-                        (itemParent is Folder || itemParent is AddItem || itemParent is RemoveItem))
-                    {
-                        var folderProxy = parent.GetOrCreateNodeWithName<ProxyNode>(itemParent.Name);
-                        folderProxy.Original = itemParent;
-                        if (folderProxy.Highlights.Count == 0)
-                        {
-                            folderProxy.Highlights.Add(itemParent.Name);
-                        }
-
-                        parent = folderProxy;
-                        parent.IsExpanded = true;
-                    }
-
-                    if (parent == root)
-                    {
-                        var evaluation = resultNode.GetNearestParent<ProjectEvaluation>();
-                        if (evaluation != null)
-                        {
-                            var evaluationName = ProxyNode.GetNodeText(evaluation);
-                            var evaluationProxy = parent.GetOrCreateNodeWithName<ProxyNode>(evaluationName);
-                            evaluationProxy.Original = evaluation;
-                            if (evaluationProxy.Highlights.Count == 0)
-                            {
-                                evaluationProxy.Highlights.Add(evaluationName);
-                            }
-
-                            parent = evaluationProxy;
-                            parent.IsExpanded = true;
-                        }
-                    }
                 }
 
                 var proxy = new ProxyNode();

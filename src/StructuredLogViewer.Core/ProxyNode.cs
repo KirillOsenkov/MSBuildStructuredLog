@@ -76,7 +76,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var nameValueNode = node as NameValueNode;
             var namedNode = node as NamedNode;
 
-
             bool nameFound = false;
             bool valueFound = false;
             bool namedNodeNameFound = false;

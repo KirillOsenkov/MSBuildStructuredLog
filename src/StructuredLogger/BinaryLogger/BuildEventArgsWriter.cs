@@ -227,7 +227,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             Write(BinaryLogRecordKind.ProjectEvaluationFinished);
 
-
             WriteBuildEventArgsFields(e, writeMessage: false);
             WriteDeduplicatedString(e.ProjectFile);
 
@@ -836,8 +835,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             WriteNameValueList();
 
-            WriteNameValueList();
-
             nameValueListBuffer.Clear();
         }
 
@@ -927,32 +924,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 Write(kvp.Key);
                 Write(kvp.Value);
             }
-        }
-
-        /// <summary>
-        /// Compute the total hash of all items in the nameValueList
-        /// while simultaneously filling the nameValueIndexListBuffer with the individual
-        /// hashes of the strings, mirroring the strings in the original nameValueList.
-        /// This helps us avoid hashing strings twice (once to hash the string individually
-        /// and the second time when hashing it as part of the nameValueList)
-        /// </summary>
-        private HashKey HashAllStrings(List<KeyValuePair<string, string>> nameValueList)
-        {
-            HashKey hash = new HashKey();
-
-            nameValueIndexListBuffer.Clear();
-
-            for (int i = 0; i < nameValueList.Count; i++)
-            {
-                var kvp = nameValueList[i];
-                var (keyIndex, keyHash) = HashString(kvp.Key);
-                var (valueIndex, valueHash) = HashString(kvp.Value);
-                hash = hash.Add(keyHash);
-                hash = hash.Add(valueHash);
-                nameValueIndexListBuffer.Add(new KeyValuePair<int, int>(keyIndex, valueIndex));
-            }
-
-            return hash;
         }
 
         /// <summary>
