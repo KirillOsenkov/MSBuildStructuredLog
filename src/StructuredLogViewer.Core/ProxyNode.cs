@@ -53,10 +53,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             var node = result.Node;
 
-            if (result.MatchedByType && result.WordsInFields.Count == 0)
+            if (result.WordsInFields.Count == 0)
             {
-                Highlights.Add(new HighlightedText { Text = OriginalType });
-                Highlights.Add(" " + TextUtilities.ShortenValue(GetNodeText(node), "..."));
+                if (result.MatchedByType)
+                {
+                    Highlights.Add(new HighlightedText { Text = OriginalType });
+                }
+
+                Highlights.Add((Highlights.Count > 0 ? " " : "") + TextUtilities.ShortenValue(GetNodeText(node), "..."));
 
                 AddDuration(result);
 

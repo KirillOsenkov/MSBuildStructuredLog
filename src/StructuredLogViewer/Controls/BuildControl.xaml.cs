@@ -85,17 +85,12 @@ namespace StructuredLogViewer.Controls
                     return null;
                 }
 
-                var roots = new List<TreeNode>(3);
+                var roots = new List<TreeNode>(2);
                 var properties = context.FindChild<Folder>(Strings.Properties);
                 var items = context.FindChild<Folder>(Strings.Items);
                 if (properties != null)
                 {
                     roots.Add(properties);
-                    var globalProperties = properties.FindChild<Folder>(Strings.Global);
-                    if (globalProperties != null)
-                    {
-                        roots.Add(globalProperties);
-                    }
                 }
 
                 if (items != null)
@@ -111,6 +106,44 @@ namespace StructuredLogViewer.Controls
 
                 var search = new Search(roots, strings.Instances, maxResults, SettingsService.MarkResultsInTree);
                 var results = search.FindNodes(searchText, cancellationToken);
+                var otherResults = new List<SearchResult>();
+
+                // Find all folders where no other results are under that folder.
+                // First find all ancestors of all non-folders.
+                var allAncestors = new HashSet<BaseNode>(results.Count());
+                foreach (var result in results)
+                {
+                    var node = result.Node;
+                    if (node is not Folder itemType)
+                    {
+                        otherResults.Add(result);
+                        foreach (var ancestor in node.GetParentChainExcludingThis())
+                        {
+                            allAncestors.Add(ancestor);
+                        }
+                    }
+                }
+
+                var includeFolderChildren = new List<BaseNode>();
+
+                // Iterate over all folders where no other results are under that folder.
+                foreach (var folder in results.Select(r => r.Node).OfType<Folder>().Where(f => !allAncestors.Contains(f)))
+                {
+                    foreach (var item in folder.Children.OfType<Item>())
+                    {
+                        includeFolderChildren.Add(item);
+                    }
+                }
+
+                results =
+                    otherResults
+                    .Concat(includeFolderChildren.Select(c =>
+                    {
+                        var result = new SearchResult(c);
+                        return result;
+                    }))
+                    .ToArray();
+
                 return results;
             };
             propertiesAndItemsControl.ResultsTreeBuilder = BuildResultTree;
@@ -1904,6 +1937,11 @@ Recent:
             }
 
             return node;
+        }
+
+        public override string ToString()
+        {
+            return Build?.ToString();
         }
     }
 }
