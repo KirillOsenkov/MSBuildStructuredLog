@@ -29,8 +29,10 @@ namespace StructuredLogViewer.Controls
         private void TypingConcurrentOperation_SearchComplete(string searchText, object arg2, TimeSpan elapsed)
         {
             BuildControl.Elapsed = elapsed;
-            SettingsService.AddRecentSearchText(searchText, discardPrefixes: true);
+            SettingsService.AddRecentSearchText(searchText, discardPrefixes: true, RecentItemsCategory);
         }
+
+        public string RecentItemsCategory { get; set; }
 
         public TreeView ResultsList => resultsList;
         public Func<object, bool, IEnumerable> ResultsTreeBuilder { get; set; }

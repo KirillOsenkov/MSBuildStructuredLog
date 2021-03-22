@@ -147,17 +147,14 @@ namespace StructuredLogViewer.Controls
                 return results;
             };
             propertiesAndItemsControl.ResultsTreeBuilder = BuildResultTree;
+
+            UpdatePropertiesAndItemsWatermark();
             propertiesAndItemsControl.WatermarkDisplayed += () =>
             {
+                UpdatePropertiesAndItemsWatermark();
             };
-            propertiesAndItemsControl.WatermarkContent =
-                $@"Look up properties or items for the selected project " +
-                "or a node under a project or evaluation.\n\n" +
-                "Surround the search term in quotes to find an exact match " +
-                "(turns off substring search). Prefix the search term with " +
-                "name= or value= to only search property and metadata names " +
-                "or values. Add $property, $item or $metadata to limit search " +
-                "to a specific node type.";
+            propertiesAndItemsControl.RecentItemsCategory = "PropertiesAndItems";
+
             SetProjectContext(null);
 
             VirtualizingPanel.SetIsVirtualizing(treeView, SettingsService.EnableTreeViewVirtualization);
@@ -581,7 +578,7 @@ Examples:
             watermark.Inlines.Add(new LineBreak());
             watermark.Inlines.Add(new LineBreak());
 
-            AddTextWithHyperlinks(watermarkText2, watermark.Inlines);
+            AddTextWithHyperlinks(watermarkText2, watermark.Inlines, searchLogControl);
 
             foreach (var example in searchExamples)
             {
@@ -604,7 +601,40 @@ Recent:
             searchLogControl.WatermarkContent = watermark;
         }
 
-        public void AddTextWithHyperlinks(string text, InlineCollection result)
+        private void UpdatePropertiesAndItemsWatermark()
+        {
+            string watermarkText1 = $@"Look up properties or items for the selected project " +
+                "or a node under a project or evaluation. " +
+                "Properties and items might not be available for some projects.\n\n" +
+                "Surround the search term in quotes to find an exact match " +
+                "(turns off substring search). Prefix the search term with " +
+                "[[name=]] or [[value=]] to only search property and metadata names " +
+                "or values. Add [[$property]], [[$item]] or [[$metadata]] to limit search " +
+                "to a specific node type.";
+
+            var watermark = new TextBlock();
+            AddTextWithHyperlinks(watermarkText1, watermark.Inlines, propertiesAndItemsControl);
+
+            watermark.Inlines.Add(new LineBreak());
+            watermark.Inlines.Add(new LineBreak());
+
+            var recentSearches = SettingsService.GetRecentSearchStrings("PropertiesAndItems");
+            if (recentSearches.Any())
+            {
+                watermark.Inlines.Add(@"
+Recent:
+");
+
+                foreach (var recentSearch in recentSearches)
+                {
+                    watermark.Inlines.Add(MakeLink(recentSearch, propertiesAndItemsControl));
+                }
+            }
+
+            propertiesAndItemsControl.WatermarkContent = watermark;
+        }
+
+        public void AddTextWithHyperlinks(string text, InlineCollection result, SearchAndResultsControl searchControl)
         {
             const string openParen = "[[";
             const string closeParen = "]]";
@@ -614,7 +644,7 @@ Recent:
                 if (chunk.StartsWith(openParen) && chunk.EndsWith(closeParen))
                 {
                     var link = chunk.Substring(openParen.Length, chunk.Length - openParen.Length - closeParen.Length);
-                    result.Add(MakeLink(link, searchLogControl, before: null, after: null));
+                    result.Add(MakeLink(link, searchControl, before: null, after: null));
                 }
                 else
                 {
