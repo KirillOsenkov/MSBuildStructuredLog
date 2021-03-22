@@ -20,7 +20,7 @@ namespace ResourcesGenerator
         };
 
         public static string[] ResourceNames = new[]
-{
+        {
             "TaskParameterPrefix",
             "OutputItemParameterMessagePrefix",
             "OutputPropertyLogMessage",
