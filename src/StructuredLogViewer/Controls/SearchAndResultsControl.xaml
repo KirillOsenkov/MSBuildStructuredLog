@@ -11,7 +11,7 @@
   </UserControl.Resources>
   
   <DockPanel>
-    <Grid DockPanel.Dock="Top">
+    <Grid DockPanel.Dock="Top" x:Name="topPanel">
       <TextBox x:Name="searchTextBox"
                TextChanged="searchTextBox_TextChanged"
                MinHeight="23"

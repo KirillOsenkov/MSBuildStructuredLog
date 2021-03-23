@@ -68,6 +68,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             structuredLogger.Parameters = "build.buildlog";
             structuredLogger.Initialize(eventSource);
 
+            build = structuredLogger.Construction.Build;
+
             eventSource.OnFileFormatVersionRead += fileFormatVersion =>
             {
                 if (fileFormatVersion >= 10)
@@ -76,9 +78,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     // TODO: but search will not work if the string table is empty
                     // structuredLogger.Construction.StringTable.DisableDeduplication = true;
                 }
-            };
 
-            build = structuredLogger.Construction.Build;
+                build.FileFormatVersion = fileFormatVersion;
+            };
 
             var sw = Stopwatch.StartNew();
             eventSource.Replay(stream);

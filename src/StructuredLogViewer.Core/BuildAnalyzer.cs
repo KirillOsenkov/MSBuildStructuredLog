@@ -114,6 +114,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 if (folder.Name == "Evaluation")
                 {
+                    folder.SortChildren();
+
                     ImportTreeAnalyzer.Analyze(folder, build.StringTable);
 
                     AnalyzeEvaluation(folder);
@@ -219,6 +221,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (project.HasChildren)
             {
                 bool allLowRelevance = true;
+
+                var entryTargets = project.FindChild<Folder>(Strings.EntryTargets);
+                if (entryTargets != null)
+                {
+                    if (entryTargets.Children.OfType<IHasRelevance>().All(c => c.IsLowRelevance))
+                    {
+                        entryTargets.IsLowRelevance = true;
+                    }
+                }
+
                 foreach (var child in project.Children)
                 {
                     if (child is IHasRelevance hasRelevance)
@@ -239,6 +251,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (allLowRelevance)
                 {
                     project.IsLowRelevance = true;
+                }
+            }
+
+            if (string.IsNullOrEmpty(project.TargetFramework))
+            {
+                var evaluation = build.FindEvaluation(project.EvaluationId);
+                if (evaluation != null)
+                {
+                    project.TargetFramework = evaluation.TargetFramework;
+                    if (!string.IsNullOrEmpty(project.TargetFramework))
+                    {
+                        project.AddChildAtBeginning(new Note
+                        {
+                            Text = $"Properties and items are available at evaluation id:{project.EvaluationId}. Use the hyperlink above or the new 'Properties and items' tab."
+                        });
+                    }
                 }
             }
         }

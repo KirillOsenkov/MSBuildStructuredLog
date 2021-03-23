@@ -405,6 +405,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string OutputItems => "OutputItems";
         public static string OutputProperties => "OutputProperties";
         public static string Items = "Items";
+        public static string Statistics = "Statistics";
+        public static string Folder = "Folder";
 
         public static string GetPropertyName(string message) => message.Substring(message.IndexOf("$") + 2, message.IndexOf("=") - message.IndexOf("$") - 3);
 

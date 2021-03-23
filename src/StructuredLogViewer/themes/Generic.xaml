@@ -194,11 +194,14 @@
 
   <HierarchicalDataTemplate DataType="{x:Type l:Folder}"
                             ItemsSource="{Binding Children}">
-    <StackPanel Orientation="Horizontal">
+    <StackPanel Orientation="Horizontal" x:Name="folderRoot">
       <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource FolderStroke}" Fill="{StaticResource ClosedFolderBrush}" />
       <TextBlock x:Name="nameText" Text="{Binding Name}" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
+      <DataTrigger Binding="{Binding IsLowRelevance}" Value="True">
+        <Setter TargetName="folderRoot" Property="Opacity" Value="0.25" />
+      </DataTrigger>
       <DataTrigger Binding="{Binding IsSelected}" Value="False">
         <Setter TargetName="nameText" Property="Foreground" Value="DarkGoldenrod" />
       </DataTrigger>
@@ -242,14 +245,15 @@
             Margin="0,2,0,0"
             Text="{Binding TargetsDisplayText}"
             Foreground="{DynamicResource TargetStroke}"
-            ToolTip="Initial targets" 
+            ToolTip="Initial targets"
             Visibility="{Binding TargetsDisplayText, Converter={x:Static s:StringEmptinessToVisibilityConverter.Instance}}" />
-      <TextBlock
-          Text="{Binding EvaluationText}"
-          Margin="6,2,0,0"
-          Opacity="0.5"
-          ToolTip="Evaluation Id"
-          Visibility="{Binding EvaluationText, Converter={x:Static s:StringEmptinessToVisibilityConverter.Instance}}" />
+      <controls:NodeHyperlinkControl
+            Margin="6,2,0,0"
+            Text="{Binding EvaluationText}"
+            HyperlinkKind="Evaluation"
+            Opacity="0.5"
+            ToolTip="Navigate to the evaluation for this project"
+            Visibility="{Binding EvaluationText, Converter={x:Static s:StringEmptinessToVisibilityConverter.Instance}}" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
       <DataTrigger Binding="{Binding IsLowRelevance}" Value="True">

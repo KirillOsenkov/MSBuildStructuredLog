@@ -16,14 +16,16 @@ namespace StructuredLogViewer.Controls
             this.MouseLeave += Control_MouseLeave;
             this.MouseUp += Control_MouseUp;
 
-            DestinationNodeGetter = GetParentTarget;
+            DestinationNodeGetter = GetDestination;
         }
 
         private Brush defaultForeground;
 
         public Func<BaseNode> DestinationNodeGetter { get; set; }
 
-        public Target GetParentTarget()
+        public string HyperlinkKind { get; set; }
+
+        public BaseNode GetDestination()
         {
             if (DataContext is Target target)
             {
@@ -40,6 +42,17 @@ namespace StructuredLogViewer.Controls
             }
             else if (DataContext is Project project)
             {
+                if (HyperlinkKind == "Evaluation")
+                {
+                    var evaluation = project.GetNearestParent<Build>()?.FindEvaluation(project.EvaluationId);
+                    if (evaluation != null)
+                    {
+                        return evaluation;
+                    }
+
+                    return null;
+                }
+
                 var targetName = project.EntryTargets.FirstOrDefault();
                 if (targetName != null)
                 {

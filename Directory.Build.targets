@@ -56,7 +56,7 @@
           DependsOnTargets="BuildNuGet"
           Inputs="$(NupkgPath)"
           Outputs="$(OutDir)Releases\MSBuildStructuredLogSetup.exe">
-    <Exec Command="&quot;$(NuGetPackageRoot)\squirrel.windows\1.4.0\tools\Squirrel.exe&quot; --releaseDir=$(OutDir)Releases --no-msi --releasify $(NupkgPath)" />
+    <Exec Command="&quot;$(NuGetPackageRoot)\squirrel.windows\1.4.4\tools\Squirrel.exe&quot; --releaseDir=$(OutDir)Releases --no-msi --releasify $(NupkgPath)" />
     <Copy SourceFiles="$(OutDir)Releases\Setup.exe" DestinationFiles="$(OutDir)Releases\MSBuildStructuredLogSetup.exe" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" />
     <Delete Files="$(OutDir)Releases\Setup.exe" />
   </Target>

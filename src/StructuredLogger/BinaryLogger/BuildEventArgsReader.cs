@@ -7,8 +7,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using Microsoft.Build.BackEnd;
 using Microsoft.Build.Collections;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Shared;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -38,6 +40,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <summary>
         /// A list of dictionaries we've encountered so far. Dictionaries are referred to by their order in this list.
         /// </summary>
+        /// <remarks>This is designed to not hold on to strings. We just store the string indices and
+        /// hydrate the dictionary on demand before returning.</remarks>
         private readonly List<NameValueRecord> nameValueListRecords = new List<NameValueRecord>();
 
         /// <summary>
@@ -578,13 +582,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var itemType = ReadDeduplicatedString();
             var items = ReadTaskItemList() as IList;
 
-            var e = new TaskParameterEventArgs(
+            var e = ItemGroupLoggingHelper.CreateTaskParameterEventArgs(
+                fields.BuildEventContext,
                 kind,
                 itemType,
                 items,
                 logItemMetadata: true,
                 fields.Timestamp);
-            e.BuildEventContext = fields.BuildEventContext;
             e.ProjectFile = fields.ProjectFile;
             return e;
         }
@@ -887,13 +891,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private IEnumerable ReadProjectItems()
         {
-            int count = ReadInt32();
-            if (count == 0)
-            {
-                return null;
-            }
-
-            List<DictionaryEntry> list;
+            IList<DictionaryEntry> list;
 
             // starting with format version 10 project items are grouped by name
             // so we only have to write the name once, and then the count of items
@@ -901,25 +899,67 @@ namespace Microsoft.Build.Logging.StructuredLogger
             // old style flat list where the name is duplicated for each item.
             if (fileFormatVersion < 10)
             {
-                list = new List<DictionaryEntry>(count);
+                int count = ReadInt32();
+                if (count == 0)
+                {
+                    return null;
+                }
+
+                list = new DictionaryEntry[count];
                 for (int i = 0; i < count; i++)
                 {
                     string itemName = ReadString();
                     ITaskItem item = ReadTaskItem();
-                    list.Add(new DictionaryEntry(itemName, item));
+                    list[i] = new DictionaryEntry(itemName, item);
+                }
+            }
+            else if (fileFormatVersion < 12)
+            {
+                int count = ReadInt32();
+                if (count == 0)
+                {
+                    return null;
+                }
+
+                list = new List<DictionaryEntry>();
+                for (int i = 0; i < count; i++)
+                {
+                    string itemType = ReadDeduplicatedString();
+                    var items = ReadTaskItemList();
+                    if (items != null)
+                    {
+                        foreach (var item in items)
+                        {
+                            list.Add(new DictionaryEntry(itemType, item));
+                        }
+                    }
                 }
             }
             else
             {
                 list = new List<DictionaryEntry>();
-                for (int i = 0; i < count; i++)
+
+                while (true)
                 {
-                    string itemName = ReadDeduplicatedString();
-                    var items = ReadTaskItemList();
-                    foreach (var item in items)
+                    string itemType = ReadDeduplicatedString();
+                    if (string.IsNullOrEmpty(itemType))
                     {
-                        list.Add(new DictionaryEntry(itemName, item));
+                        break;
                     }
+
+                    var items = ReadTaskItemList();
+                    if (items != null)
+                    {
+                        foreach (var item in items)
+                        {
+                            list.Add(new DictionaryEntry(itemType, item));
+                        }
+                    }
+                }
+
+                if (list.Count == 0)
+                {
+                    list = null;
                 }
             }
 

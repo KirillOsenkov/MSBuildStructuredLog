@@ -699,8 +699,7 @@ namespace StructuredLogViewer
         {
             MSBuildLocator.BrowseForMSBuildExe();
 
-            var buildParametersScreen = mainContent.Content as BuildParametersScreen;
-            if (buildParametersScreen != null)
+            if (mainContent.Content is BuildParametersScreen buildParametersScreen)
             {
                 buildParametersScreen.UpdateMSBuildLocations();
             }
@@ -721,12 +720,12 @@ namespace StructuredLogViewer
 
         private void HelpLink_Click(object sender, RoutedEventArgs e)
         {
-            Process.Start("https://github.com/KirillOsenkov/MSBuildStructuredLog");
+            Process.Start(new ProcessStartInfo("https://github.com/KirillOsenkov/MSBuildStructuredLog") { UseShellExecute = true });
         }
 
         private void HelpLink2_Click(object sender, RoutedEventArgs e)
         {
-            Process.Start("http://msbuildlog.com");
+            Process.Start(new ProcessStartInfo("http://msbuildlog.com") { UseShellExecute = true });
         }
 
         private void HelpAbout_Click(object sender, RoutedEventArgs e)
