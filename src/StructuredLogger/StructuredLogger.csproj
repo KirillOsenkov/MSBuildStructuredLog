@@ -8,6 +8,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>MSBuild.StructuredLogger.net45</PackageId>
     <Authors>Kirill Osenkov, Microsoft</Authors>
+    <Version>1.0.2</Version>
     <Company>Microsoft</Company>
     <Description>An MSBuild logger that can be passed to MSBuild to record a detailed structured log file. See usage example at: https://github.com/KirillOsenkov/MSBuildStructuredLog/blob/master/README.md#usage</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
