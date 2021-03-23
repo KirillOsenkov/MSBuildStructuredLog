@@ -670,8 +670,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             reusableItemsList.Clear();
         }
 
-        private readonly List<KeyValuePair<string, ITaskItem>> reusableProjectItemList = new List<KeyValuePair<string, ITaskItem>>();
-
         private void WriteProjectItems(IEnumerable items)
         {
             if (items == null)

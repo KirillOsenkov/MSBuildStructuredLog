@@ -71,7 +71,7 @@ namespace StructuredLogViewer
                 return null;
             }
 
-            if (project.EvaluationId == BuildEventContext.InvalidEvaluationId)
+            if (project.EvaluationId == -1)
             {
                 return project.ProjectFile;
             }
