@@ -112,7 +112,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
             else if (node is NamedNode folder)
             {
-                if (folder.Name == "Evaluation")
+                if (folder.Name == Strings.Evaluation)
                 {
                     folder.SortChildren();
 

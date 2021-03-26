@@ -42,7 +42,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public void SortChildren()
         {
-            if (!(children is ChildrenList list))
+            if (children == null)
+            {
+                return;
+            }
+
+            if (children is not ChildrenList list)
             {
                 list = new ChildrenList(children);
             }
