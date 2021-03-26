@@ -122,9 +122,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 list.Sort((l, r) =>
                 {
-                    if (r.Args is BuildMessageEventArgs rightMessage && l.Args is BuildMessageEventArgs leftMessage)
+                    if (l == null || r == null)
                     {
-                        return Math.Sign(rightMessage.Message.Length - leftMessage.Message.Length);
+                        return 0;
+                    }
+
+                    if (r.Args is BuildMessageEventArgs rightMessageArgs &&
+                        l.Args is BuildMessageEventArgs leftMessageArgs &&
+                        rightMessageArgs.Message is string rightMessage &&
+                        leftMessageArgs.Message is string leftMessage)
+                    {
+                        return Math.Sign(rightMessage.Length - leftMessage.Length);
                     }
 
                     if (r.Length != l.Length)
