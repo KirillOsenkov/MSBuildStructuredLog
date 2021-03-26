@@ -15,6 +15,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using System.Xml;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Language.Xml;
 
@@ -1964,6 +1965,15 @@ Recent:
             foreach (var records in stats.CategorizedRecords)
             {
                 DisplayRecordStats(records, node);
+            }
+
+            var top = stats.Records.Take(300).ToArray();
+            foreach (var item in top)
+            {
+                if (item.Args is BuildMessageEventArgs buildMessage)
+                {
+                    node.AddChild(new Message { Text = buildMessage.Message });
+                }
             }
 
             return node;

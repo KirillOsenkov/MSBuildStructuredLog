@@ -116,9 +116,24 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 Largest = Math.Max(Largest, (int)record.Length);
             }
 
+            public IEnumerable<Record> Records => list;
+
             public virtual void Seal()
             {
-                list.Sort((l, r) => Math.Sign(r.Length - l.Length));
+                list.Sort((l, r) =>
+                {
+                    if (r.Args is BuildMessageEventArgs rightMessage && l.Args is BuildMessageEventArgs leftMessage)
+                    {
+                        return Math.Sign(rightMessage.Message.Length - leftMessage.Message.Length);
+                    }
+
+                    if (r.Length != l.Length)
+                    {
+                        return Math.Sign(r.Length - l.Length);
+                    }
+
+                    return 0;
+                });
 
                 foreach (var type in recordsByType)
                 {
@@ -174,25 +189,98 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             message = args.Message;
-            if (message == null || message.Length < 50)
+            if (message == null)
             {
-                return "Other";
+                return "null";
+            }
+
+            if (message.Length < 50)
+            {
+                return "Short";
             }
 
             var first = message.Substring(0, 10);
             switch (first)
             {
+                case "Did not co":
+                    return "Did not copy";
+                case "Input file":
+                    return "Input files";
+                case "Output fil":
+                    return "Output files";
+                case "Output Pro":
+                    return "Output Property";
+                case "Set Proper":
+                    return "Set Property";
+                case "Primary re":
+                    return "Primary reference";
+                case "Encountere":
+                    return "Encountered conflict";
                 case "Output Ite":
-                    return "Task Output Item";
+                    return "Output Item";
                 case "Task Param":
-                    return "Task Input Item";
+                    return "Task Parameter";
                 case "Added Item":
                     return "Added Item";
                 case "Removed It":
                     return "Removed Item";
+                case "Overriding":
+                    return "Overriding target";
+                case "Removing P":
+                    return "Removing Property";
+                case "Using Task":
+                    return "Using Task";
+                case "Property r":
+                    return "Property reassignment";
+                case "    Resolv":
+                    return "Resolved file path";
+                case "    Refere":
+                    return "References which depend on";
+                case "    This r":
+                    return "This reference is not";
+                case "(in) Annot":
+                    return "GetReferenceNearestTargetFrameworkTask (in) Annotated";
+                case "(out) Assi":
+                    return "GetReferenceNearestTargetFrameworkTask (out) Assigned";
+                case "The target":
+                    return "Target not found";
+                case "Trying to ":
+                    return "Trying to import";
+                case "Copying fi":
+                    return "Copying file";
+                case "Task \"Warn":
+                    return "Task skipped";
+                case "Task \"Erro":
+                    return "Task skipped";
+                case "Task \"MSBu":
+                    return "Task skipped";
+                case "Task \"GetR":
+                    return "Task skipped";
+                case "Task \"Reso":
+                    return "Task skipped";
+                case "Task \"Writ":
+                    return "Task skipped";
+                case "Task \"Crea":
+                    return "Task skipped";
+                case "Task \"Gene":
+                    return "Task skipped";
+                case "Task \"Copy":
+                    return "Task skipped";
+                case "Task \"Work":
+                    return "Task skipped";
+                case "Task \"NETS":
+                    return "Task skipped";
+                case "Task \"NETB":
+                    return "Task skipped";
+                case "Task \"Assi":
+                    return "Task skipped";
+                case "        Hi":
+                    return "Hintpath";
                 default:
-                    return "Other";
+                    break;
             }
+
+            return "Other";
         }
     }
 }
