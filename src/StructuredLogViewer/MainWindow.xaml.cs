@@ -480,7 +480,7 @@ namespace StructuredLogViewer
 
         private async void BuildCore(string projectFilePath, string customArguments, string searchText = null)
         {
-            var progress = new BuildProgress();
+            var progress = new BuildProgress { IsIndeterminate = true };
             progress.ProgressText = $"Building {projectFilePath}...";
             SetContent(progress);
             var buildHost = new HostedBuild(projectFilePath, customArguments);
