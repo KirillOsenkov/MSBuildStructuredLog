@@ -43,6 +43,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             this.stringTable = Build.StringTable;
             this.messageProcessor = new MessageProcessor(this, stringTable);
             Intern(Strings.Evaluation);
+            Intern(Strings.Properties);
+            Intern(Strings.OutputItems);
+            Intern(Strings.Parameters);
         }
 
         private string Intern(string text) => stringTable.Intern(text);

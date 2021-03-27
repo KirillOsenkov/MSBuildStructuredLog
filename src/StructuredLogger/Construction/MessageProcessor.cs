@@ -126,7 +126,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void ProcessTaskParameter(TaskParameterEventArgs args)
         {
-            string itemType = args.ItemType;
+            string itemType = Intern(args.ItemType);
             var items = args.Items.OfType<ITaskItem>().ToArray();
 
             NamedNode parent = null;
@@ -176,7 +176,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 var property = new Property
                 {
-                    Name = Intern(itemName),
+                    Name = itemName,
                     Value = Intern(scalar.ItemSpec)
                 };
                 return property;
@@ -193,7 +193,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             foreach (var item in items)
             {
-                var itemNode = new Item { Text = item.ItemSpec };
+                var itemNode = new Item { Text = Intern(item.ItemSpec) };
                 foreach (string metadataName in item.MetadataNames)
                 {
                     var value = item.GetMetadata(metadataName);
