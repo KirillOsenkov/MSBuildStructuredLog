@@ -16,7 +16,7 @@ namespace BinlogTool
             WriteStrings(outputFilePath, strings);
         }
 
-        private static void WriteStrings(string outputFilePath, string[] strings)
+        public static void WriteStrings(string outputFilePath, string[] strings)
         {
             using var fileStream = new FileStream(outputFilePath, FileMode.Create, FileAccess.Write);
             using var gzipStream = new GZipStream(fileStream, CompressionLevel.Optimal);

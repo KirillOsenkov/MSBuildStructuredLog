@@ -121,7 +121,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 build.SourceFilesArchive = projectImportsArchive;
             }
 
-            // build.AddChildAtBeginning(new Message { Text = "Elapsed: " + elapsed.ToString() });
+            // strings = build.StringTable.Instances.OrderBy(s => s).ToArray();
+
+            // BinlogTool.SaveStrings.WriteStrings(@"C:\temp\2.txt", strings.ToArray());
 
             return build;
         }
