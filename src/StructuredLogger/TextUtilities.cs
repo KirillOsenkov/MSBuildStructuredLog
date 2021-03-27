@@ -215,6 +215,24 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return c == '\r' || c == '\n';
         }
 
+        public static string NormalizeLineBreaks(this string text)
+        {
+            if (text == null)
+            {
+                return null;
+            }
+
+            if (text.Length == 0)
+            {
+                return string.Empty;
+            }
+
+            text = text.Replace("\r\n", "\n");
+            text = text.Replace("\r", "\n");
+
+            return text;
+        }
+
         public static string TrimQuotes(this string word)
         {
             if (word != null && word.Length > 2 && word[0] == '"' && word[word.Length - 1] == '"')
