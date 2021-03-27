@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using Microsoft.Build.BackEnd;
@@ -31,6 +32,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// We will OOM otherwise.
         /// </summary>
         private readonly List<object> stringRecords = new List<object>();
+
+        public IEnumerable<string> GetStrings()
+        {
+            return stringRecords.Cast<string>().ToArray();
+        }
 
         private struct NameValueRecord
         {
@@ -269,6 +275,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private void ReadStringRecord()
         {
             string text = ReadString();
+
+            text = text.NormalizeLineBreaks();
+
             object storedString = stringStorage.Add(text);
             stringRecords.Add(storedString);
             OnStringRead?.Invoke(text);

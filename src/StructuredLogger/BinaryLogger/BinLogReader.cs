@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -24,6 +25,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public event Action<string, long> OnStringRead;
         public event Action<IDictionary<string, string>, long> OnNameValueListRead;
         public event Action<int> OnFileFormatVersionRead;
+        public event Action<IEnumerable<string>> OnStringDictionaryComplete;
 
         /// <summary>
         /// Raised when there was an exception reading a record from the file.
@@ -125,6 +127,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             processingTask.Wait();
+
+            var strings = reader.GetStrings();
+            if (strings != null && strings.Any())
+            {
+                OnStringDictionaryComplete?.Invoke(strings);
+            }
         }
 
         private class DisposableEnumerable<T> : IEnumerable<T>, IDisposable
