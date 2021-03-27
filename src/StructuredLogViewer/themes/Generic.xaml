@@ -955,7 +955,10 @@
                  Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
                  TextWrapping="Wrap" />
       <ProgressBar Grid.Row="1" 
-                   IsIndeterminate="True" 
+                   IsIndeterminate="{Binding IsIndeterminate}" 
+                   Value="{Binding Value}"
+                   Minimum="0.0"
+                   Maximum="1.0"
                    HorizontalAlignment="Center"
                    Width="200" 
                    Height="23" 

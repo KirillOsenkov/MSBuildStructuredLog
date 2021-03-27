@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using Microsoft.Build.Framework;
@@ -33,15 +34,27 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// Read the provided binary log file and raise corresponding events for each BuildEventArgs
         /// </summary>
         /// <param name="sourceFilePath">The full file path of the binary log file</param>
-        public void Replay(string sourceFilePath)
+        public void Replay(string sourceFilePath) => Replay(sourceFilePath, progress: null);
+
+        /// <summary>
+        /// Read the provided binary log file and raise corresponding events for each BuildEventArgs
+        /// </summary>
+        /// <param name="sourceFilePath">The full file path of the binary log file</param>
+        /// <param name="progress">optional callback to receive progress updates</param>
+        public void Replay(string sourceFilePath, Progress progress)
         {
             using (var stream = new FileStream(sourceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                Replay(stream);
+                Replay(stream, progress);
             }
         }
 
         public void Replay(Stream stream)
+        {
+            Replay(stream, progress: null);
+        }
+
+        public void Replay(Stream stream, Progress progress)
         {
             var gzipStream = new GZipStream(stream, CompressionMode.Decompress, leaveOpen: true);
             var bufferedStream = new BufferedStream(gzipStream, 32768);
@@ -75,6 +88,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             using var reader = new BuildEventArgsReader(binaryReader, fileFormatVersion);
             reader.OnBlobRead += OnBlobRead;
+
+            Stopwatch stopwatch = Stopwatch.StartNew();
+
+            var streamLength = stream.Length;
+
             while (true)
             {
                 BuildEventArgs instance = null;
@@ -96,6 +114,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
 
                 queue.Add(instance);
+
+                if (progress != null && stopwatch.ElapsedMilliseconds > 200)
+                {
+                    stopwatch.Restart();
+                    var streamPosition = stream.Position;
+                    double ratio = (double)streamPosition / streamLength;
+                    progress.Report(ratio);
+                }
             }
 
             processingTask.Wait();

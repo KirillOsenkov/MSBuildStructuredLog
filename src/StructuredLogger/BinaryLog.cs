@@ -24,7 +24,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return reader.ReadRecords(binlogBytes);
         }
 
-        public static Build ReadBuild(string filePath)
+        public static Build ReadBuild(string filePath) => ReadBuild(filePath, progress: null);
+
+        public static Build ReadBuild(string filePath, Progress progress)
         {
             using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
@@ -35,13 +37,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     projectImportsArchive = File.ReadAllBytes(projectImportsZipFile);
                 }
 
-                var build = ReadBuild(stream, projectImportsArchive);
+                var build = ReadBuild(stream, progress, projectImportsArchive);
                 build.LogFilePath = filePath;
                 return build;
             }
         }
 
         public static Build ReadBuild(Stream stream, byte[] projectImportsArchive = null)
+            => ReadBuild(stream, progress: null, projectImportsArchive: projectImportsArchive);
+
+        public static Build ReadBuild(Stream stream, Progress progress, byte[] projectImportsArchive = null)
         {
             var eventSource = new BinLogReader();
 
@@ -83,7 +88,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             };
 
             var sw = Stopwatch.StartNew();
-            eventSource.Replay(stream);
+
+            eventSource.Replay(stream, progress);
+
             var elapsed = sw.Elapsed;
 
             structuredLogger.Shutdown();

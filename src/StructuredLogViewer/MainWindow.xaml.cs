@@ -404,7 +404,7 @@ namespace StructuredLogViewer
             {
                 try
                 {
-                    return Serialization.Read(filePath);
+                    return Serialization.Read(filePath, progress.Progress);
                 }
                 catch (Exception ex)
                 {
