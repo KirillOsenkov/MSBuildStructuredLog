@@ -6,12 +6,33 @@ namespace Microsoft.Build.Logging.StructuredLogger
     {
         private Dictionary<string, string> deduplicationMap = new Dictionary<string, string>();
 
-        public IEnumerable<string> Instances => deduplicationMap.Keys;
+        public IEnumerable<string> Instances { get; set; }
+
+        public StringCache()
+        {
+            Instances = deduplicationMap.Keys;
+        }
+
+        /// <summary>
+        /// Already deduplicated list of strings can be provided externally,
+        /// in which case we should turn off deduplication and just use this
+        /// set of strings
+        /// </summary>
+        public void SetStrings(IEnumerable<string> strings)
+        {
+            Instances = strings;
+            DisableDeduplication = true;
+        }
 
         public bool DisableDeduplication { get; set; }
 
         public string Intern(string text)
         {
+            if (DisableDeduplication)
+            {
+                return text;
+            }
+
             if (text == null)
             {
                 return null;
@@ -26,11 +47,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             text = text.Replace("\r\n", "\n");
             text = text.Replace("\r", "\n");
 
-            if (DisableDeduplication)
-            {
-                return text;
-            }
-
             string existing;
             if (deduplicationMap.TryGetValue(text, out existing))
             {
@@ -44,6 +60,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public IDictionary<string, string> InternStringDictionary(IDictionary<string, string> inputDictionary)
         {
+            if (DisableDeduplication)
+            {
+                return inputDictionary;
+            }
+
             if (inputDictionary == null)
             {
                 return null;
@@ -66,6 +87,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public IReadOnlyList<string> InternList(IReadOnlyList<string> inputList)
         {
+            if (DisableDeduplication)
+            {
+                return inputList;
+            }
+
             if (inputList == null)
             {
                 return null;
