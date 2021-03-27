@@ -51,6 +51,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var eventSource = new BinLogReader();
 
             Build build = null;
+            IEnumerable<string> strings = null;
 
             eventSource.OnBlobRead += (kind, bytes) =>
             {
@@ -66,6 +67,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     build.AddChild(new Error() { Text = "Error when reading the file: " + ex.ToString() });
                 }
             };
+            eventSource.OnStringDictionaryComplete += s =>
+            {
+                strings = s;
+            };
 
             StructuredLogger.SaveLogToDisk = false;
             StructuredLogger.CurrentBuild = null;
@@ -75,16 +80,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             build = structuredLogger.Construction.Build;
 
+            bool reuseBinLogStrings = false;
+
             eventSource.OnFileFormatVersionRead += fileFormatVersion =>
             {
-                if (fileFormatVersion >= 10)
-                {
-                    // since strings are already deduplicated in the file, no need to do it again
-                    // TODO: but search will not work if the string table is empty
-                    // structuredLogger.Construction.StringTable.DisableDeduplication = true;
-                }
-
                 build.FileFormatVersion = fileFormatVersion;
+
+                // strings are deduplicated starting with version 10
+                if (fileFormatVersion >= 10 && reuseBinLogStrings)
+                {
+                    build.StringTable.DisableDeduplication = true;
+                }
             };
 
             var sw = Stopwatch.StartNew();
@@ -92,6 +98,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             eventSource.Replay(stream, progress);
 
             var elapsed = sw.Elapsed;
+
+            if (strings != null && reuseBinLogStrings)
+            {
+                // since strings are already deduplicated in the file, no need to do it again
+                build.StringTable.SetStrings(strings);
+            }
 
             structuredLogger.Shutdown();
 
