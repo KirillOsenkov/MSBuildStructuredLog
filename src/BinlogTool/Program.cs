@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 
 namespace BinlogTool
@@ -26,6 +27,18 @@ namespace BinlogTool
             }
 
             Console.WriteLine("Usage: binlogtool savefiles input.binlog");
+        }
+
+        private static void CompareStrings()
+        {
+            var left = SaveStrings.ReadStrings(@"C:\temp\1.txt");
+            var right = SaveStrings.ReadStrings(@"C:\temp\2.txt");
+
+            var onlyLeft = left.Except(right).ToArray();
+            var onlyRight = right.Except(left).ToArray();
+
+            File.WriteAllLines(@"C:\temp\onlyLeft.txt", onlyLeft);
+            File.WriteAllLines(@"C:\temp\onlyRight.txt", onlyRight);
         }
     }
 }
