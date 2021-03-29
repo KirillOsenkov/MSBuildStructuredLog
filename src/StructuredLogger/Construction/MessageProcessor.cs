@@ -339,15 +339,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     if (task.Name == "ResolveAssemblyReference")
                     {
-                        Folder inputs = task.GetOrCreateNodeWithName<Folder>("Inputs");
-                        Folder results = task.FindChild<Folder>("Results");
+                        Folder inputs = task.FindChild<Folder>(Strings.Inputs);
+                        Folder results = task.FindChild<Folder>(Strings.Results);
                         node = results ?? inputs;
 
                         if (message.StartsWith("    "))
                         {
                             message = message.Substring(4);
 
-                            var parameter = node.FindLastChild<Parameter>();
+                            var parameter = node?.FindLastChild<Parameter>();
                             if (parameter != null)
                             {
                                 bool thereWasAConflict = Strings.IsThereWasAConflictPrefix(parameter.ToString()); //parameter.ToString().StartsWith(Strings.ThereWasAConflictPrefix);
@@ -415,11 +415,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                                 if (isResult)
                                 {
-                                    results = task.GetOrCreateNodeWithName<Folder>("Results");
+                                    results = task.GetOrCreateNodeWithName<Folder>(Strings.Results);
                                     node = results;
                                 }
                                 else
                                 {
+                                    if (inputs == null)
+                                    {
+                                        inputs = task.GetOrCreateNodeWithName<Folder>(Strings.Inputs);
+                                    }
+
                                     node = inputs;
                                 }
                             }
