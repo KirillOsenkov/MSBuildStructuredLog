@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -123,7 +124,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             // strings = build.StringTable.Instances.OrderBy(s => s).ToArray();
 
-            // BinlogTool.SaveStrings.WriteStrings(@"C:\temp\2.txt", strings.ToArray());
+            // Serialization.WriteStringsToFile(@"C:\temp\1.txt", strings.ToArray());
 
             return build;
         }
