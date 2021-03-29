@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
 
@@ -10,6 +11,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static BinlogStats Calculate(string binlogFilePath)
         {
             var stats = new BinlogStats();
+            stats.FileSize = new FileInfo(binlogFilePath).Length;
 
             var reader = new BinLogReader();
             reader.OnBlobRead += (kind, bytes) => stats.OnBlobRead(kind, bytes);
@@ -20,6 +22,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             stats.Process(records);
             return stats;
         }
+
+        public long FileSize;
+        public long UncompressedStreamSize;
+        public long RecordCount;
 
         public int NameValueListCount;
         public long NameValueListTotalSize;
@@ -166,8 +172,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             var recordsByType = new RecordsByType(Strings.Statistics + ":");
 
+            long totalSize = 0;
+            long recordCount = 0;
+
             foreach (var record in records)
             {
+                totalSize += record.Length;
+                recordCount++;
+
                 var args = record.Args;
                 if (args == null)
                 {
@@ -183,6 +195,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 recordsByType.Add(record, argsType);
             }
+
+            UncompressedStreamSize = totalSize;
+            RecordCount = recordCount;
 
             recordsByType.Seal();
 

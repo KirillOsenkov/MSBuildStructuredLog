@@ -1853,6 +1853,9 @@ Recent:
             //statsRoot.AddChild(histogramNode);
 
             statsRoot.AddChild(new Property { Name = "BinlogFileFormatVersion", Value = Build.FileFormatVersion.ToString() });
+            statsRoot.AddChild(new Property { Name = "FileSize", Value = recordStats.FileSize.ToString() });
+            statsRoot.AddChild(new Property { Name = "UncompressedStreamSize", Value = recordStats.UncompressedStreamSize.ToString() });
+            statsRoot.AddChild(new Property { Name = "RecordCount", Value = recordStats.RecordCount.ToString() });
 
             Build.Seal();
         }

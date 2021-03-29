@@ -133,6 +133,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 OnStringDictionaryComplete?.Invoke(strings);
             }
+
+            if (progress != null)
+            {
+                progress.Report(1.0);
+            }
         }
 
         private class DisposableEnumerable<T> : IEnumerable<T>, IDisposable
