@@ -40,8 +40,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             AssemblyFoldersExLocation = new Regex(GetString("ResolveAssemblyReference.AssemblyFoldersExSearchLocations").Replace("{0}", ".*?"));
             AdditionalPropertiesPrefix = new Regex(GetString("General.AdditionalProperties").Replace("{0}", ".*?"));
             OverridingGlobalPropertiesPrefix = new Regex(GetString("General.OverridingProperties").Replace("{0}", ".*?"));
-            TargetAlreadyCompleteSuccess = new Regex(GetString("TargetAlreadyCompleteSuccess").Replace("{0}", @".*?"));
-            TargetAlreadyCompleteFailure = new Regex(GetString("TargetAlreadyCompleteFailure").Replace("{0}", @".*?"));
+            TargetAlreadyCompleteSuccess = GetString("TargetAlreadyCompleteSuccess");
+            TargetAlreadyCompleteSuccessRegex = new Regex(TargetAlreadyCompleteSuccess.Replace("{0}", @".*?"));
+            TargetAlreadyCompleteFailure = GetString("TargetAlreadyCompleteFailure");
+            TargetAlreadyCompleteFailureRegex = new Regex(TargetAlreadyCompleteFailure.Replace("{0}", @".*?"));
             TargetSkippedWhenSkipNonexistentTargets = new Regex(GetString("TargetSkippedWhenSkipNonexistentTargets").Replace("{0}", @".*?"));
             RemovingProjectProperties = new Regex(GetString("General.ProjectUndefineProperties").Replace("{0}", @".*?"));
 
@@ -70,7 +72,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 .Replace("{2}", @".*?")
                 .Replace("{3}", @".*?"));
 
-            TargetSkippedFalseCondition = new Regex(GetString("TargetSkippedFalseCondition")
+            TargetSkippedFalseCondition = GetString("TargetSkippedFalseCondition");
+
+            TargetSkippedFalseConditionRegex = new Regex(TargetSkippedFalseCondition
                 .Replace("{0}", @".*?")
                 .Replace("{1}", @".*?")
                 .Replace("{2}", @".*?")
@@ -228,13 +232,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static Regex CreatingHardLink { get; set; }
         public static Regex DidNotCopy { get; set; }
         public static Regex TargetDoesNotExistBeforeTargetMessage { get; set; }
-        public static Regex TargetAlreadyCompleteSuccess { get; set; }
-        public static Regex TargetSkippedFalseCondition { get; set; }
+        public static Regex TargetAlreadyCompleteSuccessRegex { get; set; }
+        public static Regex TargetAlreadyCompleteFailureRegex { get; set; }
+        public static Regex TargetSkippedFalseConditionRegex { get; set; }
         public static Regex TaskSkippedFalseCondition { get; set; }
-        public static Regex TargetAlreadyCompleteFailure { get; set; }
         public static Regex TargetSkippedWhenSkipNonexistentTargets { get; set; }
         public static Regex TaskFoundFromFactory { get; set; }
         public static Regex TaskFound { get; set; }
+
+        public static string TargetSkippedFalseCondition { get; set; }
+        public static string TargetAlreadyCompleteSuccess { get; set; }
+        public static string TargetAlreadyCompleteFailure { get; set; }
 
         public static Match UsingTask(string message)
         {
@@ -253,17 +261,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static bool IsTargetSkipped(string message)
         {
-            if (TargetAlreadyCompleteSuccess.IsMatch(message))
+            if (TargetAlreadyCompleteSuccessRegex.IsMatch(message))
             {
                 return true;
             }
 
-            if (TargetSkippedFalseCondition.IsMatch(message))
+            if (TargetSkippedFalseConditionRegex.IsMatch(message))
             {
                 return true;
             }
 
-            if (TargetAlreadyCompleteFailure.IsMatch(message))
+            if (TargetAlreadyCompleteFailureRegex.IsMatch(message))
             {
                 return true;
             }
