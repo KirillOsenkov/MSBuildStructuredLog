@@ -254,9 +254,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private BuildEventArgs ReadProjectImportedEventArgs()
         {
-            var fields = ReadBuildEventArgsFields();
-            // Read unused Importance, it defaults to Low
-            ReadInt32();
+            var fields = ReadBuildEventArgsFields(readImportance: true);
 
             bool importIgnored = false;
 
@@ -287,9 +285,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private BuildEventArgs ReadTargetSkippedEventArgs()
         {
-            var fields = ReadBuildEventArgsFields();
-            // Read unused Importance, it defaults to Low
-            ReadInt32();
+            var fields = ReadBuildEventArgsFields(readImportance: true);
+
             var targetFile = ReadOptionalString();
             var targetName = ReadOptionalString();
             var parentTarget = ReadOptionalString();
@@ -607,8 +604,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private BuildEventArgs ReadBuildMessageEventArgs()
         {
-            var fields = ReadBuildEventArgsFields();
-            var importance = (MessageImportance)ReadInt32();
+            var fields = ReadBuildEventArgsFields(readImportance: true);
 
             var e = new BuildMessageEventArgs(
                 fields.Subcategory,
@@ -621,7 +617,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 fields.Message,
                 fields.HelpKeyword,
                 fields.SenderName,
-                importance,
+                fields.Importance,
                 fields.Timestamp,
                 fields.Arguments);
             e.BuildEventContext = fields.BuildEventContext;
@@ -631,15 +627,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private BuildEventArgs ReadTaskCommandLineEventArgs()
         {
-            var fields = ReadBuildEventArgsFields();
-            var importance = (MessageImportance)ReadInt32();
+            var fields = ReadBuildEventArgsFields(readImportance: true);
             var commandLine = ReadOptionalString();
             var taskName = ReadOptionalString();
 
             var e = new TaskCommandLineEventArgs(
                 commandLine,
                 taskName,
-                importance,
+                fields.Importance,
                 fields.Timestamp);
             e.BuildEventContext = fields.BuildEventContext;
             e.ProjectFile = fields.ProjectFile;
@@ -648,9 +643,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private BuildEventArgs ReadTaskParameterEventArgs()
         {
-            var fields = ReadBuildEventArgsFields();
-            // Read unused Importance, it defaults to Low
-            ReadInt32();
+            var fields = ReadBuildEventArgsFields(readImportance: true);
 
             var kind = (TaskParameterMessageKind)ReadInt32();
             var itemType = ReadDeduplicatedString();
@@ -669,8 +662,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private BuildEventArgs ReadCriticalBuildMessageEventArgs()
         {
-            var fields = ReadBuildEventArgsFields();
-            var importance = (MessageImportance)ReadInt32();
+            var fields = ReadBuildEventArgsFields(readImportance: true);
 
             var e = new CriticalBuildMessageEventArgs(
                 fields.Subcategory,
@@ -692,8 +684,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private BuildEventArgs ReadEnvironmentVariableReadEventArgs()
         {
-            var fields = ReadBuildEventArgsFields();
-            var importance = (MessageImportance)ReadInt32();
+            var fields = ReadBuildEventArgsFields(readImportance: true);
 
             var environmentVariableName = ReadDeduplicatedString();
 
@@ -702,7 +693,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 fields.Message,
                 fields.HelpKeyword,
                 fields.SenderName,
-                importance);
+                fields.Importance);
             SetCommonFields(e, fields);
 
             return e;
@@ -710,8 +701,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private BuildEventArgs ReadPropertyReassignmentEventArgs()
         {
-            var fields = ReadBuildEventArgsFields();
-            var importance = (MessageImportance)ReadInt32();
+            var fields = ReadBuildEventArgsFields(readImportance: true);
+
             string propertyName = ReadDeduplicatedString();
             string previousValue = ReadDeduplicatedString();
             string newValue = ReadDeduplicatedString();
@@ -725,7 +716,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 fields.Message,
                 fields.HelpKeyword,
                 fields.SenderName,
-                importance);
+                fields.Importance);
             SetCommonFields(e, fields);
 
             return e;
@@ -733,8 +724,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private BuildEventArgs ReadUninitializedPropertyReadEventArgs()
         {
-            var fields = ReadBuildEventArgsFields();
-            var importance = (MessageImportance)ReadInt32();
+            var fields = ReadBuildEventArgsFields(readImportance: true);
             string propertyName = ReadDeduplicatedString();
 
             var e = new UninitializedPropertyReadEventArgs(
@@ -742,7 +732,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 fields.Message,
                 fields.HelpKeyword,
                 fields.SenderName,
-                importance);
+                fields.Importance);
             SetCommonFields(e, fields);
 
             return e;
@@ -750,8 +740,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private BuildEventArgs ReadPropertyInitialValueSetEventArgs()
         {
-            var fields = ReadBuildEventArgsFields();
-            var importance = (MessageImportance)ReadInt32();
+            var fields = ReadBuildEventArgsFields(readImportance: true);
+
             string propertyName = ReadDeduplicatedString();
             string propertyValue = ReadDeduplicatedString();
             string propertySource = ReadDeduplicatedString();
@@ -763,7 +753,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 fields.Message,
                 fields.HelpKeyword,
                 fields.SenderName,
-                importance);
+                fields.Importance);
             SetCommonFields(e, fields);
 
             return e;
@@ -787,7 +777,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             fields.EndColumnNumber = ReadInt32();
         }
 
-        private BuildEventArgsFields ReadBuildEventArgsFields()
+        private BuildEventArgsFields ReadBuildEventArgsFields(bool readImportance = false)
         {
             BuildEventArgsFieldFlags flags = (BuildEventArgsFieldFlags)ReadInt32();
             var result = new BuildEventArgsFields();
@@ -873,6 +863,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
 
                 result.Arguments = arguments;
+            }
+
+            if ((fileFormatVersion < 13 && readImportance) || (fileFormatVersion >= 13 && (flags & BuildEventArgsFieldFlags.Importance) != 0))
+            {
+                result.Importance = (MessageImportance)ReadInt32();
             }
 
             return result;

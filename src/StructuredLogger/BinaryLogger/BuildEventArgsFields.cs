@@ -17,6 +17,7 @@ namespace Microsoft.Build.Logging
         public string HelpKeyword { get; set; }
         public string SenderName { get; set; }
         public DateTime Timestamp { get; set; }
+        public MessageImportance Importance { get; set; }
 
         public string Subcategory { get; set; }
         public string Code { get; set; }
