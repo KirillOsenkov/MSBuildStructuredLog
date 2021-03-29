@@ -11,6 +11,7 @@ namespace Microsoft.Build.Logging
         public BuildEventArgsFieldFlags Flags { get; set; }
 
         public string Message { get; set; }
+        public object[] Arguments { get; set; }
         public BuildEventContext BuildEventContext { get; set; }
         public int ThreadId { get; set; }
         public string HelpKeyword { get; set; }

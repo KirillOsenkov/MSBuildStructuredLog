@@ -19,7 +19,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
     /// <summary>
     /// Deserializes and returns BuildEventArgs-derived objects from a BinaryReader
     /// </summary>
-    internal class BuildEventArgsReader : IDisposable
+    internal partial class BuildEventArgsReader : IDisposable
     {
         private readonly BinaryReader binaryReader;
         private readonly int fileFormatVersion;
@@ -32,17 +32,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// We will OOM otherwise.
         /// </summary>
         private readonly List<object> stringRecords = new List<object>();
-
-        public IEnumerable<string> GetStrings()
-        {
-            return stringRecords.Cast<string>().ToArray();
-        }
-
-        private struct NameValueRecord
-        {
-            public (int keyIndex, int valueIndex)[] Array;
-            public IDictionary<string, string> Dictionary;
-        }
 
         /// <summary>
         /// A list of dictionaries we've encountered so far. Dictionaries are referred to by their order in this list.
@@ -91,10 +80,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// The arguments include the blob kind and the byte buffer with the contents.
         /// </summary>
         public event Action<BinaryLogRecordKind, byte[]> OnBlobRead;
-
-        public event Action<string> OnStringRead;
-
-        public event Action<IDictionary<string, string>> OnNameValueListRead;
 
         /// <summary>
         /// Reads the next log record from the binary reader. If there are no more records, returns null.
@@ -256,22 +241,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 $"NameValueList record number {recordNumber} is invalid: index {id} is not within {stringRecords.Count}.");
         }
 
-        private IDictionary<string, string> CreateDictionary((int keyIndex, int valueIndex)[] list)
-        {
-            var dictionary = new ArrayDictionary<string, string>(list.Length);
-            for (int i = 0; i < list.Length; i++)
-            {
-                string key = GetStringFromRecord(list[i].keyIndex);
-                string value = GetStringFromRecord(list[i].valueIndex);
-                if (key != null)
-                {
-                    dictionary.Add(key, value);
-                }
-            }
-
-            return dictionary;
-        }
-
         private void ReadStringRecord()
         {
             string text = ReadString();
@@ -303,7 +272,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var e = new ProjectImportedEventArgs(
                 fields.LineNumber,
                 fields.ColumnNumber,
-                fields.Message);
+                fields.Message,
+                fields.Arguments);
 
             SetCommonFields(e, fields);
 
@@ -323,10 +293,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var targetFile = ReadOptionalString();
             var targetName = ReadOptionalString();
             var parentTarget = ReadOptionalString();
+
+            string condition = null;
+            string evaluatedCondition = null;
+            bool originallySucceeded = false;
+            string message = fields.Message;
+            if (fileFormatVersion >= 13)
+            {
+                condition = ReadOptionalString();
+                evaluatedCondition = ReadOptionalString();
+                originallySucceeded = ReadBoolean();
+                message = GetTargetSkippedMessage(targetName, condition, evaluatedCondition, originallySucceeded);
+            }
+
             var buildReason = (TargetBuiltReason)ReadInt32();
 
-            var e = new TargetSkippedEventArgs(
-                fields.Message);
+            var e = new TargetSkippedEventArgs(message);
 
             SetCommonFields(e, fields);
 
@@ -335,6 +317,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             e.TargetName = targetName;
             e.ParentTarget = parentTarget;
             e.BuildReason = buildReason;
+            // e.Condition = condition;
+            // e.EvaluatedCondition = evaluatedCondition;
+            // e.OriginallySucceeded = originallySucceeded;
 
             return e;
         }
@@ -590,7 +575,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 fields.Message,
                 fields.HelpKeyword,
                 fields.SenderName,
-                fields.Timestamp);
+                fields.Timestamp,
+                fields.Arguments);
             e.BuildEventContext = fields.BuildEventContext;
             e.ProjectFile = fields.ProjectFile;
             return e;
@@ -612,7 +598,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 fields.Message,
                 fields.HelpKeyword,
                 fields.SenderName,
-                fields.Timestamp);
+                fields.Timestamp,
+                fields.Arguments);
             e.BuildEventContext = fields.BuildEventContext;
             e.ProjectFile = fields.ProjectFile;
             return e;
@@ -635,7 +622,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 fields.HelpKeyword,
                 fields.SenderName,
                 importance,
-                fields.Timestamp);
+                fields.Timestamp,
+                fields.Arguments);
             e.BuildEventContext = fields.BuildEventContext;
             e.ProjectFile = fields.ProjectFile;
             return e;
@@ -695,7 +683,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 fields.Message,
                 fields.HelpKeyword,
                 fields.SenderName,
-                fields.Timestamp);
+                fields.Timestamp,
+                fields.Arguments);
             e.BuildEventContext = fields.BuildEventContext;
             e.ProjectFile = fields.ProjectFile;
             return e;
@@ -872,6 +861,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if ((flags & BuildEventArgsFieldFlags.EndColumnNumber) != 0)
             {
                 result.EndColumnNumber = ReadInt32();
+            }
+
+            if ((flags & BuildEventArgsFieldFlags.Arguments) != 0)
+            {
+                int count = ReadInt32();
+                object[] arguments = new object[count];
+                for (int i = 0; i < count; i++)
+                {
+                    arguments[i] = ReadDeduplicatedString();
+                }
+
+                result.Arguments = arguments;
             }
 
             return result;
