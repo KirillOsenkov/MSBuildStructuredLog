@@ -13,7 +13,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public IEnumerable<string> GetStrings()
         {
-            return stringRecords.Cast<string>().ToArray();
+            return stringRecords.OfType<string>().ToArray();
         }
 
         private struct NameValueRecord

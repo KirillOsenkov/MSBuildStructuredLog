@@ -47,6 +47,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static Build ReadBuild(Stream stream, byte[] projectImportsArchive = null)
             => ReadBuild(stream, progress: null, projectImportsArchive: projectImportsArchive);
 
+        internal const bool ReuseBinlogStrings = false;
+
         public static Build ReadBuild(Stream stream, Progress progress, byte[] projectImportsArchive = null)
         {
             var eventSource = new BinLogReader();
@@ -81,14 +83,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             build = structuredLogger.Construction.Build;
 
-            bool reuseBinLogStrings = false;
-
             eventSource.OnFileFormatVersionRead += fileFormatVersion =>
             {
                 build.FileFormatVersion = fileFormatVersion;
 
                 // strings are deduplicated starting with version 10
-                if (fileFormatVersion >= 10 && reuseBinLogStrings)
+                if (fileFormatVersion >= 10 && ReuseBinlogStrings)
                 {
                     build.StringTable.DisableDeduplication = true;
                 }
@@ -100,7 +100,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             var elapsed = sw.Elapsed;
 
-            if (strings != null && reuseBinLogStrings)
+            if (strings != null && ReuseBinlogStrings)
             {
                 // since strings are already deduplicated in the file, no need to do it again
                 build.StringTable.SetStrings(strings);

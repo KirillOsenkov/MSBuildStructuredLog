@@ -128,10 +128,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             processingTask.Wait();
 
-            var strings = reader.GetStrings();
-            if (strings != null && strings.Any())
+            if (BinaryLog.ReuseBinlogStrings)
             {
-                OnStringDictionaryComplete?.Invoke(strings);
+                var strings = reader.GetStrings();
+                if (strings != null && strings.Any())
+                {
+                    OnStringDictionaryComplete?.Invoke(strings);
+                }
             }
 
             if (progress != null)
