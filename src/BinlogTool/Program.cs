@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using Microsoft.Build.Logging.StructuredLogger;
 
 namespace BinlogTool
 {
@@ -31,8 +32,8 @@ namespace BinlogTool
 
         private static void CompareStrings()
         {
-            var left = SaveStrings.ReadStrings(@"C:\temp\1.txt");
-            var right = SaveStrings.ReadStrings(@"C:\temp\2.txt");
+            var left = Serialization.ReadStringsFromFile(@"C:\temp\1.txt");
+            var right = Serialization.ReadStringsFromFile(@"C:\temp\2.txt");
 
             var onlyLeft = left.Except(right).ToArray();
             var onlyRight = right.Except(left).ToArray();
