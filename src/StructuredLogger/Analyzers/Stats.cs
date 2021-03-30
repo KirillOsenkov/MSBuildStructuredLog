@@ -41,6 +41,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void OnNameValueListRead(IDictionary<string, string> list, long recordLengthBytes)
         {
+            UncompressedStreamSize += recordLengthBytes;
             NameValueListCount += 1;
             var size = (int)recordLengthBytes;
             NameValueListTotalSize += size;
@@ -52,6 +53,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private void OnStringRead(string text, long lengthInBytes)
         {
             int length = (int)lengthInBytes;
+
+            UncompressedStreamSize += lengthInBytes;
 
             if (StringSizes.Count <= length)
             {
@@ -196,7 +199,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 recordsByType.Add(record, argsType);
             }
 
-            UncompressedStreamSize = totalSize;
+            UncompressedStreamSize += totalSize;
             RecordCount = recordCount;
 
             recordsByType.Seal();
