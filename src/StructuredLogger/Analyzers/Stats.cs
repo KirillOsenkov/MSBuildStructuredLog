@@ -50,8 +50,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public List<int> StringSizes = new List<int>();
 
+        public List<string> AllStrings = new List<string>();
+
         private void OnStringRead(string text, long lengthInBytes)
         {
+            AllStrings.Add(text);
+
             int length = (int)lengthInBytes;
 
             UncompressedStreamSize += lengthInBytes;
@@ -205,6 +209,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             recordsByType.Seal();
 
             CategorizedRecords = recordsByType;
+
+            AllStrings.Sort((l, r) => r.Length == l.Length ? string.CompareOrdinal(l, r) : r.Length - l.Length);
         }
 
         private static string GetMessageSubType(string message, BuildEventArgs args)
