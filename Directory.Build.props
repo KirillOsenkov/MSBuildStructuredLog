@@ -9,6 +9,7 @@
     <BuildToCommonOutputDirectory>true</BuildToCommonOutputDirectory>
     <_FindDependencies>false</_FindDependencies>
     <TargetFrameworkMonikerAssemblyAttributesPath>$(BaseIntermediateOutputPath)AssemblyAttributes.cs</TargetFrameworkMonikerAssemblyAttributesPath>
+    <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
   </PropertyGroup>
 
   <PropertyGroup Label="Common Properties">
