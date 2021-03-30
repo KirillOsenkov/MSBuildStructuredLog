@@ -14,6 +14,8 @@ namespace Microsoft.Build.Framework
         TaskOutput,
         AddItem,
         RemoveItem,
+        SkippedTargetInputs,
+        SkippedTargetOutputs
     }
 
     /// <summary>

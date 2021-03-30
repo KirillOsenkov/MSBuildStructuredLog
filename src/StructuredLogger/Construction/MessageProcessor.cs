@@ -144,7 +144,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 node = CreateParameterNode(itemType, items);
             }
-            else if (args.Kind == TaskParameterMessageKind.AddItem || args.Kind == TaskParameterMessageKind.RemoveItem)
+            else if (
+                args.Kind == TaskParameterMessageKind.AddItem || 
+                args.Kind == TaskParameterMessageKind.RemoveItem ||
+                args.Kind == TaskParameterMessageKind.SkippedTargetInputs ||
+                args.Kind == TaskParameterMessageKind.SkippedTargetOutputs)
             {
                 parent = GetTarget(args);
 
@@ -153,9 +157,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     named = new AddItem();
                 }
-                else
+                else if (args.Kind == TaskParameterMessageKind.RemoveItem)
                 {
                     named = new RemoveItem();
+                }
+                else
+                {
+                    named = new Folder();
                 }
 
                 named.Name = itemType;
