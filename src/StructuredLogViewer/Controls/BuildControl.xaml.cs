@@ -978,14 +978,14 @@ Recent:
             var project = node.GetNearestParentOrSelf<Project>();
             if (project != null)
             {
-                if (project.FindChild<Folder>(Strings.Items) != null)
+                if (project.FindChild<Folder>(Strings.Items) != null || project.FindChild<Folder>(Strings.Properties) != null)
                 {
                     SetProjectContext(project);
                     return;
                 }
 
                 projectEvaluation = Build.FindEvaluation(project.EvaluationId);
-                if (projectEvaluation != null && projectEvaluation.FindChild<Folder>(Strings.Items) != null)
+                if (projectEvaluation != null && (projectEvaluation.FindChild<Folder>(Strings.Items) != null || projectEvaluation.FindChild<Folder>(Strings.Properties) != null))
                 {
                     SetProjectContext(projectEvaluation);
                     return;
@@ -996,7 +996,7 @@ Recent:
             }
 
             projectEvaluation = node.GetNearestParentOrSelf<ProjectEvaluation>();
-            if (projectEvaluation != null && projectEvaluation.FindChild<Folder>(Strings.Items) != null)
+            if (projectEvaluation != null && (projectEvaluation.FindChild<Folder>(Strings.Items) != null || projectEvaluation.FindChild<Folder>(Strings.Properties) != null))
             {
                 SetProjectContext(projectEvaluation);
                 return;
