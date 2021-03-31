@@ -1433,7 +1433,7 @@ Recent:
                 var treeNode = GetNode(args);
                 if (treeNode != null)
                 {
-                    args.Handled = Invoke(treeNode);
+                    args.Handled = Invoke(treeNode) || ViewFullText(treeNode);
                 }
             }
 
@@ -1458,7 +1458,7 @@ Recent:
             var node = GetNode(args);
             if (node != null)
             {
-                args.Handled = Invoke(node);
+                args.Handled = Invoke(node) || ViewFullText(node);
             }
         }
 
