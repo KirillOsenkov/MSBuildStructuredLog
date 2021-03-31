@@ -695,7 +695,9 @@ Recent:
             viewSourceItem.Visibility = CanView(node) ? Visibility.Visible : Visibility.Collapsed;
             viewFullTextItem.Visibility = HasFullText(node) ? Visibility.Visible : Visibility.Collapsed;
             openFileItem.Visibility = CanOpenFile(node) ? Visibility.Visible : Visibility.Collapsed;
-            copyFilePathItem.Visibility = node is IHasSourceFile ? Visibility.Visible : Visibility.Collapsed;
+            copyFilePathItem.Visibility = node is Import || (node is IHasSourceFile file && !string.IsNullOrEmpty(file.SourceFilePath))
+                ? Visibility.Visible
+                : Visibility.Collapsed;
             var hasChildren = node is TreeNode t && t.HasChildren;
             copySubtreeItem.Visibility = hasChildren ? Visibility.Visible : Visibility.Collapsed;
             viewSubtreeTextItem.Visibility = copySubtreeItem.Visibility;
