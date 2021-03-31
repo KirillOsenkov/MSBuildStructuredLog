@@ -45,7 +45,8 @@ namespace StructuredLogViewer.Controls
         private MenuItem sortChildrenItem;
         private MenuItem copyNameItem;
         private MenuItem copyValueItem;
-        private MenuItem viewItem;
+        private MenuItem viewSourceItem;
+        private MenuItem viewFullTextItem;
         private MenuItem openFileItem;
         private MenuItem copyFilePathItem;
         private MenuItem preprocessItem;
@@ -204,7 +205,8 @@ namespace StructuredLogViewer.Controls
             sortChildrenItem = new MenuItem() { Header = "Sort children" };
             copyNameItem = new MenuItem() { Header = "Copy name" };
             copyValueItem = new MenuItem() { Header = "Copy value" };
-            viewItem = new MenuItem() { Header = "View" };
+            viewSourceItem = new MenuItem() { Header = "View source" };
+            viewFullTextItem = new MenuItem { Header = "View full text" };
             showTimeItem = new MenuItem() { Header = "Show time and duration" };
             openFileItem = new MenuItem() { Header = "Open File" };
             copyFilePathItem = new MenuItem() { Header = "Copy file path" };
@@ -222,7 +224,8 @@ namespace StructuredLogViewer.Controls
             sortChildrenItem.Click += (s, a) => SortChildren();
             copyNameItem.Click += (s, a) => CopyName();
             copyValueItem.Click += (s, a) => CopyValue();
-            viewItem.Click += (s, a) => Invoke(treeView.SelectedItem as BaseNode);
+            viewSourceItem.Click += (s, a) => Invoke(treeView.SelectedItem as BaseNode);
+            viewFullTextItem.Click += (s, a) => ViewFullText(treeView.SelectedItem as BaseNode);
             showTimeItem.Click += (s, a) => ShowTimeAndDuration();
             openFileItem.Click += (s, a) => OpenFile();
             copyFilePathItem.Click += (s, a) => CopyFilePath();
@@ -233,7 +236,8 @@ namespace StructuredLogViewer.Controls
 
             contextMenu.Items.Add(runItem);
             contextMenu.Items.Add(debugItem);
-            contextMenu.Items.Add(viewItem);
+            contextMenu.Items.Add(viewSourceItem);
+            contextMenu.Items.Add(viewFullTextItem);
             contextMenu.Items.Add(openFileItem);
             contextMenu.Items.Add(preprocessItem);
             contextMenu.Items.Add(searchInSubtreeItem);
@@ -688,7 +692,8 @@ Recent:
             var visibility = node is NameValueNode ? Visibility.Visible : Visibility.Collapsed;
             copyNameItem.Visibility = visibility;
             copyValueItem.Visibility = visibility;
-            viewItem.Visibility = CanView(node) ? Visibility.Visible : Visibility.Collapsed;
+            viewSourceItem.Visibility = CanView(node) ? Visibility.Visible : Visibility.Collapsed;
+            viewFullTextItem.Visibility = HasFullText(node) ? Visibility.Visible : Visibility.Collapsed;
             openFileItem.Visibility = CanOpenFile(node) ? Visibility.Visible : Visibility.Collapsed;
             copyFilePathItem.Visibility = node is IHasSourceFile ? Visibility.Visible : Visibility.Collapsed;
             var hasChildren = node is TreeNode t && t.HasChildren;
@@ -1471,14 +1476,36 @@ Recent:
                 || node is Project
                 || (node is Target t && t.SourceFilePath != null && sourceFileResolver.HasFile(t.SourceFilePath))
                 || (node is Task task && task.Parent is Target parentTarget && sourceFileResolver.HasFile(parentTarget.SourceFilePath))
-                || (node is IHasSourceFile ihsf && ihsf.SourceFilePath != null && sourceFileResolver.HasFile(ihsf.SourceFilePath))
-                || (node is NameValueNode nvn && nvn.IsValueShortened)
+                || (node is IHasSourceFile ihsf && ihsf.SourceFilePath != null && sourceFileResolver.HasFile(ihsf.SourceFilePath));
+        }
+
+        private bool HasFullText(BaseNode node)
+        {
+            return (node is NameValueNode nvn && nvn.IsValueShortened)
                 || (node is TextNode tn && tn.IsTextShortened);
         }
 
         private bool CanOpenFile(BaseNode node)
         {
             return node is Import i && sourceFileResolver.HasFile(i.ImportedProjectFilePath);
+        }
+
+        private bool ViewFullText(BaseNode treeNode)
+        {
+            if (treeNode == null)
+            {
+                return false;
+            }
+
+            switch (treeNode)
+            {
+                case NameValueNode nameValueNode when nameValueNode.IsValueShortened:
+                    return DisplayText(nameValueNode.Value, nameValueNode.Name);
+                case TextNode textNode when textNode.IsTextShortened:
+                    return DisplayText(textNode.Text, textNode.Name ?? textNode.GetType().Name);
+                default:
+                    return false;
+            }
         }
 
         private bool Invoke(BaseNode treeNode)
@@ -1504,11 +1531,6 @@ Recent:
                             return DisplayFile(path, diagnostic.LineNumber, diagnostic.ColumnNumber);
                         }
 
-                        if (diagnostic.IsTextShortened)
-                        {
-                            return DisplayText(diagnostic.Text, diagnostic.GetType().Name);
-                        }
-
                         break;
                     case Target target:
                         return DisplayTarget(target.SourceFilePath, target.Name);
@@ -1532,10 +1554,6 @@ Recent:
                         return DisplayFile(hasSourceFile.SourceFilePath, line, evaluation: evaluation);
                     case SourceFileLine sourceFileLine when sourceFileLine.Parent is SourceFile sourceFile && sourceFile.SourceFilePath != null:
                         return DisplayFile(sourceFile.SourceFilePath, sourceFileLine.LineNumber);
-                    case NameValueNode nameValueNode when nameValueNode.IsValueShortened:
-                        return DisplayText(nameValueNode.Value, nameValueNode.Name);
-                    case TextNode textNode when textNode.IsTextShortened:
-                        return DisplayText(textNode.Text, textNode.Name ?? textNode.GetType().Name);
                     default:
                         return false;
                 }
