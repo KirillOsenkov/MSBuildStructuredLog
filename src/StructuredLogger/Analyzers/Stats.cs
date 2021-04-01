@@ -106,7 +106,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             public int Count { get; private set; }
             public int Largest { get; private set; }
 
-            public virtual void Add(Record record, string type = null)
+            public virtual void Add(Record record, string type = null, BinlogStats stats = null)
             {
                 if (type != null)
                 {
@@ -116,8 +116,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         recordsByType[type] = bucket;
                     }
 
-                    type = GetMessageSubType(type, record.Args);
-                    bucket.Add(record, type);
+                    type = stats.GetSubType(type, record.Args);
+                    bucket.Add(record, type, stats);
                 }
                 else
                 {
@@ -175,6 +175,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return $"{name.PadRight(30, ' ')}\t\t\tTotal size: {total:N0}\t\t\tCount: {count:N0}\t\t\tLargest: {largest:N0}";
         }
 
+        private Dictionary<(int node, int target), string> targetNamesById = new Dictionary<(int node, int target), string>();
+        private Dictionary<(int node, int task), string> taskNamesById = new Dictionary<(int node, int task), string>();
+
         private void Process(IEnumerable<Record> records)
         {
             var recordsByType = new RecordsByType(Strings.Statistics + ":");
@@ -194,13 +197,24 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     continue;
                 }
 
+                if (args is TargetStartedEventArgs targetStarted)
+                {
+                    var context = targetStarted.BuildEventContext;
+                    targetNamesById[(context.NodeId, context.TargetId)] = targetStarted.TargetName;
+                }
+                else if (args is TaskStartedEventArgs taskStarted)
+                {
+                    var context = taskStarted.BuildEventContext;
+                    taskNamesById[(context.NodeId, context.TaskId)] = taskStarted.TaskName;
+                }
+
                 string argsType = args.GetType().Name;
                 if (argsType.EndsWith("EventArgs"))
                 {
                     argsType = argsType.Substring(0, argsType.Length - 9);
                 }
 
-                recordsByType.Add(record, argsType);
+                recordsByType.Add(record, argsType, this);
             }
 
             UncompressedStreamSize += totalSize;
@@ -213,13 +227,37 @@ namespace Microsoft.Build.Logging.StructuredLogger
             AllStrings.Sort((l, r) => r.Length == l.Length ? string.CompareOrdinal(l, r) : r.Length - l.Length);
         }
 
-        private static string GetMessageSubType(string message, BuildEventArgs args)
+        private string GetSubType(string message, BuildEventArgs args)
         {
-            if (message != "BuildMessage")
+            if (message == "BuildMessage")
             {
-                return null;
+                return GetMessageSubType(message, args);
+            }
+            else if (message == "TaskParameter")
+            {
+                return GetTaskParameterSubType(message, (TaskParameterEventArgs)args);
             }
 
+            return null;
+        }
+
+        private string GetTaskParameterSubType(string message, TaskParameterEventArgs args)
+        {
+            var context = args.BuildEventContext;
+            if (args.Kind == TaskParameterMessageKind.TaskInput || args.Kind == TaskParameterMessageKind.TaskOutput)
+            {
+                taskNamesById.TryGetValue((context.NodeId, context.TaskId), out var name);
+                return $"Task {name} {args.Kind} {args.ItemType}";
+            }
+            else
+            {
+                targetNamesById.TryGetValue((context.NodeId, context.TargetId), out var name);
+                return $"Target {name} {args.Kind} {args.ItemType}";
+            }
+        }
+
+        private static string GetMessageSubType(string message, BuildEventArgs args)
+        {
             message = args.Message;
             if (message == null)
             {
