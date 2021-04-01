@@ -1964,15 +1964,38 @@ Recent:
             AddTopTasks(treeStats.TaskParameterMessagesByTask, taskInputsNode);
             AddTopTasks(treeStats.OutputItemMessagesByTask, taskOutputsNode);
 
-            var strings = new Item { Text = BinlogStats.GetString("Strings", recordStats.StringTotalSize, recordStats.StringCount, recordStats.StringLargest) };
-            var allStringText = string.Join("\n", recordStats.AllStrings);
-            var allStrings = new Message { Text = allStringText };
+            if (recordStats.StringTotalSize > 0)
+            {
+                var strings = new Item 
+                {
+                    Text = BinlogStats.GetString("Strings", recordStats.StringTotalSize, recordStats.StringCount, recordStats.StringLargest)
+                };
+                var allStringText = string.Join("\n", recordStats.AllStrings);
+                var allStrings = new Message { Text = allStringText };
 
-            statsRoot.AddChild(strings);
-            strings.AddChild(allStrings);
+                statsRoot.AddChild(strings);
+                strings.AddChild(allStrings);
+            }
 
-            statsRoot.AddChild(new Message { Text = BinlogStats.GetString("NameValueLists", recordStats.NameValueListTotalSize, recordStats.NameValueListCount, recordStats.NameValueListLargest) });
-            statsRoot.AddChild(new Message { Text = BinlogStats.GetString("Blobs", recordStats.BlobTotalSize, recordStats.BlobCount, recordStats.BlobLargest) });
+            if (recordStats.NameValueListTotalSize > 0)
+            {
+                statsRoot.AddChild(new Message 
+                {
+                    Text = BinlogStats.GetString(
+                        "NameValueLists",
+                        recordStats.NameValueListTotalSize,
+                        recordStats.NameValueListCount,
+                        recordStats.NameValueListLargest) 
+                });
+            }
+
+            if (recordStats.BlobTotalSize > 0)
+            {
+                statsRoot.AddChild(new Message
+                {
+                    Text = BinlogStats.GetString("Blobs", recordStats.BlobTotalSize, recordStats.BlobCount, recordStats.BlobLargest)
+                });
+            }
         }
 
         private static void AddTopTasks(Dictionary<string, List<string>> messagesByTask, Folder node)
