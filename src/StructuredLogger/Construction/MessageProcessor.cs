@@ -164,6 +164,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 else
                 {
                     named = new Folder();
+                    if (args.Kind == TaskParameterMessageKind.SkippedTargetInputs)
+                    {
+                        itemType = Strings.Inputs;
+                    }
+                    else
+                    {
+                        itemType = Strings.Outputs;
+                    }
                 }
 
                 named.Name = itemType;

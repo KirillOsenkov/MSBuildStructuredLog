@@ -36,7 +36,7 @@ namespace Microsoft.Build.Framework
             bool logItemMetadata,
             DateTime eventTimestamp
         )
-            : base(null, null, null, MessageImportance.Low, eventTimestamp)
+            : base(message: null, helpKeyword: null, senderName: null, MessageImportance.Low, eventTimestamp)
         {
             Kind = kind;
             ItemType = itemType;
