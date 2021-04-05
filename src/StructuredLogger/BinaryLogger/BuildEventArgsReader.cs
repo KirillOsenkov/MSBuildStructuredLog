@@ -1017,6 +1017,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         }
                     }
                 }
+
+                if (list.Count == 0)
+                {
+                    list = null;
+                }
             }
             else
             {

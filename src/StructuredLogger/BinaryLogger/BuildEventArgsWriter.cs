@@ -136,40 +136,41 @@ namespace Microsoft.Build.Logging.StructuredLogger
             currentRecordStream.SetLength(0);
         }
 
-        /*
-        Base types and inheritance ("EventArgs" suffix omitted):
+/*
+Base types and inheritance ("EventArgs" suffix omitted):
 
-        Build
-            LazyFormattedBuild
-                BuildMessage
-                    CriticalBuildMessage
-                    EnvironmentVariableRead
-                    MetaprojectGenerated
-                    ProjectImported
-                    PropertyInitialValueSet
-                    PropertyReassignment
-                    TargetSkipped
-                    TaskCommandLine
-                    TaskParameter
-                    UninitializedPropertyRead
-                BuildStatus
-                    TaskStarted
-                    TaskFinished
-                    TargetStarted
-                    TargetFinished
-                    ProjectStarted
-                    ProjectFinished
-                    BuildStarted
-                    BuildFinished
-                    ProjectEvaluationStarted
-                    ProjectEvaluationFinished
-                BuildError
-                BuildWarning
-                CustomBuild
-                    ExternalProjectStarted
-                    ExternalProjectFinished
+Build
+    Telemetry
+    LazyFormattedBuild
+        BuildMessage
+            CriticalBuildMessage
+            EnvironmentVariableRead
+            MetaprojectGenerated
+            ProjectImported
+            PropertyInitialValueSet
+            PropertyReassignment
+            TargetSkipped
+            TaskCommandLine
+            TaskParameter
+            UninitializedPropertyRead
+        BuildStatus
+            TaskStarted
+            TaskFinished
+            TargetStarted
+            TargetFinished
+            ProjectStarted
+            ProjectFinished
+            BuildStarted
+            BuildFinished
+            ProjectEvaluationStarted
+            ProjectEvaluationFinished
+        BuildError
+        BuildWarning
+        CustomBuild
+            ExternalProjectStarted
+            ExternalProjectFinished
 
-        */
+*/
 
         private void WriteCore(BuildEventArgs e)
         {
@@ -694,10 +695,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 flags |= BuildEventArgsFieldFlags.SenderName;
             }
 
-            if (e.ThreadId > 0)
-            {
-                flags |= BuildEventArgsFieldFlags.ThreadId;
-            }
+            // ThreadId never seems to be used or useful for anything.
+            //if (e.ThreadId > 0)
+            //{
+            //    flags |= BuildEventArgsFieldFlags.ThreadId;
+            //}
 
             if (e.Timestamp != default(DateTime))
             {
@@ -867,10 +869,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 nameValueListBuffer.Add(kvp);
             }
 
-            if (nameValueListBuffer.Count > 1)
-            {
-                nameValueListBuffer.Sort((l, r) => StringComparer.OrdinalIgnoreCase.Compare(l.Key, r.Key));
-            }
+            // Don't sort metadata because we want the binary log to be fully roundtrippable
+            // and we need to preserve the original order.
+            //if (nameValueListBuffer.Count > 1)
+            //{
+            //    nameValueListBuffer.Sort((l, r) => StringComparer.OrdinalIgnoreCase.Compare(l.Key, r.Key));
+            //}
 
             WriteNameValueList();
 
