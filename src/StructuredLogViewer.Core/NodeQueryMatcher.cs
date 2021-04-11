@@ -103,7 +103,7 @@ namespace StructuredLogViewer
 
         // avoid allocating this for every node
         [ThreadStatic]
-        private static List<string> searchFieldsThreadStatic;
+        private static string[] searchFieldsThreadStatic;
 
         public NodeQueryMatcher(string query, IEnumerable<string> stringTable, CancellationToken cancellationToken = default)
         {
@@ -308,97 +308,103 @@ namespace StructuredLogViewer
             PrecalculationDuration = elapsed;
         }
 
-        public static List<string> PopulateSearchFields(BaseNode node)
+        private const int MaxArraySize = 6;
+
+        public static (string[] array, int count) PopulateSearchFields(BaseNode node)
         {
             var searchFields = searchFieldsThreadStatic;
+            int count = 0;
 
             if (searchFields == null)
             {
-                searchFields = new List<string>(6);
+                searchFields = new string[MaxArraySize];
                 searchFieldsThreadStatic = searchFields;
             }
             else
             {
-                searchFields.Clear();
+                Array.Clear(searchFields, 0, MaxArraySize);
             }
 
             // in case they want to narrow down the search such as "Build target" or "Copy task"
             var typeName = node.TypeName;
-            searchFields.Add(typeName);
+            searchFields[count++] = typeName;
 
-            // for tasks derived from Task $task should still work
-            if (node is Microsoft.Build.Logging.StructuredLogger.Task && typeName != "Task")
+            if (node is NameValueNode nameValueNode)
             {
-                searchFields.Add("Task");
+                if (!string.IsNullOrEmpty(nameValueNode.Name))
+                {
+                    searchFields[count++] = nameValueNode.Name;
+                }
+
+                if (!string.IsNullOrEmpty(nameValueNode.Value))
+                {
+                    searchFields[count++] = nameValueNode.Value;
+                }
             }
-
-            if (node is NamedNode named && !string.IsNullOrEmpty(named.Name))
+            else if (node is NamedNode named)
             {
-                searchFields.Add(named.Name);
+                if (!string.IsNullOrEmpty(named.Name))
+                {
+                    searchFields[count++] = named.Name;
+                }
 
-                if (node is Project project)
+                if (node is TextNode textNode)
+                {
+                    if (!string.IsNullOrEmpty(textNode.Text))
+                    {
+                        searchFields[count++] = textNode.Text;
+                    }
+
+                    if (node is AbstractDiagnostic diagnostic)
+                    {
+                        if (!string.IsNullOrEmpty(diagnostic.Code))
+                        {
+                            searchFields[count++] = diagnostic.Code;
+                        }
+
+                        if (!string.IsNullOrEmpty(diagnostic.File))
+                        {
+                            searchFields[count++] = diagnostic.File;
+                        }
+
+                        if (!string.IsNullOrEmpty(diagnostic.ProjectFile))
+                        {
+                            searchFields[count++] = diagnostic.ProjectFile;
+                        }
+                    }
+                }
+                else if (node is Project project)
                 {
                     if (!string.IsNullOrEmpty(project.TargetFramework))
                     {
-                        searchFields.Add(project.TargetFramework);
+                        searchFields[count++] = project.TargetFramework;
                     }
 
                     if (!string.IsNullOrEmpty(project.TargetsText))
                     {
-                        searchFields.Add(project.TargetsText);
+                        searchFields[count++] = project.TargetsText;
                     }
 
                     if (!string.IsNullOrEmpty(project.EvaluationText))
                     {
-                        searchFields.Add(project.EvaluationText);
+                        searchFields[count++] = project.EvaluationText;
                     }
                 }
                 else if (node is ProjectEvaluation evaluation)
                 {
                     if (!string.IsNullOrEmpty(evaluation.EvaluationText))
                     {
-                        searchFields.Add(evaluation.EvaluationText);
+                        searchFields[count++] = evaluation.EvaluationText;
                     }
                 }
-            }
-
-            if (node is TextNode textNode && !string.IsNullOrEmpty(textNode.Text))
-            {
-                searchFields.Add(textNode.Text);
-            }
-
-            if (node is NameValueNode nameValueNode)
-            {
-                if (!string.IsNullOrEmpty(nameValueNode.Name))
+                // for tasks derived from Task $task should still work
+                else if (node is Microsoft.Build.Logging.StructuredLogger.Task && typeName != "Task")
                 {
-                    searchFields.Add(nameValueNode.Name);
-                }
-
-                if (!string.IsNullOrEmpty(nameValueNode.Value))
-                {
-                    searchFields.Add(nameValueNode.Value);
+                    searchFields[count++] = "Task";
                 }
             }
 
-            if (node is AbstractDiagnostic diagnostic)
-            {
-                if (!string.IsNullOrEmpty(diagnostic.Code))
-                {
-                    searchFields.Add(diagnostic.Code);
-                }
-
-                if (!string.IsNullOrEmpty(diagnostic.File))
-                {
-                    searchFields.Add(diagnostic.File);
-                }
-
-                if (!string.IsNullOrEmpty(diagnostic.ProjectFile))
-                {
-                    searchFields.Add(diagnostic.ProjectFile);
-                }
-            }
-
-            return searchFields;
+            return (searchFields, count);
         }
 
         /// <summary>
@@ -429,9 +435,9 @@ namespace StructuredLogViewer
             if (TypeKeyword != null)
             {
                 // zeroth field is always the type
-                if (string.Equals(TypeKeyword, searchFields[0], StringComparison.OrdinalIgnoreCase) ||
+                if (string.Equals(TypeKeyword, searchFields.array[0], StringComparison.OrdinalIgnoreCase) ||
                     // special case for types derived from Task, $task should still work
-                    (TypeKeyword == "task" && searchFields.Count > 1 && searchFields[1] == "Task"))
+                    (TypeKeyword == "task" && searchFields.count > 1 && searchFields.array[1] == "Task"))
                 {
                     // this node is of the type that we need, search other fields
                     if (result == null)
@@ -455,9 +461,9 @@ namespace StructuredLogViewer
                 var term = Words[i];
                 var word = term.Word;
 
-                for (int j = 0; j < searchFields.Count; j++)
+                for (int j = 0; j < searchFields.count; j++)
                 {
-                    var field = searchFields[j];
+                    var field = searchFields.array[j];
 
                     if (!term.IsMatch(field, MatchesInStrings[i]))
                     {
