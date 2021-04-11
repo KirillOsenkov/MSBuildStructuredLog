@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogViewer
@@ -103,7 +105,7 @@ namespace StructuredLogViewer
         [ThreadStatic]
         private static List<string> searchFieldsThreadStatic;
 
-        public NodeQueryMatcher(string query, IEnumerable<string> stringTable)
+        public NodeQueryMatcher(string query, IEnumerable<string> stringTable, CancellationToken cancellationToken = default)
         {
             query = PreprocessQuery(query);
 
@@ -222,7 +224,7 @@ namespace StructuredLogViewer
                 }
             }
 
-            PrecomputeMatchesInStrings(stringTable);
+            PrecomputeMatchesInStrings(stringTable, cancellationToken);
         }
 
         private string PreprocessQuery(string query)
@@ -238,7 +240,7 @@ namespace StructuredLogViewer
             return query;
         }
 
-        private void PrecomputeMatchesInStrings(IEnumerable<string> stringTable)
+        private void PrecomputeMatchesInStrings(IEnumerable<string> stringTable, CancellationToken cancellationToken = default)
         {
             int wordCount = Words.Count;
             MatchesInStrings = new HashSet<string>[wordCount];
@@ -275,7 +277,11 @@ namespace StructuredLogViewer
             System.Threading.Tasks.Task.WaitAll(wordTasks);
 
 #else
-            System.Threading.Tasks.Parallel.ForEach(stringTable, stringInstance =>
+            var options = new ParallelOptions
+            {
+                CancellationToken = cancellationToken,
+            };
+            Parallel.ForEach(stringTable, options, stringInstance =>
             {
                 for (int i = 0; i < Words.Count; i++)
                 {
@@ -321,7 +327,7 @@ namespace StructuredLogViewer
             searchFields.Add(typeName);
 
             // for tasks derived from Task $task should still work
-            if (node is Task && typeName != "Task")
+            if (node is Microsoft.Build.Logging.StructuredLogger.Task && typeName != "Task")
             {
                 searchFields.Add("Task");
             }

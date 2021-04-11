@@ -25,7 +25,7 @@ namespace StructuredLogViewer
 
         public IEnumerable<SearchResult> FindNodes(string query, CancellationToken cancellationToken)
         {
-            var matcher = new NodeQueryMatcher(query, strings);
+            var matcher = new NodeQueryMatcher(query, strings, cancellationToken);
 
             var resultSet = new List<SearchResult>();
             foreach (var root in roots)

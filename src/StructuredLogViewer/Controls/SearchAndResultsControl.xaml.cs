@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Linq;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -13,7 +14,7 @@ namespace StructuredLogViewer.Controls
         public SearchAndResultsControl()
         {
             InitializeComponent();
-            typingConcurrentOperation.DisplayResults += (r, moreAvailable) => DisplaySearchResults(r, moreAvailable);
+            typingConcurrentOperation.DisplayResults += (r, moreAvailable, cancellationToken) => DisplaySearchResults(r, moreAvailable, cancellationToken);
             typingConcurrentOperation.SearchComplete += TypingConcurrentOperation_SearchComplete;
 
             VirtualizingPanel.SetIsVirtualizing(resultsList, SettingsService.EnableTreeViewVirtualization);
@@ -75,12 +76,23 @@ namespace StructuredLogViewer.Controls
             typingConcurrentOperation.TextChanged(searchText, Search.DefaultMaxResults);
         }
 
-        private void DisplaySearchResults(object results, bool moreAvailable = false)
+        private void DisplaySearchResults(object results, bool moreAvailable = false, CancellationToken cancellationToken = default)
         {
             Application.Current.Dispatcher.InvokeAsync(() =>
             {
-                DisplayItems(ResultsTreeBuilder(results, moreAvailable));
-            });
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                var tree = ResultsTreeBuilder(results, moreAvailable);
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                DisplayItems(tree);
+            }, System.Windows.Threading.DispatcherPriority.Background);
         }
 
         public void DisplayItems(IEnumerable content)
