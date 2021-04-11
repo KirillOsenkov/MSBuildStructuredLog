@@ -88,9 +88,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 build.FileFormatVersion = fileFormatVersion;
 
                 // strings are deduplicated starting with version 10
-                if (fileFormatVersion >= 10 && ReuseBinlogStrings)
+                if (fileFormatVersion >= 10)
                 {
-                    build.StringTable.DisableDeduplication = true;
+                    build.StringTable.NormalizeLineEndings = false;
+                    if (ReuseBinlogStrings)
+                    {
+                        build.StringTable.DisableDeduplication = true;
+                    }
                 }
             };
 

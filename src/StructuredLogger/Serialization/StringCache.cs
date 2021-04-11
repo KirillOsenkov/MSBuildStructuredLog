@@ -25,30 +25,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         public bool DisableDeduplication { get; set; }
+        public bool NormalizeLineEndings { get; set; } = true;
 
         public string Intern(string text)
         {
-            if (DisableDeduplication)
+            if (string.IsNullOrEmpty(text) || DisableDeduplication)
             {
                 return text;
             }
 
-            if (text == null)
+            if (NormalizeLineEndings)
             {
-                return null;
+                // if it has line breaks, save some more space
+                text = text.NormalizeLineBreaks();
             }
 
-            if (text.Length == 0)
-            {
-                return string.Empty;
-            }
-
-            // if it has line breaks, save some more space
-            text = text.Replace("\r\n", "\n");
-            text = text.Replace("\r", "\n");
-
-            string existing;
-            if (deduplicationMap.TryGetValue(text, out existing))
+            if (deduplicationMap.TryGetValue(text, out string existing))
             {
                 return existing;
             }

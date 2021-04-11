@@ -217,14 +217,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static string NormalizeLineBreaks(this string text)
         {
-            if (text == null)
+            if (string.IsNullOrEmpty(text))
             {
-                return null;
-            }
-
-            if (text.Length == 0)
-            {
-                return string.Empty;
+                return text;
             }
 
             text = text.Replace("\r\n", "\n");
