@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -52,13 +53,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            if (message.StartsWith(Strings.ItemGroupIncludeMessagePrefix))
+            if (message.StartsWith(Strings.ItemGroupIncludeMessagePrefix, StringComparison.Ordinal))
             {
                 AddItemGroup(args, Strings.ItemGroupIncludeMessagePrefix, new AddItem());
                 return;
             }
 
-            if (message.StartsWith(Strings.OutputItemsMessagePrefix))
+            if (message.StartsWith(Strings.OutputItemsMessagePrefix, StringComparison.Ordinal))
             {
                 var task = GetTask(args);
 
@@ -70,7 +71,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            if (message.StartsWith(Strings.OutputPropertyMessagePrefix))
+            if (message.StartsWith(Strings.OutputPropertyMessagePrefix, StringComparison.Ordinal))
             {
                 var task = GetTask(args);
                 var folder = task.GetOrCreateNodeWithName<Folder>(Strings.OutputProperties);
@@ -79,19 +80,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            if (message.StartsWith(Strings.ItemGroupRemoveMessagePrefix))
+            if (message.StartsWith(Strings.ItemGroupRemoveMessagePrefix, StringComparison.Ordinal))
             {
                 AddItemGroup(args, Strings.ItemGroupRemoveMessagePrefix, new RemoveItem());
                 return;
             }
 
-            if (message.StartsWith(Strings.PropertyGroupMessagePrefix))
+            if (message.StartsWith(Strings.PropertyGroupMessagePrefix, StringComparison.Ordinal))
             {
                 AddPropertyGroup(args, Strings.PropertyGroupMessagePrefix);
                 return;
             }
     
-            if (message.StartsWith(Strings.TaskParameterMessagePrefix))
+            if (message.StartsWith(Strings.TaskParameterMessagePrefix, StringComparison.Ordinal))
             {
                 var task = GetTask(args);
                 if (IgnoreParameters(task))
@@ -231,13 +232,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             foreach (var item in items)
             {
                 var itemNode = new Item { Text = Intern(item.ItemSpec) };
-                foreach (string metadataName in item.MetadataNames)
+
+                var metadata = item.CloneCustomMetadata();
+                foreach (DictionaryEntry kvp in metadata)
                 {
-                    var value = item.GetMetadata(metadataName);
                     var metadataNode = new Metadata
                     {
-                        Name = Intern(metadataName),
-                        Value = Intern(value)
+                        Name = Intern((string)kvp.Key),
+                        Value = Intern((string)kvp.Value)
                     };
                     itemNode.AddChild(metadataNode);
                 }

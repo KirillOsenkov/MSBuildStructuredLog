@@ -284,14 +284,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static Match UsingTask(string message)
         {
-            if (TaskFoundFromFactory.IsMatch(message))
+            if (TaskFoundFromFactory.Match(message) is Match foundFromFactory && foundFromFactory.Success)
             {
-                return TaskFoundFromFactory.Match(message);
+                return foundFromFactory;
             }
 
-            if (TaskFound.IsMatch(message))
+            if (TaskFound.Match(message) is Match found && found.Success)
             {
-                return TaskFound.Match(message);
+                return found;
             }
 
             return Match.Empty;
