@@ -73,7 +73,8 @@ namespace ResourcesGenerator
             "PropertyReassignment",
             "EvaluationStarted",
             "EvaluationFinished",
-            "CouldNotResolveSdk"
+            "CouldNotResolveSdk",
+            "ProjectImportSkippedExpressionEvaluatedToEmpty"
         };
 
         public static Dictionary<string, string> Cultures = new Dictionary<string, string>
