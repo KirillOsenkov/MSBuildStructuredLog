@@ -374,7 +374,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         return;
                     }
 
-                    if (!sawCulture && args.SenderName == "BinaryLogger" && args.Message.StartsWith("CurrentUICulture"))
+                    if (!sawCulture && args.SenderName == "BinaryLogger" && args.Message.StartsWith("CurrentUICulture", StringComparison.Ordinal))
                     {
                         sawCulture = true;
                         int equalsIndex = args.Message.IndexOf("=");

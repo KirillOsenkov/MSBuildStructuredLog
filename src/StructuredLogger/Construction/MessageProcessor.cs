@@ -382,7 +382,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         Folder results = task.FindChild<Folder>(Strings.Results);
                         node = results ?? inputs;
 
-                        if (message.StartsWith("    "))
+                        if (message.StartsWith("    ", StringComparison.Ordinal))
                         {
                             message = message.Substring(4);
 
@@ -400,7 +400,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                 {
                                     node = parameter;
 
-                                    if (message.StartsWith("    "))
+                                    if (message.StartsWith("    ", StringComparison.Ordinal))
                                     {
                                         message = message.Substring(4);
 
@@ -410,7 +410,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                         // also don't indent if it's under AssemblyFoldersEx in Results
                                         if (lastItem != null &&
                                             !Strings.ForSearchPathPrefix.IsMatch(message) &&
-                                            !parameter.Name.StartsWith("AssemblyFoldersEx"))
+                                            !parameter.Name.StartsWith("AssemblyFoldersEx", StringComparison.Ordinal))
                                         {
                                             node = lastItem;
                                         }
@@ -479,10 +479,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     else if (string.Equals(task.Name, "MSBuild", StringComparison.OrdinalIgnoreCase))
                     {
                         var additionalPropertiesMatch = Strings.AdditionalPropertiesPrefix.Match(message);
-                        if (message.StartsWith(Strings.GlobalPropertiesPrefix) ||
+                        if (message.StartsWith(Strings.GlobalPropertiesPrefix, StringComparison.Ordinal) ||
                             additionalPropertiesMatch.Success ||
                             Strings.OverridingGlobalPropertiesPrefix.IsMatch(message) ||
-                            message.StartsWith(Strings.RemovingPropertiesPrefix) ||
+                            message.StartsWith(Strings.RemovingPropertiesPrefix, StringComparison.Ordinal) ||
                             Strings.RemovingProjectProperties.IsMatch(message))
                         {
                             if (additionalPropertiesMatch.Success)
@@ -526,79 +526,79 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     {
                         // just throw these away to save space
                         // https://github.com/NuGet/Home/issues/10383
-                        if (message.StartsWith(Strings.RestoreTask_CheckingCompatibilityFor))
+                        if (message.StartsWith(Strings.RestoreTask_CheckingCompatibilityFor, StringComparison.Ordinal))
                         {
                             return;
                         }
-                        else if (message.StartsWith("  GET"))
+                        else if (message.StartsWith("  GET", StringComparison.Ordinal))
                         {
                             node = node.GetOrCreateNodeWithName<Folder>("GET");
                         }
-                        else if (message.StartsWith("  CACHE"))
+                        else if (message.StartsWith("  CACHE", StringComparison.Ordinal))
                         {
                             node = node.GetOrCreateNodeWithName<Folder>("CACHE");
                         }
-                        else if (message.StartsWith("  OK"))
+                        else if (message.StartsWith("  OK", StringComparison.Ordinal))
                         {
                             node = node.GetOrCreateNodeWithName<Folder>("OK");
                         }
-                        else if (message.StartsWith("  NotFound"))
+                        else if (message.StartsWith("  NotFound", StringComparison.Ordinal))
                         {
                             node = node.GetOrCreateNodeWithName<Folder>("NotFound");
                         }
-                        else if (message.StartsWith("PackageSignatureVerificationLog:"))
+                        else if (message.StartsWith("PackageSignatureVerificationLog:", StringComparison.Ordinal))
                         {
                             node = node.GetOrCreateNodeWithName<Folder>("PackageSignatureVerificationLog");
                         }
-                        else if (message.StartsWith("Writing assets file to disk"))
+                        else if (message.StartsWith("Writing assets file to disk", StringComparison.Ordinal))
                         {
                             node = node.GetOrCreateNodeWithName<Folder>("Assets file");
                         }
-                        else if (message.StartsWith("Writing cache file to disk"))
+                        else if (message.StartsWith("Writing cache file to disk", StringComparison.Ordinal))
                         {
                             node = node.GetOrCreateNodeWithName<Folder>("Cache file");
                         }
-                        else if (message.StartsWith("Persisting dg to"))
+                        else if (message.StartsWith("Persisting dg to", StringComparison.Ordinal))
                         {
                             node = node.GetOrCreateNodeWithName<Folder>("dg file");
                         }
-                        else if (message.StartsWith("Generating MSBuild file"))
+                        else if (message.StartsWith("Generating MSBuild file", StringComparison.Ordinal))
                         {
                             node = node.GetOrCreateNodeWithName<Folder>("MSBuild file");
                         }
-                        else if (message.StartsWith("Lock not required"))
+                        else if (message.StartsWith("Lock not required", StringComparison.Ordinal))
                         {
                             node = node.GetOrCreateNodeWithName<Folder>("Lock not required");
                         }
-                        else if (message.StartsWith("Installing"))
+                        else if (message.StartsWith("Installing", StringComparison.Ordinal))
                         {
                             node = node.GetOrCreateNodeWithName<Folder>("Installing");
                         }
-                        else if (message.StartsWith("Restoring packages for"))
+                        else if (message.StartsWith("Restoring packages for", StringComparison.Ordinal))
                         {
                             node = node.GetOrCreateNodeWithName<Folder>("Restoring packages for");
                         }
-                        else if (message.StartsWith("Reading project file"))
+                        else if (message.StartsWith("Reading project file", StringComparison.Ordinal))
                         {
                             node = node.GetOrCreateNodeWithName<Folder>("Reading project file");
                         }
-                        else if (message.StartsWith("Scanning packages for"))
+                        else if (message.StartsWith("Scanning packages for", StringComparison.Ordinal))
                         {
                             node = node.GetOrCreateNodeWithName<Folder>("Scanning packages for");
                         }
-                        else if (message.StartsWith("Merging in runtimes"))
+                        else if (message.StartsWith("Merging in runtimes", StringComparison.Ordinal))
                         {
                             node = node.GetOrCreateNodeWithName<Folder>("Merging in runtimes");
                         }
                         else if (
-                            message.StartsWith(Strings.RestoreTask_CheckingCompatibilityFor) ||
-                            message.StartsWith(Strings.RestoreTask_CheckingCompatibilityOfPackages) ||
-                            message.StartsWith(Strings.RestoreTask_AcquiringLockForTheInstallation) ||
-                            message.StartsWith(Strings.RestoreTask_AcquiredLockForTheInstallation) ||
-                            message.StartsWith(Strings.RestoreTask_CompletedInstallationOf) ||
-                            message.StartsWith(Strings.RestoreTask_ResolvingConflictsFor) ||
-                            message.StartsWith(Strings.RestoreTask_AllPackagesAndProjectsAreCompatible) ||
-                            message.StartsWith(Strings.RestoreTask_Committing)
+                            message.StartsWith(Strings.RestoreTask_CheckingCompatibilityFor, StringComparison.Ordinal) ||
+                            message.StartsWith(Strings.RestoreTask_CheckingCompatibilityOfPackages, StringComparison.Ordinal) ||
+                            message.StartsWith(Strings.RestoreTask_AcquiringLockForTheInstallation, StringComparison.Ordinal) ||
+                            message.StartsWith(Strings.RestoreTask_AcquiredLockForTheInstallation, StringComparison.Ordinal) ||
+                            message.StartsWith(Strings.RestoreTask_CompletedInstallationOf, StringComparison.Ordinal) ||
+                            message.StartsWith(Strings.RestoreTask_ResolvingConflictsFor, StringComparison.Ordinal) ||
+                            message.StartsWith(Strings.RestoreTask_AllPackagesAndProjectsAreCompatible, StringComparison.Ordinal) ||
+                            message.StartsWith(Strings.RestoreTask_Committing, StringComparison.Ordinal)
                             )
                         {
                             return;
