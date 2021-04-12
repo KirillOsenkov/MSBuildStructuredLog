@@ -231,11 +231,58 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             if (message == "BuildMessage")
             {
-                return GetMessageSubType(message, args);
+                var context = args.BuildEventContext;
+                if (context.EvaluationId != -1)
+                {
+                    return "BuildMessage/Evaluation";
+                }
+
+                if (context.TaskId != BuildEventContext.InvalidTaskId)
+                {
+                    return "BuildMessage/Task";
+                }
+
+                if (context.TargetId != BuildEventContext.InvalidTargetId)
+                {
+                    return "BuildMessage/Target";
+                }
+
+                if (context.ProjectContextId != BuildEventContext.InvalidProjectContextId)
+                {
+                    return "BuildMessage/ProjectContext";
+                }
+
+                if (context.ProjectInstanceId != BuildEventContext.InvalidProjectInstanceId)
+                {
+                    return "BuildMessage/ProjectInstance";
+                }
+
+                return "BuildMessage/Other";
             }
             else if (message == "TaskParameter")
             {
+                if (args.BuildEventContext.TaskId != BuildEventContext.InvalidTaskId)
+                {
+                    return "TaskParameter/Task";
+                }
+                else
+                {
+                    return "TaskParameter/Target";
+                }
+            }
+            else if (message == "TaskParameter/Task" || message == "TaskParameter/Target")
+            {
                 return GetTaskParameterSubType(message, (TaskParameterEventArgs)args);
+            }
+            else if (
+                message == "BuildMessage/Evaluation" ||
+                message == "BuildMessage/Task" ||
+                message == "BuildMessage/Target" ||
+                message == "BuildMessage/ProjectContext" ||
+                message == "BuildMessage/ProjectInstance" ||
+                message == "BuildMessage/Other")
+            {
+                return GetMessageSubType(message, args);
             }
 
             return null;

@@ -12,8 +12,8 @@
     <AssemblyTitle>MSBuild Structured Log Viewer</AssemblyTitle>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'net472'">
-	<NuspecFileName>MSBuildStructuredLogViewer</NuspecFileName>
-	<ChocolateyFileName>msbuild-structured-log-viewer</ChocolateyFileName>
+    <NuspecFileName>MSBuildStructuredLogViewer</NuspecFileName>
+    <ChocolateyFileName>msbuild-structured-log-viewer</ChocolateyFileName>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AdonisUI" Version="1.16.0" />
