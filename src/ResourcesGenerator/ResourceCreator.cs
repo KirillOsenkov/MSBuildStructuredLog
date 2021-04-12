@@ -72,7 +72,8 @@ namespace ResourcesGenerator
             "ProjectImportSkippedInvalidFile",
             "PropertyReassignment",
             "EvaluationStarted",
-            "EvaluationFinished"
+            "EvaluationFinished",
+            "CouldNotResolveSdk"
         };
 
         public static Dictionary<string, string> Cultures = new Dictionary<string, string>
@@ -94,14 +95,14 @@ namespace ResourcesGenerator
 
         public static void CreateResourceFile(string msbuildPath)
         {
-            var CultureResources = new ResourcesDictionary();
+            var cultureResources = new ResourcesDictionary();
 
             foreach (KeyValuePair<string, string> culture in Cultures)
             {
                 var cultureInfo = CultureInfo.GetCultureInfo(culture.Value);
 
                 Dictionary<string, string> resourcesByCulture = new Dictionary<string, string>();
-                CultureResources.Add(culture.Value, resourcesByCulture);
+                cultureResources.Add(culture.Value, resourcesByCulture);
 
                 foreach (string dll in msBuildDlls)
                 {
@@ -134,7 +135,7 @@ namespace ResourcesGenerator
                 }
             }
 
-            Save(CultureResources);
+            Save(cultureResources);
         }
 
         private static void Save(ResourcesDictionary collection)
