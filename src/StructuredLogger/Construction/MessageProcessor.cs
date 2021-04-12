@@ -46,82 +46,93 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            if (args.SenderName == "BinaryLogger")
+            var buildEventContext = args.BuildEventContext;
+            if (buildEventContext.TaskId != BuildEventContext.InvalidTaskId)
             {
-                var parameter = ItemGroupParser.ParsePropertyOrItemList(message, string.Empty, stringTable);
-                construction.Build.AddChild(parameter);
-                return;
-            }
-
-            if (message.StartsWith(Strings.ItemGroupIncludeMessagePrefix, StringComparison.Ordinal))
-            {
-                AddItemGroup(args, Strings.ItemGroupIncludeMessagePrefix, new AddItem());
-                return;
-            }
-
-            if (message.StartsWith(Strings.OutputItemsMessagePrefix, StringComparison.Ordinal))
-            {
-                var task = GetTask(args);
-
-                //this.construction.Build.Statistics.ReportOutputItemMessage(task, message);
-
-                var folder = task.GetOrCreateNodeWithName<Folder>(Strings.OutputItems);
-                var parameter = ItemGroupParser.ParsePropertyOrItemList(message, Strings.OutputItemsMessagePrefix, stringTable);
-                folder.AddChild(parameter);
-                return;
-            }
-
-            if (message.StartsWith(Strings.OutputPropertyMessagePrefix, StringComparison.Ordinal))
-            {
-                var task = GetTask(args);
-                var folder = task.GetOrCreateNodeWithName<Folder>(Strings.OutputProperties);
-                var parameter = ItemGroupParser.ParsePropertyOrItemList(message, Strings.OutputPropertyMessagePrefix, stringTable);
-                folder.AddChild(parameter);
-                return;
-            }
-
-            if (message.StartsWith(Strings.ItemGroupRemoveMessagePrefix, StringComparison.Ordinal))
-            {
-                AddItemGroup(args, Strings.ItemGroupRemoveMessagePrefix, new RemoveItem());
-                return;
-            }
-
-            if (message.StartsWith(Strings.PropertyGroupMessagePrefix, StringComparison.Ordinal))
-            {
-                AddPropertyGroup(args, Strings.PropertyGroupMessagePrefix);
-                return;
-            }
-    
-            if (message.StartsWith(Strings.TaskParameterMessagePrefix, StringComparison.Ordinal))
-            {
-                var task = GetTask(args);
-                if (IgnoreParameters(task))
+                if (message.StartsWith(Strings.OutputItemsMessagePrefix, StringComparison.Ordinal))
                 {
+                    var task = GetTask(args);
+
+                    //this.construction.Build.Statistics.ReportOutputItemMessage(task, message);
+
+                    var folder = task.GetOrCreateNodeWithName<Folder>(Strings.OutputItems);
+                    var parameter = ItemGroupParser.ParsePropertyOrItemList(message, Strings.OutputItemsMessagePrefix, stringTable);
+                    folder.AddChild(parameter);
                     return;
                 }
 
-                //this.construction.Build.Statistics.ReportTaskParameterMessage(task, message);
-
-                var folder = task.GetOrCreateNodeWithName<Folder>(Strings.Parameters);
-                var parameter = ItemGroupParser.ParsePropertyOrItemList(message, Strings.TaskParameterMessagePrefix, stringTable);
-                folder.AddChild(parameter);
-                return;
-            }
-
-            // A task from assembly message (parses out the task name and assembly path).
-            var match = Strings.UsingTask(message);
-            if (match.Success)
-            {
-                construction.SetTaskAssembly(
-                    Intern(match.Groups["task"].Value),
-                    Intern(match.Groups["assembly"].Value));
-                return;
-            }
-
-            if (args is TaskCommandLineEventArgs taskArgs)
-            {
-                if (AddCommandLine(taskArgs))
+                if (message.StartsWith(Strings.OutputPropertyMessagePrefix, StringComparison.Ordinal))
                 {
+                    var task = GetTask(args);
+                    var folder = task.GetOrCreateNodeWithName<Folder>(Strings.OutputProperties);
+                    var parameter = ItemGroupParser.ParsePropertyOrItemList(message, Strings.OutputPropertyMessagePrefix, stringTable);
+                    folder.AddChild(parameter);
+                    return;
+                }
+
+                if (message.StartsWith(Strings.TaskParameterMessagePrefix, StringComparison.Ordinal))
+                {
+                    var task = GetTask(args);
+                    if (IgnoreParameters(task))
+                    {
+                        return;
+                    }
+
+                    //this.construction.Build.Statistics.ReportTaskParameterMessage(task, message);
+
+                    var folder = task.GetOrCreateNodeWithName<Folder>(Strings.Parameters);
+                    var parameter = ItemGroupParser.ParsePropertyOrItemList(message, Strings.TaskParameterMessagePrefix, stringTable);
+                    folder.AddChild(parameter);
+                    return;
+                }
+
+                if (args is TaskCommandLineEventArgs taskArgs)
+                {
+                    if (AddCommandLine(taskArgs))
+                    {
+                        return;
+                    }
+                }
+            }
+            else if (buildEventContext.TargetId != BuildEventContext.InvalidTargetId)
+            {
+                if (message.StartsWith(Strings.ItemGroupIncludeMessagePrefix, StringComparison.Ordinal))
+                {
+                    AddItemGroup(args, Strings.ItemGroupIncludeMessagePrefix, new AddItem());
+                    return;
+                }
+
+                if (message.StartsWith(Strings.ItemGroupRemoveMessagePrefix, StringComparison.Ordinal))
+                {
+                    AddItemGroup(args, Strings.ItemGroupRemoveMessagePrefix, new RemoveItem());
+                    return;
+                }
+
+                if (message.StartsWith(Strings.PropertyGroupMessagePrefix, StringComparison.Ordinal))
+                {
+                    AddPropertyGroup(args, Strings.PropertyGroupMessagePrefix);
+                    return;
+                }
+
+                // A task from assembly message (parses out the task name and assembly path).
+                var match = Strings.UsingTask(message);
+                if (match.Success)
+                {
+                    construction.SetTaskAssembly(
+                        Intern(match.Groups["task"].Value),
+                        Intern(match.Groups["assembly"].Value));
+                    return;
+                }
+            }
+            else if (buildEventContext.EvaluationId != BuildEventContext.InvalidEvaluationId)
+            {
+            }
+            else
+            {
+                if (args.SenderName == "BinaryLogger")
+                {
+                    var parameter = ItemGroupParser.ParsePropertyOrItemList(message, string.Empty, stringTable);
+                    construction.Build.AddChild(parameter);
                     return;
                 }
             }
@@ -371,7 +382,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             };
             BaseNode nodeToAdd = messageNode;
 
-            if (args.BuildEventContext?.TaskId > 0)
+            var buildEventContext = args.BuildEventContext;
+
+            if (buildEventContext?.TaskId > 0)
             {
                 node = GetTask(args);
                 if (node is Task task)
@@ -606,7 +619,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                 }
             }
-            else if (args.BuildEventContext?.TargetId > 0)
+            else if (buildEventContext?.TargetId > 0)
             {
                 node = GetTarget(args);
 
@@ -615,9 +628,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     messageNode.IsLowRelevance = true;
                 }
             }
-            else if (args.BuildEventContext?.ProjectContextId > 0)
+            else if (buildEventContext?.ProjectContextId > 0)
             {
-                var project = construction.GetOrAddProject(args.BuildEventContext.ProjectContextId);
+                var project = construction.GetOrAddProject(buildEventContext.ProjectContextId);
                 node = project;
 
                 if (Strings.IsTargetSkipped(message))
@@ -633,11 +646,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                 }
             }
-            else if (args.BuildEventContext.EvaluationId != -1)
+            else if (buildEventContext.EvaluationId != -1)
             {
                 node = construction.EvaluationFolder;
 
-                var evaluationId = args.BuildEventContext.EvaluationId;
+                var evaluationId = buildEventContext.EvaluationId;
                 var evaluation = construction.Build.FindEvaluation(evaluationId);
                 if (evaluation != null)
                 {
@@ -696,11 +709,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     node = folder;
                     messageNode.IsLowRelevance = true;
                 }
-                else if (args.BuildEventContext != null && (args.BuildEventContext.NodeId == 0 &&
-                       args.BuildEventContext.ProjectContextId == 0 &&
-                       args.BuildEventContext.ProjectInstanceId == 0 &&
-                       args.BuildEventContext.TargetId == 0 &&
-                       args.BuildEventContext.TaskId == 0))
+                else if (buildEventContext != null && (buildEventContext.NodeId == 0 &&
+                       buildEventContext.ProjectContextId == 0 &&
+                       buildEventContext.ProjectInstanceId == 0 &&
+                       buildEventContext.TargetId == 0 &&
+                       buildEventContext.TaskId == 0))
                 {
                     // must be Detailed Build Summary
                     // https://github.com/Microsoft/msbuild/blob/master/src/XMakeBuildEngine/BackEnd/Components/Scheduler/Scheduler.cs#L509
