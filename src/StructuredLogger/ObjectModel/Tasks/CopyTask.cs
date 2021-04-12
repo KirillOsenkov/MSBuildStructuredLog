@@ -24,26 +24,30 @@ namespace Microsoft.Build.Logging.StructuredLogger
             foreach (var message in this.Children.OfType<Message>())
             {
                 var text = message.Text;
-                match = Strings.CopyingFileFrom.Match(message.Text);
+
+                match = Strings.CopyingFileFrom.Match(text);
                 if (match.Success && match.Groups.Count > 2)
                 {
                     var operation = ParseCopyingFileFrom(match);
                     list.Add(operation);
+                    continue;
                 }
 
-                match = Strings.CreatingHardLink.Match(message.Text);
+                match = Strings.CreatingHardLink.Match(text);
                 if (match.Success && match.Groups.Count > 2)
                 {
                     var operation = ParseCopyingFileFrom(match);
                     list.Add(operation);
+                    continue;
                 }
 
-                match = Strings.DidNotCopy.Match(message.Text);
+                match = Strings.DidNotCopy.Match(text);
                 if (match.Success && match.Groups.Count > 2)
                 {
-                    var operation = ParseCopyingFileFrom(match, copied:false);
+                    var operation = ParseCopyingFileFrom(match, copied: false);
                     list.Add(operation);
-                }                
+                    continue;
+                }
             }
 
             return list;
