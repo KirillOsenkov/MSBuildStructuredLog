@@ -393,6 +393,13 @@ namespace StructuredLogViewer
             Title = filePath + " - " + DefaultTitle;
 
             var progress = new BuildProgress();
+            progress.Progress.Updated += update =>
+            {
+                Dispatcher.InvokeAsync(() =>
+                {
+                    progress.Value = update.Ratio;
+                }, DispatcherPriority.Background);
+            };
             progress.ProgressText = "Opening " + filePath + "...";
             SetContent(progress);
 

@@ -4,7 +4,6 @@
     {
         public BuildProgress()
         {
-            Progress.Updated += update => Value = update.Ratio;
         }
 
         public Progress Progress { get; } = new Progress();

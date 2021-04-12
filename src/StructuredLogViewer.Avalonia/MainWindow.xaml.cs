@@ -302,7 +302,7 @@ namespace StructuredLogViewer.Avalonia
             UpdateRecentItemsMenu();
             Title = filePath + " - " + DefaultTitle;
 
-            var progress = new BuildProgress();
+            var progress = new BuildProgress() { IsIndeterminate = true };
             progress.ProgressText = "Opening " + filePath + "...";
             SetContent(progress);
 
@@ -382,7 +382,7 @@ namespace StructuredLogViewer.Avalonia
 
         private async void BuildCore(string projectFilePath, string customArguments)
         {
-            var progress = new BuildProgress();
+            var progress = new BuildProgress() { IsIndeterminate = true };
             progress.ProgressText = $"Building {projectFilePath}...";
             SetContent(progress);
             var buildHost = new HostedBuild(projectFilePath, customArguments);
