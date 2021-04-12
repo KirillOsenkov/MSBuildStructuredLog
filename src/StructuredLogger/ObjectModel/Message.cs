@@ -25,7 +25,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             get
             {
                 var match = GetSourceFileMatch();
-                if (match.Success)
+                if (match != null && match.Success)
                 {
                     return match.Groups["File"].Value;
                 }
@@ -42,15 +42,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return match;
             }
 
-            match = Strings.ImportingProjectRegex.Match(Text);
-            if (match.Success)
-            {
-                return match;
-            }
-
-            string reason;
-            match = Strings.ProjectWasNotImportedRegex(Text, out reason);
-            return match;
+            return null;
         }
 
         // These are recalculated and not stored because storage in this class is incredibly expensive
@@ -60,7 +52,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             get
             {
                 var match = GetSourceFileMatch();
-                if (match.Success)
+                if (match != null && match.Success)
                 {
                     return int.Parse(match.Groups["Line"].Value);
                 }
