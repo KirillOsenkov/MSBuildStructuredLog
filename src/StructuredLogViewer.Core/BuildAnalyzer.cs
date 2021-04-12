@@ -116,8 +116,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     folder.SortChildren();
 
-                    ImportTreeAnalyzer.Analyze(folder, build.StringTable);
-
                     AnalyzeEvaluation(folder);
                 }
             }

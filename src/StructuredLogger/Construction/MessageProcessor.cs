@@ -33,6 +33,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 ProcessTaskParameter(taskParameter);
                 return;
             }
+            else if (args is ProjectImportedEventArgs projectImported)
+            {
+                ProcessProjectImported(projectImported);
+                return;
+            }
 
             var message = args.Message;
             if (string.IsNullOrEmpty(message))
@@ -122,6 +127,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             // Just the generic log message or something we currently don't handle in the object model.
             AddMessage(args, message);
+        }
+
+        private void ProcessProjectImported(ProjectImportedEventArgs args)
+        {
+            var import = ImportTreeAnalyzer.TryGetImportOrNoImport(args, stringTable);
+            if (import == null)
+            {
+                return;
+            }
+
+            var evaluationId = args.BuildEventContext.EvaluationId;
+            var evaluation = construction.Build.FindEvaluation(evaluationId);
+            if (evaluation != null)
+            {
+                evaluation.AddImport(import);
+            }
         }
 
         private void ProcessTaskParameter(TaskParameterEventArgs args)
@@ -614,16 +635,27 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 node = construction.EvaluationFolder;
 
-                var project = node.FindChild<ProjectEvaluation>(p => p.Id == args.BuildEventContext.EvaluationId);
-                if (project != null)
+                var evaluationId = args.BuildEventContext.EvaluationId;
+                var evaluation = construction.Build.FindEvaluation(evaluationId);
+                if (evaluation != null)
                 {
-                    node = project;
+                    node = evaluation;
                 }
 
-                if (Strings.PropertyReassignment.IsMatch(message))
+                if (Strings.PropertyReassignmentRegex.IsMatch(message))
                 {
-                    var properties = node.GetOrCreateNodeWithName<Folder>(Strings.PropertyReassignmentFolder, addAtBeginning: true);
-                    node = properties.GetOrCreateNodeWithName<Folder>(Strings.GetPropertyName(message));
+                    TimedNode properties;
+                    if (evaluation != null)
+                    {
+                        properties = evaluation.PropertyReassignmentFolder;
+                    }
+                    else
+                    {
+                        properties = node.GetOrCreateNodeWithName<TimedNode>(Strings.PropertyReassignmentFolder, addAtBeginning: true);
+                    }
+
+                    var propertyName = Strings.GetPropertyName(message);
+                    node = properties.GetOrCreateNodeWithName<Folder>(propertyName);
                 }
 
                 if (node != null && node.FindChild<Message>(message) != null)
@@ -646,7 +678,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     node = construction.EvaluationFolder;
                 }
-                else if (Strings.PropertyReassignment.IsMatch(message))
+                else if (Strings.PropertyReassignmentRegex.IsMatch(message))
                 {
                     if (!evaluationMessagesAlreadySeen.Add(message))
                     {
