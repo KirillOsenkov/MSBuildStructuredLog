@@ -24,6 +24,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             DisableDeduplication = true;
         }
 
+        public void Intern(IEnumerable<string> strings)
+        {
+            foreach (var text in strings)
+            {
+                Intern(text);
+            }
+        }
+
         public bool DisableDeduplication { get; set; }
         public bool NormalizeLineEndings { get; set; } = true;
 

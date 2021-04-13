@@ -159,7 +159,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void ProcessTaskParameter(TaskParameterEventArgs args)
         {
-            string itemType = Intern(args.ItemType);
+            string itemType = args.ItemType;
             var items = args.Items.OfType<ITaskItem>().ToArray();
 
             NamedNode parent = null;
@@ -242,15 +242,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             foreach (var item in items)
             {
-                var itemNode = new Item { Text = Intern(item.ItemSpec) };
+                var itemNode = new Item { Text = item.ItemSpec };
 
                 var metadata = item.CloneCustomMetadata();
                 foreach (DictionaryEntry kvp in metadata)
                 {
                     var metadataNode = new Metadata
                     {
-                        Name = Intern((string)kvp.Key),
-                        Value = Intern((string)kvp.Value)
+                        Name = (string)kvp.Key,
+                        Value = (string)kvp.Value
                     };
                     itemNode.AddChild(metadataNode);
                 }

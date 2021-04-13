@@ -104,10 +104,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             var elapsed = sw.Elapsed;
 
-            if (strings != null && ReuseBinlogStrings)
+            if (strings != null)
             {
-                // since strings are already deduplicated in the file, no need to do it again
-                build.StringTable.SetStrings(strings);
+                if (ReuseBinlogStrings)
+                {
+                    // since strings are already deduplicated in the file, no need to do it again
+                    build.StringTable.SetStrings(strings);
+                }
+                else
+                {
+                    // intern all strings in one fell swoop here instead of interning multiple times
+                    // one by one when processing task parameters
+                    build.StringTable.Intern(strings);
+                }
             }
 
             structuredLogger.Shutdown();

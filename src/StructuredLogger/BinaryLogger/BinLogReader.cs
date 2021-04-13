@@ -128,7 +128,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             processingTask.Wait();
 
-            if (BinaryLog.ReuseBinlogStrings)
+            if (fileFormatVersion >= 10)
             {
                 var strings = reader.GetStrings();
                 if (strings != null && strings.Any())
