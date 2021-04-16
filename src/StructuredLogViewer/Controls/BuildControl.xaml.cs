@@ -427,7 +427,10 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                 }
                 else if (item is Target || item is Task)
                 {
-                    if (string.IsNullOrEmpty(text) || item.Name.IndexOf(text, StringComparison.OrdinalIgnoreCase) > -1)
+                    if (string.IsNullOrEmpty(text) ||
+                        item.Name.IndexOf(text, StringComparison.OrdinalIgnoreCase) > -1 ||
+                        (text == "$target" && item is Target) ||
+                        (text == "$task" && item is Task))
                     {
                         visible = true;
                         item.IsVisible = true;
