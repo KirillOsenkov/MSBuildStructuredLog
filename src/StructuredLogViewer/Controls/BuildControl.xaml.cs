@@ -878,14 +878,21 @@ Recent:
 
         private IEnumerable<string> GetTargets(string file)
         {
-            if (file.EndsWith(".targets") == false)
+            if (file.EndsWith(".sln", StringComparison.OrdinalIgnoreCase) ||
+                file.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
             {
                 yield break;
             }
 
             var content = sourceFileResolver.GetSourceFileText(file);
+            if (content == null)
+            {
+                yield break;
+            }
+
             var contentText = content.Text;
-            if (string.IsNullOrWhiteSpace(contentText))
+
+            if (!Utilities.LooksLikeXml(contentText))
             {
                 yield break;
             }
