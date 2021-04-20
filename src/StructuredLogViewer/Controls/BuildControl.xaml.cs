@@ -681,7 +681,7 @@ Recent:
 
             try
             {
-                Process.Start(taskRunner.QuoteIfNeeded(), $"{logFilePath} {task.Index} pause{(debug ? " debug" : "")}");
+                Process.Start(taskRunner.QuoteIfNeeded(), $"{logFilePath.QuoteIfNeeded()} {task.Index} pause{(debug ? " debug" : "")}");
             }
             catch (Exception ex)
             {
