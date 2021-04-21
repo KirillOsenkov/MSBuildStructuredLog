@@ -132,18 +132,17 @@ namespace StructuredLogViewer.Avalonia.Controls
             contextMenu.AddItem(copyValueItem);
             contextMenu.AddItem(hideItem);
 
-            var treeViewItemStyle = new Style(s => s.OfType<TreeViewItem>())
+            Style GetTreeViewItemStyle()
             {
-                Setters = new ISetter[]
-                {
-                    new Setter(TreeViewItem.IsExpandedProperty, new Binding("IsExpanded") {Mode = BindingMode.TwoWay}),
-                    new Setter(TreeViewItem.IsSelectedProperty, new Binding("IsSelected") {Mode = BindingMode.TwoWay}),
-                    new Setter(IsVisibleProperty, new Binding("IsVisible") {Mode = BindingMode.TwoWay})
-                }
-            };
+                var treeViewItemStyle = new Style(s => s.OfType<TreeViewItem>());
+                treeViewItemStyle.Setters.Add(new Setter(TreeViewItem.IsExpandedProperty, new Binding("IsExpanded") {Mode = BindingMode.TwoWay}));
+                treeViewItemStyle.Setters.Add(new Setter(TreeViewItem.IsSelectedProperty, new Binding("IsSelected") {Mode = BindingMode.TwoWay}));
+                treeViewItemStyle.Setters.Add(new Setter(IsVisibleProperty, new Binding("IsVisible") {Mode = BindingMode.TwoWay}));
+                return treeViewItemStyle;
+            }
 
             treeView.ContextMenu = contextMenu;
-            treeView.Styles.Add(treeViewItemStyle);
+            treeView.Styles.Add(GetTreeViewItemStyle());
             RegisterTreeViewHandlers(treeView);
             treeView.KeyDown += TreeView_KeyDown;
             treeView.PropertyChanged += TreeView_SelectedItemChanged;
@@ -151,14 +150,14 @@ namespace StructuredLogViewer.Avalonia.Controls
 
             ActiveTreeView = treeView;
 
-            searchLogControl.ResultsList.Styles.Add(treeViewItemStyle);
+            searchLogControl.ResultsList.Styles.Add(GetTreeViewItemStyle());
             RegisterTreeViewHandlers(searchLogControl.ResultsList);
             searchLogControl.ResultsList.SelectionChanged += ResultsList_SelectionChanged;
             searchLogControl.ResultsList.GotFocus += (s, a) => ActiveTreeView = searchLogControl.ResultsList;
             searchLogControl.ResultsList.ContextMenu = sharedTreeContextMenu;
 
             findInFilesControl.GotFocus += (s, a) => ActiveTreeView = findInFilesControl.ResultsList;
-            findInFilesControl.ResultsList.Styles.Add(treeViewItemStyle);
+            findInFilesControl.ResultsList.Styles.Add(GetTreeViewItemStyle());
             RegisterTreeViewHandlers(findInFilesControl.ResultsList);
             findInFilesControl.ResultsList.GotFocus += (s, a) => ActiveTreeView = findInFilesControl.ResultsList;
             findInFilesControl.ResultsList.ContextMenu = sharedTreeContextMenu;
@@ -168,7 +167,7 @@ namespace StructuredLogViewer.Avalonia.Controls
                 filesTab.IsVisible = true;
                 findInFilesTab.IsVisible = true;
                 PopulateFilesTab();
-                filesTree.Styles.Add(treeViewItemStyle);
+                filesTree.Styles.Add(GetTreeViewItemStyle());
                 RegisterTreeViewHandlers(filesTree);
 
                 var text =
