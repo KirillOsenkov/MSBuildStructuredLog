@@ -30,8 +30,8 @@
             <Setter Property="StrokeThickness" Value="1" />
             <Setter Property="VerticalAlignment" Value="Top" />
         </Style>
-        
-        <Style Selector="DrawingPresenter.projectNodeIcon">
+
+        <Style Selector="Image.projectNodeIcon">
             <Setter Property="Width" Value="16" />
             <Setter Property="Height" Value="16" />
             <Setter Property="Margin" Value="2,2,6,2" />
@@ -69,8 +69,11 @@
             <StackPanel Orientation="Horizontal"
                         Name="projectRoot"
                         Opacity="{Binding IsLowRelevance, Converter={StaticResource RelevanceConverter}}">
-                <DrawingPresenter Classes="projectNodeIcon"
-                                  Drawing="{Binding ProjectFileExtension, Converter={StaticResource ProjectIconConverter}}" />
+                <Image Classes="projectNodeIcon">
+                    <Image.Source>
+                        <DrawingImage Drawing="{Binding ProjectFileExtension, Converter={StaticResource ProjectIconConverter}}" />
+                    </Image.Source>
+                </Image>
                 <TextBlock Text="{Binding Name}"
                            Margin="0,1,0,0" />
             </StackPanel>
@@ -81,8 +84,11 @@
             <StackPanel Orientation="Horizontal"
                         Name="projectRoot"
                         Opacity="{Binding IsLowRelevance, Converter={StaticResource RelevanceConverter}}">
-                <DrawingPresenter Classes="projectNodeIcon"
-                                  Drawing="{Binding ProjectFileExtension, Converter={StaticResource ProjectIconConverter}}" />
+                <Image Classes="projectNodeIcon">
+                    <Image.Source>
+                        <DrawingImage Drawing="{Binding ProjectFileExtension, Converter={StaticResource ProjectIconConverter}}" />
+                    </Image.Source>
+                </Image>
                 <TextBlock Text="{Binding Name}"
                            Margin="0,1,0,0" />
             </StackPanel>
@@ -440,10 +446,13 @@
                                     MinHeight="200"
                                     Command="{Binding OpenProjectCommand}">
                                 <StackPanel>
-                                    <DrawingPresenter Width="100"
-                                                      Height="100"
-                                                      Margin="20" 
-                                                      Drawing="{StaticResource SlnIcon}" />
+                                    <Image Width="100"
+                                           Height="100"
+                                           Margin="20">
+                                        <Image.Source>
+                                            <DrawingImage Drawing="{StaticResource SlnIcon}" />
+                                        </Image.Source>
+                                    </Image>
                                     <TextBlock Text="Open Project/Solution"
                                                FontSize="16"
                                                Margin="10"
@@ -572,7 +581,7 @@
                     <TextBlock Text="Specify custom MSBuild command line arguments:"
                                Margin="0,0,0,7" />
                     <WrapPanel Orientation="Horizontal">
-                        <DropDown Items="{Binding MSBuildLocations}"
+                        <ComboBox Items="{Binding MSBuildLocations}"
                                   ToolTip.Tip="Select MSBuild toolset to use for building"
                                   Height="22" />
                         <Button Command="{Binding BrowseForMSBuildCommand}"

@@ -71,10 +71,10 @@ namespace StructuredLogViewer.Avalonia.Controls
 
         private object ProjectIcon(string projectExtension)
         {
-            return new DrawingPresenter
+            return new Image
             {
                 Classes = { "projectNodeIcon" },
-                Drawing = projectIconConverter.ProjectExtensionToIcon(projectExtension)
+                Source = new DrawingImage {Drawing = projectIconConverter.ProjectExtensionToIcon(projectExtension)}
             };
         }
 
