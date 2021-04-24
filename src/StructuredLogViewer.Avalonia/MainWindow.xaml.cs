@@ -408,7 +408,7 @@ namespace StructuredLogViewer.Avalonia
             openFileDialog.Filters.Add(new FileDialogFilter { Name = "Build Log (*.binlog;*.buildlog;*.xml)", Extensions = { "binlog", "buildlog", "xml" } });
             openFileDialog.Title = "Open a build log file";
             var result = await openFileDialog.ShowAndGetFileAsync(this);
-            if (result == null || !File.Exists(result))
+            if (!File.Exists(result))
             {
                 return;
             }
@@ -422,7 +422,7 @@ namespace StructuredLogViewer.Avalonia
             openFileDialog.Filters.Add(new FileDialogFilter { Name = "MSBuild projects and solutions (*.sln;*.*proj)", Extensions = { "sln", "*proj" } });
             openFileDialog.Title = "Open a solution or project";
             var result = await openFileDialog.ShowAndGetFileAsync(this);
-            if (result == null || !File.Exists(result))
+            if (!File.Exists(result))
             {
                 return;
             }
@@ -566,7 +566,7 @@ namespace StructuredLogViewer.Avalonia
             };
 
             var fileName = await openFileDialog.ShowAndGetFileAsync(this);
-            if (fileName != null)
+            if (!File.Exists(fileName))
             {
                 return;
             }
