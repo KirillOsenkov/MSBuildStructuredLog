@@ -566,7 +566,7 @@ namespace StructuredLogViewer.Avalonia
             };
 
             var fileName = await openFileDialog.ShowAndGetFileAsync(this);
-            if (fileName != null)
+            if (!File.Exists(fileName))
             {
                 return;
             }
