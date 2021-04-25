@@ -113,7 +113,7 @@
                            Stroke="{StaticResource TargetStroke}"
                            Fill="{StaticResource TargetBrush}" />
                 <TextBlock Name="label"
-                           Classes="nodeText"
+                           Classes="nodeBeforeText"
                            Text="Target "
                            Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={StaticResource TargetStroke}}" />
                 <TextBlock Classes="nodeText"
@@ -140,7 +140,7 @@
                            Stroke="{StaticResource TaskStroke}"
                            Fill="{StaticResource TaskBrush}" />
                 <TextBlock Name="label"
-                           Classes="nodeText"
+                           Classes="nodeBeforeText"
                            Text="Task "
                            Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={StaticResource TaskStroke}}"/>
                 <TextBlock Classes="nodeText"
@@ -160,7 +160,7 @@
                            Stroke="{StaticResource ItemStroke}"
                            Fill="{StaticResource ItemBrush}" />
                 <TextBlock Name="label"
-                           Classes="nodeText"
+                           Classes="nodeBeforeText"
                            Text="Add Item "
                            Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={x:Static Brushes.Teal}}" />
                 <TextBlock Text="{Binding Name}"
@@ -176,7 +176,7 @@
                            Stroke="{StaticResource ItemStroke}"
                            Fill="{StaticResource ItemBrush}" />
                 <TextBlock Name="label"
-                           Classes="nodeText"
+                           Classes="nodeBeforeText"
                            Text="Remove Item "
                            Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={x:Static Brushes.Teal}}"/>
                 <TextBlock Text="{Binding Name}"
@@ -293,7 +293,7 @@
                            Stroke="{StaticResource ImportStroke}"
                            Fill="{StaticResource ImportBrush}" />
                 <TextBlock x:Name="label"
-                           Classes="nodeText"
+                           Classes="nodeBeforeText"
                            Text="Import"
                            Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={StaticResource ImportStroke}}" />
                 <TextBlock x:Name="name"
@@ -314,7 +314,7 @@
                            Stroke="{StaticResource NoImportStroke}"
                            Fill="{StaticResource NoImportBrush}" />
                 <TextBlock x:Name="label"
-                           Classes="nodeText"
+                           Classes="nodeBeforeText"
                            Text="NoImport"
                            Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={StaticResource NoImportStroke}}" />
                 <TextBlock x:Name="name"
