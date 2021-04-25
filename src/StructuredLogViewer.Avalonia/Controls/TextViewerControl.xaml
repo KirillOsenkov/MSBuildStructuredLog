@@ -12,11 +12,11 @@
                     VerticalAlignment="Center"
                     BorderThickness="0"
                     Background="Transparent"
-                    Padding="6,3,6,3"
+                    Padding="8,4,8,4"
                     ToolTip.Tip="Open in external editor" />
             <Button Name="copyFullPath"
                     Content="Copy Path"
-                    Padding="6,3,6,3"
+                    Padding="8,4,8,4"
                     BorderThickness="0"
                     Background="Transparent"
                     VerticalAlignment="Center"
@@ -24,7 +24,7 @@
                     ToolTip.Tip="Copy full path" />
             <Button Name="preprocess"
                     Content="Preprocess"
-                    Padding="6,3,6,3"
+                    Padding="8,4,8,4"
                     BorderThickness="0"
                     Background="Transparent"
                     VerticalAlignment="Center"

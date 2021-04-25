@@ -5,20 +5,20 @@
     <DockPanel>
         <Grid DockPanel.Dock="Top">
             <TextBox Name="searchTextBox"
-                     MinHeight="23"
+                     MinHeight="24"
                      BorderThickness="0,0,0,1" />
             <Path Name="magnifyingGlass"
                   Data="{DynamicResource SearchGeometry}"
                   Fill="#717171"
                   HorizontalAlignment="Right"
                   VerticalAlignment="Center"
-                  Margin="3"
+                  Margin="4"
                   IsVisible="{Binding #searchTextBox.Text, Converter={x:Static StringConverters.IsNullOrEmpty}}" />
             <Button Name="clearSearchButton"
                     Classes="close"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Stretch"
-                    Margin="0,0,0,1"
+                    Margin="0,0,0,4"
                     Width="20"
                     IsVisible="{Binding #searchTextBox.Text, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
         </Grid>

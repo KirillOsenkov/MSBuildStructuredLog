@@ -45,7 +45,7 @@
                             <TabControl Name="centralTabControl"
                                         TabStripPlacement="Bottom"
                                         SelectedIndex="0"
-                                        MinWidth="10">
+                                        MinWidth="12">
                                 <TabItem Name="mainTreeTab"
                                          Header="Log">
                                     <TreeView Name="treeView"

@@ -17,7 +17,7 @@
                 <Border Name="border"
                         Background="Transparent"
                         IsVisible="{TemplateBinding IsVisible}">
-                    <Path Width="10"
+                    <Path Width="12"
                           Height="8"
                           VerticalAlignment="Center"
                           HorizontalAlignment="Center"
@@ -81,13 +81,13 @@
                                               Padding="{TemplateBinding Padding}"
                                               Grid.Column="1"/>
                             <Ellipse Grid.Column="1"
-                                     Width="6" Height="6" Margin="1,1,0,0" StrokeThickness="1"
+                                     Width="8" Height="8" Margin="4,4,0,0" StrokeThickness="1"
                                      HorizontalAlignment="Left" VerticalAlignment="Top"
                                      Fill="{StaticResource ContainsSearchResultBrush}"
                                      Stroke="{StaticResource ContainsSearchResultStroke}"
                                      IsVisible="{Binding ContainsSearchResult}"/>
                             <Ellipse Grid.Column="1"
-                                     Width="6" Height="6" Margin="1,1,0,0" StrokeThickness="1"
+                                     Width="8" Height="8" Margin="4,4,0,0" StrokeThickness="1"
                                      HorizontalAlignment="Left" VerticalAlignment="Top"
                                      Fill="{StaticResource SearchResultBrush}"
                                      Stroke="{StaticResource SearchResultStroke}"

@@ -219,8 +219,8 @@
                           ItemsSource="{Binding Children}">
             <StackPanel Orientation="Horizontal">
                 <ProgressBar Width="40" 
-                             Height="9" 
-                             Margin="2,1,6,0" 
+                             Height="12" 
+                             Margin="4,4,8,0" 
                              Minimum="0"
                              Maximum="100"
                              Value="{Binding Value}"
@@ -230,7 +230,7 @@
                            Text="{Binding Title, Mode=OneTime}" />
                 <TextBlock Name="hits" 
                            VerticalAlignment="Center"
-                           Margin="6,0,0,0"
+                           Margin="8,0,0,0"
                            Text="{Binding DurationText, Mode=OneTime}"
                            Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={x:Static Brushes.Blue}}" />
                 <TextBlock Name="code"
@@ -349,7 +349,7 @@
                         Content="{Binding Text}"
                         Command="{Binding Command}"
                         IsEnabled="{Binding IsEnabled}"
-                        Padding="4,2,4,2" />
+                        Padding="4" />
             </StackPanel>
         </DataTemplate>
         
@@ -383,7 +383,7 @@
                         BorderThickness="1"
                         Margin="4"
                         Background="LightYellow"
-                        Padding="6">
+                        Padding="8">
                     <TextBlock Text="{Binding Text}"
                                Foreground="Gray"
                                TextWrapping="Wrap" />
@@ -399,6 +399,7 @@
                            Stroke="{StaticResource MessageStroke}"
                            Fill="{StaticResource MessageBrush}" />
                 <TextBlock Name="messageText"
+                           Classes="nodeText"
                            Text="{Binding Name}" />
             </StackPanel>
         </TreeDataTemplate>
@@ -467,7 +468,7 @@
                                    Grid.Row="0"
                                    FontSize="16"
                                    Foreground="Red"
-                                   Margin="10"
+                                   Margin="8"
                                    TextWrapping="Wrap"
                                    Text="{Binding Message}" />
                         <!--
@@ -493,7 +494,7 @@
                                     </Image>
                                     <TextBlock Text="Open Project/Solution"
                                                FontSize="16"
-                                               Margin="10"
+                                               Margin="8"
                                                HorizontalAlignment="Center" />
                                 </StackPanel>
                             </Button>
@@ -506,54 +507,54 @@
                                     <Canvas Width="100"
                                             Height="100"
                                             Margin="20">
-                                        <Rectangle Width="35"
-                                                   Height="35"
+                                        <Rectangle Width="36"
+                                                   Height="36"
                                                    Canvas.Left="0"
                                                    Canvas.Top="0"
                                                    Stroke="{StaticResource TargetStroke}"
                                                    StrokeThickness="1"
                                                    Fill="{StaticResource TargetBrush}" />
-                                        <Rectangle Width="35"
-                                                   Height="35"
-                                                   Canvas.Left="25"
-                                                   Canvas.Top="35"
+                                        <Rectangle Width="36"
+                                                   Height="36"
+                                                   Canvas.Left="24"
+                                                   Canvas.Top="36"
                                                    Stroke="{StaticResource ParameterStroke}"
                                                    StrokeThickness="1"
                                                    Fill="{StaticResource ParameterBrush}" />
-                                        <Rectangle Width="35"
-                                                   Height="35"
-                                                   Canvas.Left="25"
-                                                   Canvas.Top="70"
+                                        <Rectangle Width="36"
+                                                   Height="36"
+                                                   Canvas.Left="24"
+                                                   Canvas.Top="72"
                                                    Stroke="{StaticResource TaskStroke}"
                                                    StrokeThickness="1"
                                                    Fill="{StaticResource TaskBrush}" />
-                                        <Rectangle Width="35"
-                                                   Height="35"
+                                        <Rectangle Width="36"
+                                                   Height="36"
                                                    Canvas.Left="60"
-                                                   Canvas.Top="35"
+                                                   Canvas.Top="36"
                                                    Stroke="{StaticResource ItemStroke}"
                                                    StrokeThickness="1"
                                                    Fill="{StaticResource ItemBrush}" />
-                                        <Rectangle Width="35"
-                                                   Height="35"
+                                        <Rectangle Width="36"
+                                                   Height="36"
                                                    Canvas.Left="60"
-                                                   Canvas.Top="70"
+                                                   Canvas.Top="72"
                                                    Stroke="{StaticResource FolderStroke}"
                                                    StrokeThickness="1"
                                                    Fill="{StaticResource ClosedFolderBrush}" />
-                                        <Line StartPoint="16,35"
-                                              EndPoint="16,87"
+                                        <Line StartPoint="16,36"
+                                              EndPoint="16,88"
                                               Stroke="Black" />
-                                        <Line StartPoint="16,87"
-                                              EndPoint="25,87"
+                                        <Line StartPoint="16,88"
+                                              EndPoint="24,88"
                                               Stroke="Black" />
-                                        <Line StartPoint="16,53"
-                                              EndPoint="25,53"
+                                        <Line StartPoint="16,52"
+                                              EndPoint="24,52"
                                               Stroke="Black" />
                                     </Canvas>
                                     <TextBlock Text="Open Log File"
                                                FontSize="16"
-                                               Margin="10"
+                                               Margin="8"
                                                HorizontalAlignment="Center" />
                                 </StackPanel>
                             </Button>
@@ -563,9 +564,9 @@
                               IsVisible="{Binding ShowRecentProjects}">
                             <Expander IsExpanded="True"
                                       Header="Recent projects and solutions"
-                                      Margin="10">
+                                      Margin="8">
                                 <ListBox Items="{Binding RecentProjects}"
-                                         Margin="10"
+                                         Margin="8"
                                          SelectedItem="{Binding SelectedProject, Mode=OneWayToSource}"
                                          Background="Transparent"
                                          BorderBrush="Transparent"
@@ -588,15 +589,15 @@
                         </Grid>
                         <StackPanel Grid.Row="4">
                             <CheckBox Content="Enable tree virtualization (faster, but may cause hangs)"
-                                      Margin="10,0,10,10"
+                                      Margin="8,0,8,8"
                                       IsChecked="{Binding EnableVirtualization}"
                                       ToolTip.Tip="Disable virtualization if you're experiencing hangs or deadlocks when scrolling the tree" />
                             <CheckBox Content="Display all targets directly under the project (flattened in temporal order)"
-                                      Margin="10,0,10,10"
+                                      Margin="8,0,8,8"
                                       IsChecked="{Binding ParentAllTargetsUnderProject}" 
                                       ToolTip.Tip="Linearize/flatten all targets under the project instead of parenting targets under their dependency target"/>
                             <CheckBox Content="Mark search results with a dot in the main tree"
-                                      Margin="10,0,10,10"
+                                      Margin="8,0,8,8"
                                       IsChecked="{Binding MarkResultsInTree}" 
                                       ToolTip.Tip="Mark tree nodes that appear in search results with a dot"/>
                         </StackPanel>
@@ -704,8 +705,8 @@
                              Value="100"
                              HorizontalAlignment="Center"
                              Width="200"
-                             Height="23"
-                             Margin="10" />
+                             Height="24"
+                             Margin="12" />
                 <!--TODO:
                 IsIndeterminate="True"
                 -->
@@ -713,13 +714,13 @@
                             Margin="40"
                             IsVisible="{Binding ShowCommandLine}">
                     <TextBlock Text="Using command line (press Ctrl+C to copy):"
-                               Margin="0,0,0,7" />
+                               Margin="0,0,0,8" />
                     <TextBox Text="{Binding MSBuildCommandLine}"
                              IsReadOnly="True"
                              TextWrapping="Wrap"
                              AcceptsReturn="True"
                              Background="#E0E0E0"
-                             MinHeight="23" />
+                             MinHeight="24" />
                 </StackPanel>
             </Grid>
         </DataTemplate>

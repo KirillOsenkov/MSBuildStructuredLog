@@ -8,7 +8,7 @@
             <TabControl.ItemTemplate>
                 <DataTemplate DataType="{x:Type local:SourceFileTab}">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock MinWidth="50"
+                        <TextBlock MinWidth="52"
                                    Text="{Binding FileName}"
                                    VerticalAlignment="Center" />
                         <Button Name="HideButton"
