@@ -456,14 +456,8 @@
                 <Grid HorizontalAlignment="Center"
                       VerticalAlignment="Center">
                     <Rectangle Fill="Black" />
-                    <Grid Background="White">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
+                    <Grid Background="White"
+                          RowDefinitions="Auto,Auto,Auto,Auto,Auto">
                         <TextBlock Name="customMessage"
                                    Grid.Row="0"
                                    FontSize="16"
@@ -475,11 +469,8 @@
                                    IsVisible="{Binding Message, Converter={StaticResource StringEmptinessToVisibilityConverter}}"
                         -->
                         <Grid Name="openLogOrProjectCompartment"
-                              Grid.Row="1">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
+                              Grid.Row="1"
+                              ColumnDefinitions="Auto,Auto">
                             <Button Margin="20"
                                     MinWidth="200"
                                     MinHeight="200"
@@ -610,11 +601,8 @@
             <Grid Name="buildParameters"
                   HorizontalAlignment="Center"
                   VerticalAlignment="Center"
-                  Margin="40">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
+                  Margin="40"
+                  RowDefinitions="Auto,Auto">
                 <StackPanel Grid.Row="0"
                             Margin="40,40,40,12">
                     <TextBlock Text="Specify custom MSBuild command line arguments:"
@@ -691,12 +679,8 @@
             <Grid Name="buildProgress"
                   HorizontalAlignment="Center"
                   VerticalAlignment="Center"
-                  Margin="40">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
+                  Margin="40"
+                  RowDefinitions="Auto,Auto,Auto">
                 <TextBlock Name="text"
                            Text="{Binding ProgressText}"
                            HorizontalAlignment="Center"
