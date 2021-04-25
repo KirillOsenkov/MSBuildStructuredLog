@@ -28,21 +28,25 @@ namespace StructuredLogViewer
 
         public Task<Build> BuildAndGetResult(BuildProgress progress)
         {
-            var msbuildExe = SettingsService.GetMSBuildExe();
+            var msBuildFile = SettingsService.GetMSBuildFile();
+            var isLibraryMsBuild = msBuildFile?.EndsWith(".dll", StringComparison.OrdinalIgnoreCase);
+            msBuildFile = msBuildFile.QuoteIfNeeded();
+            var msBuildExe = isLibraryMsBuild == true ? "dotnet " + msBuildFile : msBuildFile;
+
             var postfixArguments = GetPostfixArguments();
 
             // the command line we pass to Process.Start doesn't need msbuild.exe
             var commandLine = $"{projectFilePath.QuoteIfNeeded()} {customArguments} {postfixArguments}";
 
             // the command line we display to the user should contain the full path to msbuild.exe
-            progress.MSBuildCommandLine = $"{msbuildExe.QuoteIfNeeded()} {commandLine}";
+            progress.MSBuildCommandLine = $"{msBuildExe} {commandLine}";
 
             return System.Threading.Tasks.Task.Run(() =>
             {
                 try
                 {
                     var arguments = commandLine;
-                    var processStartInfo = new ProcessStartInfo(msbuildExe, arguments);
+                    var processStartInfo = new ProcessStartInfo(msBuildExe, arguments);
                     processStartInfo.WorkingDirectory = Path.GetDirectoryName(projectFilePath);
                     var process = Process.Start(processStartInfo);
                     process.WaitForExit();

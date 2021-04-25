@@ -10,6 +10,8 @@ namespace StructuredLogViewer.Avalonia.Controls
         public event Action BuildRequested;
         public event Action CancelRequested;
 
+        public event Func<System.Threading.Tasks.Task> BrowseForMSBuildRequsted;
+
         public BuildParametersScreen()
         {
             UpdateMSBuildLocations();
@@ -64,11 +66,10 @@ namespace StructuredLogViewer.Avalonia.Controls
             //Clipboard.SetText(commandLine);
         }
 
-        private ICommand browseForMSBuildCommand;
-        public ICommand BrowseForMSBuildCommand => browseForMSBuildCommand ?? (browseForMSBuildCommand = new Command(BrowseForMSBuild));
-        public void BrowseForMSBuild()
+        public async System.Threading.Tasks.Task BrowseForMSBuildAsync()
         {
-            //MSBuildLocator.BrowseForMSBuildExe();
+            if (BrowseForMSBuildRequsted is not null)
+                await BrowseForMSBuildRequsted.Invoke();
             UpdateMSBuildLocations();
         }
     }
