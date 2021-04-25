@@ -577,16 +577,16 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <StackPanel Grid.Row="0"
-                            Margin="40,40,40,10">
+                            Margin="40,40,40,12">
                     <TextBlock Text="Specify custom MSBuild command line arguments:"
-                               Margin="0,0,0,7" />
+                               Margin="0,0,0,8" />
                     <WrapPanel Orientation="Horizontal">
                         <ComboBox Items="{Binding MSBuildLocations}"
                                   ToolTip.Tip="Select MSBuild toolset to use for building"
-                                  Height="22" />
+                                  Height="24" />
                         <Button Command="{Binding BrowseForMSBuildCommand}"
-                                Width="22"
-                                Height="22"
+                                Width="24"
+                                Height="24"
                                 ToolTip.Tip="Browse for custom MSBuild.exe location..."
                                 Margin="0,0,8,0">
                             <StackPanel Orientation="Horizontal">
@@ -605,11 +605,11 @@
                             </StackPanel>
                         </Button>
                         <TextBlock Text="{Binding PrefixArguments}"
-                                   Margin="0,3,0,0"
+                                   Margin="0,4,0,0"
                                    TextWrapping="Wrap" />
                         <TextBox Name="argumentsText"
                                  Margin="4,0,4,0"
-                                 Padding="0,1,0,0"
+                                 Padding="0,4,0,0"
                                  Text="{Binding MSBuildArguments}"
                                  TextWrapping="Wrap"
                                  MinWidth="300">
@@ -620,29 +620,30 @@
                         </TextBox>
 
                         <TextBlock Text="{Binding PostfixArguments}"
+                                   Margin="0,4,0,0"
                                    TextWrapping="Wrap" />
                     </WrapPanel>
                     <Button Content="Copy command line to clipboard"
                             Command="{Binding CopyCommand}"
                             Padding="4,0,4,0"
-                            Height="23"
+                            Height="24"
                             HorizontalAlignment="Right"
                             Margin="4" />
                 </StackPanel>
                 <StackPanel Grid.Row="1"
                             HorizontalAlignment="Center"
-                            Margin="40,10,40,40"
+                            Margin="40,12,40,40"
                             Orientation="Horizontal">
                     <Button Content="Build"
                             Command="{Binding BuildCommand}"
-                            Width="75"
-                            Height="23"
-                            Margin="7" />
+                            Width="76"
+                            Height="24"
+                            Margin="8" />
                     <Button Content="Cancel"
                             Command="{Binding CancelCommand}"
-                            Width="75"
-                            Height="23"
-                            Margin="0,7,7,7" />
+                            Width="76"
+                            Height="24"
+                            Margin="8" />
                 </StackPanel>
             </Grid>
         </DataTemplate>
