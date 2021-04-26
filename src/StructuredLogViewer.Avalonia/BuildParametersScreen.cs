@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows.Input;
 using Microsoft.Build.Logging.StructuredLogger;
 
@@ -30,15 +31,17 @@ namespace StructuredLogViewer.Avalonia.Controls
                 MSBuildLocations.Add(msbuild);
             }
 
-            if (MSBuildLocations.Count > 0)
-            {
-                //CollectionViewSource.GetDefaultView(MSBuildLocations).MoveCurrentToFirst();
-            }
+            MSBuildLocation = MSBuildLocations.FirstOrDefault();
         }
 
         public ObservableCollection<string> MSBuildLocations { get; } = new ObservableCollection<string>();
 
-        public string MSBuildLocation => ""; // CollectionViewSource.GetDefaultView(MSBuildLocations).CurrentItem as string;
+        private string msBuildLocation;
+        public string MSBuildLocation
+        {
+            get => msBuildLocation;
+            set => SetField(ref msBuildLocation, value);
+        }
 
         private string prefixArguments;
         public string PrefixArguments

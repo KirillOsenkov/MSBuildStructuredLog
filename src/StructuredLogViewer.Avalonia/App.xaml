@@ -582,6 +582,7 @@
                                Margin="0,0,0,7" />
                     <WrapPanel Orientation="Horizontal">
                         <ComboBox Items="{Binding MSBuildLocations}"
+                                  SelectedItem="{Binding MSBuildLocation}"
                                   ToolTip.Tip="Select MSBuild toolset to use for building"
                                   Height="22" />
                         <Button Command="{Binding BrowseForMSBuildAsync}"
