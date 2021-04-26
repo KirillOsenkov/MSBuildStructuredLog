@@ -588,7 +588,7 @@
                         <Button Command="{Binding BrowseForMSBuildAsync}"
                                 Width="22"
                                 Height="22"
-                                ToolTip.Tip="Browse for custom MSBuild.exe location..."
+                                ToolTip.Tip="Browse for custom MSBuild file location..."
                                 Margin="0,0,8,0">
                             <StackPanel Orientation="Horizontal">
                                 <Rectangle Width="2"
