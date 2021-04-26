@@ -82,8 +82,8 @@ namespace StructuredLogViewer
         public static void BrowseForMSBuildExe()
         {
             var openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = "MSBuild.exe|MSBuild.exe";
-            openFileDialog.Title = "Select MSBuild.exe location";
+            openFileDialog.Filter = "MSBuild (.dll;.exe)|MSBuild.dll;MSBuild.exe";
+            openFileDialog.Title = "Select MSBuild file location";
             openFileDialog.CheckFileExists = true;
             var result = openFileDialog.ShowDialog();
             if (result != true)
