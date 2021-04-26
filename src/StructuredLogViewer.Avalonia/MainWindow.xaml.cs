@@ -375,6 +375,7 @@ namespace StructuredLogViewer.Avalonia
             };
             parametersScreen.CancelRequested += () =>
             {
+                parametersScreen.SaveSelectedMSBuild();
                 DisplayWelcomeScreen();
             };
             SetContent(parametersScreen);
