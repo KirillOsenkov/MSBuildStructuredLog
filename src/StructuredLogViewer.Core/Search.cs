@@ -14,18 +14,20 @@ namespace StructuredLogViewer
         private readonly int maxResults;
         private int resultCount;
         private bool markResultsInTree = false;
+        private readonly StringCache stringTable;
 
-        public Search(IEnumerable<TreeNode> roots, IEnumerable<string> strings, int maxResults, bool markResultsInTree)
+        public Search(IEnumerable<TreeNode> roots, IEnumerable<string> strings, int maxResults, bool markResultsInTree, StringCache stringTable = null)
         {
             this.roots = roots;
             this.strings = strings;
             this.maxResults = maxResults;
             this.markResultsInTree = markResultsInTree;
+            this.stringTable = stringTable;
         }
 
         public IEnumerable<SearchResult> FindNodes(string query, CancellationToken cancellationToken)
         {
-            var matcher = new NodeQueryMatcher(query, strings, cancellationToken);
+            var matcher = new NodeQueryMatcher(query, strings, cancellationToken, stringTable);
 
             var resultSet = new List<SearchResult>();
             foreach (var root in roots)

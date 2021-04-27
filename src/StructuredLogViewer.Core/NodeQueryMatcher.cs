@@ -105,8 +105,17 @@ namespace StructuredLogViewer
         [ThreadStatic]
         private static string[] searchFieldsThreadStatic;
 
-        public NodeQueryMatcher(string query, IEnumerable<string> stringTable, CancellationToken cancellationToken = default)
+        private readonly StringCache stringCache; // only used for validation that all strings are interned (disabled)
+
+        public NodeQueryMatcher(
+            string query,
+            IEnumerable<string> stringTable,
+            CancellationToken cancellationToken = default,
+            StringCache stringCache = null // validation disabled in production
+            )
         {
+            this.stringCache = stringCache;
+
             query = PreprocessQuery(query);
 
             this.Query = query;
@@ -464,6 +473,10 @@ namespace StructuredLogViewer
                 for (int j = 0; j < searchFields.count; j++)
                 {
                     var field = searchFields.array[j];
+
+                    //if (!stringCache.Contains(field))
+                    //{
+                    //}
 
                     if (!term.IsMatch(field, MatchesInStrings[i]))
                     {

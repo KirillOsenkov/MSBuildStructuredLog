@@ -68,7 +68,13 @@ namespace StructuredLogViewer.Controls
 
             searchLogControl.ExecuteSearch = (searchText, maxResults, cancellationToken) =>
             {
-                var search = new Search(new[] { Build }, Build.StringTable.Instances, maxResults, SettingsService.MarkResultsInTree);
+                var search = new Search(
+                    new[] { Build },
+                    Build.StringTable.Instances,
+                    maxResults,
+                    SettingsService.MarkResultsInTree
+                    //, Build.StringTable // disable validation in production
+                    );
                 var results = search.FindNodes(searchText, cancellationToken);
                 return results;
             };
