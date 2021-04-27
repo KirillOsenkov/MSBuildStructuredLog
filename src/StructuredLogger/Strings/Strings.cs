@@ -84,7 +84,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 .Replace("{2}", @".*?")
                 );
 
-            TaskSkippedFalseCondition = new Regex(GetString("TaskSkippedFalseCondition")
+            TaskSkippedFalseCondition = GetString("TaskSkippedFalseCondition");
+
+            TaskSkippedFalseConditionRegex = new Regex(TaskSkippedFalseCondition
                 .Replace("{0}", @".*?")
                 .Replace("{1}", @".*?")
                 .Replace("{2}", @".*?")
@@ -263,7 +265,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static Regex TargetAlreadyCompleteSuccessRegex { get; set; }
         public static Regex TargetAlreadyCompleteFailureRegex { get; set; }
         public static Regex TargetSkippedFalseConditionRegex { get; set; }
-        public static Regex TaskSkippedFalseCondition { get; set; }
+        public static Regex TaskSkippedFalseConditionRegex { get; set; }
         public static Regex TargetSkippedWhenSkipNonexistentTargets { get; set; }
         public static Regex TaskFoundFromFactory { get; set; }
         public static Regex TaskFound { get; set; }
@@ -281,6 +283,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string ProjectImportSkippedMissingFile { get; set; }
         public static string ProjectImportSkippedInvalidFile { get; set; }
         public static string ProjectImportSkippedEmptyFile { get; set; }
+        public static string TaskSkippedFalseCondition { get; set; }
 
         public static Match UsingTask(string message)
         {

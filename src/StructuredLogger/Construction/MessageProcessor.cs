@@ -409,256 +409,44 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             var buildEventContext = args.BuildEventContext;
 
-            if (buildEventContext?.TaskId > 0)
+            if (buildEventContext.TaskId > 0)
             {
                 node = GetTask(args);
                 if (node is Task task)
                 {
-                    if (task.Name == "ResolveAssemblyReference")
+                    if (string.Equals(task.Name, "ResolveAssemblyReference", StringComparison.OrdinalIgnoreCase))
                     {
-                        Folder inputs = task.FindChild<Folder>(Strings.Inputs);
-                        Folder results = task.FindChild<Folder>(Strings.Results);
-                        node = results ?? inputs;
-
-                        if (message.StartsWith("    ", StringComparison.Ordinal))
+                        if (ProcessRAR(task, ref node, message))
                         {
-                            message = message.Substring(4);
-
-                            var parameter = node?.FindLastChild<Parameter>();
-                            if (parameter != null)
-                            {
-                                bool thereWasAConflict = Strings.IsThereWasAConflictPrefix(parameter.ToString()); //parameter.ToString().StartsWith(Strings.ThereWasAConflictPrefix);
-                                if (thereWasAConflict)
-                                {
-                                    HandleThereWasAConflict(parameter, message, stringTable);
-                                    return;
-                                }
-
-                                if (!string.IsNullOrWhiteSpace(message))
-                                {
-                                    node = parameter;
-
-                                    if (message.StartsWith("    ", StringComparison.Ordinal))
-                                    {
-                                        message = message.Substring(4);
-
-                                        var lastItem = parameter.FindLastChild<Item>();
-
-                                        // only indent if it's not a "For SearchPath..." message - that one needs to be directly under parameter
-                                        // also don't indent if it's under AssemblyFoldersEx in Results
-                                        if (lastItem != null &&
-                                            !Strings.ForSearchPathPrefix.IsMatch(message) &&
-                                            !parameter.Name.StartsWith("AssemblyFoldersEx", StringComparison.Ordinal))
-                                        {
-                                            node = lastItem;
-                                        }
-                                    }
-
-                                    if (!string.IsNullOrEmpty(message))
-                                    {
-                                        var equals = message.IndexOf('=');
-                                        if (equals != -1)
-                                        {
-                                            var kvp = TextUtilities.ParseNameValue(message);
-                                            node.AddChild(new Metadata
-                                            {
-                                                Name = Intern(kvp.Key.TrimEnd(space)),
-                                                Value = Intern(kvp.Value.TrimStart(space))
-                                            });
-                                        }
-                                        else
-                                        {
-                                            node.AddChild(new Item()
-                                            {
-                                                Text = Intern(message)
-                                            });
-                                        }
-                                    }
-                                }
-
-                                return;
-                            }
-                        }
-                        else
-                        {
-                            if (results == null)
-                            {
-                                bool isResult = Strings.UnifiedPrimaryReferencePrefix.IsMatch(message) ||
-                                   Strings.PrimaryReferencePrefix.IsMatch(message) ||
-                                   Strings.DependencyPrefix.IsMatch(message) ||
-                                   Strings.UnifiedDependencyPrefix.IsMatch(message) ||
-                                   Strings.AssemblyFoldersExLocation.IsMatch(message) ||
-                                   Strings.IsThereWasAConflictPrefix(message);
-
-                                if (isResult)
-                                {
-                                    results = task.GetOrCreateNodeWithName<Folder>(Strings.Results);
-                                    node = results;
-                                }
-                                else
-                                {
-                                    if (inputs == null)
-                                    {
-                                        inputs = task.GetOrCreateNodeWithName<Folder>(Strings.Inputs);
-                                    }
-
-                                    node = inputs;
-                                }
-                            }
-                            else
-                            {
-                                node = results;
-                            }
-
-                            node.GetOrCreateNodeWithName<Parameter>(Intern(message.TrimEnd(':')));
                             return;
                         }
                     }
                     else if (string.Equals(task.Name, "MSBuild", StringComparison.OrdinalIgnoreCase))
                     {
-                        var additionalPropertiesMatch = Strings.AdditionalPropertiesPrefix.Match(message);
-                        if (message.StartsWith(Strings.GlobalPropertiesPrefix, StringComparison.Ordinal) ||
-                            additionalPropertiesMatch.Success ||
-                            Strings.OverridingGlobalPropertiesPrefix.IsMatch(message) ||
-                            message.StartsWith(Strings.RemovingPropertiesPrefix, StringComparison.Ordinal) ||
-                            Strings.RemovingProjectProperties.IsMatch(message))
+                        if (ProcessMSBuildTask(task, ref node, ref nodeToAdd, message))
                         {
-                            if (additionalPropertiesMatch.Success)
-                            {
-                                node = node.GetOrCreateNodeWithName<Folder>(Strings.AdditionalProperties);
-                            }
-
-                            node.GetOrCreateNodeWithName<Folder>(message);
                             return;
-                        }
-
-                        node = node.FindLastChild<Folder>() ?? node;
-                        if (message.Length > 2 && message[0] == ' ' && message[1] == ' ')
-                        {
-                            if (node is Folder f && f.Name == Strings.AdditionalProperties)
-                            {
-                                node = f.FindLastChild<Folder>() ?? node;
-                            }
-
-                            message = message.Substring(2);
-                        }
-
-                        var kvp = TextUtilities.ParseNameValue(message);
-                        if (kvp.Value == "")
-                        {
-                            nodeToAdd = new Item
-                            {
-                                Text = Intern(kvp.Key)
-                            };
-                        }
-                        else
-                        {
-                            nodeToAdd = new Property
-                            {
-                                Name = Intern(kvp.Key),
-                                Value = Intern(kvp.Value)
-                            };
                         }
                     }
-                    else if (string.Equals(task.Name, "RestoreTask"))
+                    else if (string.Equals(task.Name, "RestoreTask", StringComparison.OrdinalIgnoreCase))
                     {
-                        Folder CreateFolder(TreeNode node, string name)
-                        {
-                            return node.GetOrCreateNodeWithName<Folder>(Intern(name));
-                        }
-
-                        // just throw these away to save space
-                        // https://github.com/NuGet/Home/issues/10383
-                        if (message.StartsWith(Strings.RestoreTask_CheckingCompatibilityFor, StringComparison.Ordinal))
-                        {
-                            return;
-                        }
-                        else if (message.StartsWith("  GET", StringComparison.Ordinal))
-                        {
-                            node = CreateFolder(node, "GET");
-                        }
-                        else if (message.StartsWith("  CACHE", StringComparison.Ordinal))
-                        {
-                            node = CreateFolder(node, "CACHE");
-                        }
-                        else if (message.StartsWith("  OK", StringComparison.Ordinal))
-                        {
-                            node = CreateFolder(node, "OK");
-                        }
-                        else if (message.StartsWith("  NotFound", StringComparison.Ordinal))
-                        {
-                            node = CreateFolder(node, "NotFound");
-                        }
-                        else if (message.StartsWith("PackageSignatureVerificationLog:", StringComparison.Ordinal))
-                        {
-                            node = CreateFolder(node, "PackageSignatureVerificationLog");
-                        }
-                        else if (message.StartsWith("Writing assets file to disk", StringComparison.Ordinal))
-                        {
-                            node = CreateFolder(node, "Assets file");
-                        }
-                        else if (message.StartsWith("Writing cache file to disk", StringComparison.Ordinal))
-                        {
-                            node = CreateFolder(node, "Cache file");
-                        }
-                        else if (message.StartsWith("Persisting dg to", StringComparison.Ordinal))
-                        {
-                            node = CreateFolder(node, "dg file");
-                        }
-                        else if (message.StartsWith("Generating MSBuild file", StringComparison.Ordinal))
-                        {
-                            node = CreateFolder(node, "MSBuild file");
-                        }
-                        else if (message.StartsWith("Lock not required", StringComparison.Ordinal))
-                        {
-                            node = CreateFolder(node, "Lock not required");
-                        }
-                        else if (message.StartsWith("Installing", StringComparison.Ordinal))
-                        {
-                            node = CreateFolder(node, "Installing");
-                        }
-                        else if (message.StartsWith("Restoring packages for", StringComparison.Ordinal))
-                        {
-                            node = CreateFolder(node, "Restoring packages for");
-                        }
-                        else if (message.StartsWith("Reading project file", StringComparison.Ordinal))
-                        {
-                            node = CreateFolder(node, "Reading project file");
-                        }
-                        else if (message.StartsWith("Scanning packages for", StringComparison.Ordinal))
-                        {
-                            node = CreateFolder(node, "Scanning packages for");
-                        }
-                        else if (message.StartsWith("Merging in runtimes", StringComparison.Ordinal))
-                        {
-                            node = CreateFolder(node, "Merging in runtimes");
-                        }
-                        else if (
-                            message.StartsWith(Strings.RestoreTask_CheckingCompatibilityFor, StringComparison.Ordinal) ||
-                            message.StartsWith(Strings.RestoreTask_CheckingCompatibilityOfPackages, StringComparison.Ordinal) ||
-                            message.StartsWith(Strings.RestoreTask_AcquiringLockForTheInstallation, StringComparison.Ordinal) ||
-                            message.StartsWith(Strings.RestoreTask_AcquiredLockForTheInstallation, StringComparison.Ordinal) ||
-                            message.StartsWith(Strings.RestoreTask_CompletedInstallationOf, StringComparison.Ordinal) ||
-                            message.StartsWith(Strings.RestoreTask_ResolvingConflictsFor, StringComparison.Ordinal) ||
-                            message.StartsWith(Strings.RestoreTask_AllPackagesAndProjectsAreCompatible, StringComparison.Ordinal) ||
-                            message.StartsWith(Strings.RestoreTask_Committing, StringComparison.Ordinal)
-                            )
+                        if (ProcessRestoreTask(task, ref node, message))
                         {
                             return;
                         }
                     }
                 }
             }
-            else if (buildEventContext?.TargetId > 0)
+            else if (buildEventContext.TargetId > 0)
             {
                 node = GetTarget(args);
 
-                if (Strings.TaskSkippedFalseCondition.Match(message).Success)
+                if (Strings.TaskSkippedFalseConditionRegex.Match(message).Success)
                 {
                     messageNode.IsLowRelevance = true;
                 }
             }
-            else if (buildEventContext?.ProjectContextId > 0)
+            else if (buildEventContext.ProjectContextId > 0)
             {
                 var project = construction.GetOrAddProject(buildEventContext.ProjectContextId);
                 node = project;
@@ -738,11 +526,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     node = folder;
                     messageNode.IsLowRelevance = true;
                 }
-                else if (buildEventContext != null && (buildEventContext.NodeId == 0 &&
-                       buildEventContext.ProjectContextId == 0 &&
-                       buildEventContext.ProjectInstanceId == 0 &&
-                       buildEventContext.TargetId == 0 &&
-                       buildEventContext.TaskId == 0))
+                else if (
+                    buildEventContext.NodeId == 0 &&
+                    buildEventContext.ProjectContextId == 0 &&
+                    buildEventContext.ProjectInstanceId == 0 &&
+                    buildEventContext.TargetId == 0 &&
+                    buildEventContext.TaskId == 0)
                 {
                     // must be Detailed Build Summary
                     // https://github.com/Microsoft/msbuild/blob/master/src/XMakeBuildEngine/BackEnd/Components/Scheduler/Scheduler.cs#L509
@@ -752,6 +541,249 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             node.AddChild(nodeToAdd);
+        }
+
+        private bool ProcessRAR(Task task, ref TreeNode node, string message)
+        {
+            Folder inputs = task.FindChild<Folder>(Strings.Inputs);
+            Folder results = task.FindChild<Folder>(Strings.Results);
+            node = results ?? inputs;
+
+            if (message.StartsWith("    ", StringComparison.Ordinal))
+            {
+                message = message.Substring(4);
+
+                var parameter = node?.FindLastChild<Parameter>();
+                if (parameter != null)
+                {
+                    bool thereWasAConflict = Strings.IsThereWasAConflictPrefix(parameter.ToString()); //parameter.ToString().StartsWith(Strings.ThereWasAConflictPrefix);
+                    if (thereWasAConflict)
+                    {
+                        HandleThereWasAConflict(parameter, message, stringTable);
+                        return true;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(message))
+                    {
+                        node = parameter;
+
+                        if (message.StartsWith("    ", StringComparison.Ordinal))
+                        {
+                            message = message.Substring(4);
+
+                            var lastItem = parameter.FindLastChild<Item>();
+
+                            // only indent if it's not a "For SearchPath..." message - that one needs to be directly under parameter
+                            // also don't indent if it's under AssemblyFoldersEx in Results
+                            if (lastItem != null &&
+                                !Strings.ForSearchPathPrefix.IsMatch(message) &&
+                                !parameter.Name.StartsWith("AssemblyFoldersEx", StringComparison.Ordinal))
+                            {
+                                node = lastItem;
+                            }
+                        }
+
+                        if (!string.IsNullOrEmpty(message))
+                        {
+                            var equals = message.IndexOf('=');
+                            if (equals != -1)
+                            {
+                                var kvp = TextUtilities.ParseNameValue(message);
+                                node.AddChild(new Metadata
+                                {
+                                    Name = Intern(kvp.Key.TrimEnd(space)),
+                                    Value = Intern(kvp.Value.TrimStart(space))
+                                });
+                            }
+                            else
+                            {
+                                node.AddChild(new Item()
+                                {
+                                    Text = Intern(message)
+                                });
+                            }
+                        }
+                    }
+
+                    return true;
+                }
+            }
+            else
+            {
+                if (results == null)
+                {
+                    bool isResult = Strings.UnifiedPrimaryReferencePrefix.IsMatch(message) ||
+                       Strings.PrimaryReferencePrefix.IsMatch(message) ||
+                       Strings.DependencyPrefix.IsMatch(message) ||
+                       Strings.UnifiedDependencyPrefix.IsMatch(message) ||
+                       Strings.AssemblyFoldersExLocation.IsMatch(message) ||
+                       Strings.IsThereWasAConflictPrefix(message);
+
+                    if (isResult)
+                    {
+                        results = task.GetOrCreateNodeWithName<Folder>(Strings.Results);
+                        node = results;
+                    }
+                    else
+                    {
+                        if (inputs == null)
+                        {
+                            inputs = task.GetOrCreateNodeWithName<Folder>(Strings.Inputs);
+                        }
+
+                        node = inputs;
+                    }
+                }
+                else
+                {
+                    node = results;
+                }
+
+                node.GetOrCreateNodeWithName<Parameter>(Intern(message.TrimEnd(':')));
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool ProcessMSBuildTask(Task task, ref TreeNode node, ref BaseNode nodeToAdd, string message)
+        {
+            var additionalPropertiesMatch = Strings.AdditionalPropertiesPrefix.Match(message);
+            if (message.StartsWith(Strings.GlobalPropertiesPrefix, StringComparison.Ordinal) ||
+                additionalPropertiesMatch.Success ||
+                Strings.OverridingGlobalPropertiesPrefix.IsMatch(message) ||
+                message.StartsWith(Strings.RemovingPropertiesPrefix, StringComparison.Ordinal) ||
+                Strings.RemovingProjectProperties.IsMatch(message))
+            {
+                if (additionalPropertiesMatch.Success)
+                {
+                    node = node.GetOrCreateNodeWithName<Folder>(Strings.AdditionalProperties);
+                }
+
+                node.GetOrCreateNodeWithName<Folder>(message);
+                return true;
+            }
+
+            node = node.FindLastChild<Folder>() ?? node;
+            if (message.Length > 2 && message[0] == ' ' && message[1] == ' ')
+            {
+                if (node is Folder f && f.Name == Strings.AdditionalProperties)
+                {
+                    node = f.FindLastChild<Folder>() ?? node;
+                }
+
+                message = message.Substring(2);
+            }
+
+            var kvp = TextUtilities.ParseNameValue(message);
+            if (kvp.Value == "")
+            {
+                nodeToAdd = new Item
+                {
+                    Text = Intern(kvp.Key)
+                };
+            }
+            else
+            {
+                nodeToAdd = new Property
+                {
+                    Name = Intern(kvp.Key),
+                    Value = Intern(kvp.Value)
+                };
+            }
+
+            return false;
+        }
+
+        private bool ProcessRestoreTask(Task task, ref TreeNode node, string message)
+        {
+            Folder CreateFolder(TreeNode node, string name)
+            {
+                return node.GetOrCreateNodeWithName<Folder>(Intern(name));
+            }
+
+            // just throw these away to save space
+            // https://github.com/NuGet/Home/issues/10383
+            if (message.StartsWith(Strings.RestoreTask_CheckingCompatibilityFor, StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            else if (message.StartsWith("  GET", StringComparison.Ordinal))
+            {
+                node = CreateFolder(node, "GET");
+            }
+            else if (message.StartsWith("  CACHE", StringComparison.Ordinal))
+            {
+                node = CreateFolder(node, "CACHE");
+            }
+            else if (message.StartsWith("  OK", StringComparison.Ordinal))
+            {
+                node = CreateFolder(node, "OK");
+            }
+            else if (message.StartsWith("  NotFound", StringComparison.Ordinal))
+            {
+                node = CreateFolder(node, "NotFound");
+            }
+            else if (message.StartsWith("PackageSignatureVerificationLog:", StringComparison.Ordinal))
+            {
+                node = CreateFolder(node, "PackageSignatureVerificationLog");
+            }
+            else if (message.StartsWith("Writing assets file to disk", StringComparison.Ordinal))
+            {
+                node = CreateFolder(node, "Assets file");
+            }
+            else if (message.StartsWith("Writing cache file to disk", StringComparison.Ordinal))
+            {
+                node = CreateFolder(node, "Cache file");
+            }
+            else if (message.StartsWith("Persisting dg to", StringComparison.Ordinal))
+            {
+                node = CreateFolder(node, "dg file");
+            }
+            else if (message.StartsWith("Generating MSBuild file", StringComparison.Ordinal))
+            {
+                node = CreateFolder(node, "MSBuild file");
+            }
+            else if (message.StartsWith("Lock not required", StringComparison.Ordinal))
+            {
+                node = CreateFolder(node, "Lock not required");
+            }
+            else if (message.StartsWith("Installing", StringComparison.Ordinal))
+            {
+                node = CreateFolder(node, "Installing");
+            }
+            else if (message.StartsWith("Restoring packages for", StringComparison.Ordinal))
+            {
+                node = CreateFolder(node, "Restoring packages for");
+            }
+            else if (message.StartsWith("Reading project file", StringComparison.Ordinal))
+            {
+                node = CreateFolder(node, "Reading project file");
+            }
+            else if (message.StartsWith("Scanning packages for", StringComparison.Ordinal))
+            {
+                node = CreateFolder(node, "Scanning packages for");
+            }
+            else if (message.StartsWith("Merging in runtimes", StringComparison.Ordinal))
+            {
+                node = CreateFolder(node, "Merging in runtimes");
+            }
+            else if (
+                message.StartsWith(Strings.RestoreTask_CheckingCompatibilityFor, StringComparison.Ordinal) ||
+                message.StartsWith(Strings.RestoreTask_CheckingCompatibilityOfPackages, StringComparison.Ordinal) ||
+                message.StartsWith(Strings.RestoreTask_AcquiringLockForTheInstallation, StringComparison.Ordinal) ||
+                message.StartsWith(Strings.RestoreTask_AcquiredLockForTheInstallation, StringComparison.Ordinal) ||
+                message.StartsWith(Strings.RestoreTask_CompletedInstallationOf, StringComparison.Ordinal) ||
+                message.StartsWith(Strings.RestoreTask_ResolvingConflictsFor, StringComparison.Ordinal) ||
+                message.StartsWith(Strings.RestoreTask_AllPackagesAndProjectsAreCompatible, StringComparison.Ordinal) ||
+                message.StartsWith(Strings.RestoreTask_Committing, StringComparison.Ordinal)
+                )
+            {
+                return true;
+            }
+
+            return false;
         }
 
         public static void HandleThereWasAConflict(Parameter parameter, string message, StringCache stringTable)
