@@ -75,7 +75,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 _type = type;
                 _name = name;
-                hashCode = unchecked((_type.GetHashCode() * 397) ^ _name.ToLowerInvariant().GetHashCode());
+                hashCode = unchecked((_type.GetHashCode() * 397) ^ StringComparer.OrdinalIgnoreCase.GetHashCode(_name));
             }
 
             public bool Equals(ChildrenCacheKey other)
