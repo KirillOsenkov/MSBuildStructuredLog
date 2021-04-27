@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Microsoft.Build.Collections;
 using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -250,14 +251,27 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 var itemNode = new Item { Text = item.ItemSpec };
 
-                var metadata = item.CloneCustomMetadata();
-                itemNode.EnsureChildrenCapacity(metadata.Count);
-                foreach (DictionaryEntry kvp in metadata)
+                var metadata = item.CloneCustomMetadata() as ArrayDictionary<string, string>;
+                if (metadata == null)
                 {
+                    continue;
+                }
+
+                int count = metadata.Count;
+                itemNode.EnsureChildrenCapacity(count);
+
+                var keys = metadata.KeyArray;
+                var values = metadata.ValueArray;
+
+                for (int i = 0; i < count; i++)
+                {
+                    var key = keys[i];
+                    var value = values[i];
+
                     var metadataNode = new Metadata
                     {
-                        Name = (string)kvp.Key,
-                        Value = (string)kvp.Value
+                        Name = key,
+                        Value = value
                     };
 
                     // hot path, do not use AddChild

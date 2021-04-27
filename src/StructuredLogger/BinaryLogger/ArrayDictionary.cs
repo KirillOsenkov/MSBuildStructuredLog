@@ -63,6 +63,9 @@ namespace Microsoft.Build.Collections
             set => this[(TKey)key] = (TValue)value;
         }
 
+        public TKey[] KeyArray => keys;
+        public TValue[] ValueArray => values;
+
         public ICollection<TKey> Keys => keys;
 
         ICollection IDictionary.Keys => keys;
