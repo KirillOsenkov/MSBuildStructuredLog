@@ -34,6 +34,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public bool DisableDeduplication { get; set; }
         public bool NormalizeLineEndings { get; set; } = true;
+        public bool HasDeduplicatedStrings { get; set; }
+
+        public string SoftIntern(string text)
+        {
+            if (HasDeduplicatedStrings)
+            {
+                return text;
+            }
+
+            return Intern(text);
+        }
 
         public string Intern(string text)
         {

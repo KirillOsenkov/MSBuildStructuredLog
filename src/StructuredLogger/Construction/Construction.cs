@@ -71,6 +71,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private string Intern(string text) => stringTable.Intern(text);
 
+        private string SoftIntern(string text) => stringTable.SoftIntern(text);
+
         public void BuildStarted(object sender, BuildStartedEventArgs args)
         {
             try
@@ -797,23 +799,29 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             var itemsNode = parent.GetOrCreateNodeWithName<Folder>(Strings.Items, addAtBeginning: true);
-            foreach (DictionaryEntry kvp in itemList.OfType<DictionaryEntry>().OrderBy(i => i.Key))
+            foreach (DictionaryEntry kvp in itemList)
             {
-                var itemType = Intern(Convert.ToString(kvp.Key));
+                var itemType = SoftIntern(Convert.ToString(kvp.Key));
                 var itemTypeNode = itemsNode.GetOrCreateNodeWithName<Folder>(itemType);
 
                 var itemNode = new Item();
 
-                var taskItem = kvp.Value as ITaskItem;
-                if (taskItem != null)
+                if (kvp.Value is ITaskItem taskItem)
                 {
-                    itemNode.Text = Intern(taskItem.ItemSpec);
-                    foreach (DictionaryEntry metadataName in taskItem.CloneCustomMetadata())
+                    itemNode.Text = SoftIntern(taskItem.ItemSpec);
+
+                    var metadata = taskItem.CloneCustomMetadata();
+                    if (metadata is ICollection collection)
+                    {
+                        itemNode.EnsureChildrenCapacity(collection.Count);
+                    }
+
+                    foreach (DictionaryEntry metadataName in metadata)
                     {
                         itemNode.AddChild(new Metadata
                         {
-                            Name = Intern(Convert.ToString(metadataName.Key)),
-                            Value = Intern(Convert.ToString(metadataName.Value))
+                            Name = SoftIntern(Convert.ToString(metadataName.Key)),
+                            Value = SoftIntern(Convert.ToString(metadataName.Value))
                         });
                     }
 
@@ -1017,8 +1025,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 var property = new Property
                 {
-                    Name = Intern(kvp.Key),
-                    Value = Intern(kvp.Value)
+                    Name = SoftIntern(kvp.Key),
+                    Value = SoftIntern(kvp.Value)
                 };
                 parent.AddChild(property);
 
