@@ -250,34 +250,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             foreach (ITaskItem item in items)
             {
                 var itemNode = new Item { Text = item.ItemSpec };
-
-                var metadata = item.CloneCustomMetadata() as ArrayDictionary<string, string>;
-                if (metadata != null)
-                {
-                    int count = metadata.Count;
-                    itemNode.EnsureChildrenCapacity(count);
-
-                    var keys = metadata.KeyArray;
-                    var values = metadata.ValueArray;
-
-                    for (int i = 0; i < count; i++)
-                    {
-                        var key = keys[i];
-                        var value = values[i];
-
-                        var metadataNode = new Metadata
-                        {
-                            Name = key,
-                            Value = value
-                        };
-
-                        // hot path, do not use AddChild
-                        // itemNode.AddChild(metadataNode);
-                        itemNode.Children.Add(metadataNode);
-                        metadataNode.Parent = itemNode;
-                    }
-                }
-
+                Construction.AddMetadata(item, itemNode);
                 parent.AddChild(itemNode);
             }
         }

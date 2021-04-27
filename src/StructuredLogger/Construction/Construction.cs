@@ -6,6 +6,7 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Microsoft.Build.Collections;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Framework.Profiler;
@@ -797,6 +798,40 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        public static void AddMetadata(ITaskItem item, Item itemNode)
+        {
+            if (item.CloneCustomMetadata() is ArrayDictionary<string, string> metadata)
+            {
+                int count = metadata.Count;
+                if (count == 0)
+                {
+                    return;
+                }
+
+                itemNode.EnsureChildrenCapacity(count);
+
+                var keys = metadata.KeyArray;
+                var values = metadata.ValueArray;
+
+                for (int i = 0; i < count; i++)
+                {
+                    var key = keys[i];
+                    var value = values[i];
+
+                    var metadataNode = new Metadata
+                    {
+                        Name = key,
+                        Value = value
+                    };
+
+                    // hot path, do not use AddChild
+                    // itemNode.AddChild(metadataNode);
+                    itemNode.Children.Add(metadataNode);
+                    metadataNode.Parent = itemNode;
+                }
+            }
+        }
+
         private void AddItems(TreeNode parent, IEnumerable itemList)
         {
             if (itemList == null)
@@ -815,27 +850,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (kvp.Value is ITaskItem taskItem)
                 {
                     itemNode.Text = SoftIntern(taskItem.ItemSpec);
-
-                    var metadata = taskItem.CloneCustomMetadata();
-                    if (metadata is ICollection collection)
-                    {
-                        itemNode.EnsureChildrenCapacity(collection.Count);
-                    }
-
-                    foreach (DictionaryEntry metadataName in metadata)
-                    {
-                        itemNode.AddChild(new Metadata
-                        {
-                            Name = SoftIntern(Convert.ToString(metadataName.Key)),
-                            Value = SoftIntern(Convert.ToString(metadataName.Value))
-                        });
-                    }
-
+                    AddMetadata(taskItem, itemNode);
                     itemTypeNode.AddChild(itemNode);
                 }
             }
 
-            parent.SortChildren();
+            itemsNode.SortChildren();
         }
 
         private void AddProperties(TreeNode project, IEnumerable properties)
