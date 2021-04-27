@@ -58,6 +58,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return text;
         }
 
+        public bool Contains(string text)
+        {
+            return deduplicationMap.ContainsKey(text);
+        }
+
         public IDictionary<string, string> InternStringDictionary(IDictionary<string, string> inputDictionary)
         {
             if (DisableDeduplication)
