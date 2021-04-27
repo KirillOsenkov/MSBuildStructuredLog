@@ -40,6 +40,23 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        public void EnsureChildrenCapacity(int capacity)
+        {
+            if (capacity <= 0)
+            {
+                return;
+            }
+
+            if (children == null)
+            {
+                children = new ChildrenList(capacity);
+            }
+            else if (children is ChildrenList list)
+            {
+                list.EnsureCapacity(capacity);
+            }
+        }
+
         public void SortChildren()
         {
             if (children == null)

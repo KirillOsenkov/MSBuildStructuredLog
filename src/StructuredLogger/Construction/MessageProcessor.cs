@@ -241,11 +241,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void AddItems(IEnumerable items, TreeNode parent)
         {
+            if (items is ICollection collection)
+            {
+                parent.EnsureChildrenCapacity(collection.Count);
+            }
+
             foreach (ITaskItem item in items)
             {
                 var itemNode = new Item { Text = item.ItemSpec };
 
                 var metadata = item.CloneCustomMetadata();
+                itemNode.EnsureChildrenCapacity(metadata.Count);
                 foreach (DictionaryEntry kvp in metadata)
                 {
                     var metadataNode = new Metadata
