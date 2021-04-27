@@ -498,13 +498,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     list = list.ToArray();
                 }
 
-                foreach (var child in list)
+                for (int i = 0; i < list.Count; i++)
                 {
                     if (cancellationToken.IsCancellationRequested)
                     {
                         return;
                     }
 
+                    var child = list[i];
                     if (child is TreeNode node)
                     {
                         node.VisitAllChildren(processor, cancellationToken, takeChildrenSnapshot);
