@@ -537,6 +537,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                     else if (string.Equals(task.Name, "RestoreTask"))
                     {
+                        Folder CreateFolder(TreeNode node, string name)
+                        {
+                            return node.GetOrCreateNodeWithName<Folder>(Intern(name));
+                        }
+
                         // just throw these away to save space
                         // https://github.com/NuGet/Home/issues/10383
                         if (message.StartsWith(Strings.RestoreTask_CheckingCompatibilityFor, StringComparison.Ordinal))
@@ -545,63 +550,63 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         }
                         else if (message.StartsWith("  GET", StringComparison.Ordinal))
                         {
-                            node = node.GetOrCreateNodeWithName<Folder>("GET");
+                            node = CreateFolder(node, "GET");
                         }
                         else if (message.StartsWith("  CACHE", StringComparison.Ordinal))
                         {
-                            node = node.GetOrCreateNodeWithName<Folder>("CACHE");
+                            node = CreateFolder(node, "CACHE");
                         }
                         else if (message.StartsWith("  OK", StringComparison.Ordinal))
                         {
-                            node = node.GetOrCreateNodeWithName<Folder>("OK");
+                            node = CreateFolder(node, "OK");
                         }
                         else if (message.StartsWith("  NotFound", StringComparison.Ordinal))
                         {
-                            node = node.GetOrCreateNodeWithName<Folder>("NotFound");
+                            node = CreateFolder(node, "NotFound");
                         }
                         else if (message.StartsWith("PackageSignatureVerificationLog:", StringComparison.Ordinal))
                         {
-                            node = node.GetOrCreateNodeWithName<Folder>("PackageSignatureVerificationLog");
+                            node = CreateFolder(node, "PackageSignatureVerificationLog");
                         }
                         else if (message.StartsWith("Writing assets file to disk", StringComparison.Ordinal))
                         {
-                            node = node.GetOrCreateNodeWithName<Folder>("Assets file");
+                            node = CreateFolder(node, "Assets file");
                         }
                         else if (message.StartsWith("Writing cache file to disk", StringComparison.Ordinal))
                         {
-                            node = node.GetOrCreateNodeWithName<Folder>("Cache file");
+                            node = CreateFolder(node, "Cache file");
                         }
                         else if (message.StartsWith("Persisting dg to", StringComparison.Ordinal))
                         {
-                            node = node.GetOrCreateNodeWithName<Folder>("dg file");
+                            node = CreateFolder(node, "dg file");
                         }
                         else if (message.StartsWith("Generating MSBuild file", StringComparison.Ordinal))
                         {
-                            node = node.GetOrCreateNodeWithName<Folder>("MSBuild file");
+                            node = CreateFolder(node, "MSBuild file");
                         }
                         else if (message.StartsWith("Lock not required", StringComparison.Ordinal))
                         {
-                            node = node.GetOrCreateNodeWithName<Folder>("Lock not required");
+                            node = CreateFolder(node, "Lock not required");
                         }
                         else if (message.StartsWith("Installing", StringComparison.Ordinal))
                         {
-                            node = node.GetOrCreateNodeWithName<Folder>("Installing");
+                            node = CreateFolder(node, "Installing");
                         }
                         else if (message.StartsWith("Restoring packages for", StringComparison.Ordinal))
                         {
-                            node = node.GetOrCreateNodeWithName<Folder>("Restoring packages for");
+                            node = CreateFolder(node, "Restoring packages for");
                         }
                         else if (message.StartsWith("Reading project file", StringComparison.Ordinal))
                         {
-                            node = node.GetOrCreateNodeWithName<Folder>("Reading project file");
+                            node = CreateFolder(node, "Reading project file");
                         }
                         else if (message.StartsWith("Scanning packages for", StringComparison.Ordinal))
                         {
-                            node = node.GetOrCreateNodeWithName<Folder>("Scanning packages for");
+                            node = CreateFolder(node, "Scanning packages for");
                         }
                         else if (message.StartsWith("Merging in runtimes", StringComparison.Ordinal))
                         {
-                            node = node.GetOrCreateNodeWithName<Folder>("Merging in runtimes");
+                            node = CreateFolder(node, "Merging in runtimes");
                         }
                         else if (
                             message.StartsWith(Strings.RestoreTask_CheckingCompatibilityFor, StringComparison.Ordinal) ||
