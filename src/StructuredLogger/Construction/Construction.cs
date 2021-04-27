@@ -117,7 +117,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         summary.Text = fullText;
                     }
 
-                    Build.VisitAllChildren<Project>(p => CalculateTargetGraph(p));
+                    //Build.VisitAllChildren<Project>(p => CalculateTargetGraph(p));
                 }
             }
             catch (Exception ex)
@@ -238,6 +238,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     var project = GetOrAddProject(args.BuildEventContext.ProjectContextId);
                     project.EndTime = args.Timestamp;
+
+                    var unparented = project.GetUnparentedTargets();
+                    foreach (var orphan in unparented)
+                    {
+                        project.TryAddTarget(orphan);
+                    }
                 }
             }
             catch (Exception ex)
