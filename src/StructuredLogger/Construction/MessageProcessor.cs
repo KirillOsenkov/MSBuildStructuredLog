@@ -160,11 +160,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private void ProcessTaskParameter(TaskParameterEventArgs args)
         {
             string itemType = args.ItemType;
-            var items = args.Items.OfType<ITaskItem>().ToArray();
+            var items = args.Items;
+            var kind = args.Kind;
 
             NamedNode parent = null;
             BaseNode node = null;
-            if (args.Kind == TaskParameterMessageKind.TaskInput || args.Kind == TaskParameterMessageKind.TaskOutput)
+            if (kind == TaskParameterMessageKind.TaskInput || kind == TaskParameterMessageKind.TaskOutput)
             {
                 var task = GetTask(args);
                 if (task == null || IgnoreParameters(task))
@@ -172,32 +173,32 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     return;
                 }
 
-                string folderName = args.Kind == TaskParameterMessageKind.TaskInput ? Strings.Parameters : Strings.OutputItems;
+                string folderName = kind == TaskParameterMessageKind.TaskInput ? Strings.Parameters : Strings.OutputItems;
                 parent = task.GetOrCreateNodeWithName<Folder>(folderName);
 
                 node = CreateParameterNode(itemType, items);
             }
             else if (
-                args.Kind == TaskParameterMessageKind.AddItem || 
-                args.Kind == TaskParameterMessageKind.RemoveItem ||
-                args.Kind == TaskParameterMessageKind.SkippedTargetInputs ||
-                args.Kind == TaskParameterMessageKind.SkippedTargetOutputs)
+                kind == TaskParameterMessageKind.AddItem || 
+                kind == TaskParameterMessageKind.RemoveItem ||
+                kind == TaskParameterMessageKind.SkippedTargetInputs ||
+                kind == TaskParameterMessageKind.SkippedTargetOutputs)
             {
                 parent = GetTarget(args);
 
                 NamedNode named;
-                if (args.Kind == TaskParameterMessageKind.AddItem)
+                if (kind == TaskParameterMessageKind.AddItem)
                 {
                     named = new AddItem();
                 }
-                else if (args.Kind == TaskParameterMessageKind.RemoveItem)
+                else if (kind == TaskParameterMessageKind.RemoveItem)
                 {
                     named = new RemoveItem();
                 }
                 else
                 {
                     named = new Folder();
-                    if (args.Kind == TaskParameterMessageKind.SkippedTargetInputs)
+                    if (kind == TaskParameterMessageKind.SkippedTargetInputs)
                     {
                         itemType = Strings.Inputs;
                     }
@@ -219,9 +220,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private BaseNode CreateParameterNode(string itemName, ITaskItem[] items)
+        private BaseNode CreateParameterNode(string itemName, IEnumerable items)
         {
-            if (items.Length == 1 && items[0] is ITaskItem scalar && scalar.MetadataCount == 0)
+            if (items is IList<ITaskItem> list && list.Count == 1 && list[0] is ITaskItem scalar && scalar.MetadataCount == 0)
             {
                 var property = new Property
                 {
@@ -238,9 +239,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return parameter;
         }
 
-        private void AddItems(ITaskItem[] items, TreeNode parent)
+        private void AddItems(IEnumerable items, TreeNode parent)
         {
-            foreach (var item in items)
+            foreach (ITaskItem item in items)
             {
                 var itemNode = new Item { Text = item.ItemSpec };
 
