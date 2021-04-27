@@ -462,6 +462,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string Folder = "Folder";
         public static string Inputs => "Inputs";
         public static string Outputs => "Outputs";
+        public static string Assembly => "Assembly";
+        public static string CommandLineArguments => "CommandLineArguments";
+        public static string Item => "Item";
+        public static string Property => "Property";
+        public static string Duration => "Duration";
+        public static string Note => "Note";
+        public static string DoubleWrites => "DoubleWrites";
 
         public static string GetPropertyName(string message)
         {

@@ -42,10 +42,31 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Build.Name = "Build";
             this.stringTable = Build.StringTable;
             this.messageProcessor = new MessageProcessor(this, stringTable);
+            Intern(Strings.Assembly);
+            Intern(Strings.CommandLineArguments);
+            Intern(Strings.DoubleWrites);
             Intern(Strings.Evaluation);
-            Intern(Strings.Properties);
+            Intern(Strings.Note);
             Intern(Strings.OutputItems);
             Intern(Strings.Parameters);
+            Intern(Strings.Properties);
+            Intern(Strings.UnusedLocations);
+            Intern(nameof(AddItem));
+            Intern(nameof(CopyTask));
+            Intern(nameof(CscTask));
+            Intern(nameof(EntryTarget));
+            Intern(nameof(Folder));
+            Intern(nameof(Import));
+            Intern(nameof(Item));
+            Intern(nameof(Metadata));
+            Intern(nameof(NoImport));
+            Intern(nameof(Parameter));
+            Intern(nameof(ProjectEvaluation));
+            Intern(nameof(Property));
+            Intern(nameof(RemoveItem));
+            Intern(nameof(Target));
+            Intern(nameof(Task));
+            Intern(nameof(TimedNode));
         }
 
         private string Intern(string text) => stringTable.Intern(text);
@@ -87,7 +108,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             messageProcessor.DetailedSummary.Remove(0, 1);
                         }
 
-                        summary.Text = messageProcessor.DetailedSummary.ToString();
+                        string fullText = messageProcessor.DetailedSummary.ToString();
+#if DEBUG
+                        fullText = Intern(fullText);
+#endif
+                        summary.Text = fullText;
                     }
 
                     Build.VisitAllChildren<Project>(p => CalculateTargetGraph(p));
@@ -374,19 +399,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         return;
                     }
 
-                    if (!sawCulture && args.SenderName == "BinaryLogger" && args.Message.StartsWith("CurrentUICulture", StringComparison.Ordinal))
+                    if (!sawCulture &&
+                        args.SenderName == "BinaryLogger" &&
+                        args.Message is string message &&
+                        message.StartsWith("CurrentUICulture", StringComparison.Ordinal))
                     {
                         sawCulture = true;
-                        int equalsIndex = args.Message.IndexOf("=");
-                        if (equalsIndex > 0 && equalsIndex < args.Message.Length - 1)
+                        var kvp = TextUtilities.ParseNameValue(message);
+                        string culture = kvp.Value;
+                        if (!string.IsNullOrEmpty(culture))
                         {
-                            string culture = args.Message.Substring(equalsIndex + 1, args.Message.Length - 1 - equalsIndex);
-
-                            // read language from log and initialize resource strings
-                            if (!string.IsNullOrEmpty(culture))
-                            {
-                                Strings.Initialize(culture);
-                            }
+                            Strings.Initialize(culture);
                         }
                     }
 
