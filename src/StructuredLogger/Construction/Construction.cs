@@ -834,7 +834,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             AddProperties(
                 propertiesFolder,
-                list.OrderBy(d => d.Key),
+                list.OrderBy(d => d.Key, StringComparer.Ordinal),
                 project as IProjectOrEvaluation);
         }
 
