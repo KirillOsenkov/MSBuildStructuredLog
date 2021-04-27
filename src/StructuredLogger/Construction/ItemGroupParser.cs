@@ -113,7 +113,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             {
                                 currentItem = new Item
                                 {
-                                    Text = currentProperty.Name + "=" + currentProperty.Value
+                                    Text = stringTable.Intern(currentProperty.Name + "=" + currentProperty.Value)
                                 };
                                 parameter.Children.RemoveAt(parameter.Children.Count - 1);
                                 currentProperty = null;
