@@ -834,6 +834,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     itemTypeNode.AddChild(itemNode);
                 }
             }
+
+            parent.SortChildren();
         }
 
         private void AddProperties(TreeNode project, IEnumerable properties)
@@ -1027,6 +1029,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
+            if (properties is ICollection collection)
+            {
+                parent.EnsureChildrenCapacity(collection.Count);
+            }
+
             foreach (var kvp in properties)
             {
                 var property = new Property
@@ -1034,15 +1041,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     Name = SoftIntern(kvp.Key),
                     Value = SoftIntern(kvp.Value)
                 };
-                parent.AddChild(property);
+                parent.Children.Add(property); // don't use AddChild for performance
+                property.Parent = parent;
 
                 if (project != null)
                 {
-                    if (kvp.Key == Strings.TargetFramework)
+                    if (string.Equals(kvp.Key, Strings.TargetFramework, StringComparison.OrdinalIgnoreCase))
                     {
                         project.TargetFramework = kvp.Value;
                     }
-                    else if (kvp.Key == Strings.TargetFrameworks)
+                    else if (string.Equals(kvp.Key, Strings.TargetFrameworks, StringComparison.OrdinalIgnoreCase))
                     {
                         // we want TargetFramework to take precedence over TargetFrameworks when both are present
                         if (string.IsNullOrEmpty(project.TargetFramework) && !string.IsNullOrEmpty(kvp.Value))
