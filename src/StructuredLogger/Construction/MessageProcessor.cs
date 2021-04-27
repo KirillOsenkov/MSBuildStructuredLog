@@ -673,7 +673,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     node = evaluation;
                 }
 
-                if (Strings.PropertyReassignmentRegex.IsMatch(message))
+                if (args is PropertyReassignmentEventArgs || Strings.PropertyReassignmentRegex.IsMatch(message))
                 {
                     TimedNode properties;
                     if (evaluation != null)
@@ -700,7 +700,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 node = construction.Build;
 
-                if (Strings.IsEvaluationMessage(message))
+                if (construction.Build.FileFormatVersion < 9 && Strings.IsEvaluationMessage(message))
                 {
                     if (!evaluationMessagesAlreadySeen.Add(message))
                     {
@@ -709,7 +709,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     node = construction.EvaluationFolder;
                 }
-                else if (Strings.PropertyReassignmentRegex.IsMatch(message))
+                else if (construction.Build.FileFormatVersion < 9 && Strings.PropertyReassignmentRegex.IsMatch(message))
                 {
                     if (!evaluationMessagesAlreadySeen.Add(message))
                     {
