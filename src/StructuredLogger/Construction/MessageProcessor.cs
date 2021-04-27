@@ -227,7 +227,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 var property = new Property
                 {
                     Name = itemName,
-                    Value = Intern(scalar.ItemSpec)
+                    Value = scalar.ItemSpec
                 };
                 return property;
             }
