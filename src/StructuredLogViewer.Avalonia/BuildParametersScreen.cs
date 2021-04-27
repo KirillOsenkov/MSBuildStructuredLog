@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
 using Microsoft.Build.Logging.StructuredLogger;
+using StructuredLogViewer.Core;
 
 namespace StructuredLogViewer.Avalonia.Controls
 {
@@ -25,8 +26,10 @@ namespace StructuredLogViewer.Avalonia.Controls
 
         public void UpdateMSBuildLocations()
         {
+            var msBuildLocations = SettingsService.GetRecentMSBuildLocations(
+                DotnetUtilities.GetMsBuildPathCollection().Reverse());
             MSBuildLocations.Clear();
-            foreach (var msbuild in SettingsService.GetRecentMSBuildLocations())
+            foreach (var msbuild in msBuildLocations)
             {
                 MSBuildLocations.Add(msbuild);
             }

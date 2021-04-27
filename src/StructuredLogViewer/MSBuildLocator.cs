@@ -6,6 +6,7 @@ using System.Linq;
 using Microsoft.Build.Locator;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Win32;
+using StructuredLogViewer.Core;
 
 namespace StructuredLogViewer
 {
@@ -37,10 +38,12 @@ namespace StructuredLogViewer
 
             var finalResults = candidates
                 .Where(File.Exists)
-                .OrderBy(s => s)
-                .ToArray();
+                .OrderBy(s => s);
 
-            return finalResults;
+            return DotnetUtilities.GetMsBuildPathCollection()
+                .Reverse()
+                .Concat(finalResults)
+                .ToArray();
         }
 
         private static string[] GetVS15Locations()
