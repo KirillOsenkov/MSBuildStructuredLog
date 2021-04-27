@@ -259,7 +259,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         Name = (string)kvp.Key,
                         Value = (string)kvp.Value
                     };
-                    itemNode.AddChild(metadataNode);
+
+                    // hot path, do not use AddChild
+                    // itemNode.AddChild(metadataNode);
+                    itemNode.Children.Add(metadataNode);
+                    metadataNode.Parent = itemNode;
                 }
 
                 parent.AddChild(itemNode);
