@@ -688,8 +688,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     var propertyName = Strings.GetPropertyName(message);
                     node = properties.GetOrCreateNodeWithName<Folder>(propertyName);
                 }
-
-                if (node != null && node.FindChild<Message>(message) != null)
+                else if (node == evaluation && node.FindChild<Message>(message) != null)
                 {
                     // avoid duplicate messages
                     return;
