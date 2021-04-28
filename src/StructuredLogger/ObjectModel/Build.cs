@@ -191,16 +191,31 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return found;
         }
 
+        private Dictionary<int, ProjectEvaluation> evaluationById;
+
         public ProjectEvaluation FindEvaluation(int id)
         {
-            var evaluation = EvaluationFolder;
-            if (evaluation == null)
+            if (evaluationById == null)
             {
-                return null;
+                evaluationById = new Dictionary<int, ProjectEvaluation>();
             }
 
-            var child = evaluation.FindChild<ProjectEvaluation>(e => e.Id == id);
-            return child;
+            if (!evaluationById.TryGetValue(id, out var projectEvaluation))
+            {
+                var evaluation = EvaluationFolder;
+                if (evaluation == null)
+                {
+                    return null;
+                }
+
+                projectEvaluation = evaluation.FindChild<ProjectEvaluation>(e => e.Id == id);
+                if (projectEvaluation != null)
+                {
+                    evaluationById[id] = projectEvaluation;
+                }
+            }
+
+            return projectEvaluation;
         }
     }
 }
