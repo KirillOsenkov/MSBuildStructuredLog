@@ -99,19 +99,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 if (message.StartsWith(Strings.ItemGroupIncludeMessagePrefix, StringComparison.Ordinal))
                 {
-                    AddItemGroup(args, Strings.ItemGroupIncludeMessagePrefix, new AddItem());
+                    AddItemGroup(args, message, Strings.ItemGroupIncludeMessagePrefix, new AddItem());
                     return;
                 }
 
                 if (message.StartsWith(Strings.ItemGroupRemoveMessagePrefix, StringComparison.Ordinal))
                 {
-                    AddItemGroup(args, Strings.ItemGroupRemoveMessagePrefix, new RemoveItem());
+                    AddItemGroup(args, message, Strings.ItemGroupRemoveMessagePrefix, new RemoveItem());
                     return;
                 }
 
                 if (message.StartsWith(Strings.PropertyGroupMessagePrefix, StringComparison.Ordinal))
                 {
-                    AddPropertyGroup(args, Strings.PropertyGroupMessagePrefix);
+                    AddPropertyGroup(args, message, Strings.PropertyGroupMessagePrefix);
                     return;
                 }
 
@@ -299,9 +299,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         /// <param name="args">The <see cref="BuildMessageEventArgs"/> instance containing the event data.</param>
         /// <param name="prefix">The prefix string.</param>
-        public void AddPropertyGroup(BuildMessageEventArgs args, string prefix)
+        public void AddPropertyGroup(BuildMessageEventArgs args, string message, string prefix)
         {
-            string message = args.Message.Substring(prefix.Length);
+            message = message.Substring(prefix.Length);
 
             var target = GetTarget(args);
 
@@ -318,11 +318,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         /// <param name="args">The <see cref="BuildMessageEventArgs"/> instance containing the event data.</param>
         /// <param name="prefix">The prefix string.</param>
-        public void AddItemGroup(BuildMessageEventArgs args, string prefix, NamedNode containerNode)
+        public void AddItemGroup(BuildMessageEventArgs args, string message, string prefix, NamedNode containerNode)
         {
             var target = GetTarget(args);
 
-            var itemGroup = ItemGroupParser.ParsePropertyOrItemList(args.Message, prefix, stringTable);
+            var itemGroup = ItemGroupParser.ParsePropertyOrItemList(message, prefix, stringTable);
             if (itemGroup is Property property)
             {
                 itemGroup = new Item
