@@ -368,15 +368,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <param name="args">The <see cref="BuildMessageEventArgs"/> instance containing the event data.</param>
         public void AddMessage(LazyFormattedBuildEventArgs args, string message)
         {
-            message = Intern(message);
-
             TreeNode parent = null;
-            var messageNode = new Message
-            {
-                Text = message,
-                Timestamp = args.Timestamp
-            };
-            BaseNode nodeToAdd = messageNode;
+            BaseNode nodeToAdd = null;
+            bool lowRelevance = false;
 
             var buildEventContext = args.BuildEventContext;
 
@@ -414,7 +408,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 if (Strings.TaskSkippedFalseConditionRegex.Match(message).Success)
                 {
-                    messageNode.IsLowRelevance = true;
+                    lowRelevance = true;
                 }
             }
             else if (buildEventContext.ProjectContextId > 0)
@@ -431,7 +425,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         skippedTarget.StartTime = args.Timestamp;
                         skippedTarget.EndTime = args.Timestamp;
                         parent = skippedTarget;
-                        messageNode.IsLowRelevance = true;
+                        lowRelevance = true;
                     }
                 }
             }
@@ -495,7 +489,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     var folder = construction.EvaluationFolder;
                     parent = folder;
-                    messageNode.IsLowRelevance = true;
+                    lowRelevance = true;
                 }
                 else if (
                     buildEventContext.NodeId == 0 &&
@@ -516,10 +510,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     if (message.StartsWith(Strings.MSBuildVersionPrefix))
                     {
-                        message = message.Substring(Strings.MSBuildVersionPrefix.Length);
-                        construction.Build.MSBuildVersion = message;
+                        var version = message.Substring(Strings.MSBuildVersionPrefix.Length);
+                        construction.Build.MSBuildVersion = version;
                     }
                 }
+            }
+
+            if (nodeToAdd == null)
+            {
+                message = Intern(message);
+                nodeToAdd = new Message
+                {
+                    Text = message,
+                    Timestamp = args.Timestamp,
+                    IsLowRelevance = lowRelevance
+                };
             }
 
             parent.AddChild(nodeToAdd);
