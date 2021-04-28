@@ -447,7 +447,10 @@
                           ItemsSource="{Binding Children}">
             <StackPanel Orientation="Horizontal">
                 <ContentPresenter Content="{Binding Converter={StaticResource ProxyNodeIconConverter}}"
-                                  VerticalAlignment="Top" />
+                                  Height="20"
+                                  Width="20"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center" />
                 <ItemsControl Items="{Binding Highlights}"
                               Focusable="False">
                     <ItemsControl.DataTemplates>
