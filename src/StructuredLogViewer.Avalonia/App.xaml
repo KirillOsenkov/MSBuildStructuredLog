@@ -27,14 +27,14 @@
             <Setter Property="Template">
                 <ControlTemplate>
                     <Border Background="Transparent"
-                            Width="16"
-                            Height="16"
+                            Width="12"
+                            Height="12"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center">
                         <Path Fill="{DynamicResource ThemeForegroundBrush}"
                               HorizontalAlignment="Left"
                               VerticalAlignment="Top"
-                              Data="M 6 4 L 10 8 L 6 12 Z"/>
+                              Data="M 4 2 L 8 6 L 4 10 Z"/>
                     </Border>
                 </ControlTemplate>
             </Setter>
@@ -52,7 +52,7 @@
         <Style Selector="Rectangle.nodeIcon">
             <Setter Property="Width" Value="14" />
             <Setter Property="Height" Value="12" />
-            <Setter Property="Margin" Value="2,2,6,2" />
+            <Setter Property="Margin" Value="2,1,6,1" />
             <Setter Property="StrokeThickness" Value="1" />
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
@@ -60,16 +60,16 @@
         <Style Selector="Image.projectNodeIcon">
             <Setter Property="Width" Value="16" />
             <Setter Property="Height" Value="16" />
-            <Setter Property="Margin" Value="2,2,6,2" />
+            <Setter Property="Margin" Value="2,1,6,1" />
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
 
         <Style Selector="TextBlock.nodeBeforeText">
-            <Setter Property="Margin" Value="0,2,0,2" />
+            <Setter Property="Margin" Value="0,1,0,1" />
         </Style>
 
         <Style Selector="TextBlock.nodeText">
-            <Setter Property="Margin" Value="0,2,8,2" />
+            <Setter Property="Margin" Value="0,1,8,1" />
         </Style>
     </Application.Styles>
 
@@ -447,8 +447,6 @@
                           ItemsSource="{Binding Children}">
             <StackPanel Orientation="Horizontal">
                 <ContentPresenter Content="{Binding Converter={StaticResource ProxyNodeIconConverter}}"
-                                  Height="20"
-                                  Width="20"
                                   HorizontalAlignment="Center"
                                   VerticalAlignment="Center" />
                 <ItemsControl Items="{Binding Highlights}"
