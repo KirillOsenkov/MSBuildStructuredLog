@@ -223,6 +223,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                .Replace("{3}", ".*?")
                );
 
+            ConflictFoundRegex = new Regex(GetString("ResolveAssemblyReference.ConflictFound")
+                .Replace("{0}", ".*")
+                .Replace("{1}", ".*")
+                + ".*");
+
             TaskParameterMessagePrefix = GetString("TaskParameterPrefix");
             OutputItemsMessagePrefix = GetString("OutputItemParameterMessagePrefix");
             ItemGroupIncludeMessagePrefix = GetString("ItemGroupIncludeLogMessagePrefix");
@@ -255,6 +260,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static Regex AssemblyFoldersExLocation { get; set; }
         public static Regex ConflictReferenceSameSDK { get; set; }
         public static Regex ConflictRedistDifferentSDK { get; set; }
+        public static Regex ConflictFoundRegex { get; set; }
         public static Regex ConflictReferenceDifferentSDK { get; set; }
         public static Regex AdditionalPropertiesPrefix { get; set; }
         public static Regex OverridingGlobalPropertiesPrefix { get; set; }
@@ -385,25 +391,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static bool IsThereWasAConflictPrefix(string message)
         {
-            if (ConflictReferenceSameSDK.IsMatch(message))
-            {
-                return true;
-            }
-
-            if (ConflictRedistDifferentSDK.IsMatch(message))
-            {
-                return true;
-            }
-
-            if (ConflictReferenceDifferentSDK.IsMatch(message))
+            if (ConflictFoundRegex.IsMatch(message))
             {
                 return true;
             }
 
             return false;
-            //GetSDKReferenceFiles.ConflictReferenceSameSDK $:$ There was a conflict between two references with the same file name resolved within the "{0}" SDK. Choosing "{1}" over "{2}" because it was resolved first.
-            //GetSDKReferenceFiles.ConflictRedistDifferentSDK $:$ There was a conflict between two files from the redist folder files going to the same target path "{0}" between the "{1}" and "{2}" SDKs. Choosing "{3}" over "{4}" because it was resolved first.
-            //GetSDKReferenceFiles.ConflictReferenceDifferentSDK $:$ There was a conflict between two references with the same file name between the "{0}" and "{1}" SDKs. Choosing "{2}" over "{3}" because it was resolved first.
         }
 
         public static string PropertyGroupMessagePrefix { get; set; }
@@ -472,6 +465,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string Duration => "Duration";
         public static string Note => "Note";
         public static string DoubleWrites => "DoubleWrites";
+        public static string MSBuildVersionPrefix => "MSBuild version = ";
 
         public static string GetPropertyName(string message)
         {

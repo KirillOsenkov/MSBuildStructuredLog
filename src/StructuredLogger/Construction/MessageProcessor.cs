@@ -509,6 +509,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     DetailedSummary.AppendLine(message);
                     return;
                 }
+                else if (
+                    buildEventContext.NodeId == -2 &&
+                    buildEventContext.ProjectContextId == -2 &&
+                    buildEventContext.ProjectInstanceId == -1)
+                {
+                    if (message.StartsWith(Strings.MSBuildVersionPrefix))
+                    {
+                        message = message.Substring(Strings.MSBuildVersionPrefix.Length);
+                        construction.Build.MSBuildVersion = message;
+                    }
+                }
             }
 
             node.AddChild(nodeToAdd);
@@ -527,10 +538,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 var parameter = node?.FindLastChild<Parameter>();
                 if (parameter != null)
                 {
-                    bool thereWasAConflict = Strings.IsThereWasAConflictPrefix(parameter.ToString()); //parameter.ToString().StartsWith(Strings.ThereWasAConflictPrefix);
+                    bool thereWasAConflict = Strings.IsThereWasAConflictPrefix(parameter.Name);
                     if (thereWasAConflict)
                     {
-                        HandleThereWasAConflict(parameter, message, stringTable);
+                        if (construction.Build.IsMSBuildVersionAtLeast(16, 9))
+                        {
+                            // https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/443
+                            ItemGroupParser.ParseThereWasAConflict(parameter, message, stringTable);
+                        }
+                        else
+                        {
+                            HandleThereWasAConflict(parameter, message, stringTable);
+                        }
+
                         return true;
                     }
 
@@ -610,7 +630,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     node = results;
                 }
 
-                node.GetOrCreateNodeWithName<Parameter>(Intern(message.TrimEnd(':')));
+                var parameterName = Intern(message.TrimEnd(':'));
+                var parameter = new Parameter
+                {
+                    Name = parameterName
+                };
+
+                node.AddChild(parameter);
                 return true;
             }
 

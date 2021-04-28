@@ -183,5 +183,64 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             return parameter;
         }
+
+        public static void ParseThereWasAConflict(TreeNode parent, string message, StringCache stringTable)
+        {
+            if (lineSpans == null)
+            {
+                lineSpans = new List<Span>(10240);
+            }
+
+            lineSpans.Clear();
+            message.CollectLineSpans(lineSpans, includeLineBreakInSpan: false);
+
+            Item item4 = null;
+            Item item8 = null;
+            Item item10 = null;
+
+            for (int i = 0; i < lineSpans.Count; i++)
+            {
+                var lineSpan = lineSpans[i];
+                var numberOfLeadingSpaces = TextUtilities.GetNumberOfLeadingSpaces(message, lineSpan);
+                switch (numberOfLeadingSpaces)
+                {
+                    case 0:
+                    case 4:
+                        item4 = Add(parent, message, lineSpan, numberOfLeadingSpaces, stringTable);
+                        item8 = null;
+                        item10 = null;
+                        break;
+                    case 8:
+                        item8 = Add(item4, message, lineSpan, numberOfLeadingSpaces, stringTable);
+                        item10 = null;
+                        break;
+                    case 10:
+                        item10 = Add(item8, message, lineSpan, numberOfLeadingSpaces, stringTable);
+                        break;
+                    case 12:
+                        Add(item10, message, lineSpan, numberOfLeadingSpaces, stringTable);
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            static Item Add(TreeNode parent, string text, Span span, int spaces, StringCache stringTable)
+            {
+                if (spaces >= span.Length || parent == null)
+                {
+                    return null;
+                }
+
+                string line = text.Substring(span.Start + spaces, span.Length - spaces);
+
+                var item = new Item
+                {
+                    Text = stringTable.Intern(line)
+                };
+                parent.AddChild(item);
+                return item;
+            }
+        }
     }
 }
