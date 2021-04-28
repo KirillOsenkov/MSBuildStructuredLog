@@ -370,7 +370,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             message = Intern(message);
 
-            TreeNode node = null;
+            TreeNode parent = null;
             var messageNode = new Message
             {
                 Text = message,
@@ -382,26 +382,26 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (buildEventContext.TaskId > 0)
             {
-                node = GetTask(args);
-                if (node is Task task)
+                parent = GetTask(args);
+                if (parent is Task task)
                 {
                     if (string.Equals(task.Name, "ResolveAssemblyReference", StringComparison.OrdinalIgnoreCase))
                     {
-                        if (ProcessRAR(task, ref node, message))
+                        if (ProcessRAR(task, ref parent, message))
                         {
                             return;
                         }
                     }
                     else if (string.Equals(task.Name, "MSBuild", StringComparison.OrdinalIgnoreCase))
                     {
-                        if (ProcessMSBuildTask(task, ref node, ref nodeToAdd, message))
+                        if (ProcessMSBuildTask(task, ref parent, ref nodeToAdd, message))
                         {
                             return;
                         }
                     }
                     else if (string.Equals(task.Name, "RestoreTask", StringComparison.OrdinalIgnoreCase))
                     {
-                        if (ProcessRestoreTask(task, ref node, message))
+                        if (ProcessRestoreTask(task, ref parent, message))
                         {
                             return;
                         }
@@ -410,7 +410,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
             else if (buildEventContext.TargetId > 0)
             {
-                node = GetTarget(args);
+                parent = GetTarget(args);
 
                 if (Strings.TaskSkippedFalseConditionRegex.Match(message).Success)
                 {
@@ -420,7 +420,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             else if (buildEventContext.ProjectContextId > 0)
             {
                 var project = construction.GetOrAddProject(buildEventContext.ProjectContextId);
-                node = project;
+                parent = project;
 
                 if (Strings.IsTargetSkipped(message))
                 {
@@ -430,20 +430,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         var skippedTarget = project.GetOrAddTargetByName(targetName, args.Timestamp);
                         skippedTarget.StartTime = args.Timestamp;
                         skippedTarget.EndTime = args.Timestamp;
-                        node = skippedTarget;
+                        parent = skippedTarget;
                         messageNode.IsLowRelevance = true;
                     }
                 }
             }
             else if (buildEventContext.EvaluationId != -1)
             {
-                node = construction.EvaluationFolder;
+                parent = construction.EvaluationFolder;
 
                 var evaluationId = buildEventContext.EvaluationId;
                 var evaluation = construction.Build.FindEvaluation(evaluationId);
                 if (evaluation != null)
                 {
-                    node = evaluation;
+                    parent = evaluation;
                 }
 
                 if (args is PropertyReassignmentEventArgs || Strings.PropertyReassignmentRegex.IsMatch(message))
@@ -455,22 +455,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                     else
                     {
-                        properties = node.GetOrCreateNodeWithName<TimedNode>(Strings.PropertyReassignmentFolder, addAtBeginning: true);
+                        properties = parent.GetOrCreateNodeWithName<TimedNode>(Strings.PropertyReassignmentFolder, addAtBeginning: true);
                     }
 
                     var propertyName = Strings.GetPropertyName(message);
-                    node = properties.GetOrCreateNodeWithName<Folder>(propertyName);
+                    parent = properties.GetOrCreateNodeWithName<Folder>(propertyName);
                 }
-                else if (node == evaluation && node.FindChild<Message>(message) != null)
+                else if (parent == evaluation && parent.FindChild<Message>(message) != null)
                 {
                     // avoid duplicate messages
                     return;
                 }
             }
 
-            if (node == null)
+            if (parent == null)
             {
-                node = construction.Build;
+                parent = construction.Build;
 
                 if (construction.Build.FileFormatVersion < 9 && Strings.IsEvaluationMessage(message))
                 {
@@ -479,7 +479,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         return;
                     }
 
-                    node = construction.EvaluationFolder;
+                    parent = construction.EvaluationFolder;
                 }
                 else if (construction.Build.FileFormatVersion < 9 && Strings.PropertyReassignmentRegex.IsMatch(message))
                 {
@@ -489,12 +489,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
 
                     var properties = construction.EvaluationFolder.GetOrCreateNodeWithName<Folder>(Strings.PropertyReassignmentFolder);
-                    node = properties.GetOrCreateNodeWithName<Folder>(Strings.GetPropertyName(message));
+                    parent = properties.GetOrCreateNodeWithName<Folder>(Strings.GetPropertyName(message));
                 }
                 else if (Strings.IsTargetDoesNotExistAndWillBeSkipped(message))
                 {
                     var folder = construction.EvaluationFolder;
-                    node = folder;
+                    parent = folder;
                     messageNode.IsLowRelevance = true;
                 }
                 else if (
@@ -522,7 +522,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
-            node.AddChild(nodeToAdd);
+            parent.AddChild(nodeToAdd);
         }
 
         private bool ProcessRAR(Task task, ref TreeNode node, string message)
