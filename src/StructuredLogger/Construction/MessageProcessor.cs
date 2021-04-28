@@ -379,9 +379,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 parent = GetTask(args);
                 if (parent is Task task)
                 {
-                    if (string.Equals(task.Name, "ResolveAssemblyReference", StringComparison.OrdinalIgnoreCase))
+                    if (task is ResolveAssemblyReferenceTask rar)
                     {
-                        if (ProcessRAR(task, ref parent, message))
+                        if (ProcessRAR(rar, ref parent, message))
                         {
                             return;
                         }
@@ -530,10 +530,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             parent.AddChild(nodeToAdd);
         }
 
-        private bool ProcessRAR(Task task, ref TreeNode node, string message)
+        private bool ProcessRAR(ResolveAssemblyReferenceTask task, ref TreeNode node, string message)
         {
-            Folder inputs = task.FindChild<Folder>(Strings.Inputs);
-            Folder results = task.FindChild<Folder>(Strings.Results);
+            Folder inputs = task.Inputs;
+            Folder results = task.Results;
             node = results ?? inputs;
 
             if (message.StartsWith("    ", StringComparison.Ordinal))
@@ -618,6 +618,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     if (isResult)
                     {
                         results = task.GetOrCreateNodeWithName<Folder>(Strings.Results);
+                        task.Results = results;
                         node = results;
                     }
                     else
@@ -625,6 +626,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         if (inputs == null)
                         {
                             inputs = task.GetOrCreateNodeWithName<Folder>(Strings.Inputs);
+                            task.Inputs = inputs;
                         }
 
                         node = inputs;

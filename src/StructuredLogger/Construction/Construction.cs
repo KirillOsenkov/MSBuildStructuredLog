@@ -55,6 +55,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Intern(nameof(AddItem));
             Intern(nameof(CopyTask));
             Intern(nameof(CscTask));
+            Intern(nameof(ResolveAssemblyReferenceTask));
             Intern(nameof(EntryTarget));
             Intern(nameof(Folder));
             Intern(nameof(Import));
@@ -962,25 +963,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var taskId = taskStartedEventArgs.BuildEventContext.TaskId;
             var startTime = taskStartedEventArgs.Timestamp;
 
-            Task result;
-            switch (taskName)
+            Task result = taskName.ToLowerInvariant() switch
             {
-                case "Copy":
-                    result = new CopyTask();
-                    break;
-                case "Csc":
-                    result = new CscTask();
-                    break;
-                case "Vbc":
-                    result = new VbcTask();
-                    break;
-                case "Fsc":
-                    result = new FscTask();
-                    break;
-                default:
-                    result = new Task();
-                    break;
-            }
+                "copy" => new CopyTask(),
+                "csc" => new CscTask(),
+                "vbc" => new VbcTask(),
+                "fsc" => new FscTask(),
+                "resolveassemblyreference" => new ResolveAssemblyReferenceTask(),
+                _ => new Task(),
+            };
 
             result.Name = taskName;
             result.Id = taskId;
