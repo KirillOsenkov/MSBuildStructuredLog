@@ -22,28 +22,54 @@
         <StyleInclude Source="avares://Avalonia.Themes.Default/Accents/BaseLight.xaml"/>
         <StyleInclude Source="avares://AvaloniaEdit/AvaloniaEdit.xaml" />
         <StyleInclude Source="/Styles.xaml" />
+
+        <Style Selector="TreeViewItem /template/ ToggleButton#expander">
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="Transparent"
+                            Width="16"
+                            Height="16"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+                        <Path Fill="{DynamicResource ThemeForegroundBrush}"
+                              HorizontalAlignment="Left"
+                              VerticalAlignment="Top"
+                              Data="M 6 4 L 10 8 L 6 12 Z"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+
+        <Style Selector="TreeViewItem /template/ ToggleButton#expander:checked">
+            <Setter Property="RenderTransform">
+                <TransformGroup>
+                    <RotateTransform Angle="45" />
+                    <TranslateTransform X="2" Y="2" />
+                </TransformGroup>
+            </Setter>
+        </Style>
         
         <Style Selector="Rectangle.nodeIcon">
-            <Setter Property="Width" Value="16" />
+            <Setter Property="Width" Value="14" />
             <Setter Property="Height" Value="12" />
-            <Setter Property="Margin" Value="2,4,6,2" />
+            <Setter Property="Margin" Value="2,2,6,2" />
             <Setter Property="StrokeThickness" Value="1" />
-            <Setter Property="VerticalAlignment" Value="Top" />
+            <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
 
         <Style Selector="Image.projectNodeIcon">
             <Setter Property="Width" Value="16" />
             <Setter Property="Height" Value="16" />
-            <Setter Property="Margin" Value="2,2,6,0" />
-            <Setter Property="VerticalAlignment" Value="Top" />
+            <Setter Property="Margin" Value="2,2,6,2" />
+            <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
 
         <Style Selector="TextBlock.nodeBeforeText">
-            <Setter Property="Margin" Value="0,2,0,0" />
+            <Setter Property="Margin" Value="0,2,0,2" />
         </Style>
 
         <Style Selector="TextBlock.nodeText">
-            <Setter Property="Margin" Value="0,2,8,0" />
+            <Setter Property="Margin" Value="0,2,8,2" />
         </Style>
     </Application.Styles>
 
