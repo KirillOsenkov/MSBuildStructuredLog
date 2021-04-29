@@ -102,5 +102,31 @@
             </ControlTemplate>
         </Setter>
     </Style>
+
+    <Style Selector="TreeViewItem /template/ ToggleButton#expander">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Background="Transparent"
+                        Width="12"
+                        Height="12"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                    <Path Fill="{DynamicResource ThemeForegroundBrush}"
+                          HorizontalAlignment="Left"
+                          VerticalAlignment="Top"
+                          Data="M 4 2 L 8 6 L 4 10 Z"/>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+
+    <Style Selector="TreeViewItem /template/ ToggleButton#expander:checked">
+        <Setter Property="RenderTransform">
+            <TransformGroup>
+                <RotateTransform Angle="45" />
+                <TranslateTransform X="2" Y="2" />
+            </TransformGroup>
+        </Setter>
+    </Style>
     
 </Styles>
