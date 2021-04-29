@@ -406,7 +406,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 parent = GetTarget(args);
 
-                if (Strings.TaskSkippedFalseConditionRegex.Match(message).Success)
+                if (Strings.TaskSkippedFalseConditionRegex.IsMatch(message))
                 {
                     lowRelevance = true;
                 }
@@ -652,14 +652,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private bool ProcessMSBuildTask(Task task, ref TreeNode node, ref BaseNode nodeToAdd, string message)
         {
-            var additionalPropertiesMatch = Strings.AdditionalPropertiesPrefix.Match(message);
+            var additionalPropertiesMatch = Strings.AdditionalPropertiesPrefix.IsMatch(message);
             if (message.StartsWith(Strings.GlobalPropertiesPrefix, StringComparison.Ordinal) ||
-                additionalPropertiesMatch.Success ||
+                additionalPropertiesMatch ||
                 Strings.OverridingGlobalPropertiesPrefix.IsMatch(message) ||
                 message.StartsWith(Strings.RemovingPropertiesPrefix, StringComparison.Ordinal) ||
                 Strings.RemovingProjectProperties.IsMatch(message))
             {
-                if (additionalPropertiesMatch.Success)
+                if (additionalPropertiesMatch)
                 {
                     node = node.GetOrCreateNodeWithName<Folder>(Strings.AdditionalProperties);
                 }
