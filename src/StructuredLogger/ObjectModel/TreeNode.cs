@@ -79,6 +79,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             RaisePropertyChanged(nameof(Children));
         }
 
+        [System.Diagnostics.Conditional("TurnedOff")]
         public void Seal()
         {
             if (children != null)
