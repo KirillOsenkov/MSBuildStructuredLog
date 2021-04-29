@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.Build.Collections;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Internal;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -268,15 +269,26 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private Task GetTask(BuildEventArgs args) => GetTask(args.BuildEventContext);
 
+        private BuildEventContext lastTaskBuildEventContext;
+        private Task lastTask;
+
         private Task GetTask(BuildEventContext buildEventContext)
         {
+            if (buildEventContext.EqualTo(lastTaskBuildEventContext))
+            {
+                return lastTask;
+            }
+
             Target target = GetTarget(buildEventContext);
             if (target == null)
             {
+                lastTaskBuildEventContext = null;
                 return null;
             }
 
             var task = target.GetTaskById(buildEventContext.TaskId);
+            lastTaskBuildEventContext = buildEventContext;
+            lastTask = task;
             return task;
         }
 

@@ -123,5 +123,26 @@ namespace Microsoft.Build.Internal
 
             return list;
         }
+
+        public static bool EqualTo(this BuildEventContext buildEventContext, BuildEventContext other)
+        {
+            if (object.ReferenceEquals(buildEventContext, other))
+            {
+                return true;
+            }
+
+            if (buildEventContext == null || other == null)
+            {
+                return false;
+            }
+
+            return buildEventContext.TaskId == other.TaskId
+                && buildEventContext.TargetId == other.TargetId
+                && buildEventContext.ProjectContextId == other.ProjectContextId
+                && buildEventContext.ProjectInstanceId == other.ProjectInstanceId
+                && buildEventContext.NodeId == other.NodeId
+                && buildEventContext.EvaluationId == other.EvaluationId
+                && buildEventContext.SubmissionId == other.SubmissionId;
+        }
     }
 }
