@@ -318,11 +318,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var target = GetTarget(args);
 
             var kvp = TextUtilities.ParseNameValue(message);
-            target.AddChild(new Property
+            var property = new Property
             {
                 Name = Intern(kvp.Key),
                 Value = Intern(kvp.Value)
-            });
+            };
+            target.AddChild(property);
         }
 
         /// <summary>
@@ -597,15 +598,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             if (equals != -1)
                             {
                                 var kvp = TextUtilities.ParseNameValue(message);
-                                node.AddChild(new Metadata
+                                var metadata = new Metadata
                                 {
                                     Name = Intern(kvp.Key.TrimEnd(space)),
                                     Value = Intern(kvp.Value.TrimStart(space))
-                                });
+                                };
+                                node.Children.Add(metadata);
+                                metadata.Parent = node;
                             }
                             else
                             {
-                                node.AddChild(new Item()
+                                node.AddChild(new Item
                                 {
                                     Text = Intern(message)
                                 });
