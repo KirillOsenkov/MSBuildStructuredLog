@@ -6,6 +6,7 @@ using System.Linq;
 using Microsoft.Build.Locator;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Win32;
+using StructuredLogViewer.Core;
 
 namespace StructuredLogViewer
 {
@@ -37,10 +38,12 @@ namespace StructuredLogViewer
 
             var finalResults = candidates
                 .Where(File.Exists)
-                .OrderBy(s => s)
-                .ToArray();
+                .OrderBy(s => s);
 
-            return finalResults;
+            return DotnetUtilities.GetMsBuildPathCollection()
+                .Reverse()
+                .Concat(finalResults)
+                .ToArray();
         }
 
         private static string[] GetVS15Locations()
@@ -82,8 +85,8 @@ namespace StructuredLogViewer
         public static void BrowseForMSBuildExe()
         {
             var openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = "MSBuild.exe|MSBuild.exe";
-            openFileDialog.Title = "Select MSBuild.exe location";
+            openFileDialog.Filter = "MSBuild (.dll;.exe)|MSBuild.dll;MSBuild.exe";
+            openFileDialog.Title = "Select MSBuild file location";
             openFileDialog.CheckFileExists = true;
             var result = openFileDialog.ShowDialog();
             if (result != true)

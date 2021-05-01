@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows.Input;
 using Microsoft.Build.Logging.StructuredLogger;
+using StructuredLogViewer.Core;
 
 namespace StructuredLogViewer.Avalonia.Controls
 {
@@ -9,6 +11,8 @@ namespace StructuredLogViewer.Avalonia.Controls
     {
         public event Action BuildRequested;
         public event Action CancelRequested;
+
+        public event Func<System.Threading.Tasks.Task> BrowseForMSBuildRequsted;
 
         public BuildParametersScreen()
         {
@@ -22,21 +26,25 @@ namespace StructuredLogViewer.Avalonia.Controls
 
         public void UpdateMSBuildLocations()
         {
+            var msBuildLocations = SettingsService.GetRecentMSBuildLocations(
+                DotnetUtilities.GetMsBuildPathCollection().Reverse());
             MSBuildLocations.Clear();
-            foreach (var msbuild in SettingsService.GetRecentMSBuildLocations())
+            foreach (var msbuild in msBuildLocations)
             {
                 MSBuildLocations.Add(msbuild);
             }
 
-            if (MSBuildLocations.Count > 0)
-            {
-                //CollectionViewSource.GetDefaultView(MSBuildLocations).MoveCurrentToFirst();
-            }
+            MSBuildLocation = MSBuildLocations.FirstOrDefault();
         }
 
         public ObservableCollection<string> MSBuildLocations { get; } = new ObservableCollection<string>();
 
-        public string MSBuildLocation => ""; // CollectionViewSource.GetDefaultView(MSBuildLocations).CurrentItem as string;
+        private string msBuildLocation;
+        public string MSBuildLocation
+        {
+            get => msBuildLocation;
+            set => SetField(ref msBuildLocation, value);
+        }
 
         private string prefixArguments;
         public string PrefixArguments
@@ -64,11 +72,10 @@ namespace StructuredLogViewer.Avalonia.Controls
             //Clipboard.SetText(commandLine);
         }
 
-        private ICommand browseForMSBuildCommand;
-        public ICommand BrowseForMSBuildCommand => browseForMSBuildCommand ?? (browseForMSBuildCommand = new Command(BrowseForMSBuild));
-        public void BrowseForMSBuild()
+        public async System.Threading.Tasks.Task BrowseForMSBuildAsync()
         {
-            //MSBuildLocator.BrowseForMSBuildExe();
+            if (BrowseForMSBuildRequsted is not null)
+                await BrowseForMSBuildRequsted.Invoke();
             UpdateMSBuildLocations();
         }
     }

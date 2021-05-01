@@ -894,7 +894,7 @@
           <Button Command="{Binding BrowseForMSBuildCommand}"
                   Width="22"
                   Height="22"
-                  ToolTip="Browse for custom MSBuild.exe location..."
+                  ToolTip="Browse for custom MSBuild file location..."
                   Margin="0,0,8,0">
             <StackPanel Orientation="Horizontal">
               <Rectangle Width="2" Height="2" Margin="2" Fill="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
