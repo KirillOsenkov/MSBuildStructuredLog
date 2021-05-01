@@ -368,6 +368,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     var task = CreateTask(args);
                     target.AddChild(task);
                     project.OnTaskAdded(task);
+
+                    if (args is TaskStartedEventArgs2 taskStarted2)
+                    {
+                        task.LineNumber = taskStarted2.LineNumber;
+                    }
                 }
             }
             catch (Exception ex)

@@ -555,13 +555,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 message = GetTaskStartedMessage(taskName);
             }
 
-            var e = new TaskStartedEventArgs(
+            var e = new TaskStartedEventArgs2(
                 message,
                 fields.HelpKeyword,
                 projectFile,
                 taskFile,
                 taskName,
                 fields.Timestamp);
+            e.LineNumber = fields.LineNumber;
+            e.ColumnNumber = fields.ColumnNumber;
             SetCommonFields(e, fields);
             return e;
         }
