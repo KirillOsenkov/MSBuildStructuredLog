@@ -13,14 +13,18 @@ namespace Microsoft.Build.BackEnd
             string itemType,
             IList items,
             bool logItemMetadata,
-            DateTime timestamp)
+            DateTime timestamp,
+            int line,
+            int column)
         {
             var args = new TaskParameterEventArgs(
                 messageKind,
                 itemType,
                 items,
                 logItemMetadata,
-                timestamp);
+                timestamp,
+                line,
+                column);
             args.BuildEventContext = buildEventContext;
             return args;
         }

@@ -1557,6 +1557,10 @@ Recent:
                         return DisplayTarget(target.SourceFilePath, target.Name);
                     case Task task:
                         return DisplayTask(task.SourceFilePath, task.Parent, task.Name);
+                    case AddItem addItem:
+                        return DisplayAddRemoveItem(addItem.Parent, addItem.LineNumber ?? 0);
+                    case RemoveItem removeItem:
+                        return DisplayAddRemoveItem(removeItem.Parent, removeItem.LineNumber ?? 0);
                     case IHasSourceFile hasSourceFile when hasSourceFile.SourceFilePath != null:
                         int line = 0;
                         var hasLine = hasSourceFile as IHasLineNumber;
@@ -1614,10 +1618,20 @@ Recent:
             return true;
         }
 
+        private bool DisplayAddRemoveItem(TreeNode parent, int line)
+        {
+            if (parent is not Target target)
+            {
+                return false;
+            }
+
+            string sourceFilePath = target.SourceFilePath;
+            return DisplayFile(sourceFilePath, line);
+        }
+
         private bool DisplayTask(string sourceFilePath, TreeNode parent, string name)
         {
-            Target target = parent as Target;
-            if (target == null)
+            if (parent is not Target target)
             {
                 return DisplayFile(sourceFilePath);
             }

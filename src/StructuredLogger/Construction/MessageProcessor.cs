@@ -191,11 +191,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 NamedNode named;
                 if (kind == TaskParameterMessageKind.AddItem)
                 {
-                    named = new AddItem();
+                    named = new AddItem
+                    {
+                        LineNumber = args.LineNumber
+                    };
                 }
                 else if (kind == TaskParameterMessageKind.RemoveItem)
                 {
-                    named = new RemoveItem();
+                    named = new RemoveItem
+                    {
+                        LineNumber = args.LineNumber
+                    };
                 }
                 else
                 {

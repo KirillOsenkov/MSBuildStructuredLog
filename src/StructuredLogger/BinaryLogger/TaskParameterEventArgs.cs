@@ -34,9 +34,23 @@ namespace Microsoft.Build.Framework
             string itemType,
             IList items,
             bool logItemMetadata,
-            DateTime eventTimestamp
+            DateTime eventTimestamp,
+            int line,
+            int column
         )
-            : base(message: null, helpKeyword: null, senderName: null, MessageImportance.Low, eventTimestamp)
+            : base(
+                  subcategory: null,
+                  code: null,
+                  file: null,
+                  lineNumber: line,
+                  columnNumber: column,
+                  endLineNumber: 0,
+                  endColumnNumber: 0,
+                  message: null,
+                  helpKeyword: null,
+                  senderName: null,
+                  MessageImportance.Low,
+                  eventTimestamp)
         {
             Kind = kind;
             ItemType = itemType;

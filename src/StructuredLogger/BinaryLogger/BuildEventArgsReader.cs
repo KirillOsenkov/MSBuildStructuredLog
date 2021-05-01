@@ -691,7 +691,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 itemType,
                 items,
                 logItemMetadata: true,
-                fields.Timestamp);
+                fields.Timestamp,
+                fields.LineNumber,
+                fields.ColumnNumber);
             e.ProjectFile = fields.ProjectFile;
             return e;
         }
