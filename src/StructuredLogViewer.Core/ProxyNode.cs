@@ -67,9 +67,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            if (OriginalType != Strings.Folder)
+            string typePrefix = OriginalType;
+            if (typePrefix != Strings.Folder)
             {
-                Highlights.Add(OriginalType);
+                Highlights.Add(typePrefix);
             }
 
             // NameValueNode is special case: have to show name=value when searched only in one (name or value)
@@ -115,7 +116,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             foreach (var wordsInField in result.WordsInFields.GroupBy(t => t.field, t => t.match))
             {
                 var fieldText = wordsInField.Key;
-                if (fieldText == OriginalType)
+                if (fieldText == OriginalType || (node is Task task && task.IsDerivedTask))
                 {
                     // OriginalType already added above
                     continue;
@@ -218,7 +219,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        public string OriginalType => Original.GetType().Name;
+        public string OriginalType
+        {
+            get
+            {
+                if (Original is Task)
+                {
+                    return nameof(Task);
+                }
+
+                return Original.GetType().Name;
+            }
+        }
+
         public string ProjectExtension => GetProjectFileExtension();
 
         private string GetProjectFileExtension()

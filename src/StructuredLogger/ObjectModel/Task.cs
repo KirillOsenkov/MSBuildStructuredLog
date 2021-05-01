@@ -27,6 +27,8 @@
 
         public override string TypeName => nameof(Task);
 
+        public virtual bool IsDerivedTask => this.GetType() != typeof(Task);
+
         public int? LineNumber { get; set; }
 
         public override string ToString() => Title;

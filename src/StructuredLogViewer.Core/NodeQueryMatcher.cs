@@ -336,6 +336,13 @@ namespace StructuredLogViewer
 
             // in case they want to narrow down the search such as "Build target" or "Copy task"
             var typeName = node.TypeName;
+
+            // for tasks derived from Task $task should still work
+            if (node is Microsoft.Build.Logging.StructuredLogger.Task t && t.IsDerivedTask)
+            {
+                searchFields[count++] = "Task";
+            }
+
             searchFields[count++] = typeName;
 
             if (node is NameValueNode nameValueNode)
@@ -405,11 +412,6 @@ namespace StructuredLogViewer
                     {
                         searchFields[count++] = evaluation.EvaluationText;
                     }
-                }
-                // for tasks derived from Task $task should still work
-                else if (node is Microsoft.Build.Logging.StructuredLogger.Task && typeName != "Task")
-                {
-                    searchFields[count++] = "Task";
                 }
             }
 

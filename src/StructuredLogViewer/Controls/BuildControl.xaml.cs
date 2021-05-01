@@ -1798,7 +1798,7 @@ Recent:
                     var task = resultNode.GetNearestParent<Task>(t => !string.Equals(t.Name, "MSBuild", StringComparison.OrdinalIgnoreCase));
                     if (task != null && !isTarget && project != null && task.GetNearestParent<Project>() == project)
                     {
-                        parent = InsertParent(parent, task, task.TypeName + " " + task.Name);
+                        parent = InsertParent(parent, task, "Task " + task.Name);
                     }
 
                     if (resultNode is Item item &&
