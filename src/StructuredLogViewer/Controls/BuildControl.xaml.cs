@@ -1918,7 +1918,17 @@ Recent:
             statsRoot.AddChild(new Property { Name = "UncompressedStreamSize", Value = recordStats.UncompressedStreamSize.ToString("N0") });
             statsRoot.AddChild(new Property { Name = "RecordCount", Value = recordStats.RecordCount.ToString("N0") });
 
-            Build.Seal();
+            // This is interesting. Technically WPF needs the Build.Children collection to be observable
+            // to properly refresh the list when we add a new node. However it suffices to replace the Children
+            // collection with something else (and I assume it gets a new collection view and that is
+            // equivalent to a Reset.
+            // We could literally just do children = children.ToArray() and that would be sufficient here.
+            // Note that there's no need to actually change it to observable collection this late.
+            // Since the children have already mutated by the time we're setting this. Ideally we should be
+            // setting this at the beginning.
+            // It also doesn't seem like raising PropertyChanged for Children is necessary.
+            // See https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/487 for details.
+            Build.MakeChildrenObservable();
         }
 
         private UIElement GetHistogram(List<int> values)

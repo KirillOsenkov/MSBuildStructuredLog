@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 
@@ -86,6 +87,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 children = children.ToArray();
             }
+        }
+
+        public void MakeChildrenObservable()
+        {
+            if (children == null)
+            {
+                children = new ObservableCollection<BaseNode>();
+            }
+            else
+            {
+                children = new ObservableCollection<BaseNode>(children);
+            }
+
+            RaisePropertyChanged(nameof(HasChildren));
+            RaisePropertyChanged(nameof(Children));
         }
 
         public void Unseal()
