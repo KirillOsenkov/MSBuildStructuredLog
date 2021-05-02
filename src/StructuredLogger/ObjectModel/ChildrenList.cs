@@ -9,6 +9,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
         }
 
+        public ChildrenList(int capacity) : base(capacity)
+        {
+        }
+
         public ChildrenList(IEnumerable<BaseNode> children) : base(children)
         {
         }
@@ -43,6 +47,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        public void EnsureCapacity(int capacity)
+        {
+            this.Capacity = capacity;
+        }
+
         public void OnAdded(NamedNode child)
         {
             if (child?.LookupKey == null)
@@ -66,7 +75,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 _type = type;
                 _name = name;
-                hashCode = unchecked((_type.GetHashCode() * 397) ^ _name.ToLowerInvariant().GetHashCode());
+                hashCode = unchecked((_type.GetHashCode() * 397) ^ StringComparer.OrdinalIgnoreCase.GetHashCode(_name));
             }
 
             public bool Equals(ChildrenCacheKey other)

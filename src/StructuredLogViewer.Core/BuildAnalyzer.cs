@@ -77,8 +77,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (node.HasChildren)
             {
-                foreach (var child in node.Children)
+                var children = node.Children;
+                for (int i = 0; i < children.Count; i++)
                 {
+                    var child = children[i];
                     if (child is TreeNode childNode)
                     {
                         Visit(childNode);
@@ -150,7 +152,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void AnalyzeMessage(Message message)
         {
-            if (message.Text != null && Strings.BuildingWithToolsVersionPrefix != null && Strings.BuildingWithToolsVersionPrefix.Match(message.Text).Success)
+            if (message.Text != null && Strings.BuildingWithToolsVersionPrefix != null && Strings.BuildingWithToolsVersionPrefix.IsMatch(message.Text))
             {
                 message.IsLowRelevance = true;
             }
@@ -170,23 +172,31 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void PostAnalyzeBuild(Build build)
         {
+            string Intern(string text)
+            {
+#if DEBUG
+                text = build.StringTable.Intern(text);
+#endif
+                return text;
+            }
+
             if (!build.Succeeded)
             {
-                build.AddChild(new Error { Text = "Build failed." });
+                build.AddChild(new Error { Text = Intern("Build failed.") });
             }
             else
             {
-                build.AddChild(new Item { Text = "Build succeeded." });
+                build.AddChild(new Item { Text = Intern("Build succeeded.") });
             }
 
-            build.AddChild(new Property { Name = "Duration", Value = build.DurationText });
+            build.AddChild(new Property { Name = Intern(Strings.Duration), Value = Intern(build.DurationText) });
 
             doubleWritesAnalyzer.AppendDoubleWritesFolder(build);
             resolveAssemblyReferenceAnalyzer.AppendFinalReport(build);
 
             if (build.LogFilePath != null)
             {
-                build.AddChildAtBeginning(new Item { Text = build.LogFilePath });
+                build.AddChildAtBeginning(new Item { Text = Intern(build.LogFilePath) });
             }
 
             var durations = taskDurations
@@ -199,16 +209,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (durations.Length > 0)
             {
-                var top10Tasks = build.GetOrCreateNodeWithName<Folder>($"Top {durations.Count()} most expensive tasks");
+                string folderName = $"Top {durations.Count()} most expensive tasks";
+                folderName = Intern(folderName);
+                var top10Tasks = build.GetOrCreateNodeWithName<Folder>(folderName);
                 foreach (var kvp in durations)
                 {
-                    top10Tasks.AddChild(new Item { Name = kvp.Key, Text = TextUtilities.DisplayDuration(kvp.Value) });
+                    top10Tasks.AddChild(new Item
+                    {
+                        Name = Intern(kvp.Key),
+                        Text = Intern(TextUtilities.DisplayDuration(kvp.Value))
+                    });
                 }
             }
 
             if (analyzerReports.Count > 0)
             {
-                var analyzerReportSummary = build.GetOrCreateNodeWithName<Folder>($"Analyzer Summary");
+                var analyzerReportSummary = build.GetOrCreateNodeWithName<Folder>(Intern($"Analyzer Summary"));
                 CscTaskAnalyzer.CreateMergedReport(analyzerReportSummary, analyzerReports.ToArray());
             }
         }
@@ -260,9 +276,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     project.TargetFramework = evaluation.TargetFramework;
                     if (!string.IsNullOrEmpty(project.TargetFramework))
                     {
+                        var text = $"Properties and items are available at evaluation id:{project.EvaluationId}. Use the hyperlink above or the new 'Properties and items' tab.";
+#if DEBUG
+                        text = build.StringTable.Intern(text);
+#endif
                         project.AddChildAtBeginning(new Note
                         {
-                            Text = $"Properties and items are available at evaluation id:{project.EvaluationId}. Use the hyperlink above or the new 'Properties and items' tab."
+                            Text = text
                         });
                     }
                 }
@@ -273,12 +293,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             if (!string.IsNullOrEmpty(task.CommandLineArguments))
             {
-                task.AddChildAtBeginning(new Property { Name = "CommandLineArguments", Value = task.CommandLineArguments });
+                task.AddChildAtBeginning(new Property { Name = Strings.CommandLineArguments, Value = task.CommandLineArguments });
             }
 
             if (!string.IsNullOrEmpty(task.FromAssembly))
             {
-                task.AddChildAtBeginning(new Property { Name = "Assembly", Value = task.FromAssembly });
+                task.AddChildAtBeginning(new Property { Name = Strings.Assembly, Value = task.FromAssembly });
                 build.RegisterTask(task);
             }
 

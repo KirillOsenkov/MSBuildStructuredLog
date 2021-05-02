@@ -185,7 +185,7 @@ namespace StructuredLogViewer
             return true;
         }
 
-        public static string GetMSBuildExe()
+        public static string? GetMSBuildFile()
         {
             return GetRecentMSBuildLocations().FirstOrDefault();
         }

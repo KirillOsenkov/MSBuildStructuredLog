@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 
@@ -40,6 +41,23 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        public void EnsureChildrenCapacity(int capacity)
+        {
+            if (capacity <= 0)
+            {
+                return;
+            }
+
+            if (children == null)
+            {
+                children = new ChildrenList(capacity);
+            }
+            else if (children is ChildrenList list)
+            {
+                list.EnsureCapacity(capacity);
+            }
+        }
+
         public void SortChildren()
         {
             if (children == null)
@@ -62,12 +80,28 @@ namespace Microsoft.Build.Logging.StructuredLogger
             RaisePropertyChanged(nameof(Children));
         }
 
+        [System.Diagnostics.Conditional("TurnedOff")]
         public void Seal()
         {
             if (children != null)
             {
                 children = children.ToArray();
             }
+        }
+
+        public void MakeChildrenObservable()
+        {
+            if (children == null)
+            {
+                children = new ObservableCollection<BaseNode>();
+            }
+            else
+            {
+                children = new ObservableCollection<BaseNode>(children);
+            }
+
+            RaisePropertyChanged(nameof(HasChildren));
+            RaisePropertyChanged(nameof(Children));
         }
 
         public void Unseal()
@@ -117,6 +151,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (children.Count >= 1)
             {
+                // TODO: this may not be necessary as the children collection doesn't actually change
+                // Instead we should be using an observable collection that raises the appropriate
+                // events when it changes??
+                // Since our trees are being constructed all at once, and not mutated after that it
+                // seems we've been getting lucky with our ChildrenList not being observable.
                 RaisePropertyChanged(nameof(HasChildren));
                 RaisePropertyChanged(nameof(Children));
             }
@@ -481,13 +520,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     list = list.ToArray();
                 }
 
-                foreach (var child in list)
+                for (int i = 0; i < list.Count; i++)
                 {
                     if (cancellationToken.IsCancellationRequested)
                     {
                         return;
                     }
 
+                    var child = list[i];
                     if (child is TreeNode node)
                     {
                         node.VisitAllChildren(processor, cancellationToken, takeChildrenSnapshot);

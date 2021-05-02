@@ -91,6 +91,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (fileFormatVersion >= 10)
                 {
                     build.StringTable.NormalizeLineEndings = false;
+                    build.StringTable.HasDeduplicatedStrings = true;
                     if (ReuseBinlogStrings)
                     {
                         build.StringTable.DisableDeduplication = true;

@@ -94,6 +94,30 @@ References which depend on ""System.IO.Compression, Version=4.1.1.0, Culture=neu
         }
 
         [Fact]
+        public void ParseThereWasAConflictMultiline()
+        {
+            var message = @"    References which depend on ""System.IO.Compression.FileSystem, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"" [C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\3.1.0\ref\netcoreapp3.1\System.IO.Compression.FileSystem.dll].
+        C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\3.1.0\ref\netcoreapp3.1\System.IO.Compression.FileSystem.dll
+          Project file item includes which caused reference ""C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\3.1.0\ref\netcoreapp3.1\System.IO.Compression.FileSystem.dll"".
+            C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\3.1.0\ref\netcoreapp3.1\System.IO.Compression.FileSystem.dll
+    References which depend on ""System.IO.Compression.FileSystem"" [].
+        Unresolved primary reference with an item include of ""System.IO.Compression.FileSystem"".".NormalizeLineBreaks();
+            var stringCache = new StringCache();
+            var parameter = new Parameter();
+            ItemGroupParser.ParseThereWasAConflict(parameter, message, stringCache);
+            var text = StringWriter.GetString(parameter).NormalizeLineBreaks();
+            var expected = @"
+    References which depend on ""System.IO.Compression.FileSystem, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"" [C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\3.1.0\ref\netcoreapp3.1\System.IO.Compression.FileSystem.dll].
+        C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\3.1.0\ref\netcoreapp3.1\System.IO.Compression.FileSystem.dll
+            Project file item includes which caused reference ""C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\3.1.0\ref\netcoreapp3.1\System.IO.Compression.FileSystem.dll"".
+                C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\3.1.0\ref\netcoreapp3.1\System.IO.Compression.FileSystem.dll
+    References which depend on ""System.IO.Compression.FileSystem"" [].
+        Unresolved primary reference with an item include of ""System.IO.Compression.FileSystem"".
+".NormalizeLineBreaks();
+            Assert.Equal(expected, text);
+        }
+
+        [Fact]
         public void ParseMultilineMetadata()
         {
             Strings.Initialize();

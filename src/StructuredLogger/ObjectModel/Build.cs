@@ -21,6 +21,54 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public int FileFormatVersion { get; set; }
         public byte[] SourceFilesArchive { get; set; }
 
+        private string msbuildVersion;
+        public string MSBuildVersion 
+        {
+            get => msbuildVersion;
+            set
+            {
+                msbuildVersion = value;
+                version = null;
+                ParseMSBuildVersion();
+            }
+        }
+
+        private Version version;
+
+        private void ParseMSBuildVersion()
+        {
+            if (msbuildVersion == null)
+            {
+                return;
+            }
+
+            msbuildVersion = msbuildVersion.TrimQuotes();
+
+            var parts = msbuildVersion.Split(new[] { '.' }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 2)
+            {
+                return;
+            }
+
+            if (!int.TryParse(parts[0], out var major) || !int.TryParse(parts[1], out var minor))
+            {
+                return;
+            }
+
+            version = new Version(major, minor);
+        }
+
+        public bool IsMSBuildVersionAtLeast(int major, int minor)
+        {
+            if (version == null)
+            {
+                return false;
+            }
+
+            // avoid allocating a Version instance
+            return version.Major > major || (version.Major == major && version.Minor >= minor);
+        }
+
         private Dictionary<string, ArchiveFile> sourceFiles;
         public Dictionary<string, ArchiveFile> SourceFiles
         {
@@ -143,16 +191,31 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return found;
         }
 
+        private Dictionary<int, ProjectEvaluation> evaluationById;
+
         public ProjectEvaluation FindEvaluation(int id)
         {
-            var evaluation = EvaluationFolder;
-            if (evaluation == null)
+            if (evaluationById == null)
             {
-                return null;
+                evaluationById = new Dictionary<int, ProjectEvaluation>();
             }
 
-            var child = evaluation.FindChild<ProjectEvaluation>(e => e.Id == id);
-            return child;
+            if (!evaluationById.TryGetValue(id, out var projectEvaluation))
+            {
+                var evaluation = EvaluationFolder;
+                if (evaluation == null)
+                {
+                    return null;
+                }
+
+                projectEvaluation = evaluation.FindChild<ProjectEvaluation>(e => e.Id == id);
+                if (projectEvaluation != null)
+                {
+                    evaluationById[id] = projectEvaluation;
+                }
+            }
+
+            return projectEvaluation;
         }
     }
 }

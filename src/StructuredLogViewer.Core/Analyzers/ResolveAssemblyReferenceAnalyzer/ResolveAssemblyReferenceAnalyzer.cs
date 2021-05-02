@@ -11,12 +11,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
     public class ResolveAssemblyReferenceAnalyzer
     {
         public TimeSpan TotalRARDuration = TimeSpan.Zero;
+        private StringCache stringTable;
+
         public HashSet<string> UsedLocations { get; } = new HashSet<string>();
         public HashSet<string> UnusedLocations { get; } = new HashSet<string>();
         private readonly HashSet<string> currentUsedLocations = new HashSet<string>();
 
         public void AnalyzeResolveAssemblyReference(Task rar)
         {
+            stringTable = rar.GetNearestParent<Build>()?.StringTable;
+
             currentUsedLocations.Clear();
 
             var results = rar.FindChild<Folder>(c => c.Name == Strings.Results);
@@ -112,7 +116,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                                 sourceItem.AddChild(new Metadata() { Name = metadata.Name, Value = metadata.Value });
                                                 if (notCopyLocalMessage != null)
                                                 {
-                                                    notCopyLocalMessage.AddChild(new Message { Text = $"{foundSourceItem.ToString()} has {metadata.Name} set to {metadata.Value}" });
+                                                    var message = $"{foundSourceItem} has {metadata.Name} set to {metadata.Value}";
+                                                    message = stringTable?.Intern(message);
+                                                    notCopyLocalMessage.AddChild(new Message
+                                                    {
+                                                        Text = message
+                                                    });
                                                 }
                                             }
                                         }

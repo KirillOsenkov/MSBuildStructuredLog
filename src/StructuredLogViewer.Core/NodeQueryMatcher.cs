@@ -105,8 +105,17 @@ namespace StructuredLogViewer
         [ThreadStatic]
         private static string[] searchFieldsThreadStatic;
 
-        public NodeQueryMatcher(string query, IEnumerable<string> stringTable, CancellationToken cancellationToken = default)
+        private readonly StringCache stringCache; // only used for validation that all strings are interned (disabled)
+
+        public NodeQueryMatcher(
+            string query,
+            IEnumerable<string> stringTable,
+            CancellationToken cancellationToken = default,
+            StringCache stringCache = null // validation disabled in production
+            )
         {
+            this.stringCache = stringCache;
+
             query = PreprocessQuery(query);
 
             this.Query = query;
@@ -327,6 +336,13 @@ namespace StructuredLogViewer
 
             // in case they want to narrow down the search such as "Build target" or "Copy task"
             var typeName = node.TypeName;
+
+            // for tasks derived from Task $task should still work
+            if (node is Microsoft.Build.Logging.StructuredLogger.Task t && t.IsDerivedTask)
+            {
+                searchFields[count++] = "Task";
+            }
+
             searchFields[count++] = typeName;
 
             if (node is NameValueNode nameValueNode)
@@ -397,11 +413,6 @@ namespace StructuredLogViewer
                         searchFields[count++] = evaluation.EvaluationText;
                     }
                 }
-                // for tasks derived from Task $task should still work
-                else if (node is Microsoft.Build.Logging.StructuredLogger.Task && typeName != "Task")
-                {
-                    searchFields[count++] = "Task";
-                }
             }
 
             return (searchFields, count);
@@ -464,6 +475,10 @@ namespace StructuredLogViewer
                 for (int j = 0; j < searchFields.count; j++)
                 {
                     var field = searchFields.array[j];
+
+                    //if (!stringCache.Contains(field))
+                    //{
+                    //}
 
                     if (!term.IsMatch(field, MatchesInStrings[i]))
                     {

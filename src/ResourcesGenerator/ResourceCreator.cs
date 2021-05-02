@@ -36,6 +36,7 @@ namespace ResourcesGenerator
             "ResolveAssemblyReference.Dependency",
             "ResolveAssemblyReference.UnifiedDependency",
             "ResolveAssemblyReference.AssemblyFoldersExSearchLocations",
+            "ResolveAssemblyReference.ConflictFound",
             "General.GlobalProperties",
             "General.AdditionalProperties",
             "General.OverridingProperties",
@@ -116,7 +117,13 @@ namespace ResourcesGenerator
                         if (index > -1)
                         {
                             var resourceManager = new ResourceManager(manifestResourceName.Substring(0, index), assembly);
-                            var myResourceSet = resourceManager.GetResourceSet(cultureInfo, createIfNotExists: true, tryParents: true);
+                            bool tryParents = true;
+                            if (manifestResourceName == "System.Design.resources")
+                            {
+                                tryParents = false;
+                            }
+
+                            var myResourceSet = resourceManager.GetResourceSet(cultureInfo, createIfNotExists: true, tryParents: tryParents);
                             if (myResourceSet != null)
                             {
                                 foreach (DictionaryEntry res in myResourceSet)

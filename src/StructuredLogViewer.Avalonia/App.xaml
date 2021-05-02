@@ -25,20 +25,28 @@
         
         <Style Selector="Rectangle.nodeIcon">
             <Setter Property="Width" Value="14" />
-            <Setter Property="Height" Value="11" />
-            <Setter Property="Margin" Value="3,3,6,3" />
+            <Setter Property="Height" Value="12" />
+            <Setter Property="Margin" Value="4,1,6,1" />
             <Setter Property="StrokeThickness" Value="1" />
-            <Setter Property="VerticalAlignment" Value="Top" />
+            <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
 
         <Style Selector="Image.projectNodeIcon">
             <Setter Property="Width" Value="16" />
             <Setter Property="Height" Value="16" />
-            <Setter Property="Margin" Value="2,2,6,2" />
-            <Setter Property="VerticalAlignment" Value="Top" />
+            <Setter Property="Margin" Value="3,1,6,1" />
+            <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
-        
+
+        <Style Selector="TextBlock.nodeBeforeText">
+            <Setter Property="Margin" Value="0,1,0,1" />
+        </Style>
+
+        <Style Selector="TextBlock.nodeText">
+            <Setter Property="Margin" Value="0,1,8,1" />
+        </Style>
     </Application.Styles>
+
     <Application.DataTemplates>
 
         <TreeDataTemplate DataType="{x:Type l:Folder}"
@@ -49,6 +57,7 @@
                            Stroke="{StaticResource FolderStroke}"
                            Fill="{StaticResource ClosedFolderBrush}" />
                 <TextBlock Name="nameText"
+                           Classes="nodeText"
                            Text="{Binding Name}"
                            Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={x:Static Brushes.DarkGoldenrod}}" />
             </StackPanel>
@@ -74,8 +83,8 @@
                         <DrawingImage Drawing="{Binding ProjectFileExtension, Converter={StaticResource ProjectIconConverter}}" />
                     </Image.Source>
                 </Image>
-                <TextBlock Text="{Binding Name}"
-                           Margin="0,1,0,0" />
+                <TextBlock Classes="nodeText"
+                           Text="{Binding Name}" />
             </StackPanel>
         </TreeDataTemplate>
 
@@ -89,8 +98,8 @@
                         <DrawingImage Drawing="{Binding ProjectFileExtension, Converter={StaticResource ProjectIconConverter}}" />
                     </Image.Source>
                 </Image>
-                <TextBlock Text="{Binding Name}"
-                           Margin="0,1,0,0" />
+                <TextBlock Classes="nodeText"
+                           Text="{Binding Name}" />
             </StackPanel>
         </TreeDataTemplate>
 
@@ -104,9 +113,11 @@
                            Stroke="{StaticResource TargetStroke}"
                            Fill="{StaticResource TargetBrush}" />
                 <TextBlock Name="label"
+                           Classes="nodeBeforeText"
                            Text="Target "
                            Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={StaticResource TargetStroke}}" />
-                <TextBlock Text="{Binding Name}" />
+                <TextBlock Classes="nodeText"
+                           Text="{Binding Name}" />
             </StackPanel>
         </TreeDataTemplate>
 
@@ -116,7 +127,8 @@
                            Classes="nodeIcon"
                            Stroke="{StaticResource TargetStroke}"
                            Fill="{StaticResource TargetBrush}" />
-                <TextBlock Text="{Binding Name}" />
+                <TextBlock Classes="nodeText"
+                           Text="{Binding Name}" />
             </StackPanel>
         </DataTemplate>
 
@@ -128,13 +140,15 @@
                            Stroke="{StaticResource TaskStroke}"
                            Fill="{StaticResource TaskBrush}" />
                 <TextBlock Name="label"
+                           Classes="nodeBeforeText"
                            Text="Task "
                            Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={StaticResource TaskStroke}}"/>
-                <TextBlock Text="{Binding Name}" />
+                <TextBlock Classes="nodeText"
+                           Text="{Binding Name}" />
                 <TextBlock Name="duration"
+                           Classes="nodeText"
                            Text="{Binding DurationText}"
-                           Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={x:Static Brushes.LightGray}}"
-                           Margin="6,0,0,0" />
+                           Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={x:Static Brushes.LightGray}}" />
             </StackPanel>
         </TreeDataTemplate>
 
@@ -146,9 +160,11 @@
                            Stroke="{StaticResource ItemStroke}"
                            Fill="{StaticResource ItemBrush}" />
                 <TextBlock Name="label"
+                           Classes="nodeBeforeText"
                            Text="Add Item "
                            Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={x:Static Brushes.Teal}}" />
-                <TextBlock Text="{Binding Name}" />
+                <TextBlock Text="{Binding Name}"
+                           Classes="nodeText" />
             </StackPanel>
         </TreeDataTemplate>
 
@@ -160,9 +176,11 @@
                            Stroke="{StaticResource ItemStroke}"
                            Fill="{StaticResource ItemBrush}" />
                 <TextBlock Name="label"
+                           Classes="nodeBeforeText"
                            Text="Remove Item "
                            Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={x:Static Brushes.Teal}}"/>
-                <TextBlock Text="{Binding Name}" />
+                <TextBlock Text="{Binding Name}"
+                           Classes="nodeText" />
             </StackPanel>
         </TreeDataTemplate>
 
@@ -174,9 +192,11 @@
                            Stroke="{StaticResource ItemStroke}"
                            Fill="{StaticResource ItemBrush}" />
                 <TextBlock Name="nameAndEquals"
+                           Classes="nodeBeforeText"
                            Text="{Binding NameAndEquals}"
                            Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={x:Static Brushes.Green}}"/>
-                <TextBlock Text="{Binding ShortenedText}" />
+                <TextBlock Text="{Binding ShortenedText}"
+                           Classes="nodeText" />
             </StackPanel>
         </TreeDataTemplate>
 
@@ -187,9 +207,11 @@
                            Stroke="{StaticResource MetadataStroke}"
                            Fill="{StaticResource ItemBrush}" />
                 <TextBlock Name="label"
+                           Classes="nodeBeforeText"
                            Text="{Binding NameAndEquals, Mode=OneTime}"
                            Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={x:Static Brushes.LightSeaGreen}}"/>
-                <TextBlock Text="{Binding ShortenedValue}" />
+                <TextBlock Classes="nodeText"
+                           Text="{Binding ShortenedValue}" />
             </StackPanel>
         </DataTemplate>
         
@@ -227,9 +249,11 @@
                            Stroke="{StaticResource PropertyStroke}"
                            Fill="{StaticResource PropertyBrush}" />
                 <TextBlock Name="label"
+                           Classes="nodeBeforeText"
                            Text="{Binding NameAndEquals, Mode=OneTime}"
                            Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={StaticResource PropertyStroke}}" />
-                <TextBlock Text="{Binding ShortenedValue}" />
+                <TextBlock Text="{Binding ShortenedValue}"
+                           Classes="nodeText" />
             </StackPanel>
         </DataTemplate>
 
@@ -241,6 +265,7 @@
                            Stroke="{StaticResource ParameterStroke}"
                            Fill="{StaticResource ParameterBrush}" />
                 <TextBlock Name="name"
+                           Classes="nodeText"
                            Text="{Binding Name}"
                            Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={StaticResource ParameterStroke}}" />
             </StackPanel>
@@ -253,6 +278,7 @@
                            Stroke="{StaticResource MessageStroke}"
                            Fill="{StaticResource MessageBrush}" />
                 <TextBlock Name="messageText"
+                           Classes="nodeText"
                            Text="{Binding ShortenedText}"
                            Opacity="{Binding IsLowRelevance, Converter={StaticResource RelevanceConverter}}" />
             </StackPanel>
@@ -267,12 +293,14 @@
                            Stroke="{StaticResource ImportStroke}"
                            Fill="{StaticResource ImportBrush}" />
                 <TextBlock x:Name="label"
+                           Classes="nodeBeforeText"
                            Text="Import"
-                           Margin="0,0,6,0"
                            Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={StaticResource ImportStroke}}" />
                 <TextBlock x:Name="name"
+                           Classes="nodeText"
                            Text="{Binding Name}" />
                 <TextBlock x:Name="location"
+                           Classes="nodeText"
                            Text="{Binding Location}" />
             </StackPanel>
         </TreeDataTemplate>
@@ -286,15 +314,17 @@
                            Stroke="{StaticResource NoImportStroke}"
                            Fill="{StaticResource NoImportBrush}" />
                 <TextBlock x:Name="label"
+                           Classes="nodeBeforeText"
                            Text="NoImport"
-                           Margin="0,0,6,0"
                            Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={StaticResource NoImportStroke}}" />
                 <TextBlock x:Name="name"
+                           Classes="nodeText"
                            Text="{Binding Name}" />
                 <TextBlock x:Name="location"
-                           Text="{Binding Location}"
-                           Margin="0,0,6,0" />
+                           Classes="nodeText"
+                           Text="{Binding Location}" />
                 <TextBlock x:Name="reason"
+                           Classes="nodeText"
                            Text="{Binding Text}" />
             </StackPanel>
         </TreeDataTemplate>
@@ -307,6 +337,7 @@
                            Stroke="{StaticResource FolderStroke}"
                            Fill="{StaticResource ClosedFolderBrush}" />
                 <TextBlock Name="nameText"
+                           Classes="nodeText"
                            Text="{Binding Name}"
                            Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={x:Static Brushes.DarkGoldenrod}}" />
             </StackPanel>
@@ -329,6 +360,7 @@
                            Stroke="{StaticResource ErrorStroke}"
                            Fill="{StaticResource ErrorBrush}" />
                 <TextBlock Name="text"
+                           Classes="nodeText"
                            Text="{Binding}"
                            Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={StaticResource ErrorStroke}}" />
             </StackPanel>
@@ -340,7 +372,8 @@
                            Classes="nodeIcon"
                            Stroke="{StaticResource WarningStroke}"
                            Fill="{StaticResource WarningBrush}" />
-                <TextBlock Text="{Binding}" />
+                <TextBlock Classes="nodeText"
+                           Text="{Binding}" />
             </StackPanel>
         </DataTemplate>
 
@@ -387,14 +420,20 @@
                           ItemsSource="{Binding Children}">
             <StackPanel Orientation="Horizontal">
                 <ContentPresenter Content="{Binding Converter={StaticResource ProxyNodeIconConverter}}"
-                                  VerticalAlignment="Top" />
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center" />
                 <ItemsControl Items="{Binding Highlights}"
                               Focusable="False">
                     <ItemsControl.DataTemplates>
                         <DataTemplate DataType="{x:Type common:HighlightedText}">
-                            <TextBlock Foreground="Black"
+                            <TextBlock Classes="nodeBeforeText"
+                                       Foreground="Black"
                                        Background="Yellow"
                                        Text="{Binding Text}" />
+                        </DataTemplate>
+                        <DataTemplate>
+                            <TextBlock Classes="nodeBeforeText"
+                                       Text="{Binding .}" />
                         </DataTemplate>
                     </ItemsControl.DataTemplates>
                     <ItemsControl.ItemsPanel>
@@ -417,14 +456,8 @@
                 <Grid HorizontalAlignment="Center"
                       VerticalAlignment="Center">
                     <Rectangle Fill="Black" />
-                    <Grid Background="White">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
+                    <Grid Background="White"
+                          RowDefinitions="Auto,Auto,Auto,Auto,Auto">
                         <TextBlock Name="customMessage"
                                    Grid.Row="0"
                                    FontSize="16"
@@ -436,11 +469,8 @@
                                    IsVisible="{Binding Message, Converter={StaticResource StringEmptinessToVisibilityConverter}}"
                         -->
                         <Grid Name="openLogOrProjectCompartment"
-                              Grid.Row="1">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
+                              Grid.Row="1"
+                              ColumnDefinitions="Auto,Auto">
                             <Button Margin="20"
                                     MinWidth="200"
                                     MinHeight="200"
@@ -579,13 +609,14 @@
                                Margin="4" />
                     <WrapPanel Orientation="Horizontal">
                         <ComboBox Items="{Binding MSBuildLocations}"
+                                  SelectedItem="{Binding MSBuildLocation}"
                                   ToolTip.Tip="Select MSBuild toolset to use for building"
                                   Height="28"
                                   Margin="4,4,0,4"/>
-                        <Button Command="{Binding BrowseForMSBuildCommand}"
+                        <Button Command="{Binding BrowseForMSBuildAsync}"
                                 Width="28"
                                 Height="28"
-                                ToolTip.Tip="Browse for custom MSBuild.exe location..."
+                                ToolTip.Tip="Browse for custom MSBuild file location..."
                                 Margin="0,4,4,4">
                             <StackPanel Orientation="Horizontal">
                                 <Rectangle Width="2"
@@ -653,12 +684,8 @@
             <Grid Name="buildProgress"
                   HorizontalAlignment="Center"
                   VerticalAlignment="Center"
-                  Margin="40">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
+                  Margin="40"
+                  RowDefinitions="Auto,Auto,Auto">
                 <TextBlock Name="text"
                            Text="{Binding ProgressText}"
                            HorizontalAlignment="Center"

@@ -34,6 +34,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public bool DisableDeduplication { get; set; }
         public bool NormalizeLineEndings { get; set; } = true;
+        public bool HasDeduplicatedStrings { get; set; }
+
+        public string SoftIntern(string text)
+        {
+            if (HasDeduplicatedStrings)
+            {
+                return text;
+            }
+
+            return Intern(text);
+        }
 
         public string Intern(string text)
         {
@@ -56,6 +67,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             deduplicationMap[text] = text;
 
             return text;
+        }
+
+        public bool Contains(string text)
+        {
+            return deduplicationMap.ContainsKey(text);
         }
 
         public IDictionary<string, string> InternStringDictionary(IDictionary<string, string> inputDictionary)

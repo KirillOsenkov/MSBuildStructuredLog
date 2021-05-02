@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 
 namespace Microsoft.Build.Framework
 {
@@ -64,7 +65,22 @@ namespace Microsoft.Build.Framework
 
         public override string ToString()
         {
-            return $"{ItemSpec} Metadata: {MetadataCount}";
+            if (MetadataCount == 0)
+            {
+                return ItemSpec;
+            }
+
+            var sb = new StringBuilder();
+            sb.AppendLine(ItemSpec);
+            foreach (var item in Metadata)
+            {
+                sb.Append("    ");
+                sb.Append(item.Key);
+                sb.Append("=");
+                sb.AppendLine(item.Value);
+            }
+
+            return sb.ToString();
         }
     }
 }

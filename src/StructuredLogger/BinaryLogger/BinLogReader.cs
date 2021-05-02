@@ -117,7 +117,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 queue.Add(instance);
 
-                if (progress != null && stopwatch.ElapsedMilliseconds > 200)
+                if (progress != null && recordsRead % 1000 == 0 && stopwatch.ElapsedMilliseconds > 200)
                 {
                     stopwatch.Restart();
                     var streamPosition = stream.Position;

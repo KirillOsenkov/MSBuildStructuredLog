@@ -27,47 +27,37 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return ResourceSet.GetString(key);
         }
 
+        public static string Escape(string text) => Regex.Escape(text);
+
         private static void InitializeRegex()
         {
             OutputPropertyMessagePrefix = GetString("OutputPropertyLogMessage").Replace("{0}={1}", "");
-            BuildingWithToolsVersionPrefix = new Regex(GetString("ToolsVersionInEffectForBuild").Replace("{0}", ".*?"));
+            BuildingWithToolsVersionPrefix = CreateRegex(GetString("ToolsVersionInEffectForBuild"), 1);
             PropertyGroupMessagePrefix = GetString("PropertyGroupLogMessage").Replace("{0}={1}", "");
-            ForSearchPathPrefix = new Regex(GetString("ResolveAssemblyReference.SearchPath").Replace("{0}", ".*?"));
-            UnifiedPrimaryReferencePrefix = new Regex(GetString("ResolveAssemblyReference.UnifiedPrimaryReference").Replace("{0}", ".*?"));
-            PrimaryReferencePrefix = new Regex(GetString("ResolveAssemblyReference.PrimaryReference").Replace("{0}", ".*?"));
-            DependencyPrefix = new Regex(GetString("ResolveAssemblyReference.Dependency").Replace("{0}", ".*?"));
-            UnifiedDependencyPrefix = new Regex(GetString("ResolveAssemblyReference.UnifiedDependency").Replace("{0}", ".*?"));
-            AssemblyFoldersExLocation = new Regex(GetString("ResolveAssemblyReference.AssemblyFoldersExSearchLocations").Replace("{0}", ".*?"));
-            AdditionalPropertiesPrefix = new Regex(GetString("General.AdditionalProperties").Replace("{0}", ".*?"));
-            OverridingGlobalPropertiesPrefix = new Regex(GetString("General.OverridingProperties").Replace("{0}", ".*?"));
+            ForSearchPathPrefix = CreateRegex(GetString("ResolveAssemblyReference.SearchPath"), 1);
+            UnifiedPrimaryReferencePrefix = CreateRegex(GetString("ResolveAssemblyReference.UnifiedPrimaryReference"), 1);
+            PrimaryReferencePrefix = CreateRegex(GetString("ResolveAssemblyReference.PrimaryReference"), 1);
+            DependencyPrefix = CreateRegex(GetString("ResolveAssemblyReference.Dependency"), 1);
+            UnifiedDependencyPrefix = CreateRegex(GetString("ResolveAssemblyReference.UnifiedDependency"), 1);
+            AssemblyFoldersExLocation = CreateRegex(GetString("ResolveAssemblyReference.AssemblyFoldersExSearchLocations"), 1);
+            AdditionalPropertiesPrefix = CreateRegex(GetString("General.AdditionalProperties"), 1);
+            OverridingGlobalPropertiesPrefix = CreateRegex(GetString("General.OverridingProperties"), 1);
             TargetAlreadyCompleteSuccess = GetString("TargetAlreadyCompleteSuccess");
-            TargetAlreadyCompleteSuccessRegex = new Regex(TargetAlreadyCompleteSuccess.Replace("{0}", @".*?"));
+            TargetAlreadyCompleteSuccessRegex = CreateRegex(TargetAlreadyCompleteSuccess, 1);
             TargetAlreadyCompleteFailure = GetString("TargetAlreadyCompleteFailure");
-            TargetAlreadyCompleteFailureRegex = new Regex(TargetAlreadyCompleteFailure.Replace("{0}", @".*?"));
-            TargetSkippedWhenSkipNonexistentTargets = new Regex(GetString("TargetSkippedWhenSkipNonexistentTargets").Replace("{0}", @".*?"));
-            RemovingProjectProperties = new Regex(GetString("General.ProjectUndefineProperties").Replace("{0}", @".*?"));
+            TargetAlreadyCompleteFailureRegex = CreateRegex(TargetAlreadyCompleteFailure, 1);
+            TargetSkippedWhenSkipNonexistentTargets = CreateRegex(GetString("TargetSkippedWhenSkipNonexistentTargets"), 1);
+            RemovingProjectProperties = CreateRegex(GetString("General.ProjectUndefineProperties"), 1);
 
-            DuplicateImport = new Regex(GetString("SearchPathsForMSBuildExtensionsPath")
-                .Replace("{0}", @".*?")
-                .Replace("{1}", @".*?")
-                .Replace("{2}", @".*?"));
+            DuplicateImport = CreateRegex(GetString("SearchPathsForMSBuildExtensionsPath"), 3);
 
-            SearchPathsForMSBuildExtensionsPath = new Regex(GetString("SearchPathsForMSBuildExtensionsPath")
-                .Replace("{0}", @".*?")
-                .Replace("{1}", @".*?"));
+            SearchPathsForMSBuildExtensionsPath = CreateRegex(GetString("SearchPathsForMSBuildExtensionsPath"), 2);
 
-            OverridingTarget = new Regex(GetString("OverridingTarget")
-                .Replace("{0}", @".*?")
-                .Replace("{1}", @".*?")
-                .Replace("{2}", @".*?")
-                .Replace("{3}", @".*?"));
+            OverridingTarget = CreateRegex(GetString("OverridingTarget"), 4);
 
-            TryingExtensionsPath = new Regex(GetString("TryingExtensionsPath")
-                 .Replace("{0}", @".*?")
-                 .Replace("{1}", @".*?"));
+            TryingExtensionsPath = CreateRegex(GetString("TryingExtensionsPath"), 2);
 
             ProjectImported = GetString("ProjectImported");
-
 
             string projectImported = "^" + ProjectImported
                 .Replace(".", "\\.")
@@ -78,38 +68,29 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             TargetSkippedFalseCondition = GetString("TargetSkippedFalseCondition");
 
-            TargetSkippedFalseConditionRegex = new Regex(TargetSkippedFalseCondition
-                .Replace("{0}", @".*?")
-                .Replace("{1}", @".*?")
-                .Replace("{2}", @".*?")
+            TargetSkippedFalseConditionRegex = CreateRegex(TargetSkippedFalseCondition, 3);
+
+            TaskSkippedFalseCondition = GetString("TaskSkippedFalseCondition");
+
+            TaskSkippedFalseConditionRegex = CreateRegex(TaskSkippedFalseCondition, 3);
+
+            TargetDoesNotExistBeforeTargetMessage = CreateRegex(GetString("TargetDoesNotExistBeforeTargetMessage"), 2);
+
+            CopyingFileFrom = new Regex(Escape(GetString("Copy.FileComment"))
+                .Replace(@"\{0}", @"(?<From>[^\""]+)")
+                .Replace(@"\{1}", @"(?<To>[^\""]+)")
                 );
 
-            TaskSkippedFalseCondition = new Regex(GetString("TaskSkippedFalseCondition")
-                .Replace("{0}", @".*?")
-                .Replace("{1}", @".*?")
-                .Replace("{2}", @".*?")
+            CreatingHardLink = new Regex(Escape(GetString("Copy.HardLinkComment"))
+                .Replace(@"\{0}", @"(?<From>[^\""]+)")
+                .Replace(@"\{1}", @"(?<To>[^\""]+)")
                 );
 
-            TargetDoesNotExistBeforeTargetMessage = new Regex(GetString("TargetDoesNotExistBeforeTargetMessage")
-                .Replace("{0}", @".*?")
-                .Replace("{1}", @".*?")
-                );
-
-            CopyingFileFrom = new Regex(GetString("Copy.FileComment")
-                .Replace("{0}", @"(?<From>[^\""]+)")
-                .Replace("{1}", @"(?<To>[^\""]+)")
-                );
-
-            CreatingHardLink = new Regex(GetString("Copy.HardLinkComment")
-                .Replace("{0}", @"(?<From>[^\""]+)")
-                .Replace("{1}", @"(?<To>[^\""]+)")
-                );
-
-            DidNotCopy = new Regex(GetString("Copy.DidNotCopyBecauseOfFileMatch")
-               .Replace("{0}", @"(?<From>[^\""]+)")
-               .Replace("{1}", @"(?<To>[^\""]+)")
-               .Replace("{2}", ".*?")
-               .Replace("{3}", ".*?")
+            DidNotCopy = new Regex(Escape(GetString("Copy.DidNotCopyBecauseOfFileMatch"))
+               .Replace(@"\{0}", @"(?<From>[^\""]+)")
+               .Replace(@"\{1}", @"(?<To>[^\""]+)")
+               .Replace(@"\{2}", ".*?")
+               .Replace(@"\{3}", ".*?")
                );
 
             ProjectImportSkippedMissingFile = GetString("ProjectImportSkippedMissingFile");
@@ -152,19 +133,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             // This was unused??
             //string propertyReassignment = PropertyReassignment
-            // .Replace(@"$({0})=""{1}"" (", @"\$\(\w+\)=.*? \(")
-            // .Replace(@"""{2}"")", @".*?""\)")
+            // .Replace(@"$({0})=""{1}"" (", @"\$\(\w+\)=.* \(")
+            // .Replace(@"""{2}"")", @".*""\)")
             // .Replace("{3}", @"(?<File>.*) \((?<Line>\d+),(\d+)\)$");
             //PropertyReassignmentRegex = new Regex("^" + propertyReassignment, RegexOptions.Compiled | RegexOptions.Singleline);
 
-            PropertyReassignmentRegex = new Regex(PropertyReassignment
-                .Replace("{0}", ".*?")
-                .Replace("{1}", ".*?")
-                .Replace("{2}", ".*?")
-                .Replace("{3}", ".*?")
-                .Replace("$", @"\$")
-                .Replace("(", @"\(")
-                .Replace(")", @"\)"), RegexOptions.Compiled | RegexOptions.Singleline);
+            PropertyReassignmentRegex = CreateRegex(PropertyReassignment, 4, RegexOptions.Compiled | RegexOptions.Singleline);
 
             string taskFoundFromFactory = GetString("TaskFoundFromFactory")
                 .Replace(@"""{0}""", @"\""(?<task>.+)\""")
@@ -200,26 +174,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
                .Replace("({2},{3})", @"\((?<Line>\d+),(?<Column>\d+)\)");
             ProjectImportSkippedExpressionEvaluatedToEmptyRegex = new Regex(emptyCondition, RegexOptions.Compiled);
 
-            ConflictReferenceSameSDK = new Regex(GetString("GetSDKReferenceFiles.ConflictReferenceSameSDK")
-               .Replace("{0}", ".*?")
-               .Replace("{1}", ".*?")
-               .Replace("{2}", ".*?")
-               );
+            ConflictReferenceSameSDK = CreateRegex(GetString("GetSDKReferenceFiles.ConflictReferenceSameSDK"), 3);
 
-            ConflictRedistDifferentSDK = new Regex(GetString("GetSDKReferenceFiles.ConflictRedistDifferentSDK")
-               .Replace("{0}", ".*?")
-               .Replace("{1}", ".*?")
-               .Replace("{2}", ".*?")
-               .Replace("{3}", ".*?")
-               .Replace("{4}", ".*?")
-               );
+            ConflictRedistDifferentSDK = CreateRegex(GetString("GetSDKReferenceFiles.ConflictRedistDifferentSDK"), 5);
 
-            ConflictReferenceDifferentSDK = new Regex(GetString("GetSDKReferenceFiles.ConflictRedistDifferentSDK")
-               .Replace("{0}", ".*?")
-               .Replace("{1}", ".*?")
-               .Replace("{2}", ".*?")
-               .Replace("{3}", ".*?")
-               );
+            ConflictReferenceDifferentSDK = CreateRegex(GetString("GetSDKReferenceFiles.ConflictRedistDifferentSDK"), 4);
+
+            ConflictFoundRegex = new Regex(Escape(GetString("ResolveAssemblyReference.ConflictFound"))
+                .Replace(@"\{0}", ".*?")
+                .Replace(@"\{1}", ".*?")
+                + ".*", RegexOptions.Compiled);
 
             TaskParameterMessagePrefix = GetString("TaskParameterPrefix");
             OutputItemsMessagePrefix = GetString("OutputItemParameterMessagePrefix");
@@ -229,6 +193,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
             RemovingPropertiesPrefix = GetString("General.UndefineProperties");
             EvaluationStarted = GetString("EvaluationStarted");
             EvaluationFinished = GetString("EvaluationFinished");
+        }
+
+        public static Regex CreateRegex(string text, int replacePlaceholders = 0, RegexOptions options = RegexOptions.Compiled)
+        {
+            text = Regex.Escape(text);
+            if (replacePlaceholders > 0)
+            {
+                for (int i = 0; i < replacePlaceholders; i++)
+                {
+                    text = text.Replace(@$"\{{{i}}}", ".*?");
+                }
+            }
+            var regex = new Regex(text, options);
+            return regex;
         }
 
         public static Regex RemovingProjectProperties { get; set; }
@@ -253,6 +231,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static Regex AssemblyFoldersExLocation { get; set; }
         public static Regex ConflictReferenceSameSDK { get; set; }
         public static Regex ConflictRedistDifferentSDK { get; set; }
+        public static Regex ConflictFoundRegex { get; set; }
         public static Regex ConflictReferenceDifferentSDK { get; set; }
         public static Regex AdditionalPropertiesPrefix { get; set; }
         public static Regex OverridingGlobalPropertiesPrefix { get; set; }
@@ -263,7 +242,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static Regex TargetAlreadyCompleteSuccessRegex { get; set; }
         public static Regex TargetAlreadyCompleteFailureRegex { get; set; }
         public static Regex TargetSkippedFalseConditionRegex { get; set; }
-        public static Regex TaskSkippedFalseCondition { get; set; }
+        public static Regex TaskSkippedFalseConditionRegex { get; set; }
         public static Regex TargetSkippedWhenSkipNonexistentTargets { get; set; }
         public static Regex TaskFoundFromFactory { get; set; }
         public static Regex TaskFound { get; set; }
@@ -281,6 +260,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string ProjectImportSkippedMissingFile { get; set; }
         public static string ProjectImportSkippedInvalidFile { get; set; }
         public static string ProjectImportSkippedEmptyFile { get; set; }
+        public static string TaskSkippedFalseCondition { get; set; }
 
         public static Match UsingTask(string message)
         {
@@ -382,25 +362,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static bool IsThereWasAConflictPrefix(string message)
         {
-            if (ConflictReferenceSameSDK.IsMatch(message))
-            {
-                return true;
-            }
-
-            if (ConflictRedistDifferentSDK.IsMatch(message))
-            {
-                return true;
-            }
-
-            if (ConflictReferenceDifferentSDK.IsMatch(message))
+            if (ConflictFoundRegex.IsMatch(message))
             {
                 return true;
             }
 
             return false;
-            //GetSDKReferenceFiles.ConflictReferenceSameSDK $:$ There was a conflict between two references with the same file name resolved within the "{0}" SDK. Choosing "{1}" over "{2}" because it was resolved first.
-            //GetSDKReferenceFiles.ConflictRedistDifferentSDK $:$ There was a conflict between two files from the redist folder files going to the same target path "{0}" between the "{1}" and "{2}" SDKs. Choosing "{3}" over "{4}" because it was resolved first.
-            //GetSDKReferenceFiles.ConflictReferenceDifferentSDK $:$ There was a conflict between two references with the same file name between the "{0}" and "{1}" SDKs. Choosing "{2}" over "{3}" because it was resolved first.
         }
 
         public static string PropertyGroupMessagePrefix { get; set; }
@@ -462,6 +429,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string Folder = "Folder";
         public static string Inputs => "Inputs";
         public static string Outputs => "Outputs";
+        public static string Assembly => "Assembly";
+        public static string CommandLineArguments => "CommandLineArguments";
+        public static string Item => "Item";
+        public static string Property => "Property";
+        public static string Duration => "Duration";
+        public static string Note => "Note";
+        public static string DoubleWrites => "DoubleWrites";
+        public static string MSBuildVersionPrefix => "MSBuild version = ";
 
         public static string GetPropertyName(string message)
         {

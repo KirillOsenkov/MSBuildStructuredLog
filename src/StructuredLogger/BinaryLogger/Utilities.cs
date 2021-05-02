@@ -13,14 +13,18 @@ namespace Microsoft.Build.BackEnd
             string itemType,
             IList items,
             bool logItemMetadata,
-            DateTime timestamp)
+            DateTime timestamp,
+            int line,
+            int column)
         {
             var args = new TaskParameterEventArgs(
                 messageKind,
                 itemType,
                 items,
                 logItemMetadata,
-                timestamp);
+                timestamp,
+                line,
+                column);
             args.BuildEventContext = buildEventContext;
             return args;
         }
@@ -122,6 +126,27 @@ namespace Microsoft.Build.Internal
             }
 
             return list;
+        }
+
+        public static bool EqualTo(this BuildEventContext buildEventContext, BuildEventContext other)
+        {
+            if (object.ReferenceEquals(buildEventContext, other))
+            {
+                return true;
+            }
+
+            if (buildEventContext == null || other == null)
+            {
+                return false;
+            }
+
+            return buildEventContext.TaskId == other.TaskId
+                && buildEventContext.TargetId == other.TargetId
+                && buildEventContext.ProjectContextId == other.ProjectContextId
+                && buildEventContext.ProjectInstanceId == other.ProjectInstanceId
+                && buildEventContext.NodeId == other.NodeId
+                && buildEventContext.EvaluationId == other.EvaluationId
+                && buildEventContext.SubmissionId == other.SubmissionId;
         }
     }
 }

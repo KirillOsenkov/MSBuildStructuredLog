@@ -442,9 +442,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var propertyList = ReadPropertyList();
             var itemList = ReadProjectItems();
 
+            string message = fields.Message;
+            if (fileFormatVersion >= 13)
+            {
+                message = GetProjectStartedMessage(projectFile, targetNames);
+            }
+
             var e = new ProjectStartedEventArgs(
                 projectId,
-                fields.Message,
+                message,
                 fields.HelpKeyword,
                 projectFile,
                 targetNames,
@@ -463,8 +469,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var projectFile = ReadOptionalString();
             var succeeded = ReadBoolean();
 
+            string message = fields.Message;
+            if (fileFormatVersion >= 13)
+            {
+                message = GetProjectFinishedMessage(succeeded, projectFile);
+            }
+
             var e = new ProjectFinishedEventArgs(
-                fields.Message,
+                message,
                 fields.HelpKeyword,
                 projectFile,
                 succeeded,
@@ -483,8 +495,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             // BuildReason was introduced in version 4
             var buildReason = fileFormatVersion > 3 ? (TargetBuiltReason)ReadInt32() : TargetBuiltReason.None;
 
+            string message = fields.Message;
+            if (fileFormatVersion >= 13)
+            {
+                message = GetTargetStartedMessage(projectFile, targetFile, parentTarget, targetName);
+            }
+
             var e = new TargetStartedEventArgs(
-                fields.Message,
+                message,
                 fields.HelpKeyword,
                 targetName,
                 projectFile,
@@ -505,8 +523,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var targetName = ReadOptionalString();
             var targetOutputItemList = ReadTaskItemList();
 
+            string message = fields.Message;
+            if (fileFormatVersion >= 13)
+            {
+                message = GetTargetFinishedMessage(projectFile, targetName, succeeded);
+            }
+
             var e = new TargetFinishedEventArgs(
-                fields.Message,
+                message,
                 fields.HelpKeyword,
                 targetName,
                 projectFile,
@@ -525,13 +549,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var projectFile = ReadOptionalString();
             var taskFile = ReadOptionalString();
 
-            var e = new TaskStartedEventArgs(
-                fields.Message,
+            string message = fields.Message;
+            if (fileFormatVersion >= 13)
+            {
+                message = GetTaskStartedMessage(taskName);
+            }
+
+            var e = new TaskStartedEventArgs2(
+                message,
                 fields.HelpKeyword,
                 projectFile,
                 taskFile,
                 taskName,
                 fields.Timestamp);
+            e.LineNumber = fields.LineNumber;
+            e.ColumnNumber = fields.ColumnNumber;
             SetCommonFields(e, fields);
             return e;
         }
@@ -544,8 +576,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var projectFile = ReadOptionalString();
             var taskFile = ReadOptionalString();
 
+            string message = fields.Message;
+            if (fileFormatVersion >= 13)
+            {
+                message = GetTaskFinishedMessage(succeeded, taskName);
+            }
+
             var e = new TaskFinishedEventArgs(
-                fields.Message,
+                message,
                 fields.HelpKeyword,
                 projectFile,
                 taskFile,
@@ -655,7 +693,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 itemType,
                 items,
                 logItemMetadata: true,
-                fields.Timestamp);
+                fields.Timestamp,
+                fields.LineNumber,
+                fields.ColumnNumber);
             e.ProjectFile = fields.ProjectFile;
             return e;
         }
@@ -708,12 +748,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
             string newValue = ReadDeduplicatedString();
             string location = ReadDeduplicatedString();
 
+            string message = fields.Message;
+            if (fileFormatVersion >= 13)
+            {
+                message = GetPropertyReassignmentMessage(propertyName, newValue, previousValue, location);
+            }
+
             var e = new PropertyReassignmentEventArgs(
                 propertyName,
                 previousValue,
                 newValue,
                 location,
-                fields.Message,
+                message,
                 fields.HelpKeyword,
                 fields.SenderName,
                 fields.Importance);

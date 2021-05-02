@@ -45,8 +45,9 @@ namespace StructuredLogViewer.Avalonia
         public MainWindow()
         {
             InitializeComponent();
-
+#if DEBUG
             this.AttachDevTools();
+#endif
 
             TemplateApplied += MainWindow_Loaded;
             Construction.ParentAllTargetsUnderProject = SettingsService.ParentAllTargetsUnderProject;
@@ -363,7 +364,7 @@ namespace StructuredLogViewer.Avalonia
 
             string customArguments = SettingsService.GetCustomArguments(filePath);
             var parametersScreen = new BuildParametersScreen();
-            //parametersScreen.BrowseForMSBuild += async () => await BrowseForMSBuildExe();
+            parametersScreen.BrowseForMSBuildRequsted += BrowseForMSBuildExe;
             parametersScreen.PrefixArguments = filePath.QuoteIfNeeded();
             parametersScreen.MSBuildArguments = customArguments;
             parametersScreen.PostfixArguments = HostedBuild.GetPostfixArguments();
@@ -375,6 +376,7 @@ namespace StructuredLogViewer.Avalonia
             };
             parametersScreen.CancelRequested += () =>
             {
+                parametersScreen.SaveSelectedMSBuild();
                 DisplayWelcomeScreen();
             };
             SetContent(parametersScreen);
@@ -561,12 +563,19 @@ namespace StructuredLogViewer.Avalonia
         {
             var openFileDialog = new OpenFileDialog
             {
-                Filters = { new FileDialogFilter { Name = "MSBuild", Extensions = { "MSBuild.exe" } } },
-                Title = "Select MSBuild.exe location",
+                Filters = { new FileDialogFilter { Name = "MSBuild (.dll;.exe)", Extensions = {"dll", "exe"} } },
+                Title = "Select MSBuild file location",
             };
 
             var fileName = await openFileDialog.ShowAndGetFileAsync(this);
             if (!File.Exists(fileName))
+            {
+                return;
+            }
+
+            var isMsBuild = fileName.EndsWith("MSBuild.dll", StringComparison.OrdinalIgnoreCase)
+                         || fileName.EndsWith("MSBuild.exe", StringComparison.OrdinalIgnoreCase);
+            if (!isMsBuild)
             {
                 return;
             }
