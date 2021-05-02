@@ -151,6 +151,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (children.Count >= 1)
             {
+                // TODO: this may not be necessary as the children collection doesn't actually change
+                // Instead we should be using an observable collection that raises the appropriate
+                // events when it changes??
+                // Since our trees are being constructed all at once, and not mutated after that it
+                // seems we've been getting lucky with our ChildrenList not being observable.
                 RaisePropertyChanged(nameof(HasChildren));
                 RaisePropertyChanged(nameof(Children));
             }
