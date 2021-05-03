@@ -13,6 +13,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public string SourceFilePath { get; set; }
         public string ParentTarget { get; set; }
         public TargetBuiltReason TargetBuiltReason { get; set; }
+        public TimedNode OriginalNode { get; set; }
 
         public override string TypeName => nameof(Target);
 
@@ -23,6 +24,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (string.IsNullOrEmpty(ParentTarget))
                 {
                     return string.Empty;
+                }
+
+                if (OriginalNode != null)
+                {
+                    return "Navigate to where the target was built originally";
                 }
 
                 if (TargetBuiltReason == TargetBuiltReason.None)

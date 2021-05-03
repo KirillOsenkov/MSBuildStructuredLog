@@ -300,17 +300,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private Target GetTarget(BuildEventArgs args) => GetTarget(args.BuildEventContext);
 
-        private Target GetTarget(BuildEventContext buildEventContext)
-        {
-            var project = construction.GetOrAddProject(buildEventContext.ProjectContextId);
-            if (project == null)
-            {
-                return null;
-            }
-
-            var target = project.GetTargetById(buildEventContext.TargetId);
-            return target;
-        }
+        private Target GetTarget(BuildEventContext buildEventContext) =>
+            construction.GetTarget(buildEventContext.ProjectContextId, buildEventContext.TargetId);
 
         /// <summary>
         /// Handles BuildMessage event when a property discovery/evaluation is logged.

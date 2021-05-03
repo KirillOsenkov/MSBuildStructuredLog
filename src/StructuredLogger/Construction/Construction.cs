@@ -348,7 +348,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private void TargetSkipped(TargetSkippedEventArgs args)
+        private void TargetSkipped(TargetSkippedEventArgs2 args)
         {
             var target = AddTargetCore(
                 args,
@@ -360,6 +360,24 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 var message = new Message { Text = args.Message };
                 target.AddChild(message);
+
+                if (args.OriginalBuildEventContext is { } buildEventContext)
+                {
+                    target.ParentTarget = args.Message;
+                    var originalProject = GetProject(buildEventContext.ProjectContextId);
+                    if (originalProject != null)
+                    {
+                        var originalTarget = originalProject.GetTargetById(buildEventContext.TargetId);
+                        if (originalTarget != null)
+                        {
+                            target.OriginalNode = originalTarget;
+                        }
+                        else
+                        {
+                            target.OriginalNode = originalProject;
+                        }
+                    }
+                }
             }
         }
 
@@ -417,7 +435,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 lock (syncLock)
                 {
-                    if (args is TargetSkippedEventArgs targetSkipped)
+                    if (args is TargetSkippedEventArgs2 targetSkipped)
                     {
                         TargetSkipped(targetSkipped);
                         return;
@@ -760,6 +778,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             Project result = _projectIdToProjectMap.GetOrAdd(projectId, id => CreateProject(id));
             return result;
+        }
+
+        public Project GetProject(int projectId)
+        {
+            _projectIdToProjectMap.TryGetValue(projectId, out var result);
+            return result;
+        }
+
+        public Target GetTarget(int projectId, int targetId)
+        {
+            if (!_projectIdToProjectMap.TryGetValue(projectId, out var project))
+            {
+                return null;
+            }
+
+            return project.GetTargetById(targetId);
         }
 
         /// <summary>
