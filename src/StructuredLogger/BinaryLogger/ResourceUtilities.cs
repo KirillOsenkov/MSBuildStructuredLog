@@ -9,7 +9,19 @@
             return message;
         }
 
+        internal static string FormatResourceStringStripCodeAndKeyword(out string errorCode, out string helpKeyword, string text, string filePath, string message)
+        {
+            errorCode = "MSB0001";
+            helpKeyword = "";
+            return message;
+        }
+
         internal static string FormatResourceString(string v1, string v2)
+        {
+            return v1;
+        }
+
+        internal static string FormatResourceStringStripCodeAndKeyword(string v1, string v2)
         {
             return v1;
         }

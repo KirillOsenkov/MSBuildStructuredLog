@@ -52,7 +52,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
         // version 13:
         //   - don't log Message where it can be recovered
         //   - log arguments for LazyFormattedBuildEventArgs
-        internal const int FileFormatVersion = 13;
+        //   - TargetSkippedEventArgs: added OriginallySucceeded, Condition, EvaluatedCondition
+        // version 14:
+        //   - TargetSkippedEventArgs: added SkipReason, OriginalBuildEventContext
+        internal const int FileFormatVersion = 14;
 
         private Stream stream;
         private BinaryWriter binaryWriter;
@@ -161,11 +164,24 @@ namespace Microsoft.Build.Logging.StructuredLogger
             binaryWriter = new BinaryWriter(stream);
             eventArgsWriter = new BuildEventArgsWriter(binaryWriter);
 
+            if (projectImportsCollector != null)
+            {
+                eventArgsWriter.EmbedFile += EventArgsWriter_EmbedFile;
+            }
+
             binaryWriter.Write(FileFormatVersion);
 
             LogInitialInfo();
 
             eventSource.AnyEventRaised += EventSource_AnyEventRaised;
+        }
+
+        private void EventArgsWriter_EmbedFile(string filePath)
+        {
+            if (projectImportsCollector != null)
+            {
+                projectImportsCollector.AddFile(filePath);
+            }
         }
 
         private void LogInitialInfo()
@@ -288,7 +304,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
                 else
                 {
-                    throw new LoggerException(ResourceUtilities.FormatResourceString("InvalidBinaryLoggerParameters", parameter));
+                    throw new LoggerException(ResourceUtilities.FormatResourceStringStripCodeAndKeyword("InvalidBinaryLoggerParameters", parameter));
                 }
             }
 
@@ -305,7 +321,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 string errorCode;
                 string helpKeyword;
-                string message = ResourceUtilities.FormatResourceString(out errorCode, out helpKeyword, "InvalidFileLoggerFile", FilePath, e.Message);
+                string message = ResourceUtilities.FormatResourceStringStripCodeAndKeyword(out errorCode, out helpKeyword, "InvalidFileLoggerFile", FilePath, e.Message);
                 throw new LoggerException(message, e, errorCode, helpKeyword);
             }
         }

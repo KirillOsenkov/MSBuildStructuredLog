@@ -107,6 +107,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private readonly List<KeyValuePair<int, int>> nameValueIndexListBuffer = new List<KeyValuePair<int, int>>(1024);
 
         /// <summary>
+        /// Raised when an item is encountered with a hint to embed a file into the binlog.
+        /// </summary>
+        public event Action<string> EmbedFile;
+
+        /// <summary>
         /// Initializes a new instance of BuildEventArgsWriter with a BinaryWriter
         /// </summary>
         /// <param name="binaryWriter">A BinaryWriter to write the BuildEventArgs instances to</param>
@@ -450,6 +455,8 @@ Build
             WriteDeduplicatedString(""); // EvaluatedCondition
             Write(true); // OriginallySucceeded
             Write((int)e.BuildReason);
+            Write((int)0); // SkipReason
+            Write(false); // OptionalBuildEventContext
         }
 
         private void Write(CriticalBuildMessageEventArgs e)
@@ -533,7 +540,7 @@ Build
                 Write(e.ThreadId);
             }
 
-            if ((flags & BuildEventArgsFieldFlags.HelpHeyword) != 0)
+            if ((flags & BuildEventArgsFieldFlags.HelpKeyword) != 0)
             {
                 WriteDeduplicatedString(e.HelpKeyword);
             }
@@ -681,7 +688,7 @@ Build
 
             if (e.HelpKeyword != null)
             {
-                flags |= BuildEventArgsFieldFlags.HelpHeyword;
+                flags |= BuildEventArgsFieldFlags.HelpKeyword;
             }
 
             if (writeMessage)
@@ -831,6 +838,7 @@ Build
                     {
                         WriteDeduplicatedString(currentItemType);
                         WriteTaskItemList(reusableProjectItemList);
+                        CheckForFilesToEmbed(currentItemType, reusableProjectItemList);
                         reusableProjectItemList.Clear();
                     }
 
@@ -843,11 +851,34 @@ Build
                 {
                     WriteDeduplicatedString(currentItemType);
                     WriteTaskItemList(reusableProjectItemList);
+                    CheckForFilesToEmbed(currentItemType, reusableProjectItemList);
                     reusableProjectItemList.Clear();
                 }
 
                 // signal the end
                 Write(0);
+            }
+        }
+
+        private void CheckForFilesToEmbed(string itemType, object itemList)
+        {
+            if (EmbedFile == null ||
+                !string.Equals(itemType, ItemTypeNames.EmbedInBinlog, StringComparison.OrdinalIgnoreCase) ||
+                itemList is not IEnumerable list)
+            {
+                return;
+            }
+
+            foreach (var item in list)
+            {
+                if (item is ITaskItem taskItem && !string.IsNullOrEmpty(taskItem.ItemSpec))
+                {
+                    EmbedFile.Invoke(taskItem.ItemSpec);
+                }
+                else if (item is string itemSpec && !string.IsNullOrEmpty(itemSpec))
+                {
+                    EmbedFile.Invoke(itemSpec);
+                }
             }
         }
 

@@ -266,7 +266,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static bool ParentAllTargetsUnderProject { get; set; }
 
-        private void AddTargetCore(
+        private Target AddTargetCore(
             BuildEventArgs args,
             string targetName,
             string parentTargetName,
@@ -297,12 +297,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
 
                     target.SourceFilePath = targetFile;
+
+                    return target;
                 }
             }
             catch (Exception ex)
             {
                 HandleException(ex);
             }
+
+            return null;
         }
 
         public void TargetFinished(object sender, TargetFinishedEventArgs args)
@@ -346,12 +350,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void TargetSkipped(TargetSkippedEventArgs args)
         {
-            AddTargetCore(
+            var target = AddTargetCore(
                 args,
                 Intern(args.TargetName),
                 Intern(args.ParentTarget),
                 Intern(args.TargetFile),
                 args.BuildReason);
+            if (target != null)
+            {
+                var message = new Message { Text = args.Message };
+                target.AddChild(message);
+            }
         }
 
         public void TaskStarted(object sender, TaskStartedEventArgs args)

@@ -12,6 +12,7 @@ using Microsoft.Build.BackEnd;
 using Microsoft.Build.Collections;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Framework.Profiler;
+using Microsoft.Build.Internal;
 using Microsoft.Build.Shared;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -294,7 +295,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             string condition = null;
             string evaluatedCondition = null;
             bool originallySucceeded = false;
+            TargetSkipReason skipReason = TargetSkipReason.None;
+            BuildEventContext originalBuildEventContext = null;
             string message = fields.Message;
+
             if (fileFormatVersion >= 13)
             {
                 condition = ReadOptionalString();
@@ -305,7 +309,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             var buildReason = (TargetBuiltReason)ReadInt32();
 
-            var e = new TargetSkippedEventArgs(message);
+            if (fileFormatVersion >= 14)
+            {
+                skipReason = (TargetSkipReason)ReadInt32();
+                originalBuildEventContext = binaryReader.ReadOptionalBuildEventContext();
+            }
+
+            var e = new TargetSkippedEventArgs2(
+                message);
 
             SetCommonFields(e, fields);
 
@@ -314,9 +325,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             e.TargetName = targetName;
             e.ParentTarget = parentTarget;
             e.BuildReason = buildReason;
-            // e.Condition = condition;
-            // e.EvaluatedCondition = evaluatedCondition;
-            // e.OriginallySucceeded = originallySucceeded;
+            e.Condition = condition;
+            e.EvaluatedCondition = evaluatedCondition;
+            e.OriginallySucceeded = originallySucceeded;
+            e.SkipReason = skipReason;
+            e.OriginalBuildEventContext = originalBuildEventContext;
 
             return e;
         }
@@ -844,7 +857,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 result.ThreadId = ReadInt32();
             }
 
-            if ((flags & BuildEventArgsFieldFlags.HelpHeyword) != 0)
+            if ((flags & BuildEventArgsFieldFlags.HelpKeyword) != 0)
             {
                 result.HelpKeyword = ReadDeduplicatedString();
             }
