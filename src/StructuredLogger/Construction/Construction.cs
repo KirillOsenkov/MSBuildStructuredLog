@@ -353,8 +353,42 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var project = GetProject(args.BuildEventContext.ProjectContextId);
 
             string targetName = Intern(args.TargetName);
+            string targetFile = Intern(args.TargetFile);
 
-            var target = new Target()
+            string messageText = args.Message;
+            var prefix = "Target \"" + targetName + "\" "; // trim the Target Name text since the node will already display that
+            if (messageText.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                messageText = messageText.Substring(prefix.Length);
+            }
+
+            messageText = Intern(messageText);
+
+            var skipReason = args.SkipReason;
+            Target target;
+
+            if (skipReason == TargetSkipReason.ConditionWasFalse || skipReason == TargetSkipReason.OutputsUpToDate)
+            {
+                target = AddTargetCore(
+                    args,
+                    targetName,
+                    Intern(args.ParentTarget),
+                    targetFile,
+                    args.BuildReason);
+                var messageNode = new Message { Text = messageText };
+                if (target != null)
+                {
+                    target.AddChild(messageNode);
+                }
+                else
+                {
+                    project.AddChild(messageNode);
+                }
+
+                return;
+            }
+
+            target = new Target()
             {
                 Name = targetName,
                 Id = -1,
@@ -363,19 +397,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
             };
 
             target.NodeId = args.BuildEventContext.NodeId;
+            target.SourceFilePath = targetFile;
 
             project.TryAddTarget(target);
-
-            target.SourceFilePath = Intern(args.TargetFile);
-
-            var message = Intern(args.Message);
 
             if (args.OriginalBuildEventContext is { } buildEventContext && buildEventContext.ProjectContextId != BuildEventContext.InvalidProjectContextId)
             {
                 var originalProject = GetProject(buildEventContext.ProjectContextId);
                 if (originalProject != null)
                 {
-                    target.ParentTarget = message;
+                    target.ParentTarget = messageText;
                     var originalTarget = originalProject.GetTargetById(buildEventContext.TargetId);
                     if (originalTarget != null)
                     {

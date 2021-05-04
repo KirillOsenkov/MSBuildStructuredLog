@@ -56,6 +56,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     return string.Empty;
                 }
+
+                if (OriginalNode != null)
+                {
+                    return ParentTarget;
+                }
+
                 var connectingSymbol = TargetBuiltReason switch
                 {
                     TargetBuiltReason.AfterTargets => "↑",

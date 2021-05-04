@@ -304,7 +304,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 condition = ReadOptionalString();
                 evaluatedCondition = ReadOptionalString();
                 originallySucceeded = ReadBoolean();
-                message = GetTargetSkippedMessage(targetName, condition, evaluatedCondition, originallySucceeded);
+                if (fileFormatVersion == 13)
+                {
+                    var reason = condition != null
+                        ? TargetSkipReason.ConditionWasFalse
+                        : originallySucceeded
+                            ? TargetSkipReason.PreviouslyBuiltSuccessfully
+                            : TargetSkipReason.PreviouslyBuiltUnsuccessfully;
+                    message = GetTargetSkippedMessage(reason, targetName, condition, evaluatedCondition, originallySucceeded);
+                }
             }
 
             var buildReason = (TargetBuiltReason)ReadInt32();
@@ -313,6 +321,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 skipReason = (TargetSkipReason)ReadInt32();
                 originalBuildEventContext = binaryReader.ReadOptionalBuildEventContext();
+                message = GetTargetSkippedMessage(skipReason, targetName, condition, evaluatedCondition, originallySucceeded);
             }
 
             var e = new TargetSkippedEventArgs2(

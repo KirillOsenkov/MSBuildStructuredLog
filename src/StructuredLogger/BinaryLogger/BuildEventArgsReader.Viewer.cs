@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Collections;
+using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -101,24 +102,31 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 Path.GetFileName(projectFile));
         }
 
-        private string GetTargetSkippedMessage(string targetName, string condition, string evaluatedCondition, bool originallySucceeded)
+        private string GetTargetSkippedMessage(TargetSkipReason skipReason, string targetName, string condition, string evaluatedCondition, bool originallySucceeded)
         {
-            if (condition != null)
+            return skipReason switch
             {
-                return FormatResourceStringIgnoreCodeAndKeyword(
-                    "Target \"{0}\" skipped, due to false condition; ({1}) was evaluated as ({2}).",
-                    targetName,
-                    condition,
-                    evaluatedCondition);
-            }
-            else
-            {
-                return FormatResourceStringIgnoreCodeAndKeyword(
-                    originallySucceeded
-                    ? "Target \"{0}\" skipped. Previously built successfully."
-                    : "Target \"{0}\" skipped. Previously built unsuccessfully.",
-                    targetName);
-            }
+                TargetSkipReason.PreviouslyBuiltSuccessfully or TargetSkipReason.PreviouslyBuiltUnsuccessfully =>
+                    FormatResourceStringIgnoreCodeAndKeyword(
+                        originallySucceeded
+                        ? "Target \"{0}\" skipped. Previously built successfully."
+                        : "Target \"{0}\" skipped. Previously built unsuccessfully.",
+                        targetName),
+
+                TargetSkipReason.ConditionWasFalse =>
+                    FormatResourceStringIgnoreCodeAndKeyword(
+                        "Target \"{0}\" skipped, due to false condition; ({1}) was evaluated as ({2}).",
+                        targetName,
+                        condition,
+                        evaluatedCondition),
+
+                TargetSkipReason.OutputsUpToDate =>
+                    FormatResourceStringIgnoreCodeAndKeyword(
+                        "Skipping target \"{0}\" because all output files are up-to-date with respect to the input files.",
+                        targetName),
+
+                _ => $"Target {targetName} was skipped for unknown reason: {skipReason}"
+            };
         }
 
         private string GetTaskStartedMessage(string taskName)
