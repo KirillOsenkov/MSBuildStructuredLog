@@ -76,17 +76,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             TargetDoesNotExistBeforeTargetMessage = CreateRegex(GetString("TargetDoesNotExistBeforeTargetMessage"), 2);
 
-            CopyingFileFrom = new Regex(Escape(GetString("Copy.FileComment"))
+            string copyingFileFrom = GetString("Copy.FileComment");
+            string copyingFileFromEscaped = Escape(copyingFileFrom);
+            CopyingFileFromRegex = new Regex(copyingFileFromEscaped
                 .Replace(@"\{0}", @"(?<From>[^\""]+)")
                 .Replace(@"\{1}", @"(?<To>[^\""]+)")
                 );
 
-            CreatingHardLink = new Regex(Escape(GetString("Copy.HardLinkComment"))
+            CreatingHardLinkRegex = new Regex(Escape(GetString("Copy.HardLinkComment"))
                 .Replace(@"\{0}", @"(?<From>[^\""]+)")
                 .Replace(@"\{1}", @"(?<To>[^\""]+)")
                 );
 
-            DidNotCopy = new Regex(Escape(GetString("Copy.DidNotCopyBecauseOfFileMatch"))
+            DidNotCopyRegex = new Regex(Escape(GetString("Copy.DidNotCopyBecauseOfFileMatch"))
                .Replace(@"\{0}", @"(?<From>[^\""]+)")
                .Replace(@"\{1}", @"(?<To>[^\""]+)")
                .Replace(@"\{2}", ".*?")
@@ -235,9 +237,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static Regex ConflictReferenceDifferentSDK { get; set; }
         public static Regex AdditionalPropertiesPrefix { get; set; }
         public static Regex OverridingGlobalPropertiesPrefix { get; set; }
-        public static Regex CopyingFileFrom { get; set; }
-        public static Regex CreatingHardLink { get; set; }
-        public static Regex DidNotCopy { get; set; }
+        public static Regex CopyingFileFromRegex { get; set; }
+        public static Regex CreatingHardLinkRegex { get; set; }
+        public static Regex DidNotCopyRegex { get; set; }
         public static Regex TargetDoesNotExistBeforeTargetMessage { get; set; }
         public static Regex TargetAlreadyCompleteSuccessRegex { get; set; }
         public static Regex TargetAlreadyCompleteFailureRegex { get; set; }
