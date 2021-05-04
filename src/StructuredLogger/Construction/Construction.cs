@@ -354,21 +354,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             string targetName = Intern(args.TargetName);
             string targetFile = Intern(args.TargetFile);
-
             string messageText = args.Message;
-            var prefix = "Target \"" + targetName + "\" "; // trim the Target Name text since the node will already display that
-            if (messageText.StartsWith(prefix, StringComparison.Ordinal))
-            {
-                messageText = messageText.Substring(prefix.Length);
-            }
-
-            messageText = Intern(messageText);
 
             var skipReason = args.SkipReason;
             Target target;
 
             if (skipReason == TargetSkipReason.ConditionWasFalse || skipReason == TargetSkipReason.OutputsUpToDate)
             {
+                messageText = Intern(messageText);
                 target = AddTargetCore(
                     args,
                     targetName,
@@ -387,6 +380,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 return;
             }
+
+            var prefix = "Target \"" + targetName + "\" "; // trim the Target Name text since the node will already display that
+            if (messageText.StartsWith(prefix, StringComparison.Ordinal))
+            {
+                messageText = messageText.Substring(prefix.Length);
+            }
+
+            messageText = Intern(messageText);
 
             target = new Target()
             {
