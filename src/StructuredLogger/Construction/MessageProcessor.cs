@@ -426,6 +426,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 var project = construction.GetOrAddProject(buildEventContext.ProjectContextId);
                 parent = project;
 
+                if (message.Equals("Building with tools version \"Current\".", StringComparison.Ordinal))
+                {
+                    // this is useless so just drop it on the floor
+                    return;
+                }
+
                 if (Strings.IsTargetSkipped(message))
                 {
                     var targetName = Intern(TextUtilities.ParseQuotedSubstring(message));

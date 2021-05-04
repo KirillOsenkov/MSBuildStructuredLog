@@ -284,6 +284,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return true;
             }
 
+            // realistically control never reaches here (for binlog versions 4 and newer)
             if (TargetSkippedFalseConditionRegex.IsMatch(message))
             {
                 return true;
