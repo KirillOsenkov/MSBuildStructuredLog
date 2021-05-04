@@ -389,28 +389,38 @@ namespace StructuredLogViewer
                         }
                     }
                 }
-                else if (node is Project project)
+                else if (node is TimedNode)
                 {
-                    if (!string.IsNullOrEmpty(project.TargetFramework))
+                    if (node is Project project)
                     {
-                        searchFields[count++] = project.TargetFramework;
-                    }
+                        if (!string.IsNullOrEmpty(project.TargetFramework))
+                        {
+                            searchFields[count++] = project.TargetFramework;
+                        }
 
-                    if (!string.IsNullOrEmpty(project.TargetsText))
-                    {
-                        searchFields[count++] = project.TargetsText;
-                    }
+                        if (!string.IsNullOrEmpty(project.TargetsText))
+                        {
+                            searchFields[count++] = project.TargetsText;
+                        }
 
-                    if (!string.IsNullOrEmpty(project.EvaluationText))
-                    {
-                        searchFields[count++] = project.EvaluationText;
+                        if (!string.IsNullOrEmpty(project.EvaluationText))
+                        {
+                            searchFields[count++] = project.EvaluationText;
+                        }
                     }
-                }
-                else if (node is ProjectEvaluation evaluation)
-                {
-                    if (!string.IsNullOrEmpty(evaluation.EvaluationText))
+                    else if (node is ProjectEvaluation evaluation)
                     {
-                        searchFields[count++] = evaluation.EvaluationText;
+                        if (!string.IsNullOrEmpty(evaluation.EvaluationText))
+                        {
+                            searchFields[count++] = evaluation.EvaluationText;
+                        }
+                    }
+                    else if (node is Target target)
+                    {
+                        if (!string.IsNullOrEmpty(target.ParentTarget))
+                        {
+                            searchFields[count++] = target.ParentTarget;
+                        }
                     }
                 }
             }

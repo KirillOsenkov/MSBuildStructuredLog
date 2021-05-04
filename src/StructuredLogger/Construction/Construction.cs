@@ -350,32 +350,40 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void TargetSkipped(TargetSkippedEventArgs2 args)
         {
-            var target = AddTargetCore(
-                args,
-                Intern(args.TargetName),
-                Intern(args.ParentTarget),
-                Intern(args.TargetFile),
-                args.BuildReason);
-            if (target != null)
-            {
-                var message = new Message { Text = args.Message };
-                target.AddChild(message);
+            var project = GetProject(args.BuildEventContext.ProjectContextId);
 
-                if (args.OriginalBuildEventContext is { } buildEventContext)
+            string targetName = Intern(args.TargetName);
+
+            var target = new Target()
+            {
+                Name = targetName,
+                Id = -1,
+                StartTime = args.Timestamp,
+                EndTime = args.Timestamp
+            };
+
+            target.NodeId = args.BuildEventContext.NodeId;
+
+            project.TryAddTarget(target);
+
+            target.SourceFilePath = Intern(args.TargetFile);
+
+            var message = Intern(args.Message);
+
+            if (args.OriginalBuildEventContext is { } buildEventContext && buildEventContext.ProjectContextId != BuildEventContext.InvalidProjectContextId)
+            {
+                var originalProject = GetProject(buildEventContext.ProjectContextId);
+                if (originalProject != null)
                 {
-                    target.ParentTarget = args.Message;
-                    var originalProject = GetProject(buildEventContext.ProjectContextId);
-                    if (originalProject != null)
+                    target.ParentTarget = message;
+                    var originalTarget = originalProject.GetTargetById(buildEventContext.TargetId);
+                    if (originalTarget != null)
                     {
-                        var originalTarget = originalProject.GetTargetById(buildEventContext.TargetId);
-                        if (originalTarget != null)
-                        {
-                            target.OriginalNode = originalTarget;
-                        }
-                        else
-                        {
-                            target.OriginalNode = originalProject;
-                        }
+                        target.OriginalNode = originalTarget;
+                    }
+                    else
+                    {
+                        target.OriginalNode = originalProject;
                     }
                 }
             }
