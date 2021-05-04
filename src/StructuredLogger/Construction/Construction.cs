@@ -359,7 +359,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var skipReason = args.SkipReason;
             Target target;
 
-            if (skipReason == TargetSkipReason.ConditionWasFalse || skipReason == TargetSkipReason.OutputsUpToDate)
+            if (skipReason == TargetSkipReason.ConditionWasFalse ||
+                skipReason == TargetSkipReason.OutputsUpToDate ||
+                skipReason == TargetSkipReason.None // file format version < 14
+                )
             {
                 messageText = Intern(messageText);
                 target = AddTargetCore(
