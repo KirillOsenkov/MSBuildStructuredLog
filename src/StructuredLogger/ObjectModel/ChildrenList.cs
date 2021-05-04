@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class ChildrenList : List<BaseNode>
+    public class ChildrenList : List<BaseNode>, INotifyCollectionChanged
     {
         public ChildrenList() : base(1)
         {
@@ -18,6 +19,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         private Dictionary<ChildrenCacheKey, BaseNode> childrenCache;
+
+        public event NotifyCollectionChangedEventHandler CollectionChanged;
+
+        public void RaiseCollectionChanged()
+        {
+            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+        }
 
         public T FindNode<T>(string name) where T : NamedNode
         {

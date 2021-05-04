@@ -60,7 +60,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public void SortChildren()
         {
-            if (children == null)
+            if (children == null || children.Count < 2)
             {
                 return;
             }
@@ -74,10 +74,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (list != children)
             {
                 children = list.ToArray();
+                RaisePropertyChanged(nameof(HasChildren));
+                RaisePropertyChanged(nameof(Children));
             }
-
-            RaisePropertyChanged(nameof(HasChildren));
-            RaisePropertyChanged(nameof(Children));
+            else
+            {
+                list.RaiseCollectionChanged();
+            }
         }
 
         [System.Diagnostics.Conditional("TurnedOff")]
