@@ -37,6 +37,7 @@ namespace ResourcesGenerator
             "ResolveAssemblyReference.UnifiedDependency",
             "ResolveAssemblyReference.AssemblyFoldersExSearchLocations",
             "ResolveAssemblyReference.ConflictFound",
+            "ResolveAssemblyReference.FoundConflicts",
             "General.GlobalProperties",
             "General.AdditionalProperties",
             "General.OverridingProperties",
