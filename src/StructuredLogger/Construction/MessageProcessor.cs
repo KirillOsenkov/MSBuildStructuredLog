@@ -655,11 +655,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     node = results;
                 }
 
-                var parameterName = Intern(message.TrimEnd(':'));
-                var parameter = new Parameter
+                var parameter = new Parameter();
+                string parameterName;
+
+                if (Strings.IsThereWasAConflictPrefix(message))
                 {
-                    Name = parameterName
-                };
+                    ItemGroupParser.ParseThereWasAConflict(parameter, message, stringTable);
+                    parameterName = message.GetFirstLine();
+                }
+                else
+                {
+                    parameterName = message.TrimEnd(':');
+                }
+
+                parameter.Name = Intern(parameterName);
 
                 node.AddChild(parameter);
                 return true;

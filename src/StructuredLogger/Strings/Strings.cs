@@ -187,6 +187,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 .Replace(@"\{1}", ".*?")
                 + ".*", RegexOptions.Compiled);
 
+            var foundConflictsRaw = GetString("ResolveAssemblyReference.FoundConflicts");
+            if (foundConflictsRaw.StartsWith("MSB3277: "))
+            {
+                foundConflictsRaw = foundConflictsRaw.Substring("MSB3277: ".Length);
+            }
+
+            var foundConflictsNormalized = foundConflictsRaw.NormalizeLineBreaks();
+            var foundConflictsEscaped = Escape(foundConflictsNormalized);
+            FoundConflictsRegex = new Regex(foundConflictsEscaped
+                .Replace(@"\{0}", @"(?<Assembly>[^\""]*)")
+                .Replace(@"\{1}", @"(?<Details>.*)"), RegexOptions.Compiled | RegexOptions.Singleline);
+
             TaskParameterMessagePrefix = GetString("TaskParameterPrefix");
             OutputItemsMessagePrefix = GetString("OutputItemParameterMessagePrefix");
             ItemGroupIncludeMessagePrefix = GetString("ItemGroupIncludeLogMessagePrefix");
@@ -233,7 +245,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static Regex AssemblyFoldersExLocation { get; set; }
         public static Regex ConflictReferenceSameSDK { get; set; }
         public static Regex ConflictRedistDifferentSDK { get; set; }
+
+        /// <summary>
+        /// "There was a conflict between \"{0}\" and \"{1}\"."
+        /// </summary>
         public static Regex ConflictFoundRegex { get; set; }
+
+        /// <summary>
+        /// "MSB3277: Found conflicts between different versions of \"{0}\" that could not be resolved.\r\n{1}"
+        /// </summary>
+        public static Regex FoundConflictsRegex { get; set; }
         public static Regex ConflictReferenceDifferentSDK { get; set; }
         public static Regex AdditionalPropertiesPrefix { get; set; }
         public static Regex OverridingGlobalPropertiesPrefix { get; set; }
@@ -371,6 +392,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             return false;
+        }
+
+        public static Match IsFoundConflicts(string text)
+        {
+            return FoundConflictsRegex.Match(text);
         }
 
         public static string PropertyGroupMessagePrefix { get; set; }

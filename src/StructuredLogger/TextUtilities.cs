@@ -136,6 +136,32 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 .ToArray();
         }
 
+        public static string GetFirstLine(this string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return text;
+            }
+
+            int cr = text.IndexOf('\r');
+            int lf = text.IndexOf('\n');
+            if (cr >= 0)
+            {
+                if (lf >= 0 && lf < cr)
+                {
+                    cr = lf;
+                }
+
+                text = text.Substring(0, cr);
+            }
+            else if (lf >= 0)
+            {
+                text = text.Substring(0, lf);
+            }
+
+            return text;
+        }
+
         /// <summary>
         /// Splits a string into words by spaces, keeping quoted strings as a single token
         /// </summary>

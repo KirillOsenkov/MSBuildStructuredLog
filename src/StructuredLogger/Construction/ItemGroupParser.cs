@@ -221,6 +221,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         Add(item10, message, lineSpan, numberOfLeadingSpaces, stringTable);
                         break;
                     default:
+                        Add(item10 ?? item8 ?? item4 ?? parent, message, lineSpan, numberOfLeadingSpaces, stringTable);
                         break;
                 }
             }

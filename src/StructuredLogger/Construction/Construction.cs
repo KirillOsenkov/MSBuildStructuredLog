@@ -52,6 +52,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Intern(Strings.Parameters);
             Intern(Strings.Properties);
             Intern(Strings.UnusedLocations);
+            Intern(Strings.Warnings);
             Intern(nameof(AddItem));
             Intern(nameof(CopyTask));
             Intern(nameof(CscTask));
@@ -669,10 +670,27 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         parent = Build;
                     }
 
-                    var warnings = parent.GetOrCreateNodeWithName<Folder>(Intern("Warnings"));
                     var warning = new Warning();
-                    Populate(warning, args);
-                    warnings.AddChild(warning);
+
+                    string text = args.Message;
+
+                    if (parent is ResolveAssemblyReferenceTask rar)
+                    {
+                        var match = Strings.IsFoundConflicts(text);
+                        if (match.Success)
+                        {
+                            string details = match.Groups[2].Value;
+                            // https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/443
+                            ItemGroupParser.ParseThereWasAConflict(warning, details, stringTable);
+                            text = text.GetFirstLine();
+                        }
+                    }
+
+                    parent = parent.GetOrCreateNodeWithName<Folder>(Strings.Warnings);
+
+                    Populate(warning, args, text);
+
+                    parent.AddChild(warning);
                 }
             }
             catch (Exception ex)
@@ -746,9 +764,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private void Populate(AbstractDiagnostic message, BuildWarningEventArgs args)
+        private void Populate(AbstractDiagnostic message, BuildWarningEventArgs args, string text)
         {
-            message.Text = Intern(args.Message);
+            message.Text = Intern(text);
             message.Timestamp = args.Timestamp;
             message.Code = Intern(args.Code);
             message.ColumnNumber = args.ColumnNumber;

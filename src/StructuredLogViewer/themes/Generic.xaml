@@ -581,12 +581,12 @@
     </DataTemplate.Triggers>
   </DataTemplate>
 
-  <DataTemplate DataType="{x:Type l:Warning}">
+  <HierarchicalDataTemplate DataType="{x:Type l:Warning}" ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
       <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource WarningStroke}" Fill="{StaticResource WarningBrush}" />
       <TextBlock Text="{Binding}" />
     </StackPanel>
-  </DataTemplate>
+  </HierarchicalDataTemplate>
 
   <DataTemplate DataType="{x:Type core:Note}">
     <StackPanel Orientation="Horizontal">
