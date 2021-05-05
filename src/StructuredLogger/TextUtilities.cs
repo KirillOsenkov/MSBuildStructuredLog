@@ -295,7 +295,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             int newLength = maxChars;
-            int lineBreak = text.IndexOf('\n');
+            int lineBreak = text.IndexOfFirstLineBreak();
             if (lineBreak == -1)
             {
                 if (text.Length <= newLength)
@@ -312,6 +312,25 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             return text.Substring(0, newLength) + trimPrompt;
+        }
+
+        public static int IndexOfFirstLineBreak(this string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return -1;
+            }
+
+            for (int i = 0; i < text.Length; i++)
+            {
+                char ch = text[i];
+                if (ch == '\r' || ch == '\n')
+                {
+                    return i;
+                }
+            }
+
+            return -1;
         }
 
         public static KeyValuePair<string, string> ParseNameValue(string largeText, Span span)
