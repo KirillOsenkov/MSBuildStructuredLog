@@ -410,6 +410,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             return;
                         }
                     }
+                    else if (string.Equals(task.Name, "Mmp", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (ProcessMmp(task, ref parent, message))
+                        {
+                            return;
+                        }
+                    }
                 }
             }
             else if (buildEventContext.TargetId > 0)
@@ -812,6 +819,73 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 )
             {
                 return true;
+            }
+
+            return false;
+        }
+
+        private Folder lastMmpFolder = null;
+
+        private readonly string[] mmpTerminalPrefixes = new[]
+        {
+            "Adding native reference",
+            "Did not add native reference",
+            "Added assembly",
+            "Target",
+            "Copied",
+            "Linking with the framework",
+            "Linking (weakly)",
+            "Adding Framework",
+            "Adding Weak Framework"
+        };
+
+        private bool ProcessMmp(Task task, ref TreeNode node, string message)
+        {
+            Folder CreateFolder(TreeNode node, string name)
+            {
+                return node.GetOrCreateNodeWithName<Folder>(Intern(name));
+            }
+
+            if (string.IsNullOrWhiteSpace(message))
+            {
+                return true;
+            }
+
+            var leadingSpaces = TextUtilities.GetNumberOfLeadingSpaces(message);
+            if (leadingSpaces == 0)
+            {
+                lastMmpFolder = null;
+
+                if (message == "Provided arguments:")
+                {
+                    lastMmpFolder = CreateFolder(node, "Provided arguments:");
+                    return true;
+                }
+
+                if (message.StartsWith("Loaded assembly"))
+                {
+                    var loaded = CreateFolder(node, "Loaded assembly");
+                    loaded = CreateFolder(loaded, message);
+                    lastMmpFolder = loaded;
+                    return true;
+                }
+
+                foreach (var prefix in mmpTerminalPrefixes)
+                {
+                    if (message.StartsWith(prefix, StringComparison.Ordinal))
+                    {
+                        node = CreateFolder(node, prefix);
+                        return false;
+                    }
+                }
+
+                lastMmpFolder = null;
+                return false;
+            }
+
+            if (lastMmpFolder != null && (lastMmpFolder.Parent == node || lastMmpFolder.Parent.Parent == node))
+            {
+                node = lastMmpFolder;
             }
 
             return false;
