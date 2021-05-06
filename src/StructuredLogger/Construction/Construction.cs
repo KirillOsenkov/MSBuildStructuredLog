@@ -953,7 +953,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             foreach (DictionaryEntry kvp in itemList)
             {
                 var itemType = SoftIntern(Convert.ToString(kvp.Key));
-                var itemTypeNode = itemsNode.GetOrCreateNodeWithName<Folder>(itemType);
+                var itemTypeNode = itemsNode.GetOrCreateNodeWithName<AddItem>(itemType);
 
                 var itemNode = new Item();
 

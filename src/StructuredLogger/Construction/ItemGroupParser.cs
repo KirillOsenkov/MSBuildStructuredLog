@@ -19,12 +19,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (!TextUtilities.ContainsLineBreak(message))
             {
                 var nameValue = TextUtilities.ParseNameValue(message, trimFromStart: prefix.Length);
-                var property = new Property
+                if (!isOutputItem)
                 {
-                    Name = stringTable.Intern(nameValue.Key),
-                    Value = stringTable.Intern(nameValue.Value)
-                };
-                return property;
+                    var property = new Property
+                    {
+                        Name = stringTable.Intern(nameValue.Key),
+                        Value = stringTable.Intern(nameValue.Value)
+                    };
+                    return property;
+                }
+                else
+                {
+                    var singleItem = new AddItem { Name = stringTable.Intern(nameValue.Key) };
+                    var item = new Item { Text = stringTable.Intern(nameValue.Value) };
+                    singleItem.AddChild(item);
+                    return singleItem;
+                }
             }
 
             // Can't use a field initializer with ThreadStatic.
