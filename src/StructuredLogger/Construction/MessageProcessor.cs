@@ -58,7 +58,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     //this.construction.Build.Statistics.ReportOutputItemMessage(task, message);
 
                     var folder = task.GetOrCreateNodeWithName<Folder>(Strings.OutputItems);
-                    var parameter = ItemGroupParser.ParsePropertyOrItemList(message, Strings.OutputItemsMessagePrefix, stringTable);
+                    var parameter = ItemGroupParser.ParsePropertyOrItemList(message, Strings.OutputItemsMessagePrefix, stringTable, isOutputItem: true);
                     folder.AddChild(parameter);
                     return;
                 }
@@ -175,10 +175,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     return;
                 }
 
-                string folderName = kind == TaskParameterMessageKind.TaskInput ? Strings.Parameters : Strings.OutputItems;
+                bool isOutput = kind == TaskParameterMessageKind.TaskOutput;
+
+                string folderName = isOutput ? Strings.OutputItems : Strings.Parameters;
                 parent = task.GetOrCreateNodeWithName<Folder>(folderName);
 
-                node = CreateParameterNode(itemType, items);
+                node = CreateParameterNode(itemType, items, isOutput);
             }
             else if (
                 kind == TaskParameterMessageKind.AddItem || 
@@ -228,7 +230,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private BaseNode CreateParameterNode(string itemName, IEnumerable items)
+        private BaseNode CreateParameterNode(string itemName, IEnumerable items, bool isOutput = false)
         {
             if (items is IList<ITaskItem> list && list.Count == 1 && list[0] is ITaskItem scalar && scalar.MetadataCount == 0)
             {
@@ -240,11 +242,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return property;
             }
 
-            var parameter = new Parameter { Name = itemName };
+            TreeNode parent;
+            if (isOutput)
+            {
+                parent = new AddItem { Name = itemName };
+            }
+            else
+            {
+                parent = new Parameter { Name = itemName };
+            }
 
-            AddItems(items, parameter);
+            AddItems(items, parent);
 
-            return parameter;
+            return parent;
         }
 
         private void AddItems(IEnumerable items, TreeNode parent)
