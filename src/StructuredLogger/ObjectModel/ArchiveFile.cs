@@ -36,7 +36,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             string archivePath = filePath;
 
-            if (filePath.Contains(":"))
+            if (filePath.Contains(":") || (!filePath.StartsWith("\\") && !filePath.StartsWith("/")))
             {
                 archivePath = archivePath.Replace(":", "");
                 archivePath = archivePath.Replace("/", "\\");

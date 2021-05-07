@@ -836,7 +836,7 @@ Recent:
         {
             if (filePathSeparator == null)
             {
-                if (filePath.Contains(":"))
+                if (filePath.Contains(":") || (!filePath.StartsWith("\\") && !filePath.StartsWith("/")))
                 {
                     filePathSeparator = "\\";
                 }
