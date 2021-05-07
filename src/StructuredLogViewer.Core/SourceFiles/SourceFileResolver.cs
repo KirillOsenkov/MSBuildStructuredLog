@@ -50,6 +50,8 @@ namespace StructuredLogViewer
                 return null;
             }
 
+            filePath = Microsoft.Build.Logging.StructuredLogger.ArchiveFile.CalculateArchivePath(filePath);
+
             if (fileContentsCache.TryGetValue(filePath, out var result))
             {
                 return result;

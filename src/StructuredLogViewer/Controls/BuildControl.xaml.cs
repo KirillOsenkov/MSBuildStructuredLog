@@ -795,6 +795,8 @@ Recent:
             return root.Children;
         }
 
+        private string filePathSeparator;
+
         private void PopulateFilesTab()
         {
             var root = new Folder();
@@ -816,6 +818,8 @@ Recent:
                     };
                     sourceFile.AddChild(task);
                 }
+
+                sourceFile.SortChildren();
             }
 
             foreach (var subFolder in root.Children.OfType<Folder>())
@@ -830,6 +834,18 @@ Recent:
 
         private SourceFile AddSourceFile(Folder folder, string filePath)
         {
+            if (filePathSeparator == null)
+            {
+                if (filePath.Contains(":"))
+                {
+                    filePathSeparator = "\\";
+                }
+                else
+                {
+                    filePathSeparator = "/";
+                }
+            }
+
             var parts = filePath.Split('\\', '/');
             return AddSourceFile(folder, filePath, parts, 0);
         }
@@ -846,7 +862,12 @@ Recent:
                     parent.Children.Add(grandChild);
                 }
 
-                parent.Name = Path.Combine(parent.Name, subfolder.Name);
+                if (filePathSeparator == null)
+                {
+                    filePathSeparator = "\\";
+                }
+
+                parent.Name = parent.Name + filePathSeparator + subfolder.Name;
                 CompressTree(parent);
             }
             else
@@ -862,7 +883,7 @@ Recent:
         {
             if (index == parts.Length - 1)
             {
-                var file = new SourceFile()
+                var file = new SourceFile
                 {
                     SourceFilePath = filePath,
                     Name = parts[index]
@@ -870,19 +891,29 @@ Recent:
 
                 foreach (var target in GetTargets(filePath))
                 {
-                    file.AddChild(new Target()
+                    file.AddChild(new Target
                     {
                         Name = target,
                         SourceFilePath = filePath
                     });
                 }
 
+                file.SortChildren();
+
                 folder.AddChild(file);
                 return file;
             }
             else
             {
-                var subfolder = folder.GetOrCreateNodeWithName<Folder>(parts[index]);
+                var folderName = parts[index];
+
+                // root of the Mac file system
+                if (string.IsNullOrEmpty(folderName) && index == 0)
+                {
+                    folderName = "/";
+                }
+
+                var subfolder = folder.GetOrCreateNodeWithName<Folder>(folderName);
                 subfolder.IsExpanded = true;
                 return AddSourceFile(subfolder, filePath, parts, index + 1);
             }

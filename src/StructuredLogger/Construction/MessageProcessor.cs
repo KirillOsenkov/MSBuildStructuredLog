@@ -846,7 +846,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             "Linking with the framework",
             "Linking (weakly)",
             "Adding Framework",
-            "Adding Weak Framework"
+            "Adding Weak Framework",
+            "Generating static registrar"
         };
 
         private bool ProcessMmp(Task task, ref TreeNode node, string message)
