@@ -615,7 +615,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         if (!string.IsNullOrEmpty(message))
                         {
                             var equals = message.IndexOf('=');
-                            if (equals != -1)
+                            if (equals != -1 && message.IndexOfFirstLineBreak() == -1)
                             {
                                 var kvp = TextUtilities.ParseNameValue(message);
                                 var metadata = new Metadata
