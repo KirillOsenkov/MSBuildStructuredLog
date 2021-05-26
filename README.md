@@ -43,8 +43,8 @@ git clone https://github.com/KirillOsenkov/MSBuildStructuredLog
 
 Alternatively, a longer version:
 
-1. `dotnet build`
-2. `dotnet publish --self-contained -o <some_dir>` (I used $HOME/tools/artifacts/StructuredLogViewer.Avalonia)
+1. `dotnet build MSBuildStructuredLog.Avalonia.sln`
+2. `dotnet publish MSBuildStructuredLog.Avalonia.sln --self-contained -o <some_dir>` (I used $HOME/tools/artifacts/StructuredLogViewer.Avalonia)
 3. make a script `$HOME/bin/structured-log-viewer` (or whatever's on your PATH):
 
 ```
