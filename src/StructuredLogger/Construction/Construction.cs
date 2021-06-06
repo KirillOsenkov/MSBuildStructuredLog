@@ -265,7 +265,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 args.BuildReason);
         }
 
-        public static bool ParentAllTargetsUnderProject { get; set; }
+        public static bool ParentAllTargetsUnderProject { get; set; } = true;
 
         private Target AddTargetCore(
             BuildEventArgs args,

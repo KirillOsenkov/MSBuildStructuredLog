@@ -396,7 +396,7 @@ namespace StructuredLogViewer
         {
             var sb = new StringBuilder();
             sb.AppendLine(Virtualization + enableTreeViewVirtualization.ToString());
-            sb.AppendLine(ParentAllTargetsUnderProjectSetting + parentAllTargetsUnderProject.ToString());
+            //sb.AppendLine(ParentAllTargetsUnderProjectSetting + parentAllTargetsUnderProject.ToString());
             sb.AppendLine(MarkResultsInTreeSetting + markResultsInTree.ToString());
             sb.AppendLine(UseDarkThemeSetting + useDarkTheme.ToString());
 
@@ -421,7 +421,7 @@ namespace StructuredLogViewer
                 foreach (var line in lines)
                 {
                     ProcessLine(Virtualization, line, ref enableTreeViewVirtualization);
-                    ProcessLine(ParentAllTargetsUnderProjectSetting, line, ref parentAllTargetsUnderProject);
+                    //ProcessLine(ParentAllTargetsUnderProjectSetting, line, ref parentAllTargetsUnderProject);
                     ProcessLine(MarkResultsInTreeSetting, line, ref markResultsInTree);
                     ProcessLine(UseDarkThemeSetting, line, ref useDarkTheme);
 

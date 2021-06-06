@@ -852,10 +852,10 @@
                       Margin="10,0,10,10"
                       IsChecked="{Binding EnableVirtualization}"
                       ToolTip="Disable virtualization if you're experiencing hangs or deadlocks when scrolling the tree"/>
-            <CheckBox Content="Display all targets directly under the project (flattened in temporal order)"
+            <!--<CheckBox Content="Display all targets directly under the project (flattened in temporal order)"
                       Margin="10,0,10,10"
                       IsChecked="{Binding ParentAllTargetsUnderProject}" 
-                      ToolTip="Linearize/flatten all targets under the project instead of parenting targets under their dependency target"/>
+                      ToolTip="Linearize/flatten all targets under the project instead of parenting targets under their dependency target"/>-->
             <CheckBox Content="Mark search results with a dot in the main tree"
                       Margin="10,0,10,10"
                       IsChecked="{Binding MarkResultsInTree}" 
