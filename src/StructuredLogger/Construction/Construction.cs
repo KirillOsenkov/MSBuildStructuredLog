@@ -187,12 +187,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     var project = GetOrAddProject(args.BuildEventContext.ProjectContextId);
                     project.EndTime = args.Timestamp;
-
-                    var unparented = project.GetUnparentedTargets();
-                    foreach (var orphan in unparented)
-                    {
-                        project.TryAddTarget(orphan);
-                    }
                 }
             }
             catch (Exception ex)
@@ -231,7 +225,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     target.TargetBuiltReason = targetBuiltReason;
                     target.SourceFilePath = targetFile;
 
-                    project.TryAddTarget(target);
+                    project.AddChild(target);
 
                     return target;
                 }

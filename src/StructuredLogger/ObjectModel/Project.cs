@@ -27,7 +27,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public string SourceFilePath => ProjectFile;
         string IPreprocessable.RootFilePath => ProjectFile;
 
-        private readonly List<Target> targets = new List<Target>();
         private readonly Dictionary<int, Target> targetsById = new Dictionary<int, Target>();
         private readonly Dictionary<int, Task> tasksById = new Dictionary<int, Task>();
 
@@ -51,24 +50,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return sb.ToString();
         }
 
-        public void TryAddTarget(Target target)
-        {
-            if (target.Parent == null)
-            {
-                AddChild(target);
-            }
-        }
-
-        public IEnumerable<Target> GetUnparentedTargets()
-        {
-            return targets
-                .Where(t => t.Parent == null)
-                .OrderBy(t => t.StartTime)
-                // orphaned targets may share the exact same start time hint, so disambiguate by Index as well which is a counter
-                .ThenBy(t => t.Index)
-                .ToArray();
-        }
-
         /// <summary>
         /// Gets the child target by identifier.
         /// </summary>
@@ -89,12 +70,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public Target CreateTarget(string name, int id)
         {
-            var target = CreateTargetInstance(name, default);
+            var target = CreateTargetInstance(name);
 
-            target.Name = name;
             target.Id = id;
 
-            targets.Add(target);
             targetsById[id] = target;
 
             return target;
@@ -102,7 +81,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private int unparentedTargetIndex = 0;
 
-        private Target CreateTargetInstance(string name, DateTime startTimeHint)
+        private Target CreateTargetInstance(string name)
         {
             Interlocked.Increment(ref unparentedTargetIndex);
 
@@ -111,8 +90,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 Name = name,
                 Id = -1,
                 Index = unparentedTargetIndex, // additional sorting to preserve the order unparented targets are listed in
-                StartTime = startTimeHint,
-                EndTime = startTimeHint
             };
         }
 
