@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -47,6 +48,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             TargetAlreadyCompleteFailure = GetString("TargetAlreadyCompleteFailure");
             TargetAlreadyCompleteFailureRegex = CreateRegex(TargetAlreadyCompleteFailure, 1);
             TargetSkippedWhenSkipNonexistentTargets = CreateRegex(GetString("TargetSkippedWhenSkipNonexistentTargets"), 1);
+            SkipTargetBecauseOutputsUpToDateRegex = CreateRegex(GetString("SkipTargetBecauseOutputsUpToDate"), 1);
             RemovingProjectProperties = CreateRegex(GetString("General.ProjectUndefineProperties"), 1);
 
             DuplicateImport = CreateRegex(GetString("SearchPathsForMSBuildExtensionsPath"), 3);
@@ -219,6 +221,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     text = text.Replace(@$"\{{{i}}}", ".*?");
                 }
             }
+
             var regex = new Regex(text, options);
             return regex;
         }
@@ -267,6 +270,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static Regex TargetSkippedFalseConditionRegex { get; set; }
         public static Regex TaskSkippedFalseConditionRegex { get; set; }
         public static Regex TargetSkippedWhenSkipNonexistentTargets { get; set; }
+        public static Regex SkipTargetBecauseOutputsUpToDateRegex { get; set; }
         public static Regex TaskFoundFromFactory { get; set; }
         public static Regex TaskFound { get; set; }
         public static Regex CouldNotResolveSdkRegex { get; set; }
@@ -300,34 +304,43 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return Match.Empty;
         }
 
-        public static bool IsTargetSkipped(string message)
+        public static TargetSkipReason GetTargetSkipReason(string message)
         {
+            // these were emitted as simple messages until binlog version 14
+            // (see https://github.com/dotnet/msbuild/pull/6402)
             if (TargetAlreadyCompleteSuccessRegex.IsMatch(message))
             {
-                return true;
-            }
-
-            // realistically control never reaches here (for binlog versions 4 and newer)
-            if (TargetSkippedFalseConditionRegex.IsMatch(message))
-            {
-                return true;
+                return TargetSkipReason.PreviouslyBuiltSuccessfully;
             }
 
             if (TargetAlreadyCompleteFailureRegex.IsMatch(message))
             {
-                return true;
+                return TargetSkipReason.PreviouslyBuiltUnsuccessfully;
+            }
+
+            if (SkipTargetBecauseOutputsUpToDateRegex.IsMatch(message))
+            {
+                return TargetSkipReason.OutputsUpToDate;
             }
 
             if (TargetSkippedWhenSkipNonexistentTargets.IsMatch(message))
             {
-                return true;
+                return TargetSkipReason.TargetDoesNotExist;
             }
+
+            // realistically control never reaches here (for binlog versions 4 and newer)
+            // these were converted from Message to TargetSkipped in binlog version 4
+            if (TargetSkippedFalseConditionRegex.IsMatch(message))
+            {
+                return TargetSkipReason.ConditionWasFalse;
+            }
+
             //TargetAlreadyCompleteSuccess $:$ Target "{0}" skipped.Previously built successfully.
             //TargetSkippedFalseCondition $:$ Target "{0}" skipped, due to false condition; ({1}) was evaluated as ({2}).
             //TargetAlreadyCompleteFailure $:$ Target "{0}" skipped.Previously built unsuccessfully.
             //TargetSkippedWhenSkipNonexistentTargets"><value>Target "{0}" skipped. The target does not exist in the project and SkipNonexistentTargets is set to true.</value></data>
 
-            return false;
+            return TargetSkipReason.None;
         }
 
         public static bool IsTargetDoesNotExistAndWillBeSkipped(string message)

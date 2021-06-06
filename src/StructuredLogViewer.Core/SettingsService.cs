@@ -311,29 +311,6 @@ namespace StructuredLogViewer
             }
         }
 
-        private static bool parentAllTargetsUnderProject = true;
-
-        public static bool ParentAllTargetsUnderProject
-        {
-            get
-            {
-                EnsureSettingsRead();
-                return parentAllTargetsUnderProject;
-            }
-
-            set
-            {
-                if (parentAllTargetsUnderProject == value)
-                {
-                    return;
-                }
-
-                parentAllTargetsUnderProject = value;
-                Construction.ParentAllTargetsUnderProject = value;
-                SaveSettings();
-            }
-        }
-
         private static bool markResultsInTree = false;
 
         public static bool MarkResultsInTree
@@ -388,7 +365,6 @@ namespace StructuredLogViewer
         }
 
         const string Virtualization = "Virtualization=";
-        const string ParentAllTargetsUnderProjectSetting = nameof(ParentAllTargetsUnderProject) + "=";
         const string MarkResultsInTreeSetting = "MarkResultsInTree=";
         const string UseDarkThemeSetting = "UseDarkTheme=";
 

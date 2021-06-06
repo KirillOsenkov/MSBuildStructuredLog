@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using Microsoft.Build.Collections;
 using Microsoft.Build.Framework;
@@ -449,16 +450,24 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     return;
                 }
 
-                if (Strings.IsTargetSkipped(message))
+                var targetSkipReason = Strings.GetTargetSkipReason(message);
+                if (targetSkipReason != TargetSkipReason.None)
                 {
+                    // Target skipped was a simple message before this PR:
+                    // https://github.com/dotnet/msbuild/pull/6402
                     var targetName = Intern(TextUtilities.ParseQuotedSubstring(message));
                     if (targetName != null)
                     {
-                        var skippedTarget = project.GetOrAddTargetByName(targetName, args.Timestamp);
-                        skippedTarget.StartTime = args.Timestamp;
-                        skippedTarget.EndTime = args.Timestamp;
-                        parent = skippedTarget;
-                        lowRelevance = true;
+                        var args2 = new TargetSkippedEventArgs2(message);
+                        args2.TargetName = targetName;
+                        args2.BuildEventContext = args.BuildEventContext;
+                        args2.SkipReason = targetSkipReason;
+                        args2.OriginallySucceeded = targetSkipReason != TargetSkipReason.PreviouslyBuiltUnsuccessfully;
+                        typeof(BuildEventArgs)
+                            .GetField("timestamp", BindingFlags.Instance | BindingFlags.NonPublic)
+                            .SetValue(args2, args.Timestamp);
+                        construction.TargetSkipped(args2);
+                        return;
                     }
                 }
             }

@@ -78,8 +78,6 @@ namespace TaskRunner
 
         private void Run(string binlog, int index, string taskName)
         {
-            Construction.ParentAllTargetsUnderProject = SettingsService.ParentAllTargetsUnderProject;
-
             var build = Serialization.Read(binlog);
 
             // Need to analyze build here to fully emulate what the viewer does when opening a .binlog.

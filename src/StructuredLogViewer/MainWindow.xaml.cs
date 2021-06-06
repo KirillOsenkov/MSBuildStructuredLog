@@ -40,8 +40,6 @@ namespace StructuredLogViewer
 
             ThemeManager.UseDarkTheme = SettingsService.UseDarkTheme;
             ThemeManager.UpdateTheme();
-
-            Construction.ParentAllTargetsUnderProject = SettingsService.ParentAllTargetsUnderProject;
         }
 
         protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)

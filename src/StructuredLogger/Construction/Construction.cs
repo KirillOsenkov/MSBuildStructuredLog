@@ -129,60 +129,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private void CalculateTargetGraph(Project project)
-        {
-            ProjectInstance projectInstance;
-            if (!_projectToProjectInstanceMap.TryGetValue(project, out projectInstance))
-            {
-                // if for some reason we weren't able to fish out the project instance from MSBuild,
-                // just add all orphans directly to the project
-                var unparented = project.GetUnparentedTargets();
-                foreach (var orphan in unparented)
-                {
-                    project.TryAddTarget(orphan);
-                }
-
-                return;
-            }
-
-            var targetGraph = new TargetGraph(projectInstance);
-
-            IEnumerable<Target> unparentedTargets = null;
-            while ((unparentedTargets = project.GetUnparentedTargets()).Any())
-            {
-                foreach (var unparentedTarget in unparentedTargets)
-                {
-                    var parents = targetGraph.GetDependents(unparentedTarget.Name);
-                    if (parents != null && parents.Any())
-                    {
-                        foreach (var parent in parents)
-                        {
-                            var parentNode = project.GetOrAddTargetByName(parent, default);
-                            if (parentNode != null && (parentNode.Id != -1 || parentNode.HasChildren))
-                            {
-                                parentNode.TryAddTarget(unparentedTarget);
-                                break;
-                            }
-                        }
-                    }
-
-                    project.TryAddTarget(unparentedTarget);
-                }
-            }
-
-            project.VisitAllChildren<Target>(t =>
-            {
-                if (t.Project == project)
-                {
-                    var dependencies = targetGraph.GetDependencies(t.Name);
-                    if (dependencies != null && dependencies.Any())
-                    {
-                        t.DependsOnTargets = Intern(string.Join(",", dependencies));
-                    }
-                }
-            });
-        }
-
         public void ProjectStarted(object sender, ProjectStartedEventArgs args)
         {
             try
@@ -265,8 +211,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 args.BuildReason);
         }
 
-        public static bool ParentAllTargetsUnderProject { get; set; } = true;
-
         private Target AddTargetCore(
             BuildEventArgs args,
             string targetName,
@@ -285,19 +229,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     target.EndTime = target.StartTime; // will properly set later
                     target.ParentTarget = parentTargetName;
                     target.TargetBuiltReason = targetBuiltReason;
-
-                    if (!ParentAllTargetsUnderProject && !string.IsNullOrEmpty(parentTargetName))
-                    {
-                        var parentTarget = project.GetOrAddTargetByName(parentTargetName, args.Timestamp);
-                        parentTarget.TryAddTarget(target);
-                        //project.TryAddTarget(parentTarget);
-                    }
-                    else
-                    {
-                        project.TryAddTarget(target);
-                    }
-
                     target.SourceFilePath = targetFile;
+
+                    project.TryAddTarget(target);
 
                     return target;
                 }
@@ -317,7 +251,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 lock (syncLock)
                 {
                     var project = GetOrAddProject(args.BuildEventContext.ProjectContextId);
-                    var target = project.GetTarget(args.TargetName, args.BuildEventContext.TargetId);
+                    var target = project.GetTargetById(args.BuildEventContext.TargetId);
 
                     target.EndTime = args.Timestamp;
                     target.Succeeded = args.Succeeded;
@@ -349,70 +283,39 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private void TargetSkipped(TargetSkippedEventArgs2 args)
+        public void TargetSkipped(TargetSkippedEventArgs2 args)
         {
-            var project = GetProject(args.BuildEventContext.ProjectContextId);
-
             string targetName = Intern(args.TargetName);
-            string targetFile = Intern(args.TargetFile);
             string messageText = args.Message;
 
+            var originalBuildEventContext = args.OriginalBuildEventContext;
             var skipReason = args.SkipReason;
-            Target target;
-
-            if (skipReason == TargetSkipReason.ConditionWasFalse ||
-                skipReason == TargetSkipReason.OutputsUpToDate ||
-                skipReason == TargetSkipReason.None // file format version < 14
-                )
+            if ((skipReason == TargetSkipReason.PreviouslyBuiltSuccessfully ||
+                skipReason == TargetSkipReason.PreviouslyBuiltUnsuccessfully) && originalBuildEventContext != null)
             {
-                messageText = Intern(messageText);
-                target = AddTargetCore(
-                    args,
-                    targetName,
-                    Intern(args.ParentTarget),
-                    targetFile,
-                    args.BuildReason);
-                var messageNode = new Message { Text = messageText };
-                if (target != null)
+                var prefix = "Target \"" + targetName + "\" "; // trim the Target Name text since the node will already display that
+                if (messageText.StartsWith(prefix, StringComparison.Ordinal))
                 {
-                    target.AddChild(messageNode);
+                    messageText = messageText.Substring(prefix.Length);
                 }
-                else
-                {
-                    project.AddChild(messageNode);
-                }
-
-                return;
-            }
-
-            var prefix = "Target \"" + targetName + "\" "; // trim the Target Name text since the node will already display that
-            if (messageText.StartsWith(prefix, StringComparison.Ordinal))
-            {
-                messageText = messageText.Substring(prefix.Length);
             }
 
             messageText = Intern(messageText);
 
-            target = new Target()
+            var target = AddTargetCore(
+                args,
+                targetName,
+                Intern(args.ParentTarget),
+                Intern(args.TargetFile),
+                args.BuildReason);
+
+            if (originalBuildEventContext != null && originalBuildEventContext.ProjectContextId != BuildEventContext.InvalidProjectContextId)
             {
-                Name = targetName,
-                Id = -1,
-                StartTime = args.Timestamp,
-                EndTime = args.Timestamp
-            };
-
-            target.NodeId = args.BuildEventContext.NodeId;
-            target.SourceFilePath = targetFile;
-
-            project.TryAddTarget(target);
-
-            if (args.OriginalBuildEventContext is { } buildEventContext && buildEventContext.ProjectContextId != BuildEventContext.InvalidProjectContextId)
-            {
-                var originalProject = GetProject(buildEventContext.ProjectContextId);
+                var originalProject = GetProject(originalBuildEventContext.ProjectContextId);
                 if (originalProject != null)
                 {
                     target.ParentTarget = messageText;
-                    var originalTarget = originalProject.GetTargetById(buildEventContext.TargetId);
+                    var originalTarget = originalProject.GetTargetById(originalBuildEventContext.TargetId);
                     if (originalTarget != null)
                     {
                         target.OriginalNode = originalTarget;
@@ -422,6 +325,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         target.OriginalNode = originalProject;
                     }
                 }
+            }
+            else
+            {
+                var messageNode = new Message { Text = messageText };
+                target.AddChild(messageNode);
             }
         }
 

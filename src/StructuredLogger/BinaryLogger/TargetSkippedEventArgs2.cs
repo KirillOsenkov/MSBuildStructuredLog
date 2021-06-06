@@ -30,7 +30,12 @@ namespace Microsoft.Build.Framework
         /// <summary>
         /// The condition on the target was evaluated as false.
         /// </summary>
-        ConditionWasFalse
+        ConditionWasFalse,
+
+        /// <summary>
+        /// The target was skipped because it didn't exist and BuildRequestDataFlags.SkipNonexistentTargets was set to true.
+        /// </summary>
+        TargetDoesNotExist,
     }
 
     public class TargetSkippedEventArgs2 : TargetSkippedEventArgs
