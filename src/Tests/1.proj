@@ -1,0 +1,65 @@
+<Project DefaultTargets="Build">
+
+  <Import Project="2.proj" />
+
+  <PropertyGroup>
+    <Prop1>Prop1Value</Prop1>
+    <Prop2 Condition="$(Prop1) != ''">Prop2Value</Prop2>
+    <Prop1>Prop1ValueReassigned</Prop1>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup>
+    <Item1>
+      <Metadata1>Metadata1Value</Metadata1>
+    </Item1>
+  </ItemDefinitionGroup>
+
+  <ItemGroup>
+    <Item1 Include="item1">
+      <Metadata2>Metadata2Value</Metadata2>
+    </Item1>
+  </ItemGroup>
+
+  <Target Name="A">
+    <Copy SourceFiles="$(MSBuildThisFileFullPath)" DestinationFiles="3.proj" SkipUnchangedFiles="true" />
+    <MSBuild Projects="1.proj;2.proj" Targets="B" BuildInParallel="True" />
+    <MSBuild Projects="2.proj" Targets="Target1;Target2" BuildInParallel="True" />
+    <MSBuild Projects="2.proj" Targets="Target2" />
+    <MSBuild Projects="3.proj" Targets="B;C" BuildInParallel="True" />
+  </Target>
+
+  <Target Name="B">
+  </Target>
+
+  <Target Name="C">
+  </Target>
+
+  <Target Name="Build" DependsOnTargets="A" Outputs="@(Item2)">
+    <Message Text="Message text" Importance="high" />
+
+    <PropertyGroup>
+      <PropInTarget>PropInTargetValue</PropInTarget>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Item2 Include="item2" />
+      <Item2 Include="item3" />
+      <Item2 Include="item4" />
+      <Item2 Include="item4" Metadata4="Metadata4Value" />
+      <Item2 Include="item5" />
+      <Item2 Include="item5" />
+      <Item2 Remove="item2" />
+      <Item2 Update="item3">
+        <Metadata3>Metadata3Value</Metadata3>
+      </Item2>
+    </ItemGroup>
+
+    <RemoveDuplicates Inputs="@(Item4)">
+      <Output TaskParameter="Filtered" ItemName="Item4Filtered" />
+    </RemoveDuplicates>
+
+    <Delete Files="3.proj" Condition="Exists('3.proj')" />
+
+  </Target>
+
+</Project>

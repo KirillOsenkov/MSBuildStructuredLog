@@ -1,0 +1,16 @@
+<Project>
+
+  <Target Name="Target1" Inputs="$(MSBuildThisFileFullPath)" Outputs="3.proj">
+    <ItemGroup>
+      <Item1 Include="*" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="Target2">
+    <Message Text="Target 2" Importance="high" />
+  </Target>
+
+  <Target Name="B">
+  </Target>
+
+</Project>
