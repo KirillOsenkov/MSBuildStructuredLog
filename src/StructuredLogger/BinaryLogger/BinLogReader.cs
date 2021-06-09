@@ -53,11 +53,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public async System.Threading.Tasks.Task Replay(Stream stream, Func<long, long, System.Threading.Tasks.Task> progressFunc = null)
         {
-            Replay(stream, progress: null);
-        }
-
-        public void Replay(Stream stream, Progress progress)
-        {
             var gzipStream = new GZipStream(stream, CompressionMode.Decompress, leaveOpen: true);
             var bufferedStream = new BufferedStream(gzipStream, 32768);
             var binaryReader = new BinaryReader(bufferedStream);

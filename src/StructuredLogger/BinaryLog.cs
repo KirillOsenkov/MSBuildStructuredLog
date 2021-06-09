@@ -44,6 +44,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        internal const bool ReuseBinlogStrings = false;
+
         public static async System.Threading.Tasks.Task<Build> ReadBuild(Stream stream, byte[] projectImportsArchive = null, Func<long, long, System.Threading.Tasks.Task> progressFunc = null)
         {
             var eventSource = new BinLogReader();
