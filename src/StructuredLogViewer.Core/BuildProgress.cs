@@ -2,11 +2,31 @@
 {
     public class BuildProgress : ObservableObject
     {
+        public BuildProgress()
+        {
+        }
+
+        public Progress Progress { get; } = new Progress();
+
         private string progressText;
         public string ProgressText
         {
             get => progressText;
             set => SetField(ref progressText, value);
+        }
+
+        private bool isIndeterminate;
+        public bool IsIndeterminate
+        {
+            get => isIndeterminate;
+            set => SetField(ref isIndeterminate, value);
+        }
+
+        private double value;
+        public double Value
+        {
+            get => value;
+            set => SetField(ref this.value, value);
         }
 
         private string msbuildCommandLine;

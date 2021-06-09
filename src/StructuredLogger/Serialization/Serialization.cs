@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -45,7 +46,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static Build ReadBuildLog(Stream stream, byte[] projectImportsArchive = null) => BuildLogReader.Read(stream, projectImportsArchive);
         public static Build ReadBinLog(Stream stream, byte[] projectImportsArchive = null) => BinaryLog.ReadBuild(stream, projectImportsArchive).Result;
 
-        public static Build Read(string filePath)
+        public static Build Read(string filePath) => Read(filePath, progress: null);
+
+        public static Build Read(string filePath, Progress progress)
         {
             if (filePath.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
             {
@@ -55,7 +58,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 try
                 {
-                    return BinaryLog.ReadBuild(filePath);
+                    return BinaryLog.ReadBuild(filePath, progress);
                 }
                 catch (Exception)
                 {
@@ -245,6 +248,39 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             writer.Write((byte)v);
+        }
+
+        public static void WriteStringsToFile(string outputFilePath, string[] strings)
+        {
+            using var fileStream = new FileStream(outputFilePath, FileMode.Create, FileAccess.Write);
+            using var gzipStream = new GZipStream(fileStream, CompressionLevel.Optimal);
+            using var bufferedStream = new BufferedStream(gzipStream);
+            using var binaryWriter = new BinaryWriter(bufferedStream);
+
+            binaryWriter.Write(strings.Length);
+
+            for (int i = 0; i < strings.Length; i++)
+            {
+                binaryWriter.Write(strings[i]);
+            }
+        }
+
+        public static IReadOnlyList<string> ReadStringsFromFile(string filePath)
+        {
+            using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+            using var gzipStream = new GZipStream(fileStream, CompressionMode.Decompress);
+            using var bufferedStream = new BufferedStream(gzipStream);
+            using var binaryReader = new BinaryReader(bufferedStream);
+
+            int count = binaryReader.ReadInt32();
+            var result = new string[count];
+
+            for (int i = 0; i < count; i++)
+            {
+                result[i] = binaryReader.ReadString();
+            }
+
+            return result;
         }
     }
 }

@@ -8,7 +8,6 @@
     <BaseOutputPath>$(MSBuildThisFileDirectory)bin\$(MSBuildProjectName)\</BaseOutputPath>
     <BuildToCommonOutputDirectory>true</BuildToCommonOutputDirectory>
     <_FindDependencies>false</_FindDependencies>
-    <TargetFrameworkMonikerAssemblyAttributesPath>$(BaseIntermediateOutputPath)AssemblyAttributes.cs</TargetFrameworkMonikerAssemblyAttributesPath>
   </PropertyGroup>
 
   <PropertyGroup Label="Common Properties">
@@ -21,7 +20,7 @@
     <ImportFrameworkWinFXTargets>true</ImportFrameworkWinFXTargets>
 
     <MSBuildPackageVersion>16.4.0</MSBuildPackageVersion>
-    <NuGetVersionNerdbankGitVersioning>3.2.31</NuGetVersionNerdbankGitVersioning>
+    <NuGetVersionNerdbankGitVersioning>3.4.194</NuGetVersionNerdbankGitVersioning>
   </PropertyGroup>
 
 </Project>

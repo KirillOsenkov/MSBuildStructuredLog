@@ -29,6 +29,11 @@ namespace StructuredLogViewer.Controls
         {
             if (DataContext is Target target)
             {
+                if (target.OriginalNode != null)
+                {
+                    return target.OriginalNode;
+                }
+
                 var parentTargetName = target.ParentTarget;
                 if (parentTargetName != null)
                 {

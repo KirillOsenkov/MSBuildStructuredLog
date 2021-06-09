@@ -581,12 +581,12 @@
     </DataTemplate.Triggers>
   </DataTemplate>
 
-  <DataTemplate DataType="{x:Type l:Warning}">
+  <HierarchicalDataTemplate DataType="{x:Type l:Warning}" ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
       <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource WarningStroke}" Fill="{StaticResource WarningBrush}" />
       <TextBlock Text="{Binding}" />
     </StackPanel>
-  </DataTemplate>
+  </HierarchicalDataTemplate>
 
   <DataTemplate DataType="{x:Type core:Note}">
     <StackPanel Orientation="Horizontal">
@@ -852,10 +852,10 @@
                       Margin="10,0,10,10"
                       IsChecked="{Binding EnableVirtualization}"
                       ToolTip="Disable virtualization if you're experiencing hangs or deadlocks when scrolling the tree"/>
-            <CheckBox Content="Display all targets directly under the project (flattened in temporal order)"
+            <!--<CheckBox Content="Display all targets directly under the project (flattened in temporal order)"
                       Margin="10,0,10,10"
                       IsChecked="{Binding ParentAllTargetsUnderProject}" 
-                      ToolTip="Linearize/flatten all targets under the project instead of parenting targets under their dependency target"/>
+                      ToolTip="Linearize/flatten all targets under the project instead of parenting targets under their dependency target"/>-->
             <CheckBox Content="Mark search results with a dot in the main tree"
                       Margin="10,0,10,10"
                       IsChecked="{Binding MarkResultsInTree}" 
@@ -894,7 +894,7 @@
           <Button Command="{Binding BrowseForMSBuildCommand}"
                   Width="22"
                   Height="22"
-                  ToolTip="Browse for custom MSBuild.exe location..."
+                  ToolTip="Browse for custom MSBuild file location..."
                   Margin="0,0,8,0">
             <StackPanel Orientation="Horizontal">
               <Rectangle Width="2" Height="2" Margin="2" Fill="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
@@ -955,7 +955,10 @@
                  Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
                  TextWrapping="Wrap" />
       <ProgressBar Grid.Row="1" 
-                   IsIndeterminate="True" 
+                   IsIndeterminate="{Binding IsIndeterminate}" 
+                   Value="{Binding Value}"
+                   Minimum="0.0"
+                   Maximum="1.0"
                    HorizontalAlignment="Center"
                    Width="200" 
                    Height="23" 

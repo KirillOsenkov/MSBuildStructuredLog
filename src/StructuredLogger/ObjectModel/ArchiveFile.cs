@@ -16,8 +16,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static ArchiveFile From(ZipArchiveEntry entry)
         {
+            var filePath = CalculateArchivePath(entry.FullName);
             var text = GetText(entry);
-            var file = new ArchiveFile(entry.FullName, text);
+            var file = new ArchiveFile(filePath, text);
             return file;
         }
 
@@ -35,9 +36,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             string archivePath = filePath;
 
-            archivePath = archivePath.Replace(":", "");
-            archivePath = archivePath.Replace("\\\\", "\\");
-            archivePath = archivePath.Replace("/", "\\");
+            if (filePath.Contains(":") || (!filePath.StartsWith("\\") && !filePath.StartsWith("/")))
+            {
+                archivePath = archivePath.Replace(":", "");
+                archivePath = archivePath.Replace("/", "\\");
+                archivePath = archivePath.Replace("\\\\", "\\");
+            }
+            else
+            {
+                archivePath = archivePath.Replace("\\", "/");
+                archivePath = archivePath.Replace("//", "/");
+            }
 
             return archivePath;
         }

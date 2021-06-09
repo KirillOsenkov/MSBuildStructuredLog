@@ -103,12 +103,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             set => SettingsService.EnableTreeViewVirtualization = value;
         }
 
-        public bool ParentAllTargetsUnderProject
-        {
-            get => SettingsService.ParentAllTargetsUnderProject;
-            set => SettingsService.ParentAllTargetsUnderProject = value;
-        }
-
         public bool MarkResultsInTree
         {
             get => SettingsService.MarkResultsInTree;

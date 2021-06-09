@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -36,6 +37,63 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 return $"{ProjectFile}\n{GetTimeAndDurationText()}";
             }
+        }
+
+        private TimedNode importsFolder;
+        public TimedNode ImportsFolder
+        {
+            get
+            {
+                if (importsFolder == null)
+                {
+                    importsFolder = new TimedNode
+                    {
+                        Name = Strings.Imports
+                    };
+                    this.AddChildAtBeginning(importsFolder);
+                }
+
+                return importsFolder;
+            }
+        }
+
+        private TimedNode propertyReassignmentFolder;
+        public TimedNode PropertyReassignmentFolder
+        {
+            get
+            {
+                if (propertyReassignmentFolder == null)
+                {
+                    propertyReassignmentFolder = new TimedNode
+                    {
+                        Name = Strings.PropertyReassignmentFolder
+                    };
+                    this.AddChildAtBeginning(propertyReassignmentFolder);
+                }
+
+                return propertyReassignmentFolder;
+            }
+        }
+
+        private Dictionary<string, NamedNode> importsMap = new Dictionary<string, NamedNode>();
+
+        public void AddImport(TextNode textNode)
+        {
+            NamedNode parent = ImportsFolder;
+
+            IHasSourceFile importOrNot = (IHasSourceFile)textNode;
+
+            if (importOrNot.SourceFilePath != this.ProjectFile && importsMap.TryGetValue(importOrNot.SourceFilePath, out var foundParent))
+            {
+                parent = foundParent;
+            }
+
+            if (importOrNot is Import import && import.ImportedProjectFilePath != null)
+            {
+                importsMap[import.ImportedProjectFilePath] = import;
+            }
+
+            parent.AddChild(textNode);
         }
     }
 }

@@ -14,17 +14,27 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <param name="message">The message output from the logger.</param>
         /// <param name="prefix">The prefix parsed out (e.g. 'Output Item(s): '.).</param>
         /// <returns>List of items within the list and all metadata.</returns>
-        public static BaseNode ParsePropertyOrItemList(string message, string prefix, StringCache stringTable)
+        public static BaseNode ParsePropertyOrItemList(string message, string prefix, StringCache stringTable, bool isOutputItem = false)
         {
             if (!TextUtilities.ContainsLineBreak(message))
             {
                 var nameValue = TextUtilities.ParseNameValue(message, trimFromStart: prefix.Length);
-                var property = new Property
+                if (!isOutputItem)
                 {
-                    Name = stringTable.Intern(nameValue.Key),
-                    Value = stringTable.Intern(nameValue.Value)
-                };
-                return property;
+                    var property = new Property
+                    {
+                        Name = stringTable.Intern(nameValue.Key),
+                        Value = stringTable.Intern(nameValue.Value)
+                    };
+                    return property;
+                }
+                else
+                {
+                    var singleItem = new AddItem { Name = stringTable.Intern(nameValue.Key) };
+                    var item = new Item { Text = stringTable.Intern(nameValue.Value) };
+                    singleItem.AddChild(item);
+                    return singleItem;
+                }
             }
 
             // Can't use a field initializer with ThreadStatic.
@@ -36,7 +46,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             lineSpans.Clear();
             message.CollectLineSpans(lineSpans, includeLineBreakInSpan: false);
 
-            var parameter = new Parameter();
+            NamedNode parameter = isOutputItem ? new AddItem() : new Parameter();
 
             if (lineSpans[0].Length > prefix.Length)
             {
@@ -113,7 +123,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             {
                                 currentItem = new Item
                                 {
-                                    Text = currentProperty.Name + "=" + currentProperty.Value
+                                    Text = stringTable.Intern(currentProperty.Name + "=" + currentProperty.Value)
                                 };
                                 parameter.Children.RemoveAt(parameter.Children.Count - 1);
                                 currentProperty = null;
@@ -182,6 +192,66 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             return parameter;
+        }
+
+        public static void ParseThereWasAConflict(TreeNode parent, string message, StringCache stringTable)
+        {
+            if (lineSpans == null)
+            {
+                lineSpans = new List<Span>(10240);
+            }
+
+            lineSpans.Clear();
+            message.CollectLineSpans(lineSpans, includeLineBreakInSpan: false);
+
+            Item item4 = null;
+            Item item8 = null;
+            Item item10 = null;
+
+            for (int i = 0; i < lineSpans.Count; i++)
+            {
+                var lineSpan = lineSpans[i];
+                var numberOfLeadingSpaces = TextUtilities.GetNumberOfLeadingSpaces(message, lineSpan);
+                switch (numberOfLeadingSpaces)
+                {
+                    case 0:
+                    case 4:
+                        item4 = Add(parent, message, lineSpan, numberOfLeadingSpaces, stringTable);
+                        item8 = null;
+                        item10 = null;
+                        break;
+                    case 8:
+                        item8 = Add(item4, message, lineSpan, numberOfLeadingSpaces, stringTable);
+                        item10 = null;
+                        break;
+                    case 10:
+                        item10 = Add(item8, message, lineSpan, numberOfLeadingSpaces, stringTable);
+                        break;
+                    case 12:
+                        Add(item10, message, lineSpan, numberOfLeadingSpaces, stringTable);
+                        break;
+                    default:
+                        Add(item10 ?? item8 ?? item4 ?? parent, message, lineSpan, numberOfLeadingSpaces, stringTable);
+                        break;
+                }
+            }
+
+            static Item Add(TreeNode parent, string text, Span span, int spaces, StringCache stringTable)
+            {
+                if (spaces >= span.Length || parent == null)
+                {
+                    return null;
+                }
+
+                string line = text.Substring(span.Start + spaces, span.Length - spaces);
+
+                var item = new Item
+                {
+                    Text = stringTable.Intern(line)
+                };
+                parent.AddChild(item);
+                return item;
+            }
         }
     }
 }

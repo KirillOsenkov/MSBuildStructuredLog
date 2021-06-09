@@ -1,11 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class ChildrenList : List<BaseNode>
+    public class ChildrenList : List<BaseNode>, INotifyCollectionChanged
     {
         public ChildrenList() : base(1)
+        {
+        }
+
+        public ChildrenList(int capacity) : base(capacity)
         {
         }
 
@@ -14,6 +19,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         private Dictionary<ChildrenCacheKey, BaseNode> childrenCache;
+
+        public event NotifyCollectionChangedEventHandler CollectionChanged;
+
+        public void RaiseCollectionChanged()
+        {
+            CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+        }
 
         public T FindNode<T>(string name) where T : NamedNode
         {
@@ -43,6 +55,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        public void EnsureCapacity(int capacity)
+        {
+            this.Capacity = capacity;
+        }
+
         public void OnAdded(NamedNode child)
         {
             if (child?.LookupKey == null)
@@ -66,7 +83,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 _type = type;
                 _name = name;
-                hashCode = unchecked((_type.GetHashCode() * 397) ^ _name.ToLowerInvariant().GetHashCode());
+                hashCode = unchecked((_type.GetHashCode() * 397) ^ StringComparer.OrdinalIgnoreCase.GetHashCode(_name));
             }
 
             public bool Equals(ChildrenCacheKey other)

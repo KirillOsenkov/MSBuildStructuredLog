@@ -185,7 +185,7 @@ namespace StructuredLogViewer
             return true;
         }
 
-        public static string GetMSBuildExe()
+        public static string? GetMSBuildFile()
         {
             return GetRecentMSBuildLocations().FirstOrDefault();
         }
@@ -311,29 +311,6 @@ namespace StructuredLogViewer
             }
         }
 
-        private static bool parentAllTargetsUnderProject = true;
-
-        public static bool ParentAllTargetsUnderProject
-        {
-            get
-            {
-                EnsureSettingsRead();
-                return parentAllTargetsUnderProject;
-            }
-
-            set
-            {
-                if (parentAllTargetsUnderProject == value)
-                {
-                    return;
-                }
-
-                parentAllTargetsUnderProject = value;
-                Construction.ParentAllTargetsUnderProject = value;
-                SaveSettings();
-            }
-        }
-
         private static bool markResultsInTree = false;
 
         public static bool MarkResultsInTree
@@ -388,7 +365,6 @@ namespace StructuredLogViewer
         }
 
         const string Virtualization = "Virtualization=";
-        const string ParentAllTargetsUnderProjectSetting = nameof(ParentAllTargetsUnderProject) + "=";
         const string MarkResultsInTreeSetting = "MarkResultsInTree=";
         const string UseDarkThemeSetting = "UseDarkTheme=";
 
@@ -396,7 +372,7 @@ namespace StructuredLogViewer
         {
             var sb = new StringBuilder();
             sb.AppendLine(Virtualization + enableTreeViewVirtualization.ToString());
-            sb.AppendLine(ParentAllTargetsUnderProjectSetting + parentAllTargetsUnderProject.ToString());
+            //sb.AppendLine(ParentAllTargetsUnderProjectSetting + parentAllTargetsUnderProject.ToString());
             sb.AppendLine(MarkResultsInTreeSetting + markResultsInTree.ToString());
             sb.AppendLine(UseDarkThemeSetting + useDarkTheme.ToString());
 
@@ -421,7 +397,7 @@ namespace StructuredLogViewer
                 foreach (var line in lines)
                 {
                     ProcessLine(Virtualization, line, ref enableTreeViewVirtualization);
-                    ProcessLine(ParentAllTargetsUnderProjectSetting, line, ref parentAllTargetsUnderProject);
+                    //ProcessLine(ParentAllTargetsUnderProjectSetting, line, ref parentAllTargetsUnderProject);
                     ProcessLine(MarkResultsInTreeSetting, line, ref markResultsInTree);
                     ProcessLine(UseDarkThemeSetting, line, ref useDarkTheme);
 

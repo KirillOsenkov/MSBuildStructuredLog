@@ -20,7 +20,7 @@ namespace StructuredLogViewer.Avalonia.Controls
         public SearchAndResultsControl()
         {
             InitializeComponent();
-            typingConcurrentOperation.DisplayResults += (r, moreAvailable) => Dispatcher.UIThread.InvokeAsync(() => DisplaySearchResults(r, moreAvailable));
+            typingConcurrentOperation.DisplayResults += (r, moreAvailable, cancellationToken) => Dispatcher.UIThread.InvokeAsync(() => DisplaySearchResults(r, moreAvailable));
             typingConcurrentOperation.SearchComplete += (text, arg, elapsed) => Dispatcher.UIThread.InvokeAsync(() => TypingConcurrentOperation_SearchComplete(text, arg, elapsed));
         }
 

@@ -6,6 +6,7 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Microsoft.Build.Collections;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Framework.Profiler;
@@ -42,10 +43,38 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Build.Name = "Build";
             this.stringTable = Build.StringTable;
             this.messageProcessor = new MessageProcessor(this, stringTable);
+            Intern(Strings.Assembly);
+            Intern(Strings.CommandLineArguments);
+            Intern(Strings.DoubleWrites);
             Intern(Strings.Evaluation);
+            Intern(Strings.Note);
+            Intern(Strings.OutputItems);
+            Intern(Strings.Parameters);
+            Intern(Strings.Properties);
+            Intern(Strings.UnusedLocations);
+            Intern(Strings.Warnings);
+            Intern(nameof(AddItem));
+            Intern(nameof(CopyTask));
+            Intern(nameof(CscTask));
+            Intern(nameof(ResolveAssemblyReferenceTask));
+            Intern(nameof(EntryTarget));
+            Intern(nameof(Folder));
+            Intern(nameof(Import));
+            Intern(nameof(Item));
+            Intern(nameof(Metadata));
+            Intern(nameof(NoImport));
+            Intern(nameof(Parameter));
+            Intern(nameof(ProjectEvaluation));
+            Intern(nameof(Property));
+            Intern(nameof(RemoveItem));
+            Intern(nameof(Target));
+            Intern(nameof(Task));
+            Intern(nameof(TimedNode));
         }
 
         private string Intern(string text) => stringTable.Intern(text);
+
+        private string SoftIntern(string text) => stringTable.SoftIntern(text);
 
         public void BuildStarted(object sender, BuildStartedEventArgs args)
         {
@@ -84,70 +113,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             messageProcessor.DetailedSummary.Remove(0, 1);
                         }
 
-                        summary.Text = messageProcessor.DetailedSummary.ToString();
+                        string fullText = messageProcessor.DetailedSummary.ToString();
+#if DEBUG
+                        fullText = Intern(fullText);
+#endif
+                        summary.Text = fullText;
                     }
 
-                    Build.VisitAllChildren<Project>(p => CalculateTargetGraph(p));
+                    //Build.VisitAllChildren<Project>(p => CalculateTargetGraph(p));
                 }
             }
             catch (Exception ex)
             {
                 HandleException(ex);
             }
-        }
-
-        private void CalculateTargetGraph(Project project)
-        {
-            ProjectInstance projectInstance;
-            if (!_projectToProjectInstanceMap.TryGetValue(project, out projectInstance))
-            {
-                // if for some reason we weren't able to fish out the project instance from MSBuild,
-                // just add all orphans directly to the project
-                var unparented = project.GetUnparentedTargets();
-                foreach (var orphan in unparented)
-                {
-                    project.TryAddTarget(orphan);
-                }
-
-                return;
-            }
-
-            var targetGraph = new TargetGraph(projectInstance);
-
-            IEnumerable<Target> unparentedTargets = null;
-            while ((unparentedTargets = project.GetUnparentedTargets()).Any())
-            {
-                foreach (var unparentedTarget in unparentedTargets)
-                {
-                    var parents = targetGraph.GetDependents(unparentedTarget.Name);
-                    if (parents != null && parents.Any())
-                    {
-                        foreach (var parent in parents)
-                        {
-                            var parentNode = project.GetOrAddTargetByName(parent, default);
-                            if (parentNode != null && (parentNode.Id != -1 || parentNode.HasChildren))
-                            {
-                                parentNode.TryAddTarget(unparentedTarget);
-                                break;
-                            }
-                        }
-                    }
-
-                    project.TryAddTarget(unparentedTarget);
-                }
-            }
-
-            project.VisitAllChildren<Target>(t =>
-            {
-                if (t.Project == project)
-                {
-                    var dependencies = targetGraph.GetDependencies(t.Name);
-                    if (dependencies != null && dependencies.Any())
-                    {
-                        t.DependsOnTargets = Intern(string.Join(",", dependencies));
-                    }
-                }
-            });
         }
 
         public void ProjectStarted(object sender, ProjectStartedEventArgs args)
@@ -226,9 +205,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 args.BuildReason);
         }
 
-        public static bool ParentAllTargetsUnderProject { get; set; }
-
-        private void AddTargetCore(
+        private Target AddTargetCore(
             BuildEventArgs args,
             string targetName,
             string parentTargetName,
@@ -246,25 +223,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     target.EndTime = target.StartTime; // will properly set later
                     target.ParentTarget = parentTargetName;
                     target.TargetBuiltReason = targetBuiltReason;
-
-                    if (!ParentAllTargetsUnderProject && !string.IsNullOrEmpty(parentTargetName))
-                    {
-                        var parentTarget = project.GetOrAddTargetByName(parentTargetName, args.Timestamp);
-                        parentTarget.TryAddTarget(target);
-                        //project.TryAddTarget(parentTarget);
-                    }
-                    else
-                    {
-                        project.TryAddTarget(target);
-                    }
-
                     target.SourceFilePath = targetFile;
+
+                    project.AddChild(target);
+
+                    return target;
                 }
             }
             catch (Exception ex)
             {
                 HandleException(ex);
             }
+
+            return null;
         }
 
         public void TargetFinished(object sender, TargetFinishedEventArgs args)
@@ -274,7 +245,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 lock (syncLock)
                 {
                     var project = GetOrAddProject(args.BuildEventContext.ProjectContextId);
-                    var target = project.GetTarget(args.TargetName, args.BuildEventContext.TargetId);
+                    var target = project.GetTargetById(args.BuildEventContext.TargetId);
 
                     target.EndTime = args.Timestamp;
                     target.Succeeded = args.Succeeded;
@@ -306,14 +277,54 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private void TargetSkipped(TargetSkippedEventArgs args)
+        public void TargetSkipped(TargetSkippedEventArgs2 args)
         {
-            AddTargetCore(
+            string targetName = Intern(args.TargetName);
+            string messageText = args.Message;
+
+            var originalBuildEventContext = args.OriginalBuildEventContext;
+            var skipReason = args.SkipReason;
+            if ((skipReason == TargetSkipReason.PreviouslyBuiltSuccessfully ||
+                skipReason == TargetSkipReason.PreviouslyBuiltUnsuccessfully) && originalBuildEventContext != null)
+            {
+                var prefix = "Target \"" + targetName + "\" "; // trim the Target Name text since the node will already display that
+                if (messageText.StartsWith(prefix, StringComparison.Ordinal))
+                {
+                    messageText = messageText.Substring(prefix.Length);
+                }
+            }
+
+            messageText = Intern(messageText);
+
+            var target = AddTargetCore(
                 args,
-                Intern(args.TargetName),
+                targetName,
                 Intern(args.ParentTarget),
                 Intern(args.TargetFile),
                 args.BuildReason);
+
+            if (originalBuildEventContext != null && originalBuildEventContext.ProjectContextId != BuildEventContext.InvalidProjectContextId)
+            {
+                var originalProject = GetProject(originalBuildEventContext.ProjectContextId);
+                if (originalProject != null)
+                {
+                    target.ParentTarget = messageText;
+                    var originalTarget = originalProject.GetTargetById(originalBuildEventContext.TargetId);
+                    if (originalTarget != null)
+                    {
+                        target.OriginalNode = originalTarget;
+                    }
+                    else
+                    {
+                        target.OriginalNode = originalProject;
+                    }
+                }
+            }
+            else
+            {
+                var messageNode = new Message { Text = messageText };
+                target.AddChild(messageNode);
+            }
         }
 
         public void TaskStarted(object sender, TaskStartedEventArgs args)
@@ -330,6 +341,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     var task = CreateTask(args);
                     target.AddChild(task);
                     project.OnTaskAdded(task);
+
+                    if (args is TaskStartedEventArgs2 taskStarted2)
+                    {
+                        task.LineNumber = taskStarted2.LineNumber;
+                    }
                 }
             }
             catch (Exception ex)
@@ -365,25 +381,23 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 lock (syncLock)
                 {
-                    if (args is TargetSkippedEventArgs targetSkipped)
+                    if (args is TargetSkippedEventArgs2 targetSkipped)
                     {
                         TargetSkipped(targetSkipped);
                         return;
                     }
 
-                    if (!sawCulture && args.SenderName == "BinaryLogger" && args.Message.StartsWith("CurrentUICulture"))
+                    if (!sawCulture &&
+                        args.SenderName == "BinaryLogger" &&
+                        args.Message is string message &&
+                        message.StartsWith("CurrentUICulture", StringComparison.Ordinal))
                     {
                         sawCulture = true;
-                        int equalsIndex = args.Message.IndexOf("=");
-                        if (equalsIndex > 0 && equalsIndex < args.Message.Length - 1)
+                        var kvp = TextUtilities.ParseNameValue(message);
+                        string culture = kvp.Value;
+                        if (!string.IsNullOrEmpty(culture))
                         {
-                            string culture = args.Message.Substring(equalsIndex + 1, args.Message.Length - 1 - equalsIndex);
-
-                            // read language from log and initialize resource strings
-                            if (!string.IsNullOrEmpty(culture))
-                            {
-                                Strings.Initialize(culture);
-                            }
+                            Strings.Initialize(culture);
                         }
                     }
 
@@ -558,10 +572,27 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         parent = Build;
                     }
 
-                    var warnings = parent.GetOrCreateNodeWithName<Folder>(Intern("Warnings"));
                     var warning = new Warning();
-                    Populate(warning, args);
-                    warnings.AddChild(warning);
+
+                    string text = args.Message;
+
+                    if (parent is ResolveAssemblyReferenceTask rar)
+                    {
+                        var match = Strings.IsFoundConflicts(text);
+                        if (match.Success)
+                        {
+                            string details = match.Groups[2].Value;
+                            // https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/443
+                            ItemGroupParser.ParseThereWasAConflict(warning, details, stringTable);
+                            text = text.GetFirstLine();
+                        }
+                    }
+
+                    parent = parent.GetOrCreateNodeWithName<Folder>(Strings.Warnings);
+
+                    Populate(warning, args, text);
+
+                    parent.AddChild(warning);
                 }
             }
             catch (Exception ex)
@@ -635,9 +666,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private void Populate(AbstractDiagnostic message, BuildWarningEventArgs args)
+        private void Populate(AbstractDiagnostic message, BuildWarningEventArgs args, string text)
         {
-            message.Text = Intern(args.Message);
+            message.Text = Intern(text);
             message.Timestamp = args.Timestamp;
             message.Code = Intern(args.Code);
             message.ColumnNumber = args.ColumnNumber;
@@ -712,6 +743,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return result;
         }
 
+        public Project GetProject(int projectId)
+        {
+            _projectIdToProjectMap.TryGetValue(projectId, out var result);
+            return result;
+        }
+
+        public Target GetTarget(int projectId, int targetId)
+        {
+            if (!_projectIdToProjectMap.TryGetValue(projectId, out var project))
+            {
+                return null;
+            }
+
+            return project.GetTargetById(targetId);
+        }
+
         /// <summary>
         /// Try to update the project data given a project started event. This is useful if the project
         /// was created (e.g. as a parent) before we saw the started event.
@@ -763,6 +810,40 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        public static void AddMetadata(ITaskItem item, Item itemNode)
+        {
+            if (item.CloneCustomMetadata() is ArrayDictionary<string, string> metadata)
+            {
+                int count = metadata.Count;
+                if (count == 0)
+                {
+                    return;
+                }
+
+                itemNode.EnsureChildrenCapacity(count);
+
+                var keys = metadata.KeyArray;
+                var values = metadata.ValueArray;
+
+                for (int i = 0; i < count; i++)
+                {
+                    var key = keys[i];
+                    var value = values[i];
+
+                    var metadataNode = new Metadata
+                    {
+                        Name = key,
+                        Value = value
+                    };
+
+                    // hot path, do not use AddChild
+                    // itemNode.AddChild(metadataNode);
+                    itemNode.Children.Add(metadataNode);
+                    metadataNode.Parent = itemNode;
+                }
+            }
+        }
+
         private void AddItems(TreeNode parent, IEnumerable itemList)
         {
             if (itemList == null)
@@ -771,29 +852,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             var itemsNode = parent.GetOrCreateNodeWithName<Folder>(Strings.Items, addAtBeginning: true);
-            foreach (DictionaryEntry kvp in itemList.OfType<DictionaryEntry>().OrderBy(i => i.Key))
+            foreach (DictionaryEntry kvp in itemList)
             {
-                var itemType = Intern(Convert.ToString(kvp.Key));
-                var itemTypeNode = itemsNode.GetOrCreateNodeWithName<Folder>(itemType);
+                var itemType = SoftIntern(Convert.ToString(kvp.Key));
+                var itemTypeNode = itemsNode.GetOrCreateNodeWithName<AddItem>(itemType);
 
                 var itemNode = new Item();
 
-                var taskItem = kvp.Value as ITaskItem;
-                if (taskItem != null)
+                if (kvp.Value is ITaskItem taskItem)
                 {
-                    itemNode.Text = Intern(taskItem.ItemSpec);
-                    foreach (DictionaryEntry metadataName in taskItem.CloneCustomMetadata())
-                    {
-                        itemNode.AddChild(new Metadata
-                        {
-                            Name = Intern(Convert.ToString(metadataName.Key)),
-                            Value = Intern(Convert.ToString(metadataName.Value))
-                        });
-                    }
-
+                    itemNode.Text = SoftIntern(taskItem.ItemSpec);
+                    AddMetadata(taskItem, itemNode);
                     itemTypeNode.AddChild(itemNode);
                 }
             }
+
+            itemsNode.SortChildren();
         }
 
         private void AddProperties(TreeNode project, IEnumerable properties)
@@ -808,7 +882,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             AddProperties(
                 propertiesFolder,
-                list.OrderBy(d => d.Key),
+                list.OrderBy(d => d.Key, StringComparer.Ordinal),
                 project as IProjectOrEvaluation);
         }
 
@@ -900,25 +974,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var taskId = taskStartedEventArgs.BuildEventContext.TaskId;
             var startTime = taskStartedEventArgs.Timestamp;
 
-            Task result;
-            switch (taskName)
+            Task result = taskName.ToLowerInvariant() switch
             {
-                case "Copy":
-                    result = new CopyTask();
-                    break;
-                case "Csc":
-                    result = new CscTask();
-                    break;
-                case "Vbc":
-                    result = new VbcTask();
-                    break;
-                case "Fsc":
-                    result = new FscTask();
-                    break;
-                default:
-                    result = new Task();
-                    break;
-            }
+                "copy" => new CopyTask(),
+                "csc" => new CscTask(),
+                "vbc" => new VbcTask(),
+                "fsc" => new FscTask(),
+                "resolveassemblyreference" => new ResolveAssemblyReferenceTask(),
+                _ => new Task(),
+            };
 
             result.Name = taskName;
             result.Id = taskId;
@@ -987,22 +1051,28 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
+            if (properties is ICollection collection)
+            {
+                parent.EnsureChildrenCapacity(collection.Count);
+            }
+
             foreach (var kvp in properties)
             {
                 var property = new Property
                 {
-                    Name = Intern(kvp.Key),
-                    Value = Intern(kvp.Value)
+                    Name = SoftIntern(kvp.Key),
+                    Value = SoftIntern(kvp.Value)
                 };
-                parent.AddChild(property);
+                parent.Children.Add(property); // don't use AddChild for performance
+                property.Parent = parent;
 
                 if (project != null)
                 {
-                    if (kvp.Key == Strings.TargetFramework)
+                    if (string.Equals(kvp.Key, Strings.TargetFramework, StringComparison.OrdinalIgnoreCase))
                     {
                         project.TargetFramework = kvp.Value;
                     }
-                    else if (kvp.Key == Strings.TargetFrameworks)
+                    else if (string.Equals(kvp.Key, Strings.TargetFrameworks, StringComparison.OrdinalIgnoreCase))
                     {
                         // we want TargetFramework to take precedence over TargetFrameworks when both are present
                         if (string.IsNullOrEmpty(project.TargetFramework) && !string.IsNullOrEmpty(kvp.Value))

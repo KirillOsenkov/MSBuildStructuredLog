@@ -136,6 +136,32 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 .ToArray();
         }
 
+        public static string GetFirstLine(this string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return text;
+            }
+
+            int cr = text.IndexOf('\r');
+            int lf = text.IndexOf('\n');
+            if (cr >= 0)
+            {
+                if (lf >= 0 && lf < cr)
+                {
+                    cr = lf;
+                }
+
+                text = text.Substring(0, cr);
+            }
+            else if (lf >= 0)
+            {
+                text = text.Substring(0, lf);
+            }
+
+            return text;
+        }
+
         /// <summary>
         /// Splits a string into words by spaces, keeping quoted strings as a single token
         /// </summary>
@@ -215,6 +241,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return c == '\r' || c == '\n';
         }
 
+        public static string NormalizeLineBreaks(this string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return text;
+            }
+
+            text = text.Replace("\r\n", "\n");
+            text = text.Replace("\r", "\n");
+
+            return text;
+        }
+
         public static string TrimQuotes(this string word)
         {
             if (word != null && word.Length > 2 && word[0] == '"' && word[word.Length - 1] == '"')
@@ -256,7 +295,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             int newLength = maxChars;
-            int lineBreak = text.IndexOf('\n');
+            int lineBreak = text.IndexOfFirstLineBreak();
             if (lineBreak == -1)
             {
                 if (text.Length <= newLength)
@@ -273,6 +312,25 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             return text.Substring(0, newLength) + trimPrompt;
+        }
+
+        public static int IndexOfFirstLineBreak(this string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return -1;
+            }
+
+            for (int i = 0; i < text.Length; i++)
+            {
+                char ch = text[i];
+                if (ch == '\r' || ch == '\n')
+                {
+                    return i;
+                }
+            }
+
+            return -1;
         }
 
         public static KeyValuePair<string, string> ParseNameValue(string largeText, Span span)

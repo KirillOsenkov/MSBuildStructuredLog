@@ -36,6 +36,8 @@ namespace ResourcesGenerator
             "ResolveAssemblyReference.Dependency",
             "ResolveAssemblyReference.UnifiedDependency",
             "ResolveAssemblyReference.AssemblyFoldersExSearchLocations",
+            "ResolveAssemblyReference.ConflictFound",
+            "ResolveAssemblyReference.FoundConflicts",
             "General.GlobalProperties",
             "General.AdditionalProperties",
             "General.OverridingProperties",
@@ -72,7 +74,10 @@ namespace ResourcesGenerator
             "ProjectImportSkippedInvalidFile",
             "PropertyReassignment",
             "EvaluationStarted",
-            "EvaluationFinished"
+            "EvaluationFinished",
+            "CouldNotResolveSdk",
+            "ProjectImportSkippedExpressionEvaluatedToEmpty",
+            "SkipTargetBecauseOutputsUpToDate"
         };
 
         public static Dictionary<string, string> Cultures = new Dictionary<string, string>
@@ -94,14 +99,14 @@ namespace ResourcesGenerator
 
         public static void CreateResourceFile(string msbuildPath)
         {
-            var CultureResources = new ResourcesDictionary();
+            var cultureResources = new ResourcesDictionary();
 
             foreach (KeyValuePair<string, string> culture in Cultures)
             {
                 var cultureInfo = CultureInfo.GetCultureInfo(culture.Value);
 
                 Dictionary<string, string> resourcesByCulture = new Dictionary<string, string>();
-                CultureResources.Add(culture.Value, resourcesByCulture);
+                cultureResources.Add(culture.Value, resourcesByCulture);
 
                 foreach (string dll in msBuildDlls)
                 {
@@ -114,7 +119,13 @@ namespace ResourcesGenerator
                         if (index > -1)
                         {
                             var resourceManager = new ResourceManager(manifestResourceName.Substring(0, index), assembly);
-                            var myResourceSet = resourceManager.GetResourceSet(cultureInfo, createIfNotExists: true, tryParents: true);
+                            bool tryParents = true;
+                            if (manifestResourceName == "System.Design.resources")
+                            {
+                                tryParents = false;
+                            }
+
+                            var myResourceSet = resourceManager.GetResourceSet(cultureInfo, createIfNotExists: true, tryParents: tryParents);
                             if (myResourceSet != null)
                             {
                                 foreach (DictionaryEntry res in myResourceSet)
@@ -134,7 +145,7 @@ namespace ResourcesGenerator
                 }
             }
 
-            Save(CultureResources);
+            Save(cultureResources);
         }
 
         private static void Save(ResourcesDictionary collection)

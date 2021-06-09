@@ -10,7 +10,7 @@ namespace StructuredLogViewer
     public class TypingConcurrentOperation
     {
         public ExecuteSearchFunc ExecuteSearch;
-        public event Action<object, bool> DisplayResults;
+        public event Action<object, bool, CancellationToken> DisplayResults;
         public event Action<string, object, TimeSpan> SearchComplete;
 
         public const int ThrottlingDelayMilliseconds = 300;
@@ -95,7 +95,7 @@ namespace StructuredLogViewer
             if (!cts.Token.IsCancellationRequested)
             {
                 SearchComplete?.Invoke(localSearchText, results, elapsed);
-                DisplayResults?.Invoke(results, moreAvailable);
+                DisplayResults?.Invoke(results, moreAvailable, cts.Token);
             }
         }
     }

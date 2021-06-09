@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Runtime.CompilerServices;
 using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.BackEnd
@@ -13,14 +15,18 @@ namespace Microsoft.Build.BackEnd
             string itemType,
             IList items,
             bool logItemMetadata,
-            DateTime timestamp)
+            DateTime timestamp,
+            int line,
+            int column)
         {
             var args = new TaskParameterEventArgs(
                 messageKind,
                 itemType,
                 items,
                 logItemMetadata,
-                timestamp);
+                timestamp,
+                line,
+                column);
             args.BuildEventContext = buildEventContext;
             return args;
         }
@@ -123,5 +129,80 @@ namespace Microsoft.Build.Internal
 
             return list;
         }
+
+        public static bool EqualTo(this BuildEventContext buildEventContext, BuildEventContext other)
+        {
+            if (object.ReferenceEquals(buildEventContext, other))
+            {
+                return true;
+            }
+
+            if (buildEventContext == null || other == null)
+            {
+                return false;
+            }
+
+            return buildEventContext.TaskId == other.TaskId
+                && buildEventContext.TargetId == other.TargetId
+                && buildEventContext.ProjectContextId == other.ProjectContextId
+                && buildEventContext.ProjectInstanceId == other.ProjectInstanceId
+                && buildEventContext.NodeId == other.NodeId
+                && buildEventContext.EvaluationId == other.EvaluationId
+                && buildEventContext.SubmissionId == other.SubmissionId;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static BuildEventContext ReadOptionalBuildEventContext(this BinaryReader reader)
+        {
+            if (reader.ReadByte() == 0)
+            {
+                return null;
+            }
+
+            return reader.ReadBuildEventContext();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static BuildEventContext ReadBuildEventContext(this BinaryReader reader)
+        {
+            int nodeId = reader.ReadInt32();
+            int projectContextId = reader.ReadInt32();
+            int targetId = reader.ReadInt32();
+            int taskId = reader.ReadInt32();
+            int submissionId = reader.ReadInt32();
+            int projectInstanceId = reader.ReadInt32();
+            int evaluationId = reader.ReadInt32();
+
+            var buildEventContext = new BuildEventContext(submissionId, nodeId, evaluationId, projectInstanceId, projectContextId, targetId, taskId);
+            return buildEventContext;
+        }
+    }
+}
+
+namespace Microsoft.Build.Shared
+{
+    internal static class ItemTypeNames
+    {
+        /// <summary>
+        /// References to other msbuild projects
+        /// </summary>
+        internal const string ProjectReference = nameof(ProjectReference);
+
+        /// <summary>
+        /// Statically specifies what targets a project calls on its references
+        /// </summary>
+        internal const string ProjectReferenceTargets = nameof(ProjectReferenceTargets);
+
+        internal const string GraphIsolationExemptReference = nameof(GraphIsolationExemptReference);
+
+        /// <summary>
+        /// Declares a project cache plugin and its configuration.
+        /// </summary>
+        internal const string ProjectCachePlugin = nameof(ProjectCachePlugin);
+
+        /// <summary>
+        /// Embed specified files in the binary log
+        /// </summary>
+        internal const string EmbedInBinlog = nameof(EmbedInBinlog);
     }
 }

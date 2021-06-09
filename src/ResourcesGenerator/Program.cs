@@ -19,6 +19,8 @@ namespace ResourcesGenerator
                 instances.FirstOrDefault();
             var msbuildPath = instance?.MSBuildPath;
 
+            // msbuildPath = @"C:\msbuild\artifacts\bin\bootstrap\net472\MSBuild\Current\Bin";
+
             if (msbuildPath == null)
             {
                 string defaultMSBuild = Path.Combine(

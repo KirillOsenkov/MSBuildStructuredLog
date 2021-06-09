@@ -45,11 +45,11 @@ namespace StructuredLogViewer.Avalonia
         public MainWindow()
         {
             InitializeComponent();
-
+#if DEBUG
             this.AttachDevTools();
+#endif
 
             TemplateApplied += MainWindow_Loaded;
-            Construction.ParentAllTargetsUnderProject = SettingsService.ParentAllTargetsUnderProject;
         }
 
         private void InitializeComponent()
@@ -302,7 +302,7 @@ namespace StructuredLogViewer.Avalonia
             UpdateRecentItemsMenu();
             Title = filePath + " - " + DefaultTitle;
 
-            var progress = new BuildProgress();
+            var progress = new BuildProgress() { IsIndeterminate = true };
             progress.ProgressText = "Opening " + filePath + "...";
             SetContent(progress);
 
@@ -363,7 +363,7 @@ namespace StructuredLogViewer.Avalonia
 
             string customArguments = SettingsService.GetCustomArguments(filePath);
             var parametersScreen = new BuildParametersScreen();
-            //parametersScreen.BrowseForMSBuild += async () => await BrowseForMSBuildExe();
+            parametersScreen.BrowseForMSBuildRequsted += BrowseForMSBuildExe;
             parametersScreen.PrefixArguments = filePath.QuoteIfNeeded();
             parametersScreen.MSBuildArguments = customArguments;
             parametersScreen.PostfixArguments = HostedBuild.GetPostfixArguments();
@@ -375,6 +375,7 @@ namespace StructuredLogViewer.Avalonia
             };
             parametersScreen.CancelRequested += () =>
             {
+                parametersScreen.SaveSelectedMSBuild();
                 DisplayWelcomeScreen();
             };
             SetContent(parametersScreen);
@@ -382,7 +383,7 @@ namespace StructuredLogViewer.Avalonia
 
         private async void BuildCore(string projectFilePath, string customArguments)
         {
-            var progress = new BuildProgress();
+            var progress = new BuildProgress() { IsIndeterminate = true };
             progress.ProgressText = $"Building {projectFilePath}...";
             SetContent(progress);
             var buildHost = new HostedBuild(projectFilePath, customArguments);
@@ -408,7 +409,7 @@ namespace StructuredLogViewer.Avalonia
             openFileDialog.Filters.Add(new FileDialogFilter { Name = "Build Log (*.binlog;*.buildlog;*.xml)", Extensions = { "binlog", "buildlog", "xml" } });
             openFileDialog.Title = "Open a build log file";
             var result = await openFileDialog.ShowAndGetFileAsync(this);
-            if (result == null || !File.Exists(result))
+            if (!File.Exists(result))
             {
                 return;
             }
@@ -422,7 +423,7 @@ namespace StructuredLogViewer.Avalonia
             openFileDialog.Filters.Add(new FileDialogFilter { Name = "MSBuild projects and solutions (*.sln;*.*proj)", Extensions = { "sln", "*proj" } });
             openFileDialog.Title = "Open a solution or project";
             var result = await openFileDialog.ShowAndGetFileAsync(this);
-            if (result == null || !File.Exists(result))
+            if (!File.Exists(result))
             {
                 return;
             }
@@ -561,12 +562,19 @@ namespace StructuredLogViewer.Avalonia
         {
             var openFileDialog = new OpenFileDialog
             {
-                Filters = { new FileDialogFilter { Name = "MSBuild", Extensions = { "MSBuild.exe" } } },
-                Title = "Select MSBuild.exe location",
+                Filters = { new FileDialogFilter { Name = "MSBuild (.dll;.exe)", Extensions = {"dll", "exe"} } },
+                Title = "Select MSBuild file location",
             };
 
             var fileName = await openFileDialog.ShowAndGetFileAsync(this);
-            if (fileName != null)
+            if (!File.Exists(fileName))
+            {
+                return;
+            }
+
+            var isMsBuild = fileName.EndsWith("MSBuild.dll", StringComparison.OrdinalIgnoreCase)
+                         || fileName.EndsWith("MSBuild.exe", StringComparison.OrdinalIgnoreCase);
+            if (!isMsBuild)
             {
                 return;
             }

@@ -62,7 +62,7 @@ namespace StructuredLogViewer
 
         public static bool LooksLikeXml(string text)
         {
-            if (string.IsNullOrEmpty(text))
+            if (string.IsNullOrWhiteSpace(text))
             {
                 return false;
             }

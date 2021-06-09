@@ -1,23 +1,25 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFrameworks>net472;net5.0-windows</TargetFrameworks>
     <OutputType>WinExe</OutputType>
     <UseWPF>true</UseWPF>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
     <Prefer32Bit Condition="$(Prefer32Bit)==''">false</Prefer32Bit>
     <ApplicationIcon>StructuredLogger.ico</ApplicationIcon>
-    <NuspecFileName>MSBuildStructuredLogViewer</NuspecFileName>
-    <ChocolateyFileName>msbuild-structured-log-viewer</ChocolateyFileName>
     <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
     <Company>Microsoft</Company>
     <Product>MSBuild Structured Log Viewer</Product>
     <AssemblyTitle>MSBuild Structured Log Viewer</AssemblyTitle>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net472'">
+    <NuspecFileName>MSBuildStructuredLogViewer</NuspecFileName>
+    <ChocolateyFileName>msbuild-structured-log-viewer</ChocolateyFileName>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AdonisUI" Version="1.16.0" />
     <PackageReference Include="AdonisUI.ClassicTheme" Version="1.16.0" />
     <PackageReference Include="AvalonEdit" Version="6.0.1" />
-    <PackageReference Include="Microsoft.Build.Locator" Version="1.2.6" ExcludeAssets="build" />
+    <PackageReference Include="Microsoft.Build.Locator" Version="1.4.1" ExcludeAssets="build" />
     <PackageReference Include="Nerdbank.GitVersioning" Version="$(NuGetVersionNerdbankGitVersioning)" PrivateAssets="all" />
     <PackageReference Include="squirrel.windows" Version="1.4.4" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />

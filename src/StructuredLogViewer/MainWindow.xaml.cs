@@ -40,8 +40,6 @@ namespace StructuredLogViewer
 
             ThemeManager.UseDarkTheme = SettingsService.UseDarkTheme;
             ThemeManager.UpdateTheme();
-
-            Construction.ParentAllTargetsUnderProject = SettingsService.ParentAllTargetsUnderProject;
         }
 
         protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
@@ -393,6 +391,13 @@ namespace StructuredLogViewer
             Title = filePath + " - " + DefaultTitle;
 
             var progress = new BuildProgress();
+            progress.Progress.Updated += update =>
+            {
+                Dispatcher.InvokeAsync(() =>
+                {
+                    progress.Value = update.Ratio;
+                }, DispatcherPriority.Background);
+            };
             progress.ProgressText = "Opening " + filePath + "...";
             SetContent(progress);
 
@@ -404,7 +409,7 @@ namespace StructuredLogViewer
             {
                 try
                 {
-                    return Serialization.Read(filePath);
+                    return Serialization.Read(filePath, progress.Progress);
                 }
                 catch (Exception ex)
                 {
@@ -480,7 +485,7 @@ namespace StructuredLogViewer
 
         private async void BuildCore(string projectFilePath, string customArguments, string searchText = null)
         {
-            var progress = new BuildProgress();
+            var progress = new BuildProgress { IsIndeterminate = true };
             progress.ProgressText = $"Building {projectFilePath}...";
             SetContent(progress);
             var buildHost = new HostedBuild(projectFilePath, customArguments);
@@ -720,12 +725,12 @@ namespace StructuredLogViewer
 
         private void HelpLink_Click(object sender, RoutedEventArgs e)
         {
-            Process.Start("https://github.com/KirillOsenkov/MSBuildStructuredLog");
+            Process.Start(new ProcessStartInfo("https://github.com/KirillOsenkov/MSBuildStructuredLog") { UseShellExecute = true });
         }
 
         private void HelpLink2_Click(object sender, RoutedEventArgs e)
         {
-            Process.Start("https://msbuildlog.com");
+            Process.Start(new ProcessStartInfo("http://msbuildlog.com") { UseShellExecute = true });
         }
 
         private void HelpAbout_Click(object sender, RoutedEventArgs e)

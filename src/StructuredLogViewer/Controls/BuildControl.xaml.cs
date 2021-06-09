@@ -15,6 +15,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using System.Xml;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Language.Xml;
 
@@ -44,7 +45,8 @@ namespace StructuredLogViewer.Controls
         private MenuItem sortChildrenItem;
         private MenuItem copyNameItem;
         private MenuItem copyValueItem;
-        private MenuItem viewItem;
+        private MenuItem viewSourceItem;
+        private MenuItem viewFullTextItem;
         private MenuItem openFileItem;
         private MenuItem copyFilePathItem;
         private MenuItem preprocessItem;
@@ -66,7 +68,13 @@ namespace StructuredLogViewer.Controls
 
             searchLogControl.ExecuteSearch = (searchText, maxResults, cancellationToken) =>
             {
-                var search = new Search(new[] { Build }, Build.StringTable.Instances, maxResults, SettingsService.MarkResultsInTree);
+                var search = new Search(
+                    new[] { Build },
+                    Build.StringTable.Instances,
+                    maxResults,
+                    SettingsService.MarkResultsInTree
+                    //, Build.StringTable // disable validation in production
+                    );
                 var results = search.FindNodes(searchText, cancellationToken);
                 return results;
             };
@@ -203,7 +211,8 @@ namespace StructuredLogViewer.Controls
             sortChildrenItem = new MenuItem() { Header = "Sort children" };
             copyNameItem = new MenuItem() { Header = "Copy name" };
             copyValueItem = new MenuItem() { Header = "Copy value" };
-            viewItem = new MenuItem() { Header = "View" };
+            viewSourceItem = new MenuItem() { Header = "View source" };
+            viewFullTextItem = new MenuItem { Header = "View full text" };
             showTimeItem = new MenuItem() { Header = "Show time and duration" };
             openFileItem = new MenuItem() { Header = "Open File" };
             copyFilePathItem = new MenuItem() { Header = "Copy file path" };
@@ -221,7 +230,8 @@ namespace StructuredLogViewer.Controls
             sortChildrenItem.Click += (s, a) => SortChildren();
             copyNameItem.Click += (s, a) => CopyName();
             copyValueItem.Click += (s, a) => CopyValue();
-            viewItem.Click += (s, a) => Invoke(treeView.SelectedItem as BaseNode);
+            viewSourceItem.Click += (s, a) => Invoke(treeView.SelectedItem as BaseNode);
+            viewFullTextItem.Click += (s, a) => ViewFullText(treeView.SelectedItem as BaseNode);
             showTimeItem.Click += (s, a) => ShowTimeAndDuration();
             openFileItem.Click += (s, a) => OpenFile();
             copyFilePathItem.Click += (s, a) => CopyFilePath();
@@ -232,7 +242,8 @@ namespace StructuredLogViewer.Controls
 
             contextMenu.Items.Add(runItem);
             contextMenu.Items.Add(debugItem);
-            contextMenu.Items.Add(viewItem);
+            contextMenu.Items.Add(viewSourceItem);
+            contextMenu.Items.Add(viewFullTextItem);
             contextMenu.Items.Add(openFileItem);
             contextMenu.Items.Add(preprocessItem);
             contextMenu.Items.Add(searchInSubtreeItem);
@@ -304,6 +315,9 @@ on the node will navigate to the corresponding source code associated with the n
 More functionality is available from the right-click context menu for each node.
 Right-clicking a project node may show the 'Preprocess' option if the version of MSBuild was at least 15.3.";
                 build.Unseal();
+#if DEBUG
+                text = build.StringTable.Intern(text);
+#endif
                 build.AddChild(new Note { Text = text });
                 build.Seal();
             }
@@ -422,7 +436,10 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                 }
                 else if (item is Target || item is Task)
                 {
-                    if (string.IsNullOrEmpty(text) || item.Name.IndexOf(text, StringComparison.OrdinalIgnoreCase) > -1)
+                    if (string.IsNullOrEmpty(text) ||
+                        item.Name.IndexOf(text, StringComparison.OrdinalIgnoreCase) > -1 ||
+                        (text == "$target" && item is Target) ||
+                        (text == "$task" && item is Task))
                     {
                         visible = true;
                         item.IsVisible = true;
@@ -673,7 +690,7 @@ Recent:
 
             try
             {
-                Process.Start(taskRunner.QuoteIfNeeded(), $"{logFilePath} {task.Index} pause{(debug ? " debug" : "")}");
+                Process.Start(taskRunner.QuoteIfNeeded(), $"{logFilePath.QuoteIfNeeded()} {task.Index} pause{(debug ? " debug" : "")}");
             }
             catch (Exception ex)
             {
@@ -687,9 +704,12 @@ Recent:
             var visibility = node is NameValueNode ? Visibility.Visible : Visibility.Collapsed;
             copyNameItem.Visibility = visibility;
             copyValueItem.Visibility = visibility;
-            viewItem.Visibility = CanView(node) ? Visibility.Visible : Visibility.Collapsed;
+            viewSourceItem.Visibility = CanView(node) ? Visibility.Visible : Visibility.Collapsed;
+            viewFullTextItem.Visibility = HasFullText(node) ? Visibility.Visible : Visibility.Collapsed;
             openFileItem.Visibility = CanOpenFile(node) ? Visibility.Visible : Visibility.Collapsed;
-            copyFilePathItem.Visibility = node is IHasSourceFile ? Visibility.Visible : Visibility.Collapsed;
+            copyFilePathItem.Visibility = node is Import || (node is IHasSourceFile file && !string.IsNullOrEmpty(file.SourceFilePath))
+                ? Visibility.Visible
+                : Visibility.Collapsed;
             var hasChildren = node is TreeNode t && t.HasChildren;
             copySubtreeItem.Visibility = hasChildren ? Visibility.Visible : Visibility.Collapsed;
             viewSubtreeTextItem.Visibility = copySubtreeItem.Visibility;
@@ -775,6 +795,8 @@ Recent:
             return root.Children;
         }
 
+        private string filePathSeparator;
+
         private void PopulateFilesTab()
         {
             var root = new Folder();
@@ -796,6 +818,8 @@ Recent:
                     };
                     sourceFile.AddChild(task);
                 }
+
+                sourceFile.SortChildren();
             }
 
             foreach (var subFolder in root.Children.OfType<Folder>())
@@ -810,6 +834,18 @@ Recent:
 
         private SourceFile AddSourceFile(Folder folder, string filePath)
         {
+            if (filePathSeparator == null)
+            {
+                if (filePath.Contains(":") || (!filePath.StartsWith("\\") && !filePath.StartsWith("/")))
+                {
+                    filePathSeparator = "\\";
+                }
+                else
+                {
+                    filePathSeparator = "/";
+                }
+            }
+
             var parts = filePath.Split('\\', '/');
             return AddSourceFile(folder, filePath, parts, 0);
         }
@@ -826,7 +862,12 @@ Recent:
                     parent.Children.Add(grandChild);
                 }
 
-                parent.Name = Path.Combine(parent.Name, subfolder.Name);
+                if (filePathSeparator == null)
+                {
+                    filePathSeparator = "\\";
+                }
+
+                parent.Name = parent.Name + filePathSeparator + subfolder.Name;
                 CompressTree(parent);
             }
             else
@@ -842,7 +883,7 @@ Recent:
         {
             if (index == parts.Length - 1)
             {
-                var file = new SourceFile()
+                var file = new SourceFile
                 {
                     SourceFilePath = filePath,
                     Name = parts[index]
@@ -850,19 +891,29 @@ Recent:
 
                 foreach (var target in GetTargets(filePath))
                 {
-                    file.AddChild(new Target()
+                    file.AddChild(new Target
                     {
                         Name = target,
                         SourceFilePath = filePath
                     });
                 }
 
+                file.SortChildren();
+
                 folder.AddChild(file);
                 return file;
             }
             else
             {
-                var subfolder = folder.GetOrCreateNodeWithName<Folder>(parts[index]);
+                var folderName = parts[index];
+
+                // root of the Mac file system
+                if (string.IsNullOrEmpty(folderName) && index == 0)
+                {
+                    folderName = "/";
+                }
+
+                var subfolder = folder.GetOrCreateNodeWithName<Folder>(folderName);
                 subfolder.IsExpanded = true;
                 return AddSourceFile(subfolder, filePath, parts, index + 1);
             }
@@ -870,14 +921,21 @@ Recent:
 
         private IEnumerable<string> GetTargets(string file)
         {
-            if (file.EndsWith(".targets") == false)
+            if (file.EndsWith(".sln", StringComparison.OrdinalIgnoreCase) ||
+                file.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
             {
                 yield break;
             }
 
             var content = sourceFileResolver.GetSourceFileText(file);
+            if (content == null)
+            {
+                yield break;
+            }
+
             var contentText = content.Text;
-            if (string.IsNullOrWhiteSpace(contentText))
+
+            if (!Utilities.LooksLikeXml(contentText))
             {
                 yield break;
             }
@@ -977,14 +1035,14 @@ Recent:
             var project = node.GetNearestParentOrSelf<Project>();
             if (project != null)
             {
-                if (project.FindChild<Folder>(Strings.Items) != null)
+                if (project.FindChild<Folder>(Strings.Items) != null || project.FindChild<Folder>(Strings.Properties) != null)
                 {
                     SetProjectContext(project);
                     return;
                 }
 
                 projectEvaluation = Build.FindEvaluation(project.EvaluationId);
-                if (projectEvaluation != null && projectEvaluation.FindChild<Folder>(Strings.Items) != null)
+                if (projectEvaluation != null && (projectEvaluation.FindChild<Folder>(Strings.Items) != null || projectEvaluation.FindChild<Folder>(Strings.Properties) != null))
                 {
                     SetProjectContext(projectEvaluation);
                     return;
@@ -995,7 +1053,7 @@ Recent:
             }
 
             projectEvaluation = node.GetNearestParentOrSelf<ProjectEvaluation>();
-            if (projectEvaluation != null && projectEvaluation.FindChild<Folder>(Strings.Items) != null)
+            if (projectEvaluation != null && (projectEvaluation.FindChild<Folder>(Strings.Items) != null || projectEvaluation.FindChild<Folder>(Strings.Properties) != null))
             {
                 SetProjectContext(projectEvaluation);
                 return;
@@ -1427,7 +1485,7 @@ Recent:
                 var treeNode = GetNode(args);
                 if (treeNode != null)
                 {
-                    args.Handled = Invoke(treeNode);
+                    args.Handled = Invoke(treeNode) || ViewFullText(treeNode);
                 }
             }
 
@@ -1452,7 +1510,7 @@ Recent:
             var node = GetNode(args);
             if (node != null)
             {
-                args.Handled = Invoke(node);
+                args.Handled = Invoke(node) || ViewFullText(node);
             }
         }
 
@@ -1470,14 +1528,36 @@ Recent:
                 || node is Project
                 || (node is Target t && t.SourceFilePath != null && sourceFileResolver.HasFile(t.SourceFilePath))
                 || (node is Task task && task.Parent is Target parentTarget && sourceFileResolver.HasFile(parentTarget.SourceFilePath))
-                || (node is IHasSourceFile ihsf && ihsf.SourceFilePath != null && sourceFileResolver.HasFile(ihsf.SourceFilePath))
-                || (node is NameValueNode nvn && nvn.IsValueShortened)
+                || (node is IHasSourceFile ihsf && ihsf.SourceFilePath != null && sourceFileResolver.HasFile(ihsf.SourceFilePath));
+        }
+
+        private bool HasFullText(BaseNode node)
+        {
+            return (node is NameValueNode nvn && nvn.IsValueShortened)
                 || (node is TextNode tn && tn.IsTextShortened);
         }
 
         private bool CanOpenFile(BaseNode node)
         {
             return node is Import i && sourceFileResolver.HasFile(i.ImportedProjectFilePath);
+        }
+
+        private bool ViewFullText(BaseNode treeNode)
+        {
+            if (treeNode == null)
+            {
+                return false;
+            }
+
+            switch (treeNode)
+            {
+                case NameValueNode nameValueNode when nameValueNode.IsValueShortened:
+                    return DisplayText(nameValueNode.Value, nameValueNode.Name);
+                case TextNode textNode when textNode.IsTextShortened:
+                    return DisplayText(textNode.Text, textNode.Name ?? textNode.GetType().Name);
+                default:
+                    return false;
+            }
         }
 
         private bool Invoke(BaseNode treeNode)
@@ -1503,16 +1583,15 @@ Recent:
                             return DisplayFile(path, diagnostic.LineNumber, diagnostic.ColumnNumber);
                         }
 
-                        if (diagnostic.IsTextShortened)
-                        {
-                            return DisplayText(diagnostic.Text, diagnostic.GetType().Name);
-                        }
-
                         break;
                     case Target target:
                         return DisplayTarget(target.SourceFilePath, target.Name);
                     case Task task:
-                        return DisplayTask(task.SourceFilePath, task.Parent, task.Name);
+                        return DisplayTask(task);
+                    case AddItem addItem:
+                        return DisplayAddRemoveItem(addItem.Parent, addItem.LineNumber ?? 0);
+                    case RemoveItem removeItem:
+                        return DisplayAddRemoveItem(removeItem.Parent, removeItem.LineNumber ?? 0);
                     case IHasSourceFile hasSourceFile when hasSourceFile.SourceFilePath != null:
                         int line = 0;
                         var hasLine = hasSourceFile as IHasLineNumber;
@@ -1531,10 +1610,6 @@ Recent:
                         return DisplayFile(hasSourceFile.SourceFilePath, line, evaluation: evaluation);
                     case SourceFileLine sourceFileLine when sourceFileLine.Parent is SourceFile sourceFile && sourceFile.SourceFilePath != null:
                         return DisplayFile(sourceFile.SourceFilePath, sourceFileLine.LineNumber);
-                    case NameValueNode nameValueNode when nameValueNode.IsValueShortened:
-                        return DisplayText(nameValueNode.Value, nameValueNode.Name);
-                    case TextNode textNode when textNode.IsTextShortened:
-                        return DisplayText(textNode.Text, textNode.Name ?? textNode.GetType().Name);
                     default:
                         return false;
                 }
@@ -1574,12 +1649,30 @@ Recent:
             return true;
         }
 
-        private bool DisplayTask(string sourceFilePath, TreeNode parent, string name)
+        private bool DisplayAddRemoveItem(TreeNode parent, int line)
         {
-            Target target = parent as Target;
-            if (target == null)
+            if (parent is not Target target)
+            {
+                return false;
+            }
+
+            string sourceFilePath = target.SourceFilePath;
+            return DisplayFile(sourceFilePath, line);
+        }
+
+        private bool DisplayTask(Task task)
+        {
+            var sourceFilePath = task.SourceFilePath;
+            var parent = task.Parent;
+            var name = task.Name;
+            if (parent is not Target target)
             {
                 return DisplayFile(sourceFilePath);
+            }
+
+            if (task.LineNumber.HasValue && task.LineNumber.Value > 0)
+            {
+                return DisplayFile(sourceFilePath, task.LineNumber.Value);
             }
 
             return DisplayTarget(sourceFilePath, target.Name, name);
@@ -1736,7 +1829,7 @@ Recent:
                     var task = resultNode.GetNearestParent<Task>(t => !string.Equals(t.Name, "MSBuild", StringComparison.OrdinalIgnoreCase));
                     if (task != null && !isTarget && project != null && task.GetNearestParent<Project>() == project)
                     {
-                        parent = InsertParent(parent, task, task.TypeName + " " + task.Name);
+                        parent = InsertParent(parent, task, "Task " + task.Name);
                     }
 
                     if (resultNode is Item item &&
@@ -1852,8 +1945,21 @@ Recent:
             //statsRoot.AddChild(histogramNode);
 
             statsRoot.AddChild(new Property { Name = "BinlogFileFormatVersion", Value = Build.FileFormatVersion.ToString() });
+            statsRoot.AddChild(new Property { Name = "FileSize", Value = recordStats.FileSize.ToString("N0") });
+            statsRoot.AddChild(new Property { Name = "UncompressedStreamSize", Value = recordStats.UncompressedStreamSize.ToString("N0") });
+            statsRoot.AddChild(new Property { Name = "RecordCount", Value = recordStats.RecordCount.ToString("N0") });
 
-            Build.Seal();
+            // This is interesting. Technically WPF needs the Build.Children collection to be observable
+            // to properly refresh the list when we add a new node. However it suffices to replace the Children
+            // collection with something else (and I assume it gets a new collection view and that is
+            // equivalent to a Reset.
+            // We could literally just do children = children.ToArray() and that would be sufficient here.
+            // Note that there's no need to actually change it to observable collection this late.
+            // Since the children have already mutated by the time we're setting this. Ideally we should be
+            // setting this at the beginning.
+            // It also doesn't seem like raising PropertyChanged for Children is necessary.
+            // See https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/487 for details.
+            Build.MakeChildrenObservable();
         }
 
         private UIElement GetHistogram(List<int> values)
@@ -1933,16 +2039,45 @@ Recent:
 
         private void DisplayTreeStats(Folder statsRoot, BuildStatistics treeStats, BinlogStats recordStats)
         {
-            var buildMessageNode = statsRoot.FindChild<Folder>(n => n.Name.StartsWith("BuildMessage"));
-            var taskInputsNode = buildMessageNode.FindChild<Folder>(n => n.Name.StartsWith("Task Input"));
-            var taskOutputsNode = buildMessageNode.FindChild<Folder>(n => n.Name.StartsWith("Task Output"));
+            var buildMessageNode = statsRoot.FindChild<Folder>(n => n.Name.StartsWith("BuildMessage", StringComparison.Ordinal));
+            var taskInputsNode = buildMessageNode.FindChild<Folder>(n => n.Name.StartsWith("Task Input", StringComparison.Ordinal));
+            var taskOutputsNode = buildMessageNode.FindChild<Folder>(n => n.Name.StartsWith("Task Output", StringComparison.Ordinal));
 
             AddTopTasks(treeStats.TaskParameterMessagesByTask, taskInputsNode);
             AddTopTasks(treeStats.OutputItemMessagesByTask, taskOutputsNode);
 
-            statsRoot.AddChild(new Message { Text = BinlogStats.GetString("Strings", recordStats.StringTotalSize, recordStats.StringCount, recordStats.StringLargest) });
-            statsRoot.AddChild(new Message { Text = BinlogStats.GetString("NameValueLists", recordStats.NameValueListTotalSize, recordStats.NameValueListCount, recordStats.NameValueListLargest) });
-            statsRoot.AddChild(new Message { Text = BinlogStats.GetString("Blobs", recordStats.BlobTotalSize, recordStats.BlobCount, recordStats.BlobLargest) });
+            if (recordStats.StringTotalSize > 0)
+            {
+                var strings = new Item 
+                {
+                    Text = BinlogStats.GetString("Strings", recordStats.StringTotalSize, recordStats.StringCount, recordStats.StringLargest)
+                };
+                var allStringText = string.Join("\n", recordStats.AllStrings);
+                var allStrings = new Message { Text = allStringText };
+
+                statsRoot.AddChild(strings);
+                strings.AddChild(allStrings);
+            }
+
+            if (recordStats.NameValueListTotalSize > 0)
+            {
+                statsRoot.AddChild(new Message 
+                {
+                    Text = BinlogStats.GetString(
+                        "NameValueLists",
+                        recordStats.NameValueListTotalSize,
+                        recordStats.NameValueListCount,
+                        recordStats.NameValueListLargest) 
+                });
+            }
+
+            if (recordStats.BlobTotalSize > 0)
+            {
+                statsRoot.AddChild(new Message
+                {
+                    Text = BinlogStats.GetString("Blobs", recordStats.BlobTotalSize, recordStats.BlobCount, recordStats.BlobLargest)
+                });
+            }
         }
 
         private static void AddTopTasks(Dictionary<string, List<string>> messagesByTask, Folder node)
@@ -1964,6 +2099,15 @@ Recent:
             foreach (var records in stats.CategorizedRecords)
             {
                 DisplayRecordStats(records, node);
+            }
+
+            var top = stats.Records.Take(300).ToArray();
+            foreach (var item in top)
+            {
+                if (item.Args is BuildMessageEventArgs buildMessage)
+                {
+                    node.AddChild(new Message { Text = buildMessage.Message });
+                }
             }
 
             return node;

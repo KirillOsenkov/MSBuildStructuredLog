@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 
@@ -40,9 +41,31 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        public void EnsureChildrenCapacity(int capacity)
+        {
+            if (capacity <= 0)
+            {
+                return;
+            }
+
+            if (children == null)
+            {
+                children = new ChildrenList(capacity);
+            }
+            else if (children is ChildrenList list)
+            {
+                list.EnsureCapacity(capacity);
+            }
+        }
+
         public void SortChildren()
         {
-            if (!(children is ChildrenList list))
+            if (children == null || children.Count < 2)
+            {
+                return;
+            }
+
+            if (children is not ChildrenList list)
             {
                 list = new ChildrenList(children);
             }
@@ -51,18 +74,37 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (list != children)
             {
                 children = list.ToArray();
+                RaisePropertyChanged(nameof(HasChildren));
+                RaisePropertyChanged(nameof(Children));
             }
-
-            RaisePropertyChanged(nameof(HasChildren));
-            RaisePropertyChanged(nameof(Children));
+            else
+            {
+                list.RaiseCollectionChanged();
+            }
         }
 
+        [System.Diagnostics.Conditional("TurnedOff")]
         public void Seal()
         {
             if (children != null)
             {
                 children = children.ToArray();
             }
+        }
+
+        public void MakeChildrenObservable()
+        {
+            if (children == null)
+            {
+                children = new ObservableCollection<BaseNode>();
+            }
+            else
+            {
+                children = new ObservableCollection<BaseNode>(children);
+            }
+
+            RaisePropertyChanged(nameof(HasChildren));
+            RaisePropertyChanged(nameof(Children));
         }
 
         public void Unseal()
@@ -87,12 +129,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             child.Parent = this;
-
-            if (children.Count >= 1)
-            {
-                RaisePropertyChanged(nameof(HasChildren));
-                RaisePropertyChanged(nameof(Children));
-            }
         }
 
         public virtual void AddChild(BaseNode child)
@@ -109,12 +145,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             child.Parent = this;
-
-            if (children.Count >= 1)
-            {
-                RaisePropertyChanged(nameof(HasChildren));
-                RaisePropertyChanged(nameof(Children));
-            }
         }
 
         public T GetOrCreateNodeWithName<T>(string name, bool addAtBeginning = false) where T : NamedNode, new()
@@ -476,13 +506,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     list = list.ToArray();
                 }
 
-                foreach (var child in list)
+                for (int i = 0; i < list.Count; i++)
                 {
                     if (cancellationToken.IsCancellationRequested)
                     {
                         return;
                     }
 
+                    var child = list[i];
                     if (child is TreeNode node)
                     {
                         node.VisitAllChildren(processor, cancellationToken, takeChildrenSnapshot);

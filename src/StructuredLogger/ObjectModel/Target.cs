@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
 
@@ -12,6 +13,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public string SourceFilePath { get; set; }
         public string ParentTarget { get; set; }
         public TargetBuiltReason TargetBuiltReason { get; set; }
+        public TimedNode OriginalNode { get; set; }
 
         public override string TypeName => nameof(Target);
 
@@ -22,6 +24,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (string.IsNullOrEmpty(ParentTarget))
                 {
                     return string.Empty;
+                }
+
+                if (OriginalNode != null)
+                {
+                    return "Navigate to where the target was built originally";
                 }
 
                 if (TargetBuiltReason == TargetBuiltReason.None)
@@ -49,6 +56,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     return string.Empty;
                 }
+
+                if (OriginalNode != null)
+                {
+                    return ParentTarget;
+                }
+
                 var connectingSymbol = TargetBuiltReason switch
                 {
                     TargetBuiltReason.AfterTargets => "↑",
@@ -73,9 +86,34 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        private Dictionary<int, Task> tasksById;
+
         public Task GetTaskById(int taskId)
         {
-            return Children.OfType<Task>().FirstOrDefault(t => t.Id == taskId);
+            if (tasksById == null)
+            {
+                tasksById = new Dictionary<int, Task>();
+            }
+
+            if (!tasksById.TryGetValue(taskId, out var task))
+            {
+                var children = Children;
+                for (int i = 0; i < children.Count; i++)
+                {
+                    if (children[i] is Task t && t.Id == taskId)
+                    {
+                        task = t;
+                        break;
+                    }
+                }
+
+                if (task != null)
+                {
+                    tasksById[taskId] = task;
+                }
+            }
+
+            return task;
         }
 
         public override string ToString()

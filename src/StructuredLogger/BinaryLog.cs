@@ -25,7 +25,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return reader.ReadRecords(binlogBytes);
         }
 
-        public static Build ReadBuild(string filePath)
+        public static Build ReadBuild(string filePath) => ReadBuild(filePath, progress: null);
+
+        public static Build ReadBuild(string filePath, Progress progress)
         {
             using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
@@ -47,6 +49,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var eventSource = new BinLogReader();
 
             Build build = null;
+            IEnumerable<string> strings = null;
 
             eventSource.OnBlobRead += (kind, bytes) =>
             {
@@ -61,6 +64,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     build.AddChild(new Error() { Text = "Error when reading the file: " + ex.ToString() });
                 }
+            };
+            eventSource.OnStringDictionaryComplete += s =>
+            {
+                strings = s;
             };
 
             StructuredLogger.SaveLogToDisk = false;
@@ -83,19 +90,38 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             eventSource.OnFileFormatVersionRead += fileFormatVersion =>
             {
+                build.FileFormatVersion = fileFormatVersion;
+
+                // strings are deduplicated starting with version 10
                 if (fileFormatVersion >= 10)
                 {
-                    // since strings are already deduplicated in the file, no need to do it again
-                    // TODO: but search will not work if the string table is empty
-                    // structuredLogger.Construction.StringTable.DisableDeduplication = true;
+                    build.StringTable.NormalizeLineEndings = false;
+                    build.StringTable.HasDeduplicatedStrings = true;
+                    if (ReuseBinlogStrings)
+                    {
+                        build.StringTable.DisableDeduplication = true;
+                    }
                 }
-
-                build.FileFormatVersion = fileFormatVersion;
             };
 
             var sw = Stopwatch.StartNew();
             await eventSource.Replay(stream, progressFunc);
             var elapsed = sw.Elapsed;
+
+            if (strings != null)
+            {
+                if (ReuseBinlogStrings)
+                {
+                    // since strings are already deduplicated in the file, no need to do it again
+                    build.StringTable.SetStrings(strings);
+                }
+                else
+                {
+                    // intern all strings in one fell swoop here instead of interning multiple times
+                    // one by one when processing task parameters
+                    build.StringTable.Intern(strings);
+                }
+            }
 
             structuredLogger.Shutdown();
 
@@ -113,7 +139,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 build.SourceFilesArchive = projectImportsArchive;
             }
 
-            // build.AddChildAtBeginning(new Message { Text = "Elapsed: " + elapsed.ToString() });
+            // strings = build.StringTable.Instances.OrderBy(s => s).ToArray();
+
+            // Serialization.WriteStringsToFile(@"C:\temp\1.txt", strings.ToArray());
 
             return build;
         }
