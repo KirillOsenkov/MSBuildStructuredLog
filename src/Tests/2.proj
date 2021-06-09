@@ -1,6 +1,6 @@
 <Project>
 
-  <Target Name="Target1" Inputs="$(MSBuildThisFileFullPath)" Outputs="3.proj">
+  <Target Name="Target1" Inputs="$(MSBuildThisFileFullPath)" Outputs="3.proj" Returns="@(Item1)">
     <ItemGroup>
       <Item1 Include="*" />
     </ItemGroup>
