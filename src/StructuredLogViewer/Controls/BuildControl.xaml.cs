@@ -532,9 +532,9 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             "$noimport"
         };
 
-        Inline MakeLink(string query, SearchAndResultsControl searchControl, string before = " • ", string after = "\r\n")
+        private static Inline MakeLink(string query, SearchAndResultsControl searchControl, string before = " \u2022 ", string after = "\r\n")
         {
-            var hyperlink = new Hyperlink(new Run(query));
+            var hyperlink = new Hyperlink(new Run(query.Trim()));
             hyperlink.Click += (s, e) => searchControl.SearchText = query;
 
             var span = new System.Windows.Documents.Span();
@@ -589,7 +589,7 @@ Examples:
                 }
 
                 isFirst = false;
-                watermark.Inlines.Add(MakeLink(nodeKind, searchLogControl, before: null, after: null));
+                watermark.Inlines.Add(MakeLink(nodeKind + " ", searchLogControl, before: null, after: null));
             }
 
             watermark.Inlines.Add(new LineBreak());
@@ -626,7 +626,7 @@ Recent:
                 "Surround the search term in quotes to find an exact match " +
                 "(turns off substring search). Prefix the search term with " +
                 "[[name=]] or [[value=]] to only search property and metadata names " +
-                "or values. Add [[$property]], [[$item]] or [[$metadata]] to limit search " +
+                "or values. Add [[$property ]], [[$item ]] or [[$metadata ]] to limit search " +
                 "to a specific node type.";
 
             var watermark = new TextBlock();
