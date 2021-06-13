@@ -309,7 +309,7 @@ Use syntax like '$property Prop' to narrow results down by item kind. Supported 
 Examples:
 ";
 
-            //Inline MakeLink(string query, string before = " • ", string after = "\r\n")
+            //Inline MakeLink(string query, string before = " \u2022 ", string after = "\r\n")
             //{
             //    var hyperlink = new Hyperlink(new Run(query));
             //    hyperlink.Click += (s, e) => searchLogControl.SearchText = query;
@@ -359,7 +359,7 @@ Examples:
             foreach (var example in searchExamples)
             {
                 //text += (MakeLink(example));
-                text += example;
+                text += " \u2022 " + example + Environment.NewLine;
             }
 
             var recentSearches = SettingsService.GetRecentSearchStrings();
@@ -372,7 +372,7 @@ Recent:
                 foreach (var recentSearch in recentSearches.Where(s => !searchExamples.Contains(s) && !nodeKinds.Contains(s)))
                 {
                     //text += MakeLink(recentSearch));
-                    text += recentSearch;
+                    text += " \u2022 " + recentSearch + Environment.NewLine;
                 }
             }
 
