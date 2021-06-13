@@ -311,7 +311,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
-            return text.Substring(0, newLength) + trimPrompt;
+            var shortText = text.Substring(0, newLength);
+
+            if (lineBreak == newLength && IsWhitespace(text, new Span(newLength, text.Length - newLength)))
+            {
+                return shortText + '\u21b5';
+            }
+
+            return shortText + trimPrompt;
         }
 
         public static int IndexOfFirstLineBreak(this string text)
