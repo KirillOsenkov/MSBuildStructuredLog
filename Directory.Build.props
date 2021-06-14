@@ -18,7 +18,7 @@
     <DebugType Condition="$(OS) == 'Windows_NT'">embedded</DebugType>
     <LangVersion>latest</LangVersion>
 
-    <MSBuildPackageVersion>16.4.0</MSBuildPackageVersion>
+    <MSBuildPackageVersion>16.10.0</MSBuildPackageVersion>
     <NuGetVersionNerdbankGitVersioning>3.4.194</NuGetVersionNerdbankGitVersioning>
   </PropertyGroup>
 
