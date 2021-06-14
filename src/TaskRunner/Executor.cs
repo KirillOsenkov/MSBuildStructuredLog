@@ -194,10 +194,6 @@ namespace TaskRunner
         public static void SetPropertyValue<T>(object instance, string propertyName, T value)
         {
             var propertyInfo = FindPropertyInfo(instance, propertyName, out var flags, out var type);
-            if (propertyInfo == null)
-            {
-                throw new ArgumentException("Property " + propertyName + " was not found on type " + type.ToString());
-            }
 
             // Workaround for Reflection bug 791391
             if (propertyInfo.DeclaringType != type)
@@ -214,6 +210,12 @@ namespace TaskRunner
             flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
             type = instance.GetType();
             var propertyInfo = type.GetProperty(propertyName, flags);
+            if (propertyInfo == null)
+            {
+                throw new ArgumentException($"Property {propertyName} was not found on type {type}. " +
+                                            "This probably means that the task being run was recorded with a newer version of " +
+                                            $"MSBuild than the version used by MSBuild Structured Log Viewer ({Microsoft.Build.Evaluation.ProjectCollection.Version}).");
+            }
             return propertyInfo;
         }
     }
