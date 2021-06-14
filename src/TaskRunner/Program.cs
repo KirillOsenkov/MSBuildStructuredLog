@@ -58,7 +58,14 @@ namespace TaskRunner
 
             Microsoft.Build.Locator.MSBuildLocator.RegisterDefaults();
 
-            new Program().Run(binlog, index, taskName);
+            try
+            {
+                new Program().Run(binlog, index, taskName);
+            }
+            catch (Exception exception)
+            {
+                Console.Error.WriteLine(exception);
+            }
 
             if (pause)
             {
