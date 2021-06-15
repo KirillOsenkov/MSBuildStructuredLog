@@ -68,7 +68,15 @@ namespace TaskRunner
 
             foreach (var parameter in parametersNode.Children)
             {
-                SetParameter(parameter, instance);
+                try
+                {
+                    SetParameter(parameter, instance);
+                }
+                catch (MissingPropertyException exception)
+                {
+                    exception.MSBuildVersion = task.GetNearestParent<Build>()?.MSBuildVersion;
+                    throw;
+                }
             }
         }
 
@@ -212,9 +220,7 @@ namespace TaskRunner
             var propertyInfo = type.GetProperty(propertyName, flags);
             if (propertyInfo == null)
             {
-                throw new ArgumentException($"Property {propertyName} was not found on type {type}. " +
-                                            "This probably means that the task being run was recorded with a newer version of " +
-                                            $"MSBuild than the version used by MSBuild Structured Log Viewer ({Microsoft.Build.Evaluation.ProjectCollection.Version}).");
+                throw new MissingPropertyException(className: type.FullName, propertyName: propertyName);
             }
             return propertyInfo;
         }
