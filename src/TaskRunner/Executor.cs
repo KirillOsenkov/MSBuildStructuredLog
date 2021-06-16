@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -43,19 +43,12 @@ namespace TaskRunner
                 Environment.CurrentDirectory = projectDirectory;
             }
 
-            var instance = Activator.CreateInstance(type) as ITask;
+            var instance = (ITask)Activator.CreateInstance(type);
             PopulateParameters(task, instance);
 
             instance.BuildEngine = new BuildEngine();
 
-            Run(instance);
-        }
-
-        private static bool Run(object instance)
-        {
-            var executeMethod = instance.GetType().GetMethod("Execute");
-            bool result = (bool)executeMethod.Invoke(instance, null);
-            return result;
+            instance.Execute();
         }
 
         private static void PopulateParameters(Task task, object instance)
