@@ -309,14 +309,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (originalProject != null)
                 {
                     target.ParentTarget = messageText;
-                    var originalTarget = originalProject.GetTargetById(originalBuildEventContext.TargetId);
-                    if (originalTarget != null)
+                    if (originalBuildEventContext.TargetId != -1 &&
+                        originalProject.GetTargetById(originalBuildEventContext.TargetId) is Target originalTarget)
                     {
                         target.OriginalNode = originalTarget;
                     }
                     else
                     {
-                        target.OriginalNode = originalProject;
+                        // the original target was skipped because of false condition, so its target id == -1
+                        // Need to look it up by name, if unambiguous
+                        originalTarget = originalProject
+                            .Children
+                            .OfType<Target>()
+                            .Where(t => t.Name == targetName)
+                            .SingleOrDefault();
+
+                        target.OriginalNode = (TimedNode)originalTarget ?? originalProject;
                     }
                 }
             }
