@@ -27,7 +27,7 @@ namespace BinlogTool
                 return;
             }
 
-            Console.WriteLine("Usage: binlogtool savefiles input.binlog");
+            Console.WriteLine("Usage: binlogtool savefiles input.binlog output_path");
         }
 
         private static void CompareStrings()
