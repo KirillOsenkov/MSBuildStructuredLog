@@ -65,6 +65,7 @@ namespace BinlogTool
                     var reference = TryGetReference(argument);
                     if (reference != null)
                     {
+                        reference = ArchiveFile.CalculateArchivePath(reference);
                         var physicalReferencePath = GetPhysicalPath(outputDirectory, reference);
                         WriteEmptyAssembly(physicalReferencePath);
                     }
@@ -103,16 +104,30 @@ namespace BinlogTool
 
         private string TryGetReference(string argument)
         {
+            string reference;
             if (argument.StartsWith("/r:"))
             {
-                return argument.Substring(3);
+                reference = argument.Substring(3);
             }
             else if (argument.StartsWith("/reference:"))
             {
-                return argument.Substring(11);
+                reference = argument.Substring(11);
+            }
+            else
+            {
+                return null;
             }
 
-            return null;
+            if (reference.Length >= 2)
+            {
+                // Remove enclosing quotes if present
+                if ((reference.StartsWith('\'') && reference.EndsWith('\'')) ||
+                    (reference.StartsWith('"') && reference.EndsWith('"')))
+                {
+                    return reference.Substring(1, reference.Length - 2);
+                }
+            }
+            return reference;
         }
 
         private void SaveFilesFrom(Build build, string outputDirectory)
