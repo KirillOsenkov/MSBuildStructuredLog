@@ -15,15 +15,15 @@ namespace StructuredLogViewer.Controls
     {
         private const string ImportElementName = "Import";
 
-        public static void Install(TextEditor textEditor, Build build, string filePath)
+        public static void Install(TextEditor textEditor, string filePath, NavigationHelper navigationHelper)
         {
-            if (build == null || string.IsNullOrEmpty(filePath))
+            if (navigationHelper == null || string.IsNullOrEmpty(filePath))
                 return;
 
             var importsByLocation = new Dictionary<TextLocation, string>();
-            var ambiguousLocations = new HashSet<TextLocation>();
+            var invalidLocations = new HashSet<TextLocation>();
 
-            foreach (var import in build.EvaluationFolder.Children.OfType<ProjectEvaluation>().SelectMany(i => i.GetAllImports()))
+            foreach (var import in navigationHelper.Build.EvaluationFolder.Children.OfType<ProjectEvaluation>().SelectMany(i => i.GetAllImports()))
             {
                 if (!string.Equals(import.ProjectFilePath, filePath, StringComparison.OrdinalIgnoreCase))
                     continue;
@@ -36,7 +36,7 @@ namespace StructuredLogViewer.Controls
                 if (importsByLocation.TryGetValue(location, out var existingImport))
                 {
                     if (!string.Equals(existingImport, import.ImportedProjectFilePath, StringComparison.OrdinalIgnoreCase))
-                        ambiguousLocations.Add(location);
+                        invalidLocations.Add(location);
                 }
                 else
                 {
@@ -44,22 +44,30 @@ namespace StructuredLogViewer.Controls
                 }
             }
 
-            foreach (var location in ambiguousLocations)
+            foreach (var import in importsByLocation)
+            {
+                if (!navigationHelper.SourceFileResolver.HasFile(import.Value))
+                    invalidLocations.Add(import.Key);
+            }
+
+            foreach (var location in invalidLocations)
                 importsByLocation.Remove(location);
 
             if (importsByLocation.Count == 0)
                 return;
 
-            textEditor.TextArea.TextView.ElementGenerators.Add(new ImportLinkGenerator(importsByLocation));
+            textEditor.TextArea.TextView.ElementGenerators.Add(new ImportLinkGenerator(importsByLocation, navigationHelper));
         }
 
         private class ImportLinkGenerator : VisualLineElementGenerator
         {
             private readonly Dictionary<TextLocation, string> imports;
+            private readonly NavigationHelper navigationHelper;
 
-            public ImportLinkGenerator(Dictionary<TextLocation, string> imports)
+            public ImportLinkGenerator(Dictionary<TextLocation, string> imports, NavigationHelper navigationHelper)
             {
                 this.imports = imports;
+                this.navigationHelper = navigationHelper;
             }
 
             public override int GetFirstInterestedOffset(int startOffset)
@@ -87,18 +95,20 @@ namespace StructuredLogViewer.Controls
                 if (!imports.TryGetValue(location, out var importedPath))
                     return null;
 
-                return new ImportLinkElement(CurrentContext.VisualLine, text.Count, importedPath);
+                return new ImportLinkElement(CurrentContext.VisualLine, text.Count, importedPath, navigationHelper);
             }
         }
 
         private class ImportLinkElement : VisualLineText
         {
-            public string ImportedPath { get; }
+            private readonly string importedPath;
+            private readonly NavigationHelper navigationHelper;
 
-            public ImportLinkElement(VisualLine parentVisualLine, int length, string importedPath)
+            public ImportLinkElement(VisualLine parentVisualLine, int length, string importedPath, NavigationHelper navigationHelper)
                 : base(parentVisualLine, length)
             {
-                ImportedPath = importedPath;
+                this.importedPath = importedPath;
+                this.navigationHelper = navigationHelper;
             }
 
             public override TextRun CreateTextRun(int startVisualColumn, ITextRunConstructionContext context)
@@ -107,9 +117,31 @@ namespace StructuredLogViewer.Controls
                 return base.CreateTextRun(startVisualColumn, context);
             }
 
+            protected override void OnQueryCursor(QueryCursorEventArgs e)
+            {
+                base.OnQueryCursor(e);
+
+                if ((Keyboard.Modifiers & ModifierKeys.Control) != 0)
+                {
+                    e.Handled = true;
+                    e.Cursor = Cursors.Hand;
+                }
+            }
+
+            protected override void OnMouseDown(MouseButtonEventArgs e)
+            {
+                if (!e.Handled && e.ChangedButton == MouseButton.Left && (Keyboard.Modifiers & ModifierKeys.Control) != 0)
+                {
+                    navigationHelper.OpenFile(importedPath);
+                    e.Handled = true;
+                }
+
+                base.OnMouseDown(e);
+            }
+
             protected override VisualLineText CreateInstance(int length)
             {
-                return new ImportLinkElement(ParentVisualLine, length, ImportedPath);
+                return new ImportLinkElement(ParentVisualLine, length, importedPath, navigationHelper);
             }
         }
     }
