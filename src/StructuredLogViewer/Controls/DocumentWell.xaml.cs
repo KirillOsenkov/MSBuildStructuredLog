@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogViewer.Controls
 {
@@ -65,6 +66,7 @@ namespace StructuredLogViewer.Controls
             int lineNumber = 0,
             int column = 0,
             Action preprocess = null,
+            Build build = null,
             bool displayPath = true)
         {
             var existing = Find(sourceFilePath);
@@ -89,7 +91,7 @@ namespace StructuredLogViewer.Controls
             }
 
             var textViewerControl = new TextViewerControl();
-            textViewerControl.DisplaySource(sourceFilePath, text, lineNumber, column, preprocess);
+            textViewerControl.DisplaySource(sourceFilePath, text, lineNumber, column, preprocess, build);
             var tab = new SourceFileTab()
             {
                 FilePath = sourceFilePath,

@@ -1638,7 +1638,7 @@ Recent:
                 preprocess = preprocessedFileManager.GetPreprocessAction(preprocessableFilePath, PreprocessedFileManager.GetEvaluationKey(evaluation));
             }
 
-            documentWell.DisplaySource(preprocessableFilePath, text.Text, lineNumber, column, preprocess);
+            documentWell.DisplaySource(preprocessableFilePath, text.Text, lineNumber, column, preprocess, Build);
             return true;
         }
 
