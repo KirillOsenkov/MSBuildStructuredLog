@@ -96,7 +96,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             parent.AddChild(textNode);
         }
 
-        public IReadOnlyCollection<Import> GetAllImports()
+        public IEnumerable<Import> GetAllImportsTransitive()
             => importsMap.Values;
     }
 }
