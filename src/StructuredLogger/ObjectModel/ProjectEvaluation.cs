@@ -75,7 +75,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private Dictionary<string, NamedNode> importsMap = new Dictionary<string, NamedNode>();
+        private Dictionary<string, Import> importsMap = new Dictionary<string, Import>();
 
         public void AddImport(TextNode textNode)
         {
@@ -95,5 +95,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             parent.AddChild(textNode);
         }
+
+        public IReadOnlyCollection<Import> GetAllImports()
+            => importsMap.Values;
     }
 }

@@ -2,7 +2,6 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -65,6 +64,7 @@ namespace StructuredLogViewer.Controls
             int lineNumber = 0,
             int column = 0,
             Action preprocess = null,
+            NavigationHelper navigationHelper = null,
             bool displayPath = true)
         {
             var existing = Find(sourceFilePath);
@@ -89,7 +89,7 @@ namespace StructuredLogViewer.Controls
             }
 
             var textViewerControl = new TextViewerControl();
-            textViewerControl.DisplaySource(sourceFilePath, text, lineNumber, column, preprocess);
+            textViewerControl.DisplaySource(sourceFilePath, text, lineNumber, column, preprocess, navigationHelper);
             var tab = new SourceFileTab()
             {
                 FilePath = sourceFilePath,

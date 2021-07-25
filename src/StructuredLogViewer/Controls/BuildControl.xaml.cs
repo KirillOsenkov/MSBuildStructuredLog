@@ -34,6 +34,7 @@ namespace StructuredLogViewer.Controls
         private SourceFileResolver sourceFileResolver;
         private ArchiveFileResolver archiveFile => sourceFileResolver.ArchiveFile;
         private PreprocessedFileManager preprocessedFileManager;
+        private NavigationHelper navigationHelper;
 
         private MenuItem copyItem;
         private MenuItem copySubtreeItem;
@@ -328,6 +329,9 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
             preprocessedFileManager = new PreprocessedFileManager(this.Build, sourceFileResolver);
             preprocessedFileManager.DisplayFile += filePath => DisplayFile(filePath);
+
+            navigationHelper = new NavigationHelper(Build, sourceFileResolver);
+            navigationHelper.OpenFileRequested += filePath => DisplayFile(filePath);
 
             centralTabControl.SelectionChanged += CentralTabControl_SelectionChanged;
         }
@@ -1638,7 +1642,7 @@ Recent:
                 preprocess = preprocessedFileManager.GetPreprocessAction(preprocessableFilePath, PreprocessedFileManager.GetEvaluationKey(evaluation));
             }
 
-            documentWell.DisplaySource(preprocessableFilePath, text.Text, lineNumber, column, preprocess);
+            documentWell.DisplaySource(preprocessableFilePath, text.Text, lineNumber, column, preprocess, navigationHelper);
             return true;
         }
 

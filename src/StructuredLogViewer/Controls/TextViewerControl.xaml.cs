@@ -91,11 +91,12 @@ namespace StructuredLogViewer.Controls
         }
 
         public void DisplaySource(
-            string sourceFilePath, 
-            string text, 
-            int lineNumber = 0, 
-            int column = 0, 
-            Action showPreprocessed = null)
+            string sourceFilePath,
+            string text,
+            int lineNumber = 0,
+            int column = 0,
+            Action showPreprocessed = null,
+            NavigationHelper navigationHelper = null)
         {
             this.FilePath = sourceFilePath;
             this.Preprocess = showPreprocessed;
@@ -106,6 +107,9 @@ namespace StructuredLogViewer.Controls
 
             SetText(text);
             DisplaySource(lineNumber, column);
+
+            if (IsXml)
+                ImportLinkHighlighter.Install(textEditor, sourceFilePath, navigationHelper);
         }
 
         protected override void OnKeyUp(KeyEventArgs e)
