@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media.TextFormatting;
 using ICSharpCode.AvalonEdit;
@@ -20,10 +22,9 @@ namespace StructuredLogViewer.Controls
             if (navigationHelper == null || string.IsNullOrEmpty(filePath))
                 return;
 
-            var importsByLocation = new Dictionary<TextLocation, string>();
-            var invalidLocations = new HashSet<TextLocation>();
+            var importsByLocation = new Dictionary<TextLocation, HashSet<string>>();
 
-            foreach (var import in navigationHelper.Build.EvaluationFolder.Children.OfType<ProjectEvaluation>().SelectMany(i => i.GetAllImports()))
+            foreach (var import in navigationHelper.Build.EvaluationFolder.Children.OfType<ProjectEvaluation>().SelectMany(i => i.GetAllImportsTransitive()))
             {
                 if (!string.Equals(import.ProjectFilePath, filePath, StringComparison.OrdinalIgnoreCase))
                     continue;
@@ -33,25 +34,18 @@ namespace StructuredLogViewer.Controls
 
                 var location = new TextLocation(import.Line, import.Column);
 
-                if (importsByLocation.TryGetValue(location, out var existingImport))
+                if (importsByLocation.TryGetValue(location, out var existingImports))
                 {
-                    if (!string.Equals(existingImport, import.ImportedProjectFilePath, StringComparison.OrdinalIgnoreCase))
-                        invalidLocations.Add(location);
+                    existingImports.Add(import.ImportedProjectFilePath);
                 }
                 else
                 {
-                    importsByLocation.Add(location, import.ImportedProjectFilePath);
+                    importsByLocation.Add(location, new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                    {
+                        import.ImportedProjectFilePath
+                    });
                 }
             }
-
-            foreach (var import in importsByLocation)
-            {
-                if (!navigationHelper.SourceFileResolver.HasFile(import.Value))
-                    invalidLocations.Add(import.Key);
-            }
-
-            foreach (var location in invalidLocations)
-                importsByLocation.Remove(location);
 
             if (importsByLocation.Count == 0)
                 return;
@@ -61,12 +55,12 @@ namespace StructuredLogViewer.Controls
 
         private class ImportLinkGenerator : VisualLineElementGenerator
         {
-            private readonly Dictionary<TextLocation, string> imports;
+            private readonly Dictionary<TextLocation, HashSet<string>> importsByLocation;
             private readonly NavigationHelper navigationHelper;
 
-            public ImportLinkGenerator(Dictionary<TextLocation, string> imports, NavigationHelper navigationHelper)
+            public ImportLinkGenerator(Dictionary<TextLocation, HashSet<string>> importsByLocation, NavigationHelper navigationHelper)
             {
-                this.imports = imports;
+                this.importsByLocation = importsByLocation;
                 this.navigationHelper = navigationHelper;
             }
 
@@ -92,22 +86,24 @@ namespace StructuredLogViewer.Controls
 
                 var location = CurrentContext.Document.GetLocation(offset - 1);
 
-                if (!imports.TryGetValue(location, out var importedPath))
+                if (!importsByLocation.TryGetValue(location, out var importedPaths))
                     return null;
 
-                return new ImportLinkElement(CurrentContext.VisualLine, text.Count, importedPath, navigationHelper);
+                return new ImportLinkElement(CurrentContext.TextView, CurrentContext.VisualLine, text.Count, importedPaths, navigationHelper);
             }
         }
 
         private class ImportLinkElement : VisualLineText
         {
-            private readonly string importedPath;
+            private readonly TextView textView;
+            private readonly HashSet<string> importedPaths;
             private readonly NavigationHelper navigationHelper;
 
-            public ImportLinkElement(VisualLine parentVisualLine, int length, string importedPath, NavigationHelper navigationHelper)
+            public ImportLinkElement(TextView textView, VisualLine parentVisualLine, int length, HashSet<string> importedPaths, NavigationHelper navigationHelper)
                 : base(parentVisualLine, length)
             {
-                this.importedPath = importedPath;
+                this.textView = textView;
+                this.importedPaths = importedPaths;
                 this.navigationHelper = navigationHelper;
             }
 
@@ -132,7 +128,7 @@ namespace StructuredLogViewer.Controls
             {
                 if (!e.Handled && e.ChangedButton == MouseButton.Left && (Keyboard.Modifiers & ModifierKeys.Control) != 0)
                 {
-                    navigationHelper.OpenFile(importedPath);
+                    OpenLink();
                     e.Handled = true;
                 }
 
@@ -141,7 +137,87 @@ namespace StructuredLogViewer.Controls
 
             protected override VisualLineText CreateInstance(int length)
             {
-                return new ImportLinkElement(ParentVisualLine, length, importedPath, navigationHelper);
+                return new ImportLinkElement(textView, ParentVisualLine, length, importedPaths, navigationHelper);
+            }
+
+            private void OpenLink()
+            {
+                if (importedPaths.Count == 1)
+                {
+                    var filePath = importedPaths.Single();
+
+                    if (navigationHelper.SourceFileResolver.HasFile(filePath))
+                    {
+                        navigationHelper.OpenFile(filePath);
+                        return;
+                    }
+                }
+
+                OpenMenu();
+            }
+
+            private void OpenMenu()
+            {
+                var menu = new ContextMenu
+                {
+                    HasDropShadow = false
+                };
+
+                var commonPathLength = GetCommonPathLength();
+
+                foreach (var filePath in importedPaths.OrderBy(i => i, StringComparer.OrdinalIgnoreCase))
+                {
+                    var menuItem = new MenuItem
+                    {
+                        Header = commonPathLength < 20 ? filePath : "..." + filePath.Substring(commonPathLength),
+                    };
+
+                    if (navigationHelper.SourceFileResolver.HasFile(filePath))
+                    {
+                        menuItem.Click += (_, _) => navigationHelper.OpenFile(filePath);
+                    }
+                    else
+                    {
+                        menuItem.IsEnabled = false;
+                    }
+
+                    menu.Items.Add(menuItem);
+                }
+
+                var topLeft = ParentVisualLine.GetVisualPosition(VisualColumn, VisualYPosition.LineTop);
+                var bottomRight = ParentVisualLine.GetVisualPosition(VisualColumn + VisualLength, VisualYPosition.LineBottom);
+
+                menu.Placement = PlacementMode.Bottom;
+                menu.PlacementTarget = textView;
+                menu.PlacementRectangle = new Rect(topLeft - textView.ScrollOffset, bottomRight - textView.ScrollOffset);
+                menu.IsOpen = true;
+            }
+
+            private int GetCommonPathLength()
+            {
+                if (importedPaths.Count < 2)
+                    return 0;
+
+                var paths = importedPaths.Select(i => i.ToLowerInvariant()).ToList();
+                var charCountToConsider = paths.Min(i => i.Length);
+
+                var result = 0;
+
+                for (var charIndex = 0; charIndex < charCountToConsider; ++charIndex)
+                {
+                    var currentChar = paths[0][charIndex];
+
+                    for (var pathIndex = 1; pathIndex < paths.Count; ++pathIndex)
+                    {
+                        if (paths[pathIndex][charIndex] != currentChar)
+                            return result;
+                    }
+
+                    if (currentChar is '\\' or '/')
+                        result = charIndex;
+                }
+
+                return result;
             }
         }
     }
