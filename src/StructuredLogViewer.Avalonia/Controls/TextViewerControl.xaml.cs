@@ -86,7 +86,8 @@ namespace StructuredLogViewer.Avalonia.Controls
             string text, 
             int lineNumber = 0, 
             int column = 0, 
-            Action showPreprocessed = null)
+            Action showPreprocessed = null,
+            NavigationHelper navigationHelper = null)
         {
             this.FilePath = sourceFilePath;
             this.Preprocess = showPreprocessed;
@@ -97,6 +98,9 @@ namespace StructuredLogViewer.Avalonia.Controls
 
             SetText(text);
             DisplaySource(lineNumber, column);
+
+            if (IsXml)
+                ImportLinkHighlighter.Install(textEditor, sourceFilePath, navigationHelper);
         }
 
         private void TextAreaMouseRightButtonDown(object sender, PointerEventArgs e)
