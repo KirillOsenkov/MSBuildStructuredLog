@@ -12,7 +12,7 @@ namespace StructuredLogViewer.Avalonia.Controls
     {
         private TabControl tabControl;
         private Button closeButton;
-        
+
         public DocumentWell()
         {
             InitializeComponent();
@@ -52,7 +52,14 @@ namespace StructuredLogViewer.Avalonia.Controls
             IsVisible = false;
         }
 
-        public void DisplaySource(string sourceFilePath, string text, int lineNumber = 0, int column = 0, Action preprocess = null, bool displayPath = true)
+        public void DisplaySource(
+            string sourceFilePath,
+            string text,
+            int lineNumber = 0,
+            int column = 0,
+            Action preprocess = null,
+            NavigationHelper navigationHelper = null,
+            bool displayPath = true)
         {
             var existing = Find(sourceFilePath);
             if (existing != null)
@@ -76,7 +83,7 @@ namespace StructuredLogViewer.Avalonia.Controls
             }
 
             var textViewerControl = new TextViewerControl();
-            textViewerControl.DisplaySource(sourceFilePath, text, lineNumber, column, preprocess);
+            textViewerControl.DisplaySource(sourceFilePath, text, lineNumber, column, preprocess, navigationHelper);
             var tab = new SourceFileTab
             {
                 FilePath = sourceFilePath,

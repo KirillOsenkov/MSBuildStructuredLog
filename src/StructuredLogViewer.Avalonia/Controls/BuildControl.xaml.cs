@@ -31,6 +31,7 @@ namespace StructuredLogViewer.Avalonia.Controls
         private SourceFileResolver sourceFileResolver;
         private ArchiveFileResolver archiveFile => sourceFileResolver.ArchiveFile;
         private PreprocessedFileManager preprocessedFileManager;
+        private NavigationHelper navigationHelper;
 
         private MenuItem copyItem;
         private MenuItem copySubtreeItem;
@@ -189,6 +190,9 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
             preprocessedFileManager = new PreprocessedFileManager(Build, sourceFileResolver);
             preprocessedFileManager.DisplayFile += path => DisplayFile(path);
+
+            navigationHelper = new NavigationHelper(Build, sourceFileResolver);
+            navigationHelper.OpenFileRequested += path => DisplayFile(path);
 
             //PopulateTimeline();
         }
@@ -893,7 +897,7 @@ Recent:
             }
 
             Action preprocess = preprocessedFileManager.GetPreprocessAction(sourceFilePath, PreprocessedFileManager.GetEvaluationKey(evaluation));
-            documentWell.DisplaySource(sourceFilePath, text.Text, lineNumber, column, preprocess);
+            documentWell.DisplaySource(sourceFilePath, text.Text, lineNumber, column, preprocess, navigationHelper);
             return true;
         }
 
