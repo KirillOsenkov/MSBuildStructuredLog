@@ -52,18 +52,35 @@ namespace StructuredLogViewer.Avalonia.Controls
             if (importsByLocation.Count == 0)
                 return;
 
-            textEditor.TextArea.TextView.ElementGenerators.Add(new ImportLinkGenerator(importsByLocation, navigationHelper));
+            textEditor.TextArea.TextView.ElementGenerators.Add(new ImportLinkGenerator(textEditor.TextArea.TextView, importsByLocation, navigationHelper));
         }
 
         private class ImportLinkGenerator : VisualLineElementGenerator
         {
+
+            private static readonly Cursor iBeamCursor = new(StandardCursorType.Ibeam);
+
             private readonly Dictionary<TextLocation, HashSet<string>> importsByLocation;
             private readonly NavigationHelper navigationHelper;
 
-            public ImportLinkGenerator(Dictionary<TextLocation, HashSet<string>> importsByLocation, NavigationHelper navigationHelper)
+            public TextView TextView { get; }
+            public bool WasCursorSetByLink;
+
+            public ImportLinkGenerator(TextView textView, Dictionary<TextLocation, HashSet<string>> importsByLocation, NavigationHelper navigationHelper)
             {
+                TextView = textView;
+
                 this.importsByLocation = importsByLocation;
                 this.navigationHelper = navigationHelper;
+
+                textView.PointerMoved += (_, _) =>
+                {
+                    if (!WasCursorSetByLink)
+                        return;
+
+                    textView.Cursor = iBeamCursor;
+                    WasCursorSetByLink = false;
+                };
             }
 
             public override int GetFirstInterestedOffset(int startOffset)
@@ -91,22 +108,22 @@ namespace StructuredLogViewer.Avalonia.Controls
                 if (!importsByLocation.TryGetValue(location, out var importedPaths))
                     return null;
 
-                return new ImportLinkElement(CurrentContext.TextView, CurrentContext.VisualLine, text.Count, importedPaths, navigationHelper);
+                return new ImportLinkElement(this, CurrentContext.VisualLine, text.Count, importedPaths, navigationHelper);
             }
         }
 
         private class ImportLinkElement : VisualLineText
         {
-            // private static readonly Cursor handCursor = new(StandardCursorType.Hand);
+            private static readonly Cursor handCursor = new(StandardCursorType.Hand);
 
-            private readonly TextView textView;
+            private readonly ImportLinkGenerator generator;
             private readonly HashSet<string> importedPaths;
             private readonly NavigationHelper navigationHelper;
 
-            public ImportLinkElement(TextView textView, VisualLine parentVisualLine, int length, HashSet<string> importedPaths, NavigationHelper navigationHelper)
+            public ImportLinkElement(ImportLinkGenerator generator, VisualLine parentVisualLine, int length, HashSet<string> importedPaths, NavigationHelper navigationHelper)
                 : base(parentVisualLine, length)
             {
-                this.textView = textView;
+                this.generator = generator;
                 this.importedPaths = importedPaths;
                 this.navigationHelper = navigationHelper;
             }
@@ -123,21 +140,14 @@ namespace StructuredLogViewer.Avalonia.Controls
             {
                 base.OnQueryCursor(e);
 
-                // TODO The cursor is not returning to the arrow after hovering over the link
-                // See https://github.com/AvaloniaUI/AvaloniaEdit/issues/133
+                // TODO Do this properly when the following issue is fixed: https://github.com/AvaloniaUI/AvaloniaEdit/issues/133
 
-                // if (e.Handled || e.Source is not InputElement inputElement)
-                //     return;
-                //
-                // if ((e.KeyModifiers & KeyModifiers.Control) != 0)
-                // {
-                //     inputElement.Cursor = handCursor;
-                //     e.Handled = true;
-                // }
-                // else
-                // {
-                //     inputElement.Cursor = null;
-                // }
+                if (!e.Handled && (e.KeyModifiers & KeyModifiers.Control) != 0 && ReferenceEquals(e.Source, generator.TextView))
+                {
+                    generator.TextView.Cursor = handCursor;
+                    generator.WasCursorSetByLink = true;
+                    e.Handled = true;
+                }
             }
 
             protected override void OnPointerPressed(PointerPressedEventArgs e)
@@ -156,7 +166,7 @@ namespace StructuredLogViewer.Avalonia.Controls
 
             protected override VisualLineText CreateInstance(int length)
             {
-                return new ImportLinkElement(textView, ParentVisualLine, length, importedPaths, navigationHelper);
+                return new ImportLinkElement(generator, ParentVisualLine, length, importedPaths, navigationHelper);
             }
 
             private void OpenLink()
@@ -211,10 +221,10 @@ namespace StructuredLogViewer.Avalonia.Controls
                 menu.PlacementMode = PlacementMode.AnchorAndGravity;
                 menu.PlacementAnchor = PopupAnchor.BottomLeft;
                 menu.PlacementGravity = PopupGravity.BottomRight;
-                menu.PlacementTarget = textView;
-                menu.PlacementRect = new Rect(topLeft - textView.ScrollOffset, bottomRight - textView.ScrollOffset);
+                menu.PlacementTarget = generator.TextView;
+                menu.PlacementRect = new Rect(topLeft - generator.TextView.ScrollOffset, bottomRight - generator.TextView.ScrollOffset);
                 menu.PlacementConstraintAdjustment = PopupPositionerConstraintAdjustment.FlipY | PopupPositionerConstraintAdjustment.SlideX;
-                menu.Open(textView);
+                menu.Open(generator.TextView);
             }
 
             private int GetCommonPathLength()
