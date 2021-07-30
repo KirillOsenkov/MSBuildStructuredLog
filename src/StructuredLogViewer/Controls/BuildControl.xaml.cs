@@ -367,16 +367,6 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             }
         }
 
-        private IEnumerable<SearchResult> FindPropertiesAndItems(IProjectOrEvaluation projectOrEvaluation, string searchText)
-        {
-            if (projectOrEvaluation is not TimedNode node)
-            {
-                return null;
-            }
-
-            return null;
-        }
-
         private void CentralTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var selectedItem = centralTabControl.SelectedItem as TabItem;
@@ -1039,16 +1029,16 @@ Recent:
             var project = node.GetNearestParentOrSelf<Project>();
             if (project != null)
             {
-                if (project.FindChild<Folder>(Strings.Items) != null || project.FindChild<Folder>(Strings.Properties) != null)
-                {
-                    SetProjectContext(project);
-                    return;
-                }
-
                 projectEvaluation = Build.FindEvaluation(project.EvaluationId);
                 if (projectEvaluation != null && (projectEvaluation.FindChild<Folder>(Strings.Items) != null || projectEvaluation.FindChild<Folder>(Strings.Properties) != null))
                 {
                     SetProjectContext(projectEvaluation);
+                    return;
+                }
+    
+                if (project.FindChild<Folder>(Strings.Items) != null || project.FindChild<Folder>(Strings.Properties) != null)
+                {
+                    SetProjectContext(project);
                     return;
                 }
 
