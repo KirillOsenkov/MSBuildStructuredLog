@@ -294,7 +294,7 @@
                            Fill="{StaticResource ImportBrush}" />
                 <TextBlock x:Name="label"
                            Classes="nodeBeforeText"
-                           Text="Import"
+                           Text="Import "
                            Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={StaticResource ImportStroke}}" />
                 <TextBlock x:Name="name"
                            Classes="nodeText"
@@ -315,7 +315,7 @@
                            Fill="{StaticResource NoImportBrush}" />
                 <TextBlock x:Name="label"
                            Classes="nodeBeforeText"
-                           Text="NoImport"
+                           Text="NoImport "
                            Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={StaticResource NoImportStroke}}" />
                 <TextBlock x:Name="name"
                            Classes="nodeText"
