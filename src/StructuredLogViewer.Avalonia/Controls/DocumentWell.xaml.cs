@@ -3,6 +3,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Avalonia.Interactivity;
 
@@ -28,6 +29,7 @@ namespace StructuredLogViewer.Avalonia.Controls
             this.RegisterControl(out closeButton, nameof(closeButton));
 
             closeButton.Click += closeButton_Click;
+            tabControl.PointerPressed += TabControlOnPointerPressed;
         }
 
         private void Tabs_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -99,6 +101,25 @@ namespace StructuredLogViewer.Avalonia.Controls
         private void closeButton_Click(object sender, RoutedEventArgs e)
         {
             Hide();
+        }
+
+        private void TabControlOnPointerPressed(object sender, PointerPressedEventArgs e)
+        {
+            if (e.Handled)
+                return;
+
+            var current = e.Source;
+
+            while (current != null)
+            {
+                if (current is TabItem { DataContext: SourceFileTab sourceFileTab })
+                {
+                    sourceFileTab.Close.Execute(null);
+                    break;
+                }
+
+                current = current.InteractiveParent;
+            }
         }
     }
 }
