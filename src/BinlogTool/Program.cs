@@ -9,7 +9,18 @@ namespace BinlogTool
     {
         static void Main(string[] args)
         {
-            if (args.Length == 3 && string.Equals(args[0], "savefiles", StringComparison.OrdinalIgnoreCase))
+            if (args.Length == 0)
+            {
+                Console.WriteLine(@"Usage:
+    binlogtool savefiles input.binlog output_path
+    binlogtool savestrings input.binlog output.txt
+    binlogtool search *.binlog search string");
+                return;
+            }
+
+            var firstArg = args[0];
+
+            if (args.Length == 3 && string.Equals(firstArg, "savefiles", StringComparison.OrdinalIgnoreCase))
             {
                 var binlog = args[1];
                 var outputRoot = args[2];
@@ -18,7 +29,7 @@ namespace BinlogTool
                 return;
             }
 
-            if (args.Length == 3 && string.Equals(args[0], "savestrings", StringComparison.OrdinalIgnoreCase))
+            if (args.Length == 3 && string.Equals(firstArg, "savestrings", StringComparison.OrdinalIgnoreCase))
             {
                 var binlog = args[1];
                 var outputFile = args[2];
@@ -27,7 +38,21 @@ namespace BinlogTool
                 return;
             }
 
-            Console.WriteLine("Usage: binlogtool savefiles input.binlog output_path");
+            if (firstArg == "search")
+            {
+                if (args.Length < 3)
+                {
+                    Console.Error.WriteLine("binlogtool search *.binlog search string");
+                    return;
+                }
+
+                var binlogs = args[1];
+                var search = string.Join(" ", args.Skip(2));
+                Searcher.Search(binlogs, search);
+                return;
+            }
+
+            Console.Error.WriteLine("Invalid arguments");
         }
 
         private static void CompareStrings()

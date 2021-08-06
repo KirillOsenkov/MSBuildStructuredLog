@@ -976,21 +976,15 @@ Recent:
             return node;
         }
 
-        private IEnumerable BuildResultTree(object resultsObject, bool moreAvailable)
+        public IEnumerable BuildResultTree(object resultsObject, bool moreAvailable = false)
         {
-            var results = resultsObject as ICollection<SearchResult>;
-            if (results == null)
-            {
-                return results;
-            }
+            var folder = ResultTree.BuildResultTree(resultsObject, moreAvailable, Elapsed);
 
-            var root = new Folder();
-            
             if (moreAvailable)
             {
                 var showAllButton = new ButtonNode
                 {
-                    Text = $"Showing first {results.Count} results. Show all results instead (slow)."
+                    Text = $"Showing first {folder.Children.Count} results. Show all results instead (slow)."
                 };
 
                 showAllButton.OnClick = () =>
@@ -999,43 +993,10 @@ Recent:
                     searchLogControl.TriggerSearch(searchLogControl.SearchText, int.MaxValue);
                 };
 
-                root.Children.Add(showAllButton);
-            }
-            
-            root.Children.Add(new Message
-            {
-                Text = $"{results.Count} result{(results.Count == 1 ? "" : "s")}. Search took: {Elapsed.ToString()}"
-            });
-
-            foreach (var result in results)
-            {
-                TreeNode parent = root;
-
-                var project = result.Node.GetNearestParent<Project>();
-                if (project != null)
-                {
-                    var projectProxy = root.GetOrCreateNodeWithName<ProxyNode>(project.Name);
-                    projectProxy.Original = project;
-                    if (projectProxy.Highlights.Count == 0)
-                    {
-                        projectProxy.Highlights.Add(project.Name);
-                    }
-
-                    parent = projectProxy;
-                }
-
-                var proxy = new ProxyNode();
-                proxy.Original = result.Node;
-                proxy.SearchResult = result;
-                parent.Children.Add(proxy);
+                folder.AddChildAtBeginning(showAllButton);
             }
 
-            if (!root.HasChildren)
-            {
-                root.Children.Add(new Message { Text = "No results found." });
-            }
-
-            return root.Children;
+            return folder.Children;
         }
 
         private void TreeViewItem_RequestBringIntoView(object sender, RequestBringIntoViewEventArgs e)
