@@ -27,7 +27,7 @@ namespace BinlogTool
             }
         }
 
-        public static void WriteLine(string message, ConsoleColor color = ConsoleColor.Gray)
+        public static void WriteLine(string message = "", ConsoleColor color = ConsoleColor.Gray)
         {
             if (Quiet)
             {

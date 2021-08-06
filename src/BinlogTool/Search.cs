@@ -69,6 +69,8 @@ namespace BinlogTool
 
             var resultTree = ResultTree.BuildResultTree(results);
             PrintTree(resultTree);
+            Log.WriteLine("====================================", ConsoleColor.Green);
+            Log.WriteLine("");
         }
 
         private const int IndentSize = 2;
