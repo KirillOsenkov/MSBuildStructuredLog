@@ -38,9 +38,9 @@ namespace StructuredLogViewer
             return resultSet;
         }
 
-        public static void ClearSearchResults(Build build)
+        public static void ClearSearchResults(Build build, bool markResultsInTree)
         {
-            if (!SettingsService.MarkResultsInTree)
+            if (!markResultsInTree)
             {
                 return;
             }

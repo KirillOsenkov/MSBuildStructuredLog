@@ -416,7 +416,7 @@
             </StackPanel>
         </DataTemplate>
 
-        <TreeDataTemplate DataType="{x:Type common:ProxyNode}"
+        <TreeDataTemplate DataType="{x:Type l:ProxyNode}"
                           ItemsSource="{Binding Children}">
             <StackPanel Orientation="Horizontal">
                 <ContentPresenter Content="{Binding Converter={StaticResource ProxyNodeIconConverter}}"
@@ -425,7 +425,7 @@
                 <ItemsControl Items="{Binding Highlights}"
                               Focusable="False">
                     <ItemsControl.DataTemplates>
-                        <DataTemplate DataType="{x:Type common:HighlightedText}">
+                        <DataTemplate DataType="{x:Type l:HighlightedText}">
                             <TextBlock Classes="nodeBeforeText"
                                        Foreground="Black"
                                        Background="Yellow"

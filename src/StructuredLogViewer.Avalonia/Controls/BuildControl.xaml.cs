@@ -78,7 +78,7 @@ namespace StructuredLogViewer.Avalonia.Controls
             searchLogControl.ResultsTreeBuilder = BuildResultTree;
             searchLogControl.WatermarkDisplayed += () =>
             {
-                Search.ClearSearchResults(Build);
+                Search.ClearSearchResults(Build, SettingsService.MarkResultsInTree);
                 UpdateWatermark();
             };
 

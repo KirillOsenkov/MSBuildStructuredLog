@@ -624,7 +624,7 @@
     </DataTemplate.Triggers>
   </DataTemplate>
 
-  <DataTemplate DataType="{x:Type core:HighlightedText}">
+  <DataTemplate DataType="{x:Type l:HighlightedText}">
     <TextBlock x:Name="text" Foreground="Black" Background="Yellow" Text="{Binding Text}" />
     <DataTemplate.Triggers>
       <DataTrigger Binding="{Binding Style}" Value="time">
@@ -633,7 +633,7 @@
     </DataTemplate.Triggers>
   </DataTemplate>
 
-  <HierarchicalDataTemplate DataType="{x:Type core:ProxyNode}"
+  <HierarchicalDataTemplate DataType="{x:Type l:ProxyNode}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
       <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{StaticResource ParameterStroke}" Fill="{StaticResource ParameterBrush}" />
