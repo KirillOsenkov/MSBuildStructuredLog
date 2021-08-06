@@ -588,7 +588,7 @@
     </StackPanel>
   </HierarchicalDataTemplate>
 
-  <DataTemplate DataType="{x:Type core:Note}">
+  <DataTemplate DataType="{x:Type l:Note}">
     <StackPanel Orientation="Horizontal">
       <Border BorderBrush="LightGray" BorderThickness="1" Margin="4" Background="{DynamicResource Theme_InfoBarBackground}" Padding="6">
         <TextBlock Text="{Binding Text}"

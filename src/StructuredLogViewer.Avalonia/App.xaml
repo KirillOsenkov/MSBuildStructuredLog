@@ -377,7 +377,7 @@
             </StackPanel>
         </DataTemplate>
 
-        <DataTemplate DataType="{x:Type common:Note}">
+        <DataTemplate DataType="{x:Type l:Note}">
             <StackPanel Orientation="Horizontal">
                 <Border BorderBrush="LightGray"
                         BorderThickness="1"

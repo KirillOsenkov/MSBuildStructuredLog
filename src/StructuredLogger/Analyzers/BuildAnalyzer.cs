@@ -23,23 +23,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static void AnalyzeBuild(Build build)
         {
-            try
+            if (build.IsAnalyzed)
             {
-                if (build.IsAnalyzed)
-                {
-                    SealAndCalculateIndices(build);
-                    return;
-                }
+                SealAndCalculateIndices(build);
+                return;
+            }
 
-                var analyzer = new BuildAnalyzer(build);
-                analyzer.Analyze();
-                build.IsAnalyzed = true;
-            }
-            catch (Exception ex)
-            {
-                DialogService.ShowMessageBox(
-                    "Error while analyzing build. Sorry about that. Please Ctrl+C to copy this text and file an issue on https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/new \r\n" + ex.ToString());
-            }
+            var analyzer = new BuildAnalyzer(build);
+            analyzer.Analyze();
+            build.IsAnalyzed = true;
         }
 
         private static void SealAndCalculateIndices(Build build)

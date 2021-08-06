@@ -331,7 +331,7 @@ namespace StructuredLogViewer.Avalonia
             if (shouldAnalyze)
             {
                 progress.ProgressText = "Analyzing " + filePath + "...";
-                await System.Threading.Tasks.Task.Run(() => BuildAnalyzer.AnalyzeBuild(build));
+                await QueueAnalyzeBuild(build);
             }
 
             progress.ProgressText = "Rendering tree...";
@@ -389,8 +389,24 @@ namespace StructuredLogViewer.Avalonia
             var buildHost = new HostedBuild(projectFilePath, customArguments);
             Build result = await buildHost.BuildAndGetResult(progress);
             progress.ProgressText = "Analyzing build...";
-            await System.Threading.Tasks.Task.Run(() => BuildAnalyzer.AnalyzeBuild(result));
+            await QueueAnalyzeBuild(result);
             DisplayBuild(result);
+        }
+
+        private async Task QueueAnalyzeBuild(Build build)
+        {
+            await System.Threading.Tasks.Task.Run(() =>
+            {
+                try
+                {
+                    BuildAnalyzer.AnalyzeBuild(build);
+                }
+                catch (Exception ex)
+                {
+                    DialogService.ShowMessageBox(
+                    "Error while analyzing build. Sorry about that. Please Ctrl+C to copy this text and file an issue on https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/new \r\n" + ex.ToString());
+                }
+            });
         }
 
         private async void Open_Click(object sender, RoutedEventArgs e)
@@ -562,7 +578,7 @@ namespace StructuredLogViewer.Avalonia
         {
             var openFileDialog = new OpenFileDialog
             {
-                Filters = { new FileDialogFilter { Name = "MSBuild (.dll;.exe)", Extensions = {"dll", "exe"} } },
+                Filters = { new FileDialogFilter { Name = "MSBuild (.dll;.exe)", Extensions = { "dll", "exe" } } },
                 Title = "Select MSBuild file location",
             };
 
@@ -594,7 +610,7 @@ namespace StructuredLogViewer.Avalonia
                 FileName = "https://github.com/KirillOsenkov/MSBuildStructuredLog",
                 UseShellExecute = true
             };
-            Process.Start (psi);
+            Process.Start(psi);
         }
 
         private void Exit_Click(object sender, RoutedEventArgs e)

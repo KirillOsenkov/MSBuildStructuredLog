@@ -428,7 +428,7 @@ namespace StructuredLogViewer
             if (shouldAnalyze)
             {
                 progress.ProgressText = "Analyzing " + filePath + "...";
-                await System.Threading.Tasks.Task.Run(() => BuildAnalyzer.AnalyzeBuild(build));
+                await QueueAnalyzeBuild(build);
             }
 
             progress.ProgressText = "Rendering tree...";
@@ -441,6 +441,22 @@ namespace StructuredLogViewer
             {
                 currentBuild.UpdateBreadcrumb($"Load time: {elapsed}");
             }
+        }
+
+        private async System.Threading.Tasks.Task QueueAnalyzeBuild(Build build)
+        {
+            await System.Threading.Tasks.Task.Run(() =>
+            {
+                try
+                {
+                    BuildAnalyzer.AnalyzeBuild(build);
+                }
+                catch (Exception ex)
+                {
+                    DialogService.ShowMessageBox(
+                    "Error while analyzing build. Sorry about that. Please Ctrl+C to copy this text and file an issue on https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/new \r\n" + ex.ToString());
+                }
+            });
         }
 
         private static Build GetErrorBuild(string filePath, string message)
@@ -491,7 +507,7 @@ namespace StructuredLogViewer
             var buildHost = new HostedBuild(projectFilePath, customArguments);
             Build result = await buildHost.BuildAndGetResult(progress);
             progress.ProgressText = "Analyzing build...";
-            await System.Threading.Tasks.Task.Run(() => BuildAnalyzer.AnalyzeBuild(result));
+            await QueueAnalyzeBuild(result);
             DisplayBuild(result);
             if (searchText != null && CurrentBuildControl != null)
             {
