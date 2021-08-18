@@ -10,8 +10,8 @@ namespace Microsoft.Build.BackEnd
 {
     internal class ItemGroupLoggingHelper
     {
-        internal static PropertyInfo LineNumberProperty = typeof(BuildMessageEventArgs).GetProperty("LineNumber");
-        internal static PropertyInfo ColumnNumberProperty = typeof(BuildMessageEventArgs).GetProperty("ColumnNumber");
+        internal static FieldInfo LineNumberField = typeof(BuildMessageEventArgs).GetField("lineNumber", BindingFlags.Instance | BindingFlags.NonPublic);
+        internal static FieldInfo ColumnNumberField = typeof(BuildMessageEventArgs).GetField("columnNumber", BindingFlags.Instance | BindingFlags.NonPublic);
 
         internal static TaskParameterEventArgs CreateTaskParameterEventArgs(
             BuildEventContext buildEventContext,
@@ -31,8 +31,9 @@ namespace Microsoft.Build.BackEnd
                 timestamp);
             args.BuildEventContext = buildEventContext;
 
-            LineNumberProperty.SetValue(args, line);
-            ColumnNumberProperty.SetValue(args, column);
+            // sigh this is terrible for perf
+            LineNumberField.SetValue(args, line);
+            ColumnNumberField.SetValue(args, column);
 
             // Should probably make these public
             // args.LineNumber = line;
