@@ -47,8 +47,5 @@ namespace Microsoft.Build.Framework
 
         public TargetSkipReason SkipReason { get; set; }
         public BuildEventContext OriginalBuildEventContext { get; set; }
-        public string Condition { get; set; }
-        public string EvaluatedCondition { get; set; }
-        public bool OriginallySucceeded { get; set; }
     }
 }

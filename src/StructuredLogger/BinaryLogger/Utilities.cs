@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using Microsoft.Build.Framework;
 
@@ -9,6 +10,9 @@ namespace Microsoft.Build.BackEnd
 {
     internal class ItemGroupLoggingHelper
     {
+        internal static FieldInfo LineNumberField = typeof(BuildMessageEventArgs).GetField("lineNumber", BindingFlags.Instance | BindingFlags.NonPublic);
+        internal static FieldInfo ColumnNumberField = typeof(BuildMessageEventArgs).GetField("columnNumber", BindingFlags.Instance | BindingFlags.NonPublic);
+
         internal static TaskParameterEventArgs CreateTaskParameterEventArgs(
             BuildEventContext buildEventContext,
             TaskParameterMessageKind messageKind,
@@ -24,10 +28,16 @@ namespace Microsoft.Build.BackEnd
                 itemType,
                 items,
                 logItemMetadata,
-                timestamp,
-                line,
-                column);
+                timestamp);
             args.BuildEventContext = buildEventContext;
+
+            // sigh this is terrible for perf
+            LineNumberField.SetValue(args, line);
+            ColumnNumberField.SetValue(args, column);
+
+            // Should probably make these public
+            // args.LineNumber = line;
+            // args.ColumnNumber = column;
             return args;
         }
     }
