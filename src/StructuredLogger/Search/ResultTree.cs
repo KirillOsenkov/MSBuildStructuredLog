@@ -10,13 +10,13 @@ namespace StructuredLogViewer
     {
         public static Folder BuildResultTree(object resultsObject, bool moreAvailable = false, TimeSpan elapsed = default)
         {
+            var root = new Folder();
+
             var results = resultsObject as ICollection<SearchResult>;
             if (results == null)
             {
-                return null;
+                return root;
             }
-
-            var root = new Folder();
 
             root.Children.Add(new Message
             {
