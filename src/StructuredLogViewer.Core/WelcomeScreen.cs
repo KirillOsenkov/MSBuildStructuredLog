@@ -43,9 +43,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return $"Version {ThisAssembly.AssemblyInformationalVersion}";
         }
 
+        private string selectedLog;
         public string SelectedLog
         {
-            get => null;
+            get => selectedLog;
 
             set
             {
@@ -53,6 +54,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     return;
                 }
+
+                selectedLog = value;
 
                 if (!File.Exists(value))
                 {
@@ -68,9 +71,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        private string selectedProject;
         public string SelectedProject
         {
-            get => null;
+            get => selectedProject;
 
             set
             {
@@ -78,6 +82,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     return;
                 }
+
+                selectedProject = value;
 
                 if (!File.Exists(value))
                 {
