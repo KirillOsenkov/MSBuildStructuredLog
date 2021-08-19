@@ -61,6 +61,8 @@ namespace StructuredLogViewer.Controls
 
         public TreeView ActiveTreeView;
 
+        private PropertiesAndItemsSearch propertiesAndItemsSearch;
+
         public BuildControl(Build build, string logFilePath)
         {
             InitializeComponent();
@@ -86,6 +88,8 @@ namespace StructuredLogViewer.Controls
                 UpdateWatermark();
             };
 
+            propertiesAndItemsSearch = new PropertiesAndItemsSearch();
+
             propertiesAndItemsControl.ExecuteSearch = (searchText, maxResults, cancellationToken) =>
             {
                 var context = GetProjectContext() as TimedNode;
@@ -94,64 +98,12 @@ namespace StructuredLogViewer.Controls
                     return null;
                 }
 
-                var roots = new List<TreeNode>(2);
-                var properties = context.FindChild<Folder>(Strings.Properties);
-                var items = context.FindChild<Folder>(Strings.Items);
-                if (properties != null)
-                {
-                    roots.Add(properties);
-                }
-
-                if (items != null)
-                {
-                    roots.Add(items);
-                }
-
-                var strings = new StringCache();
-                foreach (var root in roots)
-                {
-                    CollectStrings(root, strings);
-                }
-
-                var search = new Search(roots, strings.Instances, maxResults, SettingsService.MarkResultsInTree);
-                var results = search.FindNodes(searchText, cancellationToken);
-                var otherResults = new List<SearchResult>();
-
-                // Find all folders where no other results are under that folder.
-                // First find all ancestors of all non-folders.
-                var allAncestors = new HashSet<BaseNode>(results.Count());
-                foreach (var result in results)
-                {
-                    var node = result.Node;
-                    if (node is not Folder itemType)
-                    {
-                        otherResults.Add(result);
-                        foreach (var ancestor in node.GetParentChainExcludingThis())
-                        {
-                            allAncestors.Add(ancestor);
-                        }
-                    }
-                }
-
-                var includeFolderChildren = new List<BaseNode>();
-
-                // Iterate over all folders where no other results are under that folder.
-                foreach (var folder in results.Select(r => r.Node).OfType<Folder>().Where(f => !allAncestors.Contains(f)))
-                {
-                    foreach (var item in folder.Children.OfType<Item>())
-                    {
-                        includeFolderChildren.Add(item);
-                    }
-                }
-
-                results =
-                    otherResults
-                    .Concat(includeFolderChildren.Select(c =>
-                    {
-                        var result = new SearchResult(c);
-                        return result;
-                    }))
-                    .ToArray();
+                var results = propertiesAndItemsSearch.Search(
+                    context,
+                    searchText,
+                    maxResults,
+                    SettingsService.MarkResultsInTree,
+                    cancellationToken);
 
                 return results;
             };
@@ -334,37 +286,6 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             navigationHelper.OpenFileRequested += filePath => DisplayFile(filePath);
 
             centralTabControl.SelectionChanged += CentralTabControl_SelectionChanged;
-        }
-
-        private void CollectStrings(BaseNode root, StringCache strings)
-        {
-            switch (root)
-            {
-                case Property property:
-                    strings.Intern(property.Name);
-                    strings.Intern(property.Value);
-                    break;
-                case Item item:
-                    strings.Intern(item.Text);
-                    break;
-                case Metadata metadata:
-                    strings.Intern(metadata.Name);
-                    strings.Intern(metadata.Value);
-                    break;
-                case Folder folder:
-                    strings.Intern(folder.Name);
-                    break;
-                default:
-                    break;
-            }
-
-            if (root is TreeNode treeNode)
-            {
-                foreach (var child in treeNode.Children)
-                {
-                    CollectStrings(child, strings);
-                }
-            }
         }
 
         private void CentralTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -1024,29 +945,27 @@ Recent:
                 return;
             }
 
-            ProjectEvaluation projectEvaluation;
-
             var project = node.GetNearestParentOrSelf<Project>();
             if (project != null)
             {
-                projectEvaluation = Build.FindEvaluation(project.EvaluationId);
-                if (projectEvaluation != null && (projectEvaluation.FindChild<Folder>(Strings.Items) != null || projectEvaluation.FindChild<Folder>(Strings.Properties) != null))
-                {
-                    SetProjectContext(projectEvaluation);
-                    return;
-                }
+                //projectEvaluation = Build.FindEvaluation(project.EvaluationId);
+                //if (projectEvaluation != null && (projectEvaluation.FindChild<Folder>(Strings.Items) != null || projectEvaluation.FindChild<Folder>(Strings.Properties) != null))
+                //{
+                //    SetProjectContext(projectEvaluation);
+                //    return;
+                //}
     
-                if (project.FindChild<Folder>(Strings.Items) != null || project.FindChild<Folder>(Strings.Properties) != null)
-                {
-                    SetProjectContext(project);
-                    return;
-                }
+                //if (project.FindChild<Folder>(Strings.Items) != null || project.FindChild<Folder>(Strings.Properties) != null)
+                //{
+                //    SetProjectContext(project);
+                //    return;
+                //}
 
-                SetProjectContext(null);
+                SetProjectContext(project);
                 return;
             }
 
-            projectEvaluation = node.GetNearestParentOrSelf<ProjectEvaluation>();
+            var projectEvaluation = node.GetNearestParentOrSelf<ProjectEvaluation>();
             if (projectEvaluation != null && (projectEvaluation.FindChild<Folder>(Strings.Items) != null || projectEvaluation.FindChild<Folder>(Strings.Properties) != null))
             {
                 SetProjectContext(projectEvaluation);
