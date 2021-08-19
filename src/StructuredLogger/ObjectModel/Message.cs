@@ -54,7 +54,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 var match = GetSourceFileMatch();
                 if (match != null && match.Success)
                 {
-                    return int.Parse(match.Groups["Line"].Value);
+                    var value = match.Groups["Line"].Value;
+                    return int.Parse(value);
                 }
 
                 return null;

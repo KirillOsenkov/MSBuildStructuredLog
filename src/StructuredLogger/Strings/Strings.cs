@@ -135,14 +135,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             PropertyReassignment = GetString("PropertyReassignment");
 
-            // This was unused??
-            //string propertyReassignment = PropertyReassignment
-            // .Replace(@"$({0})=""{1}"" (", @"\$\(\w+\)=.* \(")
-            // .Replace(@"""{2}"")", @".*""\)")
-            // .Replace("{3}", @"(?<File>.*) \((?<Line>\d+),(\d+)\)$");
-            //PropertyReassignmentRegex = new Regex("^" + propertyReassignment, RegexOptions.Compiled | RegexOptions.Singleline);
-
-            PropertyReassignmentRegex = CreateRegex(PropertyReassignment, 4, RegexOptions.Compiled | RegexOptions.Singleline);
+            string propertyReassignment = "^" + PropertyReassignment
+                .Replace(@"$({0})=""{1}"" (", @"\$\((?<Name>\w+)\)="".*"" \(")
+                .Replace(@"""{2}"")", @""".*""\)")
+                .Replace("{3}", @"(?<File>.*) \((?<Line>\d+),(?<Column>\d+)\)$");
+            PropertyReassignmentRegex = new Regex(propertyReassignment, RegexOptions.Compiled | RegexOptions.Singleline);
 
             string taskFoundFromFactory = GetString("TaskFoundFromFactory")
                 .Replace(@"""{0}""", @"\""(?<task>.+)\""")
