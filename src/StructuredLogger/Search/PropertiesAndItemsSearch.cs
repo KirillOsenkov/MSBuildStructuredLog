@@ -17,7 +17,11 @@ namespace StructuredLogViewer
         {
             var roots = new List<TreeNode>();
 
-            if (context is Project project && project.GetRoot() is Build build)
+            Build build = context.GetRoot() as Build;
+
+            Project project = context as Project;
+
+            if (project != null && build != null)
             {
                 var projectEvaluation = build.FindEvaluation(project.EvaluationId);
                 if (projectEvaluation != null)
@@ -51,6 +55,9 @@ namespace StructuredLogViewer
 
             var search = new Search(roots, strings.Instances, maxResults, markResultsInTree);
             var results = search.FindNodes(searchText, cancellationToken);
+
+            // When they're searching for $additem Foo, add the contents of the $additem folder
+            // to search results, because this is what they likely want
             var otherResults = new List<SearchResult>();
 
             // Find all folders where no other results are under that folder.
@@ -88,6 +95,27 @@ namespace StructuredLogViewer
                     return result;
                 }))
                 .ToArray();
+
+            var nodesSoFar = new HashSet<BaseNode>(results.Select(r => r.Node));
+
+            // Now add results from execution (not evaluation) under current project
+            if (project != null && build != null)
+            {
+                var executionSearchText = $"{searchText} project(${project.Index})";
+                var executionSearch = new Search(
+                    project.Children.OfType<Target>(),
+                    build.StringTable.Instances,
+                    maxResults,
+                    markResultsInTree);
+                var executionResults = search.FindNodes(searchText, cancellationToken);
+                executionResults = executionResults.Where(r =>
+                    (r.Node is Property ||
+                     r.Node is Item ||
+                     r.Node is AddItem ||
+                     r.Node is RemoveItem)
+                     && !nodesSoFar.Contains(r.Node));
+                results = results.Concat(executionResults).ToArray();
+            }
 
             return results;
         }
