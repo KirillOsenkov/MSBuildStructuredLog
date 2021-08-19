@@ -45,6 +45,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public string SelectedLog
         {
+            get => null;
+
             set
             {
                 if (value == null)
@@ -68,6 +70,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public string SelectedProject
         {
+            get => null;
+
             set
             {
                 if (value == null)
