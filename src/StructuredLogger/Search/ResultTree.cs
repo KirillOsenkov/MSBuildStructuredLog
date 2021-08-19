@@ -72,7 +72,12 @@ namespace StructuredLogViewer
                     if (project != null)
                     {
                         var projectName = ProxyNode.GetNodeText(project);
-                        parent = InsertParent(parent, project, projectName);
+                        parent = InsertParent(
+                            parent,
+                            project,
+                            projectName,
+                            existingProxy => existingProxy.Original is Project existing &&
+                                string.Equals(existing.SourceFilePath, project.SourceFilePath, StringComparison.OrdinalIgnoreCase));
                     }
 
                     var target = resultNode.GetNearestParent<Target>();
@@ -129,10 +134,39 @@ namespace StructuredLogViewer
             return root;
         }
 
-        private static TreeNode InsertParent(TreeNode parent, NamedNode actualParent, string name = null)
+        private static TreeNode InsertParent(
+            TreeNode parent,
+            NamedNode actualParent,
+            string name = null,
+            Func<ProxyNode, bool> existingNodeFinder = null)
         {
             name ??= actualParent.Name;
-            var folderProxy = parent.GetOrCreateNodeWithName<ProxyNode>(name);
+
+            ProxyNode folderProxy = null;
+
+            if (existingNodeFinder != null)
+            {
+                foreach (var existingChild in parent.Children.OfType<ProxyNode>())
+                {
+                    if (existingNodeFinder(existingChild))
+                    {
+                        folderProxy = existingChild;
+                        break;
+                    }
+                }
+
+                if (folderProxy == null)
+                {
+                    folderProxy = new ProxyNode { Name = name };
+                    parent.AddChild(folderProxy);
+                }
+            }
+
+            if (folderProxy == null)
+            {
+                folderProxy = parent.GetOrCreateNodeWithName<ProxyNode>(name);
+            }
+
             folderProxy.Original = actualParent;
             if (folderProxy.Highlights.Count == 0)
             {
