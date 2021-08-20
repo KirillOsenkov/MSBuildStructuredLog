@@ -42,6 +42,7 @@
   <SolidColorBrush x:Key="ParameterStroke" Color="DodgerBlue" />
   <SolidColorBrush x:Key="PropertyStroke" Color="DodgerBlue" />
   <SolidColorBrush x:Key="ItemStroke" Color="MediumAquamarine" />
+  <SolidColorBrush x:Key="AddItemStroke" Color="Teal" />
   <SolidColorBrush x:Key="MetadataStroke" Color="MediumAquamarine" />
   <SolidColorBrush x:Key="MessageStroke" Color="LightGray" />
   <SolidColorBrush x:Key="ImportStroke" Color="Sienna" />
@@ -398,7 +399,7 @@
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
       <DataTrigger Binding="{Binding IsSelected}" Value="False">
-        <Setter TargetName="label" Property="Foreground" Value="Teal" />
+        <Setter TargetName="label" Property="Foreground" Value="{DynamicResource AddItemStroke}" />
       </DataTrigger>
     </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
@@ -419,7 +420,7 @@
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
       <DataTrigger Binding="{Binding IsSelected}" Value="False">
-        <Setter TargetName="label" Property="Foreground" Value="Teal" />
+        <Setter TargetName="label" Property="Foreground" Value="{DynamicResource AddItemStroke}" />
       </DataTrigger>
     </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
@@ -1033,7 +1034,7 @@
                   <RotateTransform Angle="180" CenterX="3" CenterY="3"/>
                 </Setter.Value>
               </Setter>
-              <Setter TargetName="ExpandPath" Property="Fill" Value="{StaticResource &#470;}"/>
+              <Setter TargetName="ExpandPath" Property="Fill" Value="{DynamicResource &#470;}"/>
               <Setter TargetName="ExpandPath" Property="Stroke" Value="{StaticResource &#469;}"/>
             </Trigger>
             <Trigger Property="IsMouseOver" Value="True">
