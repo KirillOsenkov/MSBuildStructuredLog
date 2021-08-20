@@ -45,6 +45,12 @@ namespace StructuredLogViewer
                 {
                     roots.Add(items);
                 }
+
+                var reassignments = root.FindChild<TimedNode>(Strings.PropertyReassignmentFolder);
+                if (reassignments != null)
+                {
+                    roots.Add(reassignments);
+                }
             }
 
             var strings = new StringCache();
@@ -107,7 +113,7 @@ namespace StructuredLogViewer
                     build.StringTable.Instances,
                     maxResults,
                     markResultsInTree);
-                var executionResults = search.FindNodes(searchText, cancellationToken);
+                var executionResults = executionSearch.FindNodes(executionSearchText, cancellationToken);
                 executionResults = executionResults.Where(r =>
                     (r.Node is Property ||
                      r.Node is Item ||
@@ -143,6 +149,9 @@ namespace StructuredLogViewer
                     break;
                 case Folder folder:
                     strings.Intern(folder.Name);
+                    break;
+                case Message message when Strings.PropertyReassignmentRegex.IsMatch(message.Text):
+                    strings.Intern(message.Text);
                     break;
                 default:
                     break;
