@@ -1207,7 +1207,7 @@ Recent:
         {
             if (treeView.SelectedItem is TimedNode timedNode)
             {
-                var text = timedNode.GetTimeAndDurationText();
+                var text = timedNode.GetTimeAndDurationText(fullPrecision: true);
                 DisplayText(text, timedNode.ToString());
             }
         }

@@ -32,7 +32,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public override string TypeName => nameof(TimedNode);
 
-        public string GetTimeAndDurationText()
+        public string GetTimeAndDurationText(bool fullPrecision = false)
         {
             var duration = DurationText;
             if (string.IsNullOrEmpty(duration))
@@ -40,8 +40,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 duration = "0";
             }
 
-            return $@"Start: {TextUtilities.Display(StartTime, displayDate: true)}
-End: {TextUtilities.Display(EndTime, displayDate: true)}
+            return $@"Start: {TextUtilities.Display(StartTime, displayDate: true, fullPrecision)}
+End: {TextUtilities.Display(EndTime, displayDate: true, fullPrecision)}
 Duration: {duration}";
         }
 

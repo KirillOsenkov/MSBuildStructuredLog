@@ -470,12 +470,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return span.Milliseconds + " ms";
         }
 
-        public static string Display(DateTime time, bool displayDate = false)
+        public static string Display(DateTime time, bool displayDate = false, bool fullPrecision = false)
         {
-            var formatString = "HH:mm:ss.fff";
+            string fullPrecisionString = fullPrecision ? "ffff" : "";
+
+            var formatString = "HH:mm:ss.fff" + fullPrecisionString;
             if (displayDate)
             {
-                formatString = "yyyy-MM-dd HH:mm:ss.fff";
+                formatString = "yyyy-MM-dd HH:mm:ss.fff" + fullPrecisionString;
             }
 
             return time.ToString(formatString);
