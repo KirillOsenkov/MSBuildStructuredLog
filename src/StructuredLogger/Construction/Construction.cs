@@ -318,11 +318,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     {
                         // the original target was skipped because of false condition, so its target id == -1
                         // Need to look it up by name, if unambiguous
-                        originalTarget = originalProject
+                        var candidates = originalProject
                             .Children
                             .OfType<Target>()
                             .Where(t => t.Name == targetName)
-                            .SingleOrDefault();
+                            .ToArray();
+                        if (candidates.Length == 1)
+                        {
+                            originalTarget = candidates[0];
+                        }
+                        else
+                        {
+                            originalTarget = null;
+                        }
 
                         target.OriginalNode = (TimedNode)originalTarget ?? originalProject;
                     }
