@@ -1709,6 +1709,11 @@ Recent:
 
         public void DisplayStats()
         {
+            if (!File.Exists(LogFilePath))
+            {
+                return;
+            }
+
             var statsRoot = Build.FindChild<Folder>(f => f.Name.StartsWith(Strings.Statistics));
             if (statsRoot != null)
             {
