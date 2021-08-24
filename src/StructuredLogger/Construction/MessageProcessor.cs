@@ -268,7 +268,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             foreach (ITaskItem item in items)
             {
                 var itemNode = new Item { Text = item.ItemSpec };
-                Construction.AddMetadata(item, itemNode);
+                this.construction.AddMetadata(item, itemNode);
                 parent.AddChild(itemNode);
             }
         }
