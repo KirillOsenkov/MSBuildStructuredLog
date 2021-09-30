@@ -7,7 +7,7 @@ install:
   - ps: '& $env:temp\dotnet-install.ps1 -Version "6.0.100-rc.1.21463.6"'
 build_script: 
 - cmd: >-
-    msbuild /r /m /p:Configuration=Release /clp:v=m MSBuildStructuredLog.sln /bl /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
+    dotnet msbuild /r /m /p:Configuration=Release /clp:v=m MSBuildStructuredLog.sln /bl /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
 
     dotnet cake ./build-macos.cake --settings_skippackageversioncheck=true
 
