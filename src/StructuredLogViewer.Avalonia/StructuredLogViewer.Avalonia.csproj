@@ -29,8 +29,8 @@
     <PackageReference Include="Avalonia.Diagnostics" Version="0.10.3" Condition=" '$(Configuration)' == 'Debug' " />
     <PackageReference Include="Avalonia.AvaloniaEdit" Version="0.10.0" />
     <PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
-    <PackageReference Include="SkiaSharp" Version="2.88.0-preview.120" />
-    <PackageReference Include="HarfBuzzSharp" Version="2.6.1.9-preview.120" />
+    <PackageReference Include="SkiaSharp" Version="2.88.0-preview.145" />
+    <PackageReference Include="HarfBuzzSharp" Version="2.8.2-preview.140" />
   </ItemGroup>
 
   <ItemGroup>
