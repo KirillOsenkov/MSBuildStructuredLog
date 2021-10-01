@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net5.0</TargetFramework>
-    <RuntimeIdentifiers>win7-x64;ubuntu.14.04-x64;osx.10.12-x64</RuntimeIdentifiers>
+    <TargetFramework>net6.0</TargetFramework>
+    <RuntimeIdentifiers>win7-x64;ubuntu.14.04-x64;osx.10.12-x64;osx-arm64</RuntimeIdentifiers>
   </PropertyGroup>
   
   <ItemGroup>
@@ -15,7 +15,7 @@
     </AvaloniaResource>
   </ItemGroup>
 
-  <ItemGroup Condition="'$(NETCoreSdkRuntimeIdentifier)' == 'osx-x64'">
+  <ItemGroup Condition="$(NETCoreSdkRuntimeIdentifier.StartsWith('osx'))">
     <Content Include="StructuredLogViewer.icns">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -29,6 +29,9 @@
     <PackageReference Include="Avalonia.Diagnostics" Version="0.10.3" Condition=" '$(Configuration)' == 'Debug' " />
     <PackageReference Include="Avalonia.AvaloniaEdit" Version="0.10.0" />
     <PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
+    <!-- Bump transitive references to preview versions that contain osx-arm64 native assets -->
+    <PackageReference Include="SkiaSharp" Version="2.88.0-preview.145" />
+    <PackageReference Include="HarfBuzzSharp" Version="2.8.2-preview.140" />
   </ItemGroup>
 
   <ItemGroup>
