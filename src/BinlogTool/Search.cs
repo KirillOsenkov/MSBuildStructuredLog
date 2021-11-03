@@ -49,7 +49,7 @@ namespace BinlogTool
 
         private static void SearchInFile(string binlogFilePath, string searchText)
         {
-            var build = Serialization.Read(binlogFilePath);
+            var build = BinaryLog.ReadBuild(binlogFilePath);
             BuildAnalyzer.AnalyzeBuild(build);
             
             var search = new Search(

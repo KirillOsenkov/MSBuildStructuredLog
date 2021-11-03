@@ -31,7 +31,7 @@ namespace BinlogTool
 
             binlog = Path.GetFullPath(binlog);
 
-            var build = Serialization.Read(binlog);
+            var build = BinaryLog.ReadBuild(binlog);
             SaveFilesFrom(build, outputDirectory);
 
             GenerateSources(build, outputDirectory);
