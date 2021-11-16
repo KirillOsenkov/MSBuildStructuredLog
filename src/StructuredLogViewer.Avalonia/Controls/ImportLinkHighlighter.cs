@@ -130,9 +130,7 @@ namespace StructuredLogViewer.Avalonia.Controls
 
             public override TextRun CreateTextRun(int startVisualColumn, ITextRunConstructionContext context)
             {
-                // TODO Replace bold with underline when available
-                TextRunProperties.Typeface = new Typeface(TextRunProperties.Typeface.FontFamily, FontStyle.Normal, FontWeight.Bold);
-
+                TextRunProperties.Underline = true;
                 return base.CreateTextRun(startVisualColumn, context);
             }
 
