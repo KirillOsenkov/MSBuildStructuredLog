@@ -113,8 +113,13 @@ namespace StructuredLogViewer.Controls
             var lanesPanel = new StackPanel { Orientation = Orientation.Vertical, HorizontalAlignment = HorizontalAlignment.Left };
             grid.Children.Add(lanesPanel);
 
-            foreach (var lane in Timeline.Lanes)
+            var keys = Timeline.Lanes.Keys.ToList();
+            keys.Sort();
+
+
+            foreach (var key in keys)
             {
+                var lane = Timeline.Lanes[key];
                 var panel = CreatePanelForLane(lane, GlobalStart);
                 if (panel != null && panel.Children.Count > 0)
                 {
@@ -148,9 +153,8 @@ namespace StructuredLogViewer.Controls
             }
         }
 
-        private Panel CreatePanelForLane(KeyValuePair<int, Lane> laneAndId, long globalStart)
+        private Panel CreatePanelForLane(Lane lane, long globalStart)
         {
-            var lane = laneAndId.Value;
             var blocks = lane.Blocks;
             if (blocks.Count == 0)
             {
