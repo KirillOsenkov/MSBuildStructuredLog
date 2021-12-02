@@ -380,7 +380,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             {
                 var timeline = new Timeline(Build);
                 this.timeline.BuildControl = this;
-                this.timeline.SetTimeline(timeline);
+                this.timeline.SetTimeline(timeline, Build.StartTime.Ticks);
                 this.timelineWatermark.Visibility = Visibility.Hidden;
                 this.timeline.Visibility = Visibility.Visible;
             }
