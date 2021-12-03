@@ -10,9 +10,13 @@ using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogViewer.Controls
 {
-    public partial class TimelineControl : UserControl
+    public partial class TracingControl : UserControl
     {
-        public TimelineControl()
+        // Ratio of time reported to the smallest pixel to render.
+        private const double TimeToPixel = 50000;
+        private long GlobalStart;
+
+        public TracingControl()
         {
             scaleTransform = new ScaleTransform();
             InitializeComponent();
@@ -91,8 +95,6 @@ namespace StructuredLogViewer.Controls
 
         private bool isDoubleClick = false;
 
-        private long GlobalStart;
-
         public Timeline Timeline { get; set; }
 
 
@@ -101,7 +103,14 @@ namespace StructuredLogViewer.Controls
             Timeline = timeline;
             GlobalStart = globalStart;
 
-            var lanesPanel = new StackPanel { Orientation = Orientation.Horizontal };
+            DrawTimeline();
+        }
+
+        // Re-drawTimeline
+        private void DrawTimeline()
+        {
+            grid.Children.Clear();
+            var lanesPanel = new StackPanel { Orientation = Orientation.Vertical, HorizontalAlignment = HorizontalAlignment.Left };
             grid.Children.Add(lanesPanel);
 
             var keys = Timeline.Lanes.Keys.ToList();
@@ -143,7 +152,7 @@ namespace StructuredLogViewer.Controls
             }
         }
 
-        private Panel CreatePanelForLane(Lane lane, double start)
+        private Panel CreatePanelForLane(Lane lane, long globalStart)
         {
             var blocks = lane.Blocks;
             if (blocks.Count == 0)
@@ -173,8 +182,7 @@ namespace StructuredLogViewer.Controls
                 endpoints.Add(block.EndPoint);
             }
 
-            endpoints.Sort((l, r) =>
-            {
+            endpoints.Sort((l, r) => {
                 int timeCompare = l.Timestamp.CompareTo(r.Timestamp);
                 if (timeCompare == 0)
                 {
@@ -194,7 +202,7 @@ namespace StructuredLogViewer.Controls
                             case Task:
                                 lValue = 1; break;
                             default:
-                                lValue = 0; break;
+                                lValue = 0;break;
                         }
 
                         switch (r.Block.Node)
@@ -227,7 +235,7 @@ namespace StructuredLogViewer.Controls
                     return l.IsStart ? 1 : -1;
                 }
                 return timeCompare;
-            });
+                });
 
             int level = 0;
             foreach (var endpoint in endpoints)
@@ -254,98 +262,65 @@ namespace StructuredLogViewer.Controls
                 return l.Length.CompareTo(r.Length);
             });
 
-            DateTime minDateTime = blocks[0].StartTime;
-            DateTime maxDateTime = blocks[blocks.Count - 1].StartTime;
-
             foreach (var block in blocks)
             {
                 block.Start = block.StartTime.Ticks;
                 block.End = block.EndTime.Ticks;
             }
 
-            double end = maxDateTime.Ticks;
-            double totalDuration = end - start;
-            if (totalDuration == 0)
-            {
-                totalDuration = 1;
-            }
-
-            double width = 0;
-
             var sample = new TextBlock();
             sample.Text = "W";
             sample.Measure(new Size(10000, 10000));
             var textHeight = sample.DesiredSize.Height;
 
-            double preferredTotalHeight = textHeight * blocks.Count(b => b.Length > totalDuration / 2000);
-
-            double currentHeight = 0;
-            double totalHeight = 0;
+            double canvasWidth = 0;
+            double canvasHeight = 0;
+            double minimumDurationToInclude = 1; // ignore duration is less than 1pixel
 
             foreach (var block in blocks)
             {
-                //if (block.Length > minimumDurationToInclude)
+                /*
+                 * |-----Project -----------------|
+                 *   |---Target --||---Target --|
+                 *     |---Task -|  |---Task --|
+                 */
+
+                var content = new ContentControl();
+                var textBlock = new TextBlock();
+                textBlock.Text = $"{block.Text} ({TextUtilities.DisplayDuration(block.Duration)})";
+                textBlock.Background = ChooseBackground(block);
+
+                double indentOffset = textHeight * (block.Indent - 1);
+
+                double left = (block.Start - globalStart) / TimeToPixel;
+                double duration = (block.End - block.Start) / TimeToPixel;
+
+                if (duration < minimumDurationToInclude)
                 {
-                    var content = new ContentControl();
-                    var textBlock = new TextBlock();
-                    textBlock.Text = $"{block.Text} ({TextUtilities.DisplayDuration(block.Duration)})";
-                    textBlock.Background = ChooseBackground(block);
-
-                    double left = 24 * block.Indent;
-
-                    double top = (block.Start - start) / totalDuration * preferredTotalHeight;
-                    double height = (block.End - block.Start) / totalDuration * preferredTotalHeight;
-                    if (height < textHeight)
-                    {
-                        height = textHeight;
-                        continue;
-                    }
-
-                    textBlock.Measure(new Size(10000, 10000));
-                    double currentTotalWidth = left + textBlock.DesiredSize.Width;
-                    if (currentTotalWidth > width)
-                    {
-                        width = currentTotalWidth;
-                    }
-
-                    double minimumTop = currentHeight;
-                    if (minimumTop > top)
-                    {
-                        double adjustment = minimumTop - top;
-                        if (height > adjustment + textHeight)
-                        {
-                            height = height - adjustment;
-                            top = minimumTop;
-                        }
-                        else
-                        {
-                            continue;
-                        }
-                    }
-
-                    textBlock.Height = height;
-                    textBlock.ToolTip = block.GetTooltip();
-                    textBlock.MouseUp += TextBlock_MouseUp;
-                    textBlock.Tag = block;
-                    TextBlocks.Add(block.Node, textBlock);
-
-                    currentHeight = top + textHeight;
-
-                    if (totalHeight < top + height)
-                    {
-                        totalHeight = top + height;
-                    }
-
-                    Canvas.SetLeft(content, left);
-                    Canvas.SetTop(content, top);
-                    content.Content = textBlock;
-                    content.MouseDoubleClick += Content_MouseDoubleClick;
-                    canvas.Children.Add(content);
+                    continue;
                 }
+
+                textBlock.Measure(new Size(10000, 10000));
+
+                textBlock.Width = duration;
+                textBlock.Height = textHeight;
+                textBlock.ToolTip = block.GetTooltip();
+                textBlock.MouseUp += TextBlock_MouseUp;
+                textBlock.Tag = block;
+                TextBlocks.Add(block.Node, textBlock);
+
+                canvasHeight = Math.Max(indentOffset + textHeight, canvasHeight);
+                canvasWidth = Math.Max(duration + left, canvasWidth);
+
+                Canvas.SetLeft(content, left);
+                Canvas.SetTop(content, indentOffset);
+                content.Content = textBlock;
+                content.MouseDoubleClick += Content_MouseDoubleClick;
+                canvas.Children.Add(content);
             }
 
-            canvas.Height = totalHeight;
-            canvas.Width = width;
+            canvas.Height = canvasHeight;
+            canvas.Width = canvasWidth;
 
             return canvas;
         }
@@ -398,8 +373,8 @@ namespace StructuredLogViewer.Controls
                     parent.Children.Add(highlight);
                     Canvas.SetLeft(highlight, Canvas.GetLeft(content));
                     Canvas.SetTop(highlight, Canvas.GetTop(content));
-                    highlight.Width = activeTextBlock.ActualWidth;
-                    highlight.Height = activeTextBlock.ActualHeight;
+                    highlight.Width = activeTextBlock.Width;
+                    highlight.Height = activeTextBlock.Height;
 
                     if (scrollToElement)
                     {
@@ -427,10 +402,10 @@ namespace StructuredLogViewer.Controls
             }
         }
 
-        private static readonly Brush projectBackground = new SolidColorBrush(Color.FromArgb(10, 180, 180, 180));
+        private static readonly Brush projectBackground = new SolidColorBrush(Color.FromArgb(40, 180, 180, 180));
         private static readonly Brush projectEvaluationBackground = new SolidColorBrush(Color.FromArgb(20, 100, 255, 150));
-        private static readonly Brush targetBackground = new SolidColorBrush(Color.FromArgb(20, 255, 100, 255));
-        private static readonly Brush taskBackground = new SolidColorBrush(Color.FromArgb(30, 100, 255, 255));
+        private static readonly Brush targetBackground = new SolidColorBrush(Color.FromArgb(50, 255, 100, 255));
+        private static readonly Brush taskBackground = new SolidColorBrush(Color.FromArgb(60, 100, 255, 255));
         private readonly ScaleTransform scaleTransform;
 
         private static Brush ChooseBackground(Block block)

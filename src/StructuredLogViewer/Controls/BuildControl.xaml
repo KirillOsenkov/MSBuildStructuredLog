@@ -10,19 +10,19 @@
              d:DataContext="{d:DesignInstance structuredLogger:Build}"
              d:DesignHeight="300" d:DesignWidth="300">
 
-  <local:SplitterPanel Orientation="Vertical" FirstChildRelativeSize="*" SecondChildRelativeSize="50">
+    <local:SplitterPanel Orientation="Vertical" FirstChildRelativeSize="*" SecondChildRelativeSize="50">
 
-    <local:SplitterPanel.FirstChild>
-      <local:SplitterPanel FirstChildRelativeSize="1*" SecondChildRelativeSize="3*">
         <local:SplitterPanel.FirstChild>
-          <TabControl x:Name="leftPaneTabControl" TabStripPlacement="Bottom" Margin="0" Padding="0">
-            <TabItem x:Name="searchLogTab" Header="Search Log">
-              <local:SearchAndResultsControl x:Name="searchLogControl"></local:SearchAndResultsControl>
-            </TabItem>
+            <local:SplitterPanel FirstChildRelativeSize="1*" SecondChildRelativeSize="3*">
+                <local:SplitterPanel.FirstChild>
+                    <TabControl x:Name="leftPaneTabControl" TabStripPlacement="Bottom" Margin="0" Padding="0">
+                        <TabItem x:Name="searchLogTab" Header="Search Log">
+                            <local:SearchAndResultsControl x:Name="searchLogControl"></local:SearchAndResultsControl>
+                        </TabItem>
 
-            <TabItem x:Name="propertiesAndItemsTab" Header="Properties and items">
-              <DockPanel>
-                <Border DockPanel.Dock="Top"
+                        <TabItem x:Name="propertiesAndItemsTab" Header="Properties and items">
+                            <DockPanel>
+                                <Border DockPanel.Dock="Top"
                     BorderThickness="0,0,0,1"
                     Background="{DynamicResource Theme_InfoBarBackground}"
                     BorderBrush="Gray"
@@ -30,34 +30,34 @@
                     Visibility="Collapsed"
                     Padding="4,2,4,2"
                     MinHeight="27">
-                  <DockPanel>
-                    <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Text="Project: " />
-                    <ContentControl Focusable="false" DockPanel.Dock="Top" VerticalAlignment="Center" x:Name="propertiesAndItemsContext" />
-                  </DockPanel>
-                </Border>
-                <local:SearchAndResultsControl x:Name="propertiesAndItemsControl"></local:SearchAndResultsControl>
-              </DockPanel>
-            </TabItem>
+                                    <DockPanel>
+                                        <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Text="Project: " />
+                                        <ContentControl Focusable="false" DockPanel.Dock="Top" VerticalAlignment="Center" x:Name="propertiesAndItemsContext" />
+                                    </DockPanel>
+                                </Border>
+                                <local:SearchAndResultsControl x:Name="propertiesAndItemsControl"></local:SearchAndResultsControl>
+                            </DockPanel>
+                        </TabItem>
 
-            <TabItem x:Name="filesTab" Header="Files" Visibility="Collapsed">
-              <local:SearchAndResultsControl x:Name="filesTree"></local:SearchAndResultsControl>
-            </TabItem>
+                        <TabItem x:Name="filesTab" Header="Files" Visibility="Collapsed">
+                            <local:SearchAndResultsControl x:Name="filesTree"></local:SearchAndResultsControl>
+                        </TabItem>
 
-            <TabItem x:Name="findInFilesTab" Header="Find in Files" Visibility="Collapsed">
-              <local:SearchAndResultsControl x:Name="findInFilesControl" WatermarkContent="Search in files"></local:SearchAndResultsControl>
-            </TabItem>
-          </TabControl>
-        </local:SplitterPanel.FirstChild>
-        <local:SplitterPanel.SecondChild>
+                        <TabItem x:Name="findInFilesTab" Header="Find in Files" Visibility="Collapsed">
+                            <local:SearchAndResultsControl x:Name="findInFilesControl" WatermarkContent="Search in files"></local:SearchAndResultsControl>
+                        </TabItem>
+                    </TabControl>
+                </local:SplitterPanel.FirstChild>
+                <local:SplitterPanel.SecondChild>
 
-          <local:SplitterPanel>
-            <local:SplitterPanel.FirstChild>
-              <TabControl x:Name="centralTabControl" 
+                    <local:SplitterPanel>
+                        <local:SplitterPanel.FirstChild>
+                            <TabControl x:Name="centralTabControl" 
                           TabStripPlacement="Bottom" 
                           SelectedIndex="0"
                           MinWidth="10">
-                <TabItem x:Name="mainTreeTab" Header="Log">
-                  <TreeView x:Name="treeView"
+                                <TabItem x:Name="mainTreeTab" Header="Log">
+                                    <TreeView x:Name="treeView"
                             BorderBrush="Transparent"
                             BorderThickness="0"
                             VirtualizingPanel.IsVirtualizing="True"
@@ -65,67 +65,77 @@
                             TreeViewItem.Selected="TreeViewItem_Selected"
                             ItemsSource="{Binding Children}"
                             structuredLogViewer:ScrollViewerHelper.ShiftWheelScrollsHorizontally="True" />
-                </TabItem>
+                                </TabItem>
 
-                <TabItem x:Name="timelineTab" Header="Timeline">
-                  <Grid>
-                    <TextBlock x:Name="timelineWatermark" HorizontalAlignment="Center"
+                                <TabItem x:Name="timelineTab" Header="Timeline">
+                                    <Grid>
+                                        <TextBlock x:Name="timelineWatermark" HorizontalAlignment="Center"
                                VerticalAlignment="Center">Rendering timeline...</TextBlock>
-                    <local:TimelineControl x:Name="timeline"
+                                        <local:TimelineControl x:Name="timeline"
                                            Visibility="Hidden"
                                            structuredLogViewer:ScrollViewerHelper.ShiftWheelScrollsHorizontally="True" />
-                  </Grid>
-                </TabItem>
-                
-                <TabItem x:Name="projectGraphTab" Header="Project Graph">
-                  <Grid>
-                    <TextBlock x:Name="projectGraphWatermark" HorizontalAlignment="Center"
+                                    </Grid>
+                                </TabItem>
+
+                                <TabItem x:Name="tracingTab" Header="Tracing">
+                                    <Grid>
+                                        <TextBlock x:Name="tracingWatermark" HorizontalAlignment="Center"
+                               VerticalAlignment="Center">Rendering Trace...</TextBlock>
+                                        <local:TracingControl x:Name="tracing"
+                                           Visibility="Hidden"
+                                           structuredLogViewer:ScrollViewerHelper.ShiftWheelScrollsHorizontally="True" />
+                                    </Grid>
+                                </TabItem>
+
+                                <TabItem x:Name="projectGraphTab" Header="Project Graph">
+                                    <Grid>
+                                        <TextBlock x:Name="projectGraphWatermark" HorizontalAlignment="Center"
                                VerticalAlignment="Center">Rendering graph...</TextBlock>
-                    <local:ProjectGraphControl x:Name="projectGraphControl" Visibility="Hidden"/>
-                  </Grid>
-                </TabItem>
-              </TabControl>
-            </local:SplitterPanel.FirstChild>
+                                        <local:ProjectGraphControl x:Name="projectGraphControl" Visibility="Hidden"/>
+                                    </Grid>
+                                </TabItem>
+                            </TabControl>
+                        </local:SplitterPanel.FirstChild>
 
-            <local:SplitterPanel.SecondChild>
-              <local:DocumentWell x:Name="documentWell" Visibility="Collapsed"></local:DocumentWell>
-            </local:SplitterPanel.SecondChild>
-          </local:SplitterPanel>
-        </local:SplitterPanel.SecondChild>
-      </local:SplitterPanel>
-    </local:SplitterPanel.FirstChild>
+                        <local:SplitterPanel.SecondChild>
+                            <local:DocumentWell x:Name="documentWell" Visibility="Collapsed"></local:DocumentWell>
+                        </local:SplitterPanel.SecondChild>
+                    </local:SplitterPanel>
+                </local:SplitterPanel.SecondChild>
+            </local:SplitterPanel>
+        </local:SplitterPanel.FirstChild>
 
-    <local:SplitterPanel.SecondChild>
-      <Border BorderBrush="Gray"
+        <local:SplitterPanel.SecondChild>
+            <Border BorderBrush="Gray"
               BorderThickness="1">
-        <ScrollViewer>
-          <ListBox x:Name="breadCrumb"
+                <ScrollViewer>
+                    <ListBox x:Name="breadCrumb"
                    BorderThickness="0"
                    BorderBrush="Transparent"
                    ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                    ScrollViewer.CanContentScroll="False"
                    Background="{DynamicResource Theme_InfoBarBackground}">
-            <ListBox.ItemsPanel>
-              <ItemsPanelTemplate>
-                <WrapPanel IsItemsHost="True"/>
-              </ItemsPanelTemplate>
-            </ListBox.ItemsPanel>
-            <ListBox.Resources>
-              <Style TargetType="Separator">
-                <Setter Property="Template">
-                  <Setter.Value>
-                    <ControlTemplate>
-                      <Polygon Points="0,0 3,3, 0,6" Stroke="{DynamicResource {x:Static SystemColors.InfoTextBrushKey}}" Fill="{DynamicResource {x:Static SystemColors.InfoTextBrushKey}}" />
-                    </ControlTemplate>
-                  </Setter.Value>
-                </Setter>
-              </Style>
-            </ListBox.Resources>
-          </ListBox>
-        </ScrollViewer>
-      </Border>
-    </local:SplitterPanel.SecondChild>
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel IsItemsHost="True"/>
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                        <ListBox.Resources>
+                            <Style TargetType="Separator">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate>
+                                            <Polygon Points="0,0 3,3, 0,6" Stroke="{DynamicResource {x:Static SystemColors.InfoTextBrushKey}}" Fill="{DynamicResource {x:Static SystemColors.InfoTextBrushKey}}" />
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </ListBox.Resources>
+                    </ListBox>
+                </ScrollViewer>
+            </Border>
+        </local:SplitterPanel.SecondChild>
 
-  </local:SplitterPanel>
+    </local:SplitterPanel>
 
 </UserControl>

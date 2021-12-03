@@ -38,4 +38,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\SolutionFile.xshd" />
   </ItemGroup>
+  <ItemGroup>
+    <Page Update="Controls\TracingControl.xaml">
+      <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+    </Page>
+  </ItemGroup>
 </Project>

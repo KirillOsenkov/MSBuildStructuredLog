@@ -303,6 +303,10 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             {
                 PopulateProjectGraph();
             }
+            else if (selectedItem.Name == nameof(tracingTab))
+            {
+                PopulateTrace();
+            }
         }
 
         private void FilesTree_SearchTextChanged(string text)
@@ -383,6 +387,18 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                 this.timeline.SetTimeline(timeline, Build.StartTime.Ticks);
                 this.timelineWatermark.Visibility = Visibility.Hidden;
                 this.timeline.Visibility = Visibility.Visible;
+            }
+        }
+
+        private void PopulateTrace()
+        {
+            if (this.tracing.Timeline == null)
+            {
+                var timeline = new Timeline(Build);
+                this.tracing.BuildControl = this;
+                this.tracing.SetTimeline(timeline, Build.StartTime.Ticks);
+                this.tracingWatermark.Visibility = Visibility.Hidden;
+                this.tracing.Visibility = Visibility.Visible;
             }
         }
 
