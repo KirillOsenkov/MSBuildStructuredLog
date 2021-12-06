@@ -95,7 +95,6 @@ namespace StructuredLogViewer.Controls
 
         public Timeline Timeline { get; set; }
 
-
         public void SetTimeline(Timeline timeline, long globalStart)
         {
             Timeline = timeline;
@@ -173,61 +172,7 @@ namespace StructuredLogViewer.Controls
                 endpoints.Add(block.EndPoint);
             }
 
-            endpoints.Sort((l, r) =>
-            {
-                int timeCompare = l.Timestamp.CompareTo(r.Timestamp);
-                if (timeCompare == 0)
-                {
-                    // Sometimes task and targets can start and end at the same time.
-                    // Finish the existing node first
-                    if (l.IsStart == r.IsStart)
-                    {
-                        // Favor Project >> Targets >> Task >> Others
-                        int lValue, rValue;
-
-                        switch (l.Block.Node)
-                        {
-                            case Project:
-                                lValue = 3; break;
-                            case Target:
-                                lValue = 2; break;
-                            case Task:
-                                lValue = 1; break;
-                            default:
-                                lValue = 0; break;
-                        }
-
-                        switch (r.Block.Node)
-                        {
-                            case Project:
-                                rValue = 3; break;
-                            case Target:
-                                rValue = 2; break;
-                            case Task:
-                                rValue = 1; break;
-                            default:
-                                rValue = 0; break;
-                        }
-
-                        if (rValue == lValue)
-                        {
-                            if (l.IsStart)
-                                return l.Block.Text.CompareTo(r.Block.Text);
-                            else
-                                return r.Block.Text.CompareTo(l.Block.Text);
-                        }
-
-                        // ascending or decending edge
-                        if (l.IsStart)
-                            return rValue - lValue;
-                        else
-                            return lValue - rValue;
-                    }
-
-                    return l.IsStart ? 1 : -1;
-                }
-                return timeCompare;
-            });
+            endpoints.Sort();
 
             int level = 0;
             foreach (var endpoint in endpoints)
