@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -15,6 +16,8 @@ namespace StructuredLogViewer.Controls
     {
         // Ratio of time reported to the smallest pixel to render.
         private const double TimeToPixel = 50000;
+
+        private double zoomRatio = 1.0;
 
         private double OneSecondPixelWidth;
 
@@ -69,11 +72,9 @@ namespace StructuredLogViewer.Controls
 
         public TracingControl()
         {
-            scaleTransform = new ScaleTransform();
             this.DataContext = this;
             InitializeComponent();
             this.PreviewMouseWheel += TimelineControl_MouseWheel;
-            grid.LayoutTransform = scaleTransform;
         }
 
         private double scaleFactor = 1;
@@ -107,13 +108,15 @@ namespace StructuredLogViewer.Controls
 
         private void Zoom(double value)
         {
-            scaleFactor = value;
-            scaleTransform.ScaleX = scaleFactor;
-            scaleTransform.ScaleY = scaleFactor;
+            if (zoomRatio != value)
+            {
+                zoomRatio = value;
+                Draw();
+            }
         }
 
         private const double minimumZoom = 0.1;
-        private const double maximumZoom = 4.0;
+        private const double maximumZoom = 20.0;
 
         private void TimelineControl_MouseWheel(object sender, MouseWheelEventArgs e)
         {
@@ -124,7 +127,7 @@ namespace StructuredLogViewer.Controls
 
             if (e.Delta > 0)
             {
-                if (scaleFactor < 4)
+                if (scaleFactor < maximumZoom)
                 {
                     scaleFactor += 0.1;
                     zoomSlider.Value = scaleFactor;
@@ -157,12 +160,27 @@ namespace StructuredLogViewer.Controls
             GlobalStartTime = globalStart;
             GlobalEndTime = globalEnd;
 
+            // quick size check.  If its too much, then disable some "Show" options.
+            int totalItems = 0;
+            foreach (var lanes in timeline.Lanes)
+            {
+                totalItems += lanes.Value.Blocks.Count;
+
+                if (totalItems > 10000)
+                {
+                    this._showEvaluation = false;
+                    this._showTask = false;
+                    this._showTarget = false;
+                    this._showOther = false;
+                    this._showNodes = false;
+                    break;
+                }
+            }
+
             var sample = new TextBlock();
             sample.Text = "W";
             sample.Measure(new Size(10000, 10000));
             textHeight = sample.DesiredSize.Height;
-
-            OneSecondPixelWidth = ConvertTimeToPixel(TimeSpan.FromSeconds(1).Ticks);
 
             Draw();
         }
@@ -178,22 +196,39 @@ namespace StructuredLogViewer.Controls
             var lanesPanel = new StackPanel { Orientation = Orientation.Vertical, HorizontalAlignment = HorizontalAlignment.Left };
             grid.Children.Add(lanesPanel);
 
+            if (Timeline == null)
+                return;
+
+            // Compute number of pixel for one second, used by ruler
+            OneSecondPixelWidth = ConvertTimeToPixel(TimeSpan.FromSeconds(1).Ticks);
+
             var keys = Timeline.Lanes.Keys.ToList();
             keys.Sort();
+            /*
+            var length = Math.Max(keys.Count(), keys.Last());
+            Panel[] panels = new Panel[length];
+            Parallel.ForEach(keys, (key) =>
+            {
+                var lane = Timeline.Lanes[key];
+                var panel = CreatePanelForLane(lane, GlobalStartTime);
+                panels[key] = panel;
+            });
+            */
 
-            bool topRuler = true;
+            int showMeassurementMod = 0;
 
             foreach (var key in keys)
             {
                 var lane = Timeline.Lanes[key];
                 var panel = CreatePanelForLane(lane, GlobalStartTime);
+
                 if (panel != null && panel.Children.Count > 0)
                 {
-                    if (ShowNodes || topRuler)
+                    if (ShowNodes || showMeassurementMod == 0)
                     {
-                        var nodePanal = CreatePanelForNodeDivider(topRuler);
+                        var nodePanal = CreatePanelForNodeDivider(showMeassurementMod % 5 == 0);
                         lanesPanel.Children.Add(nodePanal);
-                        topRuler = false;
+                        showMeassurementMod++;
                     }
 
                     panel.HorizontalAlignment = HorizontalAlignment.Left;
@@ -209,7 +244,15 @@ namespace StructuredLogViewer.Controls
 
             var timeWidth = ConvertTimeToPixel(GlobalEndTime - GlobalStartTime);
 
-            double gapWidth = (OneSecondPixelWidth / textHeight) - 0.1;
+            bool fiveSeconds = false;
+            double gapWidth;
+            if (OneSecondPixelWidth / textHeight < 3) {
+                gapWidth = (5 * OneSecondPixelWidth / textHeight) - 0.1;
+                fiveSeconds = true;
+            } else
+            {
+                gapWidth = (OneSecondPixelWidth / textHeight) - 0.1;
+            }
 
             // A dash or gap relative to the Thickness of the pen
             Line nodeLine = new Line()
@@ -222,19 +265,22 @@ namespace StructuredLogViewer.Controls
                 Y1 = textHeight / 2,
                 Y2 = textHeight / 2,
             };
+
             canvas.Children.Add(nodeLine);
 
             if (showTime)
             {
                 for (int i = 0; i < timeWidth / OneSecondPixelWidth; i++)
                 {
-                    var textBlock = new TextBlock();
-                    textBlock.Text = $"{i}s";
+                    if (!fiveSeconds || i % 5 == 0)
+                    {
+                        var textBlock = new TextBlock();
+                        textBlock.Text = $"{i}s";
 
-                    // buffer 2 pixels
-                    Canvas.SetLeft(textBlock, 2 + i * OneSecondPixelWidth);
-                    // Canvas.SetTop(textBlock, indentOffset);
-                    canvas.Children.Add(textBlock);
+                        // add textHeight/2 pixels of front padding
+                        Canvas.SetLeft(textBlock, textHeight / 2 + i * OneSecondPixelWidth);
+                        canvas.Children.Add(textBlock);
+                    }
                 }
             }
 
@@ -246,9 +292,9 @@ namespace StructuredLogViewer.Controls
             return canvas;
         }
 
-        private static double ConvertTimeToPixel(double time)
+        private double ConvertTimeToPixel(double time)
         {
-            return time / TimeToPixel;
+            return time / TimeToPixel / zoomRatio;
         }
 
         public void GoToTimedNode(TimedNode node)
@@ -287,7 +333,7 @@ namespace StructuredLogViewer.Controls
                         return ShowProject;
                     case Target:
                         return ShowTarget;
-                    case Task:
+                    case Microsoft.Build.Logging.StructuredLogger.Task:
                         return ShowTask;
                     default:
                         return ShowOther;
@@ -298,9 +344,6 @@ namespace StructuredLogViewer.Controls
             {
                 return null;
             }
-
-            var canvas = new Canvas();
-            canvas.VerticalAlignment = VerticalAlignment.Top;
 
             var endpoints = new List<BlockEndpoint>();
 
@@ -354,6 +397,8 @@ namespace StructuredLogViewer.Controls
                 block.End = block.EndTime.Ticks;
             }
 
+            var canvas = new Canvas();
+            canvas.VerticalAlignment = VerticalAlignment.Top;
             double canvasWidth = 0;
             double canvasHeight = 0;
             double minimumDurationToInclude = 1; // ignore duration is less than 1pixel
@@ -409,7 +454,7 @@ namespace StructuredLogViewer.Controls
         private void Content_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             var content = sender as ContentControl;
-            if (content.Content is TextBlock textBlock && textBlock.Tag is Block block)
+            if (content.Content is TextBlock textBlock && textBlock.Tag is Block)
             {
                 isDoubleClick = true;
             }
@@ -488,7 +533,6 @@ namespace StructuredLogViewer.Controls
         private static readonly Brush projectEvaluationBackground = new SolidColorBrush(Color.FromArgb(20, 180, 180, 180));
         private static readonly Brush targetBackground = new SolidColorBrush(Color.FromArgb(50, 255, 100, 255));
         private static readonly Brush taskBackground = new SolidColorBrush(Color.FromArgb(60, 100, 255, 255));
-        private readonly ScaleTransform scaleTransform;
 
         private static Brush ChooseBackground(Block block)
         {
@@ -497,7 +541,7 @@ namespace StructuredLogViewer.Controls
                 case Project _: return projectBackground;
                 case ProjectEvaluation _: return projectEvaluationBackground;
                 case Target _: return targetBackground;
-                case Task _: return taskBackground;
+                case Microsoft.Build.Logging.StructuredLogger.Task _: return taskBackground;
             }
 
             return Brushes.Transparent;
