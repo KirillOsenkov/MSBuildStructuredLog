@@ -16,6 +16,8 @@ namespace StructuredLogViewer.Controls
         // Ratio of time reported to the smallest pixel to render.
         private const double TimeToPixel = 50000;
 
+        private double OneSecondPixelWidth;
+
         // Build start time to sync all canvas.
         private long GlobalStartTime;
 
@@ -160,6 +162,8 @@ namespace StructuredLogViewer.Controls
             sample.Measure(new Size(10000, 10000));
             textHeight = sample.DesiredSize.Height;
 
+            OneSecondPixelWidth = ConvertTimeToPixel(TimeSpan.FromSeconds(1).Ticks);
+
             Draw();
         }
 
@@ -177,7 +181,7 @@ namespace StructuredLogViewer.Controls
             var keys = Timeline.Lanes.Keys.ToList();
             keys.Sort();
 
-            bool topRuler = false;
+            bool topRuler = true;
 
             foreach (var key in keys)
             {
@@ -187,7 +191,7 @@ namespace StructuredLogViewer.Controls
                 {
                     if (ShowNodes || topRuler)
                     {
-                        var nodePanal = CreatePanelForNodeDivider();
+                        var nodePanal = CreatePanelForNodeDivider(topRuler);
                         lanesPanel.Children.Add(nodePanal);
                         topRuler = false;
                     }
@@ -198,18 +202,19 @@ namespace StructuredLogViewer.Controls
             }
         }
 
-        private Panel CreatePanelForNodeDivider()
+        private Panel CreatePanelForNodeDivider(bool showTime)
         {
             var canvas = new Canvas();
             canvas.VerticalAlignment = VerticalAlignment.Top;
 
             var timeWidth = ConvertTimeToPixel(GlobalEndTime - GlobalStartTime);
 
-            /*
-            // TODO: match line with Time
+            double gapWidth = (OneSecondPixelWidth / textHeight) - 0.1;
+
+            // A dash or gap relative to the Thickness of the pen
             Line nodeLine = new Line()
             {
-                StrokeDashArray = new DoubleCollection { 0.05, 9.95 },
+                StrokeDashArray = new DoubleCollection { 0.1, gapWidth },
                 Stroke = Brushes.Black,
                 StrokeThickness = textHeight,
                 Height = textHeight,
@@ -218,8 +223,22 @@ namespace StructuredLogViewer.Controls
                 Y2 = textHeight / 2,
             };
             canvas.Children.Add(nodeLine);
-            */
 
+            if (showTime)
+            {
+                for (int i = 0; i < timeWidth / OneSecondPixelWidth; i++)
+                {
+                    var textBlock = new TextBlock();
+                    textBlock.Text = $"{i}s";
+
+                    // buffer 2 pixels
+                    Canvas.SetLeft(textBlock, 2 + i * OneSecondPixelWidth);
+                    // Canvas.SetTop(textBlock, indentOffset);
+                    canvas.Children.Add(textBlock);
+                }
+            }
+
+            canvas.VerticalAlignment = VerticalAlignment.Top;
             canvas.Background = nodeBackground;
             canvas.Height = textHeight;
             canvas.Width = timeWidth;
@@ -227,7 +246,7 @@ namespace StructuredLogViewer.Controls
             return canvas;
         }
 
-        private double ConvertTimeToPixel(double time)
+        private static double ConvertTimeToPixel(double time)
         {
             return time / TimeToPixel;
         }
