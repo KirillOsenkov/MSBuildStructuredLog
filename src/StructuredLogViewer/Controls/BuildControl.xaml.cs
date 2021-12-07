@@ -596,16 +596,20 @@ Recent:
                 return;
             }
 
-            var taskRunner = Path.Combine(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName), "TaskRunner.exe");
-            if (!File.Exists(taskRunner))
-            {
-                MessageBox.Show("File not found: " + taskRunner);
-                return;
-            }
-
             try
             {
-                Process.Start(taskRunner.QuoteIfNeeded(), $"{logFilePath.QuoteIfNeeded()} {task.Index} pause{(debug ? " debug" : "")}");
+                var directory = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+                var arguments = $"{logFilePath.QuoteIfNeeded()} {task.Index} pause{(debug ? " debug" : "")}";
+                if (task.GetTargetFrameworkIdentifier() == ".NETFramework")
+                {
+                    var taskRunnerExe = Path.Combine(directory, "TaskRunner.exe");
+                    Process.Start(taskRunnerExe.QuoteIfNeeded(), arguments);
+                }
+                else
+                {
+                    var taskRunnerDll = Path.Combine(directory, "TaskRunner.dll");
+                    Process.Start("dotnet", $"{taskRunnerDll.QuoteIfNeeded()} {arguments}");
+                }
             }
             catch (Exception ex)
             {
