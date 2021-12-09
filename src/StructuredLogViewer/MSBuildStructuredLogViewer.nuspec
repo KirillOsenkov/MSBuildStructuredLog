@@ -49,8 +49,8 @@
     <file src="System.ValueTuple.dll" target="lib\net472" />
     <file src="TaskRunner.exe" target="lib\net472" />
     <file src="TaskRunner.exe.config" target="lib\net472" />
-    <file src="..\net5.0-windows\TaskRunner.dll" target="lib\net472" />
-    <file src="..\net5.0-windows\TaskRunner.runtimeconfig.json" target="lib\net472" />
+    <file src="TaskRunner.dll" target="lib\net472" />
+    <file src="TaskRunner.runtimeconfig.json" target="lib\net472" />
     <file src="Microsoft.Msagl.WpfGraphControl.dll" target="lib\net472" />
     <file src="..\..\..\..\docs\StructuredLogger.png" target="StructuredLogger.png" />
   </files>
