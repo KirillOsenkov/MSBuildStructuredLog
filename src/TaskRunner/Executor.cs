@@ -146,6 +146,16 @@ namespace TaskRunner
                 {
                     value = taskItems.Select(t => t.ItemSpec).ToArray();
                 }
+                else if (propertyInfo.PropertyType == typeof(ITaskItem))
+                {
+                    var item = taskItems.First();
+                    foreach (var pair in taskItems.Skip(1).Select(e => e.ItemSpec.TrimStart().Split('=')))
+                    {
+                        item.SetMetadata(pair[0], pair[1]);
+                    }
+
+                    value = item;
+                }
                 else
                 {
                     value = taskItems;
