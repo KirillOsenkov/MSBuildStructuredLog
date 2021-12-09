@@ -476,6 +476,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string Note => "Note";
         public static string DoubleWrites => "DoubleWrites";
         public static string MSBuildVersionPrefix => "MSBuild version = ";
+        public static string MSBuildExecutablePathPrefix => "MSBuild executable path = ";
         public static string Warnings = "Warnings";
 
         public static string GetPropertyName(string message)

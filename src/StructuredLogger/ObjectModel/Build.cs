@@ -33,6 +33,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        private string msbuildExecutablePath;
+        public string MSBuildExecutablePath
+        {
+            get => msbuildExecutablePath;
+            set => msbuildExecutablePath = value?.TrimQuotes();
+        }
+
         private Version version;
 
         private void ParseMSBuildVersion()
