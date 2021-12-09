@@ -2,9 +2,24 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFrameworks>net472;net5.0</TargetFrameworks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$(TargetFramework) == 'net472'">
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
+
+  <PropertyGroup Condition="$(TargetFramework) == 'net5.0'">
+    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
+    <RollForward>LatestMajor</RollForward>
+    <UseAppHost>false</UseAppHost>
+  </PropertyGroup>
+
+  <Target Name="IgnoreAppConfig" AfterTargets="PrepareForBuild" Condition="$(TargetFrameworkIdentifier) == '.NETCoreApp'">
+    <ItemGroup>
+      <AppConfigWithTargetPath Remove="@(AppConfigWithTargetPath)" />
+    </ItemGroup>
+  </Target>
 
   <ItemGroup>
     <ProjectReference Include="..\StructuredLogger\StructuredLogger.csproj" />
