@@ -17,6 +17,8 @@ namespace StructuredLogViewer.Controls
         // Ratio of time reported to the smallest pixel to render.
         private const double TimeToPixel = 72000;
 
+        private readonly ScaleTransform scaleTransform;
+
         private double zoomRatio = 1.0;
 
         private double OneSecondPixelWidth;
@@ -87,9 +89,11 @@ namespace StructuredLogViewer.Controls
 
         public TracingControl()
         {
+            scaleTransform = new ScaleTransform();
             this.DataContext = this;
             InitializeComponent();
             this.PreviewMouseWheel += TimelineControl_MouseWheel;
+            grid.LayoutTransform = scaleTransform;
         }
 
         private double scaleFactor = 1;
@@ -123,15 +127,13 @@ namespace StructuredLogViewer.Controls
 
         private void Zoom(double value)
         {
-            if (zoomRatio != value)
-            {
-                zoomRatio = value;
-                Draw();
-            }
+            scaleFactor = value;
+            scaleTransform.ScaleX = scaleFactor;
+            scaleTransform.ScaleY = scaleFactor;
         }
 
         private const double minimumZoom = 0.1;
-        private const double maximumZoom = 20.0;
+        private const double maximumZoom = 4.0;
 
         private void TimelineControl_MouseWheel(object sender, MouseWheelEventArgs e)
         {
@@ -347,7 +349,7 @@ namespace StructuredLogViewer.Controls
 
         private double ConvertTimeToPixel(double time)
         {
-            return time / TimeToPixel / zoomRatio;
+            return time / TimeToPixel;
         }
 
         public void GoToTimedNode(TimedNode node)
