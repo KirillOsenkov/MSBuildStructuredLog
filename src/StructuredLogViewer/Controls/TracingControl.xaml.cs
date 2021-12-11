@@ -8,7 +8,10 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Windows.Threading;
+using System.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
+using System.Windows.Media.Imaging;
+using System.IO;
 
 namespace StructuredLogViewer.Controls
 {
@@ -18,8 +21,6 @@ namespace StructuredLogViewer.Controls
         private const double TimeToPixel = 72000;
 
         private readonly ScaleTransform scaleTransform;
-
-        private double zoomRatio = 1.0;
 
         private double OneSecondPixelWidth;
 
@@ -36,12 +37,15 @@ namespace StructuredLogViewer.Controls
         private bool _showOther = true;
         private bool _showNodes = true;
 
+        public int numberOfEvaluations = 0;
         public int numberOfProjects = 0;
         public int numberOfTargets = 0;
         public int numberOfTasks = 0;
         public int numberOfNodes = 0;
 
         List<List<Block>> blocksCollection = new List<List<Block>>();
+
+        public string ShowEvaluationsText => $"Show Evaluations ({numberOfEvaluations})";
 
         public string ShowProjectsText => $"Show Projects ({numberOfProjects})";
 
@@ -50,6 +54,12 @@ namespace StructuredLogViewer.Controls
         public string ShowTasksText => $"Show Tasks ({numberOfTasks})";
 
         public string ShowNodesText => $"Show Nodes Divider ({numberOfNodes})";
+
+        private TimeSpan initTime = TimeSpan.Zero;
+        private TimeSpan computeTime = TimeSpan.Zero;
+        private TimeSpan drawTime = TimeSpan.Zero;
+
+        public string LoadStatistics => $"Init:{initTime.TotalMilliseconds}ms, Compute:{computeTime.TotalMilliseconds}ms, Draw:{drawTime.TotalMilliseconds}ms";
 
         public bool ShowEvaluation
         {
@@ -174,6 +184,7 @@ namespace StructuredLogViewer.Controls
         // SetTimeline is called from BuildControl which will set the global values
         public void SetTimeline(Timeline timeline, long globalStart, long globalEnd)
         {
+            var start = DateTime.Now;
             Timeline = timeline;
             GlobalStartTime = globalStart;
             GlobalEndTime = globalEnd;
@@ -188,6 +199,9 @@ namespace StructuredLogViewer.Controls
                 {
                     switch (block.Node)
                     {
+                        case ProjectEvaluation:
+                            this.numberOfEvaluations++;
+                            break;
                         case Project:
                             this.numberOfProjects++;
                             break;
@@ -224,6 +238,8 @@ namespace StructuredLogViewer.Controls
             textHeight = sample.DesiredSize.Height;
 
             lanesPanel = new StackPanel { Orientation = Orientation.Vertical, HorizontalAlignment = HorizontalAlignment.Left };
+            this.initTime = DateTime.Now - start;
+
             ComputeAndDraw();
             grid.Children.Add(lanesPanel);
         }
@@ -240,6 +256,7 @@ namespace StructuredLogViewer.Controls
 
         private void ComputeTimeline()
         {
+            var start = DateTime.Now;
             var keys = Timeline.Lanes.Keys.ToList();
             keys.Sort();
 
@@ -254,6 +271,7 @@ namespace StructuredLogViewer.Controls
             });
 
             blocksCollection = blocksCollectionArray.ToList();
+            this.computeTime = DateTime.Now - start;
         }
 
         /// <summary>
@@ -261,6 +279,7 @@ namespace StructuredLogViewer.Controls
         /// </summary>
         private void Draw()
         {
+            var start = DateTime.Now;
             if (Timeline == null)
                 return;
 
@@ -280,15 +299,14 @@ namespace StructuredLogViewer.Controls
                 {
                     if (ShowNodes || showMeassurementMod == 0)
                     {
-                        var nodePanal = CreatePanelForNodeDivider(showMeassurementMod % 5 == 0);
-                        lanesPanel.Children.Add(nodePanal);
+                        lanesPanel.Children.Add(CreatePanelForNodeDivider(showMeassurementMod % 5 == 0));
                         showMeassurementMod++;
                     }
 
-                    panel.HorizontalAlignment = HorizontalAlignment.Left;
                     lanesPanel.Children.Add(panel);
                 }
             }
+            this.drawTime = DateTime.Now - start;
         }
 
         private Panel CreatePanelForNodeDivider(bool showTime)
@@ -347,7 +365,7 @@ namespace StructuredLogViewer.Controls
             return canvas;
         }
 
-        private double ConvertTimeToPixel(double time)
+        private static double ConvertTimeToPixel(double time)
         {
             return time / TimeToPixel;
         }
@@ -455,7 +473,7 @@ namespace StructuredLogViewer.Controls
             return blocks;
         }
 
-        private Panel CreatePanelForLane(List<Block> blocks, long globalStart)
+        private Canvas CreatePanelForLane(List<Block> blocks, long globalStart)
         {
             if (blocks == null || blocks.Count == 0)
                 return null;
@@ -510,6 +528,7 @@ namespace StructuredLogViewer.Controls
 
             canvas.Height = canvasHeight;
             canvas.Width = canvasWidth;
+            canvas.HorizontalAlignment = HorizontalAlignment.Left;
 
             return canvas;
         }
