@@ -4,7 +4,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class TimedNode : NamedNode
     {
+        /// <summary>
+        /// The Id of a Project, ProjectEvaluation, Target and Task.
+        /// Corresponds to ProjectStartedEventsArgs.ProjectId, TargetStartedEventArgs.TargetId, etc.
+        /// </summary>
         public int Id { get; set; }
+
+        /// <summary>
+        /// Corresponds to BuildEventArgs.BuildEventContext.NodeId,
+        /// which is the id of the MSBuild.exe node process that built the current project or
+        /// executed the given target or task.
+        /// </summary>
         public int NodeId { get; set; }
 
         /// <summary>

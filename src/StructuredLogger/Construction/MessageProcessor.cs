@@ -555,6 +555,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         var version = message.Substring(Strings.MSBuildVersionPrefix.Length);
                         construction.Build.MSBuildVersion = version;
                     }
+                    else if (message.StartsWith(Strings.MSBuildExecutablePathPrefix))
+                    {
+                        var executablePath = message.Substring(Strings.MSBuildExecutablePathPrefix.Length);
+                        construction.Build.MSBuildExecutablePath = executablePath;
+                    }
                 }
             }
 
