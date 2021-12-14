@@ -7,7 +7,6 @@ using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogViewer
 {
-
     public class Timeline
     {
         private Build build;
