@@ -91,20 +91,28 @@ namespace StructuredLogViewer.Controls
 
         private bool isDoubleClick = false;
 
+        private long GlobalStart;
+
         public Timeline Timeline { get; set; }
 
-        public void SetTimeline(Timeline timeline)
+        public void SetTimeline(Timeline timeline, long globalStart)
         {
             Timeline = timeline;
+            GlobalStart = globalStart;
 
             var lanesPanel = new StackPanel { Orientation = Orientation.Horizontal };
             grid.Children.Add(lanesPanel);
 
-            foreach (var lane in timeline.Lanes)
+            var keys = Timeline.Lanes.Keys.ToList();
+            keys.Sort();
+
+            foreach (var key in keys)
             {
-                var panel = CreatePanelForLane(lane);
+                var lane = Timeline.Lanes[key];
+                var panel = CreatePanelForLane(lane, GlobalStart);
                 if (panel != null && panel.Children.Count > 0)
                 {
+                    panel.HorizontalAlignment = HorizontalAlignment.Left;
                     lanesPanel.Children.Add(panel);
                 }
             }
@@ -134,9 +142,8 @@ namespace StructuredLogViewer.Controls
             }
         }
 
-        private Panel CreatePanelForLane(KeyValuePair<int, Lane> laneAndId)
+        private Panel CreatePanelForLane(Lane lane, double start)
         {
-            var lane = laneAndId.Value;
             var blocks = lane.Blocks;
             if (blocks.Count == 0)
             {
@@ -165,7 +172,7 @@ namespace StructuredLogViewer.Controls
                 endpoints.Add(block.EndPoint);
             }
 
-            endpoints.Sort((l, r) => l.Timestamp.CompareTo(r.Timestamp));
+            endpoints.Sort();
 
             int level = 0;
             foreach (var endpoint in endpoints)
@@ -201,7 +208,6 @@ namespace StructuredLogViewer.Controls
                 block.End = block.EndTime.Ticks;
             }
 
-            double start = minDateTime.Ticks;
             double end = maxDateTime.Ticks;
             double totalDuration = end - start;
             if (totalDuration == 0)
@@ -339,11 +345,11 @@ namespace StructuredLogViewer.Controls
                     Canvas.SetTop(highlight, Canvas.GetTop(content));
                     highlight.Width = activeTextBlock.ActualWidth;
                     highlight.Height = activeTextBlock.ActualHeight;
-                   
+
                     if (scrollToElement)
                     {
                         Point p = content.TranslatePoint(new Point(0, 0), grid);
-                        horizontalOffset = p.X > 20 ? p.X - 20: p.X;
+                        horizontalOffset = p.X > 20 ? p.X - 20 : p.X;
                         verticalOffset = p.Y > 20 ? p.Y - 20 : p.Y;
                     }
                 }

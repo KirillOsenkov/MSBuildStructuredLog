@@ -1,0 +1,46 @@
+﻿<UserControl x:Class="StructuredLogViewer.Controls.TracingControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:StructuredLogViewer.Controls"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300">
+  <Grid>
+    <Grid.ContextMenu>
+      <ContextMenu>
+        <MenuItem Header="{Binding Path=ShowEvaluationsText, Mode=OneWay}" IsCheckable="true" IsChecked="{Binding Path=ShowEvaluation , Mode=TwoWay}" StaysOpenOnClick="true"/>
+        <MenuItem Header="{Binding Path=ShowProjectsText, Mode=OneWay}" IsCheckable="true" IsChecked="{Binding Path=ShowProject , Mode=TwoWay}" StaysOpenOnClick="true"/>
+        <MenuItem Header="{Binding Path=ShowTargetsText, Mode=OneWay}" IsCheckable="true" IsChecked="{Binding Path=ShowTarget , Mode=TwoWay}" StaysOpenOnClick="true"/>
+        <MenuItem Header="{Binding Path=ShowTasksText, Mode=OneWay}" IsCheckable="true" IsChecked="{Binding Path=ShowTask , Mode=TwoWay}" StaysOpenOnClick="true"/>
+        <MenuItem Header="Show Other" IsCheckable="true" IsChecked="{Binding Path=ShowOther , Mode=TwoWay}" StaysOpenOnClick="true"/>
+        <MenuItem Header="{Binding Path=ShowNodesText, Mode=OneWay}" IsCheckable="true" IsChecked="{Binding Path=ShowNodes , Mode=TwoWay}" StaysOpenOnClick="true"/>
+        <!--<MenuItem Header="{Binding Path=LoadStatistics, Mode=OneWay}" IsCheckable="true" IsEnabled="false" /> -->
+      </ContextMenu>
+    </Grid.ContextMenu>
+    <ScrollViewer x:Name="scrollViewer"
+                HorizontalScrollBarVisibility="Auto" 
+                VerticalScrollBarVisibility="Auto" Loaded="ScrollViewer_Loaded" Unloaded="ScrollViewer_Unloaded">
+      <Grid x:Name="grid">
+      </Grid>
+    </ScrollViewer>
+    <StackPanel Margin="0,0,30,30"
+                Background="White"
+                Orientation="Horizontal"
+                ToolTip="Ctrl+MouseWheel to Zoom"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom">
+      <Button x:Name="resetZoomButton"
+              Click="ResetZoom_Click" 
+              Padding="2,0,2,0" 
+              Visibility="Hidden">100%</Button>
+      <Slider x:Name="zoomSlider"
+            MinWidth="100"
+            MinHeight="30"
+            Minimum="0.1"
+            Maximum="4"
+            Value="1"
+            ValueChanged="zoomSlider_ValueChanged" />
+    </StackPanel>
+  </Grid>
+</UserControl>
