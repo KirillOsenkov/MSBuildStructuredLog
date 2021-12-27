@@ -15,7 +15,7 @@ Thanks to https://signpath.io for generously providing a certificate to sign the
 ![signpath.io](https://about.signpath.io/assets/logo.svg)
 
 ## Install:
-https://github.com/KirillOsenkov/MSBuildStructuredLog/releases/download/v2.1.557/MSBuildStructuredLogSetup.exe
+https://github.com/KirillOsenkov/MSBuildStructuredLog/releases/download/v2.1.596/MSBuildStructuredLogSetup.exe
 
 The app updates automatically via [Squirrel](https://github.com/Squirrel/Squirrel.Windows) (after launch it checks for updates in background), next launch starts the newly downloaded latest version.
 
