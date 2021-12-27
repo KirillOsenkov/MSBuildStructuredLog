@@ -12,7 +12,7 @@ View binlogs in the Browser: https://live.msbuildlog.com
 Important: the NuGet package is now being published to https://nuget.org/packages/MSBuild.StructuredLogger (old location: https://nuget.org/packages/Microsoft.Build.Logging.StructuredLogger). Please update to use the new Package Id.
 
 Thanks to https://signpath.io for generously providing a certificate to sign the installer.
-![signpath.io](https://about.signpath.io/wp-content/uploads/2018/11/logo_signpath_500.png)
+![signpath.io](https://about.signpath.io/assets/logo.svg)
 
 ## Install:
 https://github.com/KirillOsenkov/MSBuildStructuredLog/releases/download/v2.1.557/MSBuildStructuredLogSetup.exe
@@ -76,7 +76,7 @@ Alternatively (useful for older versions of MSBuild) you can attach the logger t
 https://www.nuget.org/packages/MSBuild.StructuredLogger
 
 ```
-msbuild solution.sln /t:Rebuild /v:diag /noconlog /logger:BinaryLogger,%localappdata%\MSBuildStructuredLogViewer\app-2.1.557\StructuredLogger.dll;1.binlog
+msbuild solution.sln /t:Rebuild /v:diag /noconlog /logger:BinaryLogger,%localappdata%\MSBuildStructuredLogViewer\app-2.1.596\StructuredLogger.dll;1.binlog
 ```
 
 To use a portable version of the logger (e.g. with the `dotnet msbuild` command) you need a .NET Standard version of `StructuredLogger.dll`, not the .NET Framework (Desktop) version.
