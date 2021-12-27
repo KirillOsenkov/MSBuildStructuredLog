@@ -13,6 +13,7 @@ namespace StructuredLogger.Tests
         public static bool BuildProjectFromFile(string projectText, params ILogger[] loggers)
         {
             var projectFile = TestUtilities.GetTestFile("build.proj");
+            Environment.SetEnvironmentVariable("MSBUILDNOINPROCNODE", "0");
 
             try
             {
@@ -23,7 +24,9 @@ namespace StructuredLogger.Tests
                     {
                         ShutdownInProcNodeOnBuildFinish = true,
                         EnableNodeReuse = false,
-                        Loggers = loggers
+                        Loggers = loggers,
+                        MaxNodeCount = 1,
+                        DisableInProcNode = false
                     },
                     new BuildRequestData(
                         projectFile,
