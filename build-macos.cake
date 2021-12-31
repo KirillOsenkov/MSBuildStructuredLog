@@ -102,7 +102,7 @@ var netCoreProject = new {
         EnsureDirectoryExists(workingDir);
         MoveDirectory(tempDir, workingDir.Combine($"{macAppName}.app"));
 
-        Zip(workingDir.FullPath, workingDir.CombineWithFilePath($"../{macAppName}.zip"));
+        Zip(workingDir.FullPath, workingDir.CombineWithFilePath($"../{macAppName} - {runtime.Substring("osx".Length).TrimStart('-')}.zip"));
     }
  });
 
