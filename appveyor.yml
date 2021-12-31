@@ -34,7 +34,7 @@ artifacts:
   name: StructuredLogger.dll
 - path: 'MSBuildStructuredLog-*.zip'
   name: Bundle
-- path: 'artifacts\Structured Log Viewer.zip'
+- path: 'artifacts\Structured Log Viewer - *.zip'
   name: 'Structured Log Viewer macOS app'
 on_failure:
 - appveyor PushArtifact msbuild.binlog
