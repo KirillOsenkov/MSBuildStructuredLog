@@ -103,7 +103,7 @@ var netCoreProject = new {
         MoveDirectory(tempDir, workingDir.Combine($"{macAppName}.app"));
 
         var architecture = runtime[(runtime.IndexOf("-")+1)..];
-        Zip(workingDir.FullPath, workingDir.CombineWithFilePath($"../{macAppName} - {architecture}.zip"));
+        Zip(workingDir.FullPath, workingDir.CombineWithFilePath($"../{macAppName}-{architecture}.zip"));
     }
  });
 
