@@ -276,6 +276,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             "csc $task",
             "ResolveAssemblyReference $task",
             "$message CompilerServer failed",
+            "will be compiled because",
         };
 
         private static string[] nodeKinds = new[]
