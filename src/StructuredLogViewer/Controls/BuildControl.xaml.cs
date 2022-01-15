@@ -440,6 +440,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             "ResolveAssemblyReference $task",
             "$task $time",
             "$message CompilerServer failed",
+            "will be compiled because",
         };
 
         private static string[] nodeKinds = new[]
