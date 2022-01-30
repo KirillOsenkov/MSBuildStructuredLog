@@ -49,8 +49,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         // reflection is needed to set these three fields because public constructors don't provide
         // a way to set these from the outside
-        private static FieldInfo buildEventArgsFieldThreadId =
-            typeof(BuildEventArgs).GetField("threadId", BindingFlags.Instance | BindingFlags.NonPublic);
         private static FieldInfo buildEventArgsFieldSenderName =
             typeof(BuildEventArgs).GetField("senderName", BindingFlags.Instance | BindingFlags.NonPublic);
         private static FieldInfo buildEventArgsFieldTimestamp =
@@ -944,11 +942,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private void SetCommonFields(BuildEventArgs buildEventArgs, BuildEventArgsFields fields)
         {
             buildEventArgs.BuildEventContext = fields.BuildEventContext;
-
-            if ((fields.Flags & BuildEventArgsFieldFlags.ThreadId) != 0)
-            {
-                buildEventArgsFieldThreadId.SetValue(buildEventArgs, fields.ThreadId);
-            }
 
             if ((fields.Flags & BuildEventArgsFieldFlags.SenderName) != 0)
             {

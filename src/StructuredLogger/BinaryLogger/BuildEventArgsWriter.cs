@@ -607,7 +607,7 @@ Build
 
             if ((flags & BuildEventArgsFieldFlags.Arguments) != 0)
             {
-                object[] rawArguments = (object[])typeof(LazyFormattedBuildEventArgs).GetField("arguments", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(e);
+                var rawArguments = Reflector.LazyFormattedBuildEventArgs_arguments.GetValue(e) as object[] ?? Array.Empty<object>();
                 Write(rawArguments.Length);
                 for (int i = 0; i < rawArguments.Length; i++)
                 {
@@ -664,7 +664,7 @@ Build
                 flags |= BuildEventArgsFieldFlags.EndColumnNumber;
             }
 
-            object[] rawArguments = (object[])typeof(LazyFormattedBuildEventArgs).GetField("arguments", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(e);
+            var rawArguments = Reflector.LazyFormattedBuildEventArgs_arguments.GetValue(e) as object[];
             if (writeMessage && rawArguments != null && rawArguments.Length > 0)
             {
                 flags |= BuildEventArgsFieldFlags.Arguments;
