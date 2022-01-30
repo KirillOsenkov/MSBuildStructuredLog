@@ -463,9 +463,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         args2.BuildEventContext = args.BuildEventContext;
                         args2.SkipReason = targetSkipReason;
                         args2.OriginallySucceeded = targetSkipReason != TargetSkipReason.PreviouslyBuiltUnsuccessfully;
-                        typeof(BuildEventArgs)
-                            .GetField("timestamp", BindingFlags.Instance | BindingFlags.NonPublic)
-                            .SetValue(args2, args.Timestamp);
+                        Reflector.BuildEventArgs_timestamp.SetValue(args2, args.Timestamp);
                         construction.TargetSkipped(args2);
                         return;
                     }
