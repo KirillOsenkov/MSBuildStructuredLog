@@ -5,13 +5,14 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Logging.StructuredLogger;
 
 namespace Microsoft.Build.BackEnd
 {
     internal class ItemGroupLoggingHelper
     {
-        internal static FieldInfo LineNumberField = typeof(BuildMessageEventArgs).GetField("lineNumber", BindingFlags.Instance | BindingFlags.NonPublic);
-        internal static FieldInfo ColumnNumberField = typeof(BuildMessageEventArgs).GetField("columnNumber", BindingFlags.Instance | BindingFlags.NonPublic);
+        internal static FieldInfo LineNumberField = Reflector.BuildEventArgs_lineNumber;
+        internal static FieldInfo ColumnNumberField = Reflector.BuildEventArgs_columnNumber;
 
         internal static TaskParameterEventArgs CreateTaskParameterEventArgs(
             BuildEventContext buildEventContext,

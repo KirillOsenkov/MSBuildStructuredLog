@@ -526,7 +526,7 @@ Build
         {
             if ((flags & BuildEventArgsFieldFlags.Message) != 0)
             {
-                string rawMessage = (string)typeof(BuildEventArgs).GetField("message", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(e);
+                string rawMessage = Reflector.BuildEventArgs_message.GetValue(e) as string;
                 WriteDeduplicatedString(rawMessage);
             }
 

@@ -34,5 +34,61 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return lazyFormattedBuildEventArgs_arguments;
             }
         }
+
+        private static FieldInfo buildEventArgs_senderName;
+        public static FieldInfo BuildEventArgs_senderName
+        {
+            get
+            {
+                if (buildEventArgs_senderName == null)
+                {
+                    buildEventArgs_senderName = typeof(BuildEventArgs).GetField("senderName", BindingFlags.Instance | BindingFlags.NonPublic);
+                }
+
+                return buildEventArgs_senderName;
+            }
+        }
+
+        private static FieldInfo buildEventArgs_timestamp;
+        public static FieldInfo BuildEventArgs_timestamp
+        {
+            get
+            {
+                if (buildEventArgs_timestamp == null)
+                {
+                    buildEventArgs_timestamp = typeof(BuildEventArgs).GetField("timestamp", BindingFlags.Instance | BindingFlags.NonPublic);
+                }
+
+                return buildEventArgs_timestamp;
+            }
+        }
+
+        private static FieldInfo buildEventArgs_lineNumber;
+        public static FieldInfo BuildEventArgs_lineNumber
+        {
+            get
+            {
+                if (buildEventArgs_lineNumber == null)
+                {
+                    buildEventArgs_lineNumber = typeof(BuildMessageEventArgs).GetField("lineNumber", BindingFlags.Instance | BindingFlags.NonPublic);
+                }
+
+                return buildEventArgs_lineNumber;
+            }
+        }
+
+        private static FieldInfo buildEventArgs_columnNumber;
+        public static FieldInfo BuildEventArgs_columnNumber
+        {
+            get
+            {
+                if (buildEventArgs_columnNumber == null)
+                {
+                    buildEventArgs_columnNumber = typeof(BuildMessageEventArgs).GetField("columnNumber", BindingFlags.Instance | BindingFlags.NonPublic);
+                }
+
+                return buildEventArgs_columnNumber;
+            }
+        }
     }
 }

@@ -47,13 +47,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         private StringStorage stringStorage = new StringStorage();
 
-        // reflection is needed to set these three fields because public constructors don't provide
-        // a way to set these from the outside
-        private static FieldInfo buildEventArgsFieldSenderName =
-            typeof(BuildEventArgs).GetField("senderName", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static FieldInfo buildEventArgsFieldTimestamp =
-            typeof(BuildEventArgs).GetField("timestamp", BindingFlags.Instance | BindingFlags.NonPublic);
-
         /// <summary>
         /// Initializes a new instance of BuildEventArgsReader using a BinaryReader instance
         /// </summary>
@@ -945,12 +938,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if ((fields.Flags & BuildEventArgsFieldFlags.SenderName) != 0)
             {
-                buildEventArgsFieldSenderName.SetValue(buildEventArgs, fields.SenderName);
+                Reflector.BuildEventArgs_senderName.SetValue(buildEventArgs, fields.SenderName);
             }
 
             if ((fields.Flags & BuildEventArgsFieldFlags.Timestamp) != 0)
             {
-                buildEventArgsFieldTimestamp.SetValue(buildEventArgs, fields.Timestamp);
+                Reflector.BuildEventArgs_timestamp.SetValue(buildEventArgs, fields.Timestamp);
             }
         }
 
