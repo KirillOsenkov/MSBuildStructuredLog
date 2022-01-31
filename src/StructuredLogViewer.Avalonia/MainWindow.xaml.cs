@@ -46,7 +46,7 @@ namespace StructuredLogViewer.Avalonia
         {
             InitializeComponent();
 #if DEBUG
-            this.AttachDevTools();
+            //this.AttachDevTools();
 #endif
 
             TemplateApplied += MainWindow_Loaded;
