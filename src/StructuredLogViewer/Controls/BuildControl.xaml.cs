@@ -18,7 +18,7 @@ using System.Xml;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Language.Xml;
-
+using Mono.Cecil;
 using StructuredLogViewer.Core.ProjectGraph;
 
 namespace StructuredLogViewer.Controls
@@ -617,7 +617,9 @@ Recent:
             {
                 var directory = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
                 var arguments = $"{logFilePath.QuoteIfNeeded()} {task.Index} pause{(debug ? " debug" : "")}";
-                if (task.GetTargetFrameworkIdentifier() == ".NETFramework")
+
+                var targetFramework = GetTaskTargetFramework(task);
+                if (targetFramework == null || targetFramework.StartsWith(".NETFramework"))
                 {
                     var taskRunnerExe = Path.Combine(directory, "TaskRunner.exe");
                     Process.Start(taskRunnerExe.QuoteIfNeeded(), arguments);
@@ -631,6 +633,43 @@ Recent:
             catch (Exception ex)
             {
                 MessageBox.Show(ex.ToString());
+            }
+        }
+
+        private string GetTaskTargetFramework(Task task)
+        {
+            try
+            {
+                var taskDllPath = task.FromAssembly;
+                if (!File.Exists(taskDllPath))
+                {
+                    // `FromAssembly` might be an assembly name instead of a file path, e.g. "Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"
+                    // Assuming that this assembly is an MSBuild assembly which is in the same directory as the MSBuild executable
+                    var msbuildDirectory = Path.GetDirectoryName(task.GetNearestParent<Build>()?.MSBuildExecutablePath);
+                    if (msbuildDirectory is not null)
+                    {
+                        var assemblyName = new AssemblyName(task.FromAssembly);
+                        taskDllPath = Path.Combine(msbuildDirectory, $"{assemblyName.Name}.dll");
+                        if (!File.Exists(taskDllPath))
+                        {
+                            return null;
+                        }
+                    }
+                }
+
+                var module = AssemblyDefinition.ReadAssembly(taskDllPath);
+                var attribute = module.CustomAttributes.FirstOrDefault(a => a.AttributeType.Name == "TargetFrameworkAttribute");
+                if (attribute == null || attribute.ConstructorArguments.Count != 1)
+                {
+                    return null;
+                }
+
+                var targetFramework = attribute.ConstructorArguments[0].Value as string;
+                return targetFramework;
+            }
+            catch
+            {
+                return null;
             }
         }
 
