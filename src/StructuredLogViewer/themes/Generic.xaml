@@ -43,7 +43,7 @@
   <SolidColorBrush x:Key="PropertyStroke" Color="DodgerBlue" />
   <SolidColorBrush x:Key="ItemStroke" Color="MediumAquamarine" />
   <SolidColorBrush x:Key="AddItemStroke" Color="Teal" />
-  <SolidColorBrush x:Key="MetadataStroke" Color="MediumAquamarine" />
+  <SolidColorBrush x:Key="MetadataStroke" Color="Teal" />
   <SolidColorBrush x:Key="MessageStroke" Color="LightGray" />
   <SolidColorBrush x:Key="ImportStroke" Color="Sienna" />
   <SolidColorBrush x:Key="NoImportStroke" Color="Red" />
@@ -78,6 +78,11 @@
   <LinearGradientBrush x:Key="ItemBrush" StartPoint="0,0" EndPoint="1,1">
     <GradientStop Color="Honeydew" Offset="0" />
     <GradientStop Color="LightGreen" Offset="1" />
+  </LinearGradientBrush>
+
+  <LinearGradientBrush x:Key="MetadataBrush" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Color="PaleTurquoise" Offset="0" />
+    <GradientStop Color="LightSeaGreen" Offset="1" />
   </LinearGradientBrush>
 
   <LinearGradientBrush x:Key="PropertyBrush" StartPoint="0,0" EndPoint="1,1">
@@ -441,7 +446,7 @@
 
   <DataTemplate DataType="{x:Type l:Metadata}">
     <StackPanel Orientation="Horizontal">
-      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{DynamicResource MetadataStroke}" Fill="{DynamicResource ItemBrush}" />
+      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{DynamicResource MetadataStroke}" Fill="{DynamicResource MetadataBrush}" />
       <TextBlock x:Name="label" Text="{Binding NameAndEquals, Mode=OneTime}" />
       <TextBlock Text="{Binding ShortenedValue}" />
     </StackPanel>
@@ -675,7 +680,7 @@
       </DataTrigger>
       <DataTrigger Binding="{Binding OriginalType}" Value="Metadata">
         <Setter TargetName="icon" Property="Stroke" Value="{DynamicResource MetadataStroke}" />
-        <Setter TargetName="icon" Property="Fill" Value="{DynamicResource ItemBrush}" />
+        <Setter TargetName="icon" Property="Fill" Value="{DynamicResource MetadataBrush}" />
       </DataTrigger>
       <DataTrigger Binding="{Binding OriginalType}" Value="Property">
         <Setter TargetName="icon" Property="Stroke" Value="{DynamicResource PropertyStroke}" />
