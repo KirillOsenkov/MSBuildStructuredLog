@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -396,7 +396,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             {
                 var timeline = new Timeline(Build);
                 this.tracing.BuildControl = this;
-                this.tracing.SetTimeline(timeline, Build.StartTime.Ticks, Build.EndTime.Ticks); 
+                this.tracing.SetTimeline(timeline, Build.StartTime.Ticks, Build.EndTime.Ticks);
                 this.tracingWatermark.Visibility = Visibility.Hidden;
                 this.tracing.Visibility = Visibility.Visible;
             }
@@ -1014,7 +1014,7 @@ Recent:
                 //    SetProjectContext(projectEvaluation);
                 //    return;
                 //}
-    
+
                 //if (project.FindChild<Folder>(Strings.Items) != null || project.FindChild<Folder>(Strings.Properties) != null)
                 //{
                 //    SetProjectContext(project);
@@ -1898,7 +1898,7 @@ Recent:
 
             if (recordStats.StringTotalSize > 0)
             {
-                var strings = new Item 
+                var strings = new Item
                 {
                     Text = BinlogStats.GetString("Strings", recordStats.StringTotalSize, recordStats.StringCount, recordStats.StringLargest)
                 };
@@ -1911,13 +1911,13 @@ Recent:
 
             if (recordStats.NameValueListTotalSize > 0)
             {
-                statsRoot.AddChild(new Message 
+                statsRoot.AddChild(new Message
                 {
                     Text = BinlogStats.GetString(
                         "NameValueLists",
                         recordStats.NameValueListTotalSize,
                         recordStats.NameValueListCount,
-                        recordStats.NameValueListLargest) 
+                        recordStats.NameValueListLargest)
                 });
             }
 
