@@ -1,3 +1,4 @@
+using System;
 using System.Reflection;
 using Microsoft.Build.Framework;
 
@@ -35,6 +36,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        private static PropertyInfo lazyFormattedBuildEventArgs_RawArguments;
+        public static PropertyInfo LazyFormattedBuildEventArgs_RawArguments
+        {
+            get
+            {
+                if (lazyFormattedBuildEventArgs_RawArguments == null)
+                {
+                    lazyFormattedBuildEventArgs_RawArguments =
+                        typeof(LazyFormattedBuildEventArgs).GetProperty("RawArguments", BindingFlags.Instance | BindingFlags.NonPublic);
+                }
+
+                return lazyFormattedBuildEventArgs_RawArguments;
+            }
+        }
+
         private static FieldInfo buildEventArgs_senderName;
         public static FieldInfo BuildEventArgs_senderName
         {
@@ -63,32 +79,46 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private static FieldInfo buildEventArgs_lineNumber;
-        public static FieldInfo BuildEventArgs_lineNumber
+        private static FieldInfo buildMessageEventArgs_lineNumber;
+        public static FieldInfo BuildMessageEventArgs_lineNumber
         {
             get
             {
-                if (buildEventArgs_lineNumber == null)
+                if (buildMessageEventArgs_lineNumber == null)
                 {
-                    buildEventArgs_lineNumber = typeof(BuildMessageEventArgs).GetField("lineNumber", BindingFlags.Instance | BindingFlags.NonPublic);
+                    buildMessageEventArgs_lineNumber = typeof(BuildMessageEventArgs).GetField("lineNumber", BindingFlags.Instance | BindingFlags.NonPublic);
                 }
 
-                return buildEventArgs_lineNumber;
+                return buildMessageEventArgs_lineNumber;
             }
         }
 
-        private static FieldInfo buildEventArgs_columnNumber;
-        public static FieldInfo BuildEventArgs_columnNumber
+        private static FieldInfo buildMessageEventArgs_columnNumber;
+        public static FieldInfo BuildMessageEventArgs_columnNumber
         {
             get
             {
-                if (buildEventArgs_columnNumber == null)
+                if (buildMessageEventArgs_columnNumber == null)
                 {
-                    buildEventArgs_columnNumber = typeof(BuildMessageEventArgs).GetField("columnNumber", BindingFlags.Instance | BindingFlags.NonPublic);
+                    buildMessageEventArgs_columnNumber = typeof(BuildMessageEventArgs).GetField("columnNumber", BindingFlags.Instance | BindingFlags.NonPublic);
                 }
 
-                return buildEventArgs_columnNumber;
+                return buildMessageEventArgs_columnNumber;
             }
+        }
+
+        public static object[] GetArguments(LazyFormattedBuildEventArgs args)
+        {
+            if (LazyFormattedBuildEventArgs_RawArguments != null)
+            {
+                return LazyFormattedBuildEventArgs_RawArguments.GetValue(args) as object[];
+            }
+            else if (LazyFormattedBuildEventArgs_arguments != null)
+            {
+                return LazyFormattedBuildEventArgs_arguments.GetValue(args) as object[];
+            }
+
+            return Array.Empty<object>();
         }
     }
 }

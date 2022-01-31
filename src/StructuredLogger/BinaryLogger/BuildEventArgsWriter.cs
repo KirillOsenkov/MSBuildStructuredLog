@@ -391,6 +391,7 @@ Build
         {
             Write(BinaryLogRecordKind.Error);
             WriteBuildEventArgsFields(e);
+            WriteArguments(Reflector.GetArguments(e));
             WriteDeduplicatedString(e.Subcategory);
             WriteDeduplicatedString(e.Code);
             WriteDeduplicatedString(e.File);
@@ -405,6 +406,7 @@ Build
         {
             Write(BinaryLogRecordKind.Warning);
             WriteBuildEventArgsFields(e);
+            WriteArguments(Reflector.GetArguments(e));
             WriteDeduplicatedString(e.Subcategory);
             WriteDeduplicatedString(e.Code);
             WriteDeduplicatedString(e.File);
@@ -513,11 +515,20 @@ Build
             Write((int)e.Kind);
             WriteDeduplicatedString(e.ItemType);
             WriteTaskItemList(e.Items, e.LogItemMetadata);
+            if (e.Kind == TaskParameterMessageKind.AddItem)
+            {
+                CheckForFilesToEmbed(e.ItemType, e.Items);
+            }
         }
 
-        private void WriteBuildEventArgsFields(BuildEventArgs e, bool writeMessage = true)
+        private void WriteBuildEventArgsFields(BuildEventArgs e, bool writeMessage = true, bool writeLineAndColumn = false)
         {
             var flags = GetBuildEventArgsFieldFlags(e, writeMessage);
+            if (writeLineAndColumn)
+            {
+                flags |= BuildEventArgsFieldFlags.LineNumber | BuildEventArgsFieldFlags.ColumnNumber;
+            }
+
             Write((int)flags);
             WriteBaseFields(e, flags);
         }
@@ -559,7 +570,7 @@ Build
         private void WriteMessageFields(BuildMessageEventArgs e, bool writeMessage = true, bool writeImportance = false)
         {
             var flags = GetBuildEventArgsFieldFlags(e, writeMessage);
-            flags = GetMessageFlags(e, flags, writeMessage, writeImportance);
+            flags = GetMessageFlags(e, flags, writeImportance);
 
             Write((int)flags);
 
@@ -607,13 +618,8 @@ Build
 
             if ((flags & BuildEventArgsFieldFlags.Arguments) != 0)
             {
-                var rawArguments = Reflector.LazyFormattedBuildEventArgs_arguments.GetValue(e) as object[] ?? Array.Empty<object>();
-                Write(rawArguments.Length);
-                for (int i = 0; i < rawArguments.Length; i++)
-                {
-                    string argument = Convert.ToString(rawArguments[i], CultureInfo.CurrentCulture);
-                    WriteDeduplicatedString(argument);
-                }
+                var rawArguments = Reflector.GetArguments(e) ?? Array.Empty<object>();
+                WriteArguments(rawArguments);
             }
 
             if ((flags & BuildEventArgsFieldFlags.Importance) != 0)
@@ -622,7 +628,23 @@ Build
             }
         }
 
-        private static BuildEventArgsFieldFlags GetMessageFlags(BuildMessageEventArgs e, BuildEventArgsFieldFlags flags, bool writeMessage = true, bool writeImportance = false)
+        private void WriteArguments(object[] arguments)
+        {
+            if (arguments == null || arguments.Length == 0)
+            {
+                return;
+            }
+
+            int count = arguments.Length;
+            Write(count);
+            for (int i = 0; i < count; i++)
+            {
+                string argument = Convert.ToString(arguments[i], CultureInfo.CurrentCulture);
+                WriteDeduplicatedString(argument);
+            }
+        }
+
+        private static BuildEventArgsFieldFlags GetMessageFlags(BuildMessageEventArgs e, BuildEventArgsFieldFlags flags, bool writeImportance = false)
         {
             if (e.Subcategory != null)
             {
@@ -664,12 +686,6 @@ Build
                 flags |= BuildEventArgsFieldFlags.EndColumnNumber;
             }
 
-            var rawArguments = Reflector.LazyFormattedBuildEventArgs_arguments.GetValue(e) as object[];
-            if (writeMessage && rawArguments != null && rawArguments.Length > 0)
-            {
-                flags |= BuildEventArgsFieldFlags.Arguments;
-            }
-
             if (writeImportance && e.Importance != MessageImportance.Low)
             {
                 flags |= BuildEventArgsFieldFlags.Importance;
@@ -694,6 +710,14 @@ Build
             if (writeMessage)
             {
                 flags |= BuildEventArgsFieldFlags.Message;
+
+                // We're only going to write the arguments for messages,
+                // warnings and errors. Only set the flag for these.
+                if (e is LazyFormattedBuildEventArgs lazy && Reflector.GetArguments(lazy) is { Length: > 0} &&
+                    (e is BuildMessageEventArgs or BuildWarningEventArgs or BuildErrorEventArgs))
+                {
+                    flags |= BuildEventArgsFieldFlags.Arguments;
+                }
             }
 
             // no need to waste space for the default sender name
@@ -701,12 +725,6 @@ Build
             {
                 flags |= BuildEventArgsFieldFlags.SenderName;
             }
-
-            // ThreadId never seems to be used or useful for anything.
-            //if (e.ThreadId > 0)
-            //{
-            //    flags |= BuildEventArgsFieldFlags.ThreadId;
-            //}
 
             if (e.Timestamp != default(DateTime))
             {
@@ -799,6 +817,7 @@ Build
             //    {
             //        WriteDeduplicatedString(itemType);
             //        WriteTaskItemList(itemList);
+            //        CheckForFilesToEmbed(itemType, itemList);
             //    });
             //
             //    // signal the end
@@ -811,6 +830,7 @@ Build
             //    {
             //        WriteDeduplicatedString(itemType);
             //        WriteTaskItemList(itemList);
+            //        CheckForFilesToEmbed(itemType, itemList);
             //    });
             //
             //    // signal the end
@@ -902,10 +922,10 @@ Build
 
             // Don't sort metadata because we want the binary log to be fully roundtrippable
             // and we need to preserve the original order.
-            //if (nameValueListBuffer.Count > 1)
-            //{
+            // if (nameValueListBuffer.Count > 1)
+            // {
             //    nameValueListBuffer.Sort((l, r) => StringComparer.OrdinalIgnoreCase.Compare(l.Key, r.Key));
-            //}
+            // }
 
             WriteNameValueList();
 
@@ -1033,7 +1053,7 @@ Build
 
         private void Write(int value)
         {
-            binaryWriter.Write7BitEncodedInt(value);
+            BinaryWriterExtensions.Write7BitEncodedInt(binaryWriter, value);
         }
 
         private void Write(long value)
