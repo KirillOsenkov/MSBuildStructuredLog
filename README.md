@@ -37,6 +37,7 @@ There are a couple of extra steps to get the .app running on macOS since it's cu
 
 ```
 git clone https://github.com/KirillOsenkov/MSBuildStructuredLog
+cd MSBuildStructuredLog
 ./run.sh
 ```
 
