@@ -808,35 +808,62 @@ Build
                 return;
             }
 
-            //if (items is ItemDictionary<ProjectItemInstance> itemInstanceDictionary)
-            //{
-            //    // If we have access to the live data from evaluation, it exposes a special method
-            //    // to iterate the data structure under a lock and return results grouped by item type.
-            //    // There's no need to allocate or call GroupBy this way.
-            //    itemInstanceDictionary.EnumerateItemsPerType((itemType, itemList) =>
-            //    {
-            //        WriteDeduplicatedString(itemType);
-            //        WriteTaskItemList(itemList);
-            //        CheckForFilesToEmbed(itemType, itemList);
-            //    });
-            //
-            //    // signal the end
-            //    Write(0);
-            //}
-            //// not sure when this can get hit, but best to be safe and support this
-            //else if (items is ItemDictionary<ProjectItem> itemDictionary)
-            //{
-            //    itemDictionary.EnumerateItemsPerType((itemType, itemList) =>
-            //    {
-            //        WriteDeduplicatedString(itemType);
-            //        WriteTaskItemList(itemList);
-            //        CheckForFilesToEmbed(itemType, itemList);
-            //    });
-            //
-            //    // signal the end
-            //    Write(0);
-            //}
-            //else
+            var type = items.GetType();
+            if (type.Name == "ItemDictionary`1")
+            {
+                var method = Reflector.GetEnumerateItemsPerTypeMethod(type);
+                if (method != null)
+                {
+                    method.Invoke(items, new object[] { WriteItems });
+                }
+                else
+                {
+                    Write(0);
+                }
+
+                return;
+            }
+
+            void WriteItems(string itemType, object itemList)
+            {
+                WriteDeduplicatedString(itemType);
+                WriteTaskItemList((IEnumerable)itemList);
+                CheckForFilesToEmbed(itemType, (IEnumerable)itemList);
+                // signal the end
+                Write(0);
+            }
+
+#if false
+            if (items is ItemDictionary<ProjectItemInstance> itemInstanceDictionary)
+            {
+                // If we have access to the live data from evaluation, it exposes a special method
+                // to iterate the data structure under a lock and return results grouped by item type.
+                // There's no need to allocate or call GroupBy this way.
+                itemInstanceDictionary.EnumerateItemsPerType((itemType, itemList) =>
+                {
+                    WriteDeduplicatedString(itemType);
+                    WriteTaskItemList(itemList);
+                    CheckForFilesToEmbed(itemType, itemList);
+                });
+            
+                // signal the end
+                Write(0);
+            }
+            // not sure when this can get hit, but best to be safe and support this
+            else if (items is ItemDictionary<ProjectItem> itemDictionary)
+            {
+                itemDictionary.EnumerateItemsPerType((itemType, itemList) =>
+                {
+                    WriteDeduplicatedString(itemType);
+                    WriteTaskItemList(itemList);
+                    CheckForFilesToEmbed(itemType, itemList);
+                });
+            
+                // signal the end
+                Write(0);
+            }
+            else
+#endif
             {
                 string currentItemType = null;
 

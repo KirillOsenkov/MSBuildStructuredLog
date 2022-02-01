@@ -120,5 +120,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             return Array.Empty<object>();
         }
+
+        private static MethodInfo enumerateItemsPerType;
+        public static MethodInfo GetEnumerateItemsPerTypeMethod(Type itemDictionary)
+        {
+            if (enumerateItemsPerType == null)
+            {
+                enumerateItemsPerType = itemDictionary.GetMethod("EnumerateItemsPerType", BindingFlags.Instance | BindingFlags.NonPublic);
+            }
+
+            return enumerateItemsPerType;
+        }
     }
 }
