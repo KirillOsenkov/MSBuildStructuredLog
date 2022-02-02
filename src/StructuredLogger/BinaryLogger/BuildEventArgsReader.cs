@@ -701,8 +701,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var fields = ReadBuildEventArgsFields(readImportance: true);
 
             var kind = (TaskParameterMessageKind)ReadInt32();
-            var itemType = ReadDeduplicatedString();
-            var items = ReadTaskItemList() as IList;
+            var itemType = ReadDeduplicatedString() ?? "N/A";
+            var items = ReadTaskItemList() as IList ?? Array.Empty<ITaskItem>();
 
             var e = ItemGroupLoggingHelper.CreateTaskParameterEventArgs(
                 fields.BuildEventContext,
