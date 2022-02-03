@@ -816,11 +816,9 @@ Build
                 {
                     method.Invoke(items, new object[] { WriteItems });
                 }
-                else
-                {
-                    Write(0);
-                }
 
+                // signal the end
+                Write(0);
                 return;
             }
 
@@ -829,8 +827,6 @@ Build
                 WriteDeduplicatedString(itemType);
                 WriteTaskItemList((IEnumerable)itemList);
                 CheckForFilesToEmbed(itemType, (IEnumerable)itemList);
-                // signal the end
-                Write(0);
             }
 
 #if false
