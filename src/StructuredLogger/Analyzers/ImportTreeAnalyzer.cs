@@ -1,22 +1,14 @@
-using System;
-using System.Linq;
-using System.Reflection;
 using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class ImportTreeAnalyzer
     {
-        private static FieldInfo buildEventArgsFieldMessage =
-            typeof(BuildEventArgs).GetField("message", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static FieldInfo lazyFormattedBuildEventArgsFieldArguments =
-            typeof(LazyFormattedBuildEventArgs).GetField("arguments", BindingFlags.Instance | BindingFlags.NonPublic);
-
         public static TextNode TryGetImportOrNoImport(ProjectImportedEventArgs args, StringCache stringTable)
         {
-            var message = (string)buildEventArgsFieldMessage.GetValue(args);
+            var message = (string)Reflector.BuildEventArgs_message?.GetValue(args);
 
-            var arguments = lazyFormattedBuildEventArgsFieldArguments.GetValue(args) as object[];
+            var arguments = Reflector.LazyFormattedBuildEventArgs_arguments?.GetValue(args) as object[];
             if (arguments != null && arguments.Length > 0)
             {
                 if (arguments.Length == 4)

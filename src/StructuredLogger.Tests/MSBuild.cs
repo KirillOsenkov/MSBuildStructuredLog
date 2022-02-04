@@ -26,7 +26,8 @@ namespace StructuredLogger.Tests
                         EnableNodeReuse = false,
                         Loggers = loggers,
                         MaxNodeCount = 1,
-                        DisableInProcNode = false
+                        DisableInProcNode = false,
+                        DefaultToolsVersion = "Current"
                     },
                     new BuildRequestData(
                         projectFile,
@@ -45,6 +46,7 @@ namespace StructuredLogger.Tests
 
         public static bool BuildProjectInMemory(string projectText, params ILogger[] loggers)
         {
+            Environment.SetEnvironmentVariable("MSBUILDNOINPROCNODE", "0");
             Project project = CreateInMemoryProject(projectText, loggers: loggers);
             bool success = project.Build(loggers);
             return success;

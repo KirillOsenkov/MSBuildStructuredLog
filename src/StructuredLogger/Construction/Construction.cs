@@ -25,9 +25,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private readonly ConcurrentDictionary<string, string> _taskToAssemblyMap =
             new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-        private readonly ConcurrentDictionary<Project, ProjectInstance> _projectToProjectInstanceMap =
-            new ConcurrentDictionary<Project, ProjectInstance>();
-
         private readonly object syncLock = new object();
 
         private readonly MessageProcessor messageProcessor;
@@ -920,62 +917,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 propertiesFolder,
                 list.OrderBy(d => d.Key, StringComparer.Ordinal),
                 project as IProjectOrEvaluation);
-        }
-
-        // normally MSBuild internal data structures aren't available to loggers, but we really want access
-        // to get at the target graph.
-        private void RetrieveProjectInstance(Project project, ProjectStartedEventArgs args)
-        {
-            if (_projectToProjectInstanceMap.ContainsKey(project))
-            {
-                return;
-            }
-
-            var projectItemInstanceEnumeratorProxy = args?.Items;
-            if (projectItemInstanceEnumeratorProxy == null)
-            {
-                return;
-            }
-
-            var _backingItems = GetField(projectItemInstanceEnumeratorProxy, "_backingItems");
-            if (_backingItems == null)
-            {
-                return;
-            }
-
-            var _backingEnumerable = GetField(_backingItems, "_backingEnumerable");
-            if (_backingEnumerable == null)
-            {
-                return;
-            }
-
-            var _nodes = GetField(_backingEnumerable, "_nodes") as IDictionary;
-            if (_nodes == null || _nodes.Count == 0)
-            {
-                return;
-            }
-
-            var projectItemInstance = _nodes.Keys.OfType<object>().FirstOrDefault() as ProjectItemInstance;
-            if (projectItemInstance == null)
-            {
-                return;
-            }
-
-            var projectInstance = projectItemInstance.Project;
-            if (projectInstance == null)
-            {
-                return;
-            }
-
-            _projectToProjectInstanceMap[project] = projectInstance;
-        }
-
-        private static object GetField(object instance, string fieldName)
-        {
-            return instance?
-                .GetType()
-                .GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)?
-                .GetValue(instance);
         }
 
         private static HashSet<string> ignoreAssemblyForTasks = new HashSet<string>(StringComparer.OrdinalIgnoreCase)

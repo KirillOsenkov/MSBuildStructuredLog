@@ -1,4 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <TargetFrameworks>net472;net5.0-windows</TargetFrameworks>
     <OutputType>WinExe</OutputType>
@@ -11,33 +12,39 @@
     <Product>MSBuild Structured Log Viewer</Product>
     <AssemblyTitle>MSBuild Structured Log Viewer</AssemblyTitle>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net472'">
-    <NuspecFileName>MSBuildStructuredLogViewer</NuspecFileName>
-    <ChocolateyFileName>msbuild-structured-log-viewer</ChocolateyFileName>
-  </PropertyGroup>
+
+  <ItemGroup Condition="$(TargetFramework) == 'net472'">
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="AdonisUI" Version="1.16.0" />
     <PackageReference Include="AdonisUI.ClassicTheme" Version="1.16.0" />
     <PackageReference Include="AvalonEdit" Version="6.0.1" />
     <PackageReference Include="Microsoft.Build.Locator" Version="1.4.1" ExcludeAssets="build" />
+    <PackageReference Include="Mono.Cecil" Version="0.9.6.1" />
     <PackageReference Include="Nerdbank.GitVersioning" Version="$(NuGetVersionNerdbankGitVersioning)" PrivateAssets="all" />
-    <PackageReference Include="squirrel.windows" Version="1.4.4" />
+    <PackageReference Include="squirrel.windows" Version="1.4.4" GeneratePathProperty="true" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="System.IO.Compression" Version="4.3.0" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" />
     <PackageReference Include="AutomaticGraphLayout.WpfGraphControl" Version="1.1.11" />
   </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\StructuredLogger\StructuredLogger.csproj" />
     <ProjectReference Include="..\StructuredLogViewer.Core\StructuredLogViewer.Core.csproj" />
     <ProjectReference Include="..\TaskRunner\TaskRunner.csproj" />
   </ItemGroup>
+
   <ItemGroup>
     <Resource Include="StructuredLogger.ico" />
   </ItemGroup>
+
   <ItemGroup>
     <EmbeddedResource Include="Resources\SolutionFile.xshd" />
   </ItemGroup>
+
   <Target Name="CopyTaskRunnerDll" BeforeTargets="GetCopyToOutputDirectoryItems" Condition="$(TargetFramework) == 'net472'">
     <PropertyGroup>
       <CoreTaskRunnerOutDir>$([System.IO.Path]::GetFullPath(`$(OutDir)\..\..\..\TaskRunner\$(Configuration)\net5.0`))\</CoreTaskRunnerOutDir>
@@ -51,4 +58,70 @@
         DestinationFolder="$(OutDir)"
         SkipUnchangedFiles="True" />
   </Target>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net472'">
+    <NuspecFileName>MSBuildStructuredLogViewer</NuspecFileName>
+    <NuspecPath>$(MSBuildProjectDirectory)\$(NuspecFileName).nuspec</NuspecPath>
+    <ChocolateyFileName>msbuild-structured-log-viewer</ChocolateyFileName>
+    <ChocolateyNuspecPath>$(MSBuildProjectDirectory)\$(ChocolateyFileName).nuspec</ChocolateyNuspecPath>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(NuspecFileName)' != ''">
+    <NuGetInput Condition="Exists('$(NuspecPath)')" Include="$(NuspecPath)" />
+    <NuGetInput Include="$(MSBuildThisFileFullPath)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(ChocolateyFileName)' != ''">
+    <ChocolateyInput Condition="Exists('$(ChocolateyNuspecPath)')" Include="$(ChocolateyNuspecPath)" />
+    <ChocolateyInput Include="$(MSBuildThisFileFullPath)" />
+  </ItemGroup>
+
+  <Target Name="ExtractVersion"
+          AfterTargets="CoreBuild"
+          Condition="Exists('$(NuspecPath)')"
+          DependsOnTargets="PrepareResources;GenerateAssemblyVersionInfo">
+    <PropertyGroup>
+      <NupkgPath>$(OutDir)$(NuspecFileName).$(Version).nupkg</NupkgPath>
+      <ChocolateyNupkgPath>$(OutDir)$(ChocolateyFileName).$(Version).nupkg</ChocolateyNupkgPath>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="BuildNuGet"
+          AfterTargets="ExtractVersion"
+          Condition="Exists('$(NuspecPath)')"
+          DependsOnTargets="ExtractVersion"
+          Inputs="@(NuGetInput)"
+          Outputs="$(NupkgPath)">
+    <PackTask
+        PackItem="$(NuspecPath)"
+        NuspecFile="$(NuspecPath)"
+        NuspecBasePath="$(OutDir)"
+        NuspecProperties="currentVersion=$(Version)"
+        NuspecOutputPath="$(NuspecOutputPath)"
+        PackageOutputPath="$(OutDir)"
+        RestoreOutputPath="$(RestoreOutputPath)"
+        SymbolPackageFormat="snupkg"
+        />
+  </Target>
+
+  <Target Name="BuildChocolatey"
+          AfterTargets="ExtractVersion"
+          Condition="Exists('$(ChocolateyNuspecPath)') AND Exists('C:\ProgramData\chocolatey\choco.exe')"
+          DependsOnTargets="ExtractVersion"
+          Inputs="@(ChocolateyInput)"
+          Outputs="$(ChocolateyNupkgPath)">
+    <Exec Command="C:\ProgramData\chocolatey\choco.exe Pack &quot;$(ChocolateyNuspecPath)&quot; -OutputDirectory $(OutDir) currentVersion=$(Version) outdir=$(OutDir)" />
+  </Target>
+
+  <Target Name="SquirrelReleasify"
+          AfterTargets="BuildNuGet"
+          Condition="Exists('$(NupkgPath)')"
+          DependsOnTargets="BuildNuGet"
+          Inputs="$(NupkgPath)"
+          Outputs="$(OutDir)Releases\MSBuildStructuredLogSetup.exe">
+    <Exec Command="&quot;$(PkgSquirrel_Windows)\tools\Squirrel.exe&quot; --releaseDir=$(OutDir)Releases --no-msi --releasify $(NupkgPath)" />
+    <Copy SourceFiles="$(OutDir)Releases\Setup.exe" DestinationFiles="$(OutDir)Releases\MSBuildStructuredLogSetup.exe" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" />
+    <Delete Files="$(OutDir)Releases\Setup.exe" />
+  </Target>
+
 </Project>
