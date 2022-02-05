@@ -1,0 +1,1 @@
+dotnet publish -c Release -r win-x64 -p:PublishNativeAot=True src/StructuredLogViewer.Avalonia/StructuredLogViewer.Avalonia.csproj
