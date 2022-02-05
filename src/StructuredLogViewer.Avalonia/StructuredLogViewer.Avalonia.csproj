@@ -5,6 +5,10 @@
     <TargetFramework>net6.0</TargetFramework>
     <RuntimeIdentifiers>win7-x64;ubuntu.14.04-x64;osx.10.12-x64;osx-arm64</RuntimeIdentifiers>
     <ApplicationIcon>StructuredLogger.ico</ApplicationIcon>
+    <RestoreAdditionalProjectSources Condition="$(PublishNativeAot) == True">
+      https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7/nuget/v3/index.json;
+      $(RestoreAdditionalProjectSources)
+    </RestoreAdditionalProjectSources>
   </PropertyGroup>
   
   <ItemGroup>
@@ -15,6 +19,10 @@
       <SubType>Designer</SubType>
     </AvaloniaResource>
     <AvaloniaResource Include="StructuredLogger.ico" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <RdXmlFile Include="Avalonia.rd.xml" />
   </ItemGroup>
 
   <ItemGroup Condition="$(NETCoreSdkRuntimeIdentifier.StartsWith('osx'))">
@@ -35,6 +43,7 @@
     <PackageReference Include="SkiaSharp" Version="2.88.0-preview.187" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="2.88.0-preview.187" Condition="$(NETCoreSdkRuntimeIdentifier.StartsWith('linux'))" />
     <PackageReference Include="HarfBuzzSharp" Version="2.8.2-preview.187" />
+    <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="7.0.0-*" Condition="$(PublishNativeAot) == True" />
   </ItemGroup>
 
   <ItemGroup>
