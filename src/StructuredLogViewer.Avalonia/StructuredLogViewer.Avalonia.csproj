@@ -22,7 +22,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <RdXmlFile Include="avalonia.rd.xml" />
+    <RdXmlFile Include="Avalonia.rd.xml" />
   </ItemGroup>
 
   <ItemGroup Condition="$(NETCoreSdkRuntimeIdentifier.StartsWith('osx'))">
