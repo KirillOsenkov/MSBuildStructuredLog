@@ -5,6 +5,15 @@
 	<Assembly Name="Avalonia.Themes.Default" Dynamic="Required All"></Assembly>
 	<!-- <Assembly Name="Avalonia.Visuals" Dynamic="Required All"></Assembly>
 	<Assembly Name="SkiaSharp" Dynamic="Required All"></Assembly> -->
+
+	<!--
+		This is for opening files dialog 
+		Tracked here https://github.com/AvaloniaUI/Avalonia/issues/7533
+	-->
+	<Assembly Name="Avalonia.X11" Dynamic="Required All">
+		<Type Name="Avalonia.X11.NativeDialogs.Gtk+signal_generic" MarshalDelegate="Required All" />
+		<Type Name="Avalonia.X11.NativeDialogs.Gtk+signal_dialog_response" MarshalDelegate="Required All" />
+	</Assembly>
 	
 	<!-- Not known if and when you need these:
 	<Assembly Name="Avalonia.Controls" Dynamic="Required All"></Assembly>
