@@ -38,6 +38,14 @@ namespace BinlogTool
                 return;
             }
 
+            if (args.Length == 2 && string.Equals(firstArg, "listtools", StringComparison.OrdinalIgnoreCase))
+            {
+                var binlog = args[1];
+
+                new ListTools().Run(binlog);
+                return;
+            }
+
             if (firstArg == "search")
             {
                 if (args.Length < 3)
