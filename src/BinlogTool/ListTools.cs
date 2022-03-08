@@ -125,6 +125,7 @@ namespace BinlogTool
             var versionMessage = task.FindChild<Message>(m => m.Text is string message &&
                 message.Length < 200 &&
                 !message.Contains("\n") &&
+                !message.Contains("Leaving it untouched") &&
                 !message.StartsWith("ILLink:") &&
                     (message.StartsWith("Using Xcode") ||
                     message.Contains("version", StringComparison.OrdinalIgnoreCase)));
