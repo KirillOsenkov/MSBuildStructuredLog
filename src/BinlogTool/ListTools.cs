@@ -84,7 +84,26 @@ namespace BinlogTool
             if (task.Name == "Exec")
             {
                 var args = task.FindChild<Property>(p => p.Name == "CommandLineArguments");
-                if (args.Value is string arguments)
+                string arguments = null;
+
+                if (args == null)
+                {
+                    var parameters = task.FindChild<Folder>("Parameters");
+                    if (parameters != null)
+                    {
+                        var command = parameters.FindChild<Property>(p => p.Name == "Command");
+                        if (command != null)
+                        {
+                            arguments = command.Value;
+                        }
+                    }
+                }
+                else
+                {
+                    arguments = args.Value as string;
+                }
+
+                if (arguments != null)
                 {
                     arguments = arguments.TrimStart('\'', '"');
                     int space = arguments.IndexOf(' ');
