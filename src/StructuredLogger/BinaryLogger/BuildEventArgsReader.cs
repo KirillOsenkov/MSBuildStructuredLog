@@ -357,12 +357,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var succeeded = ReadBoolean();
             var environmentProperties = fileFormatVersion >= 15 ? ReadStringDictionary() : null;
 
-            var e = new BuildFinishedEventArgs(
+            var e = new BuildFinishedEventArgs2(
                 fields.Message,
                 fields.HelpKeyword,
                 succeeded,
-                environmentProperties,
-                fields.Timestamp);
+                fields.Timestamp,
+                environmentProperties);
             SetCommonFields(e, fields);
             return e;
         }
