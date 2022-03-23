@@ -87,7 +87,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                     else
                     {
-                        Build.GetOrCreateNodeWithName<TextNode>(Intern(Strings.NoEnvironment));
+                        Build.AddChild(new Note
+                        {
+                            Text = Intern(Strings.NoEnvironment)
+                        });
                     }
 
                     // realize the evaluation folder now so it is ordered before the main solution node
