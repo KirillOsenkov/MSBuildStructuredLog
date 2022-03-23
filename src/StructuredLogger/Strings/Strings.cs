@@ -446,6 +446,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static string Evaluation => "Evaluation";
         public static string Environment => "Environment";
+        public static string NoEnvironment => "Define a value for MSBUILDLOGALLENVIRONMENTVARIABLES to log all environment variables. Only those used in evaluating properties are currently logged.";
+        public static string EnvironmentDerivedProperties => "Properties derived from environment variables";
         public static string Imports => "Imports";
         public static string DetailedSummary => "Detailed summary";
         public static string Parameters => "Parameters";

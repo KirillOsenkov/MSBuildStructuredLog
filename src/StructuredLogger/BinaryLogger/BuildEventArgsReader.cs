@@ -355,11 +355,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             var fields = ReadBuildEventArgsFields();
             var succeeded = ReadBoolean();
+            var environmentProperties = fileFormatVersion >= 15 ? ReadStringDictionary() : null;
 
             var e = new BuildFinishedEventArgs(
                 fields.Message,
                 fields.HelpKeyword,
                 succeeded,
+                environmentProperties,
                 fields.Timestamp);
             SetCommonFields(e, fields);
             return e;
