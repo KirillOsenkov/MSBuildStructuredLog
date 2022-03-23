@@ -191,6 +191,7 @@ Build
                 case ProjectStartedEventArgs projectStarted: Write(projectStarted); break;
                 case ProjectFinishedEventArgs projectFinished: Write(projectFinished); break;
                 case BuildStartedEventArgs buildStarted: Write(buildStarted); break;
+                case BuildFinishedEventArgs2 buildFinished2: Write(buildFinished2); break;
                 case BuildFinishedEventArgs buildFinished: Write(buildFinished); break;
                 case ProjectEvaluationStartedEventArgs projectEvaluationStarted: Write(projectEvaluationStarted); break;
                 case ProjectEvaluationFinishedEventArgs projectEvaluationFinished: Write(projectEvaluationFinished); break;
@@ -250,7 +251,14 @@ Build
         {
             Write(BinaryLogRecordKind.BuildStarted);
             WriteBuildEventArgsFields(e);
-            Write(e.BuildEnvironment);
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("MSBUILDLOGALLENVIRONMENTVARIABLES")))
+            {
+                Write(e.BuildEnvironment);
+            }
+            else
+            {
+                Write(0);
+            }
         }
 
         private void Write(BuildFinishedEventArgs e)
@@ -258,6 +266,14 @@ Build
             Write(BinaryLogRecordKind.BuildFinished);
             WriteBuildEventArgsFields(e);
             Write(e.Succeeded);
+        }
+
+        private void Write(BuildFinishedEventArgs2 e)
+        {
+            Write(BinaryLogRecordKind.BuildFinished);
+            WriteBuildEventArgsFields(e);
+            Write(e.Succeeded); 
+            Write(e.EnvironmentVariables);
         }
 
         private void Write(ProjectEvaluationStartedEventArgs e)
