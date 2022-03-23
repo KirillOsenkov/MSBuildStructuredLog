@@ -80,7 +80,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 lock (syncLock)
                 {
                     Build.StartTime = args.Timestamp;
-                    if (args.BuildEnvironment.Count > 0)
+                    if (args.BuildEnvironment?.Count > 0)
                     {
                         var properties = Build.GetOrCreateNodeWithName<Folder>(Intern(Strings.Environment));
                         AddProperties(properties, args.BuildEnvironment);
@@ -124,8 +124,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         summary.Text = fullText;
                     }
 
-                    var properties = Build.GetOrCreateNodeWithName<Folder>(Intern(Strings.EnvironmentDerivedProperties));
-                    AddProperties(properties, args.EnvironmentVariables);
+                    if (args.EnvironmentVariables is not null)
+                    {
+                        var properties = Build.GetOrCreateNodeWithName<Folder>(Intern(Strings.EnvironmentDerivedProperties));
+                        AddProperties(properties, args.EnvironmentVariables);
+                    }
 
                     //Build.VisitAllChildren<Project>(p => CalculateTargetGraph(p));
                 }
