@@ -42,7 +42,7 @@ namespace StructuredLogViewer.Controls
         private MenuItem searchInSubtreeItem;
         private MenuItem excludeSubtreeFromSearchItem;
         private MenuItem goToTimeLineItem;
-        private MenuItem goToTracingLineItem;
+        private MenuItem goToTracingItem;
         private MenuItem copyChildrenItem;
         private MenuItem sortChildrenItem;
         private MenuItem copyNameItem;
@@ -161,7 +161,7 @@ namespace StructuredLogViewer.Controls
             searchInSubtreeItem = new MenuItem() { Header = "Search in subtree" };
             excludeSubtreeFromSearchItem = new MenuItem() { Header = "Exclude subtree from search" };
             goToTimeLineItem = new MenuItem() { Header = "Go to timeline" };
-            goToTracingLineItem = new MenuItem() { Header = "Go to tracing" };
+            goToTracingItem = new MenuItem() { Header = "Go to tracing" };
             copyChildrenItem = new MenuItem() { Header = "Copy children" };
             sortChildrenItem = new MenuItem() { Header = "Sort children" };
             copyNameItem = new MenuItem() { Header = "Copy name" };
@@ -181,7 +181,7 @@ namespace StructuredLogViewer.Controls
             searchInSubtreeItem.Click += (s, a) => SearchInSubtree();
             excludeSubtreeFromSearchItem.Click += (s, a) => ExcludeSubtreeFromSearch();
             goToTimeLineItem.Click += (s, a) => GoToTimeLine();
-            goToTracingLineItem.Click += (s, a) => GoToTracing();
+            goToTracingItem.Click += (s, a) => GoToTracing();
             copyChildrenItem.Click += (s, a) => CopyChildren();
             sortChildrenItem.Click += (s, a) => SortChildren();
             copyNameItem.Click += (s, a) => CopyName();
@@ -205,7 +205,7 @@ namespace StructuredLogViewer.Controls
             contextMenu.Items.Add(searchInSubtreeItem);
             contextMenu.Items.Add(excludeSubtreeFromSearchItem);
             contextMenu.Items.Add(goToTimeLineItem);
-            contextMenu.Items.Add(goToTracingLineItem);
+            contextMenu.Items.Add(goToTracingItem);
             contextMenu.Items.Add(copyItem);
             contextMenu.Items.Add(copySubtreeItem);
             contextMenu.Items.Add(copyFilePathItem);
@@ -696,7 +696,7 @@ Recent:
             searchInSubtreeItem.Visibility = hasChildren && node is TimedNode ? Visibility.Visible : Visibility.Collapsed;
             excludeSubtreeFromSearchItem.Visibility = hasChildren && node is TimedNode ? Visibility.Visible : Visibility.Collapsed;
             goToTimeLineItem.Visibility = node is TimedNode ? Visibility.Visible : Visibility.Collapsed;
-            goToTracingLineItem.Visibility = node is TimedNode ? Visibility.Visible : Visibility.Collapsed;
+            goToTracingItem.Visibility = node is TimedNode ? Visibility.Visible : Visibility.Collapsed;
             copyChildrenItem.Visibility = copySubtreeItem.Visibility;
             sortChildrenItem.Visibility = copySubtreeItem.Visibility;
             preprocessItem.Visibility = node is IPreprocessable p && preprocessedFileManager.CanPreprocess(p) ? Visibility.Visible : Visibility.Collapsed;
