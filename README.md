@@ -18,7 +18,7 @@ Install from https://msbuildlog.com.
 
 The app updates automatically via [Squirrel](https://github.com/Squirrel/Squirrel.Windows) (after launch it checks for updates in background), next launch starts the newly downloaded latest version.
 
-![Screenshot1](http://msbuildlog.com/Screenshot1.png)
+![Screenshot1](https://msbuildlog.com/Screenshot1.png)
 
 ## Installing the Avalonia version on Mac:
 
@@ -66,7 +66,7 @@ Mac:
 
 Starting with MSBuild 15.3 you can pass the new `/bl` switch to `msbuild.exe` to record a binary build log to `msbuild.binlog`, in the same folder as the project/solution being built:
 
-![Screenshot](http://msbuildlog.com/BinLogFromCommandLine.png)
+![Screenshot](https://msbuildlog.com/BinLogFromCommandLine.png)
 
 or you can build the solution or open an existing log file through the viewer app:
 
@@ -111,6 +111,6 @@ Open an issue if you're running into something weird and I can take a look into 
 ```
 
 ## MSBuild Resources
- * [http://msbuildlog.com](http://msbuildlog.com)
+ * [https://msbuildlog.com](https://msbuildlog.com)
  * [https://github.com/Microsoft/msbuild/blob/master/documentation/wiki/MSBuild-Resources.md](https://github.com/Microsoft/msbuild/blob/master/documentation/wiki/MSBuild-Resources.md)
  * [https://github.com/Microsoft/msbuild/blob/master/documentation/wiki/MSBuild-Tips-&-Tricks.md](https://github.com/Microsoft/msbuild/blob/master/documentation/wiki/MSBuild-Tips-&-Tricks.md)
