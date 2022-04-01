@@ -9,9 +9,9 @@
     <title>MSBuild Structured Log Viewer</title>
     <authors>Kirill Osenkov</authors>
     <projectUrl>https://msbuildlog.com/</projectUrl>
-    <iconUrl>http://cdn.rawgit.com/KirillOsenkov/MSBuildStructuredLog/master/src/StructuredLogViewer/icons/msbuild-structured-log-viewer.png</iconUrl>
+    <iconUrl>http://cdn.rawgit.com/KirillOsenkov/MSBuildStructuredLog/main/src/StructuredLogViewer/icons/msbuild-structured-log-viewer.png</iconUrl>
     <copyright>2016 Kirill Osenkov</copyright>
-    <licenseUrl>https://raw.githubusercontent.com/KirillOsenkov/MSBuildStructuredLog/master/LICENSE</licenseUrl>
+    <licenseUrl>https://raw.githubusercontent.com/KirillOsenkov/MSBuildStructuredLog/main/LICENSE</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <projectSourceUrl>https://github.com/KirillOsenkov/MSBuildStructuredLog</projectSourceUrl>
     <docsUrl>https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki</docsUrl>

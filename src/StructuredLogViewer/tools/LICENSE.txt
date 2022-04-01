@@ -1,4 +1,4 @@
-﻿From: https://raw.githubusercontent.com/KirillOsenkov/MSBuildStructuredLog/master/LICENSE
+﻿From: https://raw.githubusercontent.com/KirillOsenkov/MSBuildStructuredLog/main/LICENSE
 
 LICENSE
 

@@ -539,7 +539,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     buildEventContext.TaskId == 0)
                 {
                     // must be Detailed Build Summary
-                    // https://github.com/Microsoft/msbuild/blob/master/src/XMakeBuildEngine/BackEnd/Components/Scheduler/Scheduler.cs#L509
+                    // https://github.com/dotnet/msbuild/blob/main/src/XMakeBuildEngine/BackEnd/Components/Scheduler/Scheduler.cs#L509
                     DetailedSummary.AppendLine(message);
                     return;
                 }
