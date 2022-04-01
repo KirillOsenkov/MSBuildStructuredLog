@@ -44,7 +44,7 @@
       </MenuItem>
       <MenuItem Header="_Help">
         <MenuItem Header="https://github.com/KirillOsenkov/MSBuildStructuredLog" Click="HelpLink_Click" />
-        <MenuItem Header="http://msbuildlog.com" Click="HelpLink2_Click" />
+        <MenuItem Header="https://msbuildlog.com" Click="HelpLink2_Click" />
         <Separator />
         <MenuItem Header="About" Click="HelpAbout_Click" />
       </MenuItem>

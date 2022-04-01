@@ -746,7 +746,7 @@ namespace StructuredLogViewer
 
         private void HelpLink2_Click(object sender, RoutedEventArgs e)
         {
-            Process.Start(new ProcessStartInfo("http://msbuildlog.com") { UseShellExecute = true });
+            Process.Start(new ProcessStartInfo("https://msbuildlog.com") { UseShellExecute = true });
         }
 
         private void HelpAbout_Click(object sender, RoutedEventArgs e)
