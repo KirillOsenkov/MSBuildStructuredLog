@@ -260,7 +260,7 @@ namespace StructuredLogViewer.Controls
             var keys = Timeline.Lanes.Keys.ToList();
             keys.Sort();
 
-            var length = Math.Max(keys.Count(), keys.Last());
+            var length = Math.Max(keys.Count(), keys.Last() + 1);
 
             var blocksCollectionArray = new List<Block>[length];
             Parallel.ForEach(keys, (key) =>
