@@ -395,11 +395,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             var buildEventContext = args.BuildEventContext;
 
-            if (args is EnvironmentVariableReadEventArgs envArgs)
-            {
-                message = $"Environment variable '{envArgs.EnvironmentVariableName}' evaluated to '{message}'";
-            }
-
             if (buildEventContext.TaskId > 0)
             {
                 parent = GetTask(args);
@@ -566,7 +561,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
-            if (nodeToAdd == null)
+            if (args is EnvironmentVariableReadEventArgs envArgs)
+            {
+                nodeToAdd = new Property { Name = Intern(envArgs.EnvironmentVariableName), Value = Intern(message) };
+            }
+            else if (nodeToAdd == null)
             {
                 message = Intern(message);
                 nodeToAdd = new Message
