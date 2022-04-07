@@ -395,6 +395,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             var buildEventContext = args.BuildEventContext;
 
+            if (args is EnvironmentVariableReadEventArgs envArgs)
+            {
+                message = $"Environment variable '{envArgs.EnvironmentVariableName}' evaluated to '{message}'";
+            }
+
             if (buildEventContext.TaskId > 0)
             {
                 parent = GetTask(args);
