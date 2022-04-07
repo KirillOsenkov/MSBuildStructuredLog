@@ -7,11 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
-using System.Windows.Threading;
-using System.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
-using System.Windows.Media.Imaging;
-using System.IO;
 
 namespace StructuredLogViewer.Controls
 {
@@ -63,37 +59,37 @@ namespace StructuredLogViewer.Controls
 
         public bool ShowEvaluation
         {
-            get { return _showEvaluation; }
+            get => _showEvaluation;
             set { _showEvaluation = value; ComputeAndDraw(); }
         }
 
         public bool ShowProject
         {
-            get { return _showProject; }
+            get => _showProject;
             set { _showProject = value; ComputeAndDraw(); }
         }
 
         public bool ShowTarget
         {
-            get { return _showTarget; }
+            get => _showTarget;
             set { _showTarget = value; ComputeAndDraw(); }
         }
 
         public bool ShowTask
         {
-            get { return _showTask; }
+            get => _showTask;
             set { _showTask = value; ComputeAndDraw(); }
         }
 
         public bool ShowOther
         {
-            get { return _showOther; }
+            get => _showOther;
             set { _showOther = value; ComputeAndDraw(); }
         }
 
         public bool ShowNodes
         {
-            get { return _showNodes; }
+            get => _showNodes;
             set { _showNodes = value; ComputeAndDraw(); }
         }
 
@@ -147,11 +143,6 @@ namespace StructuredLogViewer.Controls
 
         private void TimelineControl_MouseWheel(object sender, MouseWheelEventArgs e)
         {
-            if ((Keyboard.Modifiers & ModifierKeys.Control) == 0)
-            {
-                return;
-            }
-
             if (e.Delta > 0)
             {
                 if (scaleFactor < maximumZoom)
@@ -180,11 +171,10 @@ namespace StructuredLogViewer.Controls
 
         public Timeline Timeline { get; set; }
 
-
         // SetTimeline is called from BuildControl which will set the global values
         public void SetTimeline(Timeline timeline, long globalStart, long globalEnd)
         {
-            var start = DateTime.Now;
+            var start = Timestamp;
             Timeline = timeline;
             GlobalStartTime = globalStart;
             GlobalEndTime = globalEnd;
@@ -238,7 +228,7 @@ namespace StructuredLogViewer.Controls
             textHeight = sample.DesiredSize.Height;
 
             lanesPanel = new StackPanel { Orientation = Orientation.Vertical, HorizontalAlignment = HorizontalAlignment.Left };
-            this.initTime = DateTime.Now - start;
+            this.initTime = Timestamp - start;
 
             ComputeAndDraw();
             grid.Children.Add(lanesPanel);
@@ -247,16 +237,20 @@ namespace StructuredLogViewer.Controls
         private void ComputeAndDraw()
         {
             if (Timeline == null)
+            {
                 return;
+            }
 
             ComputeTimeline();
 
             Draw();
         }
 
+        private DateTime Timestamp => DateTime.UtcNow;
+
         private void ComputeTimeline()
         {
-            var start = DateTime.Now;
+            var start = Timestamp;
             var keys = Timeline.Lanes.Keys.ToList();
             keys.Sort();
 
@@ -271,7 +265,7 @@ namespace StructuredLogViewer.Controls
             });
 
             blocksCollection = blocksCollectionArray.ToList();
-            this.computeTime = DateTime.Now - start;
+            this.computeTime = Timestamp - start;
         }
 
         /// <summary>
@@ -279,9 +273,11 @@ namespace StructuredLogViewer.Controls
         /// </summary>
         private void Draw()
         {
-            var start = DateTime.Now;
+            var start = Timestamp;
             if (Timeline == null)
+            {
                 return;
+            }
 
             TextBlocks?.Clear();
             lanesPanel.Children.Clear();
@@ -289,7 +285,7 @@ namespace StructuredLogViewer.Controls
             // Compute number of pixel for one second, used by ruler
             OneSecondPixelWidth = ConvertTimeToPixel(TimeSpan.FromSeconds(1).Ticks);
 
-            int showMeassurementMod = 0;
+            int showMeasurementMod = 0;
 
             foreach (var blocks in blocksCollection)
             {
@@ -297,16 +293,17 @@ namespace StructuredLogViewer.Controls
 
                 if (panel != null && panel.Children.Count > 0)
                 {
-                    if (ShowNodes || showMeassurementMod == 0)
+                    if (ShowNodes || showMeasurementMod == 0)
                     {
-                        lanesPanel.Children.Add(CreatePanelForNodeDivider(showMeassurementMod % 5 == 0));
-                        showMeassurementMod++;
+                        lanesPanel.Children.Add(CreatePanelForNodeDivider(showMeasurementMod % 5 == 0));
+                        showMeasurementMod++;
                     }
 
                     lanesPanel.Children.Add(panel);
                 }
             }
-            this.drawTime = DateTime.Now - start;
+
+            this.drawTime = Timestamp - start;
         }
 
         private Panel CreatePanelForNodeDivider(bool showTime)
@@ -482,7 +479,7 @@ namespace StructuredLogViewer.Controls
             canvas.VerticalAlignment = VerticalAlignment.Top;
             double canvasWidth = 0;
             double canvasHeight = 0;
-            double minimumDurationToInclude = 1; // ignore duration is less than 1pixel
+            double minimumDurationToInclude = 1; // ignore durations less than 1 pixel
 
             foreach (var block in blocks)
             {
@@ -548,6 +545,7 @@ namespace StructuredLogViewer.Controls
             BorderBrush = Brushes.DeepSkyBlue,
             BorderThickness = new Thickness(1)
         };
+
         private StackPanel lanesPanel;
 
         private void HighlightTextBlock(TextBlock hit, bool scrollToElement = false)
@@ -561,6 +559,7 @@ namespace StructuredLogViewer.Controls
                     horizontalOffset = p.X > 20 ? p.X - 20 : p.X;
                     verticalOffset = p.Y > 20 ? p.Y - 20 : p.Y;
                 }
+
                 return;
             }
 
