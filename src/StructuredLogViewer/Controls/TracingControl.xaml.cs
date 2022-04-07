@@ -14,11 +14,25 @@ namespace StructuredLogViewer.Controls
     public partial class TracingControl : UserControl
     {
         // Ratio of time reported to the smallest pixel to render.
-        private const double TimeToPixel = 72000;
+        private const double defaultTicksPerPixel = 72000;
+        private double ticksPerPixel = defaultTicksPerPixel;
+        private double TicksPerPixel 
+        {
+            get => ticksPerPixel;
+            set
+            {
+                if (ticksPerPixel == value)
+                {
+                    return;
+                }
 
-        private readonly ScaleTransform scaleTransform;
+                ticksPerPixel = value;
+            }
+        }
 
-        private double OneSecondPixelWidth;
+        private double scaleFactor = 1;
+
+        private double WidthOfOneSecondInPixels;
 
         // Build start time to sync all canvas.
         private long GlobalStartTime;
@@ -60,49 +74,70 @@ namespace StructuredLogViewer.Controls
         public bool ShowEvaluation
         {
             get => _showEvaluation;
-            set { _showEvaluation = value; ComputeAndDraw(); }
+            set
+            {
+                _showEvaluation = value; 
+                ComputeAndDraw(); 
+            }
         }
 
         public bool ShowProject
         {
             get => _showProject;
-            set { _showProject = value; ComputeAndDraw(); }
+            set
+            {
+                _showProject = value; 
+                ComputeAndDraw(); 
+            }
         }
 
         public bool ShowTarget
         {
             get => _showTarget;
-            set { _showTarget = value; ComputeAndDraw(); }
+            set 
+            {
+                _showTarget = value; 
+                ComputeAndDraw(); 
+            }
         }
 
         public bool ShowTask
         {
             get => _showTask;
-            set { _showTask = value; ComputeAndDraw(); }
+            set 
+            { 
+                _showTask = value; 
+                ComputeAndDraw();
+            }
         }
 
         public bool ShowOther
         {
             get => _showOther;
-            set { _showOther = value; ComputeAndDraw(); }
+            set 
+            { 
+                _showOther = value; 
+                ComputeAndDraw(); 
+            }
         }
 
         public bool ShowNodes
         {
             get => _showNodes;
-            set { _showNodes = value; ComputeAndDraw(); }
+            set 
+            { 
+                _showNodes = value; 
+                ComputeAndDraw(); 
+            }
         }
 
         public TracingControl()
         {
-            scaleTransform = new ScaleTransform();
             this.DataContext = this;
             InitializeComponent();
             this.PreviewMouseWheel += TimelineControl_MouseWheel;
-            grid.LayoutTransform = scaleTransform;
         }
 
-        private double scaleFactor = 1;
         private double horizontalOffset = 0;
         private double verticalOffset = 0;
         private double textHeight;
@@ -119,9 +154,40 @@ namespace StructuredLogViewer.Controls
             verticalOffset = scrollViewer.VerticalOffset;
         }
 
+        private void ResetZoom_Click(object sender, RoutedEventArgs e)
+        {
+            zoomSlider.Value = 40;
+        }
+
+        private void SetZoom(double zoom)
+        {
+            double percent = 62.445 * Math.Log(0.407 * (1 + Math.Sqrt(1 + 12.427 * 47.69897000433602 * zoom)));
+            if (percent < zoomSlider.Minimum)
+            {
+                percent = zoomSlider.Minimum;
+            }
+            else if (percent > zoomSlider.Maximum)
+            {
+                percent = zoomSlider.Maximum;
+            }
+
+            zoomSlider.Value = percent;
+        }
+
         private void zoomSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            double ratio = zoomSlider.Value;
+            double percent = zoomSlider.Value;
+
+            double ratio = 0.486 * Math.Pow(1.016, 2 * percent) - 0.395 * Math.Pow(1.016, percent);
+            if (ratio < minimumZoom)
+            {
+                ratio = minimumZoom;
+            }
+            else if (ratio > maximumZoom)
+            {
+                ratio = maximumZoom;
+            }
+
             if (Math.Abs(zoomSlider.Value - 1) <= 0.001)
             {
                 ratio = 1;
@@ -134,30 +200,22 @@ namespace StructuredLogViewer.Controls
         private void Zoom(double value)
         {
             scaleFactor = value;
-            scaleTransform.ScaleX = scaleFactor;
-            scaleTransform.ScaleY = scaleFactor;
+            TicksPerPixel = defaultTicksPerPixel / scaleFactor;
+            ComputeAndDraw();
         }
 
-        private const double minimumZoom = 0.1;
-        private const double maximumZoom = 4.0;
+        private const double minimumZoom = 0.05;
+        private const double maximumZoom = 10.0;
 
         private void TimelineControl_MouseWheel(object sender, MouseWheelEventArgs e)
         {
             if (e.Delta > 0)
             {
-                if (scaleFactor < maximumZoom)
-                {
-                    scaleFactor += 0.1;
-                    zoomSlider.Value = scaleFactor;
-                }
+                Slider.IncreaseLarge.Execute(null, zoomSlider);
             }
             else
             {
-                if (scaleFactor > minimumZoom + 0.1)
-                {
-                    scaleFactor -= 0.1;
-                    zoomSlider.Value = scaleFactor;
-                }
+                Slider.DecreaseLarge.Execute(null, zoomSlider);
             }
 
             e.Handled = true;
@@ -283,7 +341,7 @@ namespace StructuredLogViewer.Controls
             lanesPanel.Children.Clear();
 
             // Compute number of pixel for one second, used by ruler
-            OneSecondPixelWidth = ConvertTimeToPixel(TimeSpan.FromSeconds(1).Ticks);
+            WidthOfOneSecondInPixels = ConvertTimeTicksToPixels(TimeSpan.FromSeconds(1).Ticks);
 
             int showMeasurementMod = 0;
 
@@ -308,18 +366,18 @@ namespace StructuredLogViewer.Controls
 
         private Panel CreatePanelForNodeDivider(bool showTime)
         {
-            var timeWidth = ConvertTimeToPixel(GlobalEndTime - GlobalStartTime);
+            var timeWidth = ConvertTimeTicksToPixels(GlobalEndTime - GlobalStartTime);
 
             bool fiveSeconds = false;
             double gapWidth;
-            if (OneSecondPixelWidth / textHeight < 3)
+            if (WidthOfOneSecondInPixels / textHeight < 3)
             {
-                gapWidth = (5 * OneSecondPixelWidth / textHeight) - 0.1;
+                gapWidth = (5 * WidthOfOneSecondInPixels / textHeight) - 0.1;
                 fiveSeconds = true;
             }
             else
             {
-                gapWidth = (OneSecondPixelWidth / textHeight) - 0.1;
+                gapWidth = (WidthOfOneSecondInPixels / textHeight) - 0.1;
             }
 
             // A dash or gap relative to the Thickness of the pen
@@ -340,7 +398,7 @@ namespace StructuredLogViewer.Controls
 
             if (showTime)
             {
-                for (int i = 0; i < timeWidth / OneSecondPixelWidth; i++)
+                for (int i = 0; i < timeWidth / WidthOfOneSecondInPixels; i++)
                 {
                     if (!fiveSeconds || i % 5 == 0)
                     {
@@ -348,7 +406,7 @@ namespace StructuredLogViewer.Controls
                         textBlock.Text = $"{i}s";
 
                         // add textHeight/2 pixels of front padding
-                        Canvas.SetLeft(textBlock, textHeight / 2 + i * OneSecondPixelWidth);
+                        Canvas.SetLeft(textBlock, textHeight / 2 + i * WidthOfOneSecondInPixels);
                         canvas.Children.Add(textBlock);
                     }
                 }
@@ -362,9 +420,9 @@ namespace StructuredLogViewer.Controls
             return canvas;
         }
 
-        private static double ConvertTimeToPixel(double time)
+        private double ConvertTimeTicksToPixels(double ticks)
         {
-            return time / TimeToPixel;
+            return ticks / TicksPerPixel;
         }
 
         public void GoToTimedNode(TimedNode node)
@@ -473,7 +531,9 @@ namespace StructuredLogViewer.Controls
         private Canvas CreatePanelForLane(List<Block> blocks, long globalStart)
         {
             if (blocks == null || blocks.Count == 0)
+            {
                 return null;
+            }
 
             var canvas = new Canvas();
             canvas.VerticalAlignment = VerticalAlignment.Top;
@@ -496,8 +556,8 @@ namespace StructuredLogViewer.Controls
 
                 double indentOffset = textHeight * (block.Indent - 1);
 
-                double left = ConvertTimeToPixel(block.Start - globalStart);
-                double duration = ConvertTimeToPixel(block.End - block.Start);
+                double left = ConvertTimeTicksToPixels(block.Start - globalStart);
+                double duration = ConvertTimeTicksToPixels(block.End - block.Start);
 
                 if (duration < minimumDurationToInclude)
                 {
@@ -627,11 +687,6 @@ namespace StructuredLogViewer.Controls
             }
 
             return Brushes.Transparent;
-        }
-
-        private void ResetZoom_Click(object sender, RoutedEventArgs e)
-        {
-            zoomSlider.Value = 1;
         }
     }
 }
