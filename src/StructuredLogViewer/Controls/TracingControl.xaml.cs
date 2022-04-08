@@ -589,6 +589,12 @@ namespace StructuredLogViewer.Controls
                         Point p = content.TranslatePoint(new Point(0, 0), grid);
                         horizontalOffset = p.X > 20 ? p.X - 20 : p.X;
                         verticalOffset = p.Y > 20 ? p.Y - 20 : p.Y;
+
+                        horizontalOffset = Math.Max(horizontalOffset, 0);
+                        verticalOffset = Math.Max(verticalOffset, 0);
+
+                        scrollViewer.ScrollToHorizontalOffset(horizontalOffset);
+                        scrollViewer.ScrollToVerticalOffset(verticalOffset);
                     }
                 }
             }

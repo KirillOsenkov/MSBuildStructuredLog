@@ -1333,11 +1333,17 @@ Recent:
 
         public void GoToTracing()
         {
-            var treeNode = treeView.SelectedItem as TimedNode;
-            if (treeNode != null)
+            if (treeView.SelectedItem is TimedNode treeNode)
             {
                 centralTabControl.SelectedIndex = 2;
-                this.tracing.GoToTimedNode(treeNode);
+
+                // need to dispatch because at the time this is called the visual tree isn't laid out yet,
+                // so all the sizes are 0 and we don't know what's the real (X,Y) position to navigate to.
+                // Dispatching will run it after the layout when all the sizes have been set.
+                Dispatcher.InvokeAsync(() =>
+                {
+                    this.tracing.GoToTimedNode(treeNode);
+                }, DispatcherPriority.Background);
             }
         }
 
