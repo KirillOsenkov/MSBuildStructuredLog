@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
@@ -10,6 +11,7 @@ namespace StructuredLogViewer
         [STAThread]
         public static void Main(string[] args)
         {
+            Debugger.Launch();
             ExceptionHandler.Initialize();
             DialogService.ShowMessageBoxEvent += message => MessageBox.Show(message);
             ClipboardService.Set += Clipboard.SetText;

@@ -127,12 +127,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         summary.Text = fullText;
                     }
 
-                    if (args is BuildFinishedEventArgs2 args2 && args2.EnvironmentVariables is { Count: > 0})
-                    {
-                        var properties = Build.GetOrCreateNodeWithName<Folder>(Intern(Strings.EnvironmentDerivedProperties));
-                        AddProperties(properties, args2.EnvironmentVariables);
-                    }
-
                     //Build.VisitAllChildren<Project>(p => CalculateTargetGraph(p));
                 }
             }
