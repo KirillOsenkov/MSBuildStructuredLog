@@ -11,7 +11,6 @@ namespace StructuredLogViewer
         [STAThread]
         public static void Main(string[] args)
         {
-            Debugger.Launch();
             ExceptionHandler.Initialize();
             DialogService.ShowMessageBoxEvent += message => MessageBox.Show(message);
             ClipboardService.Set += Clipboard.SetText;
