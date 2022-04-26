@@ -80,8 +80,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 lock (syncLock)
                 {
                     Build.StartTime = args.Timestamp;
-                    var properties = Build.GetOrCreateNodeWithName<Folder>(Intern(Strings.Environment));
-                    AddProperties(properties, args.BuildEnvironment);
+                    if (args.BuildEnvironment?.Count > 0)
+                    {
+                        var properties = Build.GetOrCreateNodeWithName<Folder>(Intern(Strings.Environment));
+                        AddProperties(properties, args.BuildEnvironment);
+                    }
+                    else
+                    {
+                        Build.AddChild(new Note
+                        {
+                            Text = Intern(Strings.NoEnvironment)
+                        });
+                    }
 
                     // realize the evaluation folder now so it is ordered before the main solution node
                     _ = EvaluationFolder;

@@ -250,7 +250,14 @@ Build
         {
             Write(BinaryLogRecordKind.BuildStarted);
             WriteBuildEventArgsFields(e);
-            Write(e.BuildEnvironment);
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("MSBUILDLOGALLENVIRONMENTVARIABLES")))
+            {
+                Write(e.BuildEnvironment);
+            }
+            else
+            {
+                Write(0);
+            }
         }
 
         private void Write(BuildFinishedEventArgs e)
