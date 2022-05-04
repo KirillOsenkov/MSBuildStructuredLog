@@ -33,6 +33,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public StringCache StringTable => stringTable;
 
         public NamedNode EvaluationFolder => Build.EvaluationFolder;
+        public Folder EnvironmentFolder;
 
         public Construction()
         {
@@ -73,6 +74,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private string SoftIntern(string text) => stringTable.SoftIntern(text);
 
+        private readonly HashSet<string> environmentVariablesUsed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        public void AddEnvironmentVariable(string environmentVariableName, string environmentVariableValue)
+        {
+            if (environmentVariablesUsed.Add(environmentVariableName))
+            {
+                var property = new Property { Name = environmentVariableName, Value = environmentVariableValue };
+                EnvironmentFolder.AddChild(property);
+            }
+        }
+
         public void BuildStarted(object sender, BuildStartedEventArgs args)
         {
             try
@@ -80,14 +92,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 lock (syncLock)
                 {
                     Build.StartTime = args.Timestamp;
+
+                    EnvironmentFolder = Build.GetOrCreateNodeWithName<Folder>(Intern(Strings.Environment));
+
                     if (args.BuildEnvironment?.Count > 0)
                     {
-                        var properties = Build.GetOrCreateNodeWithName<Folder>(Intern(Strings.Environment));
-                        AddProperties(properties, args.BuildEnvironment);
+                        AddProperties(EnvironmentFolder, args.BuildEnvironment);
                     }
                     else
                     {
-                        Build.AddChild(new Note
+                        EnvironmentFolder.AddChild(new Note
                         {
                             Text = Intern(Strings.NoEnvironment)
                         });

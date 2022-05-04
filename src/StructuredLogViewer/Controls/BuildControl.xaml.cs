@@ -1975,7 +1975,11 @@ Recent:
             var top = stats.Records.Take(300).ToArray();
             foreach (var item in top)
             {
-                if (item.Args is BuildMessageEventArgs buildMessage)
+                if (item.Args is EnvironmentVariableReadEventArgs env)
+                {
+                    node.AddChild(new Property { Name = env.EnvironmentVariableName, Value = env.Message });
+                }
+                else if (item.Args is BuildMessageEventArgs buildMessage)
                 {
                     node.AddChild(new Message { Text = buildMessage.Message });
                 }

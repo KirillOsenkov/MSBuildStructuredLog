@@ -563,7 +563,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (args is EnvironmentVariableReadEventArgs envArgs)
             {
-                nodeToAdd = new Property { Name = Intern(envArgs.EnvironmentVariableName), Value = Intern(message) };
+                string environmentVariableName = Intern(envArgs.EnvironmentVariableName);
+                string environmentVariableValue = Intern(message);
+                nodeToAdd = new Property { Name = environmentVariableName, Value = environmentVariableValue };
+                construction.AddEnvironmentVariable(environmentVariableName, environmentVariableValue);
             }
             else if (nodeToAdd == null)
             {
