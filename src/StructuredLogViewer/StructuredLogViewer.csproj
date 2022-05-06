@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net472;net5.0-windows</TargetFrameworks>
+    <TargetFrameworks>net472;net6.0-windows</TargetFrameworks>
     <OutputType>WinExe</OutputType>
     <UseWPF>true</UseWPF>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
@@ -47,7 +47,7 @@
 
   <Target Name="CopyTaskRunnerDll" BeforeTargets="GetCopyToOutputDirectoryItems" Condition="$(TargetFramework) == 'net472'">
     <PropertyGroup>
-      <CoreTaskRunnerOutDir>$([System.IO.Path]::GetFullPath(`$(OutDir)\..\..\..\TaskRunner\$(Configuration)\net5.0`))\</CoreTaskRunnerOutDir>
+      <CoreTaskRunnerOutDir>$([System.IO.Path]::GetFullPath(`$(OutDir)\..\..\..\TaskRunner\$(Configuration)\net6.0`))\</CoreTaskRunnerOutDir>
     </PropertyGroup>
     <ItemGroup>
       <TaskRunnerFile Include="$(CoreTaskRunnerOutDir)TaskRunner.dll" />
