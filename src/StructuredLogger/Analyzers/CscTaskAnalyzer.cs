@@ -33,6 +33,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     message.Parent.Children.Remove(message);
                     continue;
                 }
+                else if (text.StartsWith("CompilerServer:", StringComparison.Ordinal))
+                {
+                    // The C# / VB compiler server emits diagnostic messages from the main build task. These 
+                    // are not related to the analyzer performance summary and should not be included in this view
+                    continue;
+                }
 
                 if (parent != null)
                 {
