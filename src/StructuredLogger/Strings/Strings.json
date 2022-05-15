@@ -49,8 +49,7 @@
     "ResolveAssemblyReference.UnifiedDependency": "Unified Dependency \"{0}\".",
     "GetSDKReferenceFiles.ConflictReferenceSameSDK": "There was a conflict between two references with the same file name resolved within the \"{0}\" SDK. Choosing \"{1}\" over \"{2}\" because it was resolved first.",
     "GetSDKReferenceFiles.ConflictRedistDifferentSDK": "There was a conflict between two files from the redist folder files going to the same target path \"{0}\" between the \"{1}\" and \"{2}\" SDKs. Choosing \"{3}\" over \"{4}\" because it was resolved first.",
-    "Copy.FileComment": "Copying file from \"{0}\" to \"{1}\".",
-    "Robocopy.FileComment": "Copied {0} to {1}"
+    "Copy.FileComment": "Copying file from \"{0}\" to \"{1}\"."
   },
   "de-DE": {
     "OutputItemParameterMessagePrefix": "Ausgegebene Elemente: ",
