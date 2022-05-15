@@ -9,9 +9,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public override string TypeName => nameof(CopyTask);
 
         private IEnumerable<FileCopyOperation> fileCopyOperations;
-        public IEnumerable<FileCopyOperation> FileCopyOperations => fileCopyOperations ?? (fileCopyOperations = GetFileCopyOperations());
+        public IEnumerable<FileCopyOperation> FileCopyOperations => fileCopyOperations ??= GetFileCopyOperations();
 
-        private IEnumerable<FileCopyOperation> GetFileCopyOperations()
+        protected virtual IEnumerable<FileCopyOperation> GetFileCopyOperations()
         {
             if (!HasChildren)
             {
@@ -53,18 +53,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return list;
         }
 
-        private static readonly string to = Strings.To;
-        private static readonly string toFile = Strings.ToFile;
-
-        private static FileCopyOperation ParseCopyingFileFrom(Match match, bool copied = true)
+        protected static FileCopyOperation ParseCopyingFileFrom(Match match, bool copied = true) => new FileCopyOperation
         {
-            var result = new FileCopyOperation();
-
-            result.Source = match.Groups["From"].Value;
-            result.Destination = match.Groups["To"].Value;
-            result.Copied = copied;
-
-            return result;
-        }
+            Source = match.Groups["From"].Value,
+            Destination = match.Groups["To"].Value,
+            Copied = copied
+        };
     }
 }

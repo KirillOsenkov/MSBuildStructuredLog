@@ -85,6 +85,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 .Replace(@"\{1}", @"(?<To>[^\""]+)")
                 );
 
+            string robocopyingFileFrom = GetString("Robocopy.FileComment");
+            string robocopyingFileFromEscaped = Escape(robocopyingFileFrom);
+            RobocopyingFileFromRegex = new Regex(robocopyingFileFromEscaped
+                .Replace(@"\{0}", @"(?<From>[^\""]+)")
+                .Replace(@"\{1}", @"(?<To>[^\""]+)")
+                );
+
             CreatingHardLinkRegex = new Regex(Escape(GetString("Copy.HardLinkComment"))
                 .Replace(@"\{0}", @"(?<From>[^\""]+)")
                 .Replace(@"\{1}", @"(?<To>[^\""]+)")
@@ -261,6 +268,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static Regex CopyingFileFromRegex { get; set; }
         public static Regex CreatingHardLinkRegex { get; set; }
         public static Regex DidNotCopyRegex { get; set; }
+        public static Regex RobocopyingFileFromRegex { get; set; }
         public static Regex TargetDoesNotExistBeforeTargetMessage { get; set; }
         public static Regex TargetAlreadyCompleteSuccessRegex { get; set; }
         public static Regex TargetAlreadyCompleteFailureRegex { get; set; }
