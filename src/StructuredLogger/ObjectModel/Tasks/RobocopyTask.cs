@@ -4,14 +4,11 @@ using System.Text.RegularExpressions;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class CopyTask : Task
+    public class RobocopyTask : CopyTask
     {
-        public override string TypeName => nameof(CopyTask);
+        public override string TypeName => nameof(RobocopyTask);
 
-        private IEnumerable<FileCopyOperation> fileCopyOperations;
-        public IEnumerable<FileCopyOperation> FileCopyOperations => fileCopyOperations ??= GetFileCopyOperations();
-
-        protected virtual IEnumerable<FileCopyOperation> GetFileCopyOperations()
+        protected override IEnumerable<FileCopyOperation> GetFileCopyOperations()
         {
             if (!HasChildren)
             {
@@ -21,11 +18,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             List<FileCopyOperation> list = new List<FileCopyOperation>();
 
             Match match;
-            foreach (var message in this.Children.OfType<Message>())
+            foreach (var message in Children.OfType<Message>())
             {
                 var text = message.Text;
 
-                match = Strings.CopyingFileFromRegex.Match(text);
+                match = Strings.RobocopyFileCopiedRegex.Match(text);
                 if (match.Success && match.Groups.Count > 2)
                 {
                     var operation = ParseCopyingFileFrom(match);
@@ -33,7 +30,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     continue;
                 }
 
-                match = Strings.DidNotCopyRegex.Match(text);
+                match = Strings.RobocopyFileSkippedRegex.Match(text);
                 if (match.Success && match.Groups.Count > 2)
                 {
                     var operation = ParseCopyingFileFrom(match, copied: false);
@@ -41,10 +38,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     continue;
                 }
 
-                match = Strings.CreatingHardLinkRegex.Match(text);
+                match = Strings.RobocopyFileFailedRegex.Match(text);
                 if (match.Success && match.Groups.Count > 2)
                 {
-                    var operation = ParseCopyingFileFrom(match);
+                    var operation = ParseCopyingFileFrom(match, copied: false);
                     list.Add(operation);
                     continue;
                 }
@@ -52,12 +49,5 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             return list;
         }
-
-        protected static FileCopyOperation ParseCopyingFileFrom(Match match, bool copied = true) => new FileCopyOperation
-        {
-            Source = match.Groups["From"].Value,
-            Destination = match.Groups["To"].Value,
-            Copied = copied
-        };
     }
 }

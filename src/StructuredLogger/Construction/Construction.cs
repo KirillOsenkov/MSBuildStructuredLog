@@ -978,6 +978,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Task result = taskName.ToLowerInvariant() switch
             {
                 "copy" => new CopyTask(),
+                "robocopy" => new RobocopyTask(),
                 "csc" => new CscTask(),
                 "vbc" => new VbcTask(),
                 "fsc" => new FscTask(),
