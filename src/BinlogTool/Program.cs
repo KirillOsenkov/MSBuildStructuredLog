@@ -12,6 +12,7 @@ namespace BinlogTool
             if (args.Length == 0)
             {
                 Console.WriteLine(@"Usage:
+    binlogtool listtools input.binlog
     binlogtool savefiles input.binlog output_path
     binlogtool savestrings input.binlog output.txt
     binlogtool search *.binlog search string");
