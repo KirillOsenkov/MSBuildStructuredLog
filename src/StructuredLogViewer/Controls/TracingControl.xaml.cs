@@ -90,7 +90,18 @@ namespace StructuredLogViewer.Controls
         public bool ShowNodes
         {
             get => _showNodes;
-            set { _showNodes = value; ComputeAndDraw(); }
+            set
+            {
+                _showNodes = value;
+                if (_showNodes)
+                {
+                    DrawAddNodeDivider();
+                }
+                else
+                {
+                    DrawRemoveNodeDivider();
+                }
+            }
         }
 
         public TracingControl()
@@ -213,12 +224,12 @@ namespace StructuredLogViewer.Controls
 
                 if (this._showEvaluation && totalItems > 10000)
                 {
-                    this._showEvaluation = false;
+                    this._showEvaluation = true;
                     this._showProject = false;
                     this._showTask = true;
                     this._showTarget = false;
                     this._showOther = false;
-                    this._showNodes = true;
+                    this._showNodes = false;
                 }
             }
 
@@ -285,7 +296,8 @@ namespace StructuredLogViewer.Controls
             // Compute number of pixel for one second, used by ruler
             OneSecondPixelWidth = ConvertTimeToPixel(TimeSpan.FromSeconds(1).Ticks);
 
-            int showMeasurementMod = 0;
+            // Add Top Timeline Ruler
+            lanesPanel.Children.Add(CreatePanelForNodeDivider(true));
 
             foreach (var blocks in blocksCollection)
             {
@@ -293,17 +305,42 @@ namespace StructuredLogViewer.Controls
 
                 if (panel != null && panel.Children.Count > 0)
                 {
-                    if (ShowNodes || showMeasurementMod == 0)
-                    {
-                        lanesPanel.Children.Add(CreatePanelForNodeDivider(showMeasurementMod % 5 == 0));
-                        showMeasurementMod++;
-                    }
-
                     lanesPanel.Children.Add(panel);
                 }
             }
 
+            if (ShowNodes)
+                DrawAddNodeDivider();
+
             this.drawTime = Timestamp - start;
+        }
+
+        private void DrawAddNodeDivider()
+        {
+            int showMeasurementMod = 0;
+            int totalChild = lanesPanel.Children.Count;
+
+            // Start from second element to account for the top ruler
+            for (int index = 2; index < totalChild; index += 2)
+            {
+                lanesPanel.Children.Insert(index, CreatePanelForNodeDivider(showMeasurementMod % 5 == 0));
+                showMeasurementMod++;
+            }
+        }
+
+        private void DrawRemoveNodeDivider()
+        {
+            // Start from second element to account for the top ruler
+            for (int index = 1; index < lanesPanel.Children.Count; index++)
+            {
+                if (lanesPanel.Children[index] is Canvas foobar)
+                {
+                    if (foobar.Background == nodeBackground)
+                    {
+                        lanesPanel.Children.RemoveAt(index);
+                    }
+                }
+            }
         }
 
         private Panel CreatePanelForNodeDivider(bool showTime)
