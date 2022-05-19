@@ -222,7 +222,7 @@ namespace StructuredLogViewer.Controls
                     this.numberOfNodes++;
                 }
 
-                if (this._showEvaluation && totalItems > 10000)
+                if (this._showProject && totalItems > 10000)
                 {
                     this._showEvaluation = true;
                     this._showProject = false;
