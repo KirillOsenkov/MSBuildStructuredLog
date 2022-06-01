@@ -262,10 +262,16 @@ namespace StructuredLogViewer.Controls
         private void ComputeTimeline()
         {
             var start = Timestamp;
-            var keys = Timeline.Lanes.Keys.ToList();
-            keys.Sort();
+            // Sort by the start time of each lane
+            var keys1 = Timeline.Lanes.Where(p => p.Value.Blocks.Any()).ToDictionary(key => key.Key, p => p.Value.Blocks.Min(p => p.StartTime.Ticks)).ToList();
+            keys1.Sort((l, r) =>
+            {
+                return l.Value.CompareTo(r.Value);
+            });
+            var keys = keys1.Select(Key => Key.Key).ToList();
 
-            var length = Math.Max(keys.Count(), keys.Last() + 1);
+            // Get the max number of lanes
+            var length = Math.Max(keys.Count(), keys.Max() + 1);
 
             var blocksCollectionArray = new List<Block>[length];
             Parallel.ForEach(keys, (key) =>
