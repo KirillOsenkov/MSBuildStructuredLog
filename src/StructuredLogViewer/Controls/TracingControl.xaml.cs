@@ -277,8 +277,7 @@ namespace StructuredLogViewer.Controls
             Parallel.ForEach(keys, (key) =>
             {
                 var lane = Timeline.Lanes[key];
-                var panel = ComputeVisibleBlocks(lane);
-                blocksCollectionArray[key] = panel;
+                blocksCollectionArray[key] = ComputeVisibleBlocks(lane);
             });
 
             blocksCollection = blocksCollectionArray.Where(p => p != null).ToList();
@@ -402,11 +401,10 @@ namespace StructuredLogViewer.Controls
 
         private void DrawAddNodeDivider()
         {
-            int showMeasurementMod = 0;
-            int totalChild = lanesPanel.Children.Count;
+            int showMeasurementMod = 1;
 
             // Start from second element to account for the top ruler
-            for (int index = 3; index < totalChild; index += 2)
+            for (int index = 3; index < lanesPanel.Children.Count; index += 2)
             {
                 lanesPanel.Children.Insert(index, CreatePanelForNodeDivider(showMeasurementMod % 5 == 0));
                 showMeasurementMod++;
