@@ -568,18 +568,30 @@ namespace StructuredLogViewer.Controls
             }
 
             endpoints.Sort();
+            List<long> indentList = new List<long>(5);
 
-            int level = 0;
             foreach (var endpoint in endpoints)
             {
                 if (endpoint.IsStart)
                 {
-                    level++;
-                    endpoint.Block.Indent = level;
-                }
-                else
-                {
-                    level--;
+                    int i = 0;
+                    while (i < indentList.Count)
+                    {
+                        if (indentList[i] <= endpoint.Timestamp)
+                        {
+                            endpoint.Block.Indent = i;
+                            indentList[i] = endpoint.Block.EndTime.Ticks;
+                            break;
+                        }
+
+                        i++;
+                    }
+
+                    if (i == indentList.Count)
+                    {
+                        endpoint.Block.Indent = i;
+                        indentList.Add(endpoint.Block.EndTime.Ticks);
+                    }
                 }
             }
 
@@ -627,7 +639,7 @@ namespace StructuredLogViewer.Controls
                 textBlock.Text = $"{block.Text} ({TextUtilities.DisplayDuration(block.Duration)})";
                 textBlock.Background = ChooseBackground(block);
 
-                double indentOffset = textHeight * (block.Indent - 1);
+                double indentOffset = textHeight * block.Indent;
 
                 double left = ConvertTimeToPixel(block.Start - globalStart);
                 double duration = ConvertTimeToPixel(block.End - block.Start);
