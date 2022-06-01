@@ -40,6 +40,7 @@ namespace StructuredLogViewer.Controls
         public int numberOfTargets = 0;
         public int numberOfTasks = 0;
         public int numberOfNodes = 0;
+        public int numberOfOthers = 0;
 
         public string ShowEvaluationsText => $"Show Evaluations ({numberOfEvaluations})";
 
@@ -50,6 +51,8 @@ namespace StructuredLogViewer.Controls
         public string ShowTasksText => $"Show Tasks ({numberOfTasks})";
 
         public string ShowNodesText => $"Show Nodes Divider ({numberOfNodes})";
+
+        public string ShowOthersText => $"Show Others ({numberOfOthers})";
 
         private TimeSpan initTime = TimeSpan.Zero;
         private TimeSpan computeTime = TimeSpan.Zero;
@@ -84,7 +87,7 @@ namespace StructuredLogViewer.Controls
         public bool ShowOther
         {
             get => _showOther;
-            set { _showOther = value; ComputeAndDraw(); }
+            set { _showOther = value; if (this.numberOfOthers > 0) ComputeAndDraw(); }
         }
 
         public bool ShowNodes
@@ -213,6 +216,7 @@ namespace StructuredLogViewer.Controls
                             this.numberOfTasks++;
                             break;
                         default:
+                            this.numberOfOthers++;
                             break;
                     }
                 }
@@ -487,6 +491,11 @@ namespace StructuredLogViewer.Controls
             return time / TimeToPixel;
         }
 
+        private static double ConvertPixelToTime(double pixel)
+        {
+            return pixel * TimeToPixel;
+        }
+
         public void GoToTimedNode(TimedNode node)
         {
             TextBlock textblock = null;
@@ -513,8 +522,12 @@ namespace StructuredLogViewer.Controls
 
         private List<Block> ComputeVisibleBlocks(Lane lane)
         {
+            double pixelDuration = ConvertPixelToTime(1);
             var blocks = lane.Blocks.Where(b =>
             {
+                if (b.Duration.Ticks < pixelDuration)
+                    return false;
+
                 switch (b.Node)
                 {
                     case ProjectEvaluation:
