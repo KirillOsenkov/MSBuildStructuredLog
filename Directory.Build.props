@@ -19,7 +19,7 @@
     <LangVersion>latest</LangVersion>
 
     <MSBuildPackageVersion>16.10.0</MSBuildPackageVersion>
-    <NuGetVersionNerdbankGitVersioning>3.4.194</NuGetVersionNerdbankGitVersioning>
+    <NuGetVersionNerdbankGitVersioning>3.5.107</NuGetVersionNerdbankGitVersioning>
   </PropertyGroup>
 
 </Project>

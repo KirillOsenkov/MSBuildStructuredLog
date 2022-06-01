@@ -79,7 +79,7 @@
   <Target Name="ExtractVersion"
           AfterTargets="CoreBuild"
           Condition="Exists('$(NuspecPath)')"
-          DependsOnTargets="PrepareResources;GenerateAssemblyVersionInfo">
+          DependsOnTargets="PrepareResources;GenerateAssemblyNBGVVersionInfo">
     <PropertyGroup>
       <NupkgPath>$(OutDir)$(NuspecFileName).$(Version).nupkg</NupkgPath>
       <ChocolateyNupkgPath>$(OutDir)$(ChocolateyFileName).$(Version).nupkg</ChocolateyNupkgPath>
