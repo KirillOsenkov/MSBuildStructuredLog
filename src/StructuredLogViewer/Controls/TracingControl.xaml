@@ -13,7 +13,7 @@
         <MenuItem Header="{Binding Path=ShowProjectsText, Mode=OneWay}" IsCheckable="true" IsChecked="{Binding Path=ShowProject , Mode=TwoWay}" StaysOpenOnClick="true"/>
         <MenuItem Header="{Binding Path=ShowTargetsText, Mode=OneWay}" IsCheckable="true" IsChecked="{Binding Path=ShowTarget , Mode=TwoWay}" StaysOpenOnClick="true"/>
         <MenuItem Header="{Binding Path=ShowTasksText, Mode=OneWay}" IsCheckable="true" IsChecked="{Binding Path=ShowTask , Mode=TwoWay}" StaysOpenOnClick="true"/>
-        <MenuItem Header="Show Other" IsCheckable="true" IsChecked="{Binding Path=ShowOther , Mode=TwoWay}" StaysOpenOnClick="true"/>
+        <MenuItem Header="{Binding Path=ShowOthersText, Mode=OneWay}" IsCheckable="true" IsChecked="{Binding Path=ShowOther , Mode=TwoWay}" StaysOpenOnClick="true"/>
         <MenuItem Header="{Binding Path=ShowNodesText, Mode=OneWay}" IsCheckable="true" IsChecked="{Binding Path=ShowNodes , Mode=TwoWay}" StaysOpenOnClick="true"/>
         <!--<MenuItem Header="{Binding Path=LoadStatistics, Mode=OneWay}" IsCheckable="true" IsEnabled="false" /> -->
       </ContextMenu>
