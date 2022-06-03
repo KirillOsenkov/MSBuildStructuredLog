@@ -34,6 +34,7 @@ namespace StructuredLogViewer.Controls
         private bool _showTask = true;
         private bool _showOther = true;
         private bool _showNodes = true;
+        private bool _groupByNodes = true;
 
         public int numberOfEvaluations = 0;
         public int numberOfProjects = 0;
@@ -104,6 +105,16 @@ namespace StructuredLogViewer.Controls
                 {
                     DrawRemoveNodeDivider();
                 }
+            }
+        }
+
+        public bool GroupByNodes
+        {
+            get => _groupByNodes;
+            set
+            {
+                _groupByNodes = value;
+                ComputeAndDraw();
             }
         }
 
@@ -234,6 +245,7 @@ namespace StructuredLogViewer.Controls
                     this._showTarget = false;
                     this._showOther = false;
                     this._showNodes = false;
+                    this._groupByNodes = false;
                 }
             }
 
@@ -266,25 +278,34 @@ namespace StructuredLogViewer.Controls
         private void ComputeTimeline()
         {
             var start = Timestamp;
-            // Sort by the start time of each lane
-            var keys1 = Timeline.Lanes.Where(p => p.Value.Blocks.Any()).ToDictionary(key => key.Key, p => p.Value.Blocks.Min(p => p.StartTime.Ticks)).ToList();
-            keys1.Sort((l, r) =>
+
+            if (!_groupByNodes)
             {
-                return l.Value.CompareTo(r.Value);
-            });
-            var keys = keys1.Select(Key => Key.Key).ToList();
-
-            // Get the max number of lanes
-            var length = Math.Max(keys.Count(), keys.Max() + 1);
-
-            var blocksCollectionArray = new List<Block>[length];
-            Parallel.ForEach(keys, (key) =>
+                blocksCollection.Clear();
+                var allBlocks = Timeline.Lanes.SelectMany(p => p.Value.Blocks);
+                blocksCollection.Add(ComputeVisibleBlocks(allBlocks));
+            }
+            else
             {
-                var lane = Timeline.Lanes[key];
-                blocksCollectionArray[key] = ComputeVisibleBlocks(lane);
-            });
+                // Sort by the start time of each lane
+                var keys1 = Timeline.Lanes.Where(p => p.Value.Blocks.Any()).ToDictionary(key => key.Key, p => p.Value.Blocks.Min(p => p.StartTime.Ticks)).ToList();
+                keys1.Sort((l, r) =>
+                {
+                    return l.Value.CompareTo(r.Value);
+                });
+                var keys = keys1.Select(Key => Key.Key).ToList();
 
-            blocksCollection = blocksCollectionArray.Where(p => p != null).ToList();
+                // Get the max number of lanes
+                var length = Math.Max(keys.Count(), keys.Max() + 1);
+
+                var blocksCollectionArray = new List<Block>[length];
+                Parallel.ForEach(keys, (key) =>
+                {
+                    blocksCollectionArray[key] = ComputeVisibleBlocks(Timeline.Lanes[key].Blocks);
+                });
+
+                blocksCollection = blocksCollectionArray.Where(p => p != null).ToList();
+            }
             this.computeTime = Timestamp - start;
         }
 
@@ -520,10 +541,10 @@ namespace StructuredLogViewer.Controls
             }
         }
 
-        private List<Block> ComputeVisibleBlocks(Lane lane)
+        private List<Block> ComputeVisibleBlocks(IEnumerable<Block> enumBlocks)
         {
             double pixelDuration = ConvertPixelToTime(1);
-            var blocks = lane.Blocks.Where(b =>
+            var blocks = enumBlocks.Where(b =>
             {
                 if (b.Duration.Ticks < pixelDuration)
                     return false;
