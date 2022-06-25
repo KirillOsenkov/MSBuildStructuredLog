@@ -8,7 +8,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <summary>
         /// Let's see if we even need timestamp, it's just eating memory for now
         /// </summary>
-        public DateTime Timestamp { get { return DateTime.MinValue; } set { } }
+        public DateTime Timestamp { get; set; }
 
         public override string TypeName => nameof(Message);
 

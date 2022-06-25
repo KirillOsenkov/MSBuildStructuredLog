@@ -32,7 +32,7 @@ namespace StructuredLogViewer.Controls
         private bool _showProject = true;
         private bool _showTarget = true;
         private bool _showTask = true;
-        private bool _showOther = true;
+        private bool _showCpp = true;
         private bool _showNodes = true;
         private bool _groupByNodes = true;
 
@@ -41,7 +41,7 @@ namespace StructuredLogViewer.Controls
         public int numberOfTargets = 0;
         public int numberOfTasks = 0;
         public int numberOfNodes = 0;
-        public int numberOfOthers = 0;
+        public int numberOfCpp = 0;
 
         public string ShowEvaluationsText => $"Show Evaluations ({numberOfEvaluations})";
 
@@ -53,7 +53,7 @@ namespace StructuredLogViewer.Controls
 
         public string ShowNodesText => $"Show Nodes Divider ({numberOfNodes})";
 
-        public string ShowOthersText => $"Show Others ({numberOfOthers})";
+        public string ShowCppText => $"Show Cpp Details ({numberOfCpp})";
 
         private TimeSpan initTime = TimeSpan.Zero;
         private TimeSpan computeTime = TimeSpan.Zero;
@@ -85,10 +85,10 @@ namespace StructuredLogViewer.Controls
             set { _showTask = value; ComputeAndDraw(); }
         }
 
-        public bool ShowOther
+        public bool ShowCpp
         {
-            get => _showOther;
-            set { _showOther = value; if (this.numberOfOthers > 0) ComputeAndDraw(); }
+            get => _showCpp;
+            set { _showCpp = value; if (this.numberOfCpp > 0) ComputeAndDraw(); }
         }
 
         public bool ShowNodes
@@ -227,7 +227,7 @@ namespace StructuredLogViewer.Controls
                             this.numberOfTasks++;
                             break;
                         default:
-                            this.numberOfOthers++;
+                            this.numberOfCpp++;
                             break;
                     }
                 }
@@ -243,7 +243,7 @@ namespace StructuredLogViewer.Controls
                     this._showProject = false;
                     this._showTask = true;
                     this._showTarget = false;
-                    this._showOther = false;
+                    this._showCpp = false;
                     this._showNodes = false;
                     this._groupByNodes = false;
                 }
@@ -320,7 +320,9 @@ namespace StructuredLogViewer.Controls
 
                 foreach (var block in blocks)
                 {
-                    if (block.Node is Microsoft.Build.Logging.StructuredLogger.Task)
+                    if (!(block.Node is ProjectEvaluation ||
+                        block.Node is Project ||
+                        block.Node is Target))
                     {
                         int left = (int)Math.Floor(ConvertTimeToPixel(block.Start - GlobalStartTime) / unitDuration);
                         int right = (int)Math.Floor(ConvertTimeToPixel(block.End - GlobalStartTime) / unitDuration);
@@ -557,10 +559,16 @@ namespace StructuredLogViewer.Controls
                         return ShowProject;
                     case Target:
                         return ShowTarget;
-                    case Microsoft.Build.Logging.StructuredLogger.Task:
+                    case Microsoft.Build.Logging.StructuredLogger.Task node:
+                        // "MultiToolTask" appear as both Task and Messages, so only show one of them.
+                        if (ShowCpp && node.Name == "MultiToolTask")
+                        {
+                            return false;
+                        }
+
                         return ShowTask;
                     default:
-                        return ShowOther;
+                        return ShowCpp;
                 }
             }).ToList();
 
@@ -787,15 +795,17 @@ namespace StructuredLogViewer.Controls
         private static readonly Brush projectEvaluationBackground = new SolidColorBrush(Color.FromArgb(20, 180, 180, 180));
         private static readonly Brush targetBackground = new SolidColorBrush(Color.FromArgb(50, 255, 100, 255));
         private static readonly Brush taskBackground = new SolidColorBrush(Color.FromArgb(60, 100, 255, 255));
+        private static readonly Brush messageBackground = new SolidColorBrush(Color.FromArgb(60, 100, 255, 255));
 
         private static Brush ChooseBackground(Block block)
         {
             switch (block.Node)
             {
-                case Project _: return projectBackground;
-                case ProjectEvaluation _: return projectEvaluationBackground;
-                case Target _: return targetBackground;
-                case Microsoft.Build.Logging.StructuredLogger.Task _: return taskBackground;
+                case Microsoft.Build.Logging.StructuredLogger.Task : return taskBackground;
+                case Target : return targetBackground;
+                case Project : return projectBackground;
+                case ProjectEvaluation : return projectEvaluationBackground;
+                case Message : return messageBackground;
             }
 
             return Brushes.Transparent;
