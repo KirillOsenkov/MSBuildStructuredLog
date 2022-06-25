@@ -472,6 +472,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string EntryTargets => "Entry targets";
         public static string TargetFramework => "TargetFramework";
         public static string TargetFrameworks => "TargetFrameworks";
+        public static string TargetFrameworkVersion => "TargetFrameworkVersion";
         public static string AdditionalProperties => "Additional properties";
         public static string OutputItems => "OutputItems";
         public static string OutputProperties => "OutputProperties";
