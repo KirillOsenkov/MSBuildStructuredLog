@@ -24,7 +24,7 @@ namespace StructuredLogViewer
             // midl.exe will run on 8 out of 8 file(s) in 8 batches.  Startup phase took 46.0028ms.
             // Task 'CodeStore.idl' took 2244ms.
             // Cleanup phase took 68ms.
-            string regexStartupPhase = @"^CL\.exe will run on (?'activeFiles'[0-9]*) out of (?'totalFiles'[0-9]*) file\(s\) in [0-9]* batches\.\s*Startup phase took (?'msTime'[0-9]*.[0-9]*)ms.$";
+            string regexStartupPhase = @"^.*\.exe will run on (?'activeFiles'[0-9]*) out of (?'totalFiles'[0-9]*) file\(s\) in [0-9]* batches\.\s*Startup phase took (?'msTime'[0-9]*.[0-9]*)ms.$";
             Regex startupPhase = new Regex(regexStartupPhase, RegexOptions.Multiline);
             string regexCleanupPhase = @"^Cleanup phase took (?'msTime'[0-9]*.[0-9]*)ms.$";
             Regex cleanupPhase = new Regex(regexCleanupPhase, RegexOptions.Multiline);
@@ -81,7 +81,7 @@ namespace StructuredLogViewer
 
                 // MultiToolTask batches tasks and runs them in parallel.
                 // For this view, de-batch them into individual task units.
-                if (includeCpp && node is Microsoft.Build.Logging.StructuredLogger.Task cppTask && (node.Name == "MultiToolTask" || node.Name == "CL") && cppTask.HasChildren)
+                if (includeCpp && node is Microsoft.Build.Logging.StructuredLogger.Task cppTask && (cppTask.Name == "MultiToolTask" || cppTask.Name == "CL") && cppTask.HasChildren)
                 {
                     TimeSpan oneMilliSecond = TimeSpan.FromMilliseconds(1);
                     bool usingBTTime = globalBtplus;
@@ -138,7 +138,7 @@ namespace StructuredLogViewer
                                     blocks.Add(block);
                                 }
                             }
-                            else
+                            else if (node.Name == "MultiToolTask")
                             {
                                 match = startupPhase.Match(message.Text);
                                 if (match.Success)
@@ -172,7 +172,7 @@ namespace StructuredLogViewer
                                         Node = message,
                                     };
 
-                                    // Add these messages to directly to the lane so to avoid mixing with the Bt+ messages.
+                                    // Add these messages to directly to the lane as to avoid mixing with the Bt+ messages.
                                     lane.Add(block);
                                 }
                             }
@@ -180,17 +180,17 @@ namespace StructuredLogViewer
 
                         if (!usingBTTime && child is Property property)
                         {
-                            if (property.Name == "CommandLineArgument" && property.Value.Contains("/Bt+"))
+                            if (property.Name == Strings.CommandLineArguments && property.Value.Contains("/Bt+"))
                             {
                                 usingBTTime = true;
                             }
                         }
                     }
 
-                    if (usingBTTime && blocks.Count > 0)
+                    if (usingBTTime && blocks.Count > 0 && mttPostStartupTime != DateTime.MinValue)
                     {
-                        // BT+ timestamp is not a global time, but is relative to the first instance,
-                        // so compute the offset and remove it the task offset.
+                        // BT+ timestamp is not a global time, but is relative to the first instance (see QueryPerformanceCounter)
+                        // so compute the offset and remove it from all blocks.
                         DateTime offset = blocks.Min(p => p.StartTime);
                         foreach (Block block in blocks)
                         {

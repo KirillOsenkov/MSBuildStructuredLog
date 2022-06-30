@@ -18,6 +18,8 @@ namespace StructuredLogViewer.Controls
 
         private readonly ScaleTransform scaleTransform;
 
+        private readonly Size textBlockSize = new Size(10000, 10000);
+
         private double OneSecondPixelWidth;
 
         // Build start time to sync all canvas.
@@ -678,8 +680,7 @@ namespace StructuredLogViewer.Controls
                     continue;
                 }
 
-                textBlock.Measure(new Size(10000, 10000));
-
+                textBlock.Measure(textBlockSize);
                 textBlock.Width = duration;
                 textBlock.Height = textHeight;
                 textBlock.ToolTip = block.GetTooltip();
