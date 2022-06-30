@@ -278,22 +278,22 @@ namespace StructuredLogViewer.Controls
         private void ComputeTimeline()
         {
             var start = Timestamp;
+            blocksCollection.Clear();
 
             if (!_groupByNodes)
             {
-                blocksCollection.Clear();
                 var allBlocks = Timeline.Lanes.SelectMany(p => p.Value.Blocks);
                 blocksCollection.Add(ComputeVisibleBlocks(allBlocks));
             }
             else
             {
                 // Sort by the start time of each lane
-                var keys1 = Timeline.Lanes.Where(p => p.Value.Blocks.Any()).ToDictionary(key => key.Key, p => p.Value.Blocks.Min(p => p.StartTime.Ticks)).ToList();
-                keys1.Sort((l, r) =>
+                var sortedKeys = Timeline.Lanes.Where(p => p.Value.Blocks.Any()).ToDictionary(key => key.Key, p => p.Value.Blocks.Min(p => p.StartTime.Ticks)).ToList();
+                sortedKeys.Sort((l, r) =>
                 {
                     return l.Value.CompareTo(r.Value);
                 });
-                var keys = keys1.Select(Key => Key.Key).ToList();
+                var keys = sortedKeys.Select(Key => Key.Key).ToList();
 
                 // Get the max number of lanes
                 var length = Math.Max(keys.Count(), keys.Max() + 1);
@@ -311,7 +311,7 @@ namespace StructuredLogViewer.Controls
 
         private int[] ComputerHeatGraphData(double unitDuration = 1)
         {
-            var graphData = new int[(int)Math.Floor(ConvertTimeToPixel(GlobalEndTime - GlobalStartTime) / unitDuration)];
+            var graphData = new int[(int)Math.Floor(ConvertTimeToPixel(GlobalEndTime - GlobalStartTime) / unitDuration) + 1];
 
             foreach (var blocks in blocksCollection)
             {
@@ -400,7 +400,7 @@ namespace StructuredLogViewer.Controls
             canvas.Width = timelineWidth;
 
             // compute the largest value but keep it within # of nodes
-            int maxData = Math.Min(blocksCollection.Count, graphData.Max());
+            int maxData = _groupByNodes ? Math.Min(blocksCollection.Count, graphData.Max()) : graphData.Max();
 
             double dataGraphHeightRatio = graphHeight / maxData;
 

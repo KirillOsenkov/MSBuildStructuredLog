@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace StructuredLogViewer
 {
@@ -9,17 +10,29 @@ namespace StructuredLogViewer
 
         public void Add(Block block)
         {
+
+            if (IsValid(block))
+                Blocks.Add(block);
+        }
+
+        public void AddRange(IEnumerable<Block> blocks)
+        {
+            Blocks.AddRange(blocks.Where(b => IsValid(b)));
+        }
+
+        private bool IsValid(Block block)
+        {
             if (block.StartTime == default(DateTime) || block.EndTime == default(DateTime))
             {
-                return;
+                return false;
             }
 
             if (block.EndTime <= block.StartTime)
             {
-                return;
+                return false;
             }
 
-            Blocks.Add(block);
+            return true;
         }
     }
 }

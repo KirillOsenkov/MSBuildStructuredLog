@@ -24,9 +24,9 @@ namespace StructuredLogViewer
             // midl.exe will run on 8 out of 8 file(s) in 8 batches.  Startup phase took 46.0028ms.
             // Task 'CodeStore.idl' took 2244ms.
             // Cleanup phase took 68ms.
-            string regexStartupPhase = @"^CL\.exe will run on (?'activeFiles'[0-9]*) out of (?'totalFiles'[0-9]*) file\(s\)\.\s*Startup phase took (?'timeMS'[0-9]*.[0-9]*)ms.$";
+            string regexStartupPhase = @"^CL\.exe will run on (?'activeFiles'[0-9]*) out of (?'totalFiles'[0-9]*) file\(s\) in [0-9]* batches\.\s*Startup phase took (?'msTime'[0-9]*.[0-9]*)ms.$";
             Regex startupPhase = new Regex(regexStartupPhase, RegexOptions.Multiline);
-            string regexCleanupPhase = @"^Cleanup phase took (?'timeMS'[0-9]*.[0-9]*)ms.$";
+            string regexCleanupPhase = @"^Cleanup phase took (?'msTime'[0-9]*.[0-9]*)ms.$";
             Regex cleanupPhase = new Regex(regexCleanupPhase, RegexOptions.Multiline);
             string regexTaskTime = @"^Task '(?'filename'.*)' took (?'msTime'([0-9]*\.[0-9]+|[0-9]+))ms.$";
             Regex TaskTime = new Regex(regexTaskTime, RegexOptions.Multiline);
@@ -35,14 +35,33 @@ namespace StructuredLogViewer
             // time(C:\Program Files(x86)\Microsoft Visual Studio\2019\Preview\VC\Tools\MSVC\14.24.28218\bin\Hostx86\x86\c2.dll)=0.01935s < 985104875296 - 985105068765 > BB[C: \Users\yuehuang\AppData\Local\Temp\123\main47.cpp]
             string regexBTPlus = @"^time\(.*(c1xx\.dll|c2\.dll)\)=(?'msTime'([0-9]*\.[0-9]+|[0-9]+))s \< (?'startTime'[\d]*) - (?'endTime'[\d]*) \>\s*BB\s*\[(?'filename'[^\]]*)\]$";
             Regex BTPlus = new Regex(regexBTPlus, RegexOptions.Multiline);
-
-            const UInt64 OA_ZERO_TICKS = 94353120000000000; //12/30/1899 12:00am in ticks
-            const UInt64 TICKS_PER_DAY = 864000000000;      //ticks per day
+            bool globalBtplus = false;
 
             build.VisitAllChildren<TimedNode>(node =>
             {
                 if (node is Build)
                 {
+                    if (includeCpp)
+                    {
+                        // Search for Global Bt+
+                        node.FindFirstChild<Folder>(childNode =>
+                        {
+                            if (childNode.Name == "Environment")
+                            {
+                                childNode.FindFirstChild<Property>(envProperty =>
+                                {
+                                    if (envProperty.Name == "_CL_" || envProperty.Name == "__CL__")
+                                    {
+                                        globalBtplus = envProperty.Value.Contains("/Bt+");
+                                        return globalBtplus;
+                                    }
+                                    return false;
+                                });
+                            }
+                            return false;
+                        });
+                    }
+
                     return;
                 }
 
@@ -62,101 +81,128 @@ namespace StructuredLogViewer
 
                 // MultiToolTask batches tasks and runs them in parallel.
                 // For this view, de-batch them into individual task units.
-                if (includeCpp && node is Microsoft.Build.Logging.StructuredLogger.Task task2 && node.Name == "MultiToolTask" && task2.HasChildren)
+                if (includeCpp && node is Microsoft.Build.Logging.StructuredLogger.Task cppTask && (node.Name == "MultiToolTask" || node.Name == "CL") && cppTask.HasChildren)
                 {
                     TimeSpan oneMilliSecond = TimeSpan.FromMilliseconds(1);
-                    bool usingBTTime = true;
+                    bool usingBTTime = globalBtplus;
+                    List<Block> blocks = new List<Block>();
+                    DateTime mttPostStartupTime = DateTime.MinValue;
 
-                    foreach (var child in task2.Children)
+                    foreach (var child in cppTask.Children)
                     {
-                        // if (!usingBTTime)
-                        // {
-                            // switch to BT+ parsing
-                            // usingBTTime = true;
-                        // }
-
                         if (child is Message message)
                         {
-                            TimeSpan timeDuration = TimeSpan.Zero;
+                            DateTime endTime = DateTime.MinValue;
+                            DateTime startTime = DateTime.MinValue;
                             string messageText = message.Text;
 
-                            if (!usingBTTime)
+                            var match = usingBTTime ? BTPlus.Match(message.Text) : TaskTime.Match(message.Text);
+                            if (match.Success)
                             {
-                                var match = TaskTime.Match(message.Text);
-                                if (match.Success)
+                                if (usingBTTime)
                                 {
-                                    var filename = match.Groups["filename"].Value;
-                                    var msTime = match.Groups["msTime"].Value;
-                                    if (double.TryParse(msTime, out double tryValue) && !string.IsNullOrWhiteSpace(filename))
+                                    // Matching Bt+
+                                    string filename = match.Groups["filename"].Value;
+                                    string startTimeValue = match.Groups["startTime"].Value;
+                                    string endTimeValue = match.Groups["endTime"].Value;
+                                    if (long.TryParse(startTimeValue, out long tryStartTime) && long.TryParse(endTimeValue, out long tryEndTime) && !string.IsNullOrWhiteSpace(filename))
                                     {
-                                        timeDuration = TimeSpan.FromMilliseconds(tryValue);
+                                        startTime = new DateTime(tryStartTime);
+                                        endTime = new DateTime(tryEndTime);
                                         messageText = Path.GetFileName(filename);
                                     }
                                 }
                                 else
                                 {
-                                    match = startupPhase.Match(message.Text);
-                                    if (match.Success)
+                                    // MTT messages only print duration, assume that timestamp of the message is the end.
+                                    // Round 1ms from start time so that the graph fits better.
+                                    string filename = match.Groups["filename"].Value;
+                                    string msTime = match.Groups["msTime"].Value;
+                                    if (double.TryParse(msTime, out double tryValue) && !string.IsNullOrWhiteSpace(filename))
                                     {
-                                        var msTime = match.Groups["msTime"].Value;
-                                        if (double.TryParse(msTime, out double tryValue))
-                                        {
-                                            timeDuration = TimeSpan.FromMilliseconds(tryValue);
-                                        }
+                                        startTime = message.Timestamp - TimeSpan.FromMilliseconds(tryValue) + oneMilliSecond;
+                                        endTime = message.Timestamp;
+                                        messageText = Path.GetFileName(filename);
                                     }
-                                    else
+                                }
+
+                                if (startTime > DateTime.MinValue)
+                                {
+                                    var block = new Block()
                                     {
-                                        match = startupPhase.Match(message.Text);
-                                        var msTime = match.Groups["msTime"].Value;
-                                        if (double.TryParse(msTime, out double tryValue))
-                                        {
-                                            timeDuration = TimeSpan.FromMilliseconds(tryValue);
-                                        }
-                                    }
+                                        StartTime = startTime,
+                                        EndTime = endTime,
+                                        Text = messageText,
+                                        Node = message,
+                                    };
+                                    blocks.Add(block);
                                 }
                             }
                             else
                             {
-                                var match = BTPlus.Match(message.Text);
+                                match = startupPhase.Match(message.Text);
                                 if (match.Success)
                                 {
-                                    var filename = match.Groups["filename"].Value;
-                                    var startTimeValue = match.Groups["startTime"].Value;
-                                    var endTimeValue = match.Groups["endTime"].Value;
-                                    if (ulong.TryParse(startTimeValue, out ulong startTime) && ulong.TryParse(endTimeValue, out ulong endTime) && !string.IsNullOrWhiteSpace(filename))
+                                    string msTime = match.Groups["msTime"].Value;
+                                    if (double.TryParse(msTime, out double tryValue))
                                     {
-
-
-
-                                        var blockChild = new Block();
-                                        blockChild.StartTime = DateTime.FromFileTime((long)((startTime + OA_ZERO_TICKS) / TICKS_PER_DAY));
-                                        blockChild.EndTime = DateTime.FromFileTime((long)((endTime + OA_ZERO_TICKS) / TICKS_PER_DAY));
-                                        blockChild.Text = Path.GetFileName(filename);
-                                        blockChild.Indent = message.GetParentChainIncludingThis().Count();
-                                        blockChild.Node = message;
-                                        lane.Add(blockChild);
+                                        startTime = message.Timestamp - TimeSpan.FromMilliseconds(tryValue) + oneMilliSecond;
+                                        endTime = message.Timestamp;
+                                        mttPostStartupTime = message.Timestamp;
                                     }
                                 }
-                            }
+                                else
+                                {
+                                    match = cleanupPhase.Match(message.Text);
+                                    string msTime = match.Groups["msTime"].Value;
+                                    if (double.TryParse(msTime, out double tryValue))
+                                    {
+                                        startTime = message.Timestamp - TimeSpan.FromMilliseconds(tryValue) + oneMilliSecond;
+                                        endTime = message.Timestamp;
+                                    }
+                                }
 
-                            if (timeDuration > TimeSpan.Zero)
+                                if (startTime > DateTime.MinValue)
+                                {
+                                    var block = new Block()
+                                    {
+                                        StartTime = startTime,
+                                        EndTime = endTime,
+                                        Text = messageText,
+                                        Node = message,
+                                    };
+
+                                    // Add these messages to directly to the lane so to avoid mixing with the Bt+ messages.
+                                    lane.Add(block);
+                                }
+                            }
+                        }
+
+                        if (!usingBTTime && child is Property property)
+                        {
+                            if (property.Name == "CommandLineArgument" && property.Value.Contains("/Bt+"))
                             {
-                                var blockChild = new Block();
-                                // MTT messages only print duration, assume that the message printed is the end time.
-                                // Also round 1ms from duration so that the graph fits better.
-                                blockChild.StartTime = message.Timestamp - timeDuration + oneMilliSecond;
-                                blockChild.EndTime = message.Timestamp;
-                                blockChild.Text = messageText;
-                                blockChild.Indent = message.GetParentChainIncludingThis().Count();
-                                blockChild.Node = message;
-                                lane.Add(blockChild);
+                                usingBTTime = true;
                             }
                         }
                     }
+
+                    if (usingBTTime && blocks.Count > 0)
+                    {
+                        // BT+ timestamp is not a global time, but is relative to the first instance,
+                        // so compute the offset and remove it the task offset.
+                        DateTime offset = blocks.Min(p => p.StartTime);
+                        foreach (Block block in blocks)
+                        {
+                            block.StartTime = mttPostStartupTime + block.StartTime.Subtract(offset);
+                            block.EndTime = mttPostStartupTime + block.EndTime.Subtract(offset);
+                        }
+                    }
+
+                    lane.AddRange(blocks);
                 }
 
-                var block = CreateBlock(node);
-                lane.Add(block);
+                lane.Add(CreateBlock(node));
             });
         }
 
