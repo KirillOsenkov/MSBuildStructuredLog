@@ -47,6 +47,8 @@ namespace StructuredLogViewer
         private bool globalLibTime = false;
         private bool globalLinkTime = false;
 
+        private TimeSpan oneMilliSecond = TimeSpan.FromMilliseconds(1);
+
         public Dictionary<int, Lane> Lanes { get; set; } = new Dictionary<int, Lane>();
 
         public Timeline(Build build, bool includeCpp)
@@ -121,7 +123,7 @@ namespace StructuredLogViewer
 
         private IEnumerable<Block> PopulateCppNodes(TimedNode node)
         {
-            TimeSpan oneMilliSecond = TimeSpan.FromMilliseconds(1);
+            
             List<Block> resultBlocks = new List<Block>();
 
             // MultiToolTask batches tasks and runs them in parallel.
@@ -130,7 +132,8 @@ namespace StructuredLogViewer
             {
                 bool usingBTTime = globalBtplus;
                 List<Block> blocks = new List<Block>();
-                DateTime mttPostStartupTime = DateTime.MinValue;
+                DateTime mttStartupTime = DateTime.MinValue;
+                DateTime mttCleanupTime = DateTime.MinValue;
 
                 foreach (var child in cppTask.Children)
                 {
@@ -192,7 +195,7 @@ namespace StructuredLogViewer
                                 {
                                     startTime = message.Timestamp - TimeSpan.FromMilliseconds(tryValue) + oneMilliSecond;
                                     endTime = message.Timestamp;
-                                    mttPostStartupTime = message.Timestamp;
+                                    mttStartupTime = message.Timestamp;
                                 }
                             }
                             else
@@ -203,6 +206,7 @@ namespace StructuredLogViewer
                                 {
                                     startTime = message.Timestamp - TimeSpan.FromMilliseconds(tryValue) + oneMilliSecond;
                                     endTime = message.Timestamp;
+                                    mttCleanupTime = message.Timestamp - TimeSpan.FromMilliseconds(tryValue);
                                 }
                             }
 
@@ -231,15 +235,30 @@ namespace StructuredLogViewer
                     }
                 }
 
-                if (usingBTTime && blocks.Count > 0 && mttPostStartupTime != DateTime.MinValue)
+                if (usingBTTime && blocks.Count > 0 && mttStartupTime != DateTime.MinValue && mttCleanupTime != DateTime.MinValue)
                 {
                     // BT+ timestamp is not a global time, but is relative to the first instance (see QueryPerformanceCounter)
-                    // so compute the offset and remove it from all blocks.
+                    // so compute the offset and center the Bt+ graph.  Assume that tool's startup closing time are the same.
                     DateTime offset = blocks.Min(p => p.StartTime);
-                    foreach (Block block in blocks)
+                    TimeSpan totalDuration = blocks.Max(p => p.EndTime) - offset;
+                    var mttDuration = mttCleanupTime - mttStartupTime;
+                    if (totalDuration > TimeSpan.Zero && totalDuration < mttDuration)
                     {
-                        block.StartTime = mttPostStartupTime + block.StartTime.Subtract(offset);
-                        block.EndTime = mttPostStartupTime + block.EndTime.Subtract(offset);
+                        mttStartupTime += TimeSpan.FromTicks((mttDuration - totalDuration).Ticks / 2);
+                        foreach (Block block in blocks)
+                        {
+                            block.StartTime = mttStartupTime + block.StartTime.Subtract(offset);
+                            block.EndTime = mttStartupTime + block.EndTime.Subtract(offset);
+                        }
+                    }
+                    else
+                    {
+                        // unable to put the nodes in the center.  Just put it right up against the mtt startup time
+                        foreach (Block block in blocks)
+                        {
+                            block.StartTime = mttStartupTime + block.StartTime.Subtract(offset);
+                            block.EndTime = mttStartupTime + block.EndTime.Subtract(offset);
+                        }
                     }
                 }
 

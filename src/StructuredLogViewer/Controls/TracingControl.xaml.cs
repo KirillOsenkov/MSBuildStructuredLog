@@ -313,7 +313,8 @@ namespace StructuredLogViewer.Controls
 
         private int[] ComputerHeatGraphData(double unitDuration = 1)
         {
-            var graphData = new int[(int)Math.Floor(ConvertTimeToPixel(GlobalEndTime - GlobalStartTime) / unitDuration) + 1];
+            var graphLength = (int)Math.Floor(ConvertTimeToPixel(GlobalEndTime - GlobalStartTime) / unitDuration) + 1;
+            var graphData = new int[graphLength];
 
             foreach (var blocks in blocksCollection)
             {
@@ -329,7 +330,7 @@ namespace StructuredLogViewer.Controls
                         int left = (int)Math.Floor(ConvertTimeToPixel(block.Start - GlobalStartTime) / unitDuration);
                         int right = (int)Math.Floor(ConvertTimeToPixel(block.End - GlobalStartTime) / unitDuration);
 
-                        for (; left <= right; left++)
+                        for (; left <= right && left < graphLength; left++)
                         {
                             graphData[left]++;
                         }
