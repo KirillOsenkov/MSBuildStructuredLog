@@ -29,8 +29,8 @@ There are a couple of extra steps to get the .app running on macOS since it's cu
 3. If necessary, unzip the file (Safari does this for you after downloading automatically).
 4. Move the `Structured Log Viewer.app` into your `Applications` folder.
 5. In terminal run: `chmod +x /Applications/Structured\ Log\ Viewer.app/Contents/MacOS/StructuredLogViewer.Avalonia` to give the app execution permissions
-6. Run the app.  You will be prompted that the app is not signed by a known developer.  Click `cancel`.
-7. In _System Preferences -> Security & Privacy_ click `Open anyway` where the app should now be visible near the setting from step 1.
+6. On the first run, right click the app on Finder and select _Open_.  You will be prompted that the app is not signed by a known developer. Click _Open_.
+
 
 
 ## Building & Running the Avalonia version on Mac:
