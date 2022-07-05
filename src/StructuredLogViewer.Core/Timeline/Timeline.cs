@@ -38,10 +38,8 @@ namespace StructuredLogViewer
         //    Wait type merge: Total time = 0.000s
         //  Pass 2: Interval #2, time = 0.016s
         //  Final: Total time = 0.141s
-        const string regexLinkPass1 = @"^Cleanup phase took (?'msTime'[0-9]*.[0-9]*)ms.$";
-        readonly Regex linkPass1 = new Regex(regexLinkPass1, RegexOptions.Multiline);
-        const string regexLinkPass2 = @"^Cleanup phase took (?'msTime'[0-9]*.[0-9]*)ms.$";
-        readonly Regex linkPass2 = new Regex(regexLinkPass2, RegexOptions.Multiline);
+        const string regexLinkTotalTime = @"^Final: Total time = (?'msTime'[0-9]*.[0-9]*)s$";
+        readonly Regex linkTotalTime = new Regex(regexLinkTotalTime, RegexOptions.Multiline);
 
         private bool globalBtplus = false;
         private bool globalLibTime = false;
@@ -131,8 +129,8 @@ namespace StructuredLogViewer
             {
                 bool usingBTTime = globalBtplus;
                 List<Block> blocks = new List<Block>();
-                DateTime mttStartupTime = DateTime.MinValue;
-                DateTime mttCleanupTime = DateTime.MinValue;
+                DateTime mttStartupTime = cppTask.StartTime;
+                DateTime mttCleanupTime = cppTask.EndTime;
 
                 foreach (var child in cppTask.Children)
                 {
@@ -287,6 +285,50 @@ namespace StructuredLogViewer
                                 startTime = message.Timestamp - TimeSpan.FromTicks(duration);
                                 endTime = message.Timestamp;
                                 messageText = Path.GetFileName(filename);
+                            }
+                        }
+
+                        if (startTime > DateTime.MinValue)
+                        {
+                            var block = new Block()
+                            {
+                                StartTime = startTime,
+                                EndTime = endTime,
+                                Text = messageText,
+                                Node = message,
+                            };
+                            resultBlocks.Add(block);
+                        }
+                    }
+                    else if (!usingLibTime && child is Property property)
+                    {
+                        if (property.Name == Strings.CommandLineArguments && property.Value.Contains("/TIME"))
+                        {
+                            usingLibTime = true;
+                        }
+                    }
+                }
+            }
+            else if (node is Microsoft.Build.Logging.StructuredLogger.Task linkTask && linkTask.Name == "Link" && linkTask.HasChildren)
+            {
+                bool usingLibTime = globalLinkTime;
+
+                foreach (var child in linkTask.Children)
+                {
+                    if (child is Message message)
+                    {
+                        DateTime endTime = DateTime.MinValue;
+                        DateTime startTime = DateTime.MinValue;
+                        string messageText = message.Text;
+
+                        var match = linkTotalTime.Match(message.Text);
+                        if (match.Success)
+                        {
+                            string secTime = match.Groups["msTime"].Value;
+                            if (double.TryParse(secTime, out double trySecTime))
+                            {
+                                startTime = message.Timestamp - TimeSpan.FromSeconds(trySecTime);
+                                endTime = message.Timestamp;
                             }
                         }
 

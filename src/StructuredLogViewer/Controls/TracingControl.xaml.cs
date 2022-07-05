@@ -570,7 +570,7 @@ namespace StructuredLogViewer.Controls
                         return ShowTarget;
                     case Microsoft.Build.Logging.StructuredLogger.Task node:
                         // "MultiToolTask" appear as both Task and Messages, so only show one of them.
-                        if (ShowCpp && (node.Name == "MultiToolTask" || node.Name == "LIB"))
+                        if (ShowCpp && (node.Name == "MultiToolTask" || node.Name == "CL" || node.Name == "LIB" || node.Name == "Link"))
                         {
                             return false;
                         }
