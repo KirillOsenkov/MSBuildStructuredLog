@@ -118,7 +118,8 @@ namespace StructuredLogViewer.Controls
             set
             {
                 _groupByNodes = value;
-                ComputeAndDraw();
+                if (numberOfNodes > 1)
+                    ComputeAndDraw();
             }
         }
 
@@ -165,6 +166,8 @@ namespace StructuredLogViewer.Controls
             scaleFactor = value;
             scaleTransform.ScaleX = scaleFactor;
             scaleTransform.ScaleY = scaleFactor;
+
+            UpdatedGraph(scrollViewer.VerticalOffset + scrollViewer.ViewportWidth);
         }
 
         private const double minimumZoom = 0.1;
@@ -188,6 +191,8 @@ namespace StructuredLogViewer.Controls
                     zoomSlider.Value = scaleFactor;
                 }
             }
+
+            UpdatedGraph(scrollViewer.VerticalOffset + scrollViewer.ViewportWidth);
 
             e.Handled = true;
         }
@@ -241,6 +246,7 @@ namespace StructuredLogViewer.Controls
                     this.numberOfNodes++;
                 }
 
+                /*
                 if (this._showProject && totalItems > 10000)
                 {
                     this._showEvaluation = true;
@@ -251,6 +257,7 @@ namespace StructuredLogViewer.Controls
                     this._showNodes = false;
                     this._groupByNodes = false;
                 }
+                */
             }
 
             var sample = new TextBlock();
@@ -272,7 +279,7 @@ namespace StructuredLogViewer.Controls
             }
 
             ComputeTimeline();
-
+            this.lastRenderTimeStamp = 0;
             Draw();
         }
 
@@ -373,7 +380,9 @@ namespace StructuredLogViewer.Controls
             lanesPanel.Children.Add(HeatGraph);
             lanesPanel.Children.Add(TopRulerNodeDivider);
 
-            var renderWidthTimeStamp = GlobalStartTime + ConvertPixelToTime(BuildControl.ActualWidth * scaleTransform.ScaleX);
+            // scrollViewer may not have been initialized, fallback to BuildControl for size.
+            var offset = Math.Max(scrollViewer.HorizontalOffset + scrollViewer.ViewportWidth, BuildControl.ActualWidth);
+            var renderWidthTimeStamp = GlobalStartTime + ConvertPixelToTime(offset / scaleTransform.ScaleX);
 
             for (int i = 0; i < blocksCollection.Count; i++)
             {
@@ -676,9 +685,12 @@ namespace StructuredLogViewer.Controls
 
         private void UpdatePanelForLane(Canvas canvas, IEnumerable<Block> blocks)
         {
-            double canvasWidth = 0;
-            double canvasHeight = 0;
+            double canvasWidth = double.IsNaN(canvas.Width) ? 0 : canvas.Width;
+            double canvasHeight = double.IsNaN(canvas.Height) ? 0 : canvas.Height;
             double minimumDurationToInclude = 1; // ignore durations less than 1 pixel
+
+            if (blocks == null || !blocks.Any())
+                return;
 
             foreach (var block in blocks)
             {
@@ -721,6 +733,38 @@ namespace StructuredLogViewer.Controls
 
             canvas.Height = canvasHeight;
             canvas.Width = canvasWidth;
+        }
+
+
+        private void UpdatedGraph(double widthOffset)
+        {
+            // Load more blocks when scroll to the right.
+            var renderWidthTimeStamp = GlobalStartTime + ConvertPixelToTime(widthOffset / scaleTransform.ScaleX);
+            if (lastRenderTimeStamp > renderWidthTimeStamp)
+                return;
+            if (lanesPanel != null)
+            {
+                foreach (var lane in lanesPanel.Children)
+                {
+                    if (lane is Canvas canvas && canvas.Name.StartsWith("node"))
+                    {
+                        if (Int32.TryParse(canvas.Name.Substring("node".Length), out int parsedInt))
+                        {
+                            var blocks = blocksCollection[parsedInt];
+                            var culledBlocks = blocks.Where(block =>
+                            {
+                                if (lastRenderTimeStamp > block.Start || block.Start >= renderWidthTimeStamp)
+                                    return false;
+                                return true;
+                            });
+
+                            UpdatePanelForLane(canvas, culledBlocks);
+                        }
+                    }
+                }
+
+                lastRenderTimeStamp = renderWidthTimeStamp;
+            }
         }
 
         private void Content_MouseDoubleClick(object sender, MouseButtonEventArgs e)
@@ -833,38 +877,16 @@ namespace StructuredLogViewer.Controls
         private void ResetZoom_Click(object sender, RoutedEventArgs e)
         {
             zoomSlider.Value = 1;
+            UpdatedGraph(scrollViewer.VerticalOffset + scrollViewer.ViewportWidth);
         }
 
         private void scrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
-            if (e.ExtentWidthChange > 0)
+            if (e.HorizontalChange == 0)
                 return;
 
-            var renderWidthTimeStamp = GlobalStartTime + ConvertPixelToTime(e.ExtentWidth * scaleTransform.ScaleX);
-            if (lastRenderTimeStamp > renderWidthTimeStamp)
-                return;
-            
-            foreach (var lane in lanesPanel.Children)
-            {
-                if (lane is Canvas canvas && canvas.Name.StartsWith("node"))
-                {
-                    if (Int32.TryParse(canvas.Name.Substring("node".Length), out int parsedInt))
-                    {
-                        // parsedInt 
-                        var blocks = blocksCollection[parsedInt];
-                        var culledBlocks = blocks.Where(block =>
-                        {
-                            if (lastRenderTimeStamp > block.Start || block.Start >= renderWidthTimeStamp)
-                                return false;
-                            return true;
-                        });
-
-                        UpdatePanelForLane(canvas, culledBlocks);
-                    }
-                }
-            }
-
-            lastRenderTimeStamp = renderWidthTimeStamp;
+            UpdatedGraph(e.ViewportWidth + e.HorizontalOffset);
         }
+
     }
 }

@@ -16,7 +16,7 @@
         <MenuItem Header="{Binding Path=ShowCppText, Mode=OneWay}" IsCheckable="true" IsChecked="{Binding Path=ShowCpp , Mode=TwoWay}" StaysOpenOnClick="true"/>
         <MenuItem Header="{Binding Path=ShowNodesText, Mode=OneWay}" IsCheckable="true" IsChecked="{Binding Path=ShowNodes , Mode=TwoWay}" StaysOpenOnClick="true"/>
         <MenuItem Header="Group By Nodes" IsCheckable="true" IsChecked="{Binding Path=GroupByNodes , Mode=TwoWay}" StaysOpenOnClick="true"/>
-        <MenuItem Header="{Binding Path=LoadStatistics, Mode=OneWay}" IsCheckable="true" IsEnabled="false" />
+        <!--<MenuItem Header="{Binding Path=LoadStatistics, Mode=OneWay}" IsCheckable="true" IsEnabled="false" />-->
       </ContextMenu>
     </Grid.ContextMenu>
     <ScrollViewer x:Name="scrollViewer"
