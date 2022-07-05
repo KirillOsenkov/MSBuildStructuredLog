@@ -123,7 +123,6 @@ namespace StructuredLogViewer
 
         private IEnumerable<Block> PopulateCppNodes(TimedNode node)
         {
-            
             List<Block> resultBlocks = new List<Block>();
 
             // MultiToolTask batches tasks and runs them in parallel.

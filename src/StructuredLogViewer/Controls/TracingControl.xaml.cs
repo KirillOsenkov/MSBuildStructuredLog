@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using Microsoft.Build.Logging.StructuredLogger;
 
@@ -57,11 +60,10 @@ namespace StructuredLogViewer.Controls
 
         public string ShowCppText => $"Show Cpp Details ({numberOfCpp})";
 
-        private TimeSpan initTime = TimeSpan.Zero;
         private TimeSpan computeTime = TimeSpan.Zero;
         private TimeSpan drawTime = TimeSpan.Zero;
 
-        public string LoadStatistics => $"Init:{initTime.TotalMilliseconds}ms, Compute:{computeTime.TotalMilliseconds}ms, Draw:{drawTime.TotalMilliseconds}ms";
+        public string LoadStatistics => $"Compute:{computeTime.TotalMilliseconds}ms, Draw:{drawTime.TotalMilliseconds}";
 
         public bool ShowEvaluation
         {
@@ -257,7 +259,6 @@ namespace StructuredLogViewer.Controls
             textHeight = sample.DesiredSize.Height;
 
             lanesPanel = new StackPanel { Orientation = Orientation.Vertical, HorizontalAlignment = HorizontalAlignment.Left };
-            this.initTime = Timestamp - start;
 
             ComputeAndDraw();
             grid.Children.Add(lanesPanel);
@@ -343,6 +344,7 @@ namespace StructuredLogViewer.Controls
 
         private Panel TopRulerNodeDivider;
         private Panel HeatGraph;
+        private double lastRenderTimeStamp = 0;
 
         /// <summary>
         /// Draw Graph 
@@ -371,15 +373,27 @@ namespace StructuredLogViewer.Controls
             lanesPanel.Children.Add(HeatGraph);
             lanesPanel.Children.Add(TopRulerNodeDivider);
 
-            foreach (var blocks in blocksCollection)
-            {
-                var panel = CreatePanelForLane(blocks, GlobalStartTime);
+            var renderWidthTimeStamp = GlobalStartTime + ConvertPixelToTime(BuildControl.ActualWidth * scaleTransform.ScaleX);
 
+            for (int i = 0; i < blocksCollection.Count; i++)
+            {
+                var blocks = blocksCollection[i];
+                var culledBlocks = blocks.Where(block =>
+                {
+                    if (lastRenderTimeStamp > block.Start || block.Start >= renderWidthTimeStamp)
+                        return false;
+                    return true;
+                });
+
+                var panel = CreatePanelForLane(culledBlocks);
                 if (panel != null && panel.Children.Count > 0)
                 {
+                    panel.Name = $"node{i}";
                     lanesPanel.Children.Add(panel);
                 }
             }
+
+            this.lastRenderTimeStamp = renderWidthTimeStamp;
 
             if (ShowNodes)
                 DrawAddNodeDivider();
@@ -508,7 +522,7 @@ namespace StructuredLogViewer.Controls
             canvas.Background = nodeBackground;
             canvas.Height = textHeight;
             canvas.Width = timeWidth;
-
+            canvas.Name = "divider";
             return canvas;
         }
 
@@ -647,13 +661,21 @@ namespace StructuredLogViewer.Controls
             return blocks;
         }
 
-        private Canvas CreatePanelForLane(List<Block> blocks, long globalStart)
+        private Canvas CreatePanelForLane(IEnumerable<Block> blocks)
         {
-            if (blocks == null || blocks.Count == 0)
+            if (blocks == null || !blocks.Any())
                 return null;
 
             var canvas = new Canvas();
             canvas.VerticalAlignment = VerticalAlignment.Top;
+            UpdatePanelForLane(canvas, blocks);
+            canvas.HorizontalAlignment = HorizontalAlignment.Left;
+
+            return canvas;
+        }
+
+        private void UpdatePanelForLane(Canvas canvas, IEnumerable<Block> blocks)
+        {
             double canvasWidth = 0;
             double canvasHeight = 0;
             double minimumDurationToInclude = 1; // ignore durations less than 1 pixel
@@ -666,21 +688,19 @@ namespace StructuredLogViewer.Controls
                  *     |---Task -|  |---Task --|
                  */
 
-                var content = new ContentControl();
-                var textBlock = new TextBlock();
-                textBlock.Text = $"{block.Text} ({TextUtilities.DisplayDuration(block.Duration)})";
-                textBlock.Background = ChooseBackground(block);
-
-                double indentOffset = textHeight * block.Indent;
-
-                double left = ConvertTimeToPixel(block.Start - globalStart);
+                double left = ConvertTimeToPixel(block.Start - GlobalStartTime);
                 double duration = ConvertTimeToPixel(block.End - block.Start);
+                double indentOffset = textHeight * block.Indent;
 
                 if (duration < minimumDurationToInclude)
                 {
                     continue;
                 }
 
+                var content = new ContentControl();
+                var textBlock = new TextBlock();
+                textBlock.Text = $"{block.Text} ({TextUtilities.DisplayDuration(block.Duration)})";
+                textBlock.Background = ChooseBackground(block);
                 textBlock.Measure(textBlockSize);
                 textBlock.Width = duration;
                 textBlock.Height = textHeight;
@@ -701,9 +721,6 @@ namespace StructuredLogViewer.Controls
 
             canvas.Height = canvasHeight;
             canvas.Width = canvasWidth;
-            canvas.HorizontalAlignment = HorizontalAlignment.Left;
-
-            return canvas;
         }
 
         private void Content_MouseDoubleClick(object sender, MouseButtonEventArgs e)
@@ -803,11 +820,11 @@ namespace StructuredLogViewer.Controls
         {
             switch (block.Node)
             {
-                case Microsoft.Build.Logging.StructuredLogger.Task : return taskBackground;
-                case Target : return targetBackground;
-                case Project : return projectBackground;
-                case ProjectEvaluation : return projectEvaluationBackground;
-                case Message : return messageBackground;
+                case Microsoft.Build.Logging.StructuredLogger.Task: return taskBackground;
+                case Target: return targetBackground;
+                case Project: return projectBackground;
+                case ProjectEvaluation: return projectEvaluationBackground;
+                case Message: return messageBackground;
             }
 
             return Brushes.Transparent;
@@ -816,6 +833,38 @@ namespace StructuredLogViewer.Controls
         private void ResetZoom_Click(object sender, RoutedEventArgs e)
         {
             zoomSlider.Value = 1;
+        }
+
+        private void scrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            if (e.ExtentWidthChange > 0)
+                return;
+
+            var renderWidthTimeStamp = GlobalStartTime + ConvertPixelToTime(e.ExtentWidth * scaleTransform.ScaleX);
+            if (lastRenderTimeStamp > renderWidthTimeStamp)
+                return;
+            
+            foreach (var lane in lanesPanel.Children)
+            {
+                if (lane is Canvas canvas && canvas.Name.StartsWith("node"))
+                {
+                    if (Int32.TryParse(canvas.Name.Substring("node".Length), out int parsedInt))
+                    {
+                        // parsedInt 
+                        var blocks = blocksCollection[parsedInt];
+                        var culledBlocks = blocks.Where(block =>
+                        {
+                            if (lastRenderTimeStamp > block.Start || block.Start >= renderWidthTimeStamp)
+                                return false;
+                            return true;
+                        });
+
+                        UpdatePanelForLane(canvas, culledBlocks);
+                    }
+                }
+            }
+
+            lastRenderTimeStamp = renderWidthTimeStamp;
         }
     }
 }
