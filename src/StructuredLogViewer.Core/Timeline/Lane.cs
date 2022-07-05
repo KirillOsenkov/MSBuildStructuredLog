@@ -10,7 +10,6 @@ namespace StructuredLogViewer
 
         public void Add(Block block)
         {
-
             if (IsValid(block))
                 Blocks.Add(block);
         }

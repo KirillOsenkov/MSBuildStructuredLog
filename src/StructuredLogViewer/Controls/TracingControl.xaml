@@ -21,7 +21,7 @@
     </Grid.ContextMenu>
     <ScrollViewer x:Name="scrollViewer"
                 HorizontalScrollBarVisibility="Auto" 
-                VerticalScrollBarVisibility="Auto" Loaded="ScrollViewer_Loaded" Unloaded="ScrollViewer_Unloaded" ScrollChanged="scrollViewer_ScrollChanged">
+                VerticalScrollBarVisibility="Auto" Loaded="ScrollViewer_Loaded" Unloaded="ScrollViewer_Unloaded" ScrollChanged="ScrollViewer_ScrollChanged">
       <Grid x:Name="grid">
       </Grid>
     </ScrollViewer>

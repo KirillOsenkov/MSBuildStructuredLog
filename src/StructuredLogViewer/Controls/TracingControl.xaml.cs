@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using Microsoft.Build.Logging.StructuredLogger;
 
@@ -245,19 +242,6 @@ namespace StructuredLogViewer.Controls
                 {
                     this.numberOfNodes++;
                 }
-
-                /*
-                if (this._showProject && totalItems > 10000)
-                {
-                    this._showEvaluation = true;
-                    this._showProject = false;
-                    this._showTask = true;
-                    this._showTarget = false;
-                    this._showCpp = false;
-                    this._showNodes = false;
-                    this._groupByNodes = false;
-                }
-                */
             }
 
             var sample = new TextBlock();
@@ -531,7 +515,6 @@ namespace StructuredLogViewer.Controls
             canvas.Background = nodeBackground;
             canvas.Height = textHeight;
             canvas.Width = timeWidth;
-            canvas.Name = "divider";
             return canvas;
         }
 
@@ -593,8 +576,10 @@ namespace StructuredLogViewer.Controls
                         }
 
                         return ShowTask;
-                    default:
+                    case Message:
                         return ShowCpp;
+                    default:
+                        return false;
                 }
             }).ToList();
 
@@ -880,13 +865,13 @@ namespace StructuredLogViewer.Controls
             UpdatedGraph(scrollViewer.VerticalOffset + scrollViewer.ViewportWidth);
         }
 
-        private void scrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
             if (e.HorizontalChange == 0)
                 return;
 
             UpdatedGraph(e.ViewportWidth + e.HorizontalOffset);
+            e.Handled = true;
         }
-
     }
 }
