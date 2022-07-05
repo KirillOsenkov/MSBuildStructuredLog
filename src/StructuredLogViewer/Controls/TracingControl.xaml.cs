@@ -379,7 +379,7 @@ namespace StructuredLogViewer.Controls
                 });
 
                 var panel = CreatePanelForLane(culledBlocks);
-                if (panel != null && panel.Children.Count > 0)
+                if (panel != null)
                 {
                     panel.Name = $"node{i}";
                     lanesPanel.Children.Add(panel);
@@ -657,14 +657,10 @@ namespace StructuredLogViewer.Controls
 
         private Canvas CreatePanelForLane(IEnumerable<Block> blocks)
         {
-            if (blocks == null || !blocks.Any())
-                return null;
-
             var canvas = new Canvas();
             canvas.VerticalAlignment = VerticalAlignment.Top;
             UpdatePanelForLane(canvas, blocks);
             canvas.HorizontalAlignment = HorizontalAlignment.Left;
-
             return canvas;
         }
 
