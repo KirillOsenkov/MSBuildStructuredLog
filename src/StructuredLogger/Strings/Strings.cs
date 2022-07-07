@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
@@ -442,6 +442,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string ToFile => "\" to file \"";
 
         public static string TotalAnalyzerExecutionTime => "Total analyzer execution time:";
+        public static string TotalGeneratorExecutionTime => "Total generator execution time:";
 
         /// <summary>
         /// https://github.com/NuGet/Home/issues/10383
@@ -466,6 +467,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string Assemblies => "Assemblies";
         public static string TargetOutputs => "TargetOutputs";
         public static string AnalyzerReport => "Analyzer Report";
+        public static string GeneratorReport => "Generator Report";
         public static string Properties => "Properties";
         public static string PropertyReassignmentFolder => "Property reassignment";
         public static string Global => "Global";
