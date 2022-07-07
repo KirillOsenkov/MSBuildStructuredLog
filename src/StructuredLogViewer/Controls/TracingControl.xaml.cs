@@ -8,7 +8,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using Microsoft.Build.Logging.StructuredLogger;
-using StructuredLogger.Analyzers;
 
 namespace StructuredLogViewer.Controls
 {

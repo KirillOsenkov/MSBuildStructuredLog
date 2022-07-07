@@ -1,14 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Microsoft.Build.Logging.StructuredLogger;
-using StructuredLogger.Analyzers;
-using static System.Reflection.Metadata.BlobBuilder;
 
 namespace StructuredLogViewer
 {

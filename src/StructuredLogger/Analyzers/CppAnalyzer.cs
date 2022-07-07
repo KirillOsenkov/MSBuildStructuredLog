@@ -1,13 +1,10 @@
-﻿using Microsoft.Build.Logging.StructuredLogger;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Xml.Linq;
 
-namespace StructuredLogger.Analyzers
+namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class CppAnalyzer
     {

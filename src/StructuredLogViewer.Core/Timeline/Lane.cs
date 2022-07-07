@@ -9,23 +9,17 @@ namespace StructuredLogViewer
 
         public void Add(Block block)
         {
-            if (IsValid(block))
-                Blocks.Add(block);
-        }
-
-        private bool IsValid(Block block)
-        {
             if (block.StartTime == default(DateTime) || block.EndTime == default(DateTime))
             {
-                return false;
+                return;
             }
 
             if (block.EndTime <= block.StartTime)
             {
-                return false;
+                return;
             }
 
-            return true;
+            Blocks.Add(block);
         }
     }
 }

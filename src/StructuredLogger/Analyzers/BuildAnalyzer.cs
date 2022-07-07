@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using StructuredLogger.Analyzers;
 using StructuredLogViewer;
 
 namespace Microsoft.Build.Logging.StructuredLogger
