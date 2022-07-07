@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -7,9 +7,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class CscTaskAnalyzer
     {
-        public static Folder Analyze(Task task)
+        public static (Folder Analyzers, Folder Generators) Analyze(Task task)
         {
             Folder analyzerReport = null;
+            Folder generatorReport = null;
+            Folder currentReport = null;
             Folder parent = null;
 
             foreach (var message in task.Children.OfType<Message>().ToArray())
@@ -21,12 +23,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     analyzerReport.Name = Strings.AnalyzerReport;
                     task.AddChild(analyzerReport);
                     parent = analyzerReport;
+                    currentReport = analyzerReport;
                 }
-                else if (text.Contains(", Version=") && analyzerReport != null)
+                else if (text.StartsWith(Strings.TotalGeneratorExecutionTime, StringComparison.Ordinal))
+                {
+                    generatorReport = new Folder();
+                    generatorReport.Name = Strings.GeneratorReport;
+                    task.AddChild(generatorReport);
+                    parent = generatorReport;
+                    currentReport = generatorReport;
+                }
+                else if (text.Contains(", Version=") && currentReport != null)
                 {
                     var lastAssembly = new Folder();
                     lastAssembly.Name = text;
-                    analyzerReport.AddChild(lastAssembly);
+                    currentReport.AddChild(lastAssembly);
                     parent = lastAssembly;
 
                     // Remove the message since we are already using the same text for the containing folder
@@ -47,7 +58,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
-            return analyzerReport;
+            return (analyzerReport, generatorReport);
         }
 
         public static void CreateMergedReport(Folder destination, Folder[] analyzerReports)

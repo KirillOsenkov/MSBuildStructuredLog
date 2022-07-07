@@ -14,6 +14,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private Dictionary<string, (TimeSpan TotalDuration, Dictionary<string, TimeSpan> ParentDurations)> taskDurations
             = new Dictionary<string, (TimeSpan TotalDuration, Dictionary<string, TimeSpan> ParentDurations)>();
         private readonly List<Folder> analyzerReports = new List<Folder>();
+        private readonly List<Folder> generatorReports = new List<Folder>();
 
         public BuildAnalyzer(Build build)
         {
@@ -230,6 +231,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 var analyzerReportSummary = build.GetOrCreateNodeWithName<Folder>(Intern($"Analyzer Summary"));
                 CscTaskAnalyzer.CreateMergedReport(analyzerReportSummary, analyzerReports.ToArray());
             }
+
+            if (generatorReports.Count > 0)
+            {
+                var generatorReportSummary = build.GetOrCreateNodeWithName<Folder>(Intern($"Generator Summary"));
+                CscTaskAnalyzer.CreateMergedReport(generatorReportSummary, generatorReports.ToArray());
+            }
         }
 
         private void PostAnalyzeProject(Project project)
@@ -317,10 +324,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
             else if (task.Name == "Csc")
             {
-                var analyzerReport = CscTaskAnalyzer.Analyze(task);
+                var (analyzerReport, generatorReport) = CscTaskAnalyzer.Analyze(task);
                 if (analyzerReport is not null)
                 {
                     analyzerReports.Add(analyzerReport);
+                }
+
+                if (generatorReport is not null)
+                {
+                    generatorReports.Add(generatorReport);
                 }
             }
 
