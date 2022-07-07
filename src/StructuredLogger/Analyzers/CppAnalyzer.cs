@@ -5,17 +5,32 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 
 namespace StructuredLogger.Analyzers
 {
     public class CppAnalyzer
     {
-        public class Block
+        public class CppTimedNode
         {
             public DateTime StartTime;
             public DateTime EndTime;
             public string Text;
+            public int NodeId;
             public BaseNode Node;
+        }
+
+        public class CppAnalyzerNode : NamedNode
+        {
+            CppAnalyzer cppAnalyzer;
+
+            public CppAnalyzerNode(CppAnalyzer cppAnalyzer)
+            {
+                this.IsVisible = false;
+                this.cppAnalyzer = cppAnalyzer;
+            }
+
+            public CppAnalyzer GetCppAnalyzer() => cppAnalyzer;
         }
 
         // parse for:
@@ -48,57 +63,76 @@ namespace StructuredLogger.Analyzers
         readonly Regex linkTotalTime = new Regex(regexLinkTotalTime, RegexOptions.Multiline);
 
         private const string MultiToolTaskName = "MultiToolTask";
-        private static bool globalBtplus = false;
-        private static bool globalLibTime = false;
-        private static bool globalLinkTime = false;
+        private const string CLTaskName = "CL";
+        private const string LinkTaskName = "Link";
+        private const string LibTaskName = "LIB";
+        private const string filenameRegexMatchName = "filename";
+        private const string startTimeRegexMatchName = "startTime";
+        private const string endTimeRegexMatchName = "endTime";
+        private const string msTimeRegexMatchName = "msTime";
+        private bool globalBtplus = false;
+        private bool globalLibTime = false;
+        private bool globalLinkTime = false;
 
         private TimeSpan oneMilliSecond = TimeSpan.FromMilliseconds(1);
 
-        public void Init()
+        List<CppTimedNode> resultTimedNode = new List<CppTimedNode>();
+
+        public CppAnalyzer()
         {
             globalBtplus = false;
             globalLibTime = false;
             globalLinkTime = false;
         }
 
-        public void AnalyzeEnvironment(TimedNode node)
+        public void AnalyzeEnvironment(NamedNode node)
         {
-            // Search for Global /Bt+ and /TIME
-            node.FindFirstChild<Folder>(childNode =>
+            // Search for /Bt+ and /TIME in the environment variables
+            node.VisitAllChildren<Property>(envProperty =>
             {
-                if (childNode.Name == Strings.Environment)
+                if (envProperty.Name == "_CL_" || envProperty.Name == "__CL__")
                 {
-                    childNode.VisitAllChildren<Property>(envProperty =>
-                    {
-                        if (envProperty.Name == "_CL_" || envProperty.Name == "__CL__")
-                        {
-                            globalBtplus = envProperty.Value.Contains("/Bt+");
-                        }
-                        else if (envProperty.Name == "_LINK_" || envProperty.Name == "__LINK__")
-                        {
-                            globalLinkTime = envProperty.Value.Contains("/TIME");
-                        }
-                        else if (envProperty.Name == "_LIB_" || envProperty.Name == "__LIB__")
-                        {
-                            globalLibTime = envProperty.Value.Contains("/TIME");
-                        }
-
-                    });
+                    globalBtplus = envProperty.Value.Contains("/Bt+");
                 }
-                return false;
+                else if (envProperty.Name == "_LINK_" || envProperty.Name == "__LINK__")
+                {
+                    globalLinkTime = envProperty.Value.Contains("/TIME");
+                }
+                else if (envProperty.Name == "_LIB_" || envProperty.Name == "__LIB__")
+                {
+                    globalLibTime = envProperty.Value.Contains("/TIME");
+                }
             });
         }
 
-        private IEnumerable<Block> PopulateCppNodes(TimedNode node)
+        public static bool IsCppTask(string taskName)
         {
-            List<Block> resultBlocks = new List<Block>();
+            if (taskName == MultiToolTaskName || taskName == CLTaskName || taskName == LibTaskName || taskName == LinkTaskName)
+            {
+                return true;
+            }
 
+            return false;
+        }
+
+        public void AppendCppAnalyzer(Build build)
+        {
+            build.AddChild(new CppAnalyzerNode(this));
+        }
+
+        public IEnumerable<CppTimedNode> GetAnalyzedTimedNode()
+        {
+            return resultTimedNode;
+        }
+
+        public void AnalyzeTask(Task cppTask)
+        {
             // MultiToolTask batches tasks and runs them in parallel.
             // For this view, de-batch them into individual task units.
-            if (node is Microsoft.Build.Logging.StructuredLogger.Task cppTask && (cppTask.Name == MultiToolTaskName || cppTask.Name == "CL") && cppTask.HasChildren)
+            if ((cppTask.Name == MultiToolTaskName || cppTask.Name == CLTaskName) && cppTask.HasChildren)
             {
                 bool usingBTTime = globalBtplus;
-                List<Block> blocks = new List<Block>();
+                List<CppTimedNode> blocks = new List<CppTimedNode>();
                 DateTime mttStartupTime = cppTask.StartTime;
                 DateTime mttCleanupTime = cppTask.EndTime;
 
@@ -116,9 +150,9 @@ namespace StructuredLogger.Analyzers
                             if (usingBTTime)
                             {
                                 // Matching Bt+
-                                string filename = match.Groups["filename"].Value;
-                                string startTimeValue = match.Groups["startTime"].Value;
-                                string endTimeValue = match.Groups["endTime"].Value;
+                                string filename = match.Groups[filenameRegexMatchName].Value;
+                                string startTimeValue = match.Groups[startTimeRegexMatchName].Value;
+                                string endTimeValue = match.Groups[endTimeRegexMatchName].Value;
                                 if (long.TryParse(startTimeValue, out long tryStartTime) && long.TryParse(endTimeValue, out long tryEndTime) && !string.IsNullOrWhiteSpace(filename))
                                 {
                                     startTime = new DateTime(tryStartTime);
@@ -130,8 +164,8 @@ namespace StructuredLogger.Analyzers
                             {
                                 // MTT messages only print duration, assume that timestamp of the message is the end.
                                 // Round 1ms from start time so that the graph fits better.
-                                string filename = match.Groups["filename"].Value;
-                                string msTime = match.Groups["msTime"].Value;
+                                string filename = match.Groups[filenameRegexMatchName].Value;
+                                string msTime = match.Groups[msTimeRegexMatchName].Value;
                                 if (double.TryParse(msTime, out double tryValue) && !string.IsNullOrWhiteSpace(filename))
                                 {
                                     startTime = message.Timestamp - TimeSpan.FromMilliseconds(tryValue) + oneMilliSecond;
@@ -142,22 +176,23 @@ namespace StructuredLogger.Analyzers
 
                             if (startTime > DateTime.MinValue)
                             {
-                                var block = new Block()
+                                var block = new CppTimedNode()
                                 {
                                     StartTime = startTime,
                                     EndTime = endTime,
                                     Text = messageText,
                                     Node = message,
-                                };
+                                    NodeId = cppTask.NodeId,
+                            };
                                 blocks.Add(block);
                             }
                         }
-                        else if (node.Name == MultiToolTaskName)
+                        else if (cppTask.Name == MultiToolTaskName)
                         {
                             match = startupPhase.Match(message.Text);
                             if (match.Success)
                             {
-                                string msTime = match.Groups["msTime"].Value;
+                                string msTime = match.Groups[msTimeRegexMatchName].Value;
                                 if (double.TryParse(msTime, out double tryValue))
                                 {
                                     startTime = message.Timestamp - TimeSpan.FromMilliseconds(tryValue) + oneMilliSecond;
@@ -168,7 +203,7 @@ namespace StructuredLogger.Analyzers
                             else
                             {
                                 match = cleanupPhase.Match(message.Text);
-                                string msTime = match.Groups["msTime"].Value;
+                                string msTime = match.Groups[msTimeRegexMatchName].Value;
                                 if (double.TryParse(msTime, out double tryValue))
                                 {
                                     startTime = message.Timestamp - TimeSpan.FromMilliseconds(tryValue) + oneMilliSecond;
@@ -179,16 +214,17 @@ namespace StructuredLogger.Analyzers
 
                             if (startTime > DateTime.MinValue)
                             {
-                                var block = new Block()
+                                var block = new CppTimedNode()
                                 {
                                     StartTime = startTime,
                                     EndTime = endTime,
                                     Text = messageText,
                                     Node = message,
+                                    NodeId = cppTask.NodeId,
                                 };
 
                                 // Add these messages to directly to the lane as to avoid mixing with the Bt+ messages.
-                                resultBlocks.Add(block);
+                                resultTimedNode.Add(block);
                             }
                         }
                     }
@@ -212,7 +248,7 @@ namespace StructuredLogger.Analyzers
                     if (totalDuration > TimeSpan.Zero && totalDuration < mttDuration)
                     {
                         mttStartupTime += TimeSpan.FromTicks((mttDuration - totalDuration).Ticks / 2);
-                        foreach (Block block in blocks)
+                        foreach (CppTimedNode block in blocks)
                         {
                             block.StartTime = mttStartupTime + block.StartTime.Subtract(offset);
                             block.EndTime = mttStartupTime + block.EndTime.Subtract(offset);
@@ -221,7 +257,7 @@ namespace StructuredLogger.Analyzers
                     else
                     {
                         // unable to put the nodes in the center.  Just put it right up against the mtt startup time
-                        foreach (Block block in blocks)
+                        foreach (CppTimedNode block in blocks)
                         {
                             block.StartTime = mttStartupTime + block.StartTime.Subtract(offset);
                             block.EndTime = mttStartupTime + block.EndTime.Subtract(offset);
@@ -229,13 +265,13 @@ namespace StructuredLogger.Analyzers
                     }
                 }
 
-                resultBlocks.AddRange(blocks);
+                resultTimedNode.AddRange(blocks);
             }
-            else if (node is Microsoft.Build.Logging.StructuredLogger.Task libTask && libTask.Name == "LIB" && libTask.HasChildren)
+            else if (cppTask.Name == LibTaskName && cppTask.HasChildren)
             {
                 bool usingLibTime = globalLibTime;
 
-                foreach (var child in libTask.Children)
+                foreach (var child in cppTask.Children)
                 {
                     if (usingLibTime && child is Message message)
                     {
@@ -246,9 +282,9 @@ namespace StructuredLogger.Analyzers
                         var match = libFinalTime.Match(message.Text);
                         if (match.Success)
                         {
-                            string filename = match.Groups["filename"].Value;
-                            string startTimeValue = match.Groups["startTime"].Value;
-                            string endTimeValue = match.Groups["endTime"].Value;
+                            string filename = match.Groups[filenameRegexMatchName].Value;
+                            string startTimeValue = match.Groups[startTimeRegexMatchName].Value;
+                            string endTimeValue = match.Groups[endTimeRegexMatchName].Value;
                             if (long.TryParse(startTimeValue, out long tryStartTime) && long.TryParse(endTimeValue, out long tryEndTime) && !string.IsNullOrWhiteSpace(filename))
                             {
                                 var duration = tryEndTime - tryStartTime;
@@ -260,14 +296,15 @@ namespace StructuredLogger.Analyzers
 
                         if (startTime > DateTime.MinValue)
                         {
-                            var block = new Block()
+                            var block = new CppTimedNode()
                             {
                                 StartTime = startTime,
                                 EndTime = endTime,
                                 Text = messageText,
                                 Node = message,
+                                NodeId = cppTask.NodeId,
                             };
-                            resultBlocks.Add(block);
+                            resultTimedNode.Add(block);
                         }
                     }
                     else if (!usingLibTime && child is Property property)
@@ -279,11 +316,11 @@ namespace StructuredLogger.Analyzers
                     }
                 }
             }
-            else if (node is Microsoft.Build.Logging.StructuredLogger.Task linkTask && linkTask.Name == "Link" && linkTask.HasChildren)
+            else if (cppTask.Name == LinkTaskName && cppTask.HasChildren)
             {
                 bool usingLinkTime = globalLinkTime;
 
-                foreach (var child in linkTask.Children)
+                foreach (var child in cppTask.Children)
                 {
                     if (child is Message message)
                     {
@@ -294,7 +331,7 @@ namespace StructuredLogger.Analyzers
                         var match = linkTotalTime.Match(message.Text);
                         if (match.Success)
                         {
-                            string secTime = match.Groups["msTime"].Value;
+                            string secTime = match.Groups[msTimeRegexMatchName].Value;
                             if (double.TryParse(secTime, out double trySecTime))
                             {
                                 startTime = message.Timestamp - TimeSpan.FromSeconds(trySecTime);
@@ -304,14 +341,15 @@ namespace StructuredLogger.Analyzers
 
                         if (startTime > DateTime.MinValue)
                         {
-                            var block = new Block()
+                            var block = new CppTimedNode()
                             {
                                 StartTime = startTime,
                                 EndTime = endTime,
                                 Text = messageText,
                                 Node = message,
+                                NodeId = cppTask.NodeId,
                             };
-                            resultBlocks.Add(block);
+                            resultTimedNode.Add(block);
                         }
                     }
                     else if (!usingLinkTime && child is Property property)
@@ -323,8 +361,6 @@ namespace StructuredLogger.Analyzers
                     }
                 }
             }
-
-            return resultBlocks;
         }
     }
 }

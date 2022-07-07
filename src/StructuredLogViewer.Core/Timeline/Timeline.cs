@@ -2,18 +2,18 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Build.Logging.StructuredLogger;
+using StructuredLogger.Analyzers;
 using static System.Reflection.Metadata.BlobBuilder;
 
 namespace StructuredLogViewer
 {
     public class Timeline
     {
-
-
         public Dictionary<int, Lane> Lanes { get; set; } = new Dictionary<int, Lane>();
 
         public Timeline(Build build, bool analyzeCpp)
@@ -44,14 +44,33 @@ namespace StructuredLogViewer
                     Lanes[nodeId] = lane;
                 }
 
-                if (analyzeCpp)
-                {
-                    IEnumerable<Block> blocks = PopulateCppNodes(node);
-                    lane.AddRange(blocks);
-                }
-
                 lane.Add(CreateBlock(node));
             });
+
+            if (analyzeCpp)
+            {
+                build.VisitAllChildren<CppAnalyzer.CppAnalyzerNode>(cppAnalyzerNode =>
+                {
+                    var cppAnalyzer = cppAnalyzerNode.GetCppAnalyzer();
+                    var cppTimedNodes = cppAnalyzer.GetAnalyzedTimedNode();
+
+                    foreach (var cppTimedNode in cppTimedNodes)
+                    {
+                        // cppAnalyzer shouldn't create any new lanes.
+                        if (Lanes.TryGetValue(cppTimedNode.NodeId, out var lane))
+                        {
+                            var block = new Block()
+                            {
+                                StartTime = cppTimedNode.StartTime,
+                                EndTime = cppTimedNode.EndTime,
+                                Text = cppTimedNode.Text,
+                                Node = cppTimedNode.Node,
+                            };
+                            lane.Add(block);
+                        }
+                    }
+                });
+            }
         }
 
         private Block CreateBlock(TimedNode node)

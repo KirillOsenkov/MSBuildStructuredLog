@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace StructuredLogViewer
 {
@@ -12,11 +11,6 @@ namespace StructuredLogViewer
         {
             if (IsValid(block))
                 Blocks.Add(block);
-        }
-
-        public void AddRange(IEnumerable<Block> blocks)
-        {
-            Blocks.AddRange(blocks.Where(b => IsValid(b)));
         }
 
         private bool IsValid(Block block)

@@ -8,6 +8,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using Microsoft.Build.Logging.StructuredLogger;
+using StructuredLogger.Analyzers;
 
 namespace StructuredLogViewer.Controls
 {
@@ -569,8 +570,8 @@ namespace StructuredLogViewer.Controls
                     case Target:
                         return ShowTarget;
                     case Microsoft.Build.Logging.StructuredLogger.Task node:
-                        // "MultiToolTask" appear as both Task and Messages, so only show one of them.
-                        if (ShowCpp && (node.Name == "MultiToolTask" || node.Name == "CL" || node.Name == "LIB" || node.Name == "Link"))
+                        // When ShowCpp is enabled, hide the task and show the messages. Only one of them will appear.
+                        if (ShowCpp && CppAnalyzer.IsCppTask(node.Name))
                         {
                             return false;
                         }

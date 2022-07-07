@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using StructuredLogger.Analyzers;
 using StructuredLogViewer;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -10,6 +11,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private Build build;
         private DoubleWritesAnalyzer doubleWritesAnalyzer;
         private ResolveAssemblyReferenceAnalyzer resolveAssemblyReferenceAnalyzer;
+        private CppAnalyzer cppAnalyzer;
         private int index;
         private Dictionary<string, (TimeSpan TotalDuration, Dictionary<string, TimeSpan> ParentDurations)> taskDurations
             = new Dictionary<string, (TimeSpan TotalDuration, Dictionary<string, TimeSpan> ParentDurations)>();
@@ -20,6 +22,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             this.build = build;
             doubleWritesAnalyzer = new DoubleWritesAnalyzer();
             resolveAssemblyReferenceAnalyzer = new ResolveAssemblyReferenceAnalyzer();
+            cppAnalyzer = new CppAnalyzer();
         }
 
         public static void AnalyzeBuild(Build build)
@@ -113,7 +116,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     AnalyzeEvaluation(folder);
                 }
+                else if (folder.Name == Strings.Environment)
+                {
+                    AnalyzeEnvironment(folder);
+                }
             }
+        }
+
+        private void AnalyzeEnvironment(NamedNode folder)
+        {
+            cppAnalyzer.AnalyzeEnvironment(folder);
         }
 
         private void AnalyzeEvaluation(NamedNode folder)
@@ -186,6 +198,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             doubleWritesAnalyzer.AppendDoubleWritesFolder(build);
             resolveAssemblyReferenceAnalyzer.AppendFinalReport(build);
+            cppAnalyzer.AppendCppAnalyzer(build);
 
             if (build.LogFilePath != null)
             {
@@ -322,6 +335,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     analyzerReports.Add(analyzerReport);
                 }
+            }
+            else if (CppAnalyzer.IsCppTask(task.Name))
+            {
+                cppAnalyzer.AnalyzeTask(task);
             }
 
             doubleWritesAnalyzer.AnalyzeTask(task);
