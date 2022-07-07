@@ -864,7 +864,9 @@ namespace StructuredLogViewer.Controls
         private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
             if (e.HorizontalChange == 0)
+            {
                 return;
+            }
 
             UpdatedGraph(e.ViewportWidth + e.HorizontalOffset);
             e.Handled = true;
