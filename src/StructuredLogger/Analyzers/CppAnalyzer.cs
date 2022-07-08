@@ -72,6 +72,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private bool globalLinkTime = false;
 
         private TimeSpan oneMilliSecond = TimeSpan.FromMilliseconds(1);
+        private static HashSet<string> hashCppTasks = new HashSet<string>() { MultiToolTaskName, CLTaskName, LinkTaskName, LibTaskName };
 
         List<CppTimedNode> resultTimedNode = new List<CppTimedNode>();
 
@@ -104,12 +105,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static bool IsCppTask(string taskName)
         {
-            if (taskName == MultiToolTaskName || taskName == CLTaskName || taskName == LibTaskName || taskName == LinkTaskName)
-            {
-                return true;
-            }
-
-            return false;
+            return hashCppTasks.Contains(taskName);
         }
 
         public void AppendCppAnalyzer(Build build)
@@ -135,7 +131,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 foreach (var child in cppTask.Children)
                 {
-                    if (child is Message message)
+                    if (child is TimedMessage message)
                     {
                         DateTime endTime = DateTime.MinValue;
                         DateTime startTime = DateTime.MinValue;
@@ -180,7 +176,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                     Text = messageText,
                                     Node = message,
                                     NodeId = cppTask.NodeId,
-                            };
+                                };
                                 blocks.Add(block);
                             }
                         }
@@ -270,7 +266,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 foreach (var child in cppTask.Children)
                 {
-                    if (usingLibTime && child is Message message)
+                    if (usingLibTime && child is TimedMessage message)
                     {
                         DateTime endTime = DateTime.MinValue;
                         DateTime startTime = DateTime.MinValue;
@@ -319,7 +315,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 foreach (var child in cppTask.Children)
                 {
-                    if (child is Message message)
+                    if (child is TimedMessage message)
                     {
                         DateTime endTime = DateTime.MinValue;
                         DateTime startTime = DateTime.MinValue;
