@@ -60,7 +60,7 @@ namespace StructuredLogViewer.Controls
         private TimeSpan computeTime = TimeSpan.Zero;
         private TimeSpan drawTime = TimeSpan.Zero;
 
-        public string LoadStatistics => $"Compute:{computeTime.TotalMilliseconds}ms, Draw:{drawTime.TotalMilliseconds}";
+        public string LoadStatistics => $"Compute:{computeTime.TotalMilliseconds}ms, Draw:{drawTime.TotalMilliseconds}ms";
 
         public bool ShowEvaluation
         {
@@ -210,7 +210,7 @@ namespace StructuredLogViewer.Controls
             GlobalStartTime = globalStart;
             GlobalEndTime = globalEnd;
 
-            // quick size check.  If it is too much, then disable some "Show" options.
+            // Quick size count
             int totalItems = 0;
             foreach (var lanes in timeline.Lanes)
             {
@@ -355,11 +355,8 @@ namespace StructuredLogViewer.Controls
             OneSecondPixelWidth = ConvertTimeToPixel(TimeSpan.FromSeconds(1).Ticks);
 
             // Add Top Timeline Ruler
-            if (TopRulerNodeDivider == null)
-                TopRulerNodeDivider = CreatePanelForNodeDivider(true);
-
-            if (HeatGraph == null)
-                HeatGraph = CreateActivityLineGraph();
+            TopRulerNodeDivider ??= CreatePanelForNodeDivider(true);
+            HeatGraph ??= CreateActivityLineGraph();
 
             lanesPanel.Children.Add(HeatGraph);
             lanesPanel.Children.Add(TopRulerNodeDivider);
@@ -569,7 +566,7 @@ namespace StructuredLogViewer.Controls
                     case Target:
                         return ShowTarget;
                     case Microsoft.Build.Logging.StructuredLogger.Task node:
-                        // When ShowCpp is enabled, hide the task and show the messages. Only one of them will appear.
+                        // When ShowCpp is enabled, hide the task and show the messages so that only one of them will appear.
                         if (ShowCpp && CppAnalyzer.IsCppTask(node.Name))
                         {
                             return false;
@@ -722,7 +719,10 @@ namespace StructuredLogViewer.Controls
             // Load more blocks when scroll to the right.
             var renderWidthTimeStamp = GlobalStartTime + ConvertPixelToTime(widthOffset / scaleTransform.ScaleX);
             if (lastRenderTimeStamp > renderWidthTimeStamp)
+            {
                 return;
+            }
+
             if (lanesPanel != null)
             {
                 foreach (var lane in lanesPanel.Children)
