@@ -571,12 +571,23 @@ namespace Microsoft.Build.Logging.StructuredLogger
             else if (nodeToAdd == null)
             {
                 message = Intern(message);
-                nodeToAdd = new Message
+                if (parent is Task task && CppAnalyzer.IsCppTask(task.Name))
                 {
-                    Text = message,
-                    Timestamp = args.Timestamp,
-                    IsLowRelevance = lowRelevance
-                };
+                    nodeToAdd = new TimedMessage
+                    {
+                        Text = message,
+                        Timestamp = args.Timestamp,
+                        IsLowRelevance = lowRelevance
+                    };
+                }
+                else
+                {
+                    nodeToAdd = new Message
+                    {
+                        Text = message,
+                        IsLowRelevance = lowRelevance
+                    };
+                }
             }
 
             parent.AddChild(nodeToAdd);

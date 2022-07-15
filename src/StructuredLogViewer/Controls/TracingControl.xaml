@@ -13,14 +13,15 @@
         <MenuItem Header="{Binding Path=ShowProjectsText, Mode=OneWay}" IsCheckable="true" IsChecked="{Binding Path=ShowProject , Mode=TwoWay}" StaysOpenOnClick="true"/>
         <MenuItem Header="{Binding Path=ShowTargetsText, Mode=OneWay}" IsCheckable="true" IsChecked="{Binding Path=ShowTarget , Mode=TwoWay}" StaysOpenOnClick="true"/>
         <MenuItem Header="{Binding Path=ShowTasksText, Mode=OneWay}" IsCheckable="true" IsChecked="{Binding Path=ShowTask , Mode=TwoWay}" StaysOpenOnClick="true"/>
-        <MenuItem Header="{Binding Path=ShowOthersText, Mode=OneWay}" IsCheckable="true" IsChecked="{Binding Path=ShowOther , Mode=TwoWay}" StaysOpenOnClick="true"/>
+        <MenuItem Header="{Binding Path=ShowCppText, Mode=OneWay}" IsCheckable="true" IsChecked="{Binding Path=ShowCpp , Mode=TwoWay}" StaysOpenOnClick="true"/>
         <MenuItem Header="{Binding Path=ShowNodesText, Mode=OneWay}" IsCheckable="true" IsChecked="{Binding Path=ShowNodes , Mode=TwoWay}" StaysOpenOnClick="true"/>
-        <!--<MenuItem Header="{Binding Path=LoadStatistics, Mode=OneWay}" IsCheckable="true" IsEnabled="false" /> -->
+        <MenuItem Header="Group By Nodes" IsCheckable="true" IsChecked="{Binding Path=GroupByNodes , Mode=TwoWay}" StaysOpenOnClick="true"/>
+        <!--<MenuItem Header="{Binding Path=LoadStatistics, Mode=OneWay}" IsCheckable="true" IsEnabled="false" />-->
       </ContextMenu>
     </Grid.ContextMenu>
     <ScrollViewer x:Name="scrollViewer"
                 HorizontalScrollBarVisibility="Auto" 
-                VerticalScrollBarVisibility="Auto" Loaded="ScrollViewer_Loaded" Unloaded="ScrollViewer_Unloaded">
+                VerticalScrollBarVisibility="Auto" Loaded="ScrollViewer_Loaded" Unloaded="ScrollViewer_Unloaded" ScrollChanged="ScrollViewer_ScrollChanged">
       <Grid x:Name="grid">
       </Grid>
     </ScrollViewer>

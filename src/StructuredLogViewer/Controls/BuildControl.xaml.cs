@@ -386,7 +386,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
         {
             if (this.timeline.Timeline == null)
             {
-                var timeline = new Timeline(Build);
+                var timeline = new Timeline(Build, analyzeCpp: false);
                 this.timeline.BuildControl = this;
                 this.timeline.SetTimeline(timeline, Build.StartTime.Ticks);
                 this.timelineWatermark.Visibility = Visibility.Hidden;
@@ -398,7 +398,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
         {
             if (this.tracing.Timeline == null)
             {
-                var timeline = new Timeline(Build);
+                var timeline = new Timeline(Build, analyzeCpp: true);
                 this.tracing.BuildControl = this;
                 this.tracing.SetTimeline(timeline, Build.StartTime.Ticks, Build.EndTime.Ticks);
                 this.tracingWatermark.Visibility = Visibility.Hidden;

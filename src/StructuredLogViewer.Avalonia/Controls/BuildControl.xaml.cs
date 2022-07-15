@@ -193,8 +193,6 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
             navigationHelper = new NavigationHelper(Build, sourceFileResolver);
             navigationHelper.OpenFileRequested += path => DisplayFile(path);
-
-            //PopulateTimeline();
         }
 
         private void RegisterTreeViewHandlers(TreeView treeView)
@@ -254,13 +252,6 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
         {
             centralTabControl.SelectedIndex = 0;
         }
-
-        //private void PopulateTimeline()
-        //{
-        //    var timeline = new Timeline(Build);
-        //    this.timeline.BuildControl = this;
-        //    this.timeline.SetTimeline(timeline);
-        //}
 
         private static string[] searchExamples = new[]
         {
