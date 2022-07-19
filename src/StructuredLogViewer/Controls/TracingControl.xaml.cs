@@ -290,7 +290,9 @@ namespace StructuredLogViewer.Controls
                 var keys = sortedKeys.Select(Key => Key.Key).ToList();
 
                 // Get the max number of lanes
-                var length = Math.Max(keys.Count(), keys.Max() + 1);
+                // Note: Max() throws if keys is empty.
+                int keysMax = keys.Any() ? keys.Max() + 1 : 1;
+                var length = Math.Max(keys.Count(), keysMax);
 
                 var blocksCollectionArray = new List<Block>[length];
                 Parallel.ForEach(keys, (key) =>

@@ -137,52 +137,55 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         DateTime startTime = DateTime.MinValue;
                         string messageText = message.Text;
 
-                        var match = usingBTTime ? BTPlus.Match(message.Text) : TaskTime.Match(message.Text);
-                        if (match.Success)
+                        if ((usingBTTime && message.Text.StartsWith(@"time(")) || (!usingBTTime && message.Text.Contains(" took ")))
                         {
-                            if (usingBTTime)
+                            Match match = usingBTTime ? BTPlus.Match(message.Text) : TaskTime.Match(message.Text);
+                            if (match.Success)
                             {
-                                // Matching Bt+
-                                string filename = match.Groups[filenameRegexMatchName].Value;
-                                string startTimeValue = match.Groups[startTimeRegexMatchName].Value;
-                                string endTimeValue = match.Groups[endTimeRegexMatchName].Value;
-                                if (long.TryParse(startTimeValue, out long tryStartTime) && long.TryParse(endTimeValue, out long tryEndTime) && !string.IsNullOrWhiteSpace(filename))
+                                if (usingBTTime)
                                 {
-                                    startTime = new DateTime(tryStartTime);
-                                    endTime = new DateTime(tryEndTime);
-                                    messageText = Path.GetFileName(filename);
+                                    // Matching Bt+
+                                    string filename = match.Groups[filenameRegexMatchName].Value;
+                                    string startTimeValue = match.Groups[startTimeRegexMatchName].Value;
+                                    string endTimeValue = match.Groups[endTimeRegexMatchName].Value;
+                                    if (long.TryParse(startTimeValue, out long tryStartTime) && long.TryParse(endTimeValue, out long tryEndTime) && !string.IsNullOrWhiteSpace(filename))
+                                    {
+                                        startTime = new DateTime(tryStartTime);
+                                        endTime = new DateTime(tryEndTime);
+                                        messageText = Path.GetFileName(filename);
+                                    }
                                 }
-                            }
-                            else
-                            {
-                                // MTT messages only print duration, assume that timestamp of the message is the end.
-                                // Round 1ms from start time so that the graph fits better.
-                                string filename = match.Groups[filenameRegexMatchName].Value;
-                                string msTime = match.Groups[msTimeRegexMatchName].Value;
-                                if (double.TryParse(msTime, out double tryValue) && !string.IsNullOrWhiteSpace(filename))
+                                else
                                 {
-                                    startTime = message.Timestamp - TimeSpan.FromMilliseconds(tryValue) + oneMilliSecond;
-                                    endTime = message.Timestamp;
-                                    messageText = Path.GetFileName(filename);
+                                    // MTT messages only print duration, assume that timestamp of the message is the end.
+                                    // Round 1ms from start time so that the graph fits better.
+                                    string filename = match.Groups[filenameRegexMatchName].Value;
+                                    string msTime = match.Groups[msTimeRegexMatchName].Value;
+                                    if (double.TryParse(msTime, out double tryValue) && !string.IsNullOrWhiteSpace(filename))
+                                    {
+                                        startTime = message.Timestamp - TimeSpan.FromMilliseconds(tryValue) + oneMilliSecond;
+                                        endTime = message.Timestamp;
+                                        messageText = Path.GetFileName(filename);
+                                    }
                                 }
-                            }
 
-                            if (startTime > DateTime.MinValue)
-                            {
-                                var block = new CppTimedNode()
+                                if (startTime > DateTime.MinValue)
                                 {
-                                    StartTime = startTime,
-                                    EndTime = endTime,
-                                    Text = messageText,
-                                    Node = message,
-                                    NodeId = cppTask.NodeId,
-                                };
-                                blocks.Add(block);
+                                    var block = new CppTimedNode()
+                                    {
+                                        StartTime = startTime,
+                                        EndTime = endTime,
+                                        Text = messageText,
+                                        Node = message,
+                                        NodeId = cppTask.NodeId,
+                                    };
+                                    blocks.Add(block);
+                                }
                             }
                         }
-                        else if (cppTask.Name == MultiToolTaskName)
+                        else if (cppTask.Name == MultiToolTaskName && message.Text.Contains("Cleanup phase took ") || message.Text.Contains("will run on "))
                         {
-                            match = startupPhase.Match(message.Text);
+                            var match = startupPhase.Match(message.Text);
                             if (match.Success)
                             {
                                 string msTime = match.Groups[msTimeRegexMatchName].Value;
@@ -266,7 +269,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 foreach (var child in cppTask.Children)
                 {
-                    if (usingLibTime && child is TimedMessage message)
+                    if (usingLibTime && child is TimedMessage message && message.Text.Contains("Lib: Final Total time ="))
                     {
                         DateTime endTime = DateTime.MinValue;
                         DateTime startTime = DateTime.MinValue;
@@ -315,7 +318,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 foreach (var child in cppTask.Children)
                 {
-                    if (child is TimedMessage message)
+                    if (child is TimedMessage message && message.Text.Contains("Final: Total time ="))
                     {
                         DateTime endTime = DateTime.MinValue;
                         DateTime startTime = DateTime.MinValue;
