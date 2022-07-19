@@ -67,6 +67,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private const string startTimeRegexMatchName = "startTime";
         private const string endTimeRegexMatchName = "endTime";
         private const string msTimeRegexMatchName = "msTime";
+        private const string btplusKeyword = @"time(";
+        private const string mttKeyword = " took ";
+        private const string mttCleanUpKeyword = "Cleanup phase took ";
+        private const string mttStartUpKeyword = "will run on ";
+        private const string libKeyword = "Lib: Final Total time =";
+        private const string linkKeyword = "Final: Total time =";
         private bool globalBtplus = false;
         private bool globalLibTime = false;
         private bool globalLinkTime = false;
@@ -137,7 +143,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         DateTime startTime = DateTime.MinValue;
                         string messageText = message.Text;
 
-                        if ((usingBTTime && message.Text.StartsWith(@"time(")) || (!usingBTTime && message.Text.Contains(" took ")))
+                        if ((usingBTTime && message.Text.StartsWith(btplusKeyword)) || (!usingBTTime && message.Text.Contains(mttKeyword)))
                         {
                             Match match = usingBTTime ? BTPlus.Match(message.Text) : TaskTime.Match(message.Text);
                             if (match.Success)
@@ -183,7 +189,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                 }
                             }
                         }
-                        else if (cppTask.Name == MultiToolTaskName && message.Text.Contains("Cleanup phase took ") || message.Text.Contains("will run on "))
+                        else if (cppTask.Name == MultiToolTaskName && message.Text.Contains(mttCleanUpKeyword) || message.Text.Contains(mttStartUpKeyword))
                         {
                             var match = startupPhase.Match(message.Text);
                             if (match.Success)
@@ -269,7 +275,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 foreach (var child in cppTask.Children)
                 {
-                    if (usingLibTime && child is TimedMessage message && message.Text.Contains("Lib: Final Total time ="))
+                    if (usingLibTime && child is TimedMessage message && message.Text.Contains(libKeyword))
                     {
                         DateTime endTime = DateTime.MinValue;
                         DateTime startTime = DateTime.MinValue;
@@ -318,7 +324,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 foreach (var child in cppTask.Children)
                 {
-                    if (child is TimedMessage message && message.Text.Contains("Final: Total time ="))
+                    if (child is TimedMessage message && message.Text.Contains(linkKeyword))
                     {
                         DateTime endTime = DateTime.MinValue;
                         DateTime startTime = DateTime.MinValue;
