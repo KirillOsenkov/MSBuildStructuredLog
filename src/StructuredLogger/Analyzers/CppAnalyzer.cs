@@ -67,6 +67,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private const string startTimeRegexMatchName = "startTime";
         private const string endTimeRegexMatchName = "endTime";
         private const string msTimeRegexMatchName = "msTime";
+        private const string btplusKeyword = @"time(";
+        private const string mttKeyword = " took ";
+        private const string mttCleanUpKeyword = "Cleanup phase took ";
+        private const string mttStartUpKeyword = "will run on ";
+        private const string libKeyword = "Lib: Final Total time =";
+        private const string linkKeyword = "Final: Total time =";
         private bool globalBtplus = false;
         private bool globalLibTime = false;
         private bool globalLinkTime = false;
@@ -137,52 +143,55 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         DateTime startTime = DateTime.MinValue;
                         string messageText = message.Text;
 
-                        var match = usingBTTime ? BTPlus.Match(message.Text) : TaskTime.Match(message.Text);
-                        if (match.Success)
+                        if ((usingBTTime && message.Text.StartsWith(btplusKeyword)) || (!usingBTTime && message.Text.Contains(mttKeyword)))
                         {
-                            if (usingBTTime)
+                            Match match = usingBTTime ? BTPlus.Match(message.Text) : TaskTime.Match(message.Text);
+                            if (match.Success)
                             {
-                                // Matching Bt+
-                                string filename = match.Groups[filenameRegexMatchName].Value;
-                                string startTimeValue = match.Groups[startTimeRegexMatchName].Value;
-                                string endTimeValue = match.Groups[endTimeRegexMatchName].Value;
-                                if (long.TryParse(startTimeValue, out long tryStartTime) && long.TryParse(endTimeValue, out long tryEndTime) && !string.IsNullOrWhiteSpace(filename))
+                                if (usingBTTime)
                                 {
-                                    startTime = new DateTime(tryStartTime);
-                                    endTime = new DateTime(tryEndTime);
-                                    messageText = Path.GetFileName(filename);
+                                    // Matching Bt+
+                                    string filename = match.Groups[filenameRegexMatchName].Value;
+                                    string startTimeValue = match.Groups[startTimeRegexMatchName].Value;
+                                    string endTimeValue = match.Groups[endTimeRegexMatchName].Value;
+                                    if (long.TryParse(startTimeValue, out long tryStartTime) && long.TryParse(endTimeValue, out long tryEndTime) && !string.IsNullOrWhiteSpace(filename))
+                                    {
+                                        startTime = new DateTime(tryStartTime);
+                                        endTime = new DateTime(tryEndTime);
+                                        messageText = Path.GetFileName(filename);
+                                    }
                                 }
-                            }
-                            else
-                            {
-                                // MTT messages only print duration, assume that timestamp of the message is the end.
-                                // Round 1ms from start time so that the graph fits better.
-                                string filename = match.Groups[filenameRegexMatchName].Value;
-                                string msTime = match.Groups[msTimeRegexMatchName].Value;
-                                if (double.TryParse(msTime, out double tryValue) && !string.IsNullOrWhiteSpace(filename))
+                                else
                                 {
-                                    startTime = message.Timestamp - TimeSpan.FromMilliseconds(tryValue) + oneMilliSecond;
-                                    endTime = message.Timestamp;
-                                    messageText = Path.GetFileName(filename);
+                                    // MTT messages only print duration, assume that timestamp of the message is the end.
+                                    // Round 1ms from start time so that the graph fits better.
+                                    string filename = match.Groups[filenameRegexMatchName].Value;
+                                    string msTime = match.Groups[msTimeRegexMatchName].Value;
+                                    if (double.TryParse(msTime, out double tryValue) && !string.IsNullOrWhiteSpace(filename))
+                                    {
+                                        startTime = message.Timestamp - TimeSpan.FromMilliseconds(tryValue) + oneMilliSecond;
+                                        endTime = message.Timestamp;
+                                        messageText = Path.GetFileName(filename);
+                                    }
                                 }
-                            }
 
-                            if (startTime > DateTime.MinValue)
-                            {
-                                var block = new CppTimedNode()
+                                if (startTime > DateTime.MinValue)
                                 {
-                                    StartTime = startTime,
-                                    EndTime = endTime,
-                                    Text = messageText,
-                                    Node = message,
-                                    NodeId = cppTask.NodeId,
-                                };
-                                blocks.Add(block);
+                                    var block = new CppTimedNode()
+                                    {
+                                        StartTime = startTime,
+                                        EndTime = endTime,
+                                        Text = messageText,
+                                        Node = message,
+                                        NodeId = cppTask.NodeId,
+                                    };
+                                    blocks.Add(block);
+                                }
                             }
                         }
-                        else if (cppTask.Name == MultiToolTaskName)
+                        else if (cppTask.Name == MultiToolTaskName && message.Text.Contains(mttCleanUpKeyword) || message.Text.Contains(mttStartUpKeyword))
                         {
-                            match = startupPhase.Match(message.Text);
+                            var match = startupPhase.Match(message.Text);
                             if (match.Success)
                             {
                                 string msTime = match.Groups[msTimeRegexMatchName].Value;
@@ -266,7 +275,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 foreach (var child in cppTask.Children)
                 {
-                    if (usingLibTime && child is TimedMessage message)
+                    if (usingLibTime && child is TimedMessage message && message.Text.Contains(libKeyword))
                     {
                         DateTime endTime = DateTime.MinValue;
                         DateTime startTime = DateTime.MinValue;
@@ -315,7 +324,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 foreach (var child in cppTask.Children)
                 {
-                    if (child is TimedMessage message)
+                    if (child is TimedMessage message && message.Text.Contains(linkKeyword))
                     {
                         DateTime endTime = DateTime.MinValue;
                         DateTime startTime = DateTime.MinValue;
