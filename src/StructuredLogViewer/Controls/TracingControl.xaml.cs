@@ -554,6 +554,7 @@ namespace StructuredLogViewer.Controls
         private List<Block> ComputeVisibleBlocks(IEnumerable<Block> enumBlocks)
         {
             double pixelDuration = ConvertPixelToTime(1);
+            bool showCppBlocks = ShowCpp && this.numberOfCpp > 0;
             var blocks = enumBlocks.Where(b =>
             {
                 if (b.Duration.Ticks < pixelDuration)
@@ -569,7 +570,7 @@ namespace StructuredLogViewer.Controls
                         return ShowTarget;
                     case Microsoft.Build.Logging.StructuredLogger.Task node:
                         // When ShowCpp is enabled, hide the task and show the messages so that only one of them will appear.
-                        if (ShowCpp && CppAnalyzer.IsCppTask(node.Name))
+                        if (showCppBlocks && CppAnalyzer.IsCppTask(node.Name))
                         {
                             return false;
                         }
