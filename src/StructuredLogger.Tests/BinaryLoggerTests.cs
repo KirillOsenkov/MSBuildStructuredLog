@@ -53,9 +53,6 @@ namespace Microsoft.Build.UnitTests
 
         public BinaryLoggerTests(ITestOutputHelper output)
         {
-            // Ensure MSBuild is registered
-            RuntimeHelpers.RunClassConstructor(typeof(MSBuild).TypeHandle);
-
             this.output = output;
         }
 
