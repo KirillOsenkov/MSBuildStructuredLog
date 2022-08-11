@@ -10,6 +10,11 @@ namespace StructuredLogger.Tests
 {
     public class MSBuild
     {
+        static MSBuild()
+        {
+            Microsoft.Build.Locator.MSBuildLocator.RegisterDefaults();
+        }
+
         public static bool BuildProjectFromFile(string projectText, params ILogger[] loggers)
         {
             var projectFile = TestUtilities.GetTestFile("build.proj");

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Microsoft.Build.Logging.StructuredLogger;
 using StructuredLogger.Tests;
 using Xunit;
@@ -52,6 +53,9 @@ namespace Microsoft.Build.UnitTests
 
         public BinaryLoggerTests(ITestOutputHelper output)
         {
+            // Ensure MSBuild is registered
+            RuntimeHelpers.RunClassConstructor(typeof(MSBuild).TypeHandle);
+
             this.output = output;
         }
 
