@@ -10,7 +10,7 @@ var artifactsDir = (DirectoryPath)Directory("./artifacts");
 
 var netCoreAppsRoot= "./src";
 var netCoreApp = "StructuredLogViewer.Avalonia";
-var macAppName = "Structured Log Viewer";
+var macAppName = "StructuredLogViewer";
 
 var buildDirs = 
     GetDirectories($"{netCoreAppsRoot}/**/bin/**") + 
