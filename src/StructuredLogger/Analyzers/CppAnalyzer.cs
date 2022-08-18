@@ -43,7 +43,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         // time(C:\Program Files (x86)\Microsoft Visual Studio\2019\Preview\VC\Tools\MSVC\14.24.28218\bin\Hostx86\x86\c1xx.dll)=0.83512s < 985096605139 - 985104956295 > BB [C:\Users\yuehuang\AppData\Local\Temp\123\main36.cpp]
         // time(C:\Program Files(x86)\Microsoft Visual Studio\2019\Preview\VC\Tools\MSVC\14.24.28218\bin\Hostx86\x86\c2.dll)=0.01935s < 985104875296 - 985105068765 > BB[C: \Users\yuehuang\AppData\Local\Temp\123\main47.cpp]
-        const string regexBTPlus = @"^time\(.*(c1xx\.dll|c2\.dll)\)=(?'msTime'([0-9]*\.[0-9]+|[0-9]+))s \< (?'startTime'[\d]*) - (?'endTime'[\d]*) \>\s*BB\s*\[(?'filename'[^\]]*)\]$";
+        const string regexBTPlus = @"^time\(.*(c1xx\.dll|c2\.dll)\)=(?'msTime'([0-9]*\.[0-9]+|[0-9]+))s \< (?'startTime'[\d]*) - (?'endTime'[\d]*) \>\s*(BB)?\s*\[(?'filename'[^\]]*)\]$";
         readonly Regex BTPlus = new Regex(regexBTPlus, RegexOptions.Multiline);
 
         // Lib: Final Total time = 0.00804s < 5881693617253 - 5881693697673 > PB: 143409152 [D:\test\ConsoleApplication2\x64\Debug\ConsoleApplication2.lib] 
@@ -132,8 +132,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 bool usingBTTime = globalBtplus;
                 List<CppTimedNode> blocks = new List<CppTimedNode>();
-                DateTime mttStartupTime = cppTask.StartTime;
-                DateTime mttCleanupTime = cppTask.EndTime;
+                DateTime taskStartTime = cppTask.StartTime;
+                DateTime taskCleanUpTime = cppTask.EndTime;
 
                 foreach (var child in cppTask.Children)
                 {
@@ -199,7 +199,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                 {
                                     startTime = message.Timestamp - TimeSpan.FromMilliseconds(tryValue) + oneMilliSecond;
                                     endTime = message.Timestamp;
-                                    mttStartupTime = message.Timestamp;
+                                    taskStartTime = message.Timestamp;
                                 }
                             }
                             else
@@ -210,7 +210,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                 {
                                     startTime = message.Timestamp - TimeSpan.FromMilliseconds(tryValue) + oneMilliSecond;
                                     endTime = message.Timestamp;
-                                    mttCleanupTime = message.Timestamp - TimeSpan.FromMilliseconds(tryValue);
+                                    // taskCleanUpTime is the start time of the cleanup step.
+                                    taskCleanUpTime = message.Timestamp - TimeSpan.FromMilliseconds(tryValue);
                                 }
                             }
 
@@ -240,29 +241,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                 }
 
-                if (usingBTTime && blocks.Count > 0 && mttStartupTime != DateTime.MinValue && mttCleanupTime != DateTime.MinValue)
+                if (usingBTTime && blocks.Count > 0)
                 {
                     // BT+ timestamp is not a global time, but is relative to the first instance (see QueryPerformanceCounter)
-                    // so compute the offset and center the Bt+ graph.  Assume that tool's startup closing time are the same.
+                    // so compute the offset and align it to the right.
                     DateTime offset = blocks.Min(p => p.StartTime);
                     TimeSpan totalDuration = blocks.Max(p => p.EndTime) - offset;
-                    var mttDuration = mttCleanupTime - mttStartupTime;
-                    if (totalDuration > TimeSpan.Zero && totalDuration < mttDuration)
+
+                    var innerDuration = taskCleanUpTime - taskStartTime;
+                    if (totalDuration > TimeSpan.Zero)
                     {
-                        mttStartupTime += TimeSpan.FromTicks((mttDuration - totalDuration).Ticks / 2);
+                        taskStartTime += TimeSpan.FromTicks((innerDuration - totalDuration).Ticks);
                         foreach (CppTimedNode block in blocks)
                         {
-                            block.StartTime = mttStartupTime + block.StartTime.Subtract(offset);
-                            block.EndTime = mttStartupTime + block.EndTime.Subtract(offset);
-                        }
-                    }
-                    else
-                    {
-                        // unable to put the nodes in the center.  Just put it right up against the mtt startup time
-                        foreach (CppTimedNode block in blocks)
-                        {
-                            block.StartTime = mttStartupTime + block.StartTime.Subtract(offset);
-                            block.EndTime = mttStartupTime + block.EndTime.Subtract(offset);
+                            block.StartTime = taskStartTime + block.StartTime.Subtract(offset);
+                            block.EndTime = taskStartTime + block.EndTime.Subtract(offset);
                         }
                     }
                 }
