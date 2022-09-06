@@ -95,15 +95,23 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     EnvironmentFolder = Build.GetOrCreateNodeWithName<Folder>(Intern(Strings.Environment));
 
-                    if (args.BuildEnvironment?.Count > 0)
+                    if (args.BuildEnvironment?.ContainsKey("MSBUILDLOGALLENVIRONMENTVARIABLES") == true)
                     {
                         AddProperties(EnvironmentFolder, args.BuildEnvironment);
                     }
                     else
                     {
+                        if (args.BuildEnvironment?.Count > 0)
+                        {
+                            AddProperties(EnvironmentFolder, args.BuildEnvironment);
+                        }
+
                         EnvironmentFolder.AddChild(new Note
                         {
-                            Text = Intern(Strings.NoEnvironment)
+                            Text = Intern(
+                                Build.FileFormatVersion >= 15 ?
+                                Strings.TruncatedEnvironment :
+                                Strings.NoEnvironment)
                         });
                     }
 
