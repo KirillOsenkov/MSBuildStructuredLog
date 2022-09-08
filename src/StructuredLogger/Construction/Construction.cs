@@ -1089,6 +1089,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         // renders the badge for all projects, but you can still use this difference to tell what is/isn't an SDK project.
                         project.TargetFramework = kvp.Value;
                     }
+
+                    if (string.Equals(kvp.Key, Strings.Platform, StringComparison.OrdinalIgnoreCase))
+                    {
+                        project.Platform = kvp.Value;
+                    }
+
+                    if (string.Equals(kvp.Key, Strings.Configuration, StringComparison.OrdinalIgnoreCase))
+                    {
+                        project.Configuration = kvp.Value;
+                    }
                 }
             }
         }
