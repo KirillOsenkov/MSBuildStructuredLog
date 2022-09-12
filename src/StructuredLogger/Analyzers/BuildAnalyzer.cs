@@ -2,20 +2,21 @@
 using System.Collections.Generic;
 using System.Linq;
 using StructuredLogViewer;
+using static Microsoft.Build.Logging.StructuredLogger.CppAnalyzer;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class BuildAnalyzer
     {
-        private Build build;
-        private DoubleWritesAnalyzer doubleWritesAnalyzer;
-        private ResolveAssemblyReferenceAnalyzer resolveAssemblyReferenceAnalyzer;
-        private CppAnalyzer cppAnalyzer;
-        private int index;
-        private Dictionary<string, (TimeSpan TotalDuration, Dictionary<string, TimeSpan> ParentDurations)> taskDurations
+        private readonly Build build;
+        private readonly DoubleWritesAnalyzer doubleWritesAnalyzer;
+        private readonly ResolveAssemblyReferenceAnalyzer resolveAssemblyReferenceAnalyzer;
+        private readonly CppAnalyzer cppAnalyzer;
+        private readonly Dictionary<string, (TimeSpan TotalDuration, Dictionary<string, TimeSpan> ParentDurations)> taskDurations
             = new Dictionary<string, (TimeSpan TotalDuration, Dictionary<string, TimeSpan> ParentDurations)>();
         private readonly List<Folder> analyzerReports = new List<Folder>();
         private readonly List<Folder> generatorReports = new List<Folder>();
+        private int index;
 
         public BuildAnalyzer(Build build)
         {
@@ -290,12 +291,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
-            if (string.IsNullOrEmpty(project.TargetFramework))
+            if (string.IsNullOrEmpty(project.TargetFramework) || string.IsNullOrEmpty(project.Platform) || string.IsNullOrEmpty(project.Configuration))
             {
                 var evaluation = build.FindEvaluation(project.EvaluationId);
                 if (evaluation != null)
                 {
                     project.TargetFramework = evaluation.TargetFramework;
+                    project.Platform = evaluation.Platform;
+                    project.Configuration = evaluation.Configuration;
+
                     if (!string.IsNullOrEmpty(project.TargetFramework))
                     {
                         var text = $"Properties and items are available at evaluation id:{project.EvaluationId}. Use the hyperlink above or the new 'Properties and items' tab.";
@@ -310,6 +314,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
         }
+
+
 
         private void AnalyzeTask(Task task)
         {
@@ -347,9 +353,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     generatorReports.Add(generatorReport);
                 }
             }
-            else if (CppAnalyzer.IsCppTask(task.Name))
+            else if (task is CppAnalyzer.CppTask cppTask)
             {
-                cppAnalyzer.AnalyzeTask(task);
+                cppAnalyzer.AnalyzeTask(cppTask);
             }
 
             doubleWritesAnalyzer.AnalyzeTask(task);

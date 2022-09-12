@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using System.Text;
-using Microsoft.Build.Collections;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Internal;
 
@@ -571,7 +568,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             else if (nodeToAdd == null)
             {
                 message = Intern(message);
-                if (parent is Task task && CppAnalyzer.IsCppTask(task.Name))
+                if (parent is Task task && task is CppAnalyzer.CppTask)
                 {
                     nodeToAdd = new TimedMessage
                     {

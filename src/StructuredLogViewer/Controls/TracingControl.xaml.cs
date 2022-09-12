@@ -34,7 +34,7 @@ namespace StructuredLogViewer.Controls
         private bool _showProject = true;
         private bool _showTarget = true;
         private bool _showTask = true;
-        private bool _showCpp = true;
+        private bool _showCpp = false;
         private bool _showNodes = true;
         private bool _groupByNodes = true;
 
@@ -570,7 +570,7 @@ namespace StructuredLogViewer.Controls
                         return ShowTarget;
                     case Microsoft.Build.Logging.StructuredLogger.Task node:
                         // When ShowCpp is enabled, hide the task and show the messages so that only one of them will appear.
-                        if (showCppBlocks && CppAnalyzer.IsCppTask(node.Name))
+                        if (showCppBlocks && node is CppAnalyzer.CppTask cppNode && cppNode.HasTimedBlocks)
                         {
                             return false;
                         }

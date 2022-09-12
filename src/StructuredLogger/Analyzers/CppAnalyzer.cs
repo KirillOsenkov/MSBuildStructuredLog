@@ -8,6 +8,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class CppAnalyzer
     {
+        public class CppTask : Task
+        {
+            public bool HasTimedBlocks { get; set; }
+        }
+
         public class CppTimedNode
         {
             public DateTime StartTime;
@@ -79,8 +84,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private TimeSpan oneMilliSecond = TimeSpan.FromMilliseconds(1);
         private static HashSet<string> hashCppTasks = new HashSet<string>() { MultiToolTaskName, CLTaskName, LinkTaskName, LibTaskName };
-
-        List<CppTimedNode> resultTimedNode = new List<CppTimedNode>();
+        private List<CppTimedNode> resultTimedNode = new List<CppTimedNode>();
 
         public CppAnalyzer()
         {
@@ -109,11 +113,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             });
         }
 
-        public static bool IsCppTask(string taskName)
-        {
-            return hashCppTasks.Contains(taskName);
-        }
-
         public void AppendCppAnalyzer(Build build)
         {
             build.AddChild(new CppAnalyzerNode(this));
@@ -124,7 +123,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return resultTimedNode;
         }
 
-        public void AnalyzeTask(Task cppTask)
+        public void AnalyzeTask(CppTask cppTask)
         {
             // MultiToolTask batches tasks and runs them in parallel.
             // For this view, de-batch them into individual task units.
@@ -228,6 +227,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                                 // Add these messages to directly to the lane as to avoid mixing with the Bt+ messages.
                                 resultTimedNode.Add(block);
+                                cppTask.HasTimedBlocks = true;
                             }
                         }
                     }
@@ -260,7 +260,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                 }
 
-                resultTimedNode.AddRange(blocks);
+                if (blocks.Count > 0)
+                {
+                    resultTimedNode.AddRange(blocks);
+                    cppTask.HasTimedBlocks = true;
+                }
             }
             else if (cppTask.Name == LibTaskName && cppTask.HasChildren)
             {
@@ -299,7 +303,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                 Node = message,
                                 NodeId = cppTask.NodeId,
                             };
+
                             resultTimedNode.Add(block);
+                            cppTask.HasTimedBlocks = true;
                         }
                     }
                     else if (!usingLibTime && child is Property property)
@@ -344,7 +350,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                 Node = message,
                                 NodeId = cppTask.NodeId,
                             };
+
                             resultTimedNode.Add(block);
+                            cppTask.HasTimedBlocks = true;
                         }
                     }
                     else if (!usingLinkTime && child is Property property)

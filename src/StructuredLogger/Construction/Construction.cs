@@ -983,8 +983,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 "vbc" => new VbcTask(),
                 "fsc" => new FscTask(),
                 "resolveassemblyreference" => new ResolveAssemblyReferenceTask(),
+                "cl" => new CppAnalyzer.CppTask(),
+                "lib" => new CppAnalyzer.CppTask(),
+                "link" => new CppAnalyzer.CppTask(),
+                "multitooltask" => new CppAnalyzer.CppTask(),
                 _ => new Task(),
-            };
+            };;
 
             result.Name = taskName;
             result.Id = taskId;
