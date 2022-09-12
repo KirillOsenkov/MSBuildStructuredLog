@@ -1,15 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.IO;
 using System.Xml;
 using Microsoft.Build.Evaluation;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 
+namespace System.Runtime.CompilerServices
+{
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    public sealed class ModuleInitializerAttribute : Attribute { }
+}
+
 namespace StructuredLogger.Tests
 {
     public class MSBuild
     {
+        [ModuleInitializer]
+        public static void InitializeModule()
+        {
+            Microsoft.Build.Locator.MSBuildLocator.RegisterDefaults();
+        }
+
         public static bool BuildProjectFromFile(string projectText, params ILogger[] loggers)
         {
             var projectFile = TestUtilities.GetTestFile("build.proj");

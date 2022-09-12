@@ -1,10 +1,10 @@
 version: 1.1.{build}
-image: Visual Studio 2019
+image: Visual Studio 2022
 install:
   - choco upgrade chocolatey # Need at least 0.10.8 to avoid packaging error
   - dotnet tool install --global Cake.Tool --version 1.0.0
   - ps: Invoke-WebRequest -Uri 'https://dot.net/v1/dotnet-install.ps1' -UseBasicParsing -OutFile "$env:temp\dotnet-install.ps1"
-  - ps: '& $env:temp\dotnet-install.ps1 -Version "6.0.100-rc.1.21463.6"'
+  - ps: '& $env:temp\dotnet-install.ps1 -Version "6.0.303"'
 build_script: 
 - cmd: >-
     dotnet msbuild /r /m /p:Configuration=Release /clp:v=m MSBuildStructuredLog.sln /bl /logger:"C:\Program Files\AppVeyor\BuildAgent\dotnetcore\Appveyor.MSBuildLogger.dll"
@@ -34,7 +34,7 @@ artifacts:
   name: StructuredLogger.dll
 - path: 'MSBuildStructuredLog-*.zip'
   name: Bundle
-- path: 'artifacts\Structured Log Viewer-*.zip'
+- path: 'artifacts\StructuredLogViewer-*.zip'
   name: 'Structured Log Viewer macOS app'
 on_failure:
 - appveyor PushArtifact msbuild.binlog
