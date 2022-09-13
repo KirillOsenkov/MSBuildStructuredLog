@@ -163,13 +163,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                 else
                                 {
                                     // MTT messages only print duration, assume that timestamp of the message is the end.
-                                    // Round 1ms from start time so that the graph fits better.
+                                    // Round 10ms from end time to compensate for the latency in logging and to make the graph look better.
                                     string filename = match.Groups[filenameRegexMatchName].Value;
                                     string msTime = match.Groups[msTimeRegexMatchName].Value;
                                     if (double.TryParse(msTime, out double tryValue) && !string.IsNullOrWhiteSpace(filename))
                                     {
-                                        startTime = message.Timestamp - TimeSpan.FromMilliseconds(tryValue) + oneMilliSecond;
-                                        endTime = message.Timestamp;
+                                        startTime = message.Timestamp - TimeSpan.FromMilliseconds(tryValue);
+                                        endTime = message.Timestamp - TimeSpan.FromMilliseconds(10);
                                         messageText = Path.GetFileName(filename);
                                     }
                                 }

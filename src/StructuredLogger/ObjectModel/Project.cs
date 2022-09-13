@@ -115,7 +115,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        public string AdormentString => this.MakeAdormentString();
+        public string AdormentString => this.GetAdormentString();
 
         public string TargetFramework { get; set; }
 
