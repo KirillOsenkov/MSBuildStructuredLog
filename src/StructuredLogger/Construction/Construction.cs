@@ -100,7 +100,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         AddProperties(EnvironmentFolder, args.BuildEnvironment);
                     }
 
-                    if (args.BuildEnvironment?.ContainsKey("MSBUILDLOGALLENVIRONMENTVARIABLES") == true)
+                    if (args.BuildEnvironment?.ContainsKey("MSBUILDLOGALLENVIRONMENTVARIABLES") != true)
                     {
                         EnvironmentFolder.AddChild(new Note
                         {
