@@ -100,13 +100,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         AddProperties(EnvironmentFolder, args.BuildEnvironment);
                     }
 
-                    if (args.BuildEnvironment?.ContainsKey("MSBUILDLOGALLENVIRONMENTVARIABLES") != true)
+                    EnvironmentFolder.AddChild(new Note
                     {
-                        EnvironmentFolder.AddChild(new Note
-                        {
-                            Text = Intern(Strings.TruncatedEnvironment)
-                        });
-                    }
+                        Text = Intern(Strings.TruncatedEnvironment)
+                    });
 
                     // realize the evaluation folder now so it is ordered before the main solution node
                     _ = EvaluationFolder;
