@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using StructuredLogViewer;
-using static Microsoft.Build.Logging.StructuredLogger.CppAnalyzer;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -314,8 +313,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
         }
-
-
 
         private void AnalyzeTask(Task task)
         {

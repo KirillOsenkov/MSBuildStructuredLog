@@ -1,22 +1,17 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Configuration;
+﻿using System.Collections.Generic;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
     public interface IProjectOrEvaluation
     {
-        public string AdornmentString { get; }
+        string TargetFramework { get; set; }
 
-        public string TargetFramework { get; set; }
+        string Platform { get; set; }
 
-        public string Platform { get; set; }
-
-        public string Configuration { get; set; }
+        string Configuration { get; set; }
     }
 
-    public static class IProjectOrEvaluationHelper
+    public static class ProjectOrEvaluationHelper
     {
         private class IProjectOrEvaluationComparer : IEqualityComparer<IProjectOrEvaluation>
         {
@@ -27,18 +22,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     && x.Configuration == y.Configuration;
             }
 
-            public int GetHashCode(IProjectOrEvaluation obj)
-            {
-                int hashcode = 123456789;
-                hashcode = hashcode * 987654321 ^ (obj.TargetFramework == null ? 1 : obj.TargetFramework.GetHashCode());
-                hashcode = hashcode * 987654321 ^ (obj.Platform == null ? 1 : obj.Platform.GetHashCode());
-                hashcode = hashcode * 987654321 ^ (obj.Configuration == null ? 1 : obj.Configuration.GetHashCode());
-
-                return hashcode;
-            }
+            public int GetHashCode(IProjectOrEvaluation obj) => (obj.TargetFramework, obj.Platform, obj.Configuration).GetHashCode();
         }
 
-        private const string seperator = ",";
+        private const string separator = ",";
 
         private static IProjectOrEvaluationComparer comparer = new();
 
@@ -51,10 +38,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return value;
             }
 
-            string Adornment = CreateAdornment(proj);
-            AdornmentStringCache.Add(proj, Adornment);
+            string adornment = CreateAdornment(proj);
+            AdornmentStringCache.Add(proj, adornment);
 
-            return Adornment;
+            return adornment;
         }
 
         private static string CreateAdornment(IProjectOrEvaluation proj)
@@ -63,10 +50,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             bool existsPlatform = !string.IsNullOrEmpty(proj.Platform);
             bool existsConfiguration = !string.IsNullOrEmpty(proj.Configuration);
 
-            if (existsConfiguration && existsPlatform && existsTF) { return string.Join(seperator, proj.Configuration, proj.Platform, proj.TargetFramework); }
-            else if (existsPlatform && existsTF) { return string.Join(seperator, proj.Platform, proj.TargetFramework); }
-            else if (existsConfiguration && existsPlatform) { return string.Join(seperator, proj.Configuration, proj.Platform); }
-            else if (existsConfiguration && existsTF) { return string.Join(seperator, proj.Configuration, proj.TargetFramework); }
+            if (existsConfiguration && existsPlatform && existsTF) { return string.Join(separator, proj.Configuration, proj.Platform, proj.TargetFramework); }
+            else if (existsPlatform && existsTF) { return string.Join(separator, proj.Platform, proj.TargetFramework); }
+            else if (existsConfiguration && existsPlatform) { return string.Join(separator, proj.Configuration, proj.Platform); }
+            else if (existsConfiguration && existsTF) { return string.Join(separator, proj.Configuration, proj.TargetFramework); }
             else if (existsConfiguration) { return proj.Configuration; }
             else if (existsPlatform) { return proj.Platform; }
             else if (existsTF) { return proj.TargetFramework; }
