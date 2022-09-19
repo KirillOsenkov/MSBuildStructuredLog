@@ -99,13 +99,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     {
                         AddProperties(EnvironmentFolder, args.BuildEnvironment);
                     }
-                    else
+
+                    EnvironmentFolder.AddChild(new Note
                     {
-                        EnvironmentFolder.AddChild(new Note
-                        {
-                            Text = Intern(Strings.NoEnvironment)
-                        });
-                    }
+                        Text = Intern(Strings.TruncatedEnvironment)
+                    });
 
                     // realize the evaluation folder now so it is ordered before the main solution node
                     _ = EvaluationFolder;
