@@ -34,7 +34,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
             else if (node is Project project)
             {
-                return $"{project.Name} {project.AdormentString} {project.TargetsDisplayText}";
+                return $"{project.Name} {project.AdornmentString} {project.TargetsDisplayText}";
             }
             else if (node is ProjectEvaluation evaluation)
             {

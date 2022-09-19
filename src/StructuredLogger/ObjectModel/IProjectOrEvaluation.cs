@@ -7,7 +7,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public interface IProjectOrEvaluation
     {
-        public string AdormentString { get; }
+        public string AdornmentString { get; }
 
         public string TargetFramework { get; set; }
 
@@ -42,22 +42,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private static IProjectOrEvaluationComparer comparer = new();
 
-        private static Dictionary<IProjectOrEvaluation, string> AdormentStringCache = new(comparer);
+        private static Dictionary<IProjectOrEvaluation, string> AdornmentStringCache = new(comparer);
 
-        public static string GetAdormentString(this IProjectOrEvaluation proj)
+        public static string GetAdornmentString(this IProjectOrEvaluation proj)
         {
-            if (AdormentStringCache.TryGetValue(proj, out string value))
+            if (AdornmentStringCache.TryGetValue(proj, out string value))
             {
                 return value;
             }
 
-            string adorment = CreateAdorment(proj);
-            AdormentStringCache.Add(proj, adorment);
+            string Adornment = CreateAdornment(proj);
+            AdornmentStringCache.Add(proj, Adornment);
 
-            return adorment;
+            return Adornment;
         }
 
-        private static string CreateAdorment(IProjectOrEvaluation proj)
+        private static string CreateAdornment(IProjectOrEvaluation proj)
         {
             bool existsTF = !string.IsNullOrEmpty(proj.TargetFramework);
             bool existsPlatform = !string.IsNullOrEmpty(proj.Platform);

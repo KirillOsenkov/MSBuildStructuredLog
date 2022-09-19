@@ -17,7 +17,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public string EvaluationText { get; set; } = "";
 
-        public string AdormentString => this.GetAdormentString();
+        public string AdornmentString => this.GetAdornmentString();
 
         public string TargetFramework { get; set; }
 
