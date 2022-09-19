@@ -38,7 +38,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private const string seperator = ";";
+        private const string seperator = ",";
 
         private static IProjectOrEvaluationComparer comparer = new();
 
