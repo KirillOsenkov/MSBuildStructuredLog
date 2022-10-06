@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -44,21 +45,36 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return adornment;
         }
 
+        [ThreadStatic]
+        private static List<string> strings;
+
         private static string CreateAdornment(IProjectOrEvaluation proj)
         {
-            bool existsTF = !string.IsNullOrEmpty(proj.TargetFramework);
-            bool existsPlatform = !string.IsNullOrEmpty(proj.Platform);
-            bool existsConfiguration = !string.IsNullOrEmpty(proj.Configuration);
+            if (strings == null)
+            {
+                strings = new List<string>(3);
+            }
 
-            if (existsConfiguration && existsPlatform && existsTF) { return string.Join(separator, proj.Configuration, proj.Platform, proj.TargetFramework); }
-            else if (existsPlatform && existsTF) { return string.Join(separator, proj.Platform, proj.TargetFramework); }
-            else if (existsConfiguration && existsPlatform) { return string.Join(separator, proj.Configuration, proj.Platform); }
-            else if (existsConfiguration && existsTF) { return string.Join(separator, proj.Configuration, proj.TargetFramework); }
-            else if (existsConfiguration) { return proj.Configuration; }
-            else if (existsPlatform) { return proj.Platform; }
-            else if (existsTF) { return proj.TargetFramework; }
+            if (proj.TargetFramework is { Length: > 0 } targetFramework)
+            {
+                strings.Add(targetFramework);
+            }
 
-            return string.Empty;
+            if (proj.Configuration is { Length: > 0 } configuration)
+            {
+                strings.Add(configuration);
+            }
+
+            if (proj.Platform is { Length: > 0 } platform)
+            {
+                strings.Add(platform);
+            }
+
+            var result = string.Join(separator, strings);
+
+            strings.Clear();
+
+            return result;
         }
     }
 }
