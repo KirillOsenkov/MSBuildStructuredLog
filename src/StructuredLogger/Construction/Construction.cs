@@ -986,7 +986,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 "link" => new CppAnalyzer.CppTask(),
                 "multitooltask" => new CppAnalyzer.CppTask(),
                 _ => new Task(),
-            };;
+            };
 
             result.Name = taskName;
             result.Id = taskId;
@@ -1087,7 +1087,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     // If neither of the above are there - look for the old project system
                     else if (project.TargetFramework is null && string.Equals(kvp.Key, Strings.TargetFrameworkVersion, StringComparison.OrdinalIgnoreCase))
                     {
-                        // Note this is untranslted, so e.g. "v4.6.2" instead of "net462" - this is intentional as it
+                        // Note this is untranslated, so e.g. "v4.6.2" instead of "net462" - this is intentional as it
                         // renders the badge for all projects, but you can still use this difference to tell what is/isn't an SDK project.
                         project.TargetFramework = kvp.Value;
                     }
