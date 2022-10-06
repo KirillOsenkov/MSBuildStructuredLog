@@ -981,8 +981,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 "vbc" => new VbcTask(),
                 "fsc" => new FscTask(),
                 "resolveassemblyreference" => new ResolveAssemblyReferenceTask(),
+                "cl" => new CppAnalyzer.CppTask(),
+                "lib" => new CppAnalyzer.CppTask(),
+                "link" => new CppAnalyzer.CppTask(),
+                "multitooltask" => new CppAnalyzer.CppTask(),
                 _ => new Task(),
-            };
+            };;
 
             result.Name = taskName;
             result.Id = taskId;
@@ -1086,6 +1090,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         // Note this is untranslted, so e.g. "v4.6.2" instead of "net462" - this is intentional as it
                         // renders the badge for all projects, but you can still use this difference to tell what is/isn't an SDK project.
                         project.TargetFramework = kvp.Value;
+                    }
+
+                    if (string.Equals(kvp.Key, Strings.Platform, StringComparison.OrdinalIgnoreCase))
+                    {
+                        project.Platform = kvp.Value;
+                    }
+
+                    if (string.Equals(kvp.Key, Strings.Configuration, StringComparison.OrdinalIgnoreCase))
+                    {
+                        project.Configuration = kvp.Value;
                     }
                 }
             }

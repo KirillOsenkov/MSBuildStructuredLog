@@ -8,6 +8,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class CppAnalyzer
     {
+        public class CppTask : Task
+        {
+            public bool HasTimedBlocks { get; set; }
+        }
+
         public class CppTimedNode
         {
             public DateTime StartTime;
@@ -43,7 +48,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         // time(C:\Program Files (x86)\Microsoft Visual Studio\2019\Preview\VC\Tools\MSVC\14.24.28218\bin\Hostx86\x86\c1xx.dll)=0.83512s < 985096605139 - 985104956295 > BB [C:\Users\yuehuang\AppData\Local\Temp\123\main36.cpp]
         // time(C:\Program Files(x86)\Microsoft Visual Studio\2019\Preview\VC\Tools\MSVC\14.24.28218\bin\Hostx86\x86\c2.dll)=0.01935s < 985104875296 - 985105068765 > BB[C: \Users\yuehuang\AppData\Local\Temp\123\main47.cpp]
-        const string regexBTPlus = @"^time\(.*(c1xx\.dll|c2\.dll)\)=(?'msTime'([0-9]*\.[0-9]+|[0-9]+))s \< (?'startTime'[\d]*) - (?'endTime'[\d]*) \>\s*BB\s*\[(?'filename'[^\]]*)\]$";
+        const string regexBTPlus = @"^time\(.*(c1xx\.dll|c2\.dll)\)=(?'msTime'([0-9]*\.[0-9]+|[0-9]+))s \< (?'startTime'[\d]*) - (?'endTime'[\d]*) \>\s*(BB)?\s*\[(?'filename'[^\]]*)\]$";
         readonly Regex BTPlus = new Regex(regexBTPlus, RegexOptions.Multiline);
 
         // Lib: Final Total time = 0.00804s < 5881693617253 - 5881693697673 > PB: 143409152 [D:\test\ConsoleApplication2\x64\Debug\ConsoleApplication2.lib] 
@@ -79,8 +84,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private TimeSpan oneMilliSecond = TimeSpan.FromMilliseconds(1);
         private static HashSet<string> hashCppTasks = new HashSet<string>() { MultiToolTaskName, CLTaskName, LinkTaskName, LibTaskName };
-
-        List<CppTimedNode> resultTimedNode = new List<CppTimedNode>();
+        private List<CppTimedNode> resultTimedNode = new List<CppTimedNode>();
 
         public CppAnalyzer()
         {
@@ -109,11 +113,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             });
         }
 
-        public static bool IsCppTask(string taskName)
-        {
-            return hashCppTasks.Contains(taskName);
-        }
-
         public void AppendCppAnalyzer(Build build)
         {
             build.AddChild(new CppAnalyzerNode(this));
@@ -124,16 +123,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return resultTimedNode;
         }
 
-        public void AnalyzeTask(Task cppTask)
+        public void AnalyzeTask(CppTask cppTask)
         {
             // MultiToolTask batches tasks and runs them in parallel.
             // For this view, de-batch them into individual task units.
             if ((cppTask.Name == MultiToolTaskName || cppTask.Name == CLTaskName) && cppTask.HasChildren)
             {
                 bool usingBTTime = globalBtplus;
-                List<CppTimedNode> blocks = new List<CppTimedNode>();
-                DateTime mttStartupTime = cppTask.StartTime;
-                DateTime mttCleanupTime = cppTask.EndTime;
+                Dictionary<string, CppTimedNode> blocks = new();
+                DateTime taskStartTime = cppTask.StartTime;
+                DateTime taskCleanUpTime = cppTask.EndTime;
 
                 foreach (var child in cppTask.Children)
                 {
@@ -142,6 +141,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         DateTime endTime = DateTime.MinValue;
                         DateTime startTime = DateTime.MinValue;
                         string messageText = message.Text;
+                        string filename;
 
                         if ((usingBTTime && message.Text.StartsWith(btplusKeyword)) || (!usingBTTime && message.Text.Contains(mttKeyword)))
                         {
@@ -151,9 +151,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                 if (usingBTTime)
                                 {
                                     // Matching Bt+
-                                    string filename = match.Groups[filenameRegexMatchName].Value;
+                                    filename = match.Groups[filenameRegexMatchName].Value;
                                     string startTimeValue = match.Groups[startTimeRegexMatchName].Value;
                                     string endTimeValue = match.Groups[endTimeRegexMatchName].Value;
+                                    string isC1 = match.Groups[endTimeRegexMatchName].Value;
                                     if (long.TryParse(startTimeValue, out long tryStartTime) && long.TryParse(endTimeValue, out long tryEndTime) && !string.IsNullOrWhiteSpace(filename))
                                     {
                                         startTime = new DateTime(tryStartTime);
@@ -164,28 +165,37 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                 else
                                 {
                                     // MTT messages only print duration, assume that timestamp of the message is the end.
-                                    // Round 1ms from start time so that the graph fits better.
-                                    string filename = match.Groups[filenameRegexMatchName].Value;
+                                    // Round 10ms from end time to compensate for the latency in logging and to make the graph look better.
+                                    filename = match.Groups[filenameRegexMatchName].Value;
                                     string msTime = match.Groups[msTimeRegexMatchName].Value;
                                     if (double.TryParse(msTime, out double tryValue) && !string.IsNullOrWhiteSpace(filename))
                                     {
-                                        startTime = message.Timestamp - TimeSpan.FromMilliseconds(tryValue) + oneMilliSecond;
-                                        endTime = message.Timestamp;
+                                        startTime = message.Timestamp - TimeSpan.FromMilliseconds(tryValue);
+                                        endTime = message.Timestamp - TimeSpan.FromMilliseconds(10);
                                         messageText = Path.GetFileName(filename);
                                     }
                                 }
 
                                 if (startTime > DateTime.MinValue)
                                 {
-                                    var block = new CppTimedNode()
+                                    // BT Time prints C1 and C2 as seperate messages, so lets combine to reduce the graph nodes by half.
+                                    if (usingBTTime && blocks.TryGetValue(filename, out CppTimedNode cppNode))
                                     {
-                                        StartTime = startTime,
-                                        EndTime = endTime,
-                                        Text = messageText,
-                                        Node = message,
-                                        NodeId = cppTask.NodeId,
-                                    };
-                                    blocks.Add(block);
+                                        cppNode.StartTime = new DateTime(Math.Min(cppNode.StartTime.Ticks, startTime.Ticks));
+                                        cppNode.EndTime = new DateTime(Math.Max(cppNode.EndTime.Ticks, endTime.Ticks));
+                                    }
+                                    else
+                                    {
+                                        var block = new CppTimedNode()
+                                        {
+                                            StartTime = startTime,
+                                            EndTime = endTime,
+                                            Text = messageText,
+                                            Node = message,
+                                            NodeId = cppTask.NodeId,
+                                        };
+                                        blocks.Add(filename, block);
+                                    }
                                 }
                             }
                         }
@@ -199,7 +209,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                 {
                                     startTime = message.Timestamp - TimeSpan.FromMilliseconds(tryValue) + oneMilliSecond;
                                     endTime = message.Timestamp;
-                                    mttStartupTime = message.Timestamp;
+                                    taskStartTime = message.Timestamp;
                                 }
                             }
                             else
@@ -210,7 +220,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                 {
                                     startTime = message.Timestamp - TimeSpan.FromMilliseconds(tryValue) + oneMilliSecond;
                                     endTime = message.Timestamp;
-                                    mttCleanupTime = message.Timestamp - TimeSpan.FromMilliseconds(tryValue);
+                                    // taskCleanUpTime is the start time of the cleanup step.
+                                    taskCleanUpTime = message.Timestamp - TimeSpan.FromMilliseconds(tryValue);
                                 }
                             }
 
@@ -227,6 +238,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                                 // Add these messages to directly to the lane as to avoid mixing with the Bt+ messages.
                                 resultTimedNode.Add(block);
+                                cppTask.HasTimedBlocks = true;
                             }
                         }
                     }
@@ -240,34 +252,30 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                 }
 
-                if (usingBTTime && blocks.Count > 0 && mttStartupTime != DateTime.MinValue && mttCleanupTime != DateTime.MinValue)
+                if (usingBTTime && blocks.Count > 0)
                 {
                     // BT+ timestamp is not a global time, but is relative to the first instance (see QueryPerformanceCounter)
-                    // so compute the offset and center the Bt+ graph.  Assume that tool's startup closing time are the same.
-                    DateTime offset = blocks.Min(p => p.StartTime);
-                    TimeSpan totalDuration = blocks.Max(p => p.EndTime) - offset;
-                    var mttDuration = mttCleanupTime - mttStartupTime;
-                    if (totalDuration > TimeSpan.Zero && totalDuration < mttDuration)
+                    // so compute the offset and align it to the right.
+                    DateTime offset = blocks.Values.Min(p => p.StartTime);
+                    TimeSpan totalDuration = blocks.Values.Max(p => p.EndTime) - offset;
+
+                    var innerDuration = taskCleanUpTime - taskStartTime;
+                    if (totalDuration > TimeSpan.Zero)
                     {
-                        mttStartupTime += TimeSpan.FromTicks((mttDuration - totalDuration).Ticks / 2);
-                        foreach (CppTimedNode block in blocks)
+                        taskStartTime += TimeSpan.FromTicks((innerDuration - totalDuration).Ticks);
+                        foreach (CppTimedNode block in blocks.Values)
                         {
-                            block.StartTime = mttStartupTime + block.StartTime.Subtract(offset);
-                            block.EndTime = mttStartupTime + block.EndTime.Subtract(offset);
-                        }
-                    }
-                    else
-                    {
-                        // unable to put the nodes in the center.  Just put it right up against the mtt startup time
-                        foreach (CppTimedNode block in blocks)
-                        {
-                            block.StartTime = mttStartupTime + block.StartTime.Subtract(offset);
-                            block.EndTime = mttStartupTime + block.EndTime.Subtract(offset);
+                            block.StartTime = taskStartTime + block.StartTime.Subtract(offset);
+                            block.EndTime = taskStartTime + block.EndTime.Subtract(offset);
                         }
                     }
                 }
 
-                resultTimedNode.AddRange(blocks);
+                if (blocks.Count > 0)
+                {
+                    resultTimedNode.AddRange(blocks.Values);
+                    cppTask.HasTimedBlocks = true;
+                }
             }
             else if (cppTask.Name == LibTaskName && cppTask.HasChildren)
             {
@@ -306,7 +314,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                 Node = message,
                                 NodeId = cppTask.NodeId,
                             };
+
                             resultTimedNode.Add(block);
+                            cppTask.HasTimedBlocks = true;
                         }
                     }
                     else if (!usingLibTime && child is Property property)
@@ -351,7 +361,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                 Node = message,
                                 NodeId = cppTask.NodeId,
                             };
+
                             resultTimedNode.Add(block);
+                            cppTask.HasTimedBlocks = true;
                         }
                     }
                     else if (!usingLinkTime && child is Property property)

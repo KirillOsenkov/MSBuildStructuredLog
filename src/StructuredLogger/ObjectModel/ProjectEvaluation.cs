@@ -17,7 +17,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public string EvaluationText { get; set; } = "";
 
+        public string AdornmentString => this.GetAdornmentString();
+
         public string TargetFramework { get; set; }
+
+        public string Platform { get; set; }
+
+        public string Configuration { get; set; }
 
         public double RelativeDuration { get; set; }
 
