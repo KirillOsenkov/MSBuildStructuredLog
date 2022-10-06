@@ -1122,6 +1122,8 @@ Recent:
             {
                 searchLogControl.SearchText = InitialSearchText;
             }
+
+            FocusSearch();
         }
 
         public string InitialSearchText { get; set; }
