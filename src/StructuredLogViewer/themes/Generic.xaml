@@ -866,6 +866,10 @@
                       Margin="10,0,10,10"
                       IsChecked="{Binding MarkResultsInTree}" 
                       ToolTip="Mark tree nodes that appear in search results with a dot"/>
+            <CheckBox Content="Show project configuration and platform"
+                      Margin="10,0,10,10"
+                      IsChecked="{Binding ShowConfigurationAndPlatform}" 
+                      ToolTip="Show project Configuration and Platform property values if available"/>
             <CheckBox Content="Dark Theme"
                       Margin="10,0,10,10"
                       IsChecked="{Binding UseDarkTheme}"

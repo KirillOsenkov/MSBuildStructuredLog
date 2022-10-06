@@ -30,7 +30,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private static IProjectOrEvaluationComparer comparer = new();
 
+        public static void ClearCache()
+        {
+            AdornmentStringCache.Clear();
+        }
+
         private static Dictionary<IProjectOrEvaluation, string> AdornmentStringCache = new(comparer);
+
+        public static bool ShowConfigurationAndPlatform;
 
         public static string GetAdornmentString(this IProjectOrEvaluation proj)
         {
@@ -60,14 +67,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 strings.Add(targetFramework);
             }
 
-            if (proj.Configuration is { Length: > 0 } configuration)
+            if (ShowConfigurationAndPlatform)
             {
-                strings.Add(configuration);
-            }
+                if (proj.Configuration is { Length: > 0 } configuration)
+                {
+                    strings.Add(configuration);
+                }
 
-            if (proj.Platform is { Length: > 0 } platform)
-            {
-                strings.Add(platform);
+                if (proj.Platform is { Length: > 0 } platform)
+                {
+                    strings.Add(platform);
+                }
             }
 
             var result = string.Join(separator, strings);

@@ -110,13 +110,31 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public bool EnableVirtualization
         {
             get => SettingsService.EnableTreeViewVirtualization;
-            set => SettingsService.EnableTreeViewVirtualization = value;
+            set
+            {
+                SettingsService.EnableTreeViewVirtualization = value;
+                RaisePropertyChanged();
+            }
         }
 
         public bool MarkResultsInTree
         {
             get => SettingsService.MarkResultsInTree;
-            set => SettingsService.MarkResultsInTree = value;
+            set
+            {
+                SettingsService.MarkResultsInTree = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        public bool ShowConfigurationAndPlatform
+        {
+            get => SettingsService.ShowConfigurationAndPlatform;
+            set
+            {
+                SettingsService.ShowConfigurationAndPlatform = value;
+                RaisePropertyChanged();
+            }
         }
 
         public bool UseDarkTheme
