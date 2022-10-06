@@ -181,7 +181,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 node = CreateParameterNode(itemType, items, isOutput);
             }
             else if (
-                kind == TaskParameterMessageKind.AddItem || 
+                kind == TaskParameterMessageKind.AddItem ||
                 kind == TaskParameterMessageKind.RemoveItem ||
                 kind == TaskParameterMessageKind.SkippedTargetInputs ||
                 kind == TaskParameterMessageKind.SkippedTargetOutputs)
@@ -568,7 +568,24 @@ namespace Microsoft.Build.Logging.StructuredLogger
             else if (nodeToAdd == null)
             {
                 message = Intern(message);
-                if (parent is Task task && task is CppAnalyzer.CppTask)
+
+                if (args is CriticalBuildMessageEventArgs criticalArgs)
+                {
+                    var critical = new CriticalBuildMessage();
+                    critical.Text = message;
+                    critical.Timestamp = args.Timestamp;
+                    critical.Code = Intern(criticalArgs.Code);
+                    critical.ColumnNumber = criticalArgs.ColumnNumber;
+                    critical.EndColumnNumber = criticalArgs.EndColumnNumber;
+                    critical.EndLineNumber = criticalArgs.EndLineNumber;
+                    critical.LineNumber = criticalArgs.LineNumber;
+                    critical.File = Intern(criticalArgs.File);
+                    critical.ProjectFile = Intern(criticalArgs.ProjectFile);
+                    critical.Subcategory = Intern(criticalArgs.Subcategory);
+
+                    nodeToAdd = critical;
+                }
+                else if (parent is Task task && task is CppAnalyzer.CppTask)
                 {
                     nodeToAdd = new TimedMessage
                     {
