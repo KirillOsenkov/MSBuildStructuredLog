@@ -20,7 +20,7 @@
     <ImportFrameworkWinFXTargets>true</ImportFrameworkWinFXTargets>
 
     <MSBuildPackageVersion>16.10.0</MSBuildPackageVersion>
-    <NuGetVersionNerdbankGitVersioning>3.5.107</NuGetVersionNerdbankGitVersioning>
+    <!--<NuGetVersionNerdbankGitVersioning>3.5.107</NuGetVersionNerdbankGitVersioning>-->
   </PropertyGroup>
 
 </Project>
