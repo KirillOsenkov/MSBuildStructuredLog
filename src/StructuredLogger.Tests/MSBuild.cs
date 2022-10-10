@@ -1,18 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.IO;
 using System.Xml;
 using Microsoft.Build.Evaluation;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 
+namespace System.Runtime.CompilerServices
+{
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    public sealed class ModuleInitializerAttribute : Attribute { }
+}
+
 namespace StructuredLogger.Tests
 {
     public class MSBuild
     {
+        [ModuleInitializer]
+        public static void InitializeModule()
+        {
+            Microsoft.Build.Locator.MSBuildLocator.RegisterDefaults();
+        }
+
         public static bool BuildProjectFromFile(string projectText, params ILogger[] loggers)
         {
             var projectFile = TestUtilities.GetTestFile("build.proj");
+            Environment.SetEnvironmentVariable("MSBUILDNOINPROCNODE", "0");
 
             try
             {
@@ -23,7 +37,10 @@ namespace StructuredLogger.Tests
                     {
                         ShutdownInProcNodeOnBuildFinish = true,
                         EnableNodeReuse = false,
-                        Loggers = loggers
+                        Loggers = loggers,
+                        MaxNodeCount = 1,
+                        DisableInProcNode = false,
+                        DefaultToolsVersion = "Current"
                     },
                     new BuildRequestData(
                         projectFile,
@@ -42,6 +59,7 @@ namespace StructuredLogger.Tests
 
         public static bool BuildProjectInMemory(string projectText, params ILogger[] loggers)
         {
+            Environment.SetEnvironmentVariable("MSBUILDNOINPROCNODE", "0");
             Project project = CreateInMemoryProject(projectText, loggers: loggers);
             bool success = project.Build(loggers);
             return success;

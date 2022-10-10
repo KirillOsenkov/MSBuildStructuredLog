@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft. All rights reserved.
+// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -47,19 +47,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         private StringStorage stringStorage = new StringStorage();
 
-        // reflection is needed to set these three fields because public constructors don't provide
-        // a way to set these from the outside
-        private static FieldInfo buildEventArgsFieldThreadId =
-            typeof(BuildEventArgs).GetField("threadId", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static FieldInfo buildEventArgsFieldSenderName =
-            typeof(BuildEventArgs).GetField("senderName", BindingFlags.Instance | BindingFlags.NonPublic);
-        private static FieldInfo buildEventArgsFieldTimestamp =
-            typeof(BuildEventArgs).GetField("timestamp", BindingFlags.Instance | BindingFlags.NonPublic);
-
         /// <summary>
-        /// Initializes a new instance of BuildEventArgsReader using a BinaryReader instance
+        /// Initializes a new instance of <see cref="T:Microsoft.Build.Logging.BuildEventArgsReader"/> using a <see cref="T:System.IO.BinaryReader"/> instance.
         /// </summary>
-        /// <param name="binaryReader">The BinaryReader to read BuildEventArgs from</param>
+        /// <param name="binaryReader">The <see cref="T:System.IO.BinaryReader"/> to read <see cref="T:Microsoft.Build.Framework.BuildEventArgs"/> from.</param>
         /// <param name="fileFormatVersion">The file format version of the log file being read.</param>
         public BuildEventArgsReader(BinaryReader binaryReader, int fileFormatVersion)
         {
@@ -83,8 +74,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public event Action<BinaryLogRecordKind, byte[]> OnBlobRead;
 
         /// <summary>
-        /// Reads the next log record from the binary reader. If there are no more records, returns null.
+        /// Reads the next log record from the <see cref="T:System.IO.BinaryReader"/>.
         /// </summary>
+        /// <returns>
+        /// The next <see cref="T:Microsoft.Build.Framework.BuildEventArgs" />. If there are no more records, returns <see langword="null" />.
+        /// </returns>
         public BuildEventArgs Read()
         {
             BinaryLogRecordKind recordKind = (BinaryLogRecordKind)ReadInt32();
@@ -306,12 +300,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 originallySucceeded = ReadBoolean();
                 if (fileFormatVersion == 13)
                 {
-                    var reason = condition != null
-                        ? TargetSkipReason.ConditionWasFalse
-                        : originallySucceeded
-                            ? TargetSkipReason.PreviouslyBuiltSuccessfully
+                    // Attempt to infer skip reason from the data we have
+                    skipReason = condition != null ?
+                        TargetSkipReason.ConditionWasFalse // condition expression only stored when false
+                        : originallySucceeded ?
+                            TargetSkipReason.PreviouslyBuiltSuccessfully
                             : TargetSkipReason.PreviouslyBuiltUnsuccessfully;
-                    message = GetTargetSkippedMessage(reason, targetName, condition, evaluatedCondition, originallySucceeded);
+                    message = GetTargetSkippedMessage(skipReason, targetName, condition, evaluatedCondition, originallySucceeded);
                 }
             }
 
@@ -706,8 +701,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var fields = ReadBuildEventArgsFields(readImportance: true);
 
             var kind = (TaskParameterMessageKind)ReadInt32();
-            var itemType = ReadDeduplicatedString();
-            var items = ReadTaskItemList() as IList;
+            var itemType = ReadDeduplicatedString() ?? "N/A";
+            var items = ReadTaskItemList() as IList ?? Array.Empty<ITaskItem>();
 
             var e = ItemGroupLoggingHelper.CreateTaskParameterEventArgs(
                 fields.BuildEventContext,
@@ -945,19 +940,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             buildEventArgs.BuildEventContext = fields.BuildEventContext;
 
-            if ((fields.Flags & BuildEventArgsFieldFlags.ThreadId) != 0)
-            {
-                buildEventArgsFieldThreadId.SetValue(buildEventArgs, fields.ThreadId);
-            }
-
             if ((fields.Flags & BuildEventArgsFieldFlags.SenderName) != 0)
             {
-                buildEventArgsFieldSenderName.SetValue(buildEventArgs, fields.SenderName);
+                Reflector.BuildEventArgs_senderName.SetValue(buildEventArgs, fields.SenderName);
             }
 
             if ((fields.Flags & BuildEventArgsFieldFlags.Timestamp) != 0)
             {
-                buildEventArgsFieldTimestamp.SetValue(buildEventArgs, fields.Timestamp);
+                Reflector.BuildEventArgs_timestamp.SetValue(buildEventArgs, fields.Timestamp);
             }
         }
 
@@ -1205,7 +1195,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             // on some platforms (net5) this method was added to BinaryReader
             // but it's not available on others. Call our own extension method
             // explicitly to avoid ambiguity.
-            return binaryReader.Read7BitEncodedInt();
+            return BinaryReaderExtensions.Read7BitEncodedInt(binaryReader);
         }
 
         private long ReadInt64()

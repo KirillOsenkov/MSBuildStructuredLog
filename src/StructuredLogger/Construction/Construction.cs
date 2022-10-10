@@ -25,9 +25,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private readonly ConcurrentDictionary<string, string> _taskToAssemblyMap =
             new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-        private readonly ConcurrentDictionary<Project, ProjectInstance> _projectToProjectInstanceMap =
-            new ConcurrentDictionary<Project, ProjectInstance>();
-
         private readonly object syncLock = new object();
 
         private readonly MessageProcessor messageProcessor;
@@ -36,6 +33,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public StringCache StringTable => stringTable;
 
         public NamedNode EvaluationFolder => Build.EvaluationFolder;
+        public Folder EnvironmentFolder;
 
         public Construction()
         {
@@ -76,6 +74,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private string SoftIntern(string text) => stringTable.SoftIntern(text);
 
+        private readonly HashSet<string> environmentVariablesUsed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        public void AddEnvironmentVariable(string environmentVariableName, string environmentVariableValue)
+        {
+            if (environmentVariablesUsed.Add(environmentVariableName))
+            {
+                var property = new Property { Name = environmentVariableName, Value = environmentVariableValue };
+                EnvironmentFolder.AddChild(property);
+            }
+        }
+
         public void BuildStarted(object sender, BuildStartedEventArgs args)
         {
             try
@@ -83,8 +92,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 lock (syncLock)
                 {
                     Build.StartTime = args.Timestamp;
-                    var properties = Build.GetOrCreateNodeWithName<Folder>(Intern(Strings.Environment));
-                    AddProperties(properties, args.BuildEnvironment);
+
+                    EnvironmentFolder = Build.GetOrCreateNodeWithName<Folder>(Intern(Strings.Environment));
+
+                    if (args.BuildEnvironment?.Count > 0)
+                    {
+                        AddProperties(EnvironmentFolder, args.BuildEnvironment);
+                    }
+
+                    EnvironmentFolder.AddChild(new Note
+                    {
+                        Text = Intern(Strings.TruncatedEnvironment)
+                    });
 
                     // realize the evaluation folder now so it is ordered before the main solution node
                     _ = EvaluationFolder;
@@ -309,14 +328,30 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (originalProject != null)
                 {
                     target.ParentTarget = messageText;
-                    var originalTarget = originalProject.GetTargetById(originalBuildEventContext.TargetId);
-                    if (originalTarget != null)
+                    if (originalBuildEventContext.TargetId != -1 &&
+                        originalProject.GetTargetById(originalBuildEventContext.TargetId) is Target originalTarget)
                     {
                         target.OriginalNode = originalTarget;
                     }
                     else
                     {
-                        target.OriginalNode = originalProject;
+                        // the original target was skipped because of false condition, so its target id == -1
+                        // Need to look it up by name, if unambiguous
+                        var candidates = originalProject
+                            .Children
+                            .OfType<Target>()
+                            .Where(t => t.Name == targetName)
+                            .ToArray();
+                        if (candidates.Length == 1)
+                        {
+                            originalTarget = candidates[0];
+                        }
+                        else
+                        {
+                            originalTarget = null;
+                        }
+
+                        target.OriginalNode = (TimedNode)originalTarget ?? originalProject;
                     }
                 }
             }
@@ -810,9 +845,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        public static void AddMetadata(ITaskItem item, Item itemNode)
+        public void AddMetadata(ITaskItem item, Item itemNode)
         {
-            if (item.CloneCustomMetadata() is ArrayDictionary<string, string> metadata)
+            var cloned = item.CloneCustomMetadata();
+            if (cloned is ArrayDictionary<string, string> metadata)
             {
                 int count = metadata.Count;
                 if (count == 0)
@@ -838,6 +874,25 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     // hot path, do not use AddChild
                     // itemNode.AddChild(metadataNode);
+                    itemNode.Children.Add(metadataNode);
+                    metadataNode.Parent = itemNode;
+                }
+            }
+            else
+            {
+                if (cloned is ICollection collection)
+                {
+                    itemNode.EnsureChildrenCapacity(collection.Count);
+                }
+
+                foreach (DictionaryEntry metadataName in cloned)
+                {
+                    var metadataNode = new Metadata
+                    {
+                        Name = SoftIntern(Convert.ToString(metadataName.Key)),
+                        Value = SoftIntern(Convert.ToString(metadataName.Value))
+                    };
+
                     itemNode.Children.Add(metadataNode);
                     metadataNode.Parent = itemNode;
                 }
@@ -882,64 +937,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             AddProperties(
                 propertiesFolder,
-                list.OrderBy(d => d.Key, StringComparer.Ordinal),
+                list.OrderBy(d => d.Key, StringComparer.OrdinalIgnoreCase),
                 project as IProjectOrEvaluation);
-        }
-
-        // normally MSBuild internal data structures aren't available to loggers, but we really want access
-        // to get at the target graph.
-        private void RetrieveProjectInstance(Project project, ProjectStartedEventArgs args)
-        {
-            if (_projectToProjectInstanceMap.ContainsKey(project))
-            {
-                return;
-            }
-
-            var projectItemInstanceEnumeratorProxy = args?.Items;
-            if (projectItemInstanceEnumeratorProxy == null)
-            {
-                return;
-            }
-
-            var _backingItems = GetField(projectItemInstanceEnumeratorProxy, "_backingItems");
-            if (_backingItems == null)
-            {
-                return;
-            }
-
-            var _backingEnumerable = GetField(_backingItems, "_backingEnumerable");
-            if (_backingEnumerable == null)
-            {
-                return;
-            }
-
-            var _nodes = GetField(_backingEnumerable, "_nodes") as IDictionary;
-            if (_nodes == null || _nodes.Count == 0)
-            {
-                return;
-            }
-
-            var projectItemInstance = _nodes.Keys.OfType<object>().FirstOrDefault() as ProjectItemInstance;
-            if (projectItemInstance == null)
-            {
-                return;
-            }
-
-            var projectInstance = projectItemInstance.Project;
-            if (projectInstance == null)
-            {
-                return;
-            }
-
-            _projectToProjectInstanceMap[project] = projectInstance;
-        }
-
-        private static object GetField(object instance, string fieldName)
-        {
-            return instance?
-                .GetType()
-                .GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)?
-                .GetValue(instance);
         }
 
         private static HashSet<string> ignoreAssemblyForTasks = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
@@ -977,10 +976,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Task result = taskName.ToLowerInvariant() switch
             {
                 "copy" => new CopyTask(),
+                "robocopy" => new RobocopyTask(),
                 "csc" => new CscTask(),
                 "vbc" => new VbcTask(),
                 "fsc" => new FscTask(),
                 "resolveassemblyreference" => new ResolveAssemblyReferenceTask(),
+                "cl" => new CppAnalyzer.CppTask(),
+                "lib" => new CppAnalyzer.CppTask(),
+                "link" => new CppAnalyzer.CppTask(),
+                "multitooltask" => new CppAnalyzer.CppTask(),
                 _ => new Task(),
             };
 
@@ -1079,6 +1083,23 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         {
                             project.TargetFramework = kvp.Value;
                         }
+                    }
+                    // If neither of the above are there - look for the old project system
+                    else if (project.TargetFramework is null && string.Equals(kvp.Key, Strings.TargetFrameworkVersion, StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Note this is untranslated, so e.g. "v4.6.2" instead of "net462" - this is intentional as it
+                        // renders the badge for all projects, but you can still use this difference to tell what is/isn't an SDK project.
+                        project.TargetFramework = kvp.Value;
+                    }
+
+                    if (string.Equals(kvp.Key, Strings.Platform, StringComparison.OrdinalIgnoreCase))
+                    {
+                        project.Platform = kvp.Value;
+                    }
+
+                    if (string.Equals(kvp.Key, Strings.Configuration, StringComparison.OrdinalIgnoreCase))
+                    {
+                        project.Configuration = kvp.Value;
                     }
                 }
             }

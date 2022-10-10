@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using System.Text;
-using Microsoft.Build.Collections;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Internal;
 
@@ -184,7 +181,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 node = CreateParameterNode(itemType, items, isOutput);
             }
             else if (
-                kind == TaskParameterMessageKind.AddItem || 
+                kind == TaskParameterMessageKind.AddItem ||
                 kind == TaskParameterMessageKind.RemoveItem ||
                 kind == TaskParameterMessageKind.SkippedTargetInputs ||
                 kind == TaskParameterMessageKind.SkippedTargetOutputs)
@@ -268,7 +265,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             foreach (ITaskItem item in items)
             {
                 var itemNode = new Item { Text = item.ItemSpec };
-                Construction.AddMetadata(item, itemNode);
+                this.construction.AddMetadata(item, itemNode);
                 parent.AddChild(itemNode);
             }
         }
@@ -434,7 +431,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 parent = GetTarget(args);
 
-                if (Strings.TaskSkippedFalseConditionRegex.IsMatch(message))
+                if (message.Contains(Strings.TaskSkippedFalseCondition) && Strings.TaskSkippedFalseConditionRegex.IsMatch(message))
                 {
                     lowRelevance = true;
                 }
@@ -463,9 +460,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         args2.BuildEventContext = args.BuildEventContext;
                         args2.SkipReason = targetSkipReason;
                         args2.OriginallySucceeded = targetSkipReason != TargetSkipReason.PreviouslyBuiltUnsuccessfully;
-                        typeof(BuildEventArgs)
-                            .GetField("timestamp", BindingFlags.Instance | BindingFlags.NonPublic)
-                            .SetValue(args2, args.Timestamp);
+                        Reflector.BuildEventArgs_timestamp.SetValue(args2, args.Timestamp);
                         construction.TargetSkipped(args2);
                         return;
                     }
@@ -482,7 +477,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     parent = evaluation;
                 }
 
-                if (args is PropertyReassignmentEventArgs || Strings.PropertyReassignmentRegex.IsMatch(message))
+                if (args is PropertyReassignmentEventArgs || (message.Contains(Strings.PropertyReassignment) && Strings.PropertyReassignmentRegex.IsMatch(message)))
                 {
                     TimedNode properties;
                     if (evaluation != null)
@@ -517,7 +512,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     parent = construction.EvaluationFolder;
                 }
-                else if (construction.Build.FileFormatVersion < 9 && Strings.PropertyReassignmentRegex.IsMatch(message))
+                else if (construction.Build.FileFormatVersion < 9 && message.Contains(Strings.PropertyReassignment) && Strings.PropertyReassignmentRegex.IsMatch(message))
                 {
                     if (!evaluationMessagesAlreadySeen.Add(message))
                     {
@@ -541,7 +536,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     buildEventContext.TaskId == 0)
                 {
                     // must be Detailed Build Summary
-                    // https://github.com/Microsoft/msbuild/blob/master/src/XMakeBuildEngine/BackEnd/Components/Scheduler/Scheduler.cs#L509
+                    // https://github.com/dotnet/msbuild/blob/main/src/XMakeBuildEngine/BackEnd/Components/Scheduler/Scheduler.cs#L509
                     DetailedSummary.AppendLine(message);
                     return;
                 }
@@ -555,18 +550,58 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         var version = message.Substring(Strings.MSBuildVersionPrefix.Length);
                         construction.Build.MSBuildVersion = version;
                     }
+                    else if (message.StartsWith(Strings.MSBuildExecutablePathPrefix))
+                    {
+                        var executablePath = message.Substring(Strings.MSBuildExecutablePathPrefix.Length);
+                        construction.Build.MSBuildExecutablePath = executablePath;
+                    }
                 }
             }
 
-            if (nodeToAdd == null)
+            if (args is EnvironmentVariableReadEventArgs envArgs)
+            {
+                string environmentVariableName = Intern(envArgs.EnvironmentVariableName);
+                string environmentVariableValue = Intern(message);
+                nodeToAdd = new Property { Name = environmentVariableName, Value = environmentVariableValue };
+                construction.AddEnvironmentVariable(environmentVariableName, environmentVariableValue);
+            }
+            else if (nodeToAdd == null)
             {
                 message = Intern(message);
-                nodeToAdd = new Message
+
+                if (args is CriticalBuildMessageEventArgs criticalArgs)
                 {
-                    Text = message,
-                    Timestamp = args.Timestamp,
-                    IsLowRelevance = lowRelevance
-                };
+                    var critical = new CriticalBuildMessage();
+                    critical.Text = message;
+                    critical.Timestamp = args.Timestamp;
+                    critical.Code = Intern(criticalArgs.Code);
+                    critical.ColumnNumber = criticalArgs.ColumnNumber;
+                    critical.EndColumnNumber = criticalArgs.EndColumnNumber;
+                    critical.EndLineNumber = criticalArgs.EndLineNumber;
+                    critical.LineNumber = criticalArgs.LineNumber;
+                    critical.File = Intern(criticalArgs.File);
+                    critical.ProjectFile = Intern(criticalArgs.ProjectFile);
+                    critical.Subcategory = Intern(criticalArgs.Subcategory);
+
+                    nodeToAdd = critical;
+                }
+                else if (parent is Task task && task is CppAnalyzer.CppTask)
+                {
+                    nodeToAdd = new TimedMessage
+                    {
+                        Text = message,
+                        Timestamp = args.Timestamp,
+                        IsLowRelevance = lowRelevance
+                    };
+                }
+                else
+                {
+                    nodeToAdd = new Message
+                    {
+                        Text = message,
+                        IsLowRelevance = lowRelevance
+                    };
+                }
             }
 
             parent.AddChild(nodeToAdd);

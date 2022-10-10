@@ -7,39 +7,35 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class BuildAnalyzer
     {
-        private Build build;
-        private DoubleWritesAnalyzer doubleWritesAnalyzer;
-        private ResolveAssemblyReferenceAnalyzer resolveAssemblyReferenceAnalyzer;
-        private int index;
-        private Dictionary<string, TimeSpan> taskDurations = new Dictionary<string, TimeSpan>();
+        private readonly Build build;
+        private readonly DoubleWritesAnalyzer doubleWritesAnalyzer;
+        private readonly ResolveAssemblyReferenceAnalyzer resolveAssemblyReferenceAnalyzer;
+        private readonly CppAnalyzer cppAnalyzer;
+        private readonly Dictionary<string, (TimeSpan TotalDuration, Dictionary<string, TimeSpan> ParentDurations)> taskDurations
+            = new Dictionary<string, (TimeSpan TotalDuration, Dictionary<string, TimeSpan> ParentDurations)>();
         private readonly List<Folder> analyzerReports = new List<Folder>();
+        private readonly List<Folder> generatorReports = new List<Folder>();
+        private int index;
 
         public BuildAnalyzer(Build build)
         {
             this.build = build;
             doubleWritesAnalyzer = new DoubleWritesAnalyzer();
             resolveAssemblyReferenceAnalyzer = new ResolveAssemblyReferenceAnalyzer();
+            cppAnalyzer = new CppAnalyzer();
         }
 
         public static void AnalyzeBuild(Build build)
         {
-            try
+            if (build.IsAnalyzed)
             {
-                if (build.IsAnalyzed)
-                {
-                    SealAndCalculateIndices(build);
-                    return;
-                }
+                SealAndCalculateIndices(build);
+                return;
+            }
 
-                var analyzer = new BuildAnalyzer(build);
-                analyzer.Analyze();
-                build.IsAnalyzed = true;
-            }
-            catch (Exception ex)
-            {
-                DialogService.ShowMessageBox(
-                    "Error while analyzing build. Sorry about that. Please Ctrl+C to copy this text and file an issue on https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/new \r\n" + ex.ToString());
-            }
+            var analyzer = new BuildAnalyzer(build);
+            analyzer.Analyze();
+            build.IsAnalyzed = true;
         }
 
         private static void SealAndCalculateIndices(Build build)
@@ -120,7 +116,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     AnalyzeEvaluation(folder);
                 }
+                else if (folder.Name == Strings.Environment)
+                {
+                    AnalyzeEnvironment(folder);
+                }
             }
+        }
+
+        private void AnalyzeEnvironment(NamedNode folder)
+        {
+            cppAnalyzer.AnalyzeEnvironment(folder);
         }
 
         private void AnalyzeEvaluation(NamedNode folder)
@@ -193,6 +198,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             doubleWritesAnalyzer.AppendDoubleWritesFolder(build);
             resolveAssemblyReferenceAnalyzer.AppendFinalReport(build);
+            cppAnalyzer.AppendCppAnalyzer(build);
 
             if (build.LogFilePath != null)
             {
@@ -200,7 +206,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             var durations = taskDurations
-                .OrderByDescending(kvp => kvp.Value)
+                .OrderByDescending(kvp => kvp.Value.TotalDuration)
                 .Where(kvp => // no need to include MSBuild and CallTarget tasks as they are not "terminal leaf" tasks
                     !string.Equals(kvp.Key, "MSBuild", StringComparison.OrdinalIgnoreCase) &&
                     !string.Equals(kvp.Key, "CallTarget", StringComparison.OrdinalIgnoreCase))
@@ -214,11 +220,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 var top10Tasks = build.GetOrCreateNodeWithName<Folder>(folderName);
                 foreach (var kvp in durations)
                 {
-                    top10Tasks.AddChild(new Item
+                    var taskItem = new Item
                     {
                         Name = Intern(kvp.Key),
-                        Text = Intern(TextUtilities.DisplayDuration(kvp.Value))
-                    });
+                        Text = Intern(TextUtilities.DisplayDuration(kvp.Value.TotalDuration))
+                    };
+                    var parentDurations = kvp.Value.ParentDurations.OrderByDescending(kv => kv.Value).Take(10);
+                    foreach (var parentDuration in parentDurations)
+                    {
+                        taskItem.AddChild(new Item
+                        {
+                            Name = Intern(parentDuration.Key),
+                            Text = Intern(TextUtilities.DisplayDuration(parentDuration.Value))
+                        });
+                    }
+                    top10Tasks.AddChild(taskItem);
                 }
             }
 
@@ -226,6 +242,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 var analyzerReportSummary = build.GetOrCreateNodeWithName<Folder>(Intern($"Analyzer Summary"));
                 CscTaskAnalyzer.CreateMergedReport(analyzerReportSummary, analyzerReports.ToArray());
+            }
+
+            if (generatorReports.Count > 0)
+            {
+                var generatorReportSummary = build.GetOrCreateNodeWithName<Folder>(Intern($"Generator Summary"));
+                CscTaskAnalyzer.CreateMergedReport(generatorReportSummary, generatorReports.ToArray());
             }
         }
 
@@ -268,12 +290,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
-            if (string.IsNullOrEmpty(project.TargetFramework))
+            if (string.IsNullOrEmpty(project.TargetFramework) || string.IsNullOrEmpty(project.Platform) || string.IsNullOrEmpty(project.Configuration))
             {
                 var evaluation = build.FindEvaluation(project.EvaluationId);
                 if (evaluation != null)
                 {
                     project.TargetFramework = evaluation.TargetFramework;
+                    project.Platform = evaluation.Platform;
+                    project.Configuration = evaluation.Configuration;
+
                     if (!string.IsNullOrEmpty(project.TargetFramework))
                     {
                         var text = $"Properties and items are available at evaluation id:{project.EvaluationId}. Use the hyperlink above or the new 'Properties and items' tab.";
@@ -302,9 +327,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 build.RegisterTask(task);
             }
 
-            taskDurations.TryGetValue(task.Name, out var duration);
-            duration += task.Duration;
-            taskDurations[task.Name] = duration;
+            UpdateTaskDurations(task);
 
             if (task.Name == "ResolveAssemblyReference")
             {
@@ -316,14 +339,42 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
             else if (task.Name == "Csc")
             {
-                var analyzerReport = CscTaskAnalyzer.Analyze(task);
+                var (analyzerReport, generatorReport) = CscTaskAnalyzer.Analyze(task);
                 if (analyzerReport is not null)
                 {
                     analyzerReports.Add(analyzerReport);
                 }
+
+                if (generatorReport is not null)
+                {
+                    generatorReports.Add(generatorReport);
+                }
+            }
+            else if (task is CppAnalyzer.CppTask cppTask)
+            {
+                cppAnalyzer.AnalyzeTask(cppTask);
             }
 
             doubleWritesAnalyzer.AnalyzeTask(task);
+        }
+
+        private void UpdateTaskDurations(Task task)
+        {
+            var parentName =
+                (task.Parent is Task parentTask) ? parentTask.Name :
+                (task.Parent is Target parentTarget) ? parentTarget.Name :
+                "???";
+
+            if (!taskDurations.TryGetValue(task.Name, out var durationTuple))
+            {
+                durationTuple = (TimeSpan.Zero, new Dictionary<string, TimeSpan>());
+            }
+            durationTuple.TotalDuration += task.Duration;
+
+            durationTuple.ParentDurations.TryGetValue(parentName, out var parentDuration);
+            durationTuple.ParentDurations[parentName] = parentDuration + task.Duration;
+
+            taskDurations[task.Name] = durationTuple;
         }
 
         private void AnalyzeTarget(Target target)

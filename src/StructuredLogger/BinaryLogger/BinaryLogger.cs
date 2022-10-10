@@ -93,19 +93,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private string FilePath { get; set; }
 
-        /// <summary>
+        /// <summary> Gets or sets the verbosity level.</summary>
+        /// <remarks>
         /// The binary logger Verbosity is always maximum (Diagnostic). It tries to capture as much
         /// information as possible.
-        /// </summary>
+        /// </remarks>
         public LoggerVerbosity Verbosity { get; set; } = LoggerVerbosity.Diagnostic;
 
         /// <summary>
-        /// The only supported parameter is the output log file path (e.g. "msbuild.binlog") 
+        /// Gets or sets the parameters. The only supported parameter is the output log file path (for example, "msbuild.binlog"). 
         /// </summary>
         public string Parameters { get; set; }
 
         /// <summary>
-        /// Initializes the logger by subscribing to events of IEventSource
+        /// Initializes the logger by subscribing to events of the specified event source.
         /// </summary>
         public void Initialize(IEventSource eventSource)
         {
@@ -114,6 +115,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             Environment.SetEnvironmentVariable("MSBUILDTARGETOUTPUTLOGGING", "true");
             Environment.SetEnvironmentVariable("MSBUILDLOGIMPORTS", "1");
+            bool logPropertiesAndItemsAfterEvaluation = true;
 
             ProcessParameters();
 
@@ -146,12 +148,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     eventSource3.IncludeEvaluationMetaprojects();
                 }
+
+                if (logPropertiesAndItemsAfterEvaluation && eventSource is IEventSource4 eventSource4)
+                {
+                    eventSource4.IncludeEvaluationPropertiesAndItems();
+                }
             }
             catch (Exception e)
             {
                 string errorCode;
                 string helpKeyword;
-                string message = ResourceUtilities.FormatResourceString(out errorCode, out helpKeyword, "InvalidFileLoggerFile", FilePath, e.Message);
+                string message = ResourceUtilities.FormatResourceStringStripCodeAndKeyword(out errorCode, out helpKeyword, "InvalidFileLoggerFile", FilePath, e.Message);
                 throw new LoggerException(message, e, errorCode, helpKeyword);
             }
 
@@ -274,10 +281,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             if (Parameters == null)
             {
-                throw new LoggerException(ResourceUtilities.FormatResourceString("InvalidBinaryLoggerParameters", ""));
+                throw new LoggerException(ResourceUtilities.FormatResourceStringStripCodeAndKeyword("InvalidBinaryLoggerParameters", ""));
             }
 
-            var parameters = Parameters.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+            var parameters = Parameters.Split(MSBuildConstants.SemicolonChar, StringSplitOptions.RemoveEmptyEntries);
             foreach (var parameter in parameters)
             {
                 if (string.Equals(parameter, "ProjectImports=None", StringComparison.OrdinalIgnoreCase))

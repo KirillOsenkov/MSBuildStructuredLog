@@ -8,10 +8,10 @@
     <owners>flcdrg, KirillOsenkov</owners>
     <title>MSBuild Structured Log Viewer</title>
     <authors>Kirill Osenkov</authors>
-    <projectUrl>http://msbuildlog.com/</projectUrl>
-    <iconUrl>http://cdn.rawgit.com/KirillOsenkov/MSBuildStructuredLog/master/src/StructuredLogViewer/icons/msbuild-structured-log-viewer.png</iconUrl>
+    <projectUrl>https://msbuildlog.com/</projectUrl>
+    <iconUrl>http://cdn.rawgit.com/KirillOsenkov/MSBuildStructuredLog/main/src/StructuredLogViewer/icons/msbuild-structured-log-viewer.png</iconUrl>
     <copyright>2016 Kirill Osenkov</copyright>
-    <licenseUrl>https://raw.githubusercontent.com/KirillOsenkov/MSBuildStructuredLog/master/LICENSE</licenseUrl>
+    <licenseUrl>https://raw.githubusercontent.com/KirillOsenkov/MSBuildStructuredLog/main/LICENSE</licenseUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <projectSourceUrl>https://github.com/KirillOsenkov/MSBuildStructuredLog</projectSourceUrl>
     <docsUrl>https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki</docsUrl>
@@ -22,7 +22,7 @@
 
 Double-click the `.binlog` file to open it in MSBuild Structured Log Viewer:
 
-![Screenshot](http://msbuildlog.com/Screenshot1.png)
+![Screenshot](https://msbuildlog.com/Screenshot1.png)
  </description>
     <releaseNotes>Set the default back to the log tab.</releaseNotes>
     <dependencies>

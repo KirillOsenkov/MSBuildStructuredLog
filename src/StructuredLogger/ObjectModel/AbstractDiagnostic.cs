@@ -20,12 +20,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public override string ToString()
         {
-            File = File ?? "";
+            File ??= "";
 
             string position = "";
             if (LineNumber != 0 || ColumnNumber != 0)
             {
-                position = $"({LineNumber},{ColumnNumber}):";
+                string column = "";
+                if (ColumnNumber > 0)
+                {
+                    column = "," + ColumnNumber.ToString();
+                }
+
+                position = $"({LineNumber}{column}):";
             }
 
             string code = "";

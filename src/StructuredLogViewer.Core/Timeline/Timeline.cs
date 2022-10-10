@@ -1,26 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogViewer
 {
     public class Timeline
     {
-        private Build build;
-
         public Dictionary<int, Lane> Lanes { get; set; } = new Dictionary<int, Lane>();
 
-        public Timeline(Build build)
+        public Timeline(Build build, bool analyzeCpp)
         {
-            this.build = build;
-
-            Populate(build);
+            Populate(build, analyzeCpp: analyzeCpp);
         }
 
-        private void Populate(Build build)
+        private void Populate(Build build, bool analyzeCpp = false)
         {
             build.VisitAllChildren<TimedNode>(node =>
             {
@@ -43,9 +37,33 @@ namespace StructuredLogViewer
                     Lanes[nodeId] = lane;
                 }
 
-                var block = CreateBlock(node);
-                lane.Add(block);
+                lane.Add(CreateBlock(node));
             });
+
+            if (analyzeCpp)
+            {
+                build.VisitAllChildren<CppAnalyzer.CppAnalyzerNode>(cppAnalyzerNode =>
+                {
+                    var cppAnalyzer = cppAnalyzerNode.GetCppAnalyzer();
+                    var cppTimedNodes = cppAnalyzer.GetAnalyzedTimedNode();
+
+                    foreach (var cppTimedNode in cppTimedNodes)
+                    {
+                        // cppAnalyzer shouldn't create any new lanes.
+                        if (Lanes.TryGetValue(cppTimedNode.NodeId, out var lane))
+                        {
+                            var block = new Block()
+                            {
+                                StartTime = cppTimedNode.StartTime,
+                                EndTime = cppTimedNode.EndTime,
+                                Text = cppTimedNode.Text,
+                                Node = cppTimedNode.Node,
+                            };
+                            lane.Add(block);
+                        }
+                    }
+                });
+            }
         }
 
         private Block CreateBlock(TimedNode node)

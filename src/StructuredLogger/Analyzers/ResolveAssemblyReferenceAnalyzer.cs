@@ -6,7 +6,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     /// <summary>
     /// Adds the value of Private metadata if present to source items of dependencies output by RAR
-    /// https://github.com/Microsoft/msbuild/blob/master/documentation/wiki/ResolveAssemblyReference.md
+    /// https://github.com/dotnet/msbuild/blob/main/documentation/wiki/ResolveAssemblyReference.md
     /// </summary>
     public class ResolveAssemblyReferenceAnalyzer
     {

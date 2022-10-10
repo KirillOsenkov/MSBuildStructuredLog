@@ -4,7 +4,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class TimedNode : NamedNode
     {
+        /// <summary>
+        /// The Id of a Project, ProjectEvaluation, Target and Task.
+        /// Corresponds to ProjectStartedEventsArgs.ProjectId, TargetStartedEventArgs.TargetId, etc.
+        /// </summary>
         public int Id { get; set; }
+
+        /// <summary>
+        /// Corresponds to BuildEventArgs.BuildEventContext.NodeId,
+        /// which is the id of the MSBuild.exe node process that built the current project or
+        /// executed the given target or task.
+        /// </summary>
         public int NodeId { get; set; }
 
         /// <summary>
@@ -32,7 +42,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public override string TypeName => nameof(TimedNode);
 
-        public string GetTimeAndDurationText()
+        public string GetTimeAndDurationText(bool fullPrecision = false)
         {
             var duration = DurationText;
             if (string.IsNullOrEmpty(duration))
@@ -40,8 +50,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 duration = "0";
             }
 
-            return $@"Start: {TextUtilities.Display(StartTime, displayDate: true)}
-End: {TextUtilities.Display(EndTime, displayDate: true)}
+            return $@"Start: {TextUtilities.Display(StartTime, displayDate: true, fullPrecision)}
+End: {TextUtilities.Display(EndTime, displayDate: true, fullPrecision)}
 Duration: {duration}";
         }
 

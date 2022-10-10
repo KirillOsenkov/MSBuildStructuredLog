@@ -31,6 +31,7 @@ namespace StructuredLogViewer.Avalonia.Controls
         private SourceFileResolver sourceFileResolver;
         private ArchiveFileResolver archiveFile => sourceFileResolver.ArchiveFile;
         private PreprocessedFileManager preprocessedFileManager;
+        private NavigationHelper navigationHelper;
 
         private MenuItem copyItem;
         private MenuItem copySubtreeItem;
@@ -77,7 +78,7 @@ namespace StructuredLogViewer.Avalonia.Controls
             searchLogControl.ResultsTreeBuilder = BuildResultTree;
             searchLogControl.WatermarkDisplayed += () =>
             {
-                Search.ClearSearchResults(Build);
+                Search.ClearSearchResults(Build, SettingsService.MarkResultsInTree);
                 UpdateWatermark();
             };
 
@@ -190,7 +191,8 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             preprocessedFileManager = new PreprocessedFileManager(Build, sourceFileResolver);
             preprocessedFileManager.DisplayFile += path => DisplayFile(path);
 
-            //PopulateTimeline();
+            navigationHelper = new NavigationHelper(Build, sourceFileResolver);
+            navigationHelper.OpenFileRequested += path => DisplayFile(path);
         }
 
         private void RegisterTreeViewHandlers(TreeView treeView)
@@ -251,13 +253,6 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             centralTabControl.SelectedIndex = 0;
         }
 
-        //private void PopulateTimeline()
-        //{
-        //    var timeline = new Timeline(Build);
-        //    this.timeline.BuildControl = this;
-        //    this.timeline.SetTimeline(timeline);
-        //}
-
         private static string[] searchExamples = new[]
         {
             "Copying file from ",
@@ -272,6 +267,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             "csc $task",
             "ResolveAssemblyReference $task",
             "$message CompilerServer failed",
+            "will be compiled because",
         };
 
         private static string[] nodeKinds = new[]
@@ -309,7 +305,7 @@ Use syntax like '$property Prop' to narrow results down by item kind. Supported 
 Examples:
 ";
 
-            //Inline MakeLink(string query, string before = " • ", string after = "\r\n")
+            //Inline MakeLink(string query, string before = " \u2022 ", string after = "\r\n")
             //{
             //    var hyperlink = new Hyperlink(new Run(query));
             //    hyperlink.Click += (s, e) => searchLogControl.SearchText = query;
@@ -359,7 +355,7 @@ Examples:
             foreach (var example in searchExamples)
             {
                 //text += (MakeLink(example));
-                text += example;
+                text += " \u2022 " + example + Environment.NewLine;
             }
 
             var recentSearches = SettingsService.GetRecentSearchStrings();
@@ -372,7 +368,7 @@ Recent:
                 foreach (var recentSearch in recentSearches.Where(s => !searchExamples.Contains(s) && !nodeKinds.Contains(s)))
                 {
                     //text += MakeLink(recentSearch));
-                    text += recentSearch;
+                    text += " \u2022 " + recentSearch + Environment.NewLine;
                 }
             }
 
@@ -893,7 +889,7 @@ Recent:
             }
 
             Action preprocess = preprocessedFileManager.GetPreprocessAction(sourceFilePath, PreprocessedFileManager.GetEvaluationKey(evaluation));
-            documentWell.DisplaySource(sourceFilePath, text.Text, lineNumber, column, preprocess);
+            documentWell.DisplaySource(sourceFilePath, text.Text, lineNumber, column, preprocess, navigationHelper);
             return true;
         }
 
@@ -972,21 +968,15 @@ Recent:
             return node;
         }
 
-        private IEnumerable BuildResultTree(object resultsObject, bool moreAvailable)
+        public IEnumerable BuildResultTree(object resultsObject, bool moreAvailable = false)
         {
-            var results = resultsObject as ICollection<SearchResult>;
-            if (results == null)
-            {
-                return results;
-            }
+            var folder = ResultTree.BuildResultTree(resultsObject, moreAvailable, Elapsed);
 
-            var root = new Folder();
-            
             if (moreAvailable)
             {
                 var showAllButton = new ButtonNode
                 {
-                    Text = $"Showing first {results.Count} results. Show all results instead (slow)."
+                    Text = $"Showing first {folder.Children.Count} results. Show all results instead (slow)."
                 };
 
                 showAllButton.OnClick = () =>
@@ -995,43 +985,10 @@ Recent:
                     searchLogControl.TriggerSearch(searchLogControl.SearchText, int.MaxValue);
                 };
 
-                root.Children.Add(showAllButton);
-            }
-            
-            root.Children.Add(new Message
-            {
-                Text = $"{results.Count} result{(results.Count == 1 ? "" : "s")}. Search took: {Elapsed.ToString()}"
-            });
-
-            foreach (var result in results)
-            {
-                TreeNode parent = root;
-
-                var project = result.Node.GetNearestParent<Project>();
-                if (project != null)
-                {
-                    var projectProxy = root.GetOrCreateNodeWithName<ProxyNode>(project.Name);
-                    projectProxy.Original = project;
-                    if (projectProxy.Highlights.Count == 0)
-                    {
-                        projectProxy.Highlights.Add(project.Name);
-                    }
-
-                    parent = projectProxy;
-                }
-
-                var proxy = new ProxyNode();
-                proxy.Original = result.Node;
-                proxy.SearchResult = result;
-                parent.Children.Add(proxy);
+                folder.AddChildAtBeginning(showAllButton);
             }
 
-            if (!root.HasChildren)
-            {
-                root.Children.Add(new Message { Text = "No results found." });
-            }
-
-            return root.Children;
+            return folder.Children;
         }
 
         private void TreeViewItem_RequestBringIntoView(object sender, RequestBringIntoViewEventArgs e)

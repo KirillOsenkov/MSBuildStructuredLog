@@ -3,7 +3,8 @@
         x:Class="StructuredLogViewer.Avalonia.MainWindow"
         WindowState="Maximized"
         WindowStartupLocation="CenterScreen"
-        Classes="mainWindow">
+        Classes="mainWindow"
+        Icon="StructuredLogger.ico">
 
     <DockPanel>
         <Menu Name="mainMenu"

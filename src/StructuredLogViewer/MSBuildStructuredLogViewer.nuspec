@@ -9,7 +9,7 @@
     <language>en-US</language>
     <license type="expression">MIT</license>
     <projectUrl>https://github.com/KirillOsenkov/MSBuildStructuredLog</projectUrl>
-    <iconUrl>https://raw.githubusercontent.com/KirillOsenkov/MSBuildStructuredLog/$GitCommitIdShort$/docs/StructuredLogger.png</iconUrl>
+    <icon>StructuredLogger.png</icon>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>A logger that can be passed to MSBuild to record a detailed log file and a WPF viewer app to view the log files in a tree form.</description>
     <summary>Structured logger and viewer to investigate MSBuild builds</summary>
@@ -49,6 +49,9 @@
     <file src="System.ValueTuple.dll" target="lib\net472" />
     <file src="TaskRunner.exe" target="lib\net472" />
     <file src="TaskRunner.exe.config" target="lib\net472" />
+    <file src="TaskRunner.dll" target="lib\net472" />
+    <file src="TaskRunner.runtimeconfig.json" target="lib\net472" />
     <file src="Microsoft.Msagl.WpfGraphControl.dll" target="lib\net472" />
+    <file src="..\..\..\..\docs\StructuredLogger.png" target="StructuredLogger.png" />
   </files>
 </package>

@@ -34,7 +34,7 @@
   <Target Name="C">
   </Target>
 
-  <Target Name="Build" DependsOnTargets="A" Outputs="@(Item2)">
+  <Target Name="Build" DependsOnTargets="A" Outputs="@(Item2)" Returns="@(Item2)">
     <Message Text="Message text" Importance="high" />
 
     <PropertyGroup>

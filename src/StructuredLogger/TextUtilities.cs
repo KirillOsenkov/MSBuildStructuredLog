@@ -311,7 +311,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
-            return text.Substring(0, newLength) + trimPrompt;
+            var shortText = text.Substring(0, newLength);
+
+            if (lineBreak == newLength && IsWhitespace(text, new Span(newLength, text.Length - newLength)))
+            {
+                return shortText + '\u21b5';
+            }
+
+            return shortText + trimPrompt;
         }
 
         public static int IndexOfFirstLineBreak(this string text)
@@ -463,12 +470,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return span.Milliseconds + " ms";
         }
 
-        public static string Display(DateTime time, bool displayDate = false)
+        public static string Display(DateTime time, bool displayDate = false, bool fullPrecision = false)
         {
-            var formatString = "HH:mm:ss.fff";
+            string fullPrecisionString = fullPrecision ? "ffff" : "";
+
+            var formatString = "HH:mm:ss.fff" + fullPrecisionString;
             if (displayDate)
             {
-                formatString = "yyyy-MM-dd HH:mm:ss.fff";
+                formatString = "yyyy-MM-dd HH:mm:ss.fff" + fullPrecisionString;
             }
 
             return time.ToString(formatString);

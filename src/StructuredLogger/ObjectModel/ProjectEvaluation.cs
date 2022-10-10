@@ -17,7 +17,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public string EvaluationText { get; set; } = "";
 
+        public string AdornmentString => this.GetAdornmentString();
+
         public string TargetFramework { get; set; }
+
+        public string Platform { get; set; }
+
+        public string Configuration { get; set; }
 
         public double RelativeDuration { get; set; }
 
@@ -75,7 +81,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private Dictionary<string, NamedNode> importsMap = new Dictionary<string, NamedNode>();
+        private Dictionary<string, Import> importsMap = new Dictionary<string, Import>();
 
         public void AddImport(TextNode textNode)
         {
@@ -95,5 +101,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             parent.AddChild(textNode);
         }
+
+        public IEnumerable<Import> GetAllImportsTransitive()
+            => importsMap.Values;
     }
 }

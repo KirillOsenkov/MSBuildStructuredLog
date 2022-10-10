@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using StructuredLogViewer;
@@ -34,7 +34,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
             else if (node is Project project)
             {
-                return $"{project.Name} {project.TargetFramework}{project.TargetsDisplayText}";
+                return $"{project.Name} {project.AdornmentString} {project.TargetsDisplayText}";
             }
             else if (node is ProjectEvaluation evaluation)
             {

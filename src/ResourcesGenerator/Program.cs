@@ -6,7 +6,11 @@ namespace ResourcesGenerator
 {
     class Program
     {
-        static void Main(string[] args)
+        /// <summary>
+        /// To regenerate Strings.json, add the strings you want to consume from MSBuild to <see cref="ResourceCreator.ResourceNames"/>
+        /// and run this program
+        /// </summary>
+        static void Main()
         {
             var options = new Microsoft.Build.Locator.VisualStudioInstanceQueryOptions()
             {
@@ -19,17 +23,20 @@ namespace ResourcesGenerator
                 instances.FirstOrDefault();
             var msbuildPath = instance?.MSBuildPath;
 
-            // msbuildPath = @"C:\msbuild\artifacts\bin\bootstrap\net472\MSBuild\Current\Bin";
+            var otherCandidates = new[]
+            {
+                @"C:\msbuild\artifacts\bin\bootstrap\net472\MSBuild\Current\Bin",
+                Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+                    "Microsoft Visual Studio", "2022", "Enterprise", "MSBuild", "Current", "Bin"),
+                Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+                    "Microsoft Visual Studio", "2019", "Enterprise", "MSBuild", "Current", "Bin")
+            };
 
             if (msbuildPath == null)
             {
-                string defaultMSBuild = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
-                    "Microsoft Visual Studio", "2019", "Enterprise", "MSBuild", "Current", "Bin");
-                if (Directory.Exists(defaultMSBuild))
-                {
-                    msbuildPath = defaultMSBuild;
-                }
+                msbuildPath = otherCandidates.FirstOrDefault(Directory.Exists);
             }
 
             if (Directory.Exists(msbuildPath))

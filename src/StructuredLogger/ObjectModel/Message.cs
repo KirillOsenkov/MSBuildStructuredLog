@@ -3,12 +3,20 @@ using System.Text.RegularExpressions;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
+    public class TimedMessage : Message
+    {
+        /// <summary>
+        /// Timestamp of the message
+        /// </summary>
+        public override DateTime Timestamp { get; set; }
+    }
+
     public class Message : TextNode, IHasRelevance, IHasSourceFile, IHasLineNumber
     {
         /// <summary>
         /// Let's see if we even need timestamp, it's just eating memory for now
         /// </summary>
-        public DateTime Timestamp { get { return DateTime.MinValue; } set { } }
+        public virtual DateTime Timestamp { get { return DateTime.MinValue; } set { } }
 
         public override string TypeName => nameof(Message);
 
@@ -54,7 +62,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 var match = GetSourceFileMatch();
                 if (match != null && match.Success)
                 {
-                    return int.Parse(match.Groups["Line"].Value);
+                    var value = match.Groups["Line"].Value;
+                    return int.Parse(value);
                 }
 
                 return null;

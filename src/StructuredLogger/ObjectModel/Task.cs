@@ -1,4 +1,11 @@
-﻿namespace Microsoft.Build.Logging.StructuredLogger
+﻿using System;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
+
+namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class Task : TimedNode, IHasSourceFile, IHasLineNumber
     {

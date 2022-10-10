@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -18,7 +18,7 @@ using System.Xml;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Language.Xml;
-
+using Mono.Cecil;
 using StructuredLogViewer.Core.ProjectGraph;
 
 namespace StructuredLogViewer.Controls
@@ -34,6 +34,7 @@ namespace StructuredLogViewer.Controls
         private SourceFileResolver sourceFileResolver;
         private ArchiveFileResolver archiveFile => sourceFileResolver.ArchiveFile;
         private PreprocessedFileManager preprocessedFileManager;
+        private NavigationHelper navigationHelper;
 
         private MenuItem copyItem;
         private MenuItem copySubtreeItem;
@@ -41,6 +42,7 @@ namespace StructuredLogViewer.Controls
         private MenuItem searchInSubtreeItem;
         private MenuItem excludeSubtreeFromSearchItem;
         private MenuItem goToTimeLineItem;
+        private MenuItem goToTracingItem;
         private MenuItem copyChildrenItem;
         private MenuItem sortChildrenItem;
         private MenuItem copyNameItem;
@@ -53,12 +55,13 @@ namespace StructuredLogViewer.Controls
         private MenuItem runItem;
         private MenuItem debugItem;
         private MenuItem hideItem;
-        private MenuItem copyAllItem;
         private MenuItem showTimeItem;
         private ContextMenu sharedTreeContextMenu;
         private ContextMenu filesTreeContextMenu;
 
         public TreeView ActiveTreeView;
+
+        private PropertiesAndItemsSearch propertiesAndItemsSearch;
 
         public BuildControl(Build build, string logFilePath)
         {
@@ -81,9 +84,11 @@ namespace StructuredLogViewer.Controls
             searchLogControl.ResultsTreeBuilder = BuildResultTree;
             searchLogControl.WatermarkDisplayed += () =>
             {
-                Search.ClearSearchResults(Build);
+                Search.ClearSearchResults(Build, SettingsService.MarkResultsInTree);
                 UpdateWatermark();
             };
+
+            propertiesAndItemsSearch = new PropertiesAndItemsSearch();
 
             propertiesAndItemsControl.ExecuteSearch = (searchText, maxResults, cancellationToken) =>
             {
@@ -93,64 +98,12 @@ namespace StructuredLogViewer.Controls
                     return null;
                 }
 
-                var roots = new List<TreeNode>(2);
-                var properties = context.FindChild<Folder>(Strings.Properties);
-                var items = context.FindChild<Folder>(Strings.Items);
-                if (properties != null)
-                {
-                    roots.Add(properties);
-                }
-
-                if (items != null)
-                {
-                    roots.Add(items);
-                }
-
-                var strings = new StringCache();
-                foreach (var root in roots)
-                {
-                    CollectStrings(root, strings);
-                }
-
-                var search = new Search(roots, strings.Instances, maxResults, SettingsService.MarkResultsInTree);
-                var results = search.FindNodes(searchText, cancellationToken);
-                var otherResults = new List<SearchResult>();
-
-                // Find all folders where no other results are under that folder.
-                // First find all ancestors of all non-folders.
-                var allAncestors = new HashSet<BaseNode>(results.Count());
-                foreach (var result in results)
-                {
-                    var node = result.Node;
-                    if (node is not Folder itemType)
-                    {
-                        otherResults.Add(result);
-                        foreach (var ancestor in node.GetParentChainExcludingThis())
-                        {
-                            allAncestors.Add(ancestor);
-                        }
-                    }
-                }
-
-                var includeFolderChildren = new List<BaseNode>();
-
-                // Iterate over all folders where no other results are under that folder.
-                foreach (var folder in results.Select(r => r.Node).OfType<Folder>().Where(f => !allAncestors.Contains(f)))
-                {
-                    foreach (var item in folder.Children.OfType<Item>())
-                    {
-                        includeFolderChildren.Add(item);
-                    }
-                }
-
-                results =
-                    otherResults
-                    .Concat(includeFolderChildren.Select(c =>
-                    {
-                        var result = new SearchResult(c);
-                        return result;
-                    }))
-                    .ToArray();
+                var results = propertiesAndItemsSearch.Search(
+                    context,
+                    searchText,
+                    maxResults,
+                    SettingsService.MarkResultsInTree,
+                    cancellationToken);
 
                 return results;
             };
@@ -186,19 +139,28 @@ namespace StructuredLogViewer.Controls
                 projectGraphTab.Visibility = Visibility.Collapsed;
             }
 
+            // Search Log | Properties and Items | Find in Files
             sharedTreeContextMenu = new ContextMenu();
-            copyAllItem = new MenuItem() { Header = "Copy All" };
-            copyAllItem.Click += (s, a) => CopyAll();
-            sharedTreeContextMenu.Items.Add(copyAllItem);
+            var sharedCopyAllItem = new MenuItem() { Header = "Copy All" };
+            var sharedCopySubtreeItem = new MenuItem() { Header = "Copy subtree" };
+            sharedCopyAllItem.Click += (s, a) => CopyAll();
+            sharedCopySubtreeItem.Click += (s, a) => CopySubtree();
+            sharedTreeContextMenu.Items.Add(sharedCopyAllItem);
+            sharedTreeContextMenu.Items.Add(sharedCopySubtreeItem);
 
+            // Files
             filesTreeContextMenu = new ContextMenu();
-            var filesCopyAll = new MenuItem { Header = "Copy All" };
-            filesCopyAll.Click += (s, a) => CopyAll(filesTree.ResultsList);
-            var filesCopyPaths = new MenuItem { Header = "Copy file paths" };
-            filesCopyPaths.Click += (s, a) => CopyPaths(filesTree.ResultsList);
-            filesTreeContextMenu.Items.Add(filesCopyAll);
-            filesTreeContextMenu.Items.Add(filesCopyPaths);
+            var filesCopyAllItem = new MenuItem { Header = "Copy All" };
+            var filesCopyPathsItem = new MenuItem { Header = "Copy file paths" };
+            var filesCopySubtreeItem = new MenuItem { Header = "Copy subtree" };
+            filesCopyAllItem.Click += (s, a) => CopyAll();
+            filesCopyPathsItem.Click += (s, a) => CopyPaths();
+            filesCopySubtreeItem.Click += (s, a) => CopySubtree();
+            filesTreeContextMenu.Items.Add(filesCopyAllItem);
+            filesTreeContextMenu.Items.Add(filesCopyPathsItem);
+            filesTreeContextMenu.Items.Add(filesCopySubtreeItem);
 
+            // Build Log
             var contextMenu = new ContextMenu();
             contextMenu.Opened += ContextMenu_Opened;
             copyItem = new MenuItem() { Header = "Copy" };
@@ -207,6 +169,7 @@ namespace StructuredLogViewer.Controls
             searchInSubtreeItem = new MenuItem() { Header = "Search in subtree" };
             excludeSubtreeFromSearchItem = new MenuItem() { Header = "Exclude subtree from search" };
             goToTimeLineItem = new MenuItem() { Header = "Go to timeline" };
+            goToTracingItem = new MenuItem() { Header = "Go to tracing" };
             copyChildrenItem = new MenuItem() { Header = "Copy children" };
             sortChildrenItem = new MenuItem() { Header = "Sort children" };
             copyNameItem = new MenuItem() { Header = "Copy name" };
@@ -221,11 +184,12 @@ namespace StructuredLogViewer.Controls
             runItem = new MenuItem() { Header = "Run" };
             debugItem = new MenuItem() { Header = "Debug" };
             copyItem.Click += (s, a) => Copy();
-            copySubtreeItem.Click += (s, a) => CopySubtree();
+            copySubtreeItem.Click += (s, a) => CopySubtree(treeView);
             viewSubtreeTextItem.Click += (s, a) => ViewSubtreeText();
             searchInSubtreeItem.Click += (s, a) => SearchInSubtree();
             excludeSubtreeFromSearchItem.Click += (s, a) => ExcludeSubtreeFromSearch();
             goToTimeLineItem.Click += (s, a) => GoToTimeLine();
+            goToTracingItem.Click += (s, a) => GoToTracing();
             copyChildrenItem.Click += (s, a) => CopyChildren();
             sortChildrenItem.Click += (s, a) => SortChildren();
             copyNameItem.Click += (s, a) => CopyName();
@@ -249,6 +213,7 @@ namespace StructuredLogViewer.Controls
             contextMenu.Items.Add(searchInSubtreeItem);
             contextMenu.Items.Add(excludeSubtreeFromSearchItem);
             contextMenu.Items.Add(goToTimeLineItem);
+            contextMenu.Items.Add(goToTracingItem);
             contextMenu.Items.Add(copyItem);
             contextMenu.Items.Add(copySubtreeItem);
             contextMenu.Items.Add(copyFilePathItem);
@@ -329,48 +294,10 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             preprocessedFileManager = new PreprocessedFileManager(this.Build, sourceFileResolver);
             preprocessedFileManager.DisplayFile += filePath => DisplayFile(filePath);
 
+            navigationHelper = new NavigationHelper(Build, sourceFileResolver);
+            navigationHelper.OpenFileRequested += filePath => DisplayFile(filePath);
+
             centralTabControl.SelectionChanged += CentralTabControl_SelectionChanged;
-        }
-
-        private void CollectStrings(BaseNode root, StringCache strings)
-        {
-            switch (root)
-            {
-                case Property property:
-                    strings.Intern(property.Name);
-                    strings.Intern(property.Value);
-                    break;
-                case Item item:
-                    strings.Intern(item.Text);
-                    break;
-                case Metadata metadata:
-                    strings.Intern(metadata.Name);
-                    strings.Intern(metadata.Value);
-                    break;
-                case Folder folder:
-                    strings.Intern(folder.Name);
-                    break;
-                default:
-                    break;
-            }
-
-            if (root is TreeNode treeNode)
-            {
-                foreach (var child in treeNode.Children)
-                {
-                    CollectStrings(child, strings);
-                }
-            }
-        }
-
-        private IEnumerable<SearchResult> FindPropertiesAndItems(IProjectOrEvaluation projectOrEvaluation, string searchText)
-        {
-            if (projectOrEvaluation is not TimedNode node)
-            {
-                return null;
-            }
-
-            return null;
         }
 
         private void CentralTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -387,6 +314,10 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             else if (selectedItem.Name == nameof(projectGraphTab))
             {
                 PopulateProjectGraph();
+            }
+            else if (selectedItem.Name == nameof(tracingTab))
+            {
+                PopulateTrace();
             }
         }
 
@@ -463,11 +394,23 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
         {
             if (this.timeline.Timeline == null)
             {
-                var timeline = new Timeline(Build);
+                var timeline = new Timeline(Build, analyzeCpp: false);
                 this.timeline.BuildControl = this;
-                this.timeline.SetTimeline(timeline);
+                this.timeline.SetTimeline(timeline, Build.StartTime.Ticks);
                 this.timelineWatermark.Visibility = Visibility.Hidden;
                 this.timeline.Visibility = Visibility.Visible;
+            }
+        }
+
+        private void PopulateTrace()
+        {
+            if (this.tracing.Timeline == null)
+            {
+                var timeline = new Timeline(Build, analyzeCpp: true);
+                this.tracing.BuildControl = this;
+                this.tracing.SetTimeline(timeline, Build.StartTime.Ticks, Build.EndTime.Ticks);
+                this.tracingWatermark.Visibility = Visibility.Hidden;
+                this.tracing.Visibility = Visibility.Visible;
             }
         }
 
@@ -509,6 +452,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             "ResolveAssemblyReference $task",
             "$task $time",
             "$message CompilerServer failed",
+            "will be compiled because",
         };
 
         private static string[] nodeKinds = new[]
@@ -532,9 +476,9 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             "$noimport"
         };
 
-        Inline MakeLink(string query, SearchAndResultsControl searchControl, string before = " • ", string after = "\r\n")
+        private static Inline MakeLink(string query, SearchAndResultsControl searchControl, string before = " \u2022 ", string after = "\r\n")
         {
-            var hyperlink = new Hyperlink(new Run(query));
+            var hyperlink = new Hyperlink(new Run(query.Trim()));
             hyperlink.Click += (s, e) => searchControl.SearchText = query;
 
             var span = new System.Windows.Documents.Span();
@@ -589,7 +533,7 @@ Examples:
                 }
 
                 isFirst = false;
-                watermark.Inlines.Add(MakeLink(nodeKind, searchLogControl, before: null, after: null));
+                watermark.Inlines.Add(MakeLink(nodeKind + " ", searchLogControl, before: null, after: null));
             }
 
             watermark.Inlines.Add(new LineBreak());
@@ -626,7 +570,7 @@ Recent:
                 "Surround the search term in quotes to find an exact match " +
                 "(turns off substring search). Prefix the search term with " +
                 "[[name=]] or [[value=]] to only search property and metadata names " +
-                "or values. Add [[$property]], [[$item]] or [[$metadata]] to limit search " +
+                "or values. Add [[$property ]], [[$item ]] or [[$metadata ]] to limit search " +
                 "to a specific node type.";
 
             var watermark = new TextBlock();
@@ -681,20 +625,63 @@ Recent:
                 return;
             }
 
-            var taskRunner = Path.Combine(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName), "TaskRunner.exe");
-            if (!File.Exists(taskRunner))
-            {
-                MessageBox.Show("File not found: " + taskRunner);
-                return;
-            }
-
             try
             {
-                Process.Start(taskRunner.QuoteIfNeeded(), $"{logFilePath.QuoteIfNeeded()} {task.Index} pause{(debug ? " debug" : "")}");
+                var directory = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+                var arguments = $"{logFilePath.QuoteIfNeeded()} {task.Index} pause{(debug ? " debug" : "")}";
+
+                var targetFramework = GetTaskTargetFramework(task);
+                if (targetFramework == null || targetFramework.StartsWith(".NETFramework"))
+                {
+                    var taskRunnerExe = Path.Combine(directory, "TaskRunner.exe");
+                    Process.Start(taskRunnerExe.QuoteIfNeeded(), arguments);
+                }
+                else
+                {
+                    var taskRunnerDll = Path.Combine(directory, "TaskRunner.dll");
+                    Process.Start("dotnet", $"{taskRunnerDll.QuoteIfNeeded()} {arguments}");
+                }
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.ToString());
+            }
+        }
+
+        private string GetTaskTargetFramework(Task task)
+        {
+            try
+            {
+                var taskDllPath = task.FromAssembly;
+                if (!File.Exists(taskDllPath))
+                {
+                    // `FromAssembly` might be an assembly name instead of a file path, e.g. "Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"
+                    // Assuming that this assembly is an MSBuild assembly which is in the same directory as the MSBuild executable
+                    var msbuildDirectory = Path.GetDirectoryName(task.GetNearestParent<Build>()?.MSBuildExecutablePath);
+                    if (msbuildDirectory is not null)
+                    {
+                        var assemblyName = new AssemblyName(task.FromAssembly);
+                        taskDllPath = Path.Combine(msbuildDirectory, $"{assemblyName.Name}.dll");
+                        if (!File.Exists(taskDllPath))
+                        {
+                            return null;
+                        }
+                    }
+                }
+
+                var module = AssemblyDefinition.ReadAssembly(taskDllPath);
+                var attribute = module.CustomAttributes.FirstOrDefault(a => a.AttributeType.Name == "TargetFrameworkAttribute");
+                if (attribute == null || attribute.ConstructorArguments.Count != 1)
+                {
+                    return null;
+                }
+
+                var targetFramework = attribute.ConstructorArguments[0].Value as string;
+                return targetFramework;
+            }
+            catch
+            {
+                return null;
             }
         }
 
@@ -717,6 +704,7 @@ Recent:
             searchInSubtreeItem.Visibility = hasChildren && node is TimedNode ? Visibility.Visible : Visibility.Collapsed;
             excludeSubtreeFromSearchItem.Visibility = hasChildren && node is TimedNode ? Visibility.Visible : Visibility.Collapsed;
             goToTimeLineItem.Visibility = node is TimedNode ? Visibility.Visible : Visibility.Collapsed;
+            goToTracingItem.Visibility = node is TimedNode ? Visibility.Visible : Visibility.Collapsed;
             copyChildrenItem.Visibility = copySubtreeItem.Visibility;
             sortChildrenItem.Visibility = copySubtreeItem.Visibility;
             preprocessItem.Visibility = node is IPreprocessable p && preprocessedFileManager.CanPreprocess(p) ? Visibility.Visible : Visibility.Collapsed;
@@ -1030,29 +1018,27 @@ Recent:
                 return;
             }
 
-            ProjectEvaluation projectEvaluation;
-
             var project = node.GetNearestParentOrSelf<Project>();
             if (project != null)
             {
-                if (project.FindChild<Folder>(Strings.Items) != null || project.FindChild<Folder>(Strings.Properties) != null)
-                {
-                    SetProjectContext(project);
-                    return;
-                }
+                //projectEvaluation = Build.FindEvaluation(project.EvaluationId);
+                //if (projectEvaluation != null && (projectEvaluation.FindChild<Folder>(Strings.Items) != null || projectEvaluation.FindChild<Folder>(Strings.Properties) != null))
+                //{
+                //    SetProjectContext(projectEvaluation);
+                //    return;
+                //}
 
-                projectEvaluation = Build.FindEvaluation(project.EvaluationId);
-                if (projectEvaluation != null && (projectEvaluation.FindChild<Folder>(Strings.Items) != null || projectEvaluation.FindChild<Folder>(Strings.Properties) != null))
-                {
-                    SetProjectContext(projectEvaluation);
-                    return;
-                }
+                //if (project.FindChild<Folder>(Strings.Items) != null || project.FindChild<Folder>(Strings.Properties) != null)
+                //{
+                //    SetProjectContext(project);
+                //    return;
+                //}
 
-                SetProjectContext(null);
+                SetProjectContext(project);
                 return;
             }
 
-            projectEvaluation = node.GetNearestParentOrSelf<ProjectEvaluation>();
+            var projectEvaluation = node.GetNearestParentOrSelf<ProjectEvaluation>();
             if (projectEvaluation != null && (projectEvaluation.FindChild<Folder>(Strings.Items) != null || projectEvaluation.FindChild<Folder>(Strings.Properties) != null))
             {
                 SetProjectContext(projectEvaluation);
@@ -1136,6 +1122,8 @@ Recent:
             {
                 searchLogControl.SearchText = InitialSearchText;
             }
+
+            FocusSearch();
         }
 
         public string InitialSearchText { get; set; }
@@ -1272,15 +1260,21 @@ Recent:
             }
         }
 
-        public void CopySubtree()
+        public void CopySubtree(TreeView tree = null)
         {
-            if (treeView.SelectedItem is BaseNode treeNode)
+            tree = tree ?? ActiveTreeView;
+            if (tree == null)
+            {
+                return;
+            }
+
+            if (tree.SelectedItem is BaseNode treeNode)
             {
                 var text = Microsoft.Build.Logging.StructuredLogger.StringWriter.GetString(treeNode);
                 CopyToClipboard(text);
             }
         }
-
+        
         public void ViewSubtreeText()
         {
             if (treeView.SelectedItem is BaseNode treeNode)
@@ -1294,7 +1288,7 @@ Recent:
         {
             if (treeView.SelectedItem is TimedNode timedNode)
             {
-                var text = timedNode.GetTimeAndDurationText();
+                var text = timedNode.GetTimeAndDurationText(fullPrecision: true);
                 DisplayText(text, timedNode.ToString());
             }
         }
@@ -1350,6 +1344,22 @@ Recent:
             {
                 centralTabControl.SelectedIndex = 1;
                 this.timeline.GoToTimedNode(treeNode);
+            }
+        }
+
+        public void GoToTracing()
+        {
+            if (treeView.SelectedItem is TimedNode treeNode)
+            {
+                centralTabControl.SelectedIndex = 2;
+
+                // need to dispatch because at the time this is called the visual tree isn't laid out yet,
+                // so all the sizes are 0 and we don't know what's the real (X,Y) position to navigate to.
+                // Dispatching will run it after the layout when all the sizes have been set.
+                Dispatcher.InvokeAsync(() =>
+                {
+                    this.tracing.GoToTimedNode(treeNode);
+                }, DispatcherPriority.Background);
             }
         }
 
@@ -1638,7 +1648,7 @@ Recent:
                 preprocess = preprocessedFileManager.GetPreprocessAction(preprocessableFilePath, PreprocessedFileManager.GetEvaluationKey(evaluation));
             }
 
-            documentWell.DisplaySource(preprocessableFilePath, text.Text, lineNumber, column, preprocess);
+            documentWell.DisplaySource(preprocessableFilePath, text.Text, lineNumber, column, preprocess, navigationHelper);
             return true;
         }
 
@@ -1738,19 +1748,13 @@ Recent:
 
         public IEnumerable BuildResultTree(object resultsObject, bool moreAvailable = false)
         {
-            var results = resultsObject as ICollection<SearchResult>;
-            if (results == null)
-            {
-                return results;
-            }
-
-            var root = new Folder();
+            var folder = ResultTree.BuildResultTree(resultsObject, moreAvailable, Elapsed);
 
             if (moreAvailable)
             {
                 var showAllButton = new ButtonNode
                 {
-                    Text = $"Showing first {results.Count} results. Show all results instead (slow)."
+                    Text = $"Showing first {folder.Children.Count} results. Show all results instead (slow)."
                 };
 
                 showAllButton.OnClick = () =>
@@ -1759,132 +1763,10 @@ Recent:
                     searchLogControl.TriggerSearch(searchLogControl.SearchText, int.MaxValue);
                 };
 
-                root.Children.Add(showAllButton);
+                folder.AddChildAtBeginning(showAllButton);
             }
 
-            root.Children.Add(new Message
-            {
-                Text = $"{results.Count} result{(results.Count == 1 ? "" : "s")}. Search took: {Elapsed.ToString()}"
-            });
-
-            bool includeDuration = false;
-            bool includeStart = false;
-            bool includeEnd = false;
-
-            foreach (var r in results)
-            {
-                if (r.Duration != default)
-                {
-                    includeDuration = true;
-                }
-
-                if (r.StartTime != default)
-                {
-                    includeStart = true;
-                }
-
-                if (r.EndTime != default)
-                {
-                    includeEnd = true;
-                }
-            }
-
-            if (includeDuration)
-            {
-                results = results.OrderByDescending(r => r.Duration).ToArray();
-            }
-            else if (includeStart)
-            {
-                results = results.OrderBy(r => r.StartTime).ToArray();
-            }
-            else if (includeEnd)
-            {
-                results = results.OrderBy(r => r.EndTime).ToArray();
-            }
-
-            foreach (var result in results)
-            {
-                TreeNode parent = root;
-                var resultNode = result.Node;
-
-                bool isProject = resultNode is Project;
-                bool isTarget = resultNode is Target;
-
-                if (!includeDuration && !includeStart && !includeEnd && !isProject)
-                {
-                    var project = resultNode.GetNearestParent<Project>();
-                    if (project != null)
-                    {
-                        var projectName = ProxyNode.GetNodeText(project);
-                        parent = InsertParent(parent, project, projectName);
-                    }
-
-                    var target = resultNode.GetNearestParent<Target>();
-                    if (!isTarget && project != null && target != null && target.Project == project)
-                    {
-                        parent = InsertParent(parent, target, target.TypeName + " " + target.Name);
-                    }
-
-                    // nest under a Task, unless it's an MSBuild task higher up the parent chain
-                    var task = resultNode.GetNearestParent<Task>(t => !string.Equals(t.Name, "MSBuild", StringComparison.OrdinalIgnoreCase));
-                    if (task != null && !isTarget && project != null && task.GetNearestParent<Project>() == project)
-                    {
-                        parent = InsertParent(parent, task, "Task " + task.Name);
-                    }
-
-                    if (resultNode is Item item &&
-                        item.Parent is NamedNode itemParent &&
-                        (itemParent is Folder || itemParent is AddItem || itemParent is RemoveItem))
-                    {
-                        parent = InsertParent(parent, itemParent);
-                    }
-
-                    if (resultNode is Metadata metadata &&
-                        metadata.Parent is Item parentItem &&
-                        parentItem.Parent is NamedNode grandparent &&
-                        (grandparent is Folder || grandparent is AddItem || grandparent is RemoveItem))
-                    {
-                        parent = InsertParent(parent, grandparent);
-                        parent = InsertParent(parent, parentItem, parentItem.Text);
-                    }
-
-                    if (parent == root)
-                    {
-                        var evaluation = resultNode.GetNearestParent<ProjectEvaluation>();
-                        if (evaluation != null)
-                        {
-                            var evaluationName = ProxyNode.GetNodeText(evaluation);
-                            parent = InsertParent(parent, evaluation, evaluationName);
-                        }
-                    }
-                }
-
-                var proxy = new ProxyNode();
-                proxy.Original = resultNode;
-                proxy.SearchResult = result;
-                parent.Children.Add(proxy);
-            }
-
-            if (!root.HasChildren)
-            {
-                root.Children.Add(new Message { Text = "No results found." });
-            }
-
-            return root.Children;
-        }
-
-        private TreeNode InsertParent(TreeNode parent, NamedNode actualParent, string name = null)
-        {
-            name ??= actualParent.Name;
-            var folderProxy = parent.GetOrCreateNodeWithName<ProxyNode>(name);
-            folderProxy.Original = actualParent;
-            if (folderProxy.Highlights.Count == 0)
-            {
-                folderProxy.Highlights.Add(name);
-            }
-
-            folderProxy.IsExpanded = true;
-            return folderProxy;
+            return folder.Children;
         }
 
         private void TreeViewItem_RequestBringIntoView(object sender, RequestBringIntoViewEventArgs e)
@@ -1924,6 +1806,11 @@ Recent:
 
         public void DisplayStats()
         {
+            if (!File.Exists(LogFilePath))
+            {
+                return;
+            }
+
             var statsRoot = Build.FindChild<Folder>(f => f.Name.StartsWith(Strings.Statistics));
             if (statsRoot != null)
             {
@@ -2048,7 +1935,7 @@ Recent:
 
             if (recordStats.StringTotalSize > 0)
             {
-                var strings = new Item 
+                var strings = new Item
                 {
                     Text = BinlogStats.GetString("Strings", recordStats.StringTotalSize, recordStats.StringCount, recordStats.StringLargest)
                 };
@@ -2061,13 +1948,13 @@ Recent:
 
             if (recordStats.NameValueListTotalSize > 0)
             {
-                statsRoot.AddChild(new Message 
+                statsRoot.AddChild(new Message
                 {
                     Text = BinlogStats.GetString(
                         "NameValueLists",
                         recordStats.NameValueListTotalSize,
                         recordStats.NameValueListCount,
-                        recordStats.NameValueListLargest) 
+                        recordStats.NameValueListLargest)
                 });
             }
 
@@ -2104,7 +1991,11 @@ Recent:
             var top = stats.Records.Take(300).ToArray();
             foreach (var item in top)
             {
-                if (item.Args is BuildMessageEventArgs buildMessage)
+                if (item.Args is EnvironmentVariableReadEventArgs env)
+                {
+                    node.AddChild(new Property { Name = env.EnvironmentVariableName, Value = env.Message });
+                }
+                else if (item.Args is BuildMessageEventArgs buildMessage)
                 {
                     node.AddChild(new Message { Text = buildMessage.Message });
                 }

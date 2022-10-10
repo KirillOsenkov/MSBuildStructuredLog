@@ -38,7 +38,7 @@ namespace StructuredLogViewer
             var commandLine = $"{projectFilePath.QuoteIfNeeded()} {customArguments} {postfixArguments}";
 
             commandLine = isLibraryMsBuild == true ? $"{msBuildFile} {commandLine}" : commandLine;
-            var fileExe = isLibraryMsBuild == true ? "dotnet " : msBuildFile;
+            var fileExe = isLibraryMsBuild == true ? "dotnet" : msBuildFile;
 
             // the command line we display to the user should contain the full path to msbuild file
             progress.MSBuildCommandLine = $"{fileExe} {commandLine}";

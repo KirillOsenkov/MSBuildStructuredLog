@@ -76,7 +76,17 @@
                                            structuredLogViewer:ScrollViewerHelper.ShiftWheelScrollsHorizontally="True" />
                   </Grid>
                 </TabItem>
-                
+
+                <TabItem x:Name="tracingTab" Header="Tracing">
+                  <Grid>
+                    <TextBlock x:Name="tracingWatermark" HorizontalAlignment="Center"
+                               VerticalAlignment="Center">Rendering Trace...</TextBlock>
+                    <local:TracingControl x:Name="tracing"
+                                           Visibility="Hidden"
+                                           structuredLogViewer:ScrollViewerHelper.ShiftWheelScrollsHorizontally="True" />
+                  </Grid>
+                </TabItem>
+
                 <TabItem x:Name="projectGraphTab" Header="Project Graph">
                   <Grid>
                     <TextBlock x:Name="projectGraphWatermark" HorizontalAlignment="Center"

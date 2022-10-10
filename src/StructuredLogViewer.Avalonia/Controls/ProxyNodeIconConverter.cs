@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using Avalonia;
@@ -42,6 +42,8 @@ namespace StructuredLogViewer.Avalonia.Controls
                     return NodeIcon("MetadataStroke", "ItemBrush");
                 case nameof(Parameter):
                     return NodeIcon("ParameterStroke", "ParameterBrush");
+                case nameof(CriticalBuildMessage):
+                    return NodeIcon("WarningStroke", "WarningBrush");
                 case nameof(Message):
                     return NodeIcon("MessageStroke", "MessageBrush");
                 case nameof(Error):

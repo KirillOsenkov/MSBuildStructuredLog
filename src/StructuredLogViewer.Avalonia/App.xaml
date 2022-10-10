@@ -294,7 +294,7 @@
                            Fill="{StaticResource ImportBrush}" />
                 <TextBlock x:Name="label"
                            Classes="nodeBeforeText"
-                           Text="Import"
+                           Text="Import "
                            Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={StaticResource ImportStroke}}" />
                 <TextBlock x:Name="name"
                            Classes="nodeText"
@@ -315,7 +315,7 @@
                            Fill="{StaticResource NoImportBrush}" />
                 <TextBlock x:Name="label"
                            Classes="nodeBeforeText"
-                           Text="NoImport"
+                           Text="NoImport "
                            Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={StaticResource NoImportStroke}}" />
                 <TextBlock x:Name="name"
                            Classes="nodeText"
@@ -377,7 +377,7 @@
             </StackPanel>
         </DataTemplate>
 
-        <DataTemplate DataType="{x:Type common:Note}">
+        <DataTemplate DataType="{x:Type l:Note}">
             <StackPanel Orientation="Horizontal">
                 <Border BorderBrush="LightGray"
                         BorderThickness="1"
@@ -416,7 +416,7 @@
             </StackPanel>
         </DataTemplate>
 
-        <TreeDataTemplate DataType="{x:Type common:ProxyNode}"
+        <TreeDataTemplate DataType="{x:Type l:ProxyNode}"
                           ItemsSource="{Binding Children}">
             <StackPanel Orientation="Horizontal">
                 <ContentPresenter Content="{Binding Converter={StaticResource ProxyNodeIconConverter}}"
@@ -425,7 +425,7 @@
                 <ItemsControl Items="{Binding Highlights}"
                               Focusable="False">
                     <ItemsControl.DataTemplates>
-                        <DataTemplate DataType="{x:Type common:HighlightedText}">
+                        <DataTemplate DataType="{x:Type l:HighlightedText}">
                             <TextBlock Classes="nodeBeforeText"
                                        Foreground="Black"
                                        Background="Yellow"

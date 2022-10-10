@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
@@ -78,24 +78,32 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             TargetDoesNotExistBeforeTargetMessage = CreateRegex(GetString("TargetDoesNotExistBeforeTargetMessage"), 2);
 
-            string copyingFileFrom = GetString("Copy.FileComment");
-            string copyingFileFromEscaped = Escape(copyingFileFrom);
+            string copyingFileFromEscaped = Escape(GetString("Copy.FileComment"));
             CopyingFileFromRegex = new Regex(copyingFileFromEscaped
                 .Replace(@"\{0}", @"(?<From>[^\""]+)")
-                .Replace(@"\{1}", @"(?<To>[^\""]+)")
-                );
+                .Replace(@"\{1}", @"(?<To>[^\""]+)"), RegexOptions.Compiled);
 
             CreatingHardLinkRegex = new Regex(Escape(GetString("Copy.HardLinkComment"))
                 .Replace(@"\{0}", @"(?<From>[^\""]+)")
-                .Replace(@"\{1}", @"(?<To>[^\""]+)")
-                );
+                .Replace(@"\{1}", @"(?<To>[^\""]+)"), RegexOptions.Compiled);
 
             DidNotCopyRegex = new Regex(Escape(GetString("Copy.DidNotCopyBecauseOfFileMatch"))
                .Replace(@"\{0}", @"(?<From>[^\""]+)")
                .Replace(@"\{1}", @"(?<To>[^\""]+)")
                .Replace(@"\{2}", ".*?")
-               .Replace(@"\{3}", ".*?")
-               );
+               .Replace(@"\{3}", ".*?"), RegexOptions.Compiled);
+
+            RobocopyFileCopiedRegex = new Regex(Escape(RobocopyFileCopiedMessage)
+                .Replace(@"\{0}", @"(?<From>[^\""]+)")
+                .Replace(@"\{1}", @"(?<To>[^\""]+)"), RegexOptions.Compiled );
+
+            RobocopyFileSkippedRegex = new Regex(Escape(RobocopyFileSkippedMessage)
+                .Replace(@"\{0}", @"(?<From>[^\""]+)")
+                .Replace(@"\{1}", @"(?<To>[^\""]+)"), RegexOptions.Compiled);
+
+            RobocopyFileFailedRegex = new Regex(Escape(RobocopyFileFailedMessage)
+                .Replace(@"\{0}", @"(?<From>[^\""]+)")
+                .Replace(@"\{1}", @"(?<To>[^\""]+)"), RegexOptions.Compiled);
 
             ProjectImportSkippedMissingFile = GetString("ProjectImportSkippedMissingFile");
 
@@ -135,14 +143,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             PropertyReassignment = GetString("PropertyReassignment");
 
-            // This was unused??
-            //string propertyReassignment = PropertyReassignment
-            // .Replace(@"$({0})=""{1}"" (", @"\$\(\w+\)=.* \(")
-            // .Replace(@"""{2}"")", @".*""\)")
-            // .Replace("{3}", @"(?<File>.*) \((?<Line>\d+),(\d+)\)$");
-            //PropertyReassignmentRegex = new Regex("^" + propertyReassignment, RegexOptions.Compiled | RegexOptions.Singleline);
-
-            PropertyReassignmentRegex = CreateRegex(PropertyReassignment, 4, RegexOptions.Compiled | RegexOptions.Singleline);
+            string propertyReassignment = "^" + PropertyReassignment
+                .Replace(@"$({0})=""{1}"" (", @"\$\((?<Name>\w+)\)="".*"" \(")
+                .Replace(@"""{2}"")", @""".*""\)")
+                .Replace("{3}", @"(?<File>.*) \((?<Line>\d+),(?<Column>\d+)\)$");
+            PropertyReassignmentRegex = new Regex(propertyReassignment, RegexOptions.Compiled | RegexOptions.Singleline);
 
             string taskFoundFromFactory = GetString("TaskFoundFromFactory")
                 .Replace(@"""{0}""", @"\""(?<task>.+)\""")
@@ -264,6 +269,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static Regex CopyingFileFromRegex { get; set; }
         public static Regex CreatingHardLinkRegex { get; set; }
         public static Regex DidNotCopyRegex { get; set; }
+        public static Regex RobocopyFileCopiedRegex { get; set; }
+        public static Regex RobocopyFileSkippedRegex { get; set; }
+        public static Regex RobocopyFileFailedRegex { get; set; }
         public static Regex TargetDoesNotExistBeforeTargetMessage { get; set; }
         public static Regex TargetAlreadyCompleteSuccessRegex { get; set; }
         public static Regex TargetAlreadyCompleteFailureRegex { get; set; }
@@ -434,6 +442,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string ToFile => "\" to file \"";
 
         public static string TotalAnalyzerExecutionTime => "Total analyzer execution time:";
+        public static string TotalGeneratorExecutionTime => "Total generator execution time:";
 
         /// <summary>
         /// https://github.com/NuGet/Home/issues/10383
@@ -449,6 +458,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static string Evaluation => "Evaluation";
         public static string Environment => "Environment";
+        public static string TruncatedEnvironment => "Starting with MSBuild 17.4, only some environment variables are included in the log: the ones read during the build and the ones prefixed with MSBUILD, DOTNET_ or COMPLUS_. Define MSBUILDLOGALLENVIRONMENTVARIABLES to log all environment variables during the build.";
         public static string Imports => "Imports";
         public static string DetailedSummary => "Detailed summary";
         public static string Parameters => "Parameters";
@@ -457,12 +467,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string Assemblies => "Assemblies";
         public static string TargetOutputs => "TargetOutputs";
         public static string AnalyzerReport => "Analyzer Report";
+        public static string GeneratorReport => "Generator Report";
         public static string Properties => "Properties";
         public static string PropertyReassignmentFolder => "Property reassignment";
         public static string Global => "Global";
         public static string EntryTargets => "Entry targets";
         public static string TargetFramework => "TargetFramework";
+        public static string Platform => "Platform";
+        public static string Configuration => "Configuration";
         public static string TargetFrameworks => "TargetFrameworks";
+        public static string TargetFrameworkVersion => "TargetFrameworkVersion";
         public static string AdditionalProperties => "Additional properties";
         public static string OutputItems => "OutputItems";
         public static string OutputProperties => "OutputProperties";
@@ -479,7 +493,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string Note => "Note";
         public static string DoubleWrites => "DoubleWrites";
         public static string MSBuildVersionPrefix => "MSBuild version = ";
+        public static string MSBuildExecutablePathPrefix => "MSBuild executable path = ";
         public static string Warnings = "Warnings";
+
+        // These aren't localized, see https://github.com/microsoft/MSBuildSdks/blob/543e965191417dee65471ee57a6702289847b49b/src/Artifacts/Tasks/Robocopy.cs#L66-L77
+        private const string RobocopyFileCopiedMessage = "Copied {0} to {1}";
+        private const string RobocopyFileSkippedMessage = "Skipped copying {0} to {1}";
+        private const string RobocopyFileFailedMessage = "Failed to copy {0} to {1}";
 
         public static string GetPropertyName(string message)
         {
