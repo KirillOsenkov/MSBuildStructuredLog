@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <NBGV_DoNotEmitNonVersionCustomAttributes>true</NBGV_DoNotEmitNonVersionCustomAttributes>
@@ -19,7 +19,7 @@
     <PackageTags>MSBuild Log Logger Structure Structured</PackageTags>
   </PropertyGroup>
   <ItemGroup Condition=" '$(OS)' == 'Windows_NT' ">
-    <PackageReference Include="Nerdbank.GitVersioning" Version="$(NuGetVersionNerdbankGitVersioning)" PrivateAssets="all" />
+    <!--<PackageReference Include="Nerdbank.GitVersioning" Version="$(NuGetVersionNerdbankGitVersioning)" PrivateAssets="all" />-->
   </ItemGroup>
   <PropertyGroup>
     <DefineConstants>$(DefineConstants);NETCORE</DefineConstants>

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -11,7 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="GuiLabs.Language.Xml" Version="1.2.46" />
-    <PackageReference Include="Nerdbank.GitVersioning" Version="$(NuGetVersionNerdbankGitVersioning)" PrivateAssets="all" />
+    <!--<PackageReference Include="Nerdbank.GitVersioning" Version="$(NuGetVersionNerdbankGitVersioning)" PrivateAssets="all" />-->
     <PackageReference Include="AutomaticGraphLayout.Drawing" Version="1.1.11" />
     <PackageReference Include="Nullable" Version="1.2.1">
       <PrivateAssets>all</PrivateAssets>
