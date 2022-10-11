@@ -40,7 +40,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private static string GetVersion()
         {
-            return $"Version {ThisAssembly.AssemblyInformationalVersion}";
+            return $"Version 1.0.0";
         }
 
         private string selectedLog;
