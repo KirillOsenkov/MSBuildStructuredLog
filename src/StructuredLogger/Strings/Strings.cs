@@ -458,7 +458,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static string Evaluation => "Evaluation";
         public static string Environment => "Environment";
-        public static string TruncatedEnvironment => "Starting with MSBuild 17.4, only some environment variables are included in the log: the ones read during the build and the ones prefixed with MSBUILD, DOTNET_ or COMPLUS_.\r\nDefine MSBUILDLOGALLENVIRONMENTVARIABLES to log all environment variables during the build.";
+        public static string TruncatedEnvironment => "Starting with MSBuild 17.4, only some environment variables are included in the log: the ones read during the build and the ones prefixed with MSBUILD, DOTNET_ or COMPLUS_.\nDefine MSBUILDLOGALLENVIRONMENTVARIABLES to log all environment variables during the build.";
         public static string Imports => "Imports";
         public static string DetailedSummary => "Detailed summary";
         public static string Parameters => "Parameters";
