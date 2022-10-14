@@ -33,7 +33,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public StringCache StringTable => stringTable;
 
         public NamedNode EvaluationFolder => Build.EvaluationFolder;
-        public Folder EnvironmentFolder;
+        public NamedNode EnvironmentFolder => Build.EnvironmentFolder;
 
         public Construction()
         {
@@ -93,17 +93,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     Build.StartTime = args.Timestamp;
 
-                    EnvironmentFolder = Build.GetOrCreateNodeWithName<Folder>(Intern(Strings.Environment));
-
                     if (args.BuildEnvironment?.Count > 0)
                     {
                         AddProperties(EnvironmentFolder, args.BuildEnvironment);
                     }
-
-                    EnvironmentFolder.AddChild(new Note
-                    {
-                        Text = Intern(Strings.TruncatedEnvironment)
-                    });
 
                     // realize the evaluation folder now so it is ordered before the main solution node
                     _ = EvaluationFolder;
@@ -123,6 +116,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     Build.EndTime = args.Timestamp;
                     Build.Succeeded = args.Succeeded;
+
+                    EnvironmentFolder.AddChild(new Note
+                    {
+                        Text = Intern(Strings.TruncatedEnvironment)
+                    });
 
                     if (messageProcessor.DetailedSummary.Length > 0)
                     {
