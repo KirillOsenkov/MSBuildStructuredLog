@@ -305,15 +305,24 @@ namespace StructuredLogViewer.Controls
             this.computeTime = Timestamp - start;
         }
 
-        private int[] ComputerHeatGraphData(double unitDuration = 1)
+        private struct HeatGraphNode
+        {
+            public HeatGraphNode() { }
+            public int Height = 0;
+            public bool HasError = false;
+        }
+
+        private HeatGraphNode[] ComputerHeatGraphData(double unitDuration = 1)
         {
             var graphLength = (int)Math.Floor(ConvertTimeToPixel(GlobalEndTime - GlobalStartTime) / unitDuration) + 1;
-            var graphData = new int[graphLength];
+            var graphData = new HeatGraphNode[graphLength];
 
             foreach (var blocks in blocksCollection)
             {
                 if (blocks == null || blocks.Count == 0)
+                {
                     continue;
+                }
 
                 foreach (var block in blocks)
                 {
@@ -326,7 +335,8 @@ namespace StructuredLogViewer.Controls
 
                         for (; left <= right && left < graphLength; left++)
                         {
-                            graphData[left]++;
+                            graphData[left].Height++;
+                            graphData[left].HasError |= block.HasError;
                         }
                     }
                 }
@@ -373,7 +383,10 @@ namespace StructuredLogViewer.Controls
                 var culledBlocks = blocks.Where(block =>
                 {
                     if (lastRenderTimeStamp > block.Start || block.Start >= renderWidthTimeStamp)
+                    {
                         return false;
+                    }
+
                     return true;
                 });
 
@@ -388,7 +401,9 @@ namespace StructuredLogViewer.Controls
             this.lastRenderTimeStamp = renderWidthTimeStamp;
 
             if (ShowNodes)
+            {
                 DrawAddNodeDivider();
+            }
 
             this.drawTime = Timestamp - start;
         }
@@ -409,18 +424,18 @@ namespace StructuredLogViewer.Controls
             canvas.Width = timelineWidth;
 
             // compute the largest value but keep it within # of nodes
-            int maxData = _groupByNodes ? Math.Min(blocksCollection.Count, graphData.Max()) : graphData.Max();
+            int maxData = _groupByNodes ? Math.Min(blocksCollection.Count, graphData.Select(g => g.Height).Max()) : graphData.Select(g => g.Height).Max();
 
             double dataGraphHeightRatio = graphHeight / maxData;
 
             for (int i = 0; i < graphData.Length; i++)
             {
-                if (graphData[i] > 0)
+                if (graphData[i].Height > 0)
                 {
-                    double normalizedGraphHeight = (double)Math.Min(graphData[i], maxData) * dataGraphHeightRatio;
+                    double normalizedGraphHeight = (double)Math.Min(graphData[i].Height, maxData) * dataGraphHeightRatio;
                     Line barLine = new Line()
                     {
-                        Stroke = taskBackground,
+                        Stroke = graphData[i].HasError ? errorBackground : taskBackground,
                         StrokeThickness = lineWidth,
                         X1 = i * lineWidth,
                         X2 = i * lineWidth,
@@ -577,7 +592,7 @@ namespace StructuredLogViewer.Controls
 
                         return ShowTask;
                     case Message:
-                        return ShowCpp;
+                        return ShowCpp && ShowTask;
                     default:
                         return false;
                 }
@@ -843,9 +858,15 @@ namespace StructuredLogViewer.Controls
         private static readonly Brush targetBackground = new SolidColorBrush(Color.FromArgb(50, 255, 100, 255));
         private static readonly Brush taskBackground = new SolidColorBrush(Color.FromArgb(60, 100, 255, 255));
         private static readonly Brush messageBackground = new SolidColorBrush(Color.FromArgb(60, 100, 255, 255));
+        private static readonly Brush errorBackground = new SolidColorBrush(Color.FromArgb(60, 255, 86, 86));
 
         private static Brush ChooseBackground(Block block)
         {
+            if (block.HasError)
+            {
+                return errorBackground;
+            }
+
             switch (block.Node)
             {
                 case Microsoft.Build.Logging.StructuredLogger.Task: return taskBackground;
