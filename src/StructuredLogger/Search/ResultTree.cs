@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -80,6 +80,18 @@ namespace StructuredLogViewer
                                 string.Equals(existing.SourceFilePath, project.SourceFilePath, StringComparison.OrdinalIgnoreCase));
                     }
 
+                    if (project == null)
+                    {
+                        var evaluation = resultNode.GetNearestParent<ProjectEvaluation>();
+                        if (evaluation != null)
+                        {
+                            parent = InsertParent(parent, evaluation.Parent as TimedNode, Strings.Evaluation);
+
+                            var evaluationName = ProxyNode.GetNodeText(evaluation);
+                            parent = InsertParent(parent, evaluation, evaluationName);
+                        }
+                    }
+
                     var target = resultNode.GetNearestParent<Target>();
                     if (!isTarget && project != null && target != null && target.Project == project)
                     {
@@ -107,16 +119,6 @@ namespace StructuredLogViewer
                     {
                         parent = InsertParent(parent, grandparent);
                         parent = InsertParent(parent, parentItem, parentItem.Text);
-                    }
-
-                    if (parent == root)
-                    {
-                        var evaluation = resultNode.GetNearestParent<ProjectEvaluation>();
-                        if (evaluation != null)
-                        {
-                            var evaluationName = ProxyNode.GetNodeText(evaluation);
-                            parent = InsertParent(parent, evaluation, evaluationName);
-                        }
                     }
                 }
 

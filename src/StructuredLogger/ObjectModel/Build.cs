@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -112,6 +112,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
 
                 return evaluationFolder;
+            }
+        }
+
+        private Folder environmentFolder;
+        public Folder EnvironmentFolder
+        {
+            get
+            {
+                if (environmentFolder == null)
+                {
+                    environmentFolder = GetOrCreateNodeWithName<Folder>(Strings.Environment);
+                }
+
+                return environmentFolder;
             }
         }
 

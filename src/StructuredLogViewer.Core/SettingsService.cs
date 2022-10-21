@@ -333,6 +333,27 @@ namespace StructuredLogViewer
             }
         }
 
+        public static bool ShowConfigurationAndPlatform
+        {
+            get
+            {
+                EnsureSettingsRead();
+                return ProjectOrEvaluationHelper.ShowConfigurationAndPlatform;
+            }
+
+            set
+            {
+                if (ProjectOrEvaluationHelper.ShowConfigurationAndPlatform == value)
+                {
+                    return;
+                }
+
+                ProjectOrEvaluationHelper.ShowConfigurationAndPlatform = value;
+                ProjectOrEvaluationHelper.ClearCache();
+                SaveSettings();
+            }
+        }
+
         private static bool useDarkTheme = false;
 
         public static bool UseDarkTheme
@@ -366,6 +387,7 @@ namespace StructuredLogViewer
 
         const string Virtualization = "Virtualization=";
         const string MarkResultsInTreeSetting = "MarkResultsInTree=";
+        const string ShowConfigurationAndPlatformSetting = "ShowConfigurationAndPlatform=";
         const string UseDarkThemeSetting = "UseDarkTheme=";
 
         private static void SaveSettings()
@@ -374,6 +396,7 @@ namespace StructuredLogViewer
             sb.AppendLine(Virtualization + enableTreeViewVirtualization.ToString());
             //sb.AppendLine(ParentAllTargetsUnderProjectSetting + parentAllTargetsUnderProject.ToString());
             sb.AppendLine(MarkResultsInTreeSetting + markResultsInTree.ToString());
+            sb.AppendLine(ShowConfigurationAndPlatformSetting + ShowConfigurationAndPlatform.ToString());
             sb.AppendLine(UseDarkThemeSetting + useDarkTheme.ToString());
 
             using (SingleGlobalInstance.Acquire(Path.GetFileName(settingsFilePath)))
@@ -399,6 +422,7 @@ namespace StructuredLogViewer
                     ProcessLine(Virtualization, line, ref enableTreeViewVirtualization);
                     //ProcessLine(ParentAllTargetsUnderProjectSetting, line, ref parentAllTargetsUnderProject);
                     ProcessLine(MarkResultsInTreeSetting, line, ref markResultsInTree);
+                    ProcessLine(ShowConfigurationAndPlatformSetting, line, ref ProjectOrEvaluationHelper.ShowConfigurationAndPlatform);
                     ProcessLine(UseDarkThemeSetting, line, ref useDarkTheme);
 
                     void ProcessLine(string setting, string text, ref bool variable)

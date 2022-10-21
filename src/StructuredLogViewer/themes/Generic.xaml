@@ -587,6 +587,13 @@
     </DataTemplate.Triggers>
   </DataTemplate>
 
+  <DataTemplate DataType="{x:Type l:CriticalBuildMessage}">
+    <StackPanel Orientation="Horizontal">
+      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{DynamicResource WarningStroke}" Fill="{DynamicResource WarningBrush}" />
+      <TextBlock x:Name="text" Text="{Binding}" />
+    </StackPanel>
+  </DataTemplate>
+
   <HierarchicalDataTemplate DataType="{x:Type l:Warning}" ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
       <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{DynamicResource WarningStroke}" Fill="{DynamicResource WarningBrush}" />
@@ -689,6 +696,10 @@
       <DataTrigger Binding="{Binding OriginalType}" Value="Parameter">
         <Setter TargetName="icon" Property="Stroke" Value="{DynamicResource ParameterStroke}" />
         <Setter TargetName="icon" Property="Fill" Value="{DynamicResource ParameterBrush}" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding OriginalType}" Value="CriticalBuildMessage">
+        <Setter TargetName="icon" Property="Stroke" Value="{DynamicResource WarningStroke}" />
+        <Setter TargetName="icon" Property="Fill" Value="{DynamicResource WarningBrush}" />
       </DataTrigger>
       <DataTrigger Binding="{Binding OriginalType}" Value="Message">
         <Setter TargetName="icon" Property="Stroke" Value="{DynamicResource MessageStroke}" />
@@ -866,6 +877,10 @@
                       Margin="10,0,10,10"
                       IsChecked="{Binding MarkResultsInTree}" 
                       ToolTip="Mark tree nodes that appear in search results with a dot"/>
+            <CheckBox Content="Show project configuration and platform"
+                      Margin="10,0,10,10"
+                      IsChecked="{Binding ShowConfigurationAndPlatform}" 
+                      ToolTip="Show project Configuration and Platform property values if available"/>
             <CheckBox Content="Dark Theme"
                       Margin="10,0,10,10"
                       IsChecked="{Binding UseDarkTheme}"
