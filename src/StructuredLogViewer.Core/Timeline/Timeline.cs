@@ -74,6 +74,7 @@ namespace StructuredLogViewer
             block.Text = node.Name;
             block.Indent = node.GetParentChainIncludingThis().Count();
             block.Node = node;
+            block.HasError = node is Microsoft.Build.Logging.StructuredLogger.Task && node.FindFirstDescendant<Error>() != null;
             return block;
         }
     }

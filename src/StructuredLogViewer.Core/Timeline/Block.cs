@@ -16,6 +16,7 @@ namespace StructuredLogViewer
         public TimeSpan Duration => EndTime - StartTime;
         public BaseNode Node { get; set; }
         public int Indent { get; set; }
+        public bool HasError { get; set; }
 
         public BlockEndpoint StartPoint;
         public BlockEndpoint EndPoint;
@@ -46,6 +47,7 @@ namespace StructuredLogViewer
         public Block Block;
         public long Timestamp;
         public bool IsStart;
+
         public int CompareTo(BlockEndpoint other)
         {
             int timeCompare = Timestamp.CompareTo(other.Timestamp);
@@ -59,43 +61,43 @@ namespace StructuredLogViewer
                     // Favor Project >> Targets >> Task >> Others
                     int lValue, rValue;
 
-                    switch (Block.Node)
+                    lValue = Block.Node switch
                     {
-                        case Project:
-                            lValue = 3; break;
-                        case Target:
-                            lValue = 2; break;
-                        case Task:
-                            lValue = 1; break;
-                        default:
-                            lValue = 0; break;
-                    }
+                        Project => 3,
+                        Target => 2,
+                        Task => 1,
+                        _ => 0,
+                    };
 
-                    switch (other.Block.Node)
+                    rValue = other.Block.Node switch
                     {
-                        case Project:
-                            rValue = 3; break;
-                        case Target:
-                            rValue = 2; break;
-                        case Task:
-                            rValue = 1; break;
-                        default:
-                            rValue = 0; break;
-                    }
+                        Project => 3,
+                        Target => 2,
+                        Task => 1,
+                        _ => 0,
+                    };
 
                     if (rValue == lValue)
                     {
                         if (IsStart)
+                        {
                             return Block.Text.CompareTo(other.Block.Text);
+                        }
                         else
+                        {
                             return other.Block.Text.CompareTo(Block.Text);
+                        }
                     }
 
                     // ascending or decending edge
                     if (IsStart)
+                    {
                         return rValue - lValue;
+                    }
                     else
+                    {
                         return lValue - rValue;
+                    }
                 }
 
                 // Close existing node before starting
