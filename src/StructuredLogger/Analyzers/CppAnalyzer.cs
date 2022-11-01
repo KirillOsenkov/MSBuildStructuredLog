@@ -178,9 +178,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                                 if (startTime > DateTime.MinValue)
                                 {
-                                    // BT Time prints C1 and C2 as seperate messages, so lets combine to reduce the graph nodes by half.
                                     if (blocks.TryGetValue(filename, out CppTimedNode cppNode))
                                     {
+                                        // BT Time prints C1 and C2 as seperate messages, so lets combine to reduce the graph nodes by half.
                                         if (usingBTTime)
                                         {
                                             cppNode.StartTime = new DateTime(Math.Min(cppNode.StartTime.Ticks, startTime.Ticks));
