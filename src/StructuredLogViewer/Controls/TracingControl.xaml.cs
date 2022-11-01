@@ -198,14 +198,13 @@ namespace StructuredLogViewer.Controls
 
         public Dictionary<BaseNode, TextBlock> TextBlocks { get; set; } = new Dictionary<BaseNode, TextBlock>();
 
-        private bool isDoubleClick = false;
+        private DateTime lastClickTimestamp = DateTime.MinValue;
 
         public Timeline Timeline { get; set; }
 
         // SetTimeline is called from BuildControl which will set the global values
         public void SetTimeline(Timeline timeline, long globalStart, long globalEnd)
         {
-            var start = Timestamp;
             Timeline = timeline;
             GlobalStartTime = globalStart;
             GlobalEndTime = globalEnd;
@@ -227,7 +226,10 @@ namespace StructuredLogViewer.Controls
                             this.numberOfProjects++;
                             break;
                         case Target:
-                            this.numberOfTargets++;
+                            if (!ignoreCommonP2PTargets.Contains((block.Node as Target).Name))
+                            {
+                                this.numberOfTargets++;
+                            }
                             break;
                         case Microsoft.Build.Logging.StructuredLogger.Task:
                             this.numberOfTasks++;
@@ -380,6 +382,9 @@ namespace StructuredLogViewer.Controls
             for (int i = 0; i < blocksCollection.Count; i++)
             {
                 var blocks = blocksCollection[i];
+
+                InitTextBlocks(blocks);
+
                 var culledBlocks = blocks.Where(block =>
                 {
                     if (lastRenderTimeStamp > block.Start || block.Start >= renderWidthTimeStamp)
@@ -566,6 +571,19 @@ namespace StructuredLogViewer.Controls
             }
         }
 
+        private static readonly string[] ignoreCommonP2PTargets = {
+            "Build",
+            "ResolveProjectReferences",
+            "GetTargetFrameworksWithPlatformFromInnerBuilds",
+            "DispatchToInnerBuilds",
+            "BuildGenerateSources",
+            "BuildGenerateSourcesTraverse",
+            "BuildCompile",
+            "BuildCompileTraverse",
+            "BuildLink",
+            "BuildLinkTraverse"
+        };
+
         private List<Block> ComputeVisibleBlocks(IEnumerable<Block> enumBlocks)
         {
             double pixelDuration = ConvertPixelToTime(1);
@@ -573,7 +591,9 @@ namespace StructuredLogViewer.Controls
             var blocks = enumBlocks.Where(b =>
             {
                 if (b.Duration.Ticks < pixelDuration)
+                {
                     return false;
+                }
 
                 switch (b.Node)
                 {
@@ -582,14 +602,13 @@ namespace StructuredLogViewer.Controls
                     case Project:
                         return ShowProject;
                     case Target:
-                        return ShowTarget;
+                        return ShowTarget && !ignoreCommonP2PTargets.Contains((b.Node as Target).Name);
                     case Microsoft.Build.Logging.StructuredLogger.Task node:
                         // When ShowCpp is enabled, hide the task and show the messages so that only one of them will appear.
                         if (showCppBlocks && node is CppAnalyzer.CppTask cppNode && cppNode.HasTimedBlocks)
                         {
                             return false;
                         }
-
                         return ShowTask;
                     case Message:
                         return ShowCpp && ShowTask;
@@ -679,14 +698,15 @@ namespace StructuredLogViewer.Controls
             return canvas;
         }
 
-        private void UpdatePanelForLane(Canvas canvas, IEnumerable<Block> blocks)
+        // Create all the TextBlock so that GoToTimedNode() resolve the node before it is drawn.
+        private void InitTextBlocks(IEnumerable<Block> blocks)
         {
-            double canvasWidth = double.IsNaN(canvas.Width) ? 0 : canvas.Width;
-            double canvasHeight = double.IsNaN(canvas.Height) ? 0 : canvas.Height;
-            double minimumDurationToInclude = 1; // ignore durations less than 1 pixel
-
             if (blocks == null || !blocks.Any())
+            {
                 return;
+            }
+
+            double minimumDurationToInclude = 1; // ignore durations less than 1 pixel
 
             foreach (var block in blocks)
             {
@@ -705,7 +725,6 @@ namespace StructuredLogViewer.Controls
                     continue;
                 }
 
-                var content = new ContentControl();
                 var textBlock = new TextBlock();
                 textBlock.Text = $"{block.Text} ({TextUtilities.DisplayDuration(block.Duration)})";
                 textBlock.Background = ChooseBackground(block);
@@ -715,22 +734,41 @@ namespace StructuredLogViewer.Controls
                 textBlock.ToolTip = block.GetTooltip();
                 textBlock.MouseUp += TextBlock_MouseUp;
                 textBlock.Tag = block;
+
+                Canvas.SetLeft(textBlock, left);
+                Canvas.SetTop(textBlock, indentOffset);
+
                 TextBlocks.Add(block.Node, textBlock);
+            }
+        }
 
-                canvasHeight = Math.Max(indentOffset + textHeight, canvasHeight);
-                canvasWidth = Math.Max(duration + left, canvasWidth);
+        private void UpdatePanelForLane(Canvas canvas, IEnumerable<Block> blocks)
+        {
+            if (blocks == null || !blocks.Any())
+            {
+                return;
+            }
 
-                Canvas.SetLeft(content, left);
-                Canvas.SetTop(content, indentOffset);
-                content.Content = textBlock;
-                content.MouseDoubleClick += Content_MouseDoubleClick;
-                canvas.Children.Add(content);
+            double canvasWidth = double.IsNaN(canvas.Width) ? 0 : canvas.Width;
+            double canvasHeight = double.IsNaN(canvas.Height) ? 0 : canvas.Height;
+
+            foreach (var block in blocks)
+            {
+                if (TextBlocks.TryGetValue(block.Node, out TextBlock textBlock))
+                {
+                    double left = Canvas.GetLeft(textBlock);
+                    double indentOffset = Canvas.GetTop(textBlock);
+                    double duration = textBlock.Width;
+
+                    canvasHeight = Math.Max(indentOffset + textHeight, canvasHeight);
+                    canvasWidth = Math.Max(duration + left, canvasWidth);
+                    canvas.Children.Add(textBlock);
+                }
             }
 
             canvas.Height = canvasHeight;
             canvas.Width = canvasWidth;
         }
-
 
         private void UpdatedGraph(double widthOffset)
         {
@@ -766,15 +804,6 @@ namespace StructuredLogViewer.Controls
             }
         }
 
-        private void Content_MouseDoubleClick(object sender, MouseButtonEventArgs e)
-        {
-            var content = sender as ContentControl;
-            if (content.Content is TextBlock textBlock && textBlock.Tag is Block)
-            {
-                isDoubleClick = true;
-            }
-        }
-
         private TextBlock activeTextBlock = null;
         private Border highlight = new Border()
         {
@@ -790,10 +819,7 @@ namespace StructuredLogViewer.Controls
             {
                 if (scrollToElement)
                 {
-                    ContentControl content = activeTextBlock.Parent as ContentControl;
-                    Point p = content.TranslatePoint(new Point(0, 0), grid);
-                    horizontalOffset = p.X > 20 ? p.X - 20 : p.X;
-                    verticalOffset = p.Y > 20 ? p.Y - 20 : p.Y;
+                    ScrollToElement(hit);
                 }
 
                 return;
@@ -811,42 +837,46 @@ namespace StructuredLogViewer.Controls
 
             if (activeTextBlock != null)
             {
-                ContentControl content = activeTextBlock.Parent as ContentControl;
-                if (content != null && content.Parent is Panel parent)
+                if (activeTextBlock.Parent is Panel parent)
                 {
                     parent.Children.Add(highlight);
-                    Canvas.SetLeft(highlight, Canvas.GetLeft(content));
-                    Canvas.SetTop(highlight, Canvas.GetTop(content));
+                    Canvas.SetLeft(highlight, Canvas.GetLeft(activeTextBlock));
+                    Canvas.SetTop(highlight, Canvas.GetTop(activeTextBlock));
                     highlight.Width = activeTextBlock.Width;
                     highlight.Height = activeTextBlock.Height;
 
                     if (scrollToElement)
                     {
-                        Point p = content.TranslatePoint(new Point(0, 0), grid);
-                        horizontalOffset = p.X > 20 ? p.X - 20 : p.X;
-                        verticalOffset = p.Y > 20 ? p.Y - 20 : p.Y;
-
-                        horizontalOffset = Math.Max(horizontalOffset, 0);
-                        verticalOffset = Math.Max(verticalOffset, 0);
-
-                        scrollViewer.ScrollToHorizontalOffset(horizontalOffset);
-                        scrollViewer.ScrollToVerticalOffset(verticalOffset);
+                        ScrollToElement(activeTextBlock);
                     }
                 }
             }
+        }
+
+        private void ScrollToElement(TextBlock hit)
+        {
+            Point p = hit.TranslatePoint(new Point(0, 0), grid);
+            horizontalOffset = p.X > 20 ? p.X - 20 : p.X;
+            verticalOffset = p.Y > 20 ? p.Y - 20 : p.Y;
+
+            horizontalOffset = Math.Max(horizontalOffset, 0);
+            verticalOffset = Math.Max(verticalOffset, 0);
+
+            scrollViewer.ScrollToHorizontalOffset(horizontalOffset);
+            scrollViewer.ScrollToVerticalOffset(verticalOffset);
         }
 
         private void TextBlock_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             if (sender is TextBlock textBlock && textBlock.Tag is Block block)
             {
-                if (isDoubleClick)
+                if (activeTextBlock != null && activeTextBlock == textBlock && (lastClickTimestamp - Timestamp).TotalMilliseconds < 200)
                 {
-                    isDoubleClick = false;
                     BuildControl.SelectItem(block.Node);
                 }
                 else
                 {
+                    lastClickTimestamp = Timestamp;
                     HighlightTextBlock(textBlock);
                 }
             }
