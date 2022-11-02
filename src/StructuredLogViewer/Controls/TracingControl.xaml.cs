@@ -37,6 +37,8 @@ namespace StructuredLogViewer.Controls
         private bool _showCpp = false;
         private bool _showNodes = true;
         private bool _groupByNodes = true;
+        private bool _showProjectReferenceSelection = true;
+
 
         public int numberOfEvaluations = 0;
         public int numberOfProjects = 0;
@@ -89,7 +91,7 @@ namespace StructuredLogViewer.Controls
         public bool ShowCpp
         {
             get => _showCpp;
-            set { _showCpp = value; if (this.numberOfCpp > 0) ComputeAndDraw(); }
+            set { _showCpp = value; if (this.numberOfCpp > 0) { ComputeAndDraw(); } }
         }
 
         public bool ShowNodes
@@ -117,6 +119,16 @@ namespace StructuredLogViewer.Controls
                 _groupByNodes = value;
                 if (numberOfNodes > 1)
                     ComputeAndDraw();
+            }
+        }
+
+        public bool ShowProjectReferenceSelection
+        {
+            get => _showProjectReferenceSelection;
+            set
+            {
+                _showProjectReferenceSelection = value;
+                DrawHighLight();
             }
         }
 
@@ -270,6 +282,24 @@ namespace StructuredLogViewer.Controls
             ComputeTimeline();
             this.lastRenderTimeStamp = 0;
             Draw();
+            DrawHighLight(false);
+        }
+
+        private void DrawHighLight(bool draw = true)
+        {
+            // Remove and Redraw Highlight
+            if (activeTextBlock != null)
+            {
+                var hit = activeTextBlock.Tag;
+                activeTextBlock = null;
+                overlayCanvas.Children.Clear(); // clear highlight
+
+                // Note: I want to redraw the Highlight but sometimes the Canvas position isn't ready yet.
+                if (draw && hit is Block block && TextBlocks.TryGetValue(block.Node, out TextBlock foundBlock))
+                {
+                    HighlightTextBlock(foundBlock);
+                }
+            }
         }
 
         private DateTime Timestamp => DateTime.UtcNow;
@@ -695,7 +725,7 @@ namespace StructuredLogViewer.Controls
             return canvas;
         }
 
-        // Create all the TextBlock so that GoToTimedNode() resolve the node before it is drawn.
+        // Create all the TextBlock so that GoToTimedNode() can locate the node without it being drawn.
         private (double, double) CreateTextBlocks(IEnumerable<Block> blocks)
         {
             if (blocks == null || !blocks.Any())
@@ -805,7 +835,7 @@ namespace StructuredLogViewer.Controls
         {
             if (activeTextBlock == hit)
             {
-                if (scrollToElement)
+                if (hit != null && scrollToElement)
                 {
                     ScrollToElement(hit);
                 }
@@ -822,80 +852,96 @@ namespace StructuredLogViewer.Controls
 
             if (activeTextBlock != null)
             {
-                if (activeTextBlock.Parent is Panel parent)
+                // Highlight node
+                Point activePoint = activeTextBlock.TranslatePoint(new Point(0, 0), overlayGrid);
+                Canvas.SetLeft(highlight, activePoint.X);
+                Canvas.SetTop(highlight, activePoint.Y);
+                highlight.Width = activeTextBlock.Width;
+                highlight.Height = activeTextBlock.Height;
+                overlayCanvas.Children.Add(highlight);
+
+                // If it is a Project node, then draw lines to those node.
+                if (ShowProjectReferenceSelection && activeTextBlock.Tag is Block b && b.Node is Project proj)
                 {
-                    // Highlight node
-                    Point activePoint = activeTextBlock.TranslatePoint(new Point(0, 0), grid);
-                    Canvas.SetLeft(highlight, activePoint.X);
-                    Canvas.SetTop(highlight, activePoint.Y);
-                    highlight.Width = activeTextBlock.Width;
-                    highlight.Height = activeTextBlock.Height;
-                    overlayCanvas.Children.Add(highlight);
+                    HighlightProjectTextBlock(proj, activePoint);
+                }
 
-                    // If it is a Project node, then draw lines to those node.
-                    if (activeTextBlock.Tag is Block b && b.Node is Project proj)
-                    {
-                        var relatedProjectNode = GetRelatedProjects(proj);
-                        foreach (var relatedProject in relatedProjectNode)
-                        {
-                            if (TextBlocks.TryGetValue(relatedProject, out TextBlock relativeTextBlock))
-                            {
-                                Point relativePoint = relativeTextBlock.TranslatePoint(new Point(0, textHeight - 1), grid);
-
-                                // Draw a line down, then to the right.
-                                Line lineDown = new Line()
-                                {
-                                    X1 = activePoint.X,
-                                    Y1 = relativePoint.Y,
-                                    X2 = activePoint.X,
-                                    Y2 = activePoint.Y,
-                                    Stroke = Brushes.DeepSkyBlue,
-                                    StrokeThickness = 2
-                                };
-                                Line lineRight = new Line()
-                                {
-                                    X1 = activePoint.X,
-                                    Y1 = relativePoint.Y,
-                                    X2 = relativePoint.X,
-                                    Y2 = relativePoint.Y,
-                                    Stroke = Brushes.LightBlue,
-                                    StrokeThickness = 1
-                                };
-                                overlayCanvas.Children.Add(lineDown);
-                                overlayCanvas.Children.Add(lineRight);
-                            }
-                        }
-                    }
-
-                    if (scrollToElement)
-                    {
-                        ScrollToElement(activeTextBlock);
-                    }
+                if (scrollToElement)
+                {
+                    ScrollToElement(activeTextBlock);
                 }
             }
         }
 
-        private Project[] GetRelatedProjects(Project node)
+        private void HighlightProjectTextBlock(Project originProject, Point originPoint)
         {
-            if (node is Project project)
+            // Get Parent Project
+            var parent = originProject.GetNearestParent<Project>();
+            if (parent != null)
             {
-                var nodes = new List<Project>();
-
-                // Get Parent Project
-                var parent = project.GetNearestParent<Project>();
-
-                if (parent != null)
+                if (TextBlocks.TryGetValue(parent, out TextBlock relativeTextBlock))
                 {
-                    nodes.Add(parent);
+                    Point parentPoint = relativeTextBlock.TranslatePoint(new Point(0, 0), overlayGrid);
+                    if (parentPoint.X >= 0 && parentPoint.Y >= 0)
+                    {
+                        DrawHorizontalLine(parentPoint, originPoint);
+                    }
                 }
-
-                // Get All Direct Dependent projects
-                var dependentProjects = project.FindImmediateChildrenOfType<Project>();
-                nodes.AddRange(dependentProjects);
-                return nodes.ToArray();
             }
 
-            return Array.Empty<Project>();
+            var relatedProjectNode = originProject.FindImmediateChildrenOfType<Project>();
+            foreach (var relatedProject in relatedProjectNode)
+            {
+                if (TextBlocks.TryGetValue(relatedProject, out TextBlock relativeTextBlock))
+                {
+                    Point destinationPoint = relativeTextBlock.TranslatePoint(new Point(0, 0), overlayGrid);
+                    if (destinationPoint.X == 0 && destinationPoint.Y == 0)
+                    {
+                        continue;
+                    }
+
+                    DrawHorizontalLine(originPoint, destinationPoint);
+                }
+            }
+        }
+
+        private void DrawHorizontalLine(Point originPoint, Point destinationPoint)
+        {
+            /* 0  .
+             * 1  ^ActivePoint
+             * 2 --------O-------
+             * 3         |
+             * 4         |-------
+             * 5         O<-DestinationPoint
+             */
+
+            // start the line from edge of the selection.
+            double originY;
+            double destinationY;
+            if (originPoint.Y < destinationPoint.Y)
+            {
+                // Below
+                originY = originPoint.Y + textHeight;
+                destinationY = destinationPoint.Y + textHeight;
+            }
+            else
+            {
+                // Above
+                originY = originPoint.Y;
+                destinationY = destinationPoint.Y;
+            }
+
+            // Draw a line up or down.
+            Line lineDown = new Line()
+            {
+                X1 = destinationPoint.X,
+                X2 = destinationPoint.X,
+                Y1 = originY,
+                Y2 = destinationY,
+                Stroke = Brushes.DeepSkyBlue,
+                StrokeThickness = 1
+            };
+            overlayCanvas.Children.Add(lineDown);
         }
 
         private void ScrollToElement(TextBlock hit)
