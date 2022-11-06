@@ -525,5 +525,30 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
         }
+
+        // A breadth first search looking for the first node of type T.
+        public IReadOnlyList<T> FindImmediateChildrenOfType<T>()
+        {
+            Queue<BaseNode> searchQueue = new Queue<BaseNode>(Children);
+            List<T> resultNodes = new List<T>();
+
+            while (searchQueue.Count > 0)
+            {
+                var node = searchQueue.Dequeue();
+                if (node is T tNode)
+                {
+                    resultNodes.Add(tNode);
+                }
+                else if (node is TreeNode treeNode && treeNode.HasChildren)
+                {
+                    foreach (BaseNode child in treeNode.Children)
+                    {
+                        searchQueue.Enqueue(child);
+                    }
+                }
+            }
+
+            return resultNodes;
+        }
     }
 }
