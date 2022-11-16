@@ -343,11 +343,11 @@ namespace StructuredLogViewer.Controls
         private struct HeatGraphNode
         {
             public HeatGraphNode() { }
-            public int Height = 0;
+            public double Height = 0;
             public bool HasError = false;
         }
 
-        private HeatGraphNode[] ComputerHeatGraphData(double unitDuration = 1)
+        private HeatGraphNode[] ComputeHeatGraphData(double unitDuration = 1)
         {
             var graphLength = (int)Math.Floor(ConvertTimeToPixel(GlobalEndTime - GlobalStartTime) / unitDuration) + 1;
             var graphData = new HeatGraphNode[graphLength];
@@ -368,10 +368,43 @@ namespace StructuredLogViewer.Controls
                         int left = (int)Math.Floor(ConvertTimeToPixel(block.Start - GlobalStartTime) / unitDuration);
                         int right = (int)Math.Floor(ConvertTimeToPixel(block.End - GlobalStartTime) / unitDuration);
 
-                        for (; left <= right && left < graphLength; left++)
+                        if (left >= graphLength)
+                        {
+                            continue;
+                        }
+
+                        // Round the edge to a percentage.
+                        // 0-----1-----2-----4
+                        // |-----|-----|-----|
+                        //    <---Task--->
+                        //    60%, 100%, 40%
+
+                        graphData[left].HasError |= block.HasError;
+
+                        // If the start and end are in the same unit.
+                        if (left == right)
+                        {
+                            graphData[left].Height += ConvertTimeToPixel(block.End - block.Start) % unitDuration / unitDuration;
+                            continue;
+                        }
+
+                        // Left edge
+                        graphData[left].Height += (unitDuration - ConvertTimeToPixel(block.Start - GlobalStartTime) % unitDuration) / unitDuration;
+
+                        // Right edge, safeguard right edge is truely to the right.
+                        if (left < right && right < graphLength)
+                        {
+                            graphData[right].Height += ConvertTimeToPixel(block.End - GlobalStartTime) % unitDuration / unitDuration;
+                            graphData[right].HasError |= block.HasError;
+                        }
+
+                        left++;
+
+                        while (left < right && left < graphLength)
                         {
                             graphData[left].Height++;
                             graphData[left].HasError |= block.HasError;
+                            left++;
                         }
                     }
                 }
@@ -445,7 +478,7 @@ namespace StructuredLogViewer.Controls
 
             // WPF is really slow to render, so only render fixed number entries
             var lineWidth = Math.Max(timelineWidth / 4000, 1);
-            var graphData = ComputerHeatGraphData(lineWidth);
+            var graphData = ComputeHeatGraphData(lineWidth);
 
             var canvas = new Canvas();
             canvas.VerticalAlignment = VerticalAlignment.Top;
@@ -453,8 +486,9 @@ namespace StructuredLogViewer.Controls
             canvas.Height = graphHeight;
             canvas.Width = timelineWidth;
 
-            // compute the largest value but keep it within # of nodes
-            int maxData = _groupByNodes ? Math.Min(blocksCollection.Count, graphData.Select(g => g.Height).Max()) : graphData.Select(g => g.Height).Max();
+            // compute the largest value but keep it within number of nodes
+            double maxData = graphData.Select(g => g.Height).Max();
+            maxData = _groupByNodes ? Math.Min(blocksCollection.Count, maxData) : maxData;
 
             double dataGraphHeightRatio = graphHeight / maxData;
 
@@ -462,7 +496,7 @@ namespace StructuredLogViewer.Controls
             {
                 if (graphData[i].Height > 0)
                 {
-                    double normalizedGraphHeight = (double)Math.Min(graphData[i].Height, maxData) * dataGraphHeightRatio;
+                    double normalizedGraphHeight = Math.Min(graphData[i].Height, maxData) * dataGraphHeightRatio;
                     Line barLine = new Line()
                     {
                         Stroke = graphData[i].HasError ? errorBackground : taskBackground,
