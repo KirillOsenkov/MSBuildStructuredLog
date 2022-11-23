@@ -222,6 +222,22 @@ namespace StructuredLogViewer.Controls
             GlobalStartTime = globalStart;
             GlobalEndTime = globalEnd;
 
+            // Global end time might not be set because the stream could had been terminated early.
+            // Locate the last block and use that as the global end time instead.
+            if (globalEnd < globalStart || globalEnd < 0)
+            {
+                long maxEndTime = 0;
+                foreach (var lanes in timeline.Lanes)
+                {
+                    foreach (var block in lanes.Value.Blocks)
+                    {
+                        maxEndTime = Math.Max(maxEndTime, block.EndTime.Ticks);
+                    }
+                }
+
+                GlobalEndTime = maxEndTime;
+            }
+
             // Quick size count
             int totalItems = 0;
             foreach (var lanes in timeline.Lanes)
