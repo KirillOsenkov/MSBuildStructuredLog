@@ -11,9 +11,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
     {
         private readonly Construction construction;
         private readonly StringCache stringTable;
-        private bool canParseDetailSummary = true;
 
-        public StringBuilder DetailedSummary { get; set; } = new StringBuilder();
+        public StringBuilder DetailedSummary { get; } = new StringBuilder();
 
         public MessageProcessor(Construction construction, StringCache stringTable)
         {
@@ -538,20 +537,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     // must be Detailed Build Summary
                     // https://github.com/dotnet/msbuild/blob/main/src/XMakeBuildEngine/BackEnd/Components/Scheduler/Scheduler.cs#L509
-                    try
-                    {
-                        if (canParseDetailSummary && DetailedSummary.Length + message.Length < DetailedSummary.MaxCapacity)
-                        {
-                            DetailedSummary.AppendLine(message);
-                        }
-                    }
-                    catch (Exception ex) when (ex is System.OutOfMemoryException || ex is System.NullReferenceException)
-                    {
-                        canParseDetailSummary = false;
-                        // Don't use DetailedSummary.Clean() because it may throw because the internal structure is broken
-                        DetailedSummary = new StringBuilder();
-                        throw new Exception($"Detail Summary encountered an error when trying to load. ({ex.Message})");
-                    }
+                    DetailedSummary.AppendLine(message);
                     return;
                 }
                 else if (
