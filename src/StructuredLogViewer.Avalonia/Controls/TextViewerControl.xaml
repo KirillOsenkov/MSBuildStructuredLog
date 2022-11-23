@@ -1,4 +1,4 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:StructuredLogViewer.Avalonia.Controls;assembly=StructuredLogViewer.Avalonia"
              xmlns:a="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
@@ -6,6 +6,15 @@
     <Grid RowDefinitions="Auto,*">
         <DockPanel Background="White"
                    Name="filePathToolbar">
+            <Button Name="save" 
+                    DockPanel.Dock="Left"
+                    Content="Save" 
+                    VerticalAlignment="Center"
+                    BorderThickness="0"
+                    Click="save_Click"
+                    Background="Transparent"
+                    Padding="6,3,6,3"
+                    ToolTip.Tip="Save file as..." />
             <Button Name="openInExternalEditor"
                     DockPanel.Dock="Left"
                     Content="Open"
