@@ -536,8 +536,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     buildEventContext.TaskId == 0)
                 {
                     // must be Detailed Build Summary
-                    // https://github.com/dotnet/msbuild/blob/main/src/XMakeBuildEngine/BackEnd/Components/Scheduler/Scheduler.cs#L509
-                    DetailedSummary.AppendLine(message);
+                    // https://github.com/dotnet/msbuild/blob/d797c48da13aaa4dc7ae440ed7603c990cd44317/src/Build/BackEnd/Components/Scheduler/Scheduler.cs#L546
+                    // Make sure to trim it otherwise it takes forever to load for huge builds
+                    // and at that data volume it's just not useful
+                    if (DetailedSummary.Length < 20_000_000)
+                    {
+                        DetailedSummary.AppendLine(message);
+                    }
+
                     return;
                 }
                 else if (
