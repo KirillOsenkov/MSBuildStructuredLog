@@ -16,6 +16,8 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Xml;
 using AvaloniaEdit.Highlighting.Xshd;
+using System.Text;
+using Avalonia.VisualTree;
 
 namespace StructuredLogViewer.Avalonia.Controls
 {
@@ -82,10 +84,10 @@ namespace StructuredLogViewer.Avalonia.Controls
         }
 
         public void DisplaySource(
-            string sourceFilePath, 
-            string text, 
-            int lineNumber = 0, 
-            int column = 0, 
+            string sourceFilePath,
+            string text,
+            int lineNumber = 0,
+            int column = 0,
             Action showPreprocessed = null,
             NavigationHelper navigationHelper = null)
         {
@@ -178,6 +180,37 @@ namespace StructuredLogViewer.Avalonia.Controls
                         textEditor.TextArea.Caret.Column = column;
                     }
                 }, DispatcherPriority.Background);
+            }
+        }
+
+        private async void save_Click(object sender, RoutedEventArgs e)
+        {
+            if (this.FindAncestorOfType<Window>() is not Window window)
+            {
+                return;
+            }
+            
+            var filePath = FilePath;
+            var extension = Path.GetExtension(filePath);
+
+            if (string.IsNullOrEmpty(extension))
+            {
+                extension = ".txt";
+                filePath += extension;
+            }
+
+            var saveFileDialog = new SaveFileDialog
+            {
+                Title = "Save file as...",
+                DefaultExtension = $"{extension.Substring(1)} files|*{extension}|All Files|*.*",
+                InitialFileName = Path.GetFileName(filePath)
+            };
+
+            var result = await saveFileDialog.ShowAsync(window);
+
+            if (!string.IsNullOrWhiteSpace(result))
+            {
+                await File.WriteAllTextAsync(result, Text, Encoding.UTF8, default);
             }
         }
 
