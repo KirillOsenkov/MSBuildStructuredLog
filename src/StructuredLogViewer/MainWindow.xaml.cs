@@ -576,6 +576,11 @@ namespace StructuredLogViewer
             currentBuild = build != null ? new BuildControl(build, logFilePath) : null;
             SetContent(currentBuild);
 
+            if (currentBuild == null)
+            {
+                ProjectOrEvaluationHelper.ClearCache();
+            }
+
             GC.Collect();
         }
 
