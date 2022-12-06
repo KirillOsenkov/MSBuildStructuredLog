@@ -118,7 +118,9 @@ namespace StructuredLogViewer.Controls
             {
                 _groupByNodes = value;
                 if (numberOfNodes > 1)
+                {
                     ComputeAndDraw();
+                }
             }
         }
 
@@ -173,11 +175,14 @@ namespace StructuredLogViewer.Controls
 
         private void Zoom(double value)
         {
+            double delta = value / scaleFactor;
             scaleFactor = value;
             scaleTransform.ScaleX = scaleFactor;
             scaleTransform.ScaleY = scaleFactor;
 
-            UpdatedGraph(scrollViewer.VerticalOffset + scrollViewer.ViewportWidth);
+            UpdatedGraph(scrollViewer.HorizontalOffset + scrollViewer.ViewportWidth);
+            scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset * delta);
+            scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset * delta);
         }
 
         private const double minimumZoom = 0.1;
@@ -185,24 +190,31 @@ namespace StructuredLogViewer.Controls
 
         private void TimelineControl_MouseWheel(object sender, MouseWheelEventArgs e)
         {
+            double delta = 0;
             if (e.Delta > 0)
             {
                 if (scaleFactor < maximumZoom)
                 {
-                    scaleFactor += 0.1;
-                    zoomSlider.Value = scaleFactor;
+                    delta = 1.1;
                 }
             }
             else
             {
                 if (scaleFactor > minimumZoom + 0.1)
                 {
-                    scaleFactor -= 0.1;
-                    zoomSlider.Value = scaleFactor;
+                    delta = 0.9;
                 }
             }
 
-            UpdatedGraph(scrollViewer.VerticalOffset + scrollViewer.ViewportWidth);
+            if (delta != 0)
+            {
+                scaleFactor *= delta;
+                zoomSlider.Value = scaleFactor;
+
+                UpdatedGraph(scrollViewer.HorizontalOffset + scrollViewer.ViewportWidth);
+                scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset * delta);
+                scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset * delta);
+            }
 
             e.Handled = true;
         }
@@ -1053,7 +1065,7 @@ namespace StructuredLogViewer.Controls
         private void ResetZoom_Click(object sender, RoutedEventArgs e)
         {
             zoomSlider.Value = 1;
-            UpdatedGraph(scrollViewer.VerticalOffset + scrollViewer.ViewportWidth);
+            UpdatedGraph(scrollViewer.HorizontalOffset + scrollViewer.ViewportWidth);
         }
 
         private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
@@ -1063,7 +1075,7 @@ namespace StructuredLogViewer.Controls
                 return;
             }
 
-            UpdatedGraph(e.ViewportWidth + e.HorizontalOffset);
+            UpdatedGraph(e.HorizontalOffset + e.ViewportWidth);
             e.Handled = true;
         }
     }
