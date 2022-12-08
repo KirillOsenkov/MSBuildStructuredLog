@@ -54,7 +54,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
             else if (children is ChildrenList list)
             {
-                list.EnsureCapacity(capacity);
+                list.EnsureCapacity(list.Count + capacity);
             }
         }
 
