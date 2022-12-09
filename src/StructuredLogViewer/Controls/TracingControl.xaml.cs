@@ -211,9 +211,14 @@ namespace StructuredLogViewer.Controls
                 scaleFactor *= delta;
                 zoomSlider.Value = scaleFactor;
 
+                // get mouse position relative to this control
+                Point mousePos = e.GetPosition(this);
+                double mouseOffsetX = mousePos.X * (1 - delta);
+                double mouseOffsetY = mousePos.Y * (1 - delta);
+
                 UpdatedGraph(scrollViewer.HorizontalOffset + scrollViewer.ViewportWidth);
-                scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset * delta);
-                scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset * delta);
+                scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset * delta - mouseOffsetX);
+                scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset * delta - mouseOffsetY);
             }
 
             e.Handled = true;
