@@ -17,6 +17,8 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using AvaloniaEdit.Highlighting.Xshd;
 using System.Text;
+using System.Threading.Tasks;
+using Avalonia.Platform.Storage;
 using Avalonia.VisualTree;
 
 namespace StructuredLogViewer.Avalonia.Controls
@@ -145,7 +147,7 @@ namespace StructuredLogViewer.Avalonia.Controls
                 var highlighting = HighlightingManager.Instance.GetDefinition("XML");
                 highlighting.GetNamedColor("XmlTag").Foreground = new SimpleHighlightingBrush(Color.FromRgb(163, 21, 21));
                 textEditor.SyntaxHighlighting = highlighting;
-                
+
                 var foldingManager = FoldingManager.Install(textEditor.TextArea);
                 var foldingStrategy = new XmlFoldingStrategy();
                 foldingStrategy.UpdateFoldings(foldingManager, textEditor.Document);
@@ -185,11 +187,11 @@ namespace StructuredLogViewer.Avalonia.Controls
 
         private async void save_Click(object sender, RoutedEventArgs e)
         {
-            if (this.FindAncestorOfType<Window>() is not Window window)
+            if (!(this.GetVisualRoot() is TopLevel topLevel))
             {
                 return;
             }
-            
+
             var filePath = FilePath;
             var extension = Path.GetExtension(filePath);
 
@@ -199,18 +201,19 @@ namespace StructuredLogViewer.Avalonia.Controls
                 filePath += extension;
             }
 
-            var saveFileDialog = new SaveFileDialog
+            using var result = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
                 Title = "Save file as...",
-                DefaultExtension = $"{extension.Substring(1)} files|*{extension}|All Files|*.*",
-                InitialFileName = Path.GetFileName(filePath)
-            };
+                DefaultExtension = extension,
+                SuggestedFileName = Path.GetFileName(filePath),
+                FileTypeChoices = new[] { FilePickerFileTypes.All, FilePickerFileTypes.TextPlain }
+            });
 
-            var result = await saveFileDialog.ShowAsync(window);
-
-            if (!string.IsNullOrWhiteSpace(result))
+            if (result?.CanOpenWrite == true)
             {
-                await File.WriteAllTextAsync(result, Text, Encoding.UTF8, default);
+                await using var stream = await result.OpenWriteAsync();
+                await using var writer = new StreamWriter(stream, Encoding.UTF8);
+                await writer.WriteAsync(Text);
             }
         }
 

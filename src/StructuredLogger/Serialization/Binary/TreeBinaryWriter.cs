@@ -9,10 +9,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class TreeBinaryWriter : IDisposable
     {
-        private readonly string filePath;
         private readonly BinaryWriter binaryWriter;
         private readonly BetterBinaryWriter treeNodesStreamBinaryWriter;
-        private readonly FileStream fileStream;
+        private readonly Stream fileStream;
         private readonly GZipStream gzipStream;
 
         /// <summary>
@@ -27,10 +26,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private readonly List<string> attributes = new List<string>(10);
 
         public TreeBinaryWriter(string filePath)
+            : this(new FileStream(filePath, FileMode.Create, FileAccess.Write))
         {
-            this.filePath = filePath;
+        }
+
+        public TreeBinaryWriter(Stream stream)
+        {
             this.treeNodesStream = new MemoryStream();
-            this.fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write);
+            this.fileStream = stream;
             WriteVersion();
             this.gzipStream = new GZipStream(fileStream, CompressionLevel.Optimal);
             this.binaryWriter = new BetterBinaryWriter(DestinationStream);

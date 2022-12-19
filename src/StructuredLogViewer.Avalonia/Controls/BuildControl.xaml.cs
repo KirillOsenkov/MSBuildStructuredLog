@@ -17,6 +17,7 @@ using Avalonia;
 using Avalonia.Styling;
 using Avalonia.Data;
 using Avalonia.Layout;
+using Avalonia.Platform.Storage;
 
 namespace StructuredLogViewer.Avalonia.Controls
 {
@@ -24,7 +25,6 @@ namespace StructuredLogViewer.Avalonia.Controls
     {
         public Build Build { get; set; }
         public TreeViewItem SelectedTreeViewItem { get; private set; }
-        public string LogFilePath { get; private set; }
 
         private ScrollViewer scrollViewer;
 
@@ -61,7 +61,7 @@ namespace StructuredLogViewer.Avalonia.Controls
         {
         }
 
-        public BuildControl(Build build, string logFilePath)
+        public BuildControl(Build build, IStorageFile logFile)
         {
             DataContext = build;
 
@@ -87,17 +87,15 @@ namespace StructuredLogViewer.Avalonia.Controls
 
             Build = build;
 
-            LogFilePath = logFilePath;
-
             if (build.SourceFilesArchive != null)
             {
                 // first try to see if the source archive was embedded in the log
                 sourceFileResolver = new SourceFileResolver(build.SourceFiles.Values);
             }
-            else
+            else if (logFile.TryGetUri(out var logFilePath) && logFilePath.IsAbsoluteUri && logFilePath.Scheme == "file")
             {
                 // otherwise try to read from the .zip file on disk if present
-                sourceFileResolver = new SourceFileResolver(logFilePath);
+                sourceFileResolver = new SourceFileResolver(logFilePath.LocalPath);
             }
 
             sharedTreeContextMenu = new ContextMenu();
@@ -174,7 +172,7 @@ namespace StructuredLogViewer.Avalonia.Controls
                 var text =
 @"This log contains the full text of projects and imported files used during the build.
 You can use the 'Files' tab in the bottom left to view these files and the 'Find in Files' tab for full-text search.
-For many nodes in the tree (Targets, Tasks, Errors, Projects, etc) pressing SPACE or ENTER or double-clicking 
+For many nodes in the tree (Targets, Tasks, Errors, Projects, etc) pressing SPACE or ENTER or double-clicking
 on the node will navigate to the corresponding source code associated with the node.
 
 More functionality is available from the right-click context menu for each node.
@@ -649,7 +647,7 @@ Recent:
         public void SelectItem(BaseNode item)
         {
             var parentChain = item.GetParentChainExcludingThis();
-            
+
             foreach (var node in parentChain)
             {
                 if (node is TreeNode treeNode)

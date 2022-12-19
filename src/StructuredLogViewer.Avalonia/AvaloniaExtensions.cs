@@ -16,7 +16,7 @@ namespace StructuredLogViewer.Avalonia
         {
             (itemsControl.Items as IList)?.Remove(o);
         }
-        
+
         public static void ClearItems(this ItemsControl itemsControl)
         {
             (itemsControl.Items as IList)?.Clear();
@@ -26,12 +26,6 @@ namespace StructuredLogViewer.Avalonia
             where TControl : class, IControl
         {
             control = parent.FindControl<TControl>(name);
-        }
-
-        public static async Task<string> ShowAndGetFileAsync(this OpenFileDialog dialog, Window window = null)
-        {
-            var result = await dialog.ShowAsync(window);
-            return result?.FirstOrDefault();
         }
     }
 }

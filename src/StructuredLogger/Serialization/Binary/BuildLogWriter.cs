@@ -1,10 +1,10 @@
 ﻿using System;
+using System.IO;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class BuildLogWriter : IDisposable
     {
-        private readonly string filePath;
         private TreeBinaryWriter writer;
 
         public static void Write(Build build, string filePath)
@@ -15,10 +15,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        public static void Write(Build build, Stream stream)
+        {
+            using (var binaryLogWriter = new BuildLogWriter(stream))
+            {
+                binaryLogWriter.WriteNode(build);
+            }
+        }
+
         private BuildLogWriter(string filePath)
         {
-            this.filePath = filePath;
             this.writer = new TreeBinaryWriter(filePath);
+        }
+
+        private BuildLogWriter(Stream stream)
+        {
+            this.writer = new TreeBinaryWriter(stream);
         }
 
         private void WriteNode(BaseNode node)
