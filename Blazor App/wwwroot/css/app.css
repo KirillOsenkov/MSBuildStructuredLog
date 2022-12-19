@@ -1,4 +1,4 @@
-﻿@import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
+@import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
 
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif, monospace;
@@ -268,6 +268,20 @@ element.Style {
     position: fixed;
     width: 100%;
     z-index: 1000;
+}
+
+.ui-treenode-content div {
+    vertical-align: middle;
+}
+
+.ui-treenode-content img {
+    padding: 0 6px 3px 0;
+}
+
+.btn.btn-primary.btn-theme {
+    margin-top: 0.5rem;
+    margin-bottom: 0.3rem;
+    margin-right: .5rem;
 }
 
 #blazor-error-ui .dismiss {

@@ -1,4 +1,4 @@
-﻿@using StructuredLogViewerWASM.Pages
+@using StructuredLogViewerWASM.Pages
 @using System.IO
 @using Microsoft.Build.Logging.StructuredLogger
 @inject Blazor.FileReader.IFileReaderService fileReaderService
@@ -22,7 +22,7 @@
                     </div>
                 </div>
 
-                <button @onclick="Theme.FlipTheme" class="btn btn-primary" style="margin-top:0.6rem;margin-right: .5rem;">@Theme.AlternateThemeName</button>
+                <button @onclick="Theme.FlipTheme" type="button" class="btn btn-primary btn-theme">@Theme.AlternateThemeName</button>
 
             </div>
 
