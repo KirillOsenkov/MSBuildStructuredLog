@@ -1,5 +1,10 @@
 version: 1.1.{build}
 image: Visual Studio 2022
+
+branches:
+  only:
+    - main
+
 install:
   - choco upgrade chocolatey # Need at least 0.10.8 to avoid packaging error
   - dotnet tool install --global Cake.Tool --version 1.0.0
