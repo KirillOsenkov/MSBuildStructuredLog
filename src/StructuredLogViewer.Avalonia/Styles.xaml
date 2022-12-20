@@ -7,7 +7,7 @@
         <structuredLogger:BaseNode />
     </Design.DataContext>
 
-    <Style Selector="Window.mainWindow">
+    <Style Selector="Window.mainView">
         <Setter Property="Background" Value="{DynamicResource WindowBackgroundStroke}"/>
     </Style>
 

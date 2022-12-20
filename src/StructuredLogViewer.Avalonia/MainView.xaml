@@ -1,0 +1,58 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="StructuredLogViewer.Avalonia.MainView"
+             Classes="mainView">
+
+    <DockPanel>
+        <Menu Name="mainMenu"
+              DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Name="startPage"
+                          Header="Start Page" />
+                <Separator />
+                <MenuItem Name="Build"
+                          Header="_Build Solution/Project..."
+                          HotKey="F6" />
+                <MenuItem Name="Rebuild"
+                          Header="Rebuild Solution/Project"
+                          HotKey="Shift+F6" />
+                <Separator />
+                <MenuItem Name="Open"
+                          Header="_Open Log..."
+                          HotKey="Ctrl+O" />
+                <MenuItem Name="ReloadMenu"
+                          Header="_Reload"
+                          HotKey="F5" />
+                <MenuItem Name="SaveAsMenu"
+                          Header="_Save Log As..."
+                          HotKey="Ctrl+S" />
+                <Separator />
+                <MenuItem Name="RecentProjectsMenu"
+                          Header="Recent Projects"
+                          IsVisible="false">
+                </MenuItem>
+                <MenuItem Name="RecentLogsMenu"
+                          Header="Recent Logs"
+                          IsVisible="false">
+                </MenuItem>
+                <Separator Name="RecentItemsSeparator"
+                           IsVisible="false" />
+                <MenuItem Name="SetMSBuild"
+                          Header="Set _MSBuild Path" />
+                <Separator />
+                <MenuItem Name="Exit"
+                          Header="E_xit"
+                          HotKey="Alt+F4" />
+            </MenuItem>
+            <MenuItem Header="_Help">
+                <MenuItem Name="HelpLink"
+                          Header="https://github.com/KirillOsenkov/MSBuildStructuredLog" />
+            </MenuItem>
+        </Menu>
+        <Grid>
+            <ContentPresenter Name="mainContent"
+                              Classes="mainContent"
+                              Margin="7" />
+        </Grid>
+    </DockPanel>
+</UserControl>
