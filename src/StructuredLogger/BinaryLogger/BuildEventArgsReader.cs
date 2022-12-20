@@ -14,7 +14,6 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Framework.Profiler;
 using Microsoft.Build.Internal;
 using Microsoft.Build.Shared;
-using StructuredLogger.BinaryLogger;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {

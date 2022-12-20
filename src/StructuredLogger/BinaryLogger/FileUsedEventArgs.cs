@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Microsoft.Build.Framework;
 
-namespace StructuredLogger.BinaryLogger
+namespace Microsoft.Build.Framework
 {
     /// <summary>
     /// Arguments for the response file used event
@@ -14,6 +13,7 @@ namespace StructuredLogger.BinaryLogger
         public FileUsedEventArgs()
         {
         }
+
         /// <summary>
         /// Initialize a new instance of the ResponseFileUsedEventArgs class.
         /// </summary>
@@ -21,6 +21,7 @@ namespace StructuredLogger.BinaryLogger
         {
             FilePath = responseFilePath;
         }
+
         public string? FilePath { set; get; }
     }
 }
