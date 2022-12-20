@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft. All rights reserved.
+﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -150,6 +150,7 @@ Build
         BuildMessage
             CriticalBuildMessage
             EnvironmentVariableRead
+            FileUsed
             MetaprojectGenerated
             ProjectImported
             PropertyInitialValueSet
@@ -437,6 +438,7 @@ Build
                 case EnvironmentVariableReadEventArgs environmentVariableRead: Write(environmentVariableRead); break;
                 case PropertyInitialValueSetEventArgs propertyInitialValueSet: Write(propertyInitialValueSet); break;
                 case CriticalBuildMessageEventArgs criticalBuildMessage: Write(criticalBuildMessage); break;
+                case FileUsedEventArgs fileUsed: Write(fileUsed); break;
                 default: // actual BuildMessageEventArgs
                     Write(BinaryLogRecordKind.Message);
                     WriteMessageFields(e, writeImportance: true);
@@ -505,6 +507,13 @@ Build
             Write(BinaryLogRecordKind.EnvironmentVariableRead);
             WriteMessageFields(e, writeImportance: true);
             WriteDeduplicatedString(e.EnvironmentVariableName);
+        }
+
+        private void Write(FileUsedEventArgs e)
+        {
+            Write(BinaryLogRecordKind.FileUsed);
+            WriteMessageFields(e, writeImportance: false);
+            WriteDeduplicatedString(e.FilePath);
         }
 
         private void Write(TaskCommandLineEventArgs e)

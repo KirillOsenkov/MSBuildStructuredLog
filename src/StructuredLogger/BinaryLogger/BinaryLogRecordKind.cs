@@ -27,6 +27,7 @@
         PropertyInitialValueSet,
         NameValueList,
         String,
-        TaskParameter
+        TaskParameter,
+        FileUsed
     }
 }

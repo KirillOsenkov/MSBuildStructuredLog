@@ -316,11 +316,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void AnalyzeTask(Task task)
         {
-            if (!string.IsNullOrEmpty(task.CommandLineArguments))
-            {
-                task.AddChildAtBeginning(new Property { Name = Strings.CommandLineArguments, Value = task.CommandLineArguments });
-            }
-
             if (!string.IsNullOrEmpty(task.FromAssembly))
             {
                 task.AddChildAtBeginning(new Property { Name = Strings.Assembly, Value = task.FromAssembly });

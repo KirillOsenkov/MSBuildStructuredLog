@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
@@ -14,6 +15,7 @@ using ICSharpCode.AvalonEdit.Folding;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 using ICSharpCode.AvalonEdit.Search;
+using Microsoft.Win32;
 
 namespace StructuredLogViewer.Controls
 {
@@ -233,6 +235,40 @@ namespace StructuredLogViewer.Controls
                         textEditor.TextArea.Caret.Column = column;
                     }
                 }, DispatcherPriority.Background);
+            }
+        }
+
+        private
+#if NET6_0_OR_GREATER
+async
+#endif
+            void save_Click(object sender, RoutedEventArgs e)
+        {
+            var filePath = FilePath;
+            var extension = Path.GetExtension(filePath);
+
+            if (string.IsNullOrEmpty(extension))
+            {
+                extension = ".txt";
+                filePath += extension;
+            }
+
+            var saveFileDialog = new SaveFileDialog
+            {
+                Filter = $"{extension.Substring(1)} files|*{extension}|All Files|*.*",
+                Title = "Save file as...",
+                FileName = Path.GetFileName(filePath)
+            };
+            
+            var result = saveFileDialog.ShowDialog(Application.Current.MainWindow);
+
+            if (result is true)
+            {
+#if NET6_0_OR_GREATER
+                await File.WriteAllTextAsync(saveFileDialog.FileName, Text, Encoding.UTF8, default);
+#else
+                File.WriteAllText(saveFileDialog.FileName, Text, Encoding.UTF8);
+#endif
             }
         }
 

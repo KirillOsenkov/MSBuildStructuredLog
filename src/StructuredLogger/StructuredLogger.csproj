@@ -49,7 +49,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <None Include="$(IconFilePath)" Pack="true" PackagePath=""/>
+    <None Include="$(IconFilePath)" Pack="true" PackagePath="" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
     <StartAction>Program</StartAction>

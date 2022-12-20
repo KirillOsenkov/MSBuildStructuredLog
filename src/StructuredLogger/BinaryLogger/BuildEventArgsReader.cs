@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft. All rights reserved.
+﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -176,6 +176,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     break;
                 case BinaryLogRecordKind.PropertyInitialValueSet:
                     result = ReadPropertyInitialValueSetEventArgs();
+                    break;
+                case BinaryLogRecordKind.FileUsed:
+                    result = ReadFileUsedEventArgs();
                     break;
                 default:
                     break;
@@ -753,6 +756,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 fields.Importance);
             SetCommonFields(e, fields);
 
+            return e;
+        }
+
+        private BuildEventArgs ReadFileUsedEventArgs()
+        {
+            var fields = ReadBuildEventArgsFields(readImportance: false);
+            var filePath = ReadDeduplicatedString();
+            var e = new FileUsedEventArgs(filePath);
+            SetCommonFields(e, fields);
             return e;
         }
 
