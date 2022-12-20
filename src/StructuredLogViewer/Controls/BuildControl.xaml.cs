@@ -1752,9 +1752,13 @@ Recent:
 
             if (moreAvailable)
             {
+                var count = resultsObject is ICollection<SearchResult> results
+                    ? results.Count
+                    : folder.Children.Count;
+
                 var showAllButton = new ButtonNode
                 {
-                    Text = $"Showing first {folder.Children.Count} results. Show all results instead (slow)."
+                    Text = $"Showing first {count} results. Show all results instead (slow)."
                 };
 
                 showAllButton.OnClick = () =>

@@ -236,24 +236,14 @@ namespace StructuredLogViewer.Controls
         public void SetTimeline(Timeline timeline, long globalStart, long globalEnd)
         {
             Timeline = timeline;
-            GlobalStartTime = globalStart;
-            GlobalEndTime = globalEnd;
 
-            // Global end time might not be set because the stream could had been terminated early.
-            // Locate the last block and use that as the global end time instead.
-            if (globalEnd < globalStart || globalEnd < 0)
-            {
-                long maxEndTime = 0;
-                foreach (var lanes in timeline.Lanes)
-                {
-                    foreach (var block in lanes.Value.Blocks)
-                    {
-                        maxEndTime = Math.Max(maxEndTime, block.EndTime.Ticks);
-                    }
-                }
+            // Sometimes the Binlog recorded start and end time are not accurate.
+            // Scan though the nodes to see if there are any nodes outside of the range.
+            var endTimeArray = timeline.Lanes.SelectMany(l => l.Value.Blocks).Select(b => b.EndTime.Ticks).Max();
+            var startTimeArray = timeline.Lanes.SelectMany(l => l.Value.Blocks).Select(b => b.StartTime.Ticks).Min();
 
-                GlobalEndTime = maxEndTime;
-            }
+            GlobalEndTime = Math.Max(endTimeArray, globalEnd);
+            GlobalStartTime = Math.Min(startTimeArray, globalStart);
 
             // Quick size count
             int totalItems = 0;
@@ -401,7 +391,7 @@ namespace StructuredLogViewer.Controls
                         int left = (int)Math.Floor(ConvertTimeToPixel(block.Start - GlobalStartTime) / unitDuration);
                         int right = (int)Math.Floor(ConvertTimeToPixel(block.End - GlobalStartTime) / unitDuration);
 
-                        if (left >= graphLength)
+                        if (left < 0 || right < 0 || left >= graphLength)
                         {
                             continue;
                         }
