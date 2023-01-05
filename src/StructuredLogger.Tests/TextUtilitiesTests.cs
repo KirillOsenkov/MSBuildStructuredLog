@@ -149,5 +149,21 @@ namespace StructuredLogger.Tests
         {
             var strings = StringsSet.ResourcesCollection;
         }
+
+        [Theory]
+        [InlineData(0, "")]
+        [InlineData(1, "1 ms")]
+        [InlineData(1000, "1.000 s")]
+        [InlineData(60 * 1000, "1:00.000")]
+        [InlineData(60 * 1000 + 40, "1:00.040")]
+        [InlineData(60 * 60 * 1000, "01:00:00")]
+        [InlineData(12 * 60 * 60 * 1000, "12:00:00")]
+        [InlineData(2 * 24 * 60 * 60 * 1000, "2.00:00:00")]
+        [InlineData(2 * 24 * 60 * 60 * 1000 + 40, "2.00:00:00.0400000")]
+        public void TestDisplayDuration(int duration, string expected)
+        {
+            var actual = TextUtilities.DisplayDuration(TimeSpan.FromMilliseconds(duration));
+            Assert.Equal(expected, actual);
+        }
     }
 }
