@@ -27,7 +27,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Build" Version="$(MSBuildPackageVersion)" NoWarn="NU1701" />
     <PackageReference Include="Microsoft.Build.Framework" Version="$(MSBuildPackageVersion)" />
-    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MSBuildPackageVersion)" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MSBuildPackageVersion)" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="all" />
   </ItemGroup>
