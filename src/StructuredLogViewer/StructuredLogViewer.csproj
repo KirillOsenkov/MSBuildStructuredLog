@@ -22,12 +22,11 @@
     <PackageReference Include="AdonisUI.ClassicTheme" Version="1.16.0" />
     <PackageReference Include="AvalonEdit" Version="6.0.1" />
     <PackageReference Include="Microsoft.Build.Locator" Version="1.4.1" ExcludeAssets="build" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MSBuildPackageVersion)" />
     <PackageReference Include="Mono.Cecil" Version="0.9.6.1" />
     <PackageReference Include="Nerdbank.GitVersioning" Version="$(NuGetVersionNerdbankGitVersioning)" PrivateAssets="all" />
     <PackageReference Include="squirrel.windows" Version="1.4.4" GeneratePathProperty="true" />
-    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
-    <PackageReference Include="System.IO.Compression" Version="4.3.0" />
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" PrivateAssets="all" />
     <PackageReference Include="AutomaticGraphLayout.WpfGraphControl" Version="1.1.11" />
   </ItemGroup>
 
