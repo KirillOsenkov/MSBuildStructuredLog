@@ -151,6 +151,7 @@ Build
             TaskCommandLine
             TaskParameter
             UninitializedPropertyRead
+            AssemblyLoaded
         BuildStatus
             TaskStarted
             TaskFinished
@@ -431,6 +432,7 @@ Build
                 case PropertyInitialValueSetEventArgs propertyInitialValueSet: Write(propertyInitialValueSet); break;
                 case CriticalBuildMessageEventArgs criticalBuildMessage: Write(criticalBuildMessage); break;
                 case FileUsedEventArgs fileUsed: Write(fileUsed); break;
+                case AssemblyLoadBuildEventArgs assemblyLoaded: Write(assemblyLoaded); break;
                 default: // actual BuildMessageEventArgs
                     Write(BinaryLogRecordKind.Message);
                     WriteMessageFields(e, writeImportance: true);
@@ -506,6 +508,18 @@ Build
             Write(BinaryLogRecordKind.FileUsed);
             WriteMessageFields(e, writeImportance: false);
             WriteDeduplicatedString(e.FilePath);
+        }
+
+        private void Write(AssemblyLoadBuildEventArgs e)
+        {
+            Write(BinaryLogRecordKind.AssemblyLoad);
+            WriteMessageFields(e, writeMessage: false, writeImportance: false);
+            Write((int)e.LoadingContext);
+            WriteDeduplicatedString(e.LoadingInitiator);
+            WriteDeduplicatedString(e.AssemblyName);
+            WriteDeduplicatedString(e.AssemblyPath);
+            Write(e.MVID);
+            WriteDeduplicatedString(e.AppDomainDescriptor);
         }
 
         private void Write(TaskCommandLineEventArgs e)
@@ -1105,6 +1119,12 @@ Build
         private void Write(bool boolean)
         {
             binaryWriter.Write(boolean);
+        }
+
+        private void Write(Guid guid)
+        {
+            // To avoid allocation (as is done in MSBuild code base) we'd need unsafe code.
+            binaryWriter.Write(guid.ToByteArray());
         }
 
         private void WriteDeduplicatedString(string text)
