@@ -326,7 +326,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             var list = filesTree.ResultsList.ItemsSource as IEnumerable<object>;
             if (list != null)
             {
-                UpdateFileVisibility(list.OfType<NamedNode>(), ArchiveFile.CalculateArchivePath(text));
+                UpdateFileVisibility(list.OfType<NamedNode>(), text.Replace(":", ""));
             }
         }
 
