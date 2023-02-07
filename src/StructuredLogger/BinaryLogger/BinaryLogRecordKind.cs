@@ -28,6 +28,7 @@
         NameValueList,
         String,
         TaskParameter,
-        FileUsed
+        FileUsed,
+        AssemblyLoad
     }
 }
