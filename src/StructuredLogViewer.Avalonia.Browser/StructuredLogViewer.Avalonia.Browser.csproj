@@ -11,10 +11,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Avalonia.Web" Version="11.0-preview4" />
+    <PackageReference Include="Avalonia.Browser" Version="11.0-preview5" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\StructuredLogViewer.Avalonia\StructuredLogViewer.Avalonia.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="AppBundle\favicon.ico" />
   </ItemGroup>
 </Project>

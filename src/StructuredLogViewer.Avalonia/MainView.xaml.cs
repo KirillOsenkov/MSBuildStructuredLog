@@ -49,7 +49,7 @@ namespace StructuredLogViewer.Avalonia
         {
             InitializeComponent();
 
-            TemplateApplied += MainWindow_Loaded;
+            Loaded += MainWindow_Loaded;
         }
 
         private void InitializeComponent()
@@ -102,7 +102,10 @@ namespace StructuredLogViewer.Avalonia
             if (!recentFiles.Contains(text))
             {
                 var fileFromClipboard = await TopLevel.GetTopLevel(this)!.StorageProvider.TryGetFileFromPath(text);
-                return OpenFile(fileFromClipboard);
+                if (fileFromClipboard is not null)
+                {
+                    return OpenFile(fileFromClipboard);
+                }
             }
 
             return false;
@@ -191,7 +194,7 @@ namespace StructuredLogViewer.Avalonia
 
             // If file was opened from the arguments, it's safe to assume, we have a file system available.
             var fileFromArgs = await TopLevel.GetTopLevel(this)!.StorageProvider.TryGetFileFromPath(filePath);
-            if (OpenFile(fileFromArgs))
+            if (fileFromArgs is not null && OpenFile(fileFromArgs))
             {
                 return true;
             }
@@ -354,7 +357,7 @@ namespace StructuredLogViewer.Avalonia
 
         private static async Task<(Build build, bool shouldAnalyze)> ReadBuildFromFilePath(IStorageFile file)
         {
-            if (file.Path is { Scheme: "file" } uri)
+            if (file.Path is { IsAbsoluteUri: true, Scheme: "file" } uri)
             {
                 return await Task.Run(() =>
                 {
@@ -656,7 +659,7 @@ namespace StructuredLogViewer.Avalonia
         {
             var files = await TopLevel.GetTopLevel(this)!.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
             {
-                Title = "Select MSBuild file location", FileTypeFilter = new[] { FilePickerFileTypes.All, FileTypes.Exe, FileTypes.Dll }
+                Title = "Select MSBuild file location", FileTypeFilter = new[] { FilePickerFileTypes.All, FileTypes.Exe }
             });
             var result = files.FirstOrDefault();
             if (result is null || !result.CanOpenRead)

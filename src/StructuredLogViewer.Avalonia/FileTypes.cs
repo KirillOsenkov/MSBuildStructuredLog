@@ -7,15 +7,15 @@ public class FileTypes
     public static string BinlogDefaultExtension = ".binlog";
 
     public static FilePickerFileType Binlog { get; } =
-        new("Binary Log (*.binlog, *.buildlog)")
+        new("Binary Log")
         {
             Patterns = new[] { "*.binlog", "*.buildlog" },
-            MimeTypes = new[] { "application/octet-stream" },
+            MimeTypes = new[] { "application/binlog", "application/buildlog" },
             AppleUniformTypeIdentifiers = new []{ "public.data" }
         };
 
     public static FilePickerFileType Xml { get; } =
-        new("XML (*.xml)")
+        new("XML")
         {
             Patterns = new[] { "*.xml" },
             MimeTypes = new[] { "application/xml", "text/xml" },
@@ -23,34 +23,26 @@ public class FileTypes
         };
 
     public static FilePickerFileType MsBuildProj { get; } =
-        new("MsBuild project file (*proj)")
+        new("MsBuild project file")
         {
-            Patterns = new[] { "*proj" },
+            Patterns = new[] { "*.csproj", "*.fsproj", "*.vbproj", "*.shproj", "*.wapproj", "*.vcxproj", "*.vcproj", "*.msbuildproj" },
             MimeTypes = new[] { "application/xml", "text/xml" },
             AppleUniformTypeIdentifiers = new[] { "public.xml" }
         };
 
     public static FilePickerFileType Sln { get; } =
-        new("Solution File (*.sln)")
+        new("Solution File")
         {
-            Patterns = new[] { "*.sln" },
+            Patterns = new[] { "*.sln", "*.slnf" },
             MimeTypes = new[] { "text/plain" },
             AppleUniformTypeIdentifiers = new[] { "public.text" }
         };
 
     public static FilePickerFileType Exe { get; } =
-        new("Executable (*.exe)")
+        new("Executable")
         {
-            Patterns = new[] { "*.exe" },
+            Patterns = new[] { "*.exe", "*.dll" },
             MimeTypes = new[] { "application/octet-stream" },
             AppleUniformTypeIdentifiers = new []{ "public.data", "public.executable", "public.windows-executable" }
-        };
-
-    public static FilePickerFileType Dll { get; } =
-        new("Dynamic library (*.dll)")
-        {
-            Patterns = new[] { "*.dll" },
-            MimeTypes = new[] { "application/octet-stream" },
-            AppleUniformTypeIdentifiers = new []{ "public.data" }
         };
 }

@@ -1,13 +1,28 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
+    <RuntimeIdentifiers>win7-x64;ubuntu.14.04-x64;osx.10.12-x64;osx-arm64</RuntimeIdentifiers>
+    <TargetFramework>net7.0</TargetFramework>
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <ApplicationIcon>StructuredLogger.ico</ApplicationIcon>
+    <PublishAot>true</PublishAot>
   </PropertyGroup>
-
+  
+  <ItemGroup Condition="$(NETCoreSdkRuntimeIdentifier.StartsWith('osx'))">
+    <Content Include="StructuredLogViewer.icns">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Info.plist">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <PropertyGroup Condition="$(NETCoreSdkRuntimeIdentifier.StartsWith('win'))">
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  
   <ItemGroup>
-    <PackageReference Include="Avalonia.Desktop" Version="11.0-preview4" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.0-preview5" />
   </ItemGroup>
 
   <ItemGroup>

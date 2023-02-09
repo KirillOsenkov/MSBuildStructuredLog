@@ -2,12 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
-    <RuntimeIdentifiers>win7-x64;ubuntu.14.04-x64;osx.10.12-x64;osx-arm64</RuntimeIdentifiers>
-    <ApplicationIcon>StructuredLogger.ico</ApplicationIcon>
-    <RestoreAdditionalProjectSources Condition="$(PublishNativeAot) == True">
-      https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7/nuget/v3/index.json;
-      $(RestoreAdditionalProjectSources)
-    </RestoreAdditionalProjectSources>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,24 +15,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <RdXmlFile Include="Avalonia.rd.xml" />
-  </ItemGroup>
-
-  <ItemGroup Condition="$(NETCoreSdkRuntimeIdentifier.StartsWith('osx'))">
-    <Content Include="StructuredLogViewer.icns">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Info.plist">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.0-preview5" />
     <PackageReference Include="Avalonia.Themes.Simple" Version="11.0-preview5" />
     <PackageReference Include="Avalonia.Diagnostics" Version="11.0-preview5" Condition=" '$(Configuration)' == 'Debug' " />
     <PackageReference Include="Avalonia.AvaloniaEdit" Version="11.0.0-preview5" />
-    <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="7.0.0-*" Condition="$(PublishNativeAot) == True" />
     <PackageReference Include="XamlNameReferenceGenerator" Version="1.5.1" />
   </ItemGroup>
 
