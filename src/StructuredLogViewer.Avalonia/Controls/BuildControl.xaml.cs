@@ -92,7 +92,7 @@ namespace StructuredLogViewer.Avalonia.Controls
                 // first try to see if the source archive was embedded in the log
                 sourceFileResolver = new SourceFileResolver(build.SourceFiles.Values);
             }
-            else if (logFile.TryGetUri(out var logFilePath) && logFilePath.IsAbsoluteUri && logFilePath.Scheme == "file")
+            else if (logFile.Path is { IsAbsoluteUri: true, Scheme: "file" } logFilePath)
             {
                 // otherwise try to read from the .zip file on disk if present
                 sourceFileResolver = new SourceFileResolver(logFilePath.LocalPath);

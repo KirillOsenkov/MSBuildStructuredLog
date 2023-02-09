@@ -3,7 +3,8 @@
              xmlns:l="clr-namespace:Microsoft.Build.Logging.StructuredLogger;assembly=StructuredLogger"
              xmlns:common="clr-namespace:Microsoft.Build.Logging.StructuredLogger;assembly=StructuredLogViewer.Core"
              xmlns:s="clr-namespace:StructuredLogViewer.Avalonia.Controls;assembly=StructuredLogViewer.Avalonia"
-             x:Class="StructuredLogViewer.Avalonia.App">
+             x:Class="StructuredLogViewer.Avalonia.App"
+             RequestedThemeVariant="Light">
 
     <Application.Resources>
         <ResourceDictionary>
@@ -16,12 +17,12 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>
-    
+
     <Application.Styles>
-        <SimpleTheme Mode="Light" />
+        <SimpleTheme />
         <StyleInclude Source="avares://AvaloniaEdit/AvaloniaEdit.xaml" />
         <StyleInclude Source="/Styles.xaml" />
-        
+
         <Style Selector="Rectangle.nodeIcon">
             <Setter Property="Width" Value="14" />
             <Setter Property="Height" Value="12" />
@@ -213,27 +214,27 @@
                            Text="{Binding ShortenedValue}" />
             </StackPanel>
         </DataTemplate>
-        
+
         <TreeDataTemplate DataType="{x:Type l:EvaluationProfileEntry}"
                           ItemsSource="{Binding Children}">
             <StackPanel Orientation="Horizontal">
-                <ProgressBar Width="40" 
-                             Height="9" 
-                             Margin="2,1,6,0" 
+                <ProgressBar Width="40"
+                             Height="9"
+                             Margin="2,1,6,0"
                              Minimum="0"
                              Maximum="100"
                              Value="{Binding Value}"
                              VerticalAlignment="Center" />
-                <TextBlock Name="label" 
+                <TextBlock Name="label"
                            VerticalAlignment="Center"
                            Text="{Binding Title, Mode=OneTime}" />
-                <TextBlock Name="hits" 
+                <TextBlock Name="hits"
                            VerticalAlignment="Center"
                            Margin="6,0,0,0"
                            Text="{Binding DurationText, Mode=OneTime}"
                            Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={x:Static Brushes.Blue}}" />
                 <TextBlock Name="code"
-                           Text="{Binding ShortenedElementDescription}" 
+                           Text="{Binding ShortenedElementDescription}"
                            VerticalAlignment="Center"
                            Margin="12,0,0,0"
                            FontFamily="Consolas"
@@ -282,7 +283,7 @@
                            Opacity="{Binding IsLowRelevance, Converter={StaticResource RelevanceConverter}}" />
             </StackPanel>
         </DataTemplate>
-        
+
         <TreeDataTemplate DataType="{x:Type l:Import}"
                           ItemsSource="{Binding Children}">
             <StackPanel Orientation="Horizontal"
@@ -341,7 +342,7 @@
                            Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={x:Static Brushes.DarkGoldenrod}}" />
             </StackPanel>
         </TreeDataTemplate>
-        
+
         <DataTemplate DataType="{x:Type common:ButtonNode}">
             <StackPanel Orientation="Horizontal">
                 <Button x:Name="button"
@@ -351,7 +352,7 @@
                         Padding="4,2,4,2" />
             </StackPanel>
         </DataTemplate>
-        
+
         <DataTemplate DataType="{x:Type l:Error}">
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
@@ -584,11 +585,11 @@
                                       ToolTip.Tip="Disable virtualization if you're experiencing hangs or deadlocks when scrolling the tree" />
                             <!--<CheckBox Content="Display all targets directly under the project (flattened in temporal order)"
                                       Margin="10,0,10,10"
-                                      IsChecked="{Binding ParentAllTargetsUnderProject}" 
+                                      IsChecked="{Binding ParentAllTargetsUnderProject}"
                                       ToolTip.Tip="Linearize/flatten all targets under the project instead of parenting targets under their dependency target"/>-->
                             <CheckBox Content="Mark search results with a dot in the main tree"
                                       Margin="10,0,10,10"
-                                      IsChecked="{Binding MarkResultsInTree}" 
+                                      IsChecked="{Binding MarkResultsInTree}"
                                       ToolTip.Tip="Mark tree nodes that appear in search results with a dot"/>
                         </StackPanel>
                     </Grid>

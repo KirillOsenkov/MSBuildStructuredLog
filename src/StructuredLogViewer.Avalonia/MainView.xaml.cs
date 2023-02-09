@@ -99,9 +99,10 @@ namespace StructuredLogViewer.Avalonia
             recentFiles.UnionWith(SettingsService.GetRecentProjects());
 
             // TODO: potentially dangerous to use BclStorageFile here, as clipboard is available on Browser as well, but file system is not.
-            if (!recentFiles.Contains(text) && OpenFile(new BclStorageFile(text)))
+            if (!recentFiles.Contains(text))
             {
-                return true;
+                var fileFromClipboard = await TopLevel.GetTopLevel(this)!.StorageProvider.TryGetFileFromPath(text);
+                return OpenFile(fileFromClipboard);
             }
 
             return false;
@@ -112,7 +113,7 @@ namespace StructuredLogViewer.Avalonia
             this.projectFilePath = null;
             this.logFile = null;
             this.currentBuild = null;
-            if (GetTopLevel() is Window window)
+            if (TopLevel.GetTopLevel(this) is Window window)
             {
                 window.Title = DefaultTitle;
             }
@@ -132,7 +133,7 @@ namespace StructuredLogViewer.Avalonia
             try
             {
                 var args = Environment.GetCommandLineArgs();
-                if (args.Length > 1 && HandleArguments(args))
+                if (args.Length > 1 && await HandleArguments(args))
                 {
                     return;
                 }
@@ -166,7 +167,7 @@ namespace StructuredLogViewer.Avalonia
             }
         }
 
-        private bool HandleArguments(string[] args)
+        private async Task<bool> HandleArguments(string[] args)
         {
             if (args.Length > 2)
             {
@@ -189,7 +190,8 @@ namespace StructuredLogViewer.Avalonia
             }
 
             // If file was opened from the arguments, it's safe to assume, we have a file system available.
-            if (OpenFile(new BclStorageFile(filePath)))
+            var fileFromArgs = await TopLevel.GetTopLevel(this)!.StorageProvider.TryGetFileFromPath(filePath);
+            if (OpenFile(fileFromArgs))
             {
                 return true;
             }
@@ -200,13 +202,12 @@ namespace StructuredLogViewer.Avalonia
 
         public bool OpenFile(IStorageFile file)
         {
-            if (file.CanOpenRead
-                || !file.TryGetUri(out Uri fileUri))
+            if (file.CanOpenRead)
             {
                 return false;
             }
 
-            var filePath = fileUri.ToString(); // might be absolute or relative at this point.
+            var filePath = file.Path.ToString(); // might be absolute or relative at this point.
 
             if (filePath.EndsWith(".xml", StringComparison.OrdinalIgnoreCase) ||
                 filePath.EndsWith(".buildlog", StringComparison.OrdinalIgnoreCase) ||
@@ -216,11 +217,11 @@ namespace StructuredLogViewer.Avalonia
                 return true;
             }
 
-            if (fileUri.IsAbsoluteUri && fileUri.Scheme == "file"
-                                      && (filePath.EndsWith(".sln", StringComparison.OrdinalIgnoreCase) ||
-                                          filePath.EndsWith("proj", StringComparison.OrdinalIgnoreCase)))
+            if (file.Path is { IsAbsoluteUri: true, Scheme: "file" }
+                && (filePath.EndsWith(".sln", StringComparison.OrdinalIgnoreCase) ||
+                    filePath.EndsWith("proj", StringComparison.OrdinalIgnoreCase)))
             {
-                BuildProject(fileUri.LocalPath);
+                BuildProject(file.Path.LocalPath);
                 return true;
             }
 
@@ -295,7 +296,7 @@ namespace StructuredLogViewer.Avalonia
 
         private async void OpenLogFile(string fileBookmark)
         {
-            var file = await GetTopLevel().StorageProvider.OpenFileBookmarkAsync(fileBookmark);
+            var file = await TopLevel.GetTopLevel(this)!.StorageProvider.OpenFileBookmarkAsync(fileBookmark);
             if (file is not null)
             {
                 OpenLogFile(file, fileBookmark);
@@ -320,10 +321,10 @@ namespace StructuredLogViewer.Avalonia
                 }
             }
 
-            file.TryGetUri(out var filePath);
+            var filePath = file.Path;
 
             UpdateRecentItemsMenu();
-            if (GetTopLevel() is Window window)
+            if (TopLevel.GetTopLevel(this) is Window window)
             {
                 window.Title = filePath + " - " + DefaultTitle;
             }
@@ -353,7 +354,7 @@ namespace StructuredLogViewer.Avalonia
 
         private static async Task<(Build build, bool shouldAnalyze)> ReadBuildFromFilePath(IStorageFile file)
         {
-            if (file.TryGetUri(out var uri) && uri.Scheme == "file")
+            if (file.Path is { Scheme: "file" } uri)
             {
                 return await Task.Run(() =>
                 {
@@ -384,7 +385,7 @@ namespace StructuredLogViewer.Avalonia
                 return (build, build.Children.Count == 1 && build.Children.FirstOrDefault() is Error);
             }
 
-            return (GetErrorBuild(uri?.ToString() ?? "(null)", "Unable to open file for read"), false);
+            return (GetErrorBuild(file.Path?.ToString() ?? "(null)", "Unable to open file for read"), false);
         }
 
         private static Build GetErrorBuild(string filePath, string message)
@@ -406,7 +407,7 @@ namespace StructuredLogViewer.Avalonia
             this.projectFilePath = filePath;
             SettingsService.AddRecentProject(projectFilePath);
             UpdateRecentItemsMenu();
-            if (GetTopLevel() is Window window)
+            if (TopLevel.GetTopLevel(this) is Window window)
             {
                 window.Title = projectFilePath + " - " + DefaultTitle;
             }
@@ -471,7 +472,7 @@ namespace StructuredLogViewer.Avalonia
 
         private async Task OpenLogFile()
         {
-            var files = await GetTopLevel().StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            var files = await TopLevel.GetTopLevel(this)!.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
                 Title = "Build Log",
                 FileTypeFilter = new[] { FilePickerFileTypes.All, FileTypes.Binlog, FileTypes.Xml }
@@ -487,7 +488,7 @@ namespace StructuredLogViewer.Avalonia
 
         private async Task OpenProjectOrSolution()
         {
-            var files = await GetTopLevel().StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
+            var files = await TopLevel.GetTopLevel(this)!.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
             {
                 Title = "Open a solution or project",
                 FileTypeFilter = new[] { FilePickerFileTypes.All, FileTypes.MsBuildProj, FileTypes.Sln }
@@ -496,9 +497,7 @@ namespace StructuredLogViewer.Avalonia
 
             if (result is not null
                 && result.CanOpenRead
-                && result.TryGetUri(out var filePath)
-                && filePath.IsAbsoluteUri
-                && filePath.Scheme == "file")
+                && result.Path is { IsAbsoluteUri: true, Scheme: "file" } filePath)
             {
                 BuildProject(filePath.LocalPath);
             }
@@ -531,14 +530,14 @@ namespace StructuredLogViewer.Avalonia
             if (currentBuild != null)
             {
                 var prevParent = logFile is not null ? await logFile.GetParentAsync() : null;
-                var result = await GetTopLevel().StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions()
+                var result = await TopLevel.GetTopLevel(this)!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions()
                 {
                     Title = "Save log file as",
                     FileTypeChoices = new[] { FileTypes.Binlog, FileTypes.Xml },
                     DefaultExtension = FileTypes.BinlogDefaultExtension,
                     SuggestedStartLocation = prevParent,
-                    SuggestedFileName = logFile?.TryGetUri(out var lastUri) == true
-                        ? Path.GetFileNameWithoutExtension(lastUri.ToString())
+                    SuggestedFileName = logFile is not null
+                        ? Path.GetFileNameWithoutExtension(logFile.ToString())
                         : null
                 });
 
@@ -548,7 +547,7 @@ namespace StructuredLogViewer.Avalonia
                     return;
                 }
 
-                result.TryGetUri(out var logFilePath);
+                var logFilePath = result.Path;
 
                 logFile = result;
                 // Use intermediate memory stream, as some platforms don't support sync access to the file system directly.
@@ -611,8 +610,6 @@ namespace StructuredLogViewer.Avalonia
             }
         }
 
-        private TopLevel GetTopLevel() => (TopLevel)this.GetVisualRoot()!;
-
         private void FocusSearch()
         {
             CurrentBuildControl?.FocusSearch();
@@ -657,7 +654,7 @@ namespace StructuredLogViewer.Avalonia
 
         private async Task BrowseForMSBuildExe()
         {
-            var files = await GetTopLevel().StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
+            var files = await TopLevel.GetTopLevel(this)!.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
             {
                 Title = "Select MSBuild file location", FileTypeFilter = new[] { FilePickerFileTypes.All, FileTypes.Exe, FileTypes.Dll }
             });
@@ -667,7 +664,7 @@ namespace StructuredLogViewer.Avalonia
                 return;
             }
 
-            if (!result.TryGetUri(out var fileNameUri) || !fileNameUri.IsAbsoluteUri || fileNameUri.Scheme != "file")
+            if (result.Path is not { IsAbsoluteUri: true, Scheme: "file" } fileNameUri)
             {
                 return;
             }

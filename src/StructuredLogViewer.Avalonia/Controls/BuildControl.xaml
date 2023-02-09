@@ -83,12 +83,11 @@
                             <ControlTemplate TargetType="{x:Type ListBox}">
                                 <Border BorderBrush="{TemplateBinding BorderBrush}"
                                         BorderThickness="{TemplateBinding BorderThickness}">
-                                    <ItemsPresenter Name="PART_ItemsPresenter"
-                                                    Items="{TemplateBinding Items}"
-                                                    ItemsPanel="{TemplateBinding ItemsPanel}"
-                                                    ItemTemplate="{TemplateBinding ItemTemplate}"
-                                                    Margin="{TemplateBinding Padding}"
-                                                    VirtualizationMode="{TemplateBinding VirtualizationMode}" />
+                                  <ItemsPresenter Name="PART_ItemsPresenter"
+                                                  Margin="{TemplateBinding Padding}"
+                                                  AreVerticalSnapPointsRegular="{TemplateBinding AreVerticalSnapPointsRegular}"
+                                                  AreHorizontalSnapPointsRegular="{TemplateBinding AreHorizontalSnapPointsRegular}"
+                                                  ItemsPanel="{TemplateBinding ItemsPanel}" />
                                 </Border>
                             </ControlTemplate>
                         </ListBox.Template>

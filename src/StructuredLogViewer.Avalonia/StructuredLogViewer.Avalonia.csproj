@@ -34,10 +34,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="11.0-preview4" />
-    <PackageReference Include="Avalonia.Themes.Simple" Version="11.0-preview4" />
-    <PackageReference Include="Avalonia.Diagnostics" Version="11.0-preview4" Condition=" '$(Configuration)' == 'Debug' " />
-    <PackageReference Include="Avalonia.AvaloniaEdit" Version="11.0.0-preview2" />
+    <PackageReference Include="Avalonia" Version="11.0-preview5" />
+    <PackageReference Include="Avalonia.Themes.Simple" Version="11.0-preview5" />
+    <PackageReference Include="Avalonia.Diagnostics" Version="11.0-preview5" Condition=" '$(Configuration)' == 'Debug' " />
+    <PackageReference Include="Avalonia.AvaloniaEdit" Version="11.0.0-preview5" />
     <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="7.0.0-*" Condition="$(PublishNativeAot) == True" />
     <PackageReference Include="XamlNameReferenceGenerator" Version="1.5.1" />
   </ItemGroup>
