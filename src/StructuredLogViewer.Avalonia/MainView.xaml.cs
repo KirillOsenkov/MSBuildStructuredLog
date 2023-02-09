@@ -133,6 +133,7 @@ namespace StructuredLogViewer.Avalonia
 
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
+            Exception initException = null;
             try
             {
                 var args = Environment.GetCommandLineArgs();
@@ -145,7 +146,14 @@ namespace StructuredLogViewer.Avalonia
                 {
                     return;
                 }
+            }
+            catch (Exception ex)
+            {
+                initException = ex;
+            }
 
+            try
+            {
                 DisplayWelcomeScreen();
 
                 // only check for updates if there were no command-line arguments and debugger not attached
@@ -156,17 +164,19 @@ namespace StructuredLogViewer.Avalonia
             }
             catch (Exception ex)
             {
-                var welcomeScreen = mainContent.Content as WelcomeScreen;
-                if (welcomeScreen != null)
-                {
-                    var text = ex.ToString();
-                    if (text.Contains("Update.exe not found"))
-                    {
-                        text = "Update.exe not found; app will not update.";
-                    }
+                initException = ex;
+            }
 
-                    welcomeScreen.Message = text;
+            if (initException is not null
+                && mainContent.Content is WelcomeScreen welcomeScreen)
+            {
+                var text = initException.ToString();
+                if (text.Contains("Update.exe not found"))
+                {
+                    text = "Update.exe not found; app will not update.";
                 }
+
+                welcomeScreen.Message = text;
             }
         }
 
