@@ -399,7 +399,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     if (args is AssemblyLoadBuildEventArgs)
                     {
-                        nodeToAdd = new Message() { Text = message };
+                        nodeToAdd = new Message() { Text = Intern(message), IsLowRelevance = lowRelevance };
                     }
                     else if (task is ResolveAssemblyReferenceTask rar)
                     {
