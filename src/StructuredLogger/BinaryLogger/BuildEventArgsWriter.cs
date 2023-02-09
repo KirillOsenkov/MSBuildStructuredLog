@@ -1,19 +1,11 @@
-// Copyright (c) Microsoft. All rights reserved.
+﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Reflection;
-using Microsoft.Build.BackEnd.Logging;
-using Microsoft.Build.Collections;
-using Microsoft.Build.Evaluation;
-using Microsoft.Build.Exceptions;
-using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Framework.Profiler;
 using Microsoft.Build.Internal;
@@ -150,6 +142,7 @@ Build
         BuildMessage
             CriticalBuildMessage
             EnvironmentVariableRead
+            FileUsed
             MetaprojectGenerated
             ProjectImported
             PropertyInitialValueSet
@@ -158,6 +151,7 @@ Build
             TaskCommandLine
             TaskParameter
             UninitializedPropertyRead
+            AssemblyLoaded
         BuildStatus
             TaskStarted
             TaskFinished
@@ -437,6 +431,8 @@ Build
                 case EnvironmentVariableReadEventArgs environmentVariableRead: Write(environmentVariableRead); break;
                 case PropertyInitialValueSetEventArgs propertyInitialValueSet: Write(propertyInitialValueSet); break;
                 case CriticalBuildMessageEventArgs criticalBuildMessage: Write(criticalBuildMessage); break;
+                case FileUsedEventArgs fileUsed: Write(fileUsed); break;
+                case AssemblyLoadBuildEventArgs assemblyLoaded: Write(assemblyLoaded); break;
                 default: // actual BuildMessageEventArgs
                     Write(BinaryLogRecordKind.Message);
                     WriteMessageFields(e, writeImportance: true);
@@ -505,6 +501,25 @@ Build
             Write(BinaryLogRecordKind.EnvironmentVariableRead);
             WriteMessageFields(e, writeImportance: true);
             WriteDeduplicatedString(e.EnvironmentVariableName);
+        }
+
+        private void Write(FileUsedEventArgs e)
+        {
+            Write(BinaryLogRecordKind.FileUsed);
+            WriteMessageFields(e, writeImportance: false);
+            WriteDeduplicatedString(e.FilePath);
+        }
+
+        private void Write(AssemblyLoadBuildEventArgs e)
+        {
+            Write(BinaryLogRecordKind.AssemblyLoad);
+            WriteMessageFields(e, writeMessage: false, writeImportance: false);
+            Write((int)e.LoadingContext);
+            WriteDeduplicatedString(e.LoadingInitiator);
+            WriteDeduplicatedString(e.AssemblyName);
+            WriteDeduplicatedString(e.AssemblyPath);
+            Write(e.MVID);
+            WriteDeduplicatedString(e.AppDomainDescriptor);
         }
 
         private void Write(TaskCommandLineEventArgs e)
@@ -1104,6 +1119,12 @@ Build
         private void Write(bool boolean)
         {
             binaryWriter.Write(boolean);
+        }
+
+        private void Write(Guid guid)
+        {
+            // To avoid allocation (as is done in MSBuild code base) we'd need unsafe code.
+            binaryWriter.Write(guid.ToByteArray());
         }
 
         private void WriteDeduplicatedString(string text)

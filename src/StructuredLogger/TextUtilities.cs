@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -451,18 +451,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 return showZero ? "0 ms" : "";
             }
-
-            if (span.TotalSeconds > 3600)
+            if (span.TotalHours >= 1)
             {
-                return span.ToString(@"h\:mm\:ss");
+                return span.ToString();
             }
-
-            if (span.TotalSeconds > 60)
+            if (span.TotalMinutes >= 1)
             {
                 return span.ToString(@"m\:ss\.fff");
             }
-
-            if (span.TotalMilliseconds > 1000)
+            if (span.TotalSeconds >= 1)
             {
                 return span.ToString(@"s\.fff") + " s";
             }

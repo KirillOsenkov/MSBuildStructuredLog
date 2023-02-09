@@ -27,6 +27,8 @@
         PropertyInitialValueSet,
         NameValueList,
         String,
-        TaskParameter
+        TaskParameter,
+        FileUsed,
+        AssemblyLoad
     }
 }

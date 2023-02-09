@@ -149,6 +149,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 .Replace("{3}", @"(?<File>.*) \((?<Line>\d+),(?<Column>\d+)\)$");
             PropertyReassignmentRegex = new Regex(propertyReassignment, RegexOptions.Compiled | RegexOptions.Singleline);
 
+            // Note: This string is not localized in MSBuild.
+            const string messageIncludeResponseFileString = @$"^Included response file: (?<File>((.:)?[^:\n\r]*?))$";
+            MessageIncludedResponseFile = new Regex(messageIncludeResponseFileString, RegexOptions.Compiled | RegexOptions.Singleline);
+
             string taskFoundFromFactory = GetString("TaskFoundFromFactory")
                 .Replace(@"""{0}""", @"\""(?<task>.+)\""")
                 .Replace(@"""{1}""", @"\""(?<assembly>.+)\""");
@@ -246,6 +250,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static Regex ProjectImportSkippedExpressionEvaluatedToEmptyRegex { get; set; }
         public static Regex ProjectImportSkippedNoMatchesRegex { get; set; }
         public static Regex PropertyReassignmentRegex { get; set; }
+        public static Regex MessageIncludedResponseFile { get; set; }
         public static Regex UnifiedPrimaryReferencePrefix { get; set; }
         public static Regex PrimaryReferencePrefix { get; set; }
         public static Regex DependencyPrefix { get; set; }

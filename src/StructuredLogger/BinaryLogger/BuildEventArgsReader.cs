@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft. All rights reserved.
+﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Build.BackEnd;
 using Microsoft.Build.Collections;
@@ -176,6 +177,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     break;
                 case BinaryLogRecordKind.PropertyInitialValueSet:
                     result = ReadPropertyInitialValueSetEventArgs();
+                    break;
+                case BinaryLogRecordKind.FileUsed:
+                    result = ReadFileUsedEventArgs();
+                    break;
+                case BinaryLogRecordKind.AssemblyLoad:
+                    result = ReadAssemblyLoadEventArgs();
                     break;
                 default:
                     break;
@@ -756,6 +763,38 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return e;
         }
 
+        private BuildEventArgs ReadFileUsedEventArgs()
+        {
+            var fields = ReadBuildEventArgsFields(readImportance: false);
+            var filePath = ReadDeduplicatedString();
+            var e = new FileUsedEventArgs(filePath);
+            SetCommonFields(e, fields);
+            return e;
+        }
+
+        private BuildEventArgs ReadAssemblyLoadEventArgs()
+        {
+            var fields = ReadBuildEventArgsFields(readImportance: false);
+
+            AssemblyLoadingContext context = (AssemblyLoadingContext)ReadInt32();
+            string loadingInitiator = ReadDeduplicatedString();
+            string assemblyName = ReadDeduplicatedString();
+            string assemblyPath = ReadDeduplicatedString();
+            Guid mvid = ReadGuid();
+            string appDomainName = ReadDeduplicatedString();
+
+            var e = new AssemblyLoadBuildEventArgs(
+                context,
+                loadingInitiator,
+                assemblyName,
+                assemblyPath,
+                mvid,
+                appDomainName);
+            SetCommonFields(e, fields);
+
+            return e;
+        }
+
         private BuildEventArgs ReadPropertyReassignmentEventArgs()
         {
             var fields = ReadBuildEventArgsFields(readImportance: true);
@@ -1206,6 +1245,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private bool ReadBoolean()
         {
             return binaryReader.ReadBoolean();
+        }
+
+        private Guid ReadGuid()
+        {
+            return new Guid(binaryReader.ReadBytes(Marshal.SizeOf(typeof(Guid))));
         }
 
         private DateTime ReadDateTime()

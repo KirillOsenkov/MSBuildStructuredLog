@@ -55,7 +55,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
         //   - TargetSkippedEventArgs: added OriginallySucceeded, Condition, EvaluatedCondition
         // version 14:
         //   - TargetSkippedEventArgs: added SkipReason, OriginalBuildEventContext
-        internal const int FileFormatVersion = 14;
+        // version 15:
+        //   - new record kind: FileUsedEventArgs
+        // version 16:
+        //   - AssemblyLoadBuildEventArgs
+        internal const int FileFormatVersion = 16;
 
         private Stream stream;
         private BinaryWriter binaryWriter;
