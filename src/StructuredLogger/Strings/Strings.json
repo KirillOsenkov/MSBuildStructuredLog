@@ -1,5 +1,6 @@
 {
   "en-US": {
+    "MetaprojectGenerated": "Metaproject \"{0}\" generated.",
     "OutputItemParameterMessagePrefix": "Output Item(s): ",
     "General.ProjectUndefineProperties": "Removing Properties for project \"{0}\":",
     "ProjectImportSkippedEmptyFile": "Project \"{0}\" was not imported by \"{1}\" at ({2},{3}), due to the file being empty.",
@@ -52,6 +53,7 @@
     "Copy.FileComment": "Copying file from \"{0}\" to \"{1}\"."
   },
   "de-DE": {
+    "MetaprojectGenerated": "Das Metaprojekt \"{0}\" wurde generiert.",
     "OutputItemParameterMessagePrefix": "Ausgegebene Elemente: ",
     "General.ProjectUndefineProperties": "Eigenschaften für Projekt \"{0}\" werden entfernt:",
     "ProjectImportSkippedEmptyFile": "Das Projekt \"{0}\" wurde von \"{1}\" nicht in ({2},{3}) importiert, da die Datei leer war.",
@@ -104,6 +106,7 @@
     "Copy.FileComment": "Die Datei wird von \"{0}\" in \"{1}\" kopiert."
   },
   "it-IT": {
+    "MetaprojectGenerated": "Il metaprogetto \"{0}\" è stato generato.",
     "OutputItemParameterMessagePrefix": "Elementi di output: ",
     "General.ProjectUndefineProperties": "Rimozione delle proprietà per il progetto \"{0}\":",
     "ProjectImportSkippedEmptyFile": "Il progetto \"{0}\" non è stato importato da \"{1}\" a ({2},{3}) perché il file è vuoto.",
@@ -156,6 +159,7 @@
     "Copy.FileComment": "Copia del file da \"{0}\" a \"{1}\"."
   },
   "es-ES": {
+    "MetaprojectGenerated": "Se generó el metaproyecto \"{0}\".",
     "OutputItemParameterMessagePrefix": "Elementos de salida: ",
     "General.ProjectUndefineProperties": "Quitando propiedades del proyecto \"{0}\":",
     "ProjectImportSkippedEmptyFile": "\"{1}\" no importó el proyecto \"{0}\" en ({2},{3}) porque el archivo estaba vacío.",
@@ -208,6 +212,7 @@
     "Copy.FileComment": "Copiando el archivo de \"{0}\" en \"{1}\"."
   },
   "fr-FR": {
+    "MetaprojectGenerated": "Le métaprojet \"{0}\" a été généré.",
     "OutputItemParameterMessagePrefix": "Élément(s) en sortie : ",
     "General.ProjectUndefineProperties": "Suppression des propriétés du projet \"{0}\" :",
     "ProjectImportSkippedEmptyFile": "Le projet \"{0}\" n’a pas été importé par \"{1}\" sur ({2},{3}), car le fichier est vide.",
@@ -260,6 +265,7 @@
     "Copy.FileComment": "Copie du fichier de \"{0}\" vers \"{1}\"."
   },
   "cs-CZ": {
+    "MetaprojectGenerated": "Metaprojekt {0} byl vygenerován.",
     "OutputItemParameterMessagePrefix": "Výstupní položky: ",
     "General.ProjectUndefineProperties": "Odstraňování vlastností projektu {0}:",
     "ProjectImportSkippedEmptyFile": "{1} neimportoval projekt {0} v ({2},{3}), protože soubor je prázdný.",
@@ -312,6 +318,7 @@
     "Copy.FileComment": "Probíhá kopírování souboru z umístění {0} do umístění {1}."
   },
   "ja-JP": {
+    "MetaprojectGenerated": "メタプロジェクト \"{0}\" が生成されました。",
     "OutputItemParameterMessagePrefix": "出力項目: ",
     "General.ProjectUndefineProperties": "プロジェクト \"{0}\" のプロパティの削除:",
     "ProjectImportSkippedEmptyFile": "ファイルが空であるため、プロジェクト \"{0}\" は \"{1}\" によって ({2},{3}) でインポートされませんでした。",
@@ -364,6 +371,7 @@
     "Copy.FileComment": "\"{0}\" から \"{1}\" へファイルをコピーしています。"
   },
   "ko-KR": {
+    "MetaprojectGenerated": "메타프로젝트 \"{0}\"이(가) 생성되었습니다.",
     "OutputItemParameterMessagePrefix": "출력 항목: ",
     "General.ProjectUndefineProperties": "\"{0}\" 프로젝트에 대한 속성 제거:",
     "ProjectImportSkippedEmptyFile": "파일이 비어 있어 ({2},{3})의 \"{1}\"이(가) \"{0}\" 프로젝트를 가져오지 않았습니다.",
@@ -416,6 +424,7 @@
     "Copy.FileComment": "\"{0}\"에서 \"{1}\"(으)로 파일을 복사하고 있습니다."
   },
   "ru-RU": {
+    "MetaprojectGenerated": "Создан метапроект \"{0}\".",
     "OutputItemParameterMessagePrefix": "Выходных элементов: ",
     "General.ProjectUndefineProperties": "Удаление свойств для проекта \"{0}\":",
     "ProjectImportSkippedEmptyFile": "Проект \"{0}\" не был импортирован \"{1}\" в ({2},{3}), так как файл пуст.",
@@ -468,6 +477,7 @@
     "Copy.FileComment": "Копирование файла из \"{0}\" в \"{1}\"."
   },
   "pl-PL": {
+    "MetaprojectGenerated": "Wygenerowano metaprojekt „{0}”.",
     "OutputItemParameterMessagePrefix": "Elementy wyjściowe: ",
     "General.ProjectUndefineProperties": "Usuwanie właściwości projektu {0}:",
     "ProjectImportSkippedEmptyFile": "Projekt „{0}” nie został zaimportowany przez projekt „{1}” o ({2},{3}), ponieważ plik był pusty.",
@@ -520,6 +530,7 @@
     "Copy.FileComment": "Kopiowanie pliku z „{0}” do „{1}”."
   },
   "pt-BR": {
+    "MetaprojectGenerated": "Metaprojeto \"{0}\" gerado.",
     "OutputItemParameterMessagePrefix": "Itens de Saída(s): ",
     "General.ProjectUndefineProperties": "Removendo Propriedades do projeto \"{0}\":",
     "ProjectImportSkippedEmptyFile": "O projeto \"{0}\" não foi importado por \"{1}\" em ({2},{3}), devido ao arquivo estar vazio.",
@@ -572,6 +583,7 @@
     "Copy.FileComment": "Copiando o arquivo de \"{0}\" para \"{1}\"."
   },
   "tr-TR": {
+    "MetaprojectGenerated": "\"{0}\" meta projesi oluşturuldu.",
     "OutputItemParameterMessagePrefix": "Çıkış Öğeleri: ",
     "General.ProjectUndefineProperties": "\"{0}\" projesinin Özellikleri kaldırılıyor:",
     "ProjectImportSkippedEmptyFile": "\"{0}\" adlı proje, dosyanın boş olması nedeniyle ({2},{3}) konumundaki \"{1}\" tarafından içeri aktarılmadı.",
@@ -624,6 +636,7 @@
     "Copy.FileComment": "Dosya \"{0}\" konumundan \"{1}\" konumuna kopyalanıyor."
   },
   "zh-Hans": {
+    "MetaprojectGenerated": "已生成元项目“{0}”。",
     "OutputItemParameterMessagePrefix": "输出项: ",
     "General.ProjectUndefineProperties": "移除项目“{0}”的属性:",
     "ProjectImportSkippedEmptyFile": "由于文件为空，项目“{0}”不由 ({2}、{3}) 处的“{1}”导入。",

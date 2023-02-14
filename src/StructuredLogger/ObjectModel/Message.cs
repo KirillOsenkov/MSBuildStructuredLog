@@ -56,6 +56,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return match;
             }
 
+            match = Strings.MessageMetaprojectGenerated.Match(Text);
+            if (match.Success)
+            {
+                return match;
+            }
+
             return null;
         }
 
