@@ -77,7 +77,8 @@ namespace ResourcesGenerator
             "EvaluationFinished",
             "CouldNotResolveSdk",
             "ProjectImportSkippedExpressionEvaluatedToEmpty",
-            "SkipTargetBecauseOutputsUpToDate"
+            "SkipTargetBecauseOutputsUpToDate",
+            "MetaprojectGenerated"
         };
 
         public static Dictionary<string, string> Cultures = new Dictionary<string, string>

@@ -236,20 +236,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private string GetProjectFileExtension()
         {
-            string result = null;
+            string result = "other";
 
-            if (Original is Project project)
+            if (Original is Project project && !string.IsNullOrEmpty(project.ProjectFileExtension))
             {
                 result = project.ProjectFileExtension;
             }
-            else if (Original is ProjectEvaluation evaluation)
+            else if (Original is ProjectEvaluation evaluation && !string.IsNullOrEmpty(evaluation.ProjectFileExtension))
             {
                 result = evaluation.ProjectFileExtension;
-            }
-
-            if (result != null && result != ".sln" && result != ".csproj")
-            {
-                result = "other";
             }
 
             return result;
