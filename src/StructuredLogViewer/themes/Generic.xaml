@@ -144,7 +144,21 @@
           <GeometryDrawing Brush="#FF414141" Geometry="F1M5.8496,11C6.5296,11,7.0786,10.898,7.4996,10.692L7.4996,9.499C7.0786,9.747 6.6156,9.871 6.1076,9.871 5.5766,9.871 5.1546,9.705 4.8396,9.372 4.5256,9.039 4.3696,8.592 4.3696,8.031 4.3696,7.445 4.5356,6.981 4.8686,6.639 5.2016,6.297 5.6386,6.125 6.1796,6.125 6.6736,6.125 7.1146,6.241 7.4996,6.473L7.4996,5.215C7.1146,5.072 6.6386,5 6.0766,5 5.1656,5 4.4256,5.289 3.8556,5.866 3.2856,6.443 2.9996,7.195 2.9996,8.124 2.9996,8.995 3.2536,9.692 3.7616,10.216 4.2676,10.739 4.9646,11 5.8496,11" />
           <GeometryDrawing Brush="#FFF0EFF1" Geometry="F1M10,8L11,8 11,7 10,7z" />
           <GeometryDrawing Brush="#FFF0EFF1" Geometry="F1M13,7L12,7 12,8 13,8 13,9 12,9 12,10 11,10 11,9 10,9 10,10 9,10 9,9 8,9 8,8 9,8 9,7 8,7 8,6 9,6 9,5 10,5 10,6 11,6 11,5 12,5 12,6 13,6z M7.5,6.473C7.114,6.241 6.674,6.125 6.18,6.125 5.639,6.125 5.201,6.297 4.868,6.639 4.535,6.981 4.369,7.445 4.369,8.031 4.369,8.592 4.525,9.039 4.84,9.372 5.154,9.705 5.576,9.871 6.107,9.871 6.615,9.871 7.079,9.747 7.5,9.499L7.5,10.692C7.079,10.898 6.529,11 5.85,11 4.965,11 4.268,10.739 3.762,10.216 3.254,9.692 3,8.995 3,8.124 3,7.195 3.285,6.443 3.855,5.866 4.426,5.289 5.166,5 6.076,5 6.639,5 7.114,5.072 7.5,5.215z M2,13L14,13 14,3 2,3z" />
-          <GeometryDrawing Brush="#FF378A33" Geometry="F1M14,13L2,13 2,3 14,3z M1,14L15,14 15,2 1,2z" />
+          <GeometryDrawing Brush="#FF1F801F" Geometry="F1M14,13L2,13 2,3 14,3z M1,14L15,14 15,2 1,2z" />
+        </DrawingGroup.Children>
+      </DrawingGroup>
+    </DrawingBrush.Drawing>
+  </DrawingBrush>
+
+<DrawingBrush x:Key="CppProjIcon">
+    <DrawingBrush.Drawing>
+      <DrawingGroup>
+        <DrawingGroup.Children>
+          <GeometryDrawing Brush="#00FFFFFF" Geometry="F1M16,16L0,16 0,0 16,0z" />
+          <GeometryDrawing Brush="#FFF6F6F6" Geometry="F1M0,15L16,15 16,1 0,1z" />
+          <GeometryDrawing Brush="#FFA43FB1" Geometry="F1M14,13L2,13 2,3 14,3z M1,14L15,14 15,2 1,2z" />
+                    <GeometryDrawing Brush="#FFA43FB1" Geometry="F1M8,6V7H6V9H5V7H3V6H5V4H6V6Z" />
+                    <GeometryDrawing Brush="#FFA43FB1" Geometry="F1M13,9v1H11v2H10V10H8V9h2V7h1V9Z" />
         </DrawingGroup.Children>
       </DrawingGroup>
     </DrawingBrush.Drawing>
@@ -215,6 +229,10 @@
         <Setter TargetName="nameText" Property="Foreground" Value="Red" />
         <Setter TargetName="icon" Property="Fill" Value="{DynamicResource ErrorBrush}" />
       </DataTrigger>
+      <DataTrigger Binding="{Binding Name}" Value="DoubleBuild">
+        <Setter TargetName="nameText" Property="Foreground" Value="Red" />
+        <Setter TargetName="icon" Property="Fill" Value="{DynamicResource ErrorBrush}" />
+      </DataTrigger>
     </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
 
@@ -277,6 +295,9 @@
       <DataTrigger Binding="{Binding ProjectFileExtension}" Value=".fsproj">
         <Setter TargetName="icon" Property="Fill" Value="{StaticResource FSProjIcon}" />
       </DataTrigger>
+      <DataTrigger Binding="{Binding ProjectFileExtension}" Value=".vcxproj">
+        <Setter TargetName="icon" Property="Fill" Value="{StaticResource CppProjIcon}" />
+      </DataTrigger>
     </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
 
@@ -324,6 +345,9 @@
       </DataTrigger>
       <DataTrigger Binding="{Binding ProjectFileExtension}" Value=".fsproj">
         <Setter TargetName="icon" Property="Fill" Value="{StaticResource FSProjIcon}" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding ProjectFileExtension}" Value=".vcxproj">
+        <Setter TargetName="icon" Property="Fill" Value="{StaticResource CppProjIcon}" />
       </DataTrigger>
     </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
@@ -731,6 +755,30 @@
       </DataTrigger>
       <DataTrigger Binding="{Binding ProjectExtension}" Value=".csproj">
         <Setter TargetName="icon" Property="Fill" Value="{StaticResource CSProjIcon}" />
+        <Setter TargetName="icon" Property="Height" Value="16" />
+        <Setter TargetName="icon" Property="Width" Value="16" />
+        <Setter TargetName="icon" Property="StrokeThickness" Value="0" />
+        <Setter TargetName="icon" Property="Margin" Value="2,2,6,2" />
+        <Setter TargetName="text" Property="Margin" Value="0,2,0,0" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding ProjectExtension}" Value=".vbproj">
+        <Setter TargetName="icon" Property="Fill" Value="{StaticResource VBProjIcon}" />
+        <Setter TargetName="icon" Property="Height" Value="16" />
+        <Setter TargetName="icon" Property="Width" Value="16" />
+        <Setter TargetName="icon" Property="StrokeThickness" Value="0" />
+        <Setter TargetName="icon" Property="Margin" Value="2,2,6,2" />
+        <Setter TargetName="text" Property="Margin" Value="0,2,0,0" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding ProjectExtension}" Value=".fsproj">
+        <Setter TargetName="icon" Property="Fill" Value="{StaticResource FSProjIcon}" />
+        <Setter TargetName="icon" Property="Height" Value="16" />
+        <Setter TargetName="icon" Property="Width" Value="16" />
+        <Setter TargetName="icon" Property="StrokeThickness" Value="0" />
+        <Setter TargetName="icon" Property="Margin" Value="2,2,6,2" />
+        <Setter TargetName="text" Property="Margin" Value="0,2,0,0" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding ProjectExtension}" Value=".vcxproj">
+        <Setter TargetName="icon" Property="Fill" Value="{StaticResource CppProjIcon}" />
         <Setter TargetName="icon" Property="Height" Value="16" />
         <Setter TargetName="icon" Property="Width" Value="16" />
         <Setter TargetName="icon" Property="StrokeThickness" Value="0" />
