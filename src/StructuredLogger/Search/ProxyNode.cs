@@ -182,9 +182,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 var result = "";
 
-                if (!string.IsNullOrEmpty(project.TargetFramework))
+                if (!string.IsNullOrEmpty(project.AdornmentString))
                 {
-                    result += " " + project.TargetFramework;
+                    result += " " + project.AdornmentString;
                 }
 
                 if (!string.IsNullOrEmpty(project.TargetsDisplayText))
