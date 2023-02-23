@@ -35,9 +35,9 @@ namespace StructuredLogViewer.Controls
 
                 foreach (var text in blocks)
                 {
-                    rect = text.Rect;
+                    rect = text.Position;
 
-                    var bg = TracingControl.ChooseBackground(text.Tag as Block);
+                    var bg = TracingControl.ChooseBackground(text.Block as Block);
                     dc.DrawRectangle(bg, null, rect);
 
                     if (rect.Width < minTextWidth)
@@ -56,21 +56,17 @@ namespace StructuredLogViewer.Controls
                 }
             }
 
-            public bool GetTextBlockAtPosition(Point mousePos, out TextField resultText, out Point point)
+            public bool TryGetTextBlockAtPosition(Point mousePos, out TextField resultText, out Point point)
             {
-                // TODO: Optimize later as this is an linear search.
-                Rect rect = new Rect();
-                point = new Point();
+                // TODO: Optimize later to avoid a linear search.
+                point = PointZero;
                 resultText = null;
 
                 foreach (var text in blocks)
                 {
-                    rect = text.Rect;
-
-                    if (rect.Contains(mousePos))
+                    if (text.Position.Contains(mousePos))
                     {
-                        point.X = rect.X;
-                        point.Y = rect.Y;
+                        point = new(text.Position.X, text.Position.Y);
                         resultText = text;
                         return true;
                     }
@@ -89,9 +85,9 @@ namespace StructuredLogViewer.Controls
         {
             public string Text { get; set; }
 
-            public Rect Rect { get; set; }
+            public Rect Position { get; set; }
 
-            public Block Tag { get; set; }
+            public Block Block { get; set; }
         }
 
         // Ratio of time reported to the smallest pixel to render.
@@ -126,7 +122,6 @@ namespace StructuredLogViewer.Controls
         private bool _groupByNodes = true;
         private bool _showProjectReferenceSelection = true;
 
-
         public int numberOfEvaluations = 0;
         public int numberOfProjects = 0;
         public int numberOfTargets = 0;
@@ -146,10 +141,12 @@ namespace StructuredLogViewer.Controls
 
         public string ShowCppText => $"Show Cpp Details ({numberOfCpp})";
 
+
+        public TimeSpan TimelineTime { get; set; }
         private TimeSpan computeTime = TimeSpan.Zero;
         private TimeSpan drawTime = TimeSpan.Zero;
 
-        public string LoadStatistics => $"Compute:{Math.Round(computeTime.TotalMilliseconds)}ms, Draw:{Math.Round(drawTime.TotalMilliseconds)}ms";
+        public string LoadStatistics => $"Timeline:{Math.Round(TimelineTime.TotalMilliseconds)}ms, Compute:{Math.Round(computeTime.TotalMilliseconds)}ms, Draw:{Math.Round(drawTime.TotalMilliseconds)}ms";
 
         public bool ShowEvaluation
         {
@@ -283,6 +280,11 @@ namespace StructuredLogViewer.Controls
                 if (scaleFactor < maximumZoom)
                 {
                     delta = 1.1;
+
+                    if (scaleFactor * delta > maximumZoom)
+                    {
+                        delta = maximumZoom / scaleFactor;
+                    }
                 }
             }
             else
@@ -323,6 +325,11 @@ namespace StructuredLogViewer.Controls
         public void SetTimeline(Timeline timeline, long globalStart, long globalEnd)
         {
             Timeline = timeline;
+
+            if (timeline.Lanes.Count == 0)
+            {
+                return;
+            }
 
             // Sometimes the Binlog recorded start and end time are not accurate.
             // Scan though the nodes to see if there are any nodes outside of the range.
@@ -402,7 +409,7 @@ namespace StructuredLogViewer.Controls
             // Remove and Redraw Highlight
             if (activeTextBlock != null)
             {
-                var hit = activeTextBlock.Tag;
+                var hit = activeTextBlock.Block;
                 activeTextBlock = null;
                 overlayCanvas.Children.Clear(); // clear highlight
 
@@ -909,9 +916,9 @@ namespace StructuredLogViewer.Controls
 
                 var textBlock = new TextField();
                 textBlock.Text = $"{block.Text} ({TextUtilities.DisplayDuration(block.Duration)})";
-                textBlock.Rect = new Rect(left, indentOffset, duration, textHeight);
+                textBlock.Position = new Rect(left, indentOffset, duration, textHeight);
                 // textBlock.ToolTip = block.GetTooltip();
-                textBlock.Tag = block;
+                textBlock.Block = block;
                 TextBlocks.Add(block.Node, textBlock);
 
                 canvasHeight = Math.Max(indentOffset + textHeight, canvasHeight);
@@ -999,12 +1006,12 @@ namespace StructuredLogViewer.Controls
                 // Highlight node
                 Canvas.SetLeft(highlight, activePoint.X);
                 Canvas.SetTop(highlight, activePoint.Y);
-                highlight.Width = activeTextBlock.Rect.Width;
-                highlight.Height = activeTextBlock.Rect.Height;
+                highlight.Width = activeTextBlock.Position.Width;
+                highlight.Height = activeTextBlock.Position.Height;
                 overlayCanvas.Children.Add(highlight);
 
                 // If it is a Project node, then draw lines to those node.
-                if (ShowProjectReferenceSelection && activeTextBlock.Tag is Block b && b.Node is Project proj)
+                if (ShowProjectReferenceSelection && activeTextBlock.Block is Block b && b.Node is Project proj)
                 {
                     HighlightProjectTextBlock(proj, activePoint);
                 }
@@ -1024,7 +1031,7 @@ namespace StructuredLogViewer.Controls
                 {
                     if (fastCanvas.ContainsTextBlock(textBlock))
                     {
-                        Point point = textBlock.Rect.TopLeft;
+                        Point point = textBlock.Position.TopLeft;
                         return fastCanvas.TranslatePoint(point, overlayCanvas);
                     }
                 }
@@ -1123,7 +1130,7 @@ namespace StructuredLogViewer.Controls
             {
                 var mousePos = e.GetPosition(canvas);
 
-                if (canvas.GetTextBlockAtPosition(mousePos, out TextField textBlock, out Point point) && textBlock.Tag is Block block)
+                if (canvas.TryGetTextBlockAtPosition(mousePos, out TextField textBlock, out Point point) && textBlock.Block is Block block)
                 {
                     if (activeTextBlock != null && activeTextBlock == textBlock && (Timestamp - lastClickTimestamp).TotalMilliseconds < 200)
                     {

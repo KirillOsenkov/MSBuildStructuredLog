@@ -7,7 +7,7 @@ namespace StructuredLogViewer
 {
     public class Timeline
     {
-        public Dictionary<int, Lane> Lanes { get; set; } = new Dictionary<int, Lane>();
+        public Dictionary<int, Lane> Lanes { get; set; } = new();
 
         public Timeline(Build build, bool analyzeCpp)
         {
@@ -16,33 +16,9 @@ namespace StructuredLogViewer
 
         private void Populate(Build build, bool analyzeCpp = false)
         {
-            build.VisitAllChildren<TimedNode>(node =>
+            build.VisitAllChildren<NamedNode>(node =>
             {
-                if (node is Build)
-                {
-                    return;
-                }
-
-                if (node is Microsoft.Build.Logging.StructuredLogger.Task task &&
-                    (string.Equals(task.Name, "MSBuild", StringComparison.OrdinalIgnoreCase) ||
-                     string.Equals(task.Name, "CallTarget", StringComparison.OrdinalIgnoreCase)))
-                {
-                    return;
-                }
-
-                var nodeId = node.NodeId;
-                if (!Lanes.TryGetValue(nodeId, out var lane))
-                {
-                    lane = new Lane();
-                    Lanes[nodeId] = lane;
-                }
-
-                lane.Add(CreateBlock(node));
-            });
-
-            if (analyzeCpp)
-            {
-                build.VisitAllChildren<CppAnalyzer.CppAnalyzerNode>(cppAnalyzerNode =>
+                if (analyzeCpp && node is CppAnalyzer.CppAnalyzerNode cppAnalyzerNode)
                 {
                     var cppAnalyzer = cppAnalyzerNode.GetCppAnalyzer();
                     var cppTimedNodes = cppAnalyzer.GetAnalyzedTimedNode();
@@ -62,8 +38,36 @@ namespace StructuredLogViewer
                             lane.Add(block);
                         }
                     }
-                });
-            }
+                }
+
+                if (node is not TimedNode timedNode)
+                {
+                    return;
+                }
+
+                if (timedNode is Build)
+                {
+                    return;
+                }
+
+                if (timedNode is Microsoft.Build.Logging.StructuredLogger.Task task &&
+                    (string.Equals(task.Name, "MSBuild", StringComparison.OrdinalIgnoreCase) ||
+                     string.Equals(task.Name, "CallTarget", StringComparison.OrdinalIgnoreCase)))
+                {
+                    return;
+                }
+
+                {
+                    var nodeId = timedNode.NodeId;
+                    if (!Lanes.TryGetValue(nodeId, out var lane))
+                    {
+                        lane = new Lane();
+                        Lanes[nodeId] = lane;
+                    }
+
+                    lane.Add(CreateBlock(timedNode));
+                }
+            });
         }
 
         private Block CreateBlock(TimedNode node)
