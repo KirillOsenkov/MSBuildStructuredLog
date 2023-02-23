@@ -144,7 +144,7 @@ namespace StructuredLogViewer.Controls
 
         private Panel CreatePanelForLane(Lane lane, double start)
         {
-            var blocks = lane.Blocks;
+            var blocks = lane.Blocks.ToList();
             if (blocks.Count == 0)
             {
                 return null;

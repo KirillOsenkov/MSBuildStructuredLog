@@ -1,13 +1,15 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogViewer
 {
     public class Timeline
     {
-        public Dictionary<int, Lane> Lanes { get; set; } = new();
+        public ConcurrentDictionary<int, Lane> Lanes { get; set; } = new();
 
         public Timeline(Build build, bool analyzeCpp)
         {
@@ -16,7 +18,7 @@ namespace StructuredLogViewer
 
         private void Populate(Build build, bool analyzeCpp = false)
         {
-            build.VisitAllChildren<NamedNode>(node =>
+            build.ParallelVisitAllChildren<TimedNode>(node =>
             {
                 if (analyzeCpp && node is CppAnalyzer.CppAnalyzerNode cppAnalyzerNode)
                 {
@@ -38,6 +40,8 @@ namespace StructuredLogViewer
                             lane.Add(block);
                         }
                     }
+
+                    return;
                 }
 
                 if (node is not TimedNode timedNode)
