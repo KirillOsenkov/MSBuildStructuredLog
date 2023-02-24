@@ -406,9 +406,9 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
         {
             if (this.tracing.Timeline == null)
             {
-                var start = DateTime.Now;
+                var start = DateTime.UtcNow;
                 var timeline = new Timeline(Build, analyzeCpp: true);
-                var timelineTime = DateTime.Now - start;
+                var timelineTime = DateTime.UtcNow - start;
                 this.tracing.TimelineTime = timelineTime;
                 this.tracing.BuildControl = this;
                 this.tracing.SetTimeline(timeline, Build.StartTime.Ticks, Build.EndTime.Ticks);
