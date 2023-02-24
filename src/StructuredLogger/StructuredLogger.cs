@@ -99,6 +99,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public override void Shutdown()
         {
             base.Shutdown();
+            construction.Shutdown();
 
             if (projectImportsCollector != null)
             {
