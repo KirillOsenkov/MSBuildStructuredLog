@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace StructuredLogViewer
 {
     public class Lane
     {
-        public List<Block> Blocks { get; set; } = new List<Block>();
+        public ConcurrentBag<Block> Blocks { get; set; } = new();
 
         public void Add(Block block)
         {

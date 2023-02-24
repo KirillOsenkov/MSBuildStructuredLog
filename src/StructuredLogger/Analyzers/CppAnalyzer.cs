@@ -22,7 +22,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             public BaseNode Node;
         }
 
-        public class CppAnalyzerNode : NamedNode
+        public class CppAnalyzerNode : TimedNode
         {
             CppAnalyzer cppAnalyzer;
 
