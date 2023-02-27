@@ -63,12 +63,7 @@ namespace StructuredLogViewer
 
                 {
                     var nodeId = timedNode.NodeId;
-                    if (!Lanes.TryGetValue(nodeId, out var lane))
-                    {
-                        lane = new Lane();
-                        Lanes[nodeId] = lane;
-                    }
-
+                    var lane = Lanes.GetOrAdd(nodeId, (_) => new Lane());
                     lane.Add(CreateBlock(timedNode));
                 }
             });
