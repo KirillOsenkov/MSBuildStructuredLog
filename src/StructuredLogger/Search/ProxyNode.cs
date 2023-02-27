@@ -182,9 +182,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 var result = "";
 
-                if (!string.IsNullOrEmpty(project.TargetFramework))
+                if (!string.IsNullOrEmpty(project.AdornmentString))
                 {
-                    result += " " + project.TargetFramework;
+                    result += " " + project.AdornmentString;
                 }
 
                 if (!string.IsNullOrEmpty(project.TargetsDisplayText))
@@ -240,16 +240,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (Original is Project project)
             {
-                result = project.ProjectFileExtension;
+                result = string.IsNullOrEmpty(project.ProjectFileExtension) ? "other" : project.ProjectFileExtension;
             }
             else if (Original is ProjectEvaluation evaluation)
             {
-                result = evaluation.ProjectFileExtension;
-            }
-
-            if (result != null && result != ".sln" && result != ".csproj")
-            {
-                result = "other";
+                result = string.IsNullOrEmpty(evaluation.ProjectFileExtension) ? "other" : evaluation.ProjectFileExtension;
             }
 
             return result;

@@ -418,6 +418,8 @@ namespace StructuredLogViewer
                     return GetErrorBuild(filePath, ex.ToString());
                 }
             });
+            var openTime = stopwatch.Elapsed;
+            stopwatch.Restart();
 
             if (build == null)
             {
@@ -430,16 +432,18 @@ namespace StructuredLogViewer
                 progress.ProgressText = "Analyzing " + filePath + "...";
                 await QueueAnalyzeBuild(build);
             }
+            var analyzingTime = stopwatch.Elapsed;
 
+            stopwatch.Restart();
             progress.ProgressText = "Rendering tree...";
             await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Loaded); // let the progress message be rendered before we block the UI again
+            var renderTime = stopwatch.Elapsed;
 
             DisplayBuild(build);
 
-            var elapsed = stopwatch.Elapsed;
             if (currentBuild != null)
             {
-                currentBuild.UpdateBreadcrumb($"Load time: {elapsed}");
+                currentBuild.UpdateBreadcrumb($"Opening: {Math.Round(openTime.TotalSeconds, 3)}s, Analyzing: {Math.Round(analyzingTime.TotalSeconds, 3)}s");
             }
         }
 

@@ -149,19 +149,19 @@ namespace StructuredLogViewer
             {
                 var word = Words[i].Word;
 
-                if (word == "$time" || word == "$duration")
+                if (string.Equals(word, "$time", StringComparison.OrdinalIgnoreCase) || string.Equals(word, "$duration", StringComparison.OrdinalIgnoreCase))
                 {
                     Words.RemoveAt(i);
                     IncludeDuration = true;
                     continue;
                 }
-                else if (word == "$start" || word == "$starttime")
+                else if (string.Equals(word, "$start", StringComparison.OrdinalIgnoreCase) || string.Equals(word, "$starttime", StringComparison.OrdinalIgnoreCase))
                 {
                     Words.RemoveAt(i);
                     IncludeStart = true;
                     continue;
                 }
-                else if (word == "$end" || word == "$endtime")
+                else if (string.Equals(word, "$end", StringComparison.OrdinalIgnoreCase) || string.Equals(word, "$endtime", StringComparison.OrdinalIgnoreCase))
                 {
                     Words.RemoveAt(i);
                     IncludeEnd = true;

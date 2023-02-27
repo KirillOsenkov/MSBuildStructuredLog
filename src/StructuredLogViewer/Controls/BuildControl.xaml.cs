@@ -326,7 +326,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             var list = filesTree.ResultsList.ItemsSource as IEnumerable<object>;
             if (list != null)
             {
-                UpdateFileVisibility(list.OfType<NamedNode>(), text);
+                UpdateFileVisibility(list.OfType<NamedNode>(), text.Replace(":", ""));
             }
         }
 
@@ -406,7 +406,10 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
         {
             if (this.tracing.Timeline == null)
             {
+                var start = DateTime.Now;
                 var timeline = new Timeline(Build, analyzeCpp: true);
+                var timelineTime = DateTime.Now - start;
+                this.tracing.TimelineTime = timelineTime;
                 this.tracing.BuildControl = this;
                 this.tracing.SetTimeline(timeline, Build.StartTime.Ticks, Build.EndTime.Ticks);
                 this.tracingWatermark.Visibility = Visibility.Hidden;

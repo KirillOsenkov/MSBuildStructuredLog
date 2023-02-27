@@ -50,6 +50,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return match;
             }
 
+            match = Strings.MessageIncludedResponseFile.Match(Text);
+            if (match.Success)
+            {
+                return match;
+            }
+
+            match = Strings.MessageMetaprojectGenerated.Match(Text);
+            if (match.Success)
+            {
+                return match;
+            }
+
             return null;
         }
 
@@ -63,7 +75,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (match != null && match.Success)
                 {
                     var value = match.Groups["Line"].Value;
-                    return int.Parse(value);
+                    if (int.TryParse(value, out int result))
+                    {
+                        return result;
+                    }
                 }
 
                 return null;

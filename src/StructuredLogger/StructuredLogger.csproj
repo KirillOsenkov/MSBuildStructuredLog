@@ -25,12 +25,13 @@
     <DefineConstants>$(DefineConstants);NETCORE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build" Version="$(MSBuildPackageVersion)" NoWarn="NU1701" />
     <PackageReference Include="Microsoft.Build.Framework" Version="$(MSBuildPackageVersion)" />
-    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MSBuildPackageVersion)" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MSBuildPackageVersion)" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="all" />
     <PackageReference Include="Tewr.Blazor.FileReader" Version="1.6.0.20166" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Construction\TargetGraph.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="Properties\Resources.Designer.cs">

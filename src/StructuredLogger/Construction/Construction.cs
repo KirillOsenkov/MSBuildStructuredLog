@@ -5,9 +5,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using Microsoft.Build.Collections;
-using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Framework.Profiler;
 
@@ -29,6 +27,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private readonly MessageProcessor messageProcessor;
         private readonly StringCache stringTable;
+
+        private System.Threading.Tasks.Task bgWorker;
+        private BlockingCollection<System.Threading.Tasks.Task> bgJobPool;
 
         public StringCache StringTable => stringTable;
 
@@ -68,6 +69,24 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Intern(nameof(Target));
             Intern(nameof(Task));
             Intern(nameof(TimedNode));
+
+            bgJobPool = new(2000);
+            bgWorker = new System.Threading.Tasks.Task(() =>
+            {
+                // Note: Limit MaxDegreeOfParallelism to 4 for now.
+                System.Threading.Tasks.Parallel.ForEach(bgJobPool.GetConsumingEnumerable(), new System.Threading.Tasks.ParallelOptions() { MaxDegreeOfParallelism = 4 }, task =>
+                {
+                    task.Start();
+                    task.Wait();
+                });
+            }, System.Threading.Tasks.TaskCreationOptions.LongRunning);
+            bgWorker.Start();
+        }
+
+        public void Shutdown()
+        {
+            bgJobPool.CompleteAdding();
+            bgWorker.Wait();
         }
 
         private string Intern(string text) => stringTable.Intern(text);
@@ -505,13 +524,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             ConstructProfilerResult(projectEvaluation, profilerResult.Value);
                         }
 
+                        Folder globFolder = null;
                         if (projectEvaluationFinished.GlobalProperties != null)
                         {
-                            AddGlobalProperties(projectEvaluation, projectEvaluationFinished.GlobalProperties);
+                            globFolder = GetOrCreateGlobalPropertiesFolder(projectEvaluation, projectEvaluationFinished.GlobalProperties);
                         }
 
-                        AddProperties(projectEvaluation, projectEvaluationFinished.Properties);
-                        AddItems(projectEvaluation, projectEvaluationFinished.Items);
+                        bgJobPool.Add(new System.Threading.Tasks.Task(() =>
+                        {
+                            if (projectEvaluationFinished.GlobalProperties != null && globFolder != null)
+                            {
+                                AddProperties(projectEvaluation, (IEnumerable<KeyValuePair<string, string>>)projectEvaluationFinished.GlobalProperties, projectEvaluation);
+                            }
+
+                            AddProperties(projectEvaluation, projectEvaluationFinished.Properties);
+                            AddItems(projectEvaluation, projectEvaluationFinished.Items);
+                        }));
                     }
                 }
             }
@@ -828,18 +856,27 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 project.GlobalProperties = stringTable.InternStringDictionary(args.GlobalProperties) ?? ImmutableDictionary<string, string>.Empty;
 
+                Folder globalNode = null;
                 if (args.GlobalProperties != null)
                 {
-                    AddGlobalProperties(project, project.GlobalProperties);
+                    globalNode = GetOrCreateGlobalPropertiesFolder(project, project.GlobalProperties);
                 }
 
-                if (!string.IsNullOrEmpty(args.TargetNames))
+                bgJobPool.Add(new System.Threading.Tasks.Task(() =>
                 {
-                    AddEntryTargets(project);
-                }
+                    if (args.GlobalProperties != null && globalNode != null)
+                    {
+                        AddProperties(globalNode, args.GlobalProperties, project);
+                    }
 
-                AddProperties(project, args.Properties);
-                AddItems(project, args.Items);
+                    if (!string.IsNullOrEmpty(args.TargetNames))
+                    {
+                        AddEntryTargets(project);
+                    }
+
+                    AddProperties(project, args.Properties);
+                    AddItems(project, args.Items);
+                }));
             }
         }
 
@@ -1017,16 +1054,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
             _taskToAssemblyMap.GetOrAdd(taskName, t => assembly);
         }
 
-        private void AddGlobalProperties(TreeNode project, IEnumerable globalProperties)
+        private Folder GetOrCreateGlobalPropertiesFolder(TreeNode project, IEnumerable globalProperties)
         {
             if (globalProperties == null)
             {
-                return;
+                return null;
             }
 
             var propertiesNode = project.GetOrCreateNodeWithName<Folder>(Strings.Properties, addAtBeginning: true);
             var globalNode = propertiesNode.GetOrCreateNodeWithName<Folder>(Strings.Global, addAtBeginning: true);
-            AddProperties(globalNode, (IEnumerable<KeyValuePair<string, string>>)globalProperties, project as IProjectOrEvaluation);
+
+            return globalNode;
         }
 
         private static void AddEntryTargets(Project project)
@@ -1058,6 +1096,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 parent.EnsureChildrenCapacity(collection.Count);
             }
 
+            bool tfvFound = false;
+            bool platformFound = false;
+            bool configFound = false;
+
             foreach (var kvp in properties)
             {
                 var property = new Property
@@ -1065,39 +1107,46 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     Name = SoftIntern(kvp.Key),
                     Value = SoftIntern(kvp.Value)
                 };
+
                 parent.Children.Add(property); // don't use AddChild for performance
                 property.Parent = parent;
 
                 if (project != null)
                 {
-                    if (string.Equals(kvp.Key, Strings.TargetFramework, StringComparison.OrdinalIgnoreCase))
+                    if (!tfvFound)
                     {
-                        project.TargetFramework = kvp.Value;
-                    }
-                    else if (string.Equals(kvp.Key, Strings.TargetFrameworks, StringComparison.OrdinalIgnoreCase))
-                    {
-                        // we want TargetFramework to take precedence over TargetFrameworks when both are present
-                        if (string.IsNullOrEmpty(project.TargetFramework) && !string.IsNullOrEmpty(kvp.Value))
+                        if (string.Equals(kvp.Key, Strings.TargetFramework, StringComparison.OrdinalIgnoreCase))
                         {
                             project.TargetFramework = kvp.Value;
+                            tfvFound = true;
+                        }
+                        else if (string.Equals(kvp.Key, Strings.TargetFrameworks, StringComparison.OrdinalIgnoreCase))
+                        {
+                            // we want TargetFramework to take precedence over TargetFrameworks when both are present
+                            if (string.IsNullOrEmpty(project.TargetFramework) && !string.IsNullOrEmpty(kvp.Value))
+                            {
+                                project.TargetFramework = kvp.Value;
+                                tfvFound = true;
+                            }
+                        }
+                        // If neither of the above are there - look for the old project system
+                        else if (project.TargetFramework is null && string.Equals(kvp.Key, Strings.TargetFrameworkVersion, StringComparison.OrdinalIgnoreCase))
+                        {
+                            // Note this is untranslated, so e.g. "v4.6.2" instead of "net462" - this is intentional as it
+                            // renders the badge for all projects, but you can still use this difference to tell what is/isn't an SDK project.
+                            project.TargetFramework = kvp.Value;
+                            tfvFound = true;
                         }
                     }
-                    // If neither of the above are there - look for the old project system
-                    else if (project.TargetFramework is null && string.Equals(kvp.Key, Strings.TargetFrameworkVersion, StringComparison.OrdinalIgnoreCase))
-                    {
-                        // Note this is untranslated, so e.g. "v4.6.2" instead of "net462" - this is intentional as it
-                        // renders the badge for all projects, but you can still use this difference to tell what is/isn't an SDK project.
-                        project.TargetFramework = kvp.Value;
-                    }
-
-                    if (string.Equals(kvp.Key, Strings.Platform, StringComparison.OrdinalIgnoreCase))
+                    else if (!platformFound && string.Equals(kvp.Key, Strings.Platform, StringComparison.OrdinalIgnoreCase))
                     {
                         project.Platform = kvp.Value;
+                        platformFound = true;
                     }
-
-                    if (string.Equals(kvp.Key, Strings.Configuration, StringComparison.OrdinalIgnoreCase))
+                    else if (!configFound && string.Equals(kvp.Key, Strings.Configuration, StringComparison.OrdinalIgnoreCase))
                     {
                         project.Configuration = kvp.Value;
+                        configFound = true;
                     }
                 }
             }

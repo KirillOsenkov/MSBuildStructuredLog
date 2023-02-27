@@ -397,7 +397,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 parent = GetTask(args);
                 if (parent is Task task)
                 {
-                    if (task is ResolveAssemblyReferenceTask rar)
+                    if (args is AssemblyLoadBuildEventArgs)
+                    {
+                        nodeToAdd = new Message() { Text = Intern(message), IsLowRelevance = lowRelevance };
+                    }
+                    else if (task is ResolveAssemblyReferenceTask rar)
                     {
                         if (ProcessRAR(rar, ref parent, message))
                         {
