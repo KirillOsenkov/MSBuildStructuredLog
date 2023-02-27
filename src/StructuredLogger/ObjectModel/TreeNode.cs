@@ -484,7 +484,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return foundChildren;
         }
 
-
+        /// <summary>
+        /// Iterate through all the children nodes in parallel.  Make sure the action is threadsafe.
+        /// </summary>
         public void ParallelVisitAllChildren<T>(
             Action<T> processor,
             CancellationToken cancellationToken = default,
