@@ -61,6 +61,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         //   - AssemblyLoadBuildEventArgs
         internal const int FileFormatVersion = 16;
 
+        public static bool IsNewerVersionAvailable { get; set; }
+
         private Stream stream;
         private BinaryWriter binaryWriter;
         private BuildEventArgsWriter eventArgsWriter;
