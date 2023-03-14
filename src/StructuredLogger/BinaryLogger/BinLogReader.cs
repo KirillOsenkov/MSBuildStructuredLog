@@ -61,13 +61,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             OnFileFormatVersionRead?.Invoke(fileFormatVersion);
 
-            // the log file is written using a newer version of file format
-            // that we don't know how to read
-            if (fileFormatVersion > BinaryLogger.FileFormatVersion)
-            {
-                var text = $"Unsupported log file format. Latest supported version is {BinaryLogger.FileFormatVersion}, the log file has version {fileFormatVersion}.";
-                throw new NotSupportedException(text);
-            }
+            EnsureFileFormatVersionKnown(fileFormatVersion);
 
             // Use a producer-consumer queue so that IO can happen on one thread
             // while processing can happen on another thread decoupled. The speed
@@ -118,6 +112,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             //processingTask.Wait();
+        }
+
+        private void EnsureFileFormatVersionKnown(int fileFormatVersion)
+        {
+            // the log file is written using a newer version of file format
+            // that we don't know how to read
+            if (fileFormatVersion > BinaryLogger.FileFormatVersion)
+            {
+                var text = $"Unsupported log file format. Latest supported version is {BinaryLogger.FileFormatVersion}, the log file has version {fileFormatVersion}.";
+                if (BinaryLogger.IsNewerVersionAvailable)
+                {
+                    text += " Update available - restart this instance to automatically use newer version.";
+                }
+                throw new NotSupportedException(text);
+            }
         }
 
         private class DisposableEnumerable<T> : IEnumerable<T>, IDisposable
@@ -187,13 +196,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             int fileFormatVersion = binaryReader.ReadInt32();
 
-            // the log file is written using a newer version of file format
-            // that we don't know how to read
-            if (fileFormatVersion > BinaryLogger.FileFormatVersion)
-            {
-                var text = $"Unsupported log file format. Latest supported version is {BinaryLogger.FileFormatVersion}, the log file has version {fileFormatVersion}.";
-                throw new NotSupportedException(text);
-            }
+            EnsureFileFormatVersionKnown(fileFormatVersion);
 
             long lengthOfBlobsAddedLastTime = 0;
 
