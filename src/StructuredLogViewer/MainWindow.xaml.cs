@@ -211,6 +211,7 @@ namespace StructuredLogViewer
                 {
                     var versionText = result.Version.ToString();
                     message = "After restarting the app you will be on version " + versionText;
+                    BinaryLogger.IsNewerVersionAvailable = true;
                     FileAssociations.EnsureAssociationsSet(versionText);
                 }
                 else
