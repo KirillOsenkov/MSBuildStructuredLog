@@ -1124,8 +1124,17 @@ namespace StructuredLogViewer.Controls
             scrollViewer.ScrollToVerticalOffset(verticalOffset);
         }
 
+        private bool IsMouseMoving;
+        private Point initial;
+
         private void Canvas_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
+            if (IsMouseMoving)
+            {
+                IsMouseMoving = false;
+                return;
+            }
+
             if (sender is FastCanvas canvas)
             {
                 var mousePos = e.GetPosition(canvas);
@@ -1141,8 +1150,34 @@ namespace StructuredLogViewer.Controls
                         lastClickTimestamp = Timestamp;
                         var activePoint = canvas.TranslatePoint(point, overlayCanvas);
                         HighlightTextBlock(textBlock, activePoint);
+                        BuildControl.UpdateBreadcrumb(block.Node);
                     }
                 }
+            }
+        }
+
+        private void Grid_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            initial = Mouse.GetPosition(this);
+        }
+
+        private void Grid_MouseMove(object sender, MouseEventArgs e)
+        {
+            // Handle the case where mouse up isn't sent when released outside of client space.
+            if (e.LeftButton == MouseButtonState.Released)
+            {
+                IsMouseMoving = false;
+                return;
+            }
+
+            var newPosition = e.GetPosition(this);
+            var vect = Point.Subtract(initial, newPosition);
+            if (IsMouseMoving || vect.Length > 5)
+            {
+                IsMouseMoving = true;
+                scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset + vect.X);
+                scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset + vect.Y);
+                initial = newPosition;
             }
         }
 
