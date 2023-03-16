@@ -35,7 +35,6 @@
             </Grid>
         </ScrollViewer>
         <StackPanel Margin="0,0,30,30"
-                Background="White"
                 Orientation="Horizontal"
                 ToolTip="Ctrl+MouseWheel to Zoom"
                 HorizontalAlignment="Right"

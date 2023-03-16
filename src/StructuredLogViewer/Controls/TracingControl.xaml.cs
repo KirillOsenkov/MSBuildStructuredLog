@@ -56,17 +56,17 @@ namespace StructuredLogViewer.Controls
                 }
             }
 
-            public bool TryGetTextBlockAtPosition(Point mousePos, out TextField resultText, out Point point)
+            public bool TryGetTextBlockAtPosition(Point mousePos, out TextField resultText, out Point resultPoint)
             {
                 // TODO: Optimize later to avoid a linear search.
-                point = PointZero;
+                resultPoint = PointZero;
                 resultText = null;
 
                 foreach (var text in blocks)
                 {
                     if (text.Position.Contains(mousePos))
                     {
-                        point = new(text.Position.X, text.Position.Y);
+                        resultPoint = new Point(text.Position.X, text.Position.Y);
                         resultText = text;
                         return true;
                     }
@@ -84,6 +84,8 @@ namespace StructuredLogViewer.Controls
         public class TextField
         {
             public string Text { get; set; }
+
+            public string ToolTip { get; set; }
 
             public Rect Position { get; set; }
 
@@ -917,7 +919,7 @@ namespace StructuredLogViewer.Controls
                 var textBlock = new TextField();
                 textBlock.Text = $"{block.Text} ({TextUtilities.DisplayDuration(block.Duration)})";
                 textBlock.Position = new Rect(left, indentOffset, duration, textHeight);
-                // textBlock.ToolTip = block.GetTooltip();
+                textBlock.ToolTip = block.GetTooltip();
                 textBlock.Block = block;
                 TextBlocks.Add(block.Node, textBlock);
 
@@ -1124,14 +1126,14 @@ namespace StructuredLogViewer.Controls
             scrollViewer.ScrollToVerticalOffset(verticalOffset);
         }
 
-        private bool IsMouseMoving;
-        private Point initial;
+        private bool isMouseMoving;
+        private Point lastMousePos;
 
-        private void Canvas_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void Canvas_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            if (IsMouseMoving)
+            if (isMouseMoving)
             {
-                IsMouseMoving = false;
+                isMouseMoving = false;
                 return;
             }
 
@@ -1158,26 +1160,71 @@ namespace StructuredLogViewer.Controls
 
         private void Grid_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            initial = Mouse.GetPosition(this);
+            lastMousePos = Mouse.GetPosition(this);
         }
 
         private void Grid_MouseMove(object sender, MouseEventArgs e)
         {
+            var currentMousePos = e.GetPosition(this);
+
             // Handle the case where mouse up isn't sent when released outside of client space.
             if (e.LeftButton == MouseButtonState.Released)
             {
-                IsMouseMoving = false;
+                if (isMouseMoving)
+                {
+                    isMouseMoving = false;
+                }
+                else
+                {
+                    UpdateToolTips(currentMousePos);
+                }
+
                 return;
             }
 
-            var newPosition = e.GetPosition(this);
-            var vect = Point.Subtract(initial, newPosition);
-            if (IsMouseMoving || vect.Length > 5)
+            var vect = Point.Subtract(lastMousePos, currentMousePos);
+            if (isMouseMoving || vect.Length > 5)
             {
-                IsMouseMoving = true;
+                isMouseMoving = true;
                 scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset + vect.X);
                 scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset + vect.Y);
-                initial = newPosition;
+                lastMousePos = currentMousePos;
+            }
+        }
+
+        TextField lastHoverText;
+
+        private void UpdateToolTips(Point mousePos)
+        {
+            var graphPoint = this.TranslatePoint(mousePos, overlayCanvas);
+            var hitResult = VisualTreeHelper.HitTest(this.lanesPanel, graphPoint);
+
+            if (hitResult?.VisualHit is FastCanvas canvas)
+            {
+                var canvasPoint = this.TranslatePoint(mousePos, canvas);
+                if (canvas.TryGetTextBlockAtPosition(canvasPoint, out TextField resultText, out Point _))
+                {
+                    canvas.ToolTip ??= new ToolTip()
+                    {
+                        // Offset by 1 to allow click through to the bottem element
+                        HorizontalOffset = 1,
+                        VerticalOffset = 1
+                    };
+
+                    if (resultText != lastHoverText)
+                    {
+                        var toolTipControl = canvas.ToolTip as ToolTip;
+                        toolTipControl.Content = resultText.ToolTip;
+                        lastHoverText = resultText;
+
+                        // Toggle tooltip to force it to redraw at the new mouse position.
+                        if (toolTipControl.IsOpen)
+                        {
+                            toolTipControl.IsOpen = false;
+                            toolTipControl.IsOpen = true;
+                        }
+                    }
+                }
             }
         }
 
