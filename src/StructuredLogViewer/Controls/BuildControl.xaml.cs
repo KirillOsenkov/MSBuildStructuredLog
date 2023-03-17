@@ -982,8 +982,18 @@ Recent:
             var node = breadCrumb.SelectedItem as TreeNode;
             if (node != null)
             {
-                SelectItem(node);
-                treeView.Focus();
+                if (this.centralTabControl.SelectedIndex == 0)
+                {
+                    SelectItem(node);
+                    treeView.Focus();
+                }
+                else if (this.centralTabControl.SelectedIndex == 2)
+                {
+                    if (node is TimedNode tnode) {
+                        tracing.GoToTimedNode(tnode);
+                    }
+                }
+
                 e.Handled = true;
             }
 

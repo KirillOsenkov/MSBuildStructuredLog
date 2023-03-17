@@ -27,11 +27,14 @@
                 VerticalScrollBarVisibility="Auto" Loaded="ScrollViewer_Loaded" Unloaded="ScrollViewer_Unloaded" ScrollChanged="ScrollViewer_ScrollChanged">
             <Grid>
                 <Grid x:Name="overlayGrid" Panel.ZIndex="100" />
-                <Grid x:Name="grid" />
+                <!-- Note: This grid needs to be transparent so that Mouse Move and Down will register on the empty background. -->
+                <Grid x:Name="grid"
+                      Background="Transparent"
+                      MouseLeftButtonDown="Grid_MouseLeftButtonDown"
+                      MouseMove="Grid_MouseMove" />
             </Grid>
         </ScrollViewer>
         <StackPanel Margin="0,0,30,30"
-                Background="White"
                 Orientation="Horizontal"
                 ToolTip="Ctrl+MouseWheel to Zoom"
                 HorizontalAlignment="Right"
