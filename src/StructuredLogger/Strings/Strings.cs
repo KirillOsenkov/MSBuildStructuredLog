@@ -507,6 +507,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string MSBuildVersionPrefix => "MSBuild version = ";
         public static string MSBuildExecutablePathPrefix => "MSBuild executable path = ";
         public static string Warnings = "Warnings";
+        public static string NodesReusal = "Reusing node";
+        public static string NodesManagementNode = "Nodes Management";
 
         // These aren't localized, see https://github.com/microsoft/MSBuildSdks/blob/543e965191417dee65471ee57a6702289847b49b/src/Artifacts/Tasks/Robocopy.cs#L66-L77
         private const string RobocopyFileCopiedMessage = "Copied {0} to {1}";

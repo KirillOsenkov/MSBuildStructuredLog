@@ -502,6 +502,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     return;
                 }
             }
+            else if (args.Message.StartsWith(Strings.NodesReusal, StringComparison.Ordinal))
+            {
+                parent = construction.Build.GetOrCreateNodeWithName<Folder>(Strings.NodesManagementNode);
+            }
 
             if (parent == null)
             {
