@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -42,7 +42,14 @@ namespace BinlogTool
             var compilerInvocations = CompilerInvocationsReader.ReadInvocations(build);
             foreach (var invocation in compilerInvocations)
             {
-                GenerateSourcesForProject(invocation, outputDirectory);
+                try
+                {
+                    GenerateSourcesForProject(invocation, outputDirectory);
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine(ex.ToString());
+                }
             }
         }
 
@@ -57,17 +64,27 @@ namespace BinlogTool
                 return;
             }
 
-            var arguments = invocation.CommandLineArguments.Tokenize();
+            var commandLineArgumentText = invocation.CommandLineArguments;
+
+            var arguments = commandLineArgumentText.Tokenize();
             foreach (var argument in arguments)
             {
                 if (argument.StartsWith("/"))
                 {
-                    var reference = TryGetReference(argument);
-                    if (reference != null)
+                    var references = TryGetReferences(argument);
+                    foreach (var referenceText in references)
                     {
-                        reference = ArchiveFile.CalculateArchivePath(reference);
+                        var reference = ArchiveFile.CalculateArchivePath(referenceText);
                         var physicalReferencePath = GetPhysicalPath(outputDirectory, reference);
-                        WriteEmptyAssembly(physicalReferencePath);
+
+                        try
+                        {
+                            WriteEmptyAssembly(physicalReferencePath);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.Error.WriteLine(ex.ToString());
+                        }
                     }
                 }
                 else
@@ -102,32 +119,47 @@ namespace BinlogTool
             process.WaitForExit();
         }
 
-        private string TryGetReference(string argument)
+        private string[] TryGetReferences(string argument)
         {
-            string reference;
             if (argument.StartsWith("/r:"))
             {
-                reference = argument.Substring(3);
+                argument = argument.Substring(3);
             }
             else if (argument.StartsWith("/reference:"))
             {
-                reference = argument.Substring(11);
+                argument = argument.Substring(11);
             }
             else
             {
-                return null;
+                return Array.Empty<string>();
             }
 
-            if (reference.Length >= 2)
+            string[] result = argument.Split(',');
+
+            for (int i = 0; i < result.Length; i++)
             {
-                // Remove enclosing quotes if present
-                if ((reference.StartsWith('\'') && reference.EndsWith('\'')) ||
-                    (reference.StartsWith('"') && reference.EndsWith('"')))
+                var reference = result[i];
+
+                if (reference.Length >= 2)
                 {
-                    return reference.Substring(1, reference.Length - 2);
+                    // Remove enclosing quotes if present
+                    if ((reference.StartsWith('\'') || reference.StartsWith('"')) &&
+                        (reference.EndsWith('\'') || reference.EndsWith('"')))
+                    {
+                        reference = reference.Substring(1, reference.Length - 2);
+                    }
                 }
+
+                int equals = reference.IndexOf('=');
+                if (equals >= 0 && equals < reference.Length - 1)
+                {
+                    reference = reference.Substring(equals + 1);
+                }
+
+                result[i] = reference;
             }
-            return reference;
+
+            return result;
         }
 
         private void SaveFilesFrom(Build build, string outputDirectory)
