@@ -16,7 +16,7 @@ namespace BinlogTool
             this.args = args;
         }
 
-        public void Run(string binlog, string outputDirectory)
+        public void Run(string binlog, string outputDirectory, bool reconstruct = false)
         {
             if (string.IsNullOrEmpty(binlog) || !File.Exists(binlog))
             {
@@ -34,7 +34,10 @@ namespace BinlogTool
             var build = BinaryLog.ReadBuild(binlog);
             SaveFilesFrom(build, outputDirectory);
 
-            GenerateSources(build, outputDirectory);
+            if (reconstruct)
+            {
+                GenerateSources(build, outputDirectory);
+            }
         }
 
         private void GenerateSources(Build build, string outputDirectory)

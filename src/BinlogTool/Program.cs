@@ -14,6 +14,7 @@ namespace BinlogTool
                 Console.WriteLine(@"Usage:
     binlogtool listtools input.binlog
     binlogtool savefiles input.binlog output_path
+    binlogtool reconstruct input.binlog output_path
     binlogtool savestrings input.binlog output.txt
     binlogtool search *.binlog search string");
                 return;
@@ -27,6 +28,15 @@ namespace BinlogTool
                 var outputRoot = args[2];
 
                 new SaveFiles(args).Run(binlog, outputRoot);
+                return;
+            }
+
+            if (args.Length == 3 && string.Equals(firstArg, "reconstruct", StringComparison.OrdinalIgnoreCase))
+            {
+                var binlog = args[1];
+                var outputRoot = args[2];
+
+                new SaveFiles(args).Run(binlog, outputRoot, reconstruct: true);
                 return;
             }
 
