@@ -100,6 +100,8 @@ namespace BinlogTool
             }
         }
 
+        private string EmptyDllFile;
+
         private void WriteEmptyAssembly(string physicalReferencePath)
         {
             var directory = Path.GetDirectoryName(physicalReferencePath);
@@ -116,10 +118,18 @@ namespace BinlogTool
                 return;
             }
 
-            var args = new ProcessStartInfo(csc, "/nologo /nowarn:CS2008 /t:library /out:" + Path.GetFileName(physicalReferencePath));
-            args.WorkingDirectory = directory;
-            var process = Process.Start(args);
-            process.WaitForExit();
+            if (EmptyDllFile == null || !File.Exists(EmptyDllFile))
+            {
+                var args = new ProcessStartInfo(csc, "/nologo /nowarn:CS2008 /t:library /out:" + Path.GetFileName(physicalReferencePath));
+                args.WorkingDirectory = directory;
+                var process = Process.Start(args);
+                process.WaitForExit();
+                EmptyDllFile = physicalReferencePath;
+            }
+            else
+            {
+                File.Copy(EmptyDllFile, physicalReferencePath);
+            }
         }
 
         private string[] TryGetReferences(string argument)
