@@ -95,7 +95,11 @@ namespace BinlogTool
                     var sourceRelativePath = argument.TrimQuotes();
                     var physicalSourcePath = Path.Combine(physicalProjectDirectory, sourceRelativePath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar));
                     physicalSourcePath = Path.GetFullPath(physicalSourcePath);
-                    WriteFile(physicalSourcePath, "");
+
+                    if (!File.Exists(physicalSourcePath))
+                    {
+                        WriteFile(physicalSourcePath, "");
+                    }
                 }
             }
         }
@@ -189,6 +193,11 @@ namespace BinlogTool
                 try
                 {
                     string pathOnDisk = GetPhysicalPath(outputDirectory, filePath);
+                    if (File.Exists(pathOnDisk))
+                    {
+                        continue;
+                    }
+
                     string text = file.Text;
                     text = ProcessProjectFileText(outputDirectory, filePath, pathOnDisk, text);
                     WriteFile(pathOnDisk, text);
