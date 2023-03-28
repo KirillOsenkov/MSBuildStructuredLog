@@ -59,19 +59,25 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 text = text.NormalizeLineBreaks();
             }
 
-            if (deduplicationMap.TryGetValue(text, out string existing))
+            lock (deduplicationMap)
             {
-                return existing;
-            }
+                if (deduplicationMap.TryGetValue(text, out string existing))
+                {
+                    return existing;
+                }
 
-            deduplicationMap[text] = text;
+                deduplicationMap[text] = text;
+            }
 
             return text;
         }
 
         public bool Contains(string text)
         {
-            return deduplicationMap.ContainsKey(text);
+            lock (deduplicationMap)
+            {
+                return deduplicationMap.ContainsKey(text);
+            }
         }
 
         public IDictionary<string, string> InternStringDictionary(IDictionary<string, string> inputDictionary)
