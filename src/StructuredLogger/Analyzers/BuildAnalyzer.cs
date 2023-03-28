@@ -22,7 +22,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private readonly DoubleWritesAnalyzer doubleWritesAnalyzer;
         private readonly ResolveAssemblyReferenceAnalyzer resolveAssemblyReferenceAnalyzer;
         private readonly CppAnalyzer cppAnalyzer;
-        private readonly Dictionary<string, TaskStatistic> taskDurations = new ();
+        private readonly Dictionary<string, TaskStatistic> taskDurations = new();
         private readonly List<Folder> analyzerReports = new List<Folder>();
         private readonly List<Folder> generatorReports = new List<Folder>();
         private int index;
@@ -233,15 +233,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     var taskItem = new Item
                     {
                         Name = Intern(kvp.Key),
-                        Text = Intern($"{TextUtilities.DisplayDuration(kvp.Value.Duration)}, count={kvp.Value.Count}")
+                        Text = Intern($"{TextUtilities.DisplayDuration(kvp.Value.Duration)}, {kvp.Value.Count} calls.")
                     };
-                    var parentDurations = kvp.Value.ChildNodes.OrderByDescending(kv => kv.Value.Duration).Take(10);
-                    foreach (var parentDuration in parentDurations)
+                    var childNodes = kvp.Value.ChildNodes.OrderByDescending(kv => kv.Value.Duration).Take(10);
+                    foreach (var durationNodes in childNodes)
                     {
                         taskItem.AddChild(new Item
                         {
-                            Name = Intern(parentDuration.Key),
-                            Text = Intern($"{TextUtilities.DisplayDuration(parentDuration.Value.Duration)}, count={parentDuration.Value.Count}")                       });
+                            Name = Intern(durationNodes.Key),
+                            Text = Intern($"{TextUtilities.DisplayDuration(durationNodes.Value.Duration)}, {durationNodes.Value.Count} calls.")
+                        });
                     }
                     top10Tasks.AddChild(taskItem);
                 }
