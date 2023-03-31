@@ -20,8 +20,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private readonly ConcurrentDictionary<int, Project> _projectIdToProjectMap = new ConcurrentDictionary<int, Project>();
 
-        private readonly ConcurrentDictionary<string, string> _taskToAssemblyMap =
-            new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, string> _taskToAssemblyMap =
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         private readonly object syncLock = new object();
 
@@ -1069,8 +1069,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <returns>The assembly location for the task.</returns>
         public string GetTaskAssembly(string taskName)
         {
-            string assembly;
-            return _taskToAssemblyMap.TryGetValue(taskName, out assembly) ? assembly : string.Empty;
+            lock (_taskToAssemblyMap)
+            {
+                return _taskToAssemblyMap.TryGetValue(taskName, out string assembly) ? assembly : string.Empty;
+            }
         }
 
         /// <summary>
@@ -1080,7 +1082,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <param name="assembly">The assembly location.</param>
         public void SetTaskAssembly(string taskName, string assembly)
         {
-            _taskToAssemblyMap.GetOrAdd(taskName, t => assembly);
+            lock (_taskToAssemblyMap)
+            {
+                // Important to overwrite because the Using task ... message is usually logged immediately before the TaskStarted
+                // so need to make sure we remember the last assembly used for this task
+                // see issue https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/669
+                _taskToAssemblyMap[taskName] = assembly;
+            }
         }
 
         private Folder GetOrCreateGlobalPropertiesFolder(TreeNode project, IEnumerable globalProperties)
