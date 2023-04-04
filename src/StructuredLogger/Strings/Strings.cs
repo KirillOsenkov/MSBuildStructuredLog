@@ -149,9 +149,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 .Replace("{3}", @"(?<File>.*) \((?<Line>\d+),(?<Column>\d+)\)$");
             PropertyReassignmentRegex = new Regex(propertyReassignment, RegexOptions.Compiled | RegexOptions.Singleline);
 
-            // Note: This string is not localized in MSBuild.
-            const string messageIncludeResponseFileString = @$"^Included response file: (?<File>((.:)?[^:\n\r]*?))$";
-            MessageIncludedResponseFile = new Regex(messageIncludeResponseFileString, RegexOptions.Compiled | RegexOptions.Singleline);
+            string deferredResponseFile = "^" + GetString("DeferredResponseFile")
+                .Replace(@"{0}", @"(?<File>((.:)?[^:\n\r]*?))") + "$";
+            DeferredResponseFileRegex = new Regex(deferredResponseFile, RegexOptions.Compiled | RegexOptions.Singleline);
 
             MetaprojectGenerated = GetString("MetaprojectGenerated");
             string messageMetaprojectGeneratedString = MetaprojectGenerated.Replace(@"{0}", @"(?<File>((.:)?[^:\n\r]*?))");
@@ -255,7 +255,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static Regex ProjectImportSkippedExpressionEvaluatedToEmptyRegex { get; set; }
         public static Regex ProjectImportSkippedNoMatchesRegex { get; set; }
         public static Regex PropertyReassignmentRegex { get; set; }
-        public static Regex MessageIncludedResponseFile { get; set; }
+        public static Regex DeferredResponseFileRegex { get; set; }
         public static Regex MessageMetaprojectGenerated { get; set; }
         public static Regex UnifiedPrimaryReferencePrefix { get; set; }
         public static Regex PrimaryReferencePrefix { get; set; }

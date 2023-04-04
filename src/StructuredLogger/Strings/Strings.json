@@ -1,5 +1,6 @@
 {
   "en-US": {
+    "DeferredResponseFile": "Included response file: {0}",
     "MetaprojectGenerated": "Metaproject \"{0}\" generated.",
     "OutputItemParameterMessagePrefix": "Output Item(s): ",
     "General.ProjectUndefineProperties": "Removing Properties for project \"{0}\":",
@@ -53,6 +54,7 @@
     "Copy.FileComment": "Copying file from \"{0}\" to \"{1}\"."
   },
   "de-DE": {
+    "DeferredResponseFile": "Included response file: {0}",
     "MetaprojectGenerated": "Das Metaprojekt \"{0}\" wurde generiert.",
     "OutputItemParameterMessagePrefix": "Ausgegebene Elemente: ",
     "General.ProjectUndefineProperties": "Eigenschaften für Projekt \"{0}\" werden entfernt:",
@@ -106,6 +108,7 @@
     "Copy.FileComment": "Die Datei wird von \"{0}\" in \"{1}\" kopiert."
   },
   "it-IT": {
+    "DeferredResponseFile": "Included response file: {0}",
     "MetaprojectGenerated": "Il metaprogetto \"{0}\" è stato generato.",
     "OutputItemParameterMessagePrefix": "Elementi di output: ",
     "General.ProjectUndefineProperties": "Rimozione delle proprietà per il progetto \"{0}\":",
@@ -159,6 +162,7 @@
     "Copy.FileComment": "Copia del file da \"{0}\" a \"{1}\"."
   },
   "es-ES": {
+    "DeferredResponseFile": "Included response file: {0}",
     "MetaprojectGenerated": "Se generó el metaproyecto \"{0}\".",
     "OutputItemParameterMessagePrefix": "Elementos de salida: ",
     "General.ProjectUndefineProperties": "Quitando propiedades del proyecto \"{0}\":",
@@ -212,6 +216,7 @@
     "Copy.FileComment": "Copiando el archivo de \"{0}\" en \"{1}\"."
   },
   "fr-FR": {
+    "DeferredResponseFile": "Included response file: {0}",
     "MetaprojectGenerated": "Le métaprojet \"{0}\" a été généré.",
     "OutputItemParameterMessagePrefix": "Élément(s) en sortie : ",
     "General.ProjectUndefineProperties": "Suppression des propriétés du projet \"{0}\" :",
@@ -265,6 +270,7 @@
     "Copy.FileComment": "Copie du fichier de \"{0}\" vers \"{1}\"."
   },
   "cs-CZ": {
+    "DeferredResponseFile": "Included response file: {0}",
     "MetaprojectGenerated": "Metaprojekt {0} byl vygenerován.",
     "OutputItemParameterMessagePrefix": "Výstupní položky: ",
     "General.ProjectUndefineProperties": "Odstraňování vlastností projektu {0}:",
@@ -318,6 +324,7 @@
     "Copy.FileComment": "Probíhá kopírování souboru z umístění {0} do umístění {1}."
   },
   "ja-JP": {
+    "DeferredResponseFile": "Included response file: {0}",
     "MetaprojectGenerated": "メタプロジェクト \"{0}\" が生成されました。",
     "OutputItemParameterMessagePrefix": "出力項目: ",
     "General.ProjectUndefineProperties": "プロジェクト \"{0}\" のプロパティの削除:",
@@ -371,6 +378,7 @@
     "Copy.FileComment": "\"{0}\" から \"{1}\" へファイルをコピーしています。"
   },
   "ko-KR": {
+    "DeferredResponseFile": "Included response file: {0}",
     "MetaprojectGenerated": "메타프로젝트 \"{0}\"이(가) 생성되었습니다.",
     "OutputItemParameterMessagePrefix": "출력 항목: ",
     "General.ProjectUndefineProperties": "\"{0}\" 프로젝트에 대한 속성 제거:",
@@ -424,6 +432,7 @@
     "Copy.FileComment": "\"{0}\"에서 \"{1}\"(으)로 파일을 복사하고 있습니다."
   },
   "ru-RU": {
+    "DeferredResponseFile": "Included response file: {0}",
     "MetaprojectGenerated": "Создан метапроект \"{0}\".",
     "OutputItemParameterMessagePrefix": "Выходных элементов: ",
     "General.ProjectUndefineProperties": "Удаление свойств для проекта \"{0}\":",
@@ -477,6 +486,7 @@
     "Copy.FileComment": "Копирование файла из \"{0}\" в \"{1}\"."
   },
   "pl-PL": {
+    "DeferredResponseFile": "Included response file: {0}",
     "MetaprojectGenerated": "Wygenerowano metaprojekt „{0}”.",
     "OutputItemParameterMessagePrefix": "Elementy wyjściowe: ",
     "General.ProjectUndefineProperties": "Usuwanie właściwości projektu {0}:",
@@ -530,6 +540,7 @@
     "Copy.FileComment": "Kopiowanie pliku z „{0}” do „{1}”."
   },
   "pt-BR": {
+    "DeferredResponseFile": "Included response file: {0}",
     "MetaprojectGenerated": "Metaprojeto \"{0}\" gerado.",
     "OutputItemParameterMessagePrefix": "Itens de Saída(s): ",
     "General.ProjectUndefineProperties": "Removendo Propriedades do projeto \"{0}\":",
@@ -583,6 +594,7 @@
     "Copy.FileComment": "Copiando o arquivo de \"{0}\" para \"{1}\"."
   },
   "tr-TR": {
+    "DeferredResponseFile": "Included response file: {0}",
     "MetaprojectGenerated": "\"{0}\" meta projesi oluşturuldu.",
     "OutputItemParameterMessagePrefix": "Çıkış Öğeleri: ",
     "General.ProjectUndefineProperties": "\"{0}\" projesinin Özellikleri kaldırılıyor:",
@@ -636,6 +648,7 @@
     "Copy.FileComment": "Dosya \"{0}\" konumundan \"{1}\" konumuna kopyalanıyor."
   },
   "zh-Hans": {
+    "DeferredResponseFile": "Included response file: {0}",
     "MetaprojectGenerated": "已生成元项目“{0}”。",
     "OutputItemParameterMessagePrefix": "输出项: ",
     "General.ProjectUndefineProperties": "移除项目“{0}”的属性:",
