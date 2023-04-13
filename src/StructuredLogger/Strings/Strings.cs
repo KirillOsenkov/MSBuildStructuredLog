@@ -149,8 +149,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 .Replace("{3}", @"(?<File>.*) \((?<Line>\d+),(?<Column>\d+)\)$");
             PropertyReassignmentRegex = new Regex(propertyReassignment, RegexOptions.Compiled | RegexOptions.Singleline);
 
-            string deferredResponseFile = "^" + GetString("DeferredResponseFile")
-                .Replace(@"{0}", @"(?<File>((.:)?[^:\n\r]*?))") + "$";
+            // MSBuild 17.6 shipped with this hardcoded to English (the first part of the regex), but it was switched to a different
+            // localized message in https://github.com/dotnet/msbuild/pull/8665. Support both here.
+            string deferredResponseFile = ("^(?:Included response file: {0}|" + GetString("PickedUpSwitchesFromAutoResponse") + ")$")
+                .Replace(@"{0}", @"(?<File>((.:)?[^:\n\r]*?))");
             DeferredResponseFileRegex = new Regex(deferredResponseFile, RegexOptions.Compiled | RegexOptions.Singleline);
 
             MetaprojectGenerated = GetString("MetaprojectGenerated");

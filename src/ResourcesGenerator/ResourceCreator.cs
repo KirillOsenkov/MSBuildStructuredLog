@@ -80,7 +80,7 @@ namespace ResourcesGenerator
             "ProjectImportSkippedExpressionEvaluatedToEmpty",
             "SkipTargetBecauseOutputsUpToDate",
             "MetaprojectGenerated",
-            "DeferredResponseFile"
+            "PickedUpSwitchesFromAutoResponse"
         };
 
         public static Dictionary<string, string> Cultures = new Dictionary<string, string>
