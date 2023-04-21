@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class StringCache
     {
-        private Dictionary<string, string> deduplicationMap = new Dictionary<string, string>();
+        private ConcurrentDictionary<string, string> deduplicationMap = new ConcurrentDictionary<string, string>();
 
         public IEnumerable<string> Instances { get; set; }
 
@@ -59,14 +60,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 text = text.NormalizeLineBreaks();
             }
 
-            if (deduplicationMap.TryGetValue(text, out string existing))
-            {
-                return existing;
-            }
-
-            deduplicationMap[text] = text;
-
-            return text;
+            return deduplicationMap.GetOrAdd(text, text);
         }
 
         public bool Contains(string text)

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -16,7 +16,7 @@ namespace BinlogTool
             this.args = args;
         }
 
-        public void Run(string binlog, string outputDirectory)
+        public void Run(string binlog, string outputDirectory, bool reconstruct = false)
         {
             if (string.IsNullOrEmpty(binlog) || !File.Exists(binlog))
             {
@@ -34,7 +34,10 @@ namespace BinlogTool
             var build = BinaryLog.ReadBuild(binlog);
             SaveFilesFrom(build, outputDirectory);
 
-            GenerateSources(build, outputDirectory);
+            if (reconstruct)
+            {
+                GenerateSources(build, outputDirectory);
+            }
         }
 
         private void GenerateSources(Build build, string outputDirectory)
@@ -42,7 +45,14 @@ namespace BinlogTool
             var compilerInvocations = CompilerInvocationsReader.ReadInvocations(build);
             foreach (var invocation in compilerInvocations)
             {
-                GenerateSourcesForProject(invocation, outputDirectory);
+                try
+                {
+                    GenerateSourcesForProject(invocation, outputDirectory);
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine(ex.ToString());
+                }
             }
         }
 
@@ -57,17 +67,27 @@ namespace BinlogTool
                 return;
             }
 
-            var arguments = invocation.CommandLineArguments.Tokenize();
+            var commandLineArgumentText = invocation.CommandLineArguments;
+
+            var arguments = commandLineArgumentText.Tokenize();
             foreach (var argument in arguments)
             {
                 if (argument.StartsWith("/"))
                 {
-                    var reference = TryGetReference(argument);
-                    if (reference != null)
+                    var references = TryGetReferences(argument);
+                    foreach (var referenceText in references)
                     {
-                        reference = ArchiveFile.CalculateArchivePath(reference);
+                        var reference = ArchiveFile.CalculateArchivePath(referenceText);
                         var physicalReferencePath = GetPhysicalPath(outputDirectory, reference);
-                        WriteEmptyAssembly(physicalReferencePath);
+
+                        try
+                        {
+                            WriteEmptyAssembly(physicalReferencePath);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.Error.WriteLine(ex.ToString());
+                        }
                     }
                 }
                 else
@@ -75,10 +95,16 @@ namespace BinlogTool
                     var sourceRelativePath = argument.TrimQuotes();
                     var physicalSourcePath = Path.Combine(physicalProjectDirectory, sourceRelativePath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar));
                     physicalSourcePath = Path.GetFullPath(physicalSourcePath);
-                    WriteFile(physicalSourcePath, "");
+
+                    if (!File.Exists(physicalSourcePath))
+                    {
+                        WriteFile(physicalSourcePath, "");
+                    }
                 }
             }
         }
+
+        private string EmptyDllFile;
 
         private void WriteEmptyAssembly(string physicalReferencePath)
         {
@@ -96,38 +122,61 @@ namespace BinlogTool
                 return;
             }
 
-            var args = new ProcessStartInfo(csc, "/nologo /nowarn:CS2008 /t:library /out:" + Path.GetFileName(physicalReferencePath));
-            args.WorkingDirectory = directory;
-            var process = Process.Start(args);
-            process.WaitForExit();
-        }
-
-        private string TryGetReference(string argument)
-        {
-            string reference;
-            if (argument.StartsWith("/r:"))
+            if (EmptyDllFile == null || !File.Exists(EmptyDllFile))
             {
-                reference = argument.Substring(3);
-            }
-            else if (argument.StartsWith("/reference:"))
-            {
-                reference = argument.Substring(11);
+                var args = new ProcessStartInfo(csc, "/nologo /nowarn:CS2008 /t:library /out:" + Path.GetFileName(physicalReferencePath));
+                args.WorkingDirectory = directory;
+                var process = Process.Start(args);
+                process.WaitForExit();
+                EmptyDllFile = physicalReferencePath;
             }
             else
             {
-                return null;
+                File.Copy(EmptyDllFile, physicalReferencePath);
+            }
+        }
+
+        private string[] TryGetReferences(string argument)
+        {
+            if (argument.StartsWith("/r:"))
+            {
+                argument = argument.Substring(3);
+            }
+            else if (argument.StartsWith("/reference:"))
+            {
+                argument = argument.Substring(11);
+            }
+            else
+            {
+                return Array.Empty<string>();
             }
 
-            if (reference.Length >= 2)
+            string[] result = argument.Split(',');
+
+            for (int i = 0; i < result.Length; i++)
             {
-                // Remove enclosing quotes if present
-                if ((reference.StartsWith('\'') && reference.EndsWith('\'')) ||
-                    (reference.StartsWith('"') && reference.EndsWith('"')))
+                var reference = result[i];
+
+                if (reference.Length >= 2)
                 {
-                    return reference.Substring(1, reference.Length - 2);
+                    // Remove enclosing quotes if present
+                    if ((reference.StartsWith('\'') || reference.StartsWith('"')) &&
+                        (reference.EndsWith('\'') || reference.EndsWith('"')))
+                    {
+                        reference = reference.Substring(1, reference.Length - 2);
+                    }
                 }
+
+                int equals = reference.IndexOf('=');
+                if (equals >= 0 && equals < reference.Length - 1)
+                {
+                    reference = reference.Substring(equals + 1);
+                }
+
+                result[i] = reference;
             }
-            return reference;
+
+            return result;
         }
 
         private void SaveFilesFrom(Build build, string outputDirectory)
@@ -144,6 +193,11 @@ namespace BinlogTool
                 try
                 {
                     string pathOnDisk = GetPhysicalPath(outputDirectory, filePath);
+                    if (File.Exists(pathOnDisk))
+                    {
+                        continue;
+                    }
+
                     string text = file.Text;
                     text = ProcessProjectFileText(outputDirectory, filePath, pathOnDisk, text);
                     WriteFile(pathOnDisk, text);

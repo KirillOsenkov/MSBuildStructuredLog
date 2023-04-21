@@ -21,23 +21,17 @@ namespace ResourcesGenerator
             var instance =
                 instances.FirstOrDefault(i => !i.MSBuildPath.Contains("Preview")) ??
                 instances.FirstOrDefault();
-            var msbuildPath = instance?.MSBuildPath;
 
-            var otherCandidates = new[]
+            var candidates = new[]
             {
-                @"C:\msbuild\artifacts\bin\bootstrap\net472\MSBuild\Current\Bin",
+                @"C:\msbuild\artifacts\bin\bootstrap\net472\MSBuild\Current\Bin\amd64",
+                instance?.MSBuildPath,
                 Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
                     "Microsoft Visual Studio", "2022", "Enterprise", "MSBuild", "Current", "Bin"),
-                Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
-                    "Microsoft Visual Studio", "2019", "Enterprise", "MSBuild", "Current", "Bin")
             };
 
-            if (msbuildPath == null)
-            {
-                msbuildPath = otherCandidates.FirstOrDefault(Directory.Exists);
-            }
+            var msbuildPath = candidates.FirstOrDefault(c => c != null && Directory.Exists(c));
 
             if (Directory.Exists(msbuildPath))
             {

@@ -149,9 +149,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 .Replace("{3}", @"(?<File>.*) \((?<Line>\d+),(?<Column>\d+)\)$");
             PropertyReassignmentRegex = new Regex(propertyReassignment, RegexOptions.Compiled | RegexOptions.Singleline);
 
-            // Note: This string is not localized in MSBuild.
-            const string messageIncludeResponseFileString = @$"^Included response file: (?<File>((.:)?[^:\n\r]*?))$";
-            MessageIncludedResponseFile = new Regex(messageIncludeResponseFileString, RegexOptions.Compiled | RegexOptions.Singleline);
+            // MSBuild 17.6 shipped with this hardcoded to English (the first part of the regex), but it was switched to a different
+            // localized message in https://github.com/dotnet/msbuild/pull/8665. Support both here.
+            string deferredResponseFile = ("^(?:Included response file: {0}|" + GetString("PickedUpSwitchesFromAutoResponse") + ")$")
+                .Replace(@"{0}", @"(?<File>((.:)?[^:\n\r]*?))");
+            DeferredResponseFileRegex = new Regex(deferredResponseFile, RegexOptions.Compiled | RegexOptions.Singleline);
 
             MetaprojectGenerated = GetString("MetaprojectGenerated");
             string messageMetaprojectGeneratedString = MetaprojectGenerated.Replace(@"{0}", @"(?<File>((.:)?[^:\n\r]*?))");
@@ -255,7 +257,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static Regex ProjectImportSkippedExpressionEvaluatedToEmptyRegex { get; set; }
         public static Regex ProjectImportSkippedNoMatchesRegex { get; set; }
         public static Regex PropertyReassignmentRegex { get; set; }
-        public static Regex MessageIncludedResponseFile { get; set; }
+        public static Regex DeferredResponseFileRegex { get; set; }
         public static Regex MessageMetaprojectGenerated { get; set; }
         public static Regex UnifiedPrimaryReferencePrefix { get; set; }
         public static Regex PrimaryReferencePrefix { get; set; }
@@ -507,6 +509,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string MSBuildVersionPrefix => "MSBuild version = ";
         public static string MSBuildExecutablePathPrefix => "MSBuild executable path = ";
         public static string Warnings = "Warnings";
+        public static string NodesReusal = "Reusing node";
+        public static string NodesManagementNode = "Nodes Management";
 
         // These aren't localized, see https://github.com/microsoft/MSBuildSdks/blob/543e965191417dee65471ee57a6702289847b49b/src/Artifacts/Tasks/Robocopy.cs#L66-L77
         private const string RobocopyFileCopiedMessage = "Copied {0} to {1}";

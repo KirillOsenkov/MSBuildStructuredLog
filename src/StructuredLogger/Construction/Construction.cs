@@ -20,8 +20,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private readonly ConcurrentDictionary<int, Project> _projectIdToProjectMap = new ConcurrentDictionary<int, Project>();
 
-        private readonly ConcurrentDictionary<string, string> _taskToAssemblyMap =
-            new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, string> _taskToAssemblyMap =
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         private readonly object syncLock = new object();
 
@@ -525,19 +525,28 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                         // Pre-create folder before starting the fill on the background thread.
                         Folder globFolder = null;
+                        Folder itemsNode = null;
+                        Folder propertiesFolder = null;
                         if (projectEvaluationFinished.GlobalProperties != null)
                         {
                             globFolder = GetOrCreateGlobalPropertiesFolder(projectEvaluation, projectEvaluationFinished.GlobalProperties);
                         }
 
-                        var itemsNode = projectEvaluation.GetOrCreateNodeWithName<Folder>(Strings.Items, addAtBeginning: true);
-                        var propertiesFolder = projectEvaluation.GetOrCreateNodeWithName<Folder>(Strings.Properties, addAtBeginning: true);
+                        if (projectEvaluationFinished.Items != null)
+                        {
+                            itemsNode = projectEvaluation.GetOrCreateNodeWithName<Folder>(Strings.Items, addAtBeginning: true);
+                        }
+
+                        if (projectEvaluationFinished.Properties != null)
+                        {
+                            propertiesFolder = projectEvaluation.GetOrCreateNodeWithName<Folder>(Strings.Properties, addAtBeginning: true);
+                        }
 
                         bgJobPool.Add(new System.Threading.Tasks.Task(() =>
                         {
                             if (projectEvaluationFinished.GlobalProperties != null && globFolder != null)
                             {
-                                AddProperties(projectEvaluation, (IEnumerable<KeyValuePair<string, string>>)projectEvaluationFinished.GlobalProperties, projectEvaluation);
+                                AddProperties(globFolder, (IEnumerable<KeyValuePair<string, string>>)projectEvaluationFinished.GlobalProperties, projectEvaluation);
                             }
 
                             AddProperties(propertiesFolder, projectEvaluation, projectEvaluationFinished.Properties);
@@ -867,13 +876,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
 
                 Folder targetsNode = null;
+                Folder itemFolder = null;
+                Folder propertyFolder = null;
                 if (!string.IsNullOrEmpty(args.TargetNames))
                 {
                     targetsNode = project.GetOrCreateNodeWithName<Folder>(Strings.EntryTargets);
                 }
 
-                var itemFolder = project.GetOrCreateNodeWithName<Folder>(Strings.Items, addAtBeginning: true);
-                var propertyFolder = project.GetOrCreateNodeWithName<Folder>(Strings.Properties, addAtBeginning: true);
+                if (args.Items != null)
+                {
+                    itemFolder = project.GetOrCreateNodeWithName<Folder>(Strings.Items, addAtBeginning: true);
+                }
+
+                if (args.Properties != null)
+                {
+                    propertyFolder = project.GetOrCreateNodeWithName<Folder>(Strings.Properties, addAtBeginning: true);
+                }
 
                 bgJobPool.Add(new System.Threading.Tasks.Task(() =>
                 {
@@ -1051,8 +1069,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <returns>The assembly location for the task.</returns>
         public string GetTaskAssembly(string taskName)
         {
-            string assembly;
-            return _taskToAssemblyMap.TryGetValue(taskName, out assembly) ? assembly : string.Empty;
+            lock (_taskToAssemblyMap)
+            {
+                return _taskToAssemblyMap.TryGetValue(taskName, out string assembly) ? assembly : string.Empty;
+            }
         }
 
         /// <summary>
@@ -1062,7 +1082,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <param name="assembly">The assembly location.</param>
         public void SetTaskAssembly(string taskName, string assembly)
         {
-            _taskToAssemblyMap.GetOrAdd(taskName, t => assembly);
+            lock (_taskToAssemblyMap)
+            {
+                // Important to overwrite because the Using task ... message is usually logged immediately before the TaskStarted
+                // so need to make sure we remember the last assembly used for this task
+                // see issue https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/669
+                _taskToAssemblyMap[taskName] = assembly;
+            }
         }
 
         private Folder GetOrCreateGlobalPropertiesFolder(TreeNode project, IEnumerable globalProperties)
@@ -1123,30 +1149,28 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 if (project != null)
                 {
-                    if (!tfvFound)
+
+                    if (!tfvFound && string.Equals(kvp.Key, Strings.TargetFramework, StringComparison.OrdinalIgnoreCase))
                     {
-                        if (string.Equals(kvp.Key, Strings.TargetFramework, StringComparison.OrdinalIgnoreCase))
+                        project.TargetFramework = kvp.Value;
+                        tfvFound = true;
+                    }
+                    else if (!tfvFound && string.Equals(kvp.Key, Strings.TargetFrameworks, StringComparison.OrdinalIgnoreCase))
+                    {
+                        // we want TargetFramework to take precedence over TargetFrameworks when both are present
+                        if (string.IsNullOrEmpty(project.TargetFramework) && !string.IsNullOrEmpty(kvp.Value))
                         {
                             project.TargetFramework = kvp.Value;
                             tfvFound = true;
                         }
-                        else if (string.Equals(kvp.Key, Strings.TargetFrameworks, StringComparison.OrdinalIgnoreCase))
-                        {
-                            // we want TargetFramework to take precedence over TargetFrameworks when both are present
-                            if (string.IsNullOrEmpty(project.TargetFramework) && !string.IsNullOrEmpty(kvp.Value))
-                            {
-                                project.TargetFramework = kvp.Value;
-                                tfvFound = true;
-                            }
-                        }
-                        // If neither of the above are there - look for the old project system
-                        else if (project.TargetFramework is null && string.Equals(kvp.Key, Strings.TargetFrameworkVersion, StringComparison.OrdinalIgnoreCase))
-                        {
-                            // Note this is untranslated, so e.g. "v4.6.2" instead of "net462" - this is intentional as it
-                            // renders the badge for all projects, but you can still use this difference to tell what is/isn't an SDK project.
-                            project.TargetFramework = kvp.Value;
-                            tfvFound = true;
-                        }
+                    }
+                    // If neither of the above are there - look for the old project system
+                    else if (!tfvFound && project.TargetFramework is null && string.Equals(kvp.Key, Strings.TargetFrameworkVersion, StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Note this is untranslated, so e.g. "v4.6.2" instead of "net462" - this is intentional as it
+                        // renders the badge for all projects, but you can still use this difference to tell what is/isn't an SDK project.
+                        project.TargetFramework = kvp.Value;
+                        tfvFound = true;
                     }
                     else if (!platformFound && string.Equals(kvp.Key, Strings.Platform, StringComparison.OrdinalIgnoreCase))
                     {

@@ -14,6 +14,7 @@ namespace ResourcesGenerator
     {
         private static string[] msBuildDlls = new string[]
         {
+            "MSBuild.exe",
             "Microsoft.Build.dll",
             "Microsoft.Build.Tasks.Core.dll",
             "Microsoft.Build.Utilities.Core.dll"
@@ -78,7 +79,8 @@ namespace ResourcesGenerator
             "CouldNotResolveSdk",
             "ProjectImportSkippedExpressionEvaluatedToEmpty",
             "SkipTargetBecauseOutputsUpToDate",
-            "MetaprojectGenerated"
+            "MetaprojectGenerated",
+            "PickedUpSwitchesFromAutoResponse"
         };
 
         public static Dictionary<string, string> Cultures = new Dictionary<string, string>

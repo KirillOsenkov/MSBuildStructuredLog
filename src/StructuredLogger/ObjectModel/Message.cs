@@ -50,7 +50,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return match;
             }
 
-            match = Strings.MessageIncludedResponseFile.Match(Text);
+            match = Strings.DeferredResponseFileRegex.Match(Text);
             if (match.Success)
             {
                 return match;

@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="StructuredLogViewer.Controls.TimelineControl"
+<UserControl x:Class="StructuredLogViewer.Controls.TimelineControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -14,7 +14,6 @@
       </Grid>
     </ScrollViewer>
     <StackPanel Margin="0,0,30,30"
-                Background="White"
                 Orientation="Horizontal"
                 ToolTip="Ctrl+MouseWheel to Zoom"
                 HorizontalAlignment="Right"

@@ -1,5 +1,6 @@
 {
   "en-US": {
+    "PickedUpSwitchesFromAutoResponse": "Some command line switches were read from the auto-response file \"{0}\". To disable this file, use the \"-noAutoResponse\" switch.",
     "MetaprojectGenerated": "Metaproject \"{0}\" generated.",
     "OutputItemParameterMessagePrefix": "Output Item(s): ",
     "General.ProjectUndefineProperties": "Removing Properties for project \"{0}\":",
@@ -53,6 +54,7 @@
     "Copy.FileComment": "Copying file from \"{0}\" to \"{1}\"."
   },
   "de-DE": {
+    "PickedUpSwitchesFromAutoResponse": "Einige Befehlszeilenschalter wurden aus der automatischen Antwortdatei \"{0}\" gelesen. Verwenden Sie den Schalter \"-noAutoResponse\", um diese Datei zu deaktivieren.",
     "MetaprojectGenerated": "Das Metaprojekt \"{0}\" wurde generiert.",
     "OutputItemParameterMessagePrefix": "Ausgegebene Elemente: ",
     "General.ProjectUndefineProperties": "Eigenschaften für Projekt \"{0}\" werden entfernt:",
@@ -106,6 +108,7 @@
     "Copy.FileComment": "Die Datei wird von \"{0}\" in \"{1}\" kopiert."
   },
   "it-IT": {
+    "PickedUpSwitchesFromAutoResponse": "Alcune opzioni della riga di comando sono state lette dal file di risposta automatica \"{0}\". Per disabilitare questo file, usare l'opzione \"-noAutoResponse\".",
     "MetaprojectGenerated": "Il metaprogetto \"{0}\" è stato generato.",
     "OutputItemParameterMessagePrefix": "Elementi di output: ",
     "General.ProjectUndefineProperties": "Rimozione delle proprietà per il progetto \"{0}\":",
@@ -159,6 +162,7 @@
     "Copy.FileComment": "Copia del file da \"{0}\" a \"{1}\"."
   },
   "es-ES": {
+    "PickedUpSwitchesFromAutoResponse": "Algunos modificadores de la línea de comandos se leyeron del archivo de respuesta automática \"{0}\". Para deshabilitar este archivo, use el modificador \"-noAutoResponse\".",
     "MetaprojectGenerated": "Se generó el metaproyecto \"{0}\".",
     "OutputItemParameterMessagePrefix": "Elementos de salida: ",
     "General.ProjectUndefineProperties": "Quitando propiedades del proyecto \"{0}\":",
@@ -212,6 +216,7 @@
     "Copy.FileComment": "Copiando el archivo de \"{0}\" en \"{1}\"."
   },
   "fr-FR": {
+    "PickedUpSwitchesFromAutoResponse": "Certains commutateurs de ligne de commande sont issus du fichier réponse automatique \"{0}\". Ajoutez le commutateur \"-noAutoResponse\" pour le désactiver.",
     "MetaprojectGenerated": "Le métaprojet \"{0}\" a été généré.",
     "OutputItemParameterMessagePrefix": "Élément(s) en sortie : ",
     "General.ProjectUndefineProperties": "Suppression des propriétés du projet \"{0}\" :",
@@ -265,6 +270,7 @@
     "Copy.FileComment": "Copie du fichier de \"{0}\" vers \"{1}\"."
   },
   "cs-CZ": {
+    "PickedUpSwitchesFromAutoResponse": "Některé přepínače příkazového řádku byly načteny ze souboru automatických odpovědí {0}. Pokud chcete tento soubor zakázat, použijte přepínač -noAutoResponse.",
     "MetaprojectGenerated": "Metaprojekt {0} byl vygenerován.",
     "OutputItemParameterMessagePrefix": "Výstupní položky: ",
     "General.ProjectUndefineProperties": "Odstraňování vlastností projektu {0}:",
@@ -318,6 +324,7 @@
     "Copy.FileComment": "Probíhá kopírování souboru z umístění {0} do umístění {1}."
   },
   "ja-JP": {
+    "PickedUpSwitchesFromAutoResponse": "コマンド ラインの一部のスイッチは自動応答ファイル \"{0}\" から読み取られたものです。このファイルを無効にするには、\"-noAutoResponse\" スイッチをご使用ください。",
     "MetaprojectGenerated": "メタプロジェクト \"{0}\" が生成されました。",
     "OutputItemParameterMessagePrefix": "出力項目: ",
     "General.ProjectUndefineProperties": "プロジェクト \"{0}\" のプロパティの削除:",
@@ -371,6 +378,7 @@
     "Copy.FileComment": "\"{0}\" から \"{1}\" へファイルをコピーしています。"
   },
   "ko-KR": {
+    "PickedUpSwitchesFromAutoResponse": "자동 지시 파일 \"{0}\"에서 일부 명령줄 스위치를 읽어왔습니다. 이 파일을 사용하지 않도록 설정하려면 \"-noAutoResponse\" 스위치를 사용하세요.",
     "MetaprojectGenerated": "메타프로젝트 \"{0}\"이(가) 생성되었습니다.",
     "OutputItemParameterMessagePrefix": "출력 항목: ",
     "General.ProjectUndefineProperties": "\"{0}\" 프로젝트에 대한 속성 제거:",
@@ -424,6 +432,7 @@
     "Copy.FileComment": "\"{0}\"에서 \"{1}\"(으)로 파일을 복사하고 있습니다."
   },
   "ru-RU": {
+    "PickedUpSwitchesFromAutoResponse": "Некоторые параметры командной строки были считаны из файла автоматического ответа \"{0}\". Чтобы отключить этот файл, используйте параметр \"-noAutoResponse\".",
     "MetaprojectGenerated": "Создан метапроект \"{0}\".",
     "OutputItemParameterMessagePrefix": "Выходных элементов: ",
     "General.ProjectUndefineProperties": "Удаление свойств для проекта \"{0}\":",
@@ -477,6 +486,7 @@
     "Copy.FileComment": "Копирование файла из \"{0}\" в \"{1}\"."
   },
   "pl-PL": {
+    "PickedUpSwitchesFromAutoResponse": "Odczytano pewne przełączniki wiersza polecenia z pliku autoodpowiedzi „{0}”. Aby wyłączyć ten plik, użyj przełącznika „-noAutoResponse”.",
     "MetaprojectGenerated": "Wygenerowano metaprojekt „{0}”.",
     "OutputItemParameterMessagePrefix": "Elementy wyjściowe: ",
     "General.ProjectUndefineProperties": "Usuwanie właściwości projektu {0}:",
@@ -530,6 +540,7 @@
     "Copy.FileComment": "Kopiowanie pliku z „{0}” do „{1}”."
   },
   "pt-BR": {
+    "PickedUpSwitchesFromAutoResponse": "Algumas opções de linha de comando foram lidas do arquivo de resposta automática \"{0}\". Para desabilitar esse arquivo, use a opção \"-noAutoResponse\".",
     "MetaprojectGenerated": "Metaprojeto \"{0}\" gerado.",
     "OutputItemParameterMessagePrefix": "Itens de Saída(s): ",
     "General.ProjectUndefineProperties": "Removendo Propriedades do projeto \"{0}\":",
@@ -583,6 +594,7 @@
     "Copy.FileComment": "Copiando o arquivo de \"{0}\" para \"{1}\"."
   },
   "tr-TR": {
+    "PickedUpSwitchesFromAutoResponse": "Bazı komut satırı anahtarları \"{0}\" otomatik yanıt dosyasından okundu. Bu dosyayı devre dışı bırakmak için \"-noAutoResponse\" anahtarını kullanın.",
     "MetaprojectGenerated": "\"{0}\" meta projesi oluşturuldu.",
     "OutputItemParameterMessagePrefix": "Çıkış Öğeleri: ",
     "General.ProjectUndefineProperties": "\"{0}\" projesinin Özellikleri kaldırılıyor:",
@@ -636,6 +648,7 @@
     "Copy.FileComment": "Dosya \"{0}\" konumundan \"{1}\" konumuna kopyalanıyor."
   },
   "zh-Hans": {
+    "PickedUpSwitchesFromAutoResponse": "将从自动响应文件“{0}”中读取某些命令行开关。若要禁用此文件，请使用“-noAutoResponse”开关。",
     "MetaprojectGenerated": "已生成元项目“{0}”。",
     "OutputItemParameterMessagePrefix": "输出项: ",
     "General.ProjectUndefineProperties": "移除项目“{0}”的属性:",
