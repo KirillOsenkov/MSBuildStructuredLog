@@ -742,13 +742,14 @@ namespace StructuredLogViewer.Controls
                 }
             }
 
+            // Clear highlight when selection failed.
             if (textblock == null && activeTextBlock != null)
             {
                 if (highlight.Parent is Panel parent)
                 {
                     parent.Children.Remove(highlight);
                 }
-
+                activeTextBlock = null;
                 scrollViewer.ScrollToVerticalOffset(0);
                 scrollViewer.ScrollToHorizontalOffset(0);
             }
@@ -1116,8 +1117,8 @@ namespace StructuredLogViewer.Controls
         private void ScrollToElement(TextField hit)
         {
             Point p = GetTextBlockToOverlayGrid(hit);
-            horizontalOffset = p.X > 20 ? p.X - 20 : p.X;
-            verticalOffset = p.Y > 20 ? p.Y - 20 : p.Y;
+            horizontalOffset = (p.X > 20 ? p.X - 20 : p.X) * scaleTransform.ScaleX;
+            verticalOffset = (p.Y > 20 ? p.Y - 20 : p.Y) * scaleTransform.ScaleY;
 
             horizontalOffset = Math.Max(horizontalOffset, 0);
             verticalOffset = Math.Max(verticalOffset, 0);
