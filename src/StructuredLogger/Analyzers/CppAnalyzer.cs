@@ -48,7 +48,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         // time(C:\Program Files (x86)\Microsoft Visual Studio\2019\Preview\VC\Tools\MSVC\14.24.28218\bin\Hostx86\x86\c1xx.dll)=0.83512s < 985096605139 - 985104956295 > BB [C:\Users\yuehuang\AppData\Local\Temp\123\main36.cpp]
         // time(C:\Program Files(x86)\Microsoft Visual Studio\2019\Preview\VC\Tools\MSVC\14.24.28218\bin\Hostx86\x86\c2.dll)=0.01935s < 985104875296 - 985105068765 > BB[C: \Users\yuehuang\AppData\Local\Temp\123\main47.cpp]
-        const string regexBTPlus = @"^time\(.*(c1xx\.dll|c2\.dll)\)=(?'msTime'([0-9]*\.[0-9]+|[0-9]+))s \< (?'startTime'[\d]*) - (?'endTime'[\d]*) \>\s*(BB)?\s*\[(?'filename'[^\]]*)\]$";
+        const string regexBTPlus = @"^time\(.*(c1\.dll|c1xx\.dll|c2\.dll)\)=(?'msTime'([0-9]*\.[0-9]+|[0-9]+))s \< (?'startTime'[\d]*) - (?'endTime'[\d]*) \>\s*(BB)?\s*\[(?'filename'[^\]]*)\]$";
         readonly Regex BTPlus = new Regex(regexBTPlus, RegexOptions.Multiline);
 
         // Lib: Final Total time = 0.00804s < 5881693617253 - 5881693697673 > PB: 143409152 [D:\test\ConsoleApplication2\x64\Debug\ConsoleApplication2.lib] 
@@ -129,7 +129,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             // For this view, de-batch them into individual task units.
             if ((cppTask.Name == MultiToolTaskName || cppTask.Name == CLTaskName) && cppTask.HasChildren)
             {
-                bool usingBTTime = globalBtplus;
+                bool usingBTTime = (cppTask.Name == CLTaskName) && globalBtplus;
                 Dictionary<string, CppTimedNode> blocks = new();
                 DateTime taskStartTime = cppTask.StartTime;
                 DateTime taskCleanUpTime = cppTask.EndTime;
@@ -250,7 +250,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     if (!usingBTTime && child is Property property)
                     {
-                        if (property.Name == Strings.CommandLineArguments && property.Value.Contains("/Bt+"))
+                        if (property.Name == Strings.CommandLineArguments
+                            && (property.Value.Contains("/Bt+") || (property.Value.IndexOf("cl.exe", StringComparison.OrdinalIgnoreCase) >= 0 && globalBtplus)))
                         {
                             usingBTTime = true;
                         }
