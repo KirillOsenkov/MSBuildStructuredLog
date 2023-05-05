@@ -1223,11 +1223,11 @@ Recent:
             {
                 if (node is IHasTitle hasTitle)
                 {
-                    return hasTitle.Title;
+                    return hasTitle.Title ?? "";
                 }
                 else
                 {
-                    return node.ToString();
+                    return node.ToString() ?? "";
                 }
             }
         }
