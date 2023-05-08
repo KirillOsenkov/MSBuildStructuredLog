@@ -17,8 +17,9 @@
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)\key.snk</AssemblyOriginatorKeyFile>
     <DebugType Condition="$(OS) == 'Windows_NT'">embedded</DebugType>
     <LangVersion>latest</LangVersion>
+    <NoWarn>$(NoWarn);NU1701;CS8632</NoWarn>
 
-    <MSBuildPackageVersion>16.10.0</MSBuildPackageVersion>
+    <MSBuildPackageVersion>17.5.0</MSBuildPackageVersion>
     <NuGetVersionNerdbankGitVersioning>3.5.107</NuGetVersionNerdbankGitVersioning>
   </PropertyGroup>
 
