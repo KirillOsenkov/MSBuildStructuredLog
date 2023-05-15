@@ -108,8 +108,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             if (bucket.Value
-                .Select(f => new FileInfo(f))
-                .Select(f => f.FullName)
+                .Select(f => GetFullPath(f))
                 .Distinct()
                 .Count() == 1)
             {
@@ -117,6 +116,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             return true;
+        }
+
+        private static string GetFullPath(string filePath)
+        {
+            try
+            {
+                filePath = new FileInfo(filePath).FullName;
+            }
+            // https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/679
+            catch
+            {
+            }
+
+            return filePath;
         }
     }
 }
