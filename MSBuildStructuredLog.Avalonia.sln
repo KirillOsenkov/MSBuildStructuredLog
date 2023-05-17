@@ -22,6 +22,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TaskRunner", "src\TaskRunne
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StructuredLogViewer.Core", "src\StructuredLogViewer.Core\StructuredLogViewer.Core.csproj", "{3C655C5D-22C3-4B8D-969C-3FC497294703}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StructuredLogViewer.Avalonia.Desktop", "src\StructuredLogViewer.Avalonia.Desktop\StructuredLogViewer.Avalonia.Desktop.csproj", "{4143B4F2-1FC3-469C-A91C-2721705820AC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StructuredLogViewer.Avalonia.Browser", "src\StructuredLogViewer.Avalonia.Browser\StructuredLogViewer.Avalonia.Browser.csproj", "{95215092-37BB-4ED1-91D4-A96535508C12}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Mixed Platforms = Debug|Mixed Platforms
@@ -48,6 +52,14 @@ Global
 		{B8DB3798-1636-417D-B57A-25C51C574F1E}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
 		{B8DB3798-1636-417D-B57A-25C51C574F1E}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{B8DB3798-1636-417D-B57A-25C51C574F1E}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{4143B4F2-1FC3-469C-A91C-2721705820AC}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{4143B4F2-1FC3-469C-A91C-2721705820AC}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{4143B4F2-1FC3-469C-A91C-2721705820AC}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{4143B4F2-1FC3-469C-A91C-2721705820AC}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{95215092-37BB-4ED1-91D4-A96535508C12}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{95215092-37BB-4ED1-91D4-A96535508C12}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{95215092-37BB-4ED1-91D4-A96535508C12}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{95215092-37BB-4ED1-91D4-A96535508C12}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

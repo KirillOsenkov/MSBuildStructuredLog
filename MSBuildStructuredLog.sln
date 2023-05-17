@@ -28,6 +28,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ResourcesGenerator", "src\R
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BinlogTool", "src\BinlogTool\BinlogTool.csproj", "{35F44EA6-7259-43CC-8C17-E058F3EB86D3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StructuredLogViewer.Avalonia.Desktop", "src\StructuredLogViewer.Avalonia.Desktop\StructuredLogViewer.Avalonia.Desktop.csproj", "{BA82B344-6C38-4449-A318-BF1AEF33D7D8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StructuredLogViewer.Avalonia.Browser", "src\StructuredLogViewer.Avalonia.Browser\StructuredLogViewer.Avalonia.Browser.csproj", "{E16075FD-60E4-430B-BBCF-61692C6A3157}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Mixed Platforms = Debug|Mixed Platforms
@@ -66,6 +70,14 @@ Global
 		{35F44EA6-7259-43CC-8C17-E058F3EB86D3}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
 		{35F44EA6-7259-43CC-8C17-E058F3EB86D3}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{35F44EA6-7259-43CC-8C17-E058F3EB86D3}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{BA82B344-6C38-4449-A318-BF1AEF33D7D8}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{BA82B344-6C38-4449-A318-BF1AEF33D7D8}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{BA82B344-6C38-4449-A318-BF1AEF33D7D8}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{BA82B344-6C38-4449-A318-BF1AEF33D7D8}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{E16075FD-60E4-430B-BBCF-61692C6A3157}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{E16075FD-60E4-430B-BBCF-61692C6A3157}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{E16075FD-60E4-430B-BBCF-61692C6A3157}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{E16075FD-60E4-430B-BBCF-61692C6A3157}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

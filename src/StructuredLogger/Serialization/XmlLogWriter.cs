@@ -14,13 +14,26 @@ namespace Microsoft.Build.Logging.StructuredLogger
             writer.Write(build, logFile);
         }
 
+        public static void WriteToXml(Build build, Stream stream)
+        {
+            var writer = new XmlLogWriter();
+            writer.Write(build, stream);
+        }
+
         public void Write(Build build, string logFile)
+        {
+            using (FileStream stream = File.Open(logFile, FileMode.Create))
+            {
+                Write(build, stream);
+            }
+        }
+
+        public void Write(Build build, Stream stream)
         {
             var settings = new XmlWriterSettings()
             {
                 Indent = true
             };
-            using (FileStream stream = File.Open(logFile, FileMode.Create))
             using (xmlWriter = XmlWriter.Create(stream, settings))
             {
                 xmlWriter.WriteStartDocument();

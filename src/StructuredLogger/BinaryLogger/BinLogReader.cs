@@ -68,17 +68,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             EnsureFileFormatVersionKnown(fileFormatVersion);
 
-            // Use a producer-consumer queue so that IO can happen on one thread
-            // while processing can happen on another thread decoupled. The speed
-            // up is from 4.65 to 4.15 seconds.
-            var queue = new BlockingCollection<BuildEventArgs>(boundedCapacity: 5000);
-            var processingTask = System.Threading.Tasks.Task.Run(() =>
-            {
-                foreach (var args in queue.GetConsumingEnumerable())
-                {
-                    Dispatch(args);
-                }
-            });
+
+            var queue = new EventArgsDispatcherQueue<BuildEventArgs>(Dispatch);
 
             int recordsRead = 0;
 
@@ -120,7 +111,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
-            processingTask.Wait();
+            queue.Wait();
 
             if (fileFormatVersion >= 10)
             {
@@ -316,10 +307,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public override long Length => stream.Length;
 
         private long position;
-        public override long Position 
+        public override long Position
         {
-            get => position; 
-            set => throw new NotImplementedException(); 
+            get => position;
+            set => throw new NotImplementedException();
         }
 
         public override void Flush()

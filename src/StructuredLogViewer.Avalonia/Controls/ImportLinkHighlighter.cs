@@ -6,12 +6,11 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives.PopupPositioning;
 using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.Media.TextFormatting;
 using AvaloniaEdit;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Rendering;
-using AvaloniaEdit.Text;
 using Microsoft.Build.Logging.StructuredLogger;
-using FontStyle = Avalonia.Media.FontStyle;
 
 namespace StructuredLogViewer.Avalonia.Controls
 {
@@ -130,7 +129,7 @@ namespace StructuredLogViewer.Avalonia.Controls
 
             public override TextRun CreateTextRun(int startVisualColumn, ITextRunConstructionContext context)
             {
-                TextRunProperties.Underline = true;
+                TextRunProperties.SetTextDecorations(TextDecorations.Underline);
                 return base.CreateTextRun(startVisualColumn, context);
             }
 

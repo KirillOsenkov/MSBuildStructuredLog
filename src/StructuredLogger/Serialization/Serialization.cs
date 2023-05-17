@@ -131,6 +131,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        public static void Write(Build build, Stream stream, string fileName = null)
+        {
+            if (fileName?.EndsWith(".xml", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                XmlLogWriter.WriteToXml(build, stream);
+            }
+            else
+            {
+                BuildLogWriter.Write(build, stream);
+            }
+        }
+
         public static string GetNodeName(BaseNode node)
         {
             var folder = node as Folder;

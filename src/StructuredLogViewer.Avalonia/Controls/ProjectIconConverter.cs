@@ -17,16 +17,16 @@ namespace StructuredLogViewer.Avalonia.Controls
             {
                 case ".sln":
                     return GetIcon("SlnIcon");
-                
+
                 case ".csproj":
                     return GetIcon("CSProjIcon");
-                    
+
                 case ".vbproj":
                     return GetIcon("VBProjIcon");
-                    
+
                 case ".fsproj":
                     return GetIcon("FSProjIcon");
-                    
+
                 default:
                     return GetIcon("GenericProjectIcon");
             }
@@ -36,7 +36,7 @@ namespace StructuredLogViewer.Avalonia.Controls
         {
             if (!icons.TryGetValue(resourceName, out var icon))
             {
-                if (!Application.Current.Resources.TryGetResource(resourceName, out var resource))
+                if (!Application.Current.Resources.TryGetResource(resourceName, null, out var resource))
                     resource = null;
 
                 icon = resource as DrawingGroup;
@@ -46,10 +46,10 @@ namespace StructuredLogViewer.Avalonia.Controls
             return icon;
         }
 
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) 
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
             => ProjectExtensionToIcon(value as string);
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) 
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
             => throw new NotSupportedException();
     }
 }
