@@ -1,8 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <RuntimeIdentifiers>win7-x64;ubuntu.14.04-x64;osx.10.12-x64;osx-arm64</RuntimeIdentifiers>
     <ApplicationIcon>StructuredLogger.ico</ApplicationIcon>
     <RestoreAdditionalProjectSources Condition="$(PublishNativeAot) == True">

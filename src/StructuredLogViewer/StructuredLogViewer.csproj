@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net472;net6.0-windows</TargetFrameworks>
@@ -46,7 +46,7 @@
 
   <Target Name="CopyTaskRunnerDll" BeforeTargets="GetCopyToOutputDirectoryItems" Condition="$(TargetFramework) == 'net472'">
     <PropertyGroup>
-      <CoreTaskRunnerOutDir>$([System.IO.Path]::GetFullPath(`$(OutDir)\..\..\..\TaskRunner\$(Configuration)\net6.0`))\</CoreTaskRunnerOutDir>
+      <CoreTaskRunnerOutDir>$([System.IO.Path]::GetFullPath(`$(OutDir)\..\..\..\TaskRunner\$(Configuration)\net7.0`))\</CoreTaskRunnerOutDir>
     </PropertyGroup>
     <ItemGroup>
       <TaskRunnerFile Include="$(CoreTaskRunnerOutDir)TaskRunner.dll" />

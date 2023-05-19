@@ -2,14 +2,14 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net472;net6.0</TargetFrameworks>
+    <TargetFrameworks>net472;net7.0</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup Condition="$(TargetFramework) == 'net472'">
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
 
-  <PropertyGroup Condition="$(TargetFramework) == 'net6.0'">
+  <PropertyGroup Condition="$(TargetFramework) == 'net7.0'">
     <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
     <RollForward>LatestMajor</RollForward>
     <UseAppHost>false</UseAppHost>
