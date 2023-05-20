@@ -6,40 +6,40 @@
     <Design.DataContext>
         <local:DocumentWell />
     </Design.DataContext>
-    <Grid>
-        <TabControl Name="tabControl" Items="{Binding #documentWell.Tabs}">
-            <TabControl.ItemTemplate>
-                <DataTemplate DataType="{x:Type local:SourceFileTab}">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock MinWidth="50"
-                                   Text="{Binding FileName}"
-                                   VerticalAlignment="Center" />
-                        <Button Name="HideButton"
-                                Width="16"
-                                Height="16"
-                                Classes="close"
-                                Command="{Binding Close}"
-                                VerticalAlignment="Center"
-                                Margin="4,2,-2,0"
-                                ToolTip.Tip="Close">
-                        </Button>
-                    </StackPanel>
-                </DataTemplate>
-            </TabControl.ItemTemplate>
-            <TabControl.ContentTemplate>
-                <DataTemplate DataType="{x:Type local:SourceFileTab}">
-                    <ContentPresenter Content="{Binding Content}" />
-                </DataTemplate>
-            </TabControl.ContentTemplate>
-        </TabControl>
+  <Grid>
+    <TabControl Name="tabControl" Items="{Binding #documentWell.Tabs}">
+      <TabControl.ItemTemplate>
+        <DataTemplate DataType="{x:Type local:SourceFileTab}">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock MinWidth="50"
+                            Text="{Binding FileName}"
+                            VerticalAlignment="Center" />
+                <Button Name="HideButton"
+                        Width="16"
+                        Height="16"
+                        Classes="close"
+                        Command="{Binding Close}"
+                        VerticalAlignment="Center"
+                        Margin="4,2,-2,0"
+                        ToolTip.Tip="Close">
+                </Button>
+            </StackPanel>
+        </DataTemplate>
+      </TabControl.ItemTemplate>
+      <TabControl.ContentTemplate>
+          <DataTemplate DataType="{x:Type local:SourceFileTab}">
+              <ContentPresenter Content="{Binding Content}" />
+          </DataTemplate>
+      </TabControl.ContentTemplate>
+    </TabControl>
         
-        <Button Name="closeButton"
-                Classes="close"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Top"
-                Width="16"
-                Height="16"
-                ToolTip.Tip="Close the source code view" />
+    <Button Name="closeButton"
+            Classes="close"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            Width="16"
+            Height="16"
+            ToolTip.Tip="Close the source code view" />
 
-    </Grid>
+  </Grid>
 </UserControl>
