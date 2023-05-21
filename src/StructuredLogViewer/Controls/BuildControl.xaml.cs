@@ -145,8 +145,8 @@ namespace StructuredLogViewer.Controls
             var sharedCopySubtreeItem = new MenuItem() { Header = "Copy subtree" };
             sharedCopyAllItem.Click += (s, a) => CopyAll();
             sharedCopySubtreeItem.Click += (s, a) => CopySubtree();
-            sharedTreeContextMenu.Items.Add(sharedCopyAllItem);
-            sharedTreeContextMenu.Items.Add(sharedCopySubtreeItem);
+            sharedTreeContextMenu.AddItem(sharedCopyAllItem);
+            sharedTreeContextMenu.AddItem(sharedCopySubtreeItem);
 
             // Files
             filesTreeContextMenu = new ContextMenu();
@@ -156,9 +156,9 @@ namespace StructuredLogViewer.Controls
             filesCopyAllItem.Click += (s, a) => CopyAll();
             filesCopyPathsItem.Click += (s, a) => CopyPaths();
             filesCopySubtreeItem.Click += (s, a) => CopySubtree();
-            filesTreeContextMenu.Items.Add(filesCopyAllItem);
-            filesTreeContextMenu.Items.Add(filesCopyPathsItem);
-            filesTreeContextMenu.Items.Add(filesCopySubtreeItem);
+            filesTreeContextMenu.AddItem(filesCopyAllItem);
+            filesTreeContextMenu.AddItem(filesCopyPathsItem);
+            filesTreeContextMenu.AddItem(filesCopySubtreeItem);
 
             // Build Log
             var contextMenu = new ContextMenu();
@@ -204,26 +204,26 @@ namespace StructuredLogViewer.Controls
             debugItem.Click += (s, a) => Run(treeView.SelectedItem as Task, debug: true);
             hideItem.Click += (s, a) => Delete();
 
-            contextMenu.Items.Add(runItem);
-            contextMenu.Items.Add(debugItem);
-            contextMenu.Items.Add(viewSourceItem);
-            contextMenu.Items.Add(viewFullTextItem);
-            contextMenu.Items.Add(openFileItem);
-            contextMenu.Items.Add(preprocessItem);
-            contextMenu.Items.Add(searchInSubtreeItem);
-            contextMenu.Items.Add(excludeSubtreeFromSearchItem);
-            contextMenu.Items.Add(goToTimeLineItem);
-            contextMenu.Items.Add(goToTracingItem);
-            contextMenu.Items.Add(copyItem);
-            contextMenu.Items.Add(copySubtreeItem);
-            contextMenu.Items.Add(copyFilePathItem);
-            contextMenu.Items.Add(viewSubtreeTextItem);
-            contextMenu.Items.Add(copyChildrenItem);
-            contextMenu.Items.Add(sortChildrenItem);
-            contextMenu.Items.Add(copyNameItem);
-            contextMenu.Items.Add(copyValueItem);
-            contextMenu.Items.Add(showTimeItem);
-            contextMenu.Items.Add(hideItem);
+            contextMenu.AddItem(runItem);
+            contextMenu.AddItem(debugItem);
+            contextMenu.AddItem(viewSourceItem);
+            contextMenu.AddItem(viewFullTextItem);
+            contextMenu.AddItem(openFileItem);
+            contextMenu.AddItem(preprocessItem);
+            contextMenu.AddItem(searchInSubtreeItem);
+            contextMenu.AddItem(excludeSubtreeFromSearchItem);
+            contextMenu.AddItem(goToTimeLineItem);
+            contextMenu.AddItem(goToTracingItem);
+            contextMenu.AddItem(copyItem);
+            contextMenu.AddItem(copySubtreeItem);
+            contextMenu.AddItem(copyFilePathItem);
+            contextMenu.AddItem(viewSubtreeTextItem);
+            contextMenu.AddItem(copyChildrenItem);
+            contextMenu.AddItem(sortChildrenItem);
+            contextMenu.AddItem(copyNameItem);
+            contextMenu.AddItem(copyValueItem);
+            contextMenu.AddItem(showTimeItem);
+            contextMenu.AddItem(hideItem);
 
             var existingTreeViewItemStyle = (Style)Application.Current.Resources[typeof(TreeViewItem)];
             var treeViewItemStyle = new Style(typeof(TreeViewItem), existingTreeViewItemStyle);

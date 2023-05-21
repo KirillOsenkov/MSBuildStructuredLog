@@ -181,7 +181,7 @@ namespace StructuredLogViewer.Controls
                         menuItem.IsEnabled = false;
                     }
 
-                    menu.Items.Add(menuItem);
+                    menu.AddItem(menuItem);
                 }
 
                 var topLeft = ParentVisualLine.GetVisualPosition(VisualColumn, VisualYPosition.LineTop);

@@ -1,119 +1,120 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:StructuredLogViewer.Avalonia.Controls;assembly=StructuredLogViewer.Avalonia"
              x:Class="StructuredLogViewer.Avalonia.Controls.BuildControl">
 
-    <local:SplitterPanel Orientation="Vertical"
-                         FirstChildRelativeSize="*"
-                         SecondChildRelativeSize="50">
+  <local:SplitterPanel Orientation="Vertical" FirstChildRelativeSize="*" SecondChildRelativeSize="50">
 
+    <local:SplitterPanel.FirstChild>
+      <local:SplitterPanel FirstChildRelativeSize="1*" SecondChildRelativeSize="3*">
         <local:SplitterPanel.FirstChild>
-            <local:SplitterPanel FirstChildRelativeSize="1*"
-                                 SecondChildRelativeSize="3*">
-                <local:SplitterPanel.FirstChild>
-                    <TabControl Name="leftPaneTabControl"
-                                SelectedIndex="0"
-                                TabStripPlacement="Bottom"
-                                Margin="0"
-                                Padding="0">
-                        <TabItem Name="searchLogTab"
-                                 Header="Search Log">
-                            <local:SearchAndResultsControl Name="searchLogControl" />
-                        </TabItem>
+          <TabControl Name="leftPaneTabControl" TabStripPlacement="Bottom" SelectedIndex="0" Margin="0" Padding="0">
+            <TabItem Name="searchLogTab" Header="Search Log">
+              <local:SearchAndResultsControl Name="searchLogControl"></local:SearchAndResultsControl>
+            </TabItem>
 
-                        <TabItem Name="filesTab"
-                                 Header="Files"
-                                 IsVisible="false">
-                            <TreeView Name="filesTree"
-                                      Background="#F5F5F5"
-                                      BorderThickness="0">
-                            </TreeView>
-                        </TabItem>
+            <TabItem x:Name="propertiesAndItemsTab" Header="Properties and items">
+              <DockPanel>
+                <Border DockPanel.Dock="Top"
+                    BorderThickness="0,0,0,1"
+                    Background="{DynamicResource Theme_InfoBarBackground}"
+                    BorderBrush="Gray"
+                    Name="projectContextBorder"
+                    IsVisible="False"
+                    Padding="4,2,4,2"
+                    MinHeight="27">
+                  <DockPanel>
+                    <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Text="Project: " />
+                    <ContentControl Focusable="false" DockPanel.Dock="Top" VerticalAlignment="Center" Name="propertiesAndItemsContext" />
+                  </DockPanel>
+                </Border>
+                <local:SearchAndResultsControl Name="propertiesAndItemsControl"></local:SearchAndResultsControl>
+              </DockPanel>
+            </TabItem>
 
-                        <TabItem Name="findInFilesTab"
-                                 Header="Find in Files"
-                                 IsVisible="False">
-                            <local:SearchAndResultsControl Name="findInFilesControl"
-                                                           WatermarkContent="Search in files" />
-                        </TabItem>
-                    </TabControl>
-                </local:SplitterPanel.FirstChild>
-                <local:SplitterPanel.SecondChild>
+            <TabItem Name="filesTab" Header="Files" IsVisible="false">
+              <TreeView Name="filesTree"></TreeView>
+            </TabItem>
 
-                    <local:SplitterPanel Name="tabs">
-                        <local:SplitterPanel.FirstChild>
-                            <TabControl Name="centralTabControl"
-                                        TabStripPlacement="Bottom"
-                                        SelectedIndex="0"
-                                        MinWidth="10">
-                                <TabItem Name="mainTreeTab"
-                                         Header="Log">
-                                    <TreeView Name="treeView"
-                                              BorderBrush="Transparent"
-                                              BorderThickness="0"
-                                              Classes="searchable"
-                                              AutoScrollToSelectedItem="True"
-                                              Items="{Binding Children}"/>
-                                </TabItem>
-
-                                <!--<TabItem Name="timelineTab"
-                                         Header="Timeline">
-                                    <local:TimelineControl Name="timeline" />
-                                </TabItem>-->
-                            </TabControl>
-                        </local:SplitterPanel.FirstChild>
-
-                        <local:SplitterPanel.SecondChild>
-                            <local:DocumentWell Name="documentWell"
-                                                IsVisible="false" />
-                        </local:SplitterPanel.SecondChild>
-                    </local:SplitterPanel>
-                </local:SplitterPanel.SecondChild>
-            </local:SplitterPanel>
+            <TabItem Name="findInFilesTab" Header="Find in Files" IsVisible="False">
+              <local:SearchAndResultsControl Name="findInFilesControl" WatermarkContent="Search in files"></local:SearchAndResultsControl>
+            </TabItem>
+          </TabControl>
         </local:SplitterPanel.FirstChild>
-
         <local:SplitterPanel.SecondChild>
-            <Border BorderBrush="Gray"
-                    BorderThickness="1">
-                <ScrollViewer Background="LightYellow">
-                    <ListBox Name="breadCrumb"
-                             BorderThickness="0"
-                             BorderBrush="Transparent">
-                        <ListBox.Template>
-                            <ControlTemplate TargetType="{x:Type ListBox}">
-                                <Border BorderBrush="{TemplateBinding BorderBrush}"
-                                        BorderThickness="{TemplateBinding BorderThickness}">
-                                    <ItemsPresenter Name="PART_ItemsPresenter"
-                                                    Items="{TemplateBinding Items}"
-                                                    ItemsPanel="{TemplateBinding ItemsPanel}"
-                                                    ItemTemplate="{TemplateBinding ItemTemplate}"
-                                                    Margin="{TemplateBinding Padding}"
-                                                    VirtualizationMode="{TemplateBinding VirtualizationMode}" />
-                                </Border>
-                            </ControlTemplate>
-                        </ListBox.Template>
-                        <ListBox.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel />
-                            </ItemsPanelTemplate>
-                        </ListBox.ItemsPanel>
-                        <ListBox.Styles>
-                            <Style Selector="Separator">
-                                <Setter Property="Template">
-                                    <ControlTemplate>
-                                        <Polygon Points="0,0 3,3 0,6"
-                                                 Stroke="Black"
-                                                 Fill="Black"
-                                                 VerticalAlignment="Center" />
-                                    </ControlTemplate>
-                                </Setter>
-                            </Style>
-                        </ListBox.Styles>
-                    </ListBox>
-                </ScrollViewer>
-            </Border>
-        </local:SplitterPanel.SecondChild>
 
-    </local:SplitterPanel>
+          <local:SplitterPanel Name="tabs">
+            <local:SplitterPanel.FirstChild>
+              <TabControl Name="centralTabControl"
+                          TabStripPlacement="Bottom"
+                          SelectedIndex="0"
+                          MinWidth="10">
+                <TabItem Name="mainTreeTab" Header="Log">
+                  <TreeView Name="treeView"
+                            BorderBrush="Transparent"
+                            BorderThickness="0"
+                            Classes="searchable"
+                            AutoScrollToSelectedItem="True"
+                            Items="{Binding Children}"/>
+                </TabItem>
+
+                  <!--<TabItem Name="timelineTab"
+                            Header="Timeline">
+                      <local:TimelineControl Name="timeline" />
+                  </TabItem>-->
+              </TabControl>
+            </local:SplitterPanel.FirstChild>
+
+            <local:SplitterPanel.SecondChild>
+              <local:DocumentWell Name="documentWell" IsVisible="false"></local:DocumentWell>
+            </local:SplitterPanel.SecondChild>
+          </local:SplitterPanel>
+        </local:SplitterPanel.SecondChild>
+      </local:SplitterPanel>
+    </local:SplitterPanel.FirstChild>
+
+    <local:SplitterPanel.SecondChild>
+      <Border BorderBrush="Gray"
+              BorderThickness="1">
+        <ScrollViewer Background="LightYellow">
+          <ListBox Name="breadCrumb"
+                   BorderThickness="0"
+                   BorderBrush="Transparent">
+            <ListBox.ItemsPanel>
+              <ItemsPanelTemplate>
+                <WrapPanel />
+              </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+              <ListBox.Template>
+                <ControlTemplate TargetType="{x:Type ListBox}">
+                    <Border BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                        <ItemsPresenter Name="PART_ItemsPresenter"
+                                        Items="{TemplateBinding Items}"
+                                        ItemsPanel="{TemplateBinding ItemsPanel}"
+                                        ItemTemplate="{TemplateBinding ItemTemplate}"
+                                        Margin="{TemplateBinding Padding}"
+                                        VirtualizationMode="{TemplateBinding VirtualizationMode}" />
+                    </Border>
+                </ControlTemplate>
+              </ListBox.Template>
+              <ListBox.Styles>
+                <Style Selector="Separator">
+                  <Setter Property="Template">
+                    <ControlTemplate>
+                      <Polygon Points="0,0 3,3 0,6"
+                               Stroke="Black"
+                               Fill="Black"
+                               VerticalAlignment="Center" />
+                    </ControlTemplate>
+                  </Setter>
+                </Style>
+              </ListBox.Styles>
+          </ListBox>
+        </ScrollViewer>
+      </Border>
+    </local:SplitterPanel.SecondChild>
+
+  </local:SplitterPanel>
 
 </UserControl>

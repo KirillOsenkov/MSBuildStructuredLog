@@ -4,24 +4,33 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using System;
 using System.Collections;
+using System.Threading;
 using Avalonia;
 using Avalonia.Controls.Presenters;
+using System.Linq;
 
 namespace StructuredLogViewer.Avalonia.Controls
 {
     public partial class SearchAndResultsControl : UserControl
     {
-        private TypingConcurrentOperation typingConcurrentOperation = new TypingConcurrentOperation();
+        private readonly TypingConcurrentOperation typingConcurrentOperation = new TypingConcurrentOperation();
         internal TextBox searchTextBox;
         private TreeView resultsList;
         private ContentPresenter watermark;
+        private ScrollViewer watermarkScrollViewer;
         private Button clearSearchButton;
+        private Grid topPanel;
 
         public SearchAndResultsControl()
         {
             InitializeComponent();
-            typingConcurrentOperation.DisplayResults += (r, moreAvailable, cancellationToken) => Dispatcher.UIThread.InvokeAsync(() => DisplaySearchResults(r, moreAvailable));
+            typingConcurrentOperation.DisplayResults += (r, moreAvailable, cancellationToken) => Dispatcher.UIThread.InvokeAsync(() => DisplaySearchResults(r, moreAvailable, cancellationToken));
             typingConcurrentOperation.SearchComplete += (text, arg, elapsed) => Dispatcher.UIThread.InvokeAsync(() => TypingConcurrentOperation_SearchComplete(text, arg, elapsed));
+        }
+
+        protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+        {
+            typingConcurrentOperation.ReleaseTimer();
         }
 
         private void InitializeComponent()
@@ -32,6 +41,8 @@ namespace StructuredLogViewer.Avalonia.Controls
             this.RegisterControl(out resultsList, nameof(resultsList));
             this.RegisterControl(out watermark, nameof(watermark));
             this.RegisterControl(out clearSearchButton, nameof(clearSearchButton));
+            this.RegisterControl(out watermarkScrollViewer, nameof(watermarkScrollViewer));
+            this.RegisterControl(out topPanel, nameof(topPanel));
 
             searchTextBox.PropertyChanged += searchTextBox_TextChanged;
             clearSearchButton.Click += clearSearchButton_Click;
@@ -40,19 +51,24 @@ namespace StructuredLogViewer.Avalonia.Controls
         private void TypingConcurrentOperation_SearchComplete(string searchText, object arg2, TimeSpan elapsed)
         {
             BuildControl.Elapsed = elapsed;
-            SettingsService.AddRecentSearchText(searchText, discardPrefixes: true);
+            SettingsService.AddRecentSearchText(searchText, discardPrefixes: true, RecentItemsCategory);
         }
+
+        public string RecentItemsCategory { get; set; }
 
         public TreeView ResultsList => resultsList;
         public Func<object, bool, IEnumerable> ResultsTreeBuilder { get; set; }
         public event Action WatermarkDisplayed;
+        public event Action<string> TextChanged;
+
+        public Grid TopPanel => topPanel;
 
         public ExecuteSearchFunc ExecuteSearch
         {
             get => typingConcurrentOperation.ExecuteSearch;
             set => typingConcurrentOperation.ExecuteSearch = value;
         }
-        
+
         public void TriggerSearch(string text, int maxResults)
         {
             typingConcurrentOperation.TriggerSearch(text, maxResults);
@@ -63,32 +79,61 @@ namespace StructuredLogViewer.Avalonia.Controls
             if (e.Property != TextBox.TextProperty) return;
 
             var searchText = searchTextBox.Text;
+            TextChanged?.Invoke(searchText);
+
             if (string.IsNullOrWhiteSpace(searchText) || searchText.Length < 3)
             {
                 typingConcurrentOperation.Reset();
-                DisplaySearchResults(null);
+
+                // only clear the contents when we have a search function defined.
+                // if the text input is handled externally, don't mess with the 
+                // content
+                if (ExecuteSearch != null)
+                {
+                    DisplaySearchResults(null);
+                }
+
                 return;
             }
 
             typingConcurrentOperation.TextChanged(searchText, Search.DefaultMaxResults);
         }
 
-        private void DisplaySearchResults(object results, bool moreAvailable = false)
+        private void DisplaySearchResults(object results, bool moreAvailable = false, CancellationToken cancellationToken = default)
         {
-            if (results == null)
+            Dispatcher.UIThread.InvokeAsync(() =>
             {
-                if (!watermark.IsVisible)
+                if (cancellationToken.IsCancellationRequested)
                 {
-                    watermark.IsVisible = true;
+                    return;
+                }
+
+                var tree = ResultsTreeBuilder(results, moreAvailable);
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                DisplayItems(tree);
+            }, DispatcherPriority.Background);
+        }
+
+        public void DisplayItems(IEnumerable content)
+        {
+            if ((content == null || !content.OfType<object>().Any()) && WatermarkContent != null)
+            {
+                if (!watermarkScrollViewer.IsVisible)
+                {
+                    watermarkScrollViewer.IsVisible = true;
                     WatermarkDisplayed?.Invoke();
                 }
             }
             else
             {
-                watermark.IsVisible = false;
+                watermarkScrollViewer.IsVisible = false;
             }
 
-            resultsList.Items = ResultsTreeBuilder(results, moreAvailable);
+            resultsList.Items = content;
         }
 
         public object WatermarkContent
