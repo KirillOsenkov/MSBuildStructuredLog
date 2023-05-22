@@ -11,7 +11,7 @@ View binlogs in the Browser: https://live.msbuildlog.com
 
 Important: the NuGet package is now being published to https://nuget.org/packages/MSBuild.StructuredLogger (old location: https://nuget.org/packages/Microsoft.Build.Logging.StructuredLogger). Please update to use the new Package Id.
 
-Thanks to https://signpath.io for generously providing a certificate to sign the installer.
+Thanks to [SignPath.io](https://signpath.io?utm_source=foundation&utm_medium=github&utm_campaign=MSBuildStructuredLog) for providing a free code signing service and to the [SignPath Foundation](https://signpath.org?utm_source=foundation&utm_medium=github&utm_campaign=MSBuildStructuredLog) for a free code signing certificate to sign the installer.
 
 ## Install:
 Install from https://msbuildlog.com.
