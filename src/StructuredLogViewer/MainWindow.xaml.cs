@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Windows;
 using System.Windows.Controls;
@@ -302,9 +303,11 @@ namespace StructuredLogViewer
         private void UpdateRecentItemsMenu(WelcomeScreen welcomeScreen = null)
         {
             welcomeScreen = welcomeScreen ?? new WelcomeScreen();
+
+            RecentItemsSeparator.Visibility = Visibility.Collapsed;
+            RecentProjectsMenu.Items.Clear();
             if (welcomeScreen.ShowRecentProjects)
             {
-                RecentProjectsMenu.Items.Clear();
                 RecentProjectsMenu.Visibility = Visibility.Visible;
                 RecentItemsSeparator.Visibility = Visibility.Visible;
                 foreach (var recentProjectFile in welcomeScreen.RecentProjects)
@@ -313,11 +316,19 @@ namespace StructuredLogViewer
                     menuItem.Click += RecentProjectClick;
                     RecentProjectsMenu.Items.Add(menuItem);
                 }
+
+                var clearHistory = new MenuItem { Header = "Clear Recent Projects" };
+                clearHistory.Click += ClearAllRecentProjectFileClick;
+                RecentProjectsMenu.Items.Add(clearHistory);
+            }
+            else
+            {
+                RecentProjectsMenu.Visibility = Visibility.Collapsed;
             }
 
+            RecentLogsMenu.Items.Clear();
             if (welcomeScreen.ShowRecentLogs)
             {
-                RecentLogsMenu.Items.Clear();
                 RecentLogsMenu.Visibility = Visibility.Visible;
                 RecentItemsSeparator.Visibility = Visibility.Visible;
                 foreach (var recentLog in welcomeScreen.RecentLogs)
@@ -326,6 +337,14 @@ namespace StructuredLogViewer
                     menuItem.Click += RecentLogFileClick;
                     RecentLogsMenu.Items.Add(menuItem);
                 }
+
+                var clearHistory = new MenuItem { Header = "Clear Recent Logs" };
+                clearHistory.Click += ClearAllRecentLogFileClick;
+                RecentLogsMenu.Items.Add(clearHistory);
+            }
+            else
+            {
+                RecentLogsMenu.Visibility = Visibility.Collapsed;
             }
         }
 
@@ -376,6 +395,54 @@ namespace StructuredLogViewer
         {
             var menuItem = sender as MenuItem;
             OpenLogFile(Convert.ToString(menuItem.Header));
+        }
+
+        private void ClearProjectFileClick(object sender, RoutedEventArgs e)
+        {
+            SettingsService.RemoveAllRecentProject();
+
+            // Re-draw the welcome screen if it is active
+            // or only update the menu
+            if (this.mainContent.Content is WelcomeScreen)
+            {
+                DisplayWelcomeScreen();
+            }
+            else
+            {
+                UpdateRecentItemsMenu();
+            }
+        }
+
+        private void ClearAllRecentProjectFileClick(object sender, RoutedEventArgs e)
+        {
+            SettingsService.RemoveAllRecentProject();
+
+            // Re-draw the welcome screen if it is active
+            // or only update the menu
+            if (this.mainContent.Content is WelcomeScreen)
+            {
+                DisplayWelcomeScreen();
+            }
+            else
+            {
+                UpdateRecentItemsMenu();
+            }
+        }
+
+        private void ClearAllRecentLogFileClick(object sender, RoutedEventArgs e)
+        {
+            SettingsService.RemoveAllRecentLogFile();
+
+            // Re-draw the welcome screen if it is active
+            // or only update the menu
+            if (this.mainContent.Content is WelcomeScreen)
+            {
+                DisplayWelcomeScreen();
+            }
+            else
+            {
+                UpdateRecentItemsMenu();
+            }
         }
 
         private async void OpenLogFile(string filePath)

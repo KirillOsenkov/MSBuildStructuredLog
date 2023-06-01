@@ -89,9 +89,19 @@ namespace StructuredLogViewer
             RemoveRecentItem(filePath, recentLogsFilePath);
         }
 
+        public static void RemoveAllRecentLogFile()
+        {
+            SaveText(recentLogsFilePath, Enumerable.Empty<string>());
+        }
+
         public static void RemoveRecentProject(string filePath)
         {
             RemoveRecentItem(filePath, recentProjectsFilePath);
+        }
+
+        public static void RemoveAllRecentProject()
+        {
+            SaveText(recentProjectsFilePath, Enumerable.Empty<string>());
         }
 
         private static string GetRecentSearchFilePath(string category = "")
