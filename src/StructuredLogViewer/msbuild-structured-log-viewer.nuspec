@@ -3,7 +3,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
   <metadata>
     <id>msbuild-structured-log-viewer</id>
-    <version>$currentVersion$</version>
+    <version>1.0.0</version>
     <packageSourceUrl>https://github.com/KirillOsenkov/MSBuildStructuredLog</packageSourceUrl>
     <owners>flcdrg, KirillOsenkov</owners>
     <title>MSBuild Structured Log Viewer</title>
