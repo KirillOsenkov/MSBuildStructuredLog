@@ -318,7 +318,7 @@ namespace StructuredLogViewer
                 }
 
                 var clearHistory = new MenuItem { Header = "Clear Recent Projects" };
-                clearHistory.Click += ClearAllRecentProjectFileClick;
+                clearHistory.Click += ClearRecentProjects;
                 RecentProjectsMenu.Items.Add(clearHistory);
             }
             else
@@ -339,7 +339,7 @@ namespace StructuredLogViewer
                 }
 
                 var clearHistory = new MenuItem { Header = "Clear Recent Logs" };
-                clearHistory.Click += ClearAllRecentLogFileClick;
+                clearHistory.Click += ClearRecentLogFiles;
                 RecentLogsMenu.Items.Add(clearHistory);
             }
             else
@@ -397,7 +397,7 @@ namespace StructuredLogViewer
             OpenLogFile(Convert.ToString(menuItem.Header));
         }
 
-        private void ClearProjectFileClick(object sender, RoutedEventArgs e)
+        private void ClearRecentProjects(object sender, RoutedEventArgs e)
         {
             SettingsService.RemoveAllRecentProjects();
 
@@ -413,23 +413,7 @@ namespace StructuredLogViewer
             }
         }
 
-        private void ClearAllRecentProjectFileClick(object sender, RoutedEventArgs e)
-        {
-            SettingsService.RemoveAllRecentProjects();
-
-            // Re-draw the welcome screen if it is active
-            // or only update the menu
-            if (this.mainContent.Content is WelcomeScreen)
-            {
-                DisplayWelcomeScreen();
-            }
-            else
-            {
-                UpdateRecentItemsMenu();
-            }
-        }
-
-        private void ClearAllRecentLogFileClick(object sender, RoutedEventArgs e)
+        private void ClearRecentLogFiles(object sender, RoutedEventArgs e)
         {
             SettingsService.RemoveAllRecentLogFiles();
 
