@@ -89,7 +89,7 @@ namespace StructuredLogViewer
             RemoveRecentItem(filePath, recentLogsFilePath);
         }
 
-        public static void RemoveAllRecentLogFile()
+        public static void RemoveAllRecentLogFiles()
         {
             SaveText(recentLogsFilePath, Enumerable.Empty<string>());
         }
@@ -99,7 +99,7 @@ namespace StructuredLogViewer
             RemoveRecentItem(filePath, recentProjectsFilePath);
         }
 
-        public static void RemoveAllRecentProject()
+        public static void RemoveAllRecentProjects()
         {
             SaveText(recentProjectsFilePath, Enumerable.Empty<string>());
         }

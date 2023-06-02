@@ -133,13 +133,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
             TimeSpan totalTime = TimeSpan.Zero;
             foreach (var counter in performanceCounters)
             {
-                perfFolder.AddChild(new Property() { Name = counter.Key, Value = @$"{Math.Round(counter.Value.TotalTime.TotalMilliseconds, 2)} ms, Calls {counter.Value.Count}" });
+                perfFolder.AddChild(new Property
+                {
+                    Name = counter.Key,
+                    Value = @$"{Math.Round(counter.Value.TotalTime.TotalMilliseconds, 2)} ms, Calls {counter.Value.Count}"
+                });
 
                 if (!counter.Value.InnerCounter)
                 {
                     totalTime += counter.Value.TotalTime;
                 }
             }
+
             perfFolder.Name = $"Log Processing Statistics (Total {Math.Round(totalTime.TotalMilliseconds, 2)} ms)";
             Build.AddChild(perfFolder);
         }

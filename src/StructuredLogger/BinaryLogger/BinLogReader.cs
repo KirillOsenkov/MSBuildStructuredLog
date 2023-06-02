@@ -71,8 +71,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             // Use a producer-consumer queue so that IO can happen on one thread
             // while processing can happen on another thread decoupled. The speed
             // up is from 4.65 to 4.15 seconds.
-            var maxBoundCapacity = 50000;
-            var queue = new BlockingCollection<BuildEventArgs>(boundedCapacity: maxBoundCapacity);
+
+            // see issue https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/684
+            var maxBoundedCapacity = 50000;
+
+            var queue = new BlockingCollection<BuildEventArgs>(boundedCapacity: maxBoundedCapacity);
             var processingTask = System.Threading.Tasks.Task.Run(() =>
             {
                 foreach (var args in queue.GetConsumingEnumerable())
@@ -121,7 +124,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     if (bufferUsage != null)
                     {
-                        bufferUsage.Report((double)queue.Count / maxBoundCapacity);
+                        bufferUsage.Report((double)queue.Count / maxBoundedCapacity);
                     }
                 }
             }
@@ -154,6 +157,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     text += " Update available - restart this instance to automatically use newer version.";
                 }
+
                 throw new NotSupportedException(text);
             }
         }
