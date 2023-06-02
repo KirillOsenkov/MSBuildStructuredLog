@@ -466,6 +466,14 @@ namespace StructuredLogViewer
                     progress.Value = update.Ratio;
                 }, DispatcherPriority.Background);
             };
+            progress.BufferUsage.Updated += update =>
+            {
+                Dispatcher.InvokeAsync(() =>
+                {
+                    progress.BufferValue = update.Ratio;
+                }, DispatcherPriority.Background);
+            };
+            progress.ShowBufferUsage = true;
             progress.ProgressText = "Opening " + filePath + "...";
             SetContent(progress);
 
@@ -477,7 +485,7 @@ namespace StructuredLogViewer
             {
                 try
                 {
-                    return Serialization.Read(filePath, progress.Progress);
+                    return Serialization.Read(filePath, progress.Progress, progress.BufferUsage);
                 }
                 catch (Exception ex)
                 {

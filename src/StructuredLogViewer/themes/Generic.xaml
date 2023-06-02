@@ -1017,6 +1017,8 @@
         <RowDefinition Height="Auto" />
         <RowDefinition Height="Auto" />
         <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
       </Grid.RowDefinitions>
       <TextBlock x:Name="text"
                  Text="{Binding ProgressText}"
@@ -1024,15 +1026,32 @@
                  Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
                  TextWrapping="Wrap" />
       <ProgressBar Grid.Row="1" 
-                   IsIndeterminate="{Binding IsIndeterminate}" 
+                   IsIndeterminate="{Binding IsIndeterminate}"
                    Value="{Binding Value}"
                    Minimum="0.0"
                    Maximum="1.0"
                    HorizontalAlignment="Center"
-                   Width="200" 
-                   Height="23" 
+                   Width="200"
+                   Height="23"
                    Margin="10" />
-      <StackPanel Grid.Row="2"
+      <TextBlock Grid.Row="2"
+                 Visibility="{Binding ShowBufferUsage, Converter={StaticResource booleanToVisibilityConverter}}" 
+                 Text="Disk ==> Buffer ==> CPU"
+                 HorizontalAlignment="Center"
+                 Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
+                 TextWrapping="Wrap" />
+      <ProgressBar Grid.Row="3"
+                   x:Name="Buffer"
+                   IsIndeterminate="{Binding IsIndeterminate}"
+                   Value="{Binding BufferValue}"
+                   Minimum="0.0"
+                   Maximum="1.0"
+                   HorizontalAlignment="Center"
+                   Width="200"
+                   Height="23"
+                   Margin="10"
+                   Visibility="{Binding ShowBufferUsage, Converter={StaticResource booleanToVisibilityConverter}}" />
+            <StackPanel Grid.Row="4"
                   Margin="40"
                   Visibility="{Binding ShowCommandLine, Converter={StaticResource booleanToVisibilityConverter}}">
         <TextBlock Text="Using command line (press Ctrl+C to copy):"

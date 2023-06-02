@@ -48,7 +48,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static Build Read(string filePath) => Read(filePath, progress: null);
 
-        public static Build Read(string filePath, Progress progress)
+        public static Build Read(string filePath, Progress progress, Progress bufferUsage = null)
         {
             if (filePath.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
             {
@@ -58,7 +58,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 try
                 {
-                    return BinaryLog.ReadBuild(filePath, progress);
+                    return BinaryLog.ReadBuild(filePath, progress, bufferUsage);
                 }
                 catch (Exception)
                 {
