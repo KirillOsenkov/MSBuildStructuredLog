@@ -399,7 +399,7 @@ namespace StructuredLogViewer
 
         private void ClearProjectFileClick(object sender, RoutedEventArgs e)
         {
-            SettingsService.RemoveAllRecentProject();
+            SettingsService.RemoveAllRecentProjects();
 
             // Re-draw the welcome screen if it is active
             // or only update the menu
@@ -415,7 +415,7 @@ namespace StructuredLogViewer
 
         private void ClearAllRecentProjectFileClick(object sender, RoutedEventArgs e)
         {
-            SettingsService.RemoveAllRecentProject();
+            SettingsService.RemoveAllRecentProjects();
 
             // Re-draw the welcome screen if it is active
             // or only update the menu
@@ -431,7 +431,7 @@ namespace StructuredLogViewer
 
         private void ClearAllRecentLogFileClick(object sender, RoutedEventArgs e)
         {
-            SettingsService.RemoveAllRecentLogFile();
+            SettingsService.RemoveAllRecentLogFiles();
 
             // Re-draw the welcome screen if it is active
             // or only update the menu
