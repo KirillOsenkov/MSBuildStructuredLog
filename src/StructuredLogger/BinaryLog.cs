@@ -27,7 +27,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static Build ReadBuild(string filePath) => ReadBuild(filePath, progress: null);
 
-        public static Build ReadBuild(string filePath, Progress progress, Progress bufferUsage = null)
+        public static Build ReadBuild(string filePath, Progress progress)
         {
             using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
@@ -38,7 +38,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     projectImportsArchive = File.ReadAllBytes(projectImportsZipFile);
                 }
 
-                var build = ReadBuild(stream, progress, bufferUsage, projectImportsArchive);
+                var build = ReadBuild(stream, progress, projectImportsArchive);
                 build.LogFilePath = filePath;
                 return build;
             }
@@ -49,7 +49,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         internal const bool ReuseBinlogStrings = false;
 
-        public static Build ReadBuild(Stream stream, Progress progress, Progress bufferUsage = null, byte[] projectImportsArchive = null)
+        public static Build ReadBuild(Stream stream, Progress progress, byte[] projectImportsArchive = null)
         {
             var eventSource = new BinLogReader();
 
@@ -101,7 +101,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             var sw = Stopwatch.StartNew();
 
-            eventSource.Replay(stream, progress, bufferUsage);
+            eventSource.Replay(stream, progress);
 
             var elapsed = sw.Elapsed;
 
