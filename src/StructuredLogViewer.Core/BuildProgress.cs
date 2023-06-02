@@ -8,6 +8,8 @@
 
         public Progress Progress { get; } = new Progress();
 
+        public Progress BufferUsage { get; } = new Progress();
+
         private string progressText;
         public string ProgressText
         {
@@ -29,6 +31,13 @@
             set => SetField(ref this.value, value);
         }
 
+        private double bufferValue;
+        public double BufferValue
+        {
+            get => bufferValue;
+            set => SetField(ref this.bufferValue, value);
+        }
+
         private string msbuildCommandLine;
         public string MSBuildCommandLine
         {
@@ -43,5 +52,7 @@
         }
 
         public bool ShowCommandLine => !string.IsNullOrEmpty(MSBuildCommandLine);
+
+        public bool ShowBufferUsage { get; set; } = false;
     }
 }

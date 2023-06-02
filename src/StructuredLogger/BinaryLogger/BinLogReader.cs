@@ -56,7 +56,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Replay(stream, progress: null);
         }
 
-        public void Replay(Stream stream, Progress progress)
+        public void Replay(Stream stream, Progress progress, Progress bufferUsage = null)
         {
             var gzipStream = new GZipStream(stream, CompressionMode.Decompress, leaveOpen: true);
             var bufferedStream = new BufferedStream(gzipStream, 32768);
@@ -71,7 +71,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             // Use a producer-consumer queue so that IO can happen on one thread
             // while processing can happen on another thread decoupled. The speed
             // up is from 4.65 to 4.15 seconds.
-            var queue = new BlockingCollection<BuildEventArgs>(boundedCapacity: 5000);
+            var maxBoundCapacity = 50000;
+            var queue = new BlockingCollection<BuildEventArgs>(boundedCapacity: maxBoundCapacity);
             var processingTask = System.Threading.Tasks.Task.Run(() =>
             {
                 foreach (var args in queue.GetConsumingEnumerable())
@@ -111,12 +112,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 queue.Add(instance);
 
-                if (progress != null && recordsRead % 1000 == 0 && stopwatch.ElapsedMilliseconds > 200)
+                if (progress != null && stopwatch.ElapsedMilliseconds > 200)
                 {
                     stopwatch.Restart();
                     var streamPosition = stream.Position;
                     double ratio = (double)streamPosition / streamLength;
                     progress.Report(ratio);
+
+                    if (bufferUsage != null)
+                    {
+                        bufferUsage.Report((double)queue.Count / maxBoundCapacity);
+                    }
                 }
             }
 
@@ -316,10 +322,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public override long Length => stream.Length;
 
         private long position;
-        public override long Position 
+        public override long Position
         {
-            get => position; 
-            set => throw new NotImplementedException(); 
+            get => position;
+            set => throw new NotImplementedException();
         }
 
         public override void Flush()

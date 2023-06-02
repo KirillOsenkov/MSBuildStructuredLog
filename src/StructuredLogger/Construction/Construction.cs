@@ -3,8 +3,10 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 using Microsoft.Build.Collections;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Framework.Profiler;
@@ -16,6 +18,44 @@ namespace Microsoft.Build.Logging.StructuredLogger
     /// </summary>
     public class Construction
     {
+        private class PerformanceCounter
+        {
+            public int Count = 0;
+            public TimeSpan TotalTime = TimeSpan.Zero;
+            public bool InnerCounter = false;
+            public void AddCounter(TimeSpan time)
+            {
+                Count++;
+                TotalTime += time;
+            }
+
+            public void AddCounter(long tick)
+            {
+                Count++;
+                TotalTime += TimeSpan.FromTicks(tick);
+            }
+
+            public float Average { get => Count > 0 ? TotalTime.Milliseconds / Count : 0; }
+        }
+
+        private Dictionary<string, PerformanceCounter> performanceCounters = new()
+        {
+            {nameof(BuildStartedEventArgs), new () },
+            {nameof(BuildFinishedEventArgs), new () },
+            {nameof(ProjectStartedEventArgs), new () },
+            {nameof(ProjectFinishedEventArgs), new () },
+            {nameof(TargetStartedEventArgs), new () },
+            {nameof(TargetFinishedEventArgs), new () },
+            {nameof(TaskStartedEventArgs), new () },
+            {nameof(TaskFinishedEventArgs), new () },
+            {nameof(BuildMessageEventArgs), new () },
+            {nameof(CustomBuildEventArgs), new () },
+            {nameof(BuildStatusEventArgs), new () },
+            {nameof(BuildWarningEventArgs), new () },
+            {nameof(BuildErrorEventArgs), new () },
+            {"Shutdown", new () }
+        };
+
         public Build Build { get; private set; }
 
         private readonly ConcurrentDictionary<int, Project> _projectIdToProjectMap = new ConcurrentDictionary<int, Project>();
@@ -84,8 +124,24 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public void Shutdown()
         {
+            var tick = Stopwatch.GetTimestamp();
             bgJobPool.CompleteAdding();
             bgWorker.Wait();
+            performanceCounters["Shutdown"].AddCounter(Stopwatch.GetTimestamp() - tick);
+
+            Folder perfFolder = new Folder();
+            TimeSpan totalTime = TimeSpan.Zero;
+            foreach (var counter in performanceCounters)
+            {
+                perfFolder.AddChild(new Property() { Name = counter.Key, Value = @$"{Math.Round(counter.Value.TotalTime.TotalMilliseconds, 2)} ms, Calls {counter.Value.Count}" });
+
+                if (!counter.Value.InnerCounter)
+                {
+                    totalTime += counter.Value.TotalTime;
+                }
+            }
+            perfFolder.Name = $"Log Processing Statistics (Total {Math.Round(totalTime.TotalMilliseconds, 2)} ms)";
+            Build.AddChild(perfFolder);
         }
 
         private string Intern(string text) => stringTable.Intern(text);
@@ -107,6 +163,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             try
             {
+                var tickNow = Stopwatch.GetTimestamp();
+
                 lock (syncLock)
                 {
                     Build.StartTime = args.Timestamp;
@@ -119,6 +177,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     // realize the evaluation folder now so it is ordered before the main solution node
                     _ = EvaluationFolder;
                 }
+
+                performanceCounters[nameof(BuildStartedEventArgs)].AddCounter(Stopwatch.GetTimestamp() - tickNow);
             }
             catch (Exception ex)
             {
@@ -130,6 +190,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             try
             {
+                var tickNow = Stopwatch.GetTimestamp();
+
                 lock (syncLock)
                 {
                     Build.EndTime = args.Timestamp;
@@ -157,6 +219,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     //Build.VisitAllChildren<Project>(p => CalculateTargetGraph(p));
                 }
+
+                performanceCounters[nameof(BuildFinishedEventArgs)].AddCounter(Stopwatch.GetTimestamp() - tickNow);
             }
             catch (Exception ex)
             {
@@ -168,6 +232,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             try
             {
+                var tickNow = Stopwatch.GetTimestamp();
+
                 lock (syncLock)
                 {
                     Project parentProject = null;
@@ -207,6 +273,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         }
                     }
                 }
+
+                performanceCounters[nameof(ProjectStartedEventArgs)].AddCounter(Stopwatch.GetTimestamp() - tickNow);
             }
             catch (Exception ex)
             {
@@ -218,11 +286,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             try
             {
+                var tickNow = Stopwatch.GetTimestamp();
+
                 lock (syncLock)
                 {
                     var project = GetOrAddProject(args.BuildEventContext.ProjectContextId);
                     project.EndTime = args.Timestamp;
                 }
+
+                performanceCounters[nameof(ProjectFinishedEventArgs)].AddCounter(Stopwatch.GetTimestamp() - tickNow);
+
             }
             catch (Exception ex)
             {
@@ -232,12 +305,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public void TargetStarted(object sender, TargetStartedEventArgs args)
         {
+            var tickNow = Stopwatch.GetTimestamp();
+
             AddTargetCore(
                 args,
                 Intern(args.TargetName),
                 Intern(args.ParentTarget),
                 Intern(args.TargetFile),
                 args.BuildReason);
+
+            performanceCounters[nameof(TargetStartedEventArgs)].AddCounter(Stopwatch.GetTimestamp() - tickNow);
+
         }
 
         private Target AddTargetCore(
@@ -277,6 +355,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             try
             {
+                var tickNow = Stopwatch.GetTimestamp();
+
                 lock (syncLock)
                 {
                     var project = GetOrAddProject(args.BuildEventContext.ProjectContextId);
@@ -305,6 +385,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         }
                     }
                 }
+
+                performanceCounters[nameof(TargetFinishedEventArgs)].AddCounter(Stopwatch.GetTimestamp() - tickNow);
             }
             catch (Exception ex)
             {
@@ -382,6 +464,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             try
             {
+                var tickNow = Stopwatch.GetTimestamp();
+
                 lock (syncLock)
                 {
                     Build.Statistics.Tasks++;
@@ -398,6 +482,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         task.LineNumber = taskStarted2.LineNumber;
                     }
                 }
+
+                performanceCounters[nameof(TaskStartedEventArgs)].AddCounter(Stopwatch.GetTimestamp() - tickNow);
+
             }
             catch (Exception ex)
             {
@@ -409,6 +496,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             try
             {
+                var tickNow = Stopwatch.GetTimestamp();
+
                 lock (syncLock)
                 {
                     var project = GetOrAddProject(args.BuildEventContext.ProjectContextId);
@@ -417,6 +506,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     task.EndTime = args.Timestamp;
                 }
+
+                performanceCounters[nameof(TaskFinishedEventArgs)].AddCounter(Stopwatch.GetTimestamp() - tickNow);
             }
             catch (Exception ex)
             {
@@ -430,6 +521,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             try
             {
+                var tickNow = Stopwatch.GetTimestamp();
+
                 lock (syncLock)
                 {
                     if (args is TargetSkippedEventArgs2 targetSkipped)
@@ -453,6 +546,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
 
                     messageProcessor.Process(args);
+                    performanceCounters[nameof(BuildMessageEventArgs)].AddCounter(Stopwatch.GetTimestamp() - tickNow);
                 }
             }
             catch (Exception ex)
@@ -465,6 +559,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             try
             {
+                var tickNow = Stopwatch.GetTimestamp();
+
                 lock (syncLock)
                 {
                     messageProcessor.Process(new BuildMessageEventArgs(
@@ -473,6 +569,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         Intern(args.SenderName),
                         MessageImportance.Low));
                 }
+
+                performanceCounters[nameof(CustomBuildEventArgs)].AddCounter(Stopwatch.GetTimestamp() - tickNow);
             }
             catch (Exception ex)
             {
@@ -484,6 +582,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             try
             {
+                var tickNow = Stopwatch.GetTimestamp();
+
                 lock (syncLock)
                 {
                     if (e is ProjectEvaluationStartedEventArgs projectEvaluationStarted)
@@ -554,6 +654,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         }));
                     }
                 }
+
+                performanceCounters[nameof(BuildStatusEventArgs)].AddCounter(Stopwatch.GetTimestamp() - tickNow);
             }
             catch (Exception ex)
             {
@@ -637,6 +739,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             try
             {
+                var tickNow = Stopwatch.GetTimestamp();
+
                 lock (syncLock)
                 {
                     TreeNode parent = FindParent(args.BuildEventContext);
@@ -667,6 +771,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     parent.AddChild(warning);
                 }
+
+                performanceCounters[nameof(BuildWarningEventArgs)].AddCounter(Stopwatch.GetTimestamp() - tickNow);
             }
             catch (Exception ex)
             {
@@ -719,6 +825,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             try
             {
+                var tickNow = Stopwatch.GetTimestamp();
+
                 lock (syncLock)
                 {
                     TreeNode parent = FindParent(args.BuildEventContext);
@@ -732,6 +840,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     Populate(error, args);
                     errors.AddChild(error);
                 }
+
+                performanceCounters[nameof(BuildErrorEventArgs)].AddCounter(Stopwatch.GetTimestamp() - tickNow);
             }
             catch (Exception ex)
             {
