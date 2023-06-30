@@ -59,7 +59,7 @@ namespace StructuredLogViewer.Controls
         private ContextMenu sharedTreeContextMenu;
         private ContextMenu filesTreeContextMenu;
 
-        public TreeView ActiveTreeView;
+        private TreeView ActiveTreeView;
 
         private PropertiesAndItemsSearch propertiesAndItemsSearch;
 
@@ -110,10 +110,7 @@ namespace StructuredLogViewer.Controls
             propertiesAndItemsControl.ResultsTreeBuilder = BuildResultTree;
 
             UpdatePropertiesAndItemsWatermark();
-            propertiesAndItemsControl.WatermarkDisplayed += () =>
-            {
-                UpdatePropertiesAndItemsWatermark();
-            };
+            propertiesAndItemsControl.WatermarkDisplayed += UpdatePropertiesAndItemsWatermark;
             propertiesAndItemsControl.RecentItemsCategory = "PropertiesAndItems";
 
             SetProjectContext(null);
@@ -298,6 +295,34 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             navigationHelper.OpenFileRequested += filePath => DisplayFile(filePath);
 
             centralTabControl.SelectionChanged += CentralTabControl_SelectionChanged;
+        }
+
+        public void Dispose()
+        {
+            searchLogControl.ResultsList.SelectedItemChanged -= ResultsList_SelectionChanged;
+            searchLogControl.WatermarkDisplayed -= UpdatePropertiesAndItemsWatermark;
+            searchLogControl.ExecuteSearch = null;
+            searchLogControl.WatermarkContent = null;
+            searchLogControl.DisplayItems(null);
+            propertiesAndItemsControl.ResultsList.SelectedItemChanged -= ResultsList_SelectionChanged;
+            propertiesAndItemsControl.WatermarkDisplayed -= UpdatePropertiesAndItemsWatermark;
+            propertiesAndItemsContext.Content = null;
+            propertiesAndItemsControl.ExecuteSearch = null;
+            propertiesAndItemsControl.WatermarkContent = null;
+            propertiesAndItemsSearch = null;
+            breadCrumb.ItemsSource = null;
+            filesTree.DisplayItems(null);
+            treeView.SelectedItemChanged -= TreeView_SelectedItemChanged;
+            treeView.ItemsSource = null;
+            centralTabControl.SelectionChanged -= CentralTabControl_SelectionChanged;
+            this.ActiveTreeView = null;
+            this.DataContext = null;
+            preprocessedFileManager = null;
+            navigationHelper = null;
+            projectContext = null;
+            SelectedTreeViewItem = null;
+            BaseNode.ClearSelectedNode();
+            this.Build = null;
         }
 
         private void CentralTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
