@@ -20,6 +20,17 @@ namespace StructuredLogViewer.Controls
             grid.LayoutTransform = scaleTransform;
         }
 
+        public void Dispose()
+        {
+            PreviewMouseWheel -= TimelineControl_MouseWheel;
+            grid.Children.Clear();
+            this.Timeline = null;
+            BuildControl = null;
+            TextBlocks.Clear();
+            activeTextBlock = null;
+            highlight = null;
+        }
+
         private double scaleFactor = 1;
         private double horizontalOffset = 0;
         private double verticalOffset = 0;

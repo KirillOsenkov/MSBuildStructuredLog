@@ -59,7 +59,7 @@ namespace StructuredLogViewer.Controls
         private ContextMenu sharedTreeContextMenu;
         private ContextMenu filesTreeContextMenu;
 
-        public TreeView ActiveTreeView;
+        private TreeView ActiveTreeView;
 
         private PropertiesAndItemsSearch propertiesAndItemsSearch;
 
@@ -110,10 +110,7 @@ namespace StructuredLogViewer.Controls
             propertiesAndItemsControl.ResultsTreeBuilder = BuildResultTree;
 
             UpdatePropertiesAndItemsWatermark();
-            propertiesAndItemsControl.WatermarkDisplayed += () =>
-            {
-                UpdatePropertiesAndItemsWatermark();
-            };
+            propertiesAndItemsControl.WatermarkDisplayed += UpdatePropertiesAndItemsWatermark;
             propertiesAndItemsControl.RecentItemsCategory = "PropertiesAndItems";
 
             SetProjectContext(null);
@@ -240,7 +237,8 @@ namespace StructuredLogViewer.Controls
             treeView.ItemContainerStyle = treeViewItemStyle;
             treeView.KeyDown += TreeView_KeyDown;
             treeView.SelectedItemChanged += TreeView_SelectedItemChanged;
-            treeView.GotFocus += (s, a) => ActiveTreeView = treeView;
+            treeView.GotFocus += TreeView_GetFocus;
+            treeView.AddHandler(TreeViewItem.SelectedEvent, (RoutedEventHandler)TreeViewItem_Selected);
 
             ActiveTreeView = treeView;
 
@@ -298,6 +296,89 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             navigationHelper.OpenFileRequested += filePath => DisplayFile(filePath);
 
             centralTabControl.SelectionChanged += CentralTabControl_SelectionChanged;
+        }
+
+        public void Dispose()
+        {
+            // WPF controls
+            documentWell.Dispose();
+            searchLogControl.Dispose();
+            searchLogControl.ResultsList.ItemContainerStyle = null;
+            searchLogControl.ResultsList.SelectedItemChanged -= ResultsList_SelectionChanged;
+            searchLogControl.WatermarkDisplayed -= UpdatePropertiesAndItemsWatermark;
+            searchLogControl.ExecuteSearch = null;
+            searchLogControl.WatermarkContent = null;
+            propertiesAndItemsControl.ResultsList.ItemContainerStyle = null;
+            propertiesAndItemsControl.ResultsList.SelectedItemChanged -= ResultsList_SelectionChanged;
+            propertiesAndItemsControl.WatermarkDisplayed -= UpdatePropertiesAndItemsWatermark;
+            propertiesAndItemsControl.ExecuteSearch = null;
+            propertiesAndItemsControl.WatermarkContent = null;
+            propertiesAndItemsContext.Content = null;
+            propertiesAndItemsSearch = null;
+            breadCrumb.ItemsSource = null;
+            filesTree.ResultsList.ItemContainerStyle = null;
+            filesTree.ContextMenu = null;
+            filesTree.DisplayItems(null);
+            findInFilesControl.ResultsList.ItemContainerStyle = null;
+            treeView.RemoveHandler(TreeViewItem.SelectedEvent, (RoutedEventHandler)TreeViewItem_Selected);
+            treeView.SelectedItemChanged -= TreeView_SelectedItemChanged;
+            treeView.KeyDown -= TreeView_KeyDown;
+            treeView.GotFocus -= TreeView_GetFocus;
+            treeView.ItemsSource = null;
+            treeView.ItemContainerStyle = null;
+            treeView.ContextMenu = null;
+            centralTabControl.SelectionChanged -= CentralTabControl_SelectionChanged;
+
+            if (this.tracing.Timeline != null)
+            {
+                this.tracing.Dispose();
+            }
+
+            if (this.timeline.Timeline != null)
+            {
+                this.timeline.Dispose();
+            }
+
+            if (this.graph != null)
+            {
+                graph = null;
+                projectGraphControl.Dispose();
+            }
+
+            // member variables
+            copyItem = null;
+            copySubtreeItem = null;
+            viewSubtreeTextItem = null;
+            searchInSubtreeItem = null;
+            excludeSubtreeFromSearchItem = null;
+            goToTimeLineItem = null;
+            goToTracingItem = null;
+            copyChildrenItem = null;
+            sortChildrenItem = null;
+            copyNameItem = null;
+            copyValueItem = null;
+            viewSourceItem = null;
+            viewFullTextItem = null;
+            openFileItem = null;
+            copyFilePathItem = null;
+            preprocessItem = null;
+            runItem = null;
+            debugItem = null;
+            hideItem = null;
+            showTimeItem = null;
+
+            sharedTreeContextMenu = null;
+            filesTreeContextMenu = null;
+            ActiveTreeView = null;
+            DataContext = null;
+            preprocessedFileManager = null;
+            navigationHelper = null;
+            projectContext = null;
+            SelectedTreeViewItem = null;
+            sourceFileResolver = null;
+            scrollViewer = null;
+            BaseNode.ClearSelectedNode();
+            this.Build = null;
         }
 
         private void CentralTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -989,7 +1070,8 @@ Recent:
                 }
                 else if (this.centralTabControl.SelectedIndex == 2)
                 {
-                    if (node is TimedNode tnode) {
+                    if (node is TimedNode tnode)
+                    {
                         tracing.GoToTimedNode(tnode);
                     }
                 }
@@ -1009,6 +1091,11 @@ Recent:
                 UpdateBreadcrumb(item);
                 UpdateProjectContext(item);
             }
+        }
+
+        private void TreeView_GetFocus(object sender, RoutedEventArgs e)
+        {
+            ActiveTreeView = treeView;
         }
 
         private void ResultsList_SelectionChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
@@ -1287,7 +1374,7 @@ Recent:
                 CopyToClipboard(text);
             }
         }
-        
+
         public void ViewSubtreeText()
         {
             if (treeView.SelectedItem is BaseNode treeNode)

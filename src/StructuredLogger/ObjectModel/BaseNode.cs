@@ -35,6 +35,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         private static BaseNode selectedNode = null;
 
+        public static void ClearSelectedNode()
+        {
+            selectedNode = null;
+        }
+
         public bool IsSelected
         {
             get => selectedNode == this;

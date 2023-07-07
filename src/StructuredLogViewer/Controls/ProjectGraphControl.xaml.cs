@@ -12,6 +12,12 @@ namespace StructuredLogViewer.Controls
             InitializeComponent();
         }
 
+        public void Dispose()
+        {
+            Panel.Children.Clear();
+            BuildControl = null;
+        }
+
         public BuildControl BuildControl { get; set; }
 
         public void SetGraph(Graph graph)

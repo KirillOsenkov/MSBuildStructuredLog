@@ -133,6 +133,9 @@ namespace StructuredLogViewer
 
         private void DisplayWelcomeScreen(string message = "")
         {
+            // Dispose of current build.
+            DisplayBuild(null);
+
             this.projectFilePath = null;
             this.logFilePath = null;
             this.currentBuild = null;
@@ -629,6 +632,11 @@ namespace StructuredLogViewer
 
         private void DisplayBuild(Build build)
         {
+            if (currentBuild != null && currentBuild is BuildControl)
+            {
+                currentBuild.Dispose();
+            }
+
             currentBuild = build != null ? new BuildControl(build, logFilePath) : null;
             SetContent(currentBuild);
 
