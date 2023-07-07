@@ -12,13 +12,10 @@ namespace StructuredLogViewer.Controls
 {
     public partial class DocumentWell : UserControl
     {
-        private ICollectionView tabsView;
-
         public DocumentWell()
         {
             InitializeComponent();
             tabControl.ItemsSource = Tabs;
-            tabsView = CollectionViewSource.GetDefaultView(Tabs);
             Tabs.CollectionChanged += Tabs_CollectionChanged;
 
             var existingStyle = Application.Current.FindResource(typeof(TabItem));
@@ -26,6 +23,13 @@ namespace StructuredLogViewer.Controls
             style.Setters.Add(new EventSetter(MouseDownEvent, (MouseButtonEventHandler)OnMouseDownEvent));
 
             tabControl.ItemContainerStyle = style;
+        }
+
+        public void Dispose()
+        {
+            tabControl.ItemContainerStyle = null;
+            Tabs.CollectionChanged -= Tabs_CollectionChanged;
+            tabControl.ItemsSource = null;
         }
 
         private void OnMouseDownEvent(object sender, MouseButtonEventArgs args)

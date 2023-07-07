@@ -62,7 +62,6 @@
                             BorderThickness="0"
                             VirtualizingPanel.IsVirtualizing="True"
                             VirtualizingPanel.VirtualizationMode="Recycling"
-                            TreeViewItem.Selected="TreeViewItem_Selected"
                             ItemsSource="{Binding Children}"
                             structuredLogViewer:ScrollViewerHelper.ShiftWheelScrollsHorizontally="True" />
                 </TabItem>

@@ -225,9 +225,30 @@ namespace StructuredLogViewer.Controls
             scaleTransform = new ScaleTransform();
             this.DataContext = this;
             InitializeComponent();
-            this.PreviewMouseWheel += TimelineControl_MouseWheel;
+            PreviewMouseWheel += TimelineControl_MouseWheel;
             grid.LayoutTransform = scaleTransform;
             overlayGrid.LayoutTransform = scaleTransform;
+        }
+
+        public void Dispose()
+        {
+            // WPF controls
+            PreviewMouseWheel -= TimelineControl_MouseWheel;
+            overlayGrid.Children.Clear();
+            grid.Children.Clear();
+
+            lanesPanel?.Children.Clear();
+            lanesPanel = null;
+            overlayCanvas?.Children.Clear();
+            overlayCanvas = null;
+            blocksCollection.Clear();
+            activeTextBlock = null;
+            lastHoverText = null;
+            HeatGraph = null;
+            TopRulerNodeDivider = null;
+            Timeline = null;
+            BuildControl = null;
+            TextBlocks = null;
         }
 
         private double scaleFactor = 1;
@@ -245,6 +266,16 @@ namespace StructuredLogViewer.Controls
         {
             horizontalOffset = scrollViewer.HorizontalOffset;
             verticalOffset = scrollViewer.VerticalOffset;
+        }
+
+        private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            if (e.HorizontalChange == 0)
+            {
+                return;
+            }
+
+            e.Handled = true;
         }
 
         private void zoomSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -266,7 +297,6 @@ namespace StructuredLogViewer.Controls
             scaleTransform.ScaleX = scaleFactor;
             scaleTransform.ScaleY = scaleFactor;
 
-            UpdatedGraph(scrollViewer.HorizontalOffset + scrollViewer.ViewportWidth);
             scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset * delta);
             scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset * delta);
         }
@@ -307,7 +337,6 @@ namespace StructuredLogViewer.Controls
                 double mouseOffsetX = mousePos.X * (1 - delta);
                 double mouseOffsetY = mousePos.Y * (1 - delta);
 
-                UpdatedGraph(scrollViewer.HorizontalOffset + scrollViewer.ViewportWidth);
                 scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset * delta - mouseOffsetX);
                 scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset * delta - mouseOffsetY);
             }
@@ -317,7 +346,7 @@ namespace StructuredLogViewer.Controls
 
         public BuildControl BuildControl { get; set; }
 
-        public Dictionary<BaseNode, TextField> TextBlocks { get; set; } = new();
+        private Dictionary<BaseNode, TextField> TextBlocks { get; set; } = new();
 
         private DateTime lastClickTimestamp = DateTime.MinValue;
 
@@ -947,34 +976,6 @@ namespace StructuredLogViewer.Controls
             }
         }
 
-        private void UpdatedGraph(double widthOffset)
-        {
-            // Load more blocks when scroll to the right.
-            var renderWidthTimeStamp = GlobalStartTime + ConvertPixelToTime(widthOffset / scaleTransform.ScaleX);
-            if (lastRenderTimeStamp > renderWidthTimeStamp)
-            {
-                return;
-            }
-
-            if (lanesPanel != null)
-            {
-                foreach (var lane in lanesPanel.Children)
-                {
-                    if (lane is FastCanvas canvas && canvas.Name.StartsWith("node"))
-                    {
-                        if (Int32.TryParse(canvas.Name.Substring("node".Length), out int parsedInt))
-                        {
-                            var blocks = blocksCollection[parsedInt];
-                            var culledBlocks = blocks.Where(block => !(lastRenderTimeStamp > block.Start || block.Start >= renderWidthTimeStamp));
-                            UpdatePanelForLane(canvas, culledBlocks);
-                        }
-                    }
-                }
-
-                lastRenderTimeStamp = renderWidthTimeStamp;
-            }
-        }
-
         private TextField activeTextBlock = null;
         private Border highlight = new Border()
         {
@@ -1259,18 +1260,6 @@ namespace StructuredLogViewer.Controls
         private void ResetZoom_Click(object sender, RoutedEventArgs e)
         {
             zoomSlider.Value = 1;
-            UpdatedGraph(scrollViewer.HorizontalOffset + scrollViewer.ViewportWidth);
-        }
-
-        private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
-        {
-            if (e.HorizontalChange == 0)
-            {
-                return;
-            }
-
-            UpdatedGraph(e.HorizontalOffset + e.ViewportWidth);
-            e.Handled = true;
         }
     }
 }
