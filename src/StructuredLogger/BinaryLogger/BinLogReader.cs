@@ -7,6 +7,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using Microsoft.Build.Framework;
+using StructuredLogger;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -68,72 +69,131 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             EnsureFileFormatVersionKnown(fileFormatVersion);
 
-            // Use a producer-consumer queue so that IO can happen on one thread
-            // while processing can happen on another thread decoupled. The speed
-            // up is from 4.65 to 4.15 seconds.
-
-            // see issue https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/684
-            var maxBoundedCapacity = 50000;
-
-            var queue = new BlockingCollection<BuildEventArgs>(boundedCapacity: maxBoundedCapacity);
-            var processingTask = System.Threading.Tasks.Task.Run(() =>
+            if (PlatformUtilities.HasThreads)
             {
-                foreach (var args in queue.GetConsumingEnumerable())
+                // Use a producer-consumer queue so that IO can happen on one thread
+                // while processing can happen on another thread decoupled. The speed
+                // up is from 4.65 to 4.15 seconds.
+
+                // see issue https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/684
+                var maxBoundedCapacity = 50000;
+
+                var queue = new BlockingCollection<BuildEventArgs>(boundedCapacity: maxBoundedCapacity);
+                var processingTask = System.Threading.Tasks.Task.Run(() =>
+                {
+                    foreach (var args in queue.GetConsumingEnumerable())
+                    {
+                        Dispatch(args);
+                    }
+                });
+
+                int recordsRead = 0;
+
+                using var reader = new BuildEventArgsReader(binaryReader, fileFormatVersion);
+                reader.OnBlobRead += OnBlobRead;
+
+                Stopwatch stopwatch = Stopwatch.StartNew();
+
+                var streamLength = stream.Length;
+
+                while (true)
+                {
+                    BuildEventArgs instance = null;
+
+                    try
+                    {
+                        instance = reader.Read();
+                    }
+                    catch (Exception ex)
+                    {
+                        OnException?.Invoke(ex);
+                    }
+
+                    recordsRead++;
+                    if (instance == null)
+                    {
+                        queue.CompleteAdding();
+                        break;
+                    }
+
+                    queue.Add(instance);
+
+                    if (progress != null && stopwatch.ElapsedMilliseconds > 200)
+                    {
+                        stopwatch.Restart();
+                        var streamPosition = stream.Position;
+                        double ratio = (double)streamPosition / streamLength;
+                        progress.Report(ratio);
+                    }
+                }
+
+                processingTask.Wait();
+                if (fileFormatVersion >= 10)
+                {
+                    var strings = reader.GetStrings();
+                    if (strings != null && strings.Any())
+                    {
+                        OnStringDictionaryComplete?.Invoke(strings);
+                    }
+                }
+            }
+            else
+            {
+                var queue = new List<BuildEventArgs>();
+
+                int recordsRead = 0;
+
+                using var reader = new BuildEventArgsReader(binaryReader, fileFormatVersion);
+                reader.OnBlobRead += OnBlobRead;
+
+                Stopwatch stopwatch = Stopwatch.StartNew();
+
+                var streamLength = stream.Length;
+
+                while (true)
+                {
+                    BuildEventArgs instance = null;
+
+                    try
+                    {
+                        instance = reader.Read();
+                    }
+                    catch (Exception ex)
+                    {
+                        OnException?.Invoke(ex);
+                    }
+
+                    recordsRead++;
+                    if (instance == null)
+                    {
+                        break;
+                    }
+
+                    queue.Add(instance);
+
+                    if (progress != null && stopwatch.ElapsedMilliseconds > 200)
+                    {
+                        stopwatch.Restart();
+                        var streamPosition = stream.Position;
+                        double ratio = (double)streamPosition / streamLength;
+                        progress.Report(ratio);
+                    }
+                }
+
+                foreach (var args in queue)
                 {
                     Dispatch(args);
                 }
-            });
-
-            int recordsRead = 0;
-
-            using var reader = new BuildEventArgsReader(binaryReader, fileFormatVersion);
-            reader.OnBlobRead += OnBlobRead;
-
-            Stopwatch stopwatch = Stopwatch.StartNew();
-
-            var streamLength = stream.Length;
-
-            while (true)
-            {
-                BuildEventArgs instance = null;
-
-                try
+                if (fileFormatVersion >= 10)
                 {
-                    instance = reader.Read();
-                }
-                catch (Exception ex)
-                {
-                    OnException?.Invoke(ex);
-                }
-
-                recordsRead++;
-                if (instance == null)
-                {
-                    queue.CompleteAdding();
-                    break;
-                }
-
-                queue.Add(instance);
-
-                if (progress != null && stopwatch.ElapsedMilliseconds > 200)
-                {
-                    stopwatch.Restart();
-                    var streamPosition = stream.Position;
-                    double ratio = (double)streamPosition / streamLength;
-                    progress.Report(ratio);
+                    var strings = reader.GetStrings();
+                    if (strings != null && strings.Any())
+                    {
+                        OnStringDictionaryComplete?.Invoke(strings);
+                    }
                 }
             }
 
-            processingTask.Wait();
-
-            if (fileFormatVersion >= 10)
-            {
-                var strings = reader.GetStrings();
-                if (strings != null && strings.Any())
-                {
-                    OnStringDictionaryComplete?.Invoke(strings);
-                }
-            }
 
             if (progress != null)
             {
@@ -321,10 +381,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public override long Length => stream.Length;
 
         private long position;
-        public override long Position 
+        public override long Position
         {
-            get => position; 
-            set => throw new NotImplementedException(); 
+            get => position;
+            set => throw new NotImplementedException();
         }
 
         public override void Flush()

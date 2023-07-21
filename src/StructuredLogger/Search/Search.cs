@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
+using StructuredLogger;
 using TPLTask = System.Threading.Tasks.Task;
 
 namespace StructuredLogViewer
@@ -87,30 +88,53 @@ namespace StructuredLogViewer
                 var children = treeNode.Children;
                 if (node is Project)
                 {
-                    var tasks = new System.Threading.Tasks.Task<List<SearchResult>>[children.Count];
-
-                    for (int i = 0; i < children.Count; i++)
+                    if (PlatformUtilities.HasThreads)
                     {
-                        var child = children[i];
-                        var task = TPLTask.Run(() =>
+                        var tasks = new System.Threading.Tasks.Task<List<SearchResult>>[children.Count];
+
+                        for (int i = 0; i < children.Count; i++)
                         {
+                            var child = children[i];
+                            var task = TPLTask.Run(() =>
+                            {
+                                var list = new List<SearchResult>();
+                                Visit(child, matcher, list, cancellationToken);
+                                return list;
+                            });
+                            tasks[i] = task;
+                        }
+
+                        TPLTask.WaitAll(tasks);
+
+                        lock (results)
+                        {
+                            for (int i = 0; i < tasks.Length; i++)
+                            {
+                                var task = tasks[i];
+                                var subList = task.Result;
+                                results.AddRange(subList);
+                                containsMatch |= subList.Count > 0;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        var searchResults = new List<SearchResult>[children.Count];
+                        for (int i = 0; i < children.Count; i++)
+                        {
+                            var child = children[i];
                             var list = new List<SearchResult>();
                             Visit(child, matcher, list, cancellationToken);
-                            return list;
-                        });
-                        tasks[i] = task;
-                    }
-
-                    TPLTask.WaitAll(tasks);
-
-                    lock (results)
-                    {
-                        for (int i = 0; i < tasks.Length; i++)
+                            searchResults[i] = list;
+                        }
+                        lock (results)
                         {
-                            var task = tasks[i];
-                            var subList = task.Result;
-                            results.AddRange(subList);
-                            containsMatch |= subList.Count > 0;
+                            for (int i = 0; i < searchResults.Length; i++)
+                            {
+                                var subList = searchResults[i];
+                                results.AddRange(subList);
+                                containsMatch |= subList.Count > 0;
+                            }
                         }
                     }
                 }

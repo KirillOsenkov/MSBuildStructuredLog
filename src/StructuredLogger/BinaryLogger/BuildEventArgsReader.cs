@@ -15,6 +15,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Framework.Profiler;
 using Microsoft.Build.Internal;
 using Microsoft.Build.Shared;
+using StructuredLogger;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -1396,7 +1397,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             public StringStorage()
             {
-                if (!Environment.Is64BitProcess)
+                if (!Environment.Is64BitProcess && PlatformUtilities.HasTempStorage)
                 {
                     filePath = Path.GetTempFileName();
                     var utf8noBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
@@ -1495,7 +1496,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
                 catch
                 {
-                    // The StringStorage class is not crucial for other functionality and if 
+                    // The StringStorage class is not crucial for other functionality and if
                     // there are exceptions when closing the temp file, it's too late to do anything about it.
                     // Since we don't want to disrupt anything and the file is in the TEMP directory, it will
                     // get cleaned up at some point anyway.
