@@ -5,7 +5,7 @@ namespace StructuredLogger;
 
 public class PlatformUtilities
 {
-    public static bool HasThreads => !RuntimeInformation.IsOSPlatform(_browser);
+    public static bool HasThreads => !_isBrowser;
 
-    private static readonly OSPlatform _browser = OSPlatform.Create("BROWSER");
+    private static readonly bool _isBrowser = RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER"));
 }
