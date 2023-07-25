@@ -5,7 +5,7 @@ namespace Microsoft.Build.Logging.StructuredLogger;
 
 public class PlatformUtilities
 {
-    public static bool HasThreads => !_isBrowser;
+    public static bool HasThreads => !_isBrowser && !_isWasi;
 
     public static bool HasTempStorage => !_isWasi;
     public static bool HasColor => !_isWasi;
