@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace StructuredLogger;
+namespace Microsoft.Build.Logging.StructuredLogger;
 
 public class PlatformUtilities
 {

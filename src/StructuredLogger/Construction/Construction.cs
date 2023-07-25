@@ -8,7 +8,6 @@ using System.Linq;
 using Microsoft.Build.Collections;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Framework.Profiler;
-using StructuredLogger;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
