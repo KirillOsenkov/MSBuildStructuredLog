@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="StructuredLogViewer.Controls.BuildControl"
+<UserControl x:Class="StructuredLogViewer.Controls.BuildControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -52,8 +52,8 @@
 
           <local:SplitterPanel>
             <local:SplitterPanel.FirstChild>
-              <TabControl x:Name="centralTabControl" 
-                          TabStripPlacement="Bottom" 
+              <TabControl x:Name="centralTabControl"
+                          TabStripPlacement="Bottom"
                           SelectedIndex="0"
                           MinWidth="10">
                 <TabItem x:Name="mainTreeTab" Header="Log">
@@ -62,7 +62,6 @@
                             BorderThickness="0"
                             VirtualizingPanel.IsVirtualizing="True"
                             VirtualizingPanel.VirtualizationMode="Recycling"
-                            TreeViewItem.Selected="TreeViewItem_Selected"
                             ItemsSource="{Binding Children}"
                             structuredLogViewer:ScrollViewerHelper.ShiftWheelScrollsHorizontally="True" />
                 </TabItem>
@@ -125,7 +124,7 @@
                 <Setter Property="Template">
                   <Setter.Value>
                     <ControlTemplate>
-                      <Polygon Points="0,0 3,3, 0,6" Stroke="{DynamicResource {x:Static SystemColors.InfoTextBrushKey}}" Fill="{DynamicResource {x:Static SystemColors.InfoTextBrushKey}}" />
+                      <Polygon Points="0,0 3,3 0,6" Stroke="{DynamicResource {x:Static SystemColors.InfoTextBrushKey}}" Fill="{DynamicResource {x:Static SystemColors.InfoTextBrushKey}}" />
                     </ControlTemplate>
                   </Setter.Value>
                 </Setter>

@@ -3,65 +3,65 @@
              xmlns:local="clr-namespace:StructuredLogViewer.Avalonia.Controls;assembly=StructuredLogViewer.Avalonia"
              xmlns:a="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
              x:Class="StructuredLogViewer.Avalonia.Controls.TextViewerControl">
-    <Grid RowDefinitions="Auto,*">
-        <DockPanel Background="White"
-                   Name="filePathToolbar">
-            <Button Name="save" 
-                    DockPanel.Dock="Left"
-                    Content="Save" 
-                    VerticalAlignment="Center"
-                    BorderThickness="0"
-                    Click="save_Click"
-                    Background="Transparent"
-                    Padding="6,3,6,3"
-                    ToolTip.Tip="Save file as..." />
-            <Button Name="openInExternalEditor"
-                    DockPanel.Dock="Left"
-                    Content="Open"
-                    VerticalAlignment="Center"
-                    BorderThickness="0"
-                    Background="Transparent"
-                    Padding="6,3,6,3"
-                    ToolTip.Tip="Open in external editor" />
-            <Button Name="copyFullPath"
-                    Content="Copy Path"
-                    Padding="6,3,6,3"
-                    BorderThickness="0"
-                    Background="Transparent"
-                    VerticalAlignment="Center"
-                    DockPanel.Dock="Left"
-                    ToolTip.Tip="Copy full path" />
-            <Button Name="preprocess"
-                    Content="Preprocess"
-                    Padding="6,3,6,3"
-                    BorderThickness="0"
-                    Background="Transparent"
-                    VerticalAlignment="Center"
-                    DockPanel.Dock="Left"
-                    ToolTip.Tip="Show preprocessed project with all imports inlined" />
-            <CheckBox Name="wordWrap"
-                      Margin="4"
-                      VerticalAlignment="Center"
-                      DockPanel.Dock="Left"
-                      Content="Word Wrap" />
-            <TextBox Name="filePathText"
-                     Padding="4"
-                     Background="Transparent"
-                     BorderThickness="0"
-                     IsReadOnly="True" />
-        </DockPanel>
+  <Grid RowDefinitions="Auto,*">
+    <DockPanel Background="White" Name="filePathToolbar">
+      <Button Name="save" 
+              DockPanel.Dock="Left"
+              Content="Save" 
+              VerticalAlignment="Center"
+              BorderThickness="0"
+              Click="save_Click"
+              Background="Transparent"
+              Padding="6,3,6,3"
+              ToolTip.Tip="Save file as..." />
+      <Button Name="openInExternalEditor"
+              DockPanel.Dock="Left"
+              Content="Open"
+              VerticalAlignment="Center"
+              BorderThickness="0"
+              Background="Transparent"
+              Padding="6,3,6,3"
+              ToolTip.Tip="Open in external editor" />
+      <Button Name="copyFullPath"
+              Content="Copy Path"
+              Padding="6,3,6,3"
+              BorderThickness="0"
+              Background="Transparent"
+              VerticalAlignment="Center"
+              DockPanel.Dock="Left"
+              ToolTip.Tip="Copy full path" />
+      <Button Name="preprocess"
+              Content="Preprocess"
+              Padding="6,3,6,3"
+              BorderThickness="0"
+              Background="Transparent"
+              VerticalAlignment="Center"
+              DockPanel.Dock="Left"
+              ToolTip.Tip="Show preprocessed project with all imports inlined" />
+      <CheckBox Name="wordWrap"
+                Margin="4"
+                VerticalAlignment="Center"
+                DockPanel.Dock="Left"
+                Content="Word Wrap" />
+      <TextBox Name="filePathText"
+               Padding="4"
+               Background="Transparent"
+               BorderThickness="0"
+               IsReadOnly="True" />
+    </DockPanel>
 
-        <a:TextEditor Name="textEditor"
-                      Grid.Row="1"
-                      ShowLineNumbers="True"
-                      LineNumbersForeground="Teal"
-                      FontSize="14">
-            <a:TextEditor.ContextMenu>
-                <ContextMenu>
-                    <MenuItem Header="Copy"
-                              Name="copyMenu" />
-                </ContextMenu>
-            </a:TextEditor.ContextMenu>
-        </a:TextEditor>
-    </Grid>
+    <a:TextEditor Name="textEditor"
+                  FontFamily="Consolas"
+                  Grid.Row="1"
+                  ShowLineNumbers="True"
+                  LineNumbersForeground="Teal"
+                  FontSize="14">
+      <a:TextEditor.ContextMenu>
+        <ContextMenu>
+          <MenuItem Header="Copy"
+                    Name="copyMenu" />
+        </ContextMenu>
+      </a:TextEditor.ContextMenu>
+    </a:TextEditor>
+  </Grid>
 </UserControl>

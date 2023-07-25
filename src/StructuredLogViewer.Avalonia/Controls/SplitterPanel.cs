@@ -24,12 +24,23 @@ namespace StructuredLogViewer.Avalonia.Controls
         public static readonly StyledProperty<GridLength> SecondChildRelativeSizeProperty =
             AvaloniaProperty.Register<SplitterPanel, GridLength>(nameof(SecondChildRelativeSize), new GridLength(1, GridUnitType.Star));
 
-        private readonly GridSplitter gridSplitter = new GridSplitter();
+        private readonly GridSplitter gridSplitter = new GridSplitter()
+        {
+            ResizeBehavior = GridResizeBehavior.PreviousAndNext
+        };
 
         public Orientation Orientation
         {
-            get { return GetValue(OrientationProperty); }
-            set { SetValue(OrientationProperty, value); }
+            get
+            {
+            	return GetValue(OrientationProperty);
+            }
+
+            set
+            {
+                SetValue(OrientationProperty, value);
+                UpdateRowColumnInfo();
+            }
         }
 
         public static readonly StyledProperty<Orientation> OrientationProperty =
@@ -43,7 +54,11 @@ namespace StructuredLogViewer.Avalonia.Controls
         private Control firstChild;
         public Control FirstChild
         {
-            get { return firstChild; }
+            get
+            {
+                return firstChild;
+            }
+
             set
             {
                 if (firstChild != null)
@@ -63,7 +78,11 @@ namespace StructuredLogViewer.Avalonia.Controls
         private Control secondChild;
         public Control SecondChild
         {
-            get { return secondChild; }
+            get
+            {
+                return secondChild;
+            }
+
             set
             {
                 if (secondChild != null)
@@ -112,6 +131,7 @@ namespace StructuredLogViewer.Avalonia.Controls
                 RowDefinitions.Add(new RowDefinition());
                 SetRow(gridSplitter, 0);
                 SetColumn(gridSplitter, 1);
+                gridSplitter.ResizeDirection = GridResizeDirection.Columns;
                 gridSplitter.Width = 5;
                 gridSplitter.HorizontalAlignment = HorizontalAlignment.Stretch;
                 gridSplitter.VerticalAlignment = VerticalAlignment.Stretch;
@@ -124,6 +144,7 @@ namespace StructuredLogViewer.Avalonia.Controls
                 ColumnDefinitions.Add(new ColumnDefinition());
                 SetRow(gridSplitter, 1);
                 SetColumn(gridSplitter, 0);
+                gridSplitter.ResizeDirection = GridResizeDirection.Rows;
                 gridSplitter.Height = 5;
                 gridSplitter.HorizontalAlignment = HorizontalAlignment.Stretch;
                 gridSplitter.VerticalAlignment = VerticalAlignment.Stretch;

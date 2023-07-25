@@ -59,7 +59,7 @@ namespace StructuredLogViewer.Controls
         private ContextMenu sharedTreeContextMenu;
         private ContextMenu filesTreeContextMenu;
 
-        public TreeView ActiveTreeView;
+        private TreeView ActiveTreeView;
 
         private PropertiesAndItemsSearch propertiesAndItemsSearch;
 
@@ -110,10 +110,7 @@ namespace StructuredLogViewer.Controls
             propertiesAndItemsControl.ResultsTreeBuilder = BuildResultTree;
 
             UpdatePropertiesAndItemsWatermark();
-            propertiesAndItemsControl.WatermarkDisplayed += () =>
-            {
-                UpdatePropertiesAndItemsWatermark();
-            };
+            propertiesAndItemsControl.WatermarkDisplayed += UpdatePropertiesAndItemsWatermark;
             propertiesAndItemsControl.RecentItemsCategory = "PropertiesAndItems";
 
             SetProjectContext(null);
@@ -145,8 +142,8 @@ namespace StructuredLogViewer.Controls
             var sharedCopySubtreeItem = new MenuItem() { Header = "Copy subtree" };
             sharedCopyAllItem.Click += (s, a) => CopyAll();
             sharedCopySubtreeItem.Click += (s, a) => CopySubtree();
-            sharedTreeContextMenu.Items.Add(sharedCopyAllItem);
-            sharedTreeContextMenu.Items.Add(sharedCopySubtreeItem);
+            sharedTreeContextMenu.AddItem(sharedCopyAllItem);
+            sharedTreeContextMenu.AddItem(sharedCopySubtreeItem);
 
             // Files
             filesTreeContextMenu = new ContextMenu();
@@ -156,9 +153,9 @@ namespace StructuredLogViewer.Controls
             filesCopyAllItem.Click += (s, a) => CopyAll();
             filesCopyPathsItem.Click += (s, a) => CopyPaths();
             filesCopySubtreeItem.Click += (s, a) => CopySubtree();
-            filesTreeContextMenu.Items.Add(filesCopyAllItem);
-            filesTreeContextMenu.Items.Add(filesCopyPathsItem);
-            filesTreeContextMenu.Items.Add(filesCopySubtreeItem);
+            filesTreeContextMenu.AddItem(filesCopyAllItem);
+            filesTreeContextMenu.AddItem(filesCopyPathsItem);
+            filesTreeContextMenu.AddItem(filesCopySubtreeItem);
 
             // Build Log
             var contextMenu = new ContextMenu();
@@ -204,26 +201,26 @@ namespace StructuredLogViewer.Controls
             debugItem.Click += (s, a) => Run(treeView.SelectedItem as Task, debug: true);
             hideItem.Click += (s, a) => Delete();
 
-            contextMenu.Items.Add(runItem);
-            contextMenu.Items.Add(debugItem);
-            contextMenu.Items.Add(viewSourceItem);
-            contextMenu.Items.Add(viewFullTextItem);
-            contextMenu.Items.Add(openFileItem);
-            contextMenu.Items.Add(preprocessItem);
-            contextMenu.Items.Add(searchInSubtreeItem);
-            contextMenu.Items.Add(excludeSubtreeFromSearchItem);
-            contextMenu.Items.Add(goToTimeLineItem);
-            contextMenu.Items.Add(goToTracingItem);
-            contextMenu.Items.Add(copyItem);
-            contextMenu.Items.Add(copySubtreeItem);
-            contextMenu.Items.Add(copyFilePathItem);
-            contextMenu.Items.Add(viewSubtreeTextItem);
-            contextMenu.Items.Add(copyChildrenItem);
-            contextMenu.Items.Add(sortChildrenItem);
-            contextMenu.Items.Add(copyNameItem);
-            contextMenu.Items.Add(copyValueItem);
-            contextMenu.Items.Add(showTimeItem);
-            contextMenu.Items.Add(hideItem);
+            contextMenu.AddItem(runItem);
+            contextMenu.AddItem(debugItem);
+            contextMenu.AddItem(viewSourceItem);
+            contextMenu.AddItem(viewFullTextItem);
+            contextMenu.AddItem(openFileItem);
+            contextMenu.AddItem(preprocessItem);
+            contextMenu.AddItem(searchInSubtreeItem);
+            contextMenu.AddItem(excludeSubtreeFromSearchItem);
+            contextMenu.AddItem(goToTimeLineItem);
+            contextMenu.AddItem(goToTracingItem);
+            contextMenu.AddItem(copyItem);
+            contextMenu.AddItem(copySubtreeItem);
+            contextMenu.AddItem(copyFilePathItem);
+            contextMenu.AddItem(viewSubtreeTextItem);
+            contextMenu.AddItem(copyChildrenItem);
+            contextMenu.AddItem(sortChildrenItem);
+            contextMenu.AddItem(copyNameItem);
+            contextMenu.AddItem(copyValueItem);
+            contextMenu.AddItem(showTimeItem);
+            contextMenu.AddItem(hideItem);
 
             var existingTreeViewItemStyle = (Style)Application.Current.Resources[typeof(TreeViewItem)];
             var treeViewItemStyle = new Style(typeof(TreeViewItem), existingTreeViewItemStyle);
@@ -240,7 +237,8 @@ namespace StructuredLogViewer.Controls
             treeView.ItemContainerStyle = treeViewItemStyle;
             treeView.KeyDown += TreeView_KeyDown;
             treeView.SelectedItemChanged += TreeView_SelectedItemChanged;
-            treeView.GotFocus += (s, a) => ActiveTreeView = treeView;
+            treeView.GotFocus += TreeView_GetFocus;
+            treeView.AddHandler(TreeViewItem.SelectedEvent, (RoutedEventHandler)TreeViewItem_Selected);
 
             ActiveTreeView = treeView;
 
@@ -298,6 +296,89 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             navigationHelper.OpenFileRequested += filePath => DisplayFile(filePath);
 
             centralTabControl.SelectionChanged += CentralTabControl_SelectionChanged;
+        }
+
+        public void Dispose()
+        {
+            // WPF controls
+            documentWell.Dispose();
+            searchLogControl.Dispose();
+            searchLogControl.ResultsList.ItemContainerStyle = null;
+            searchLogControl.ResultsList.SelectedItemChanged -= ResultsList_SelectionChanged;
+            searchLogControl.WatermarkDisplayed -= UpdatePropertiesAndItemsWatermark;
+            searchLogControl.ExecuteSearch = null;
+            searchLogControl.WatermarkContent = null;
+            propertiesAndItemsControl.ResultsList.ItemContainerStyle = null;
+            propertiesAndItemsControl.ResultsList.SelectedItemChanged -= ResultsList_SelectionChanged;
+            propertiesAndItemsControl.WatermarkDisplayed -= UpdatePropertiesAndItemsWatermark;
+            propertiesAndItemsControl.ExecuteSearch = null;
+            propertiesAndItemsControl.WatermarkContent = null;
+            propertiesAndItemsContext.Content = null;
+            propertiesAndItemsSearch = null;
+            breadCrumb.ItemsSource = null;
+            filesTree.ResultsList.ItemContainerStyle = null;
+            filesTree.ContextMenu = null;
+            filesTree.DisplayItems(null);
+            findInFilesControl.ResultsList.ItemContainerStyle = null;
+            treeView.RemoveHandler(TreeViewItem.SelectedEvent, (RoutedEventHandler)TreeViewItem_Selected);
+            treeView.SelectedItemChanged -= TreeView_SelectedItemChanged;
+            treeView.KeyDown -= TreeView_KeyDown;
+            treeView.GotFocus -= TreeView_GetFocus;
+            treeView.ItemsSource = null;
+            treeView.ItemContainerStyle = null;
+            treeView.ContextMenu = null;
+            centralTabControl.SelectionChanged -= CentralTabControl_SelectionChanged;
+
+            if (this.tracing.Timeline != null)
+            {
+                this.tracing.Dispose();
+            }
+
+            if (this.timeline.Timeline != null)
+            {
+                this.timeline.Dispose();
+            }
+
+            if (this.graph != null)
+            {
+                graph = null;
+                projectGraphControl.Dispose();
+            }
+
+            // member variables
+            copyItem = null;
+            copySubtreeItem = null;
+            viewSubtreeTextItem = null;
+            searchInSubtreeItem = null;
+            excludeSubtreeFromSearchItem = null;
+            goToTimeLineItem = null;
+            goToTracingItem = null;
+            copyChildrenItem = null;
+            sortChildrenItem = null;
+            copyNameItem = null;
+            copyValueItem = null;
+            viewSourceItem = null;
+            viewFullTextItem = null;
+            openFileItem = null;
+            copyFilePathItem = null;
+            preprocessItem = null;
+            runItem = null;
+            debugItem = null;
+            hideItem = null;
+            showTimeItem = null;
+
+            sharedTreeContextMenu = null;
+            filesTreeContextMenu = null;
+            ActiveTreeView = null;
+            DataContext = null;
+            preprocessedFileManager = null;
+            navigationHelper = null;
+            projectContext = null;
+            SelectedTreeViewItem = null;
+            sourceFileResolver = null;
+            scrollViewer = null;
+            BaseNode.ClearSelectedNode();
+            this.Build = null;
         }
 
         private void CentralTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -989,7 +1070,8 @@ Recent:
                 }
                 else if (this.centralTabControl.SelectedIndex == 2)
                 {
-                    if (node is TimedNode tnode) {
+                    if (node is TimedNode tnode)
+                    {
                         tracing.GoToTimedNode(tnode);
                     }
                 }
@@ -1009,6 +1091,11 @@ Recent:
                 UpdateBreadcrumb(item);
                 UpdateProjectContext(item);
             }
+        }
+
+        private void TreeView_GetFocus(object sender, RoutedEventArgs e)
+        {
+            ActiveTreeView = treeView;
         }
 
         private void ResultsList_SelectionChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
@@ -1223,11 +1310,11 @@ Recent:
             {
                 if (node is IHasTitle hasTitle)
                 {
-                    return hasTitle.Title;
+                    return hasTitle.Title ?? "";
                 }
                 else
                 {
-                    return node.ToString();
+                    return node.ToString() ?? "";
                 }
             }
         }
@@ -1287,7 +1374,7 @@ Recent:
                 CopyToClipboard(text);
             }
         }
-        
+
         public void ViewSubtreeText()
         {
             if (treeView.SelectedItem is BaseNode treeNode)

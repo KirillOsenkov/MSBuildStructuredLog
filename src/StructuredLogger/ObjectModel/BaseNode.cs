@@ -46,6 +46,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// trees.
         /// </summary>
         private static BaseNode selectedNode = null;
+
+        public static void ClearSelectedNode()
+        {
+            selectedNode = null;
+        }
+
         public bool IsExpanded { get; set; }
         public bool IsSelected
         {

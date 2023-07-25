@@ -1,46 +1,49 @@
-﻿<UserControl xmlns="https://github.com/avaloniaui"
+<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:StructuredLogViewer.Avalonia.Controls;assembly=StructuredLogViewer.Avalonia"
              x:Class="StructuredLogViewer.Avalonia.Controls.SearchAndResultsControl">
-    <DockPanel>
-        <Grid DockPanel.Dock="Top">
-            <TextBox Name="searchTextBox"
-                     MinHeight="23"
-                     BorderThickness="0,0,0,1" />
-            <Path Name="magnifyingGlass"
-                  Data="{DynamicResource SearchGeometry}"
-                  Fill="#717171"
-                  HorizontalAlignment="Right"
-                  VerticalAlignment="Center"
-                  Margin="3"
-                  IsVisible="{Binding #searchTextBox.Text, Converter={x:Static StringConverters.IsNullOrEmpty}}" />
-            <Button Name="clearSearchButton"
-                    Classes="close"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Stretch"
-                    Margin="0,0,0,1"
-                    Width="20"
-                    IsVisible="{Binding #searchTextBox.Text, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-        </Grid>
+  <DockPanel>
+    <Grid DockPanel.Dock="Top" Name="topPanel">
+      <TextBox Name="searchTextBox"
+               MinHeight="23"
+               BorderThickness="0,0,0,1" />
+      <Path Name="magnifyingGlass"
+            Data="{DynamicResource SearchGeometry}"
+            Fill="#717171"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Center"
+            Margin="3"
+            IsVisible="{Binding #searchTextBox.Text, Converter={x:Static StringConverters.IsNullOrEmpty}}" />
+      <Button Name="clearSearchButton"
+              Classes="close"
+              HorizontalAlignment="Right"
+              VerticalAlignment="Stretch"
+              Margin="0,0,0,1"
+              Width="20"
+              IsVisible="{Binding #searchTextBox.Text, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+    </Grid>
 
-        <Grid>
-            <TreeView Name="resultsList"
-                      BorderThickness="0"
-                      Background="#F5F5F5" />
-            <ContentPresenter Name="watermark"
-                              Margin="40"
-                              HorizontalAlignment="Center"
-                              VerticalAlignment="Center">
-                <ContentPresenter.Styles>
-                    <Style Selector="TextBlock">
-                        <Setter Property="TextWrapping"
-                                Value="Wrap" />
-                        <Setter Property="Foreground"
-                                Value="Gray" />
-                    </Style>
-                </ContentPresenter.Styles>
-            </ContentPresenter>
-        </Grid>
-    </DockPanel>
+    <Grid>
+      <TreeView Name="resultsList"
+                BorderThickness="0"
+                Background="#F5F5F5" />
+      <ScrollViewer Name="watermarkScrollViewer"
+        HorizontalScrollBarVisibility="Disabled"
+        VerticalScrollBarVisibility="Auto">
+        <ContentPresenter Name="watermark"
+                   Margin="40"
+                   HorizontalAlignment="Center"
+                   Content="{Binding WatermarkText}"
+                   VerticalAlignment="Center">
+          <ContentPresenter.Styles>
+            <Style Selector="TextBlock">
+              <Setter Property="TextWrapping" Value="Wrap" />
+              <Setter Property="Foreground" Value="Gray" />
+            </Style>
+          </ContentPresenter.Styles>
+        </ContentPresenter>
+      </ScrollViewer>
+    </Grid>
+  </DockPanel>
 
 </UserControl>

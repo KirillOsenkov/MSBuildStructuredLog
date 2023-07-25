@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net472;net6.0-windows</TargetFrameworks>
+    <TargetFrameworks>net472;net7.0-windows</TargetFrameworks>
     <OutputType>WinExe</OutputType>
     <UseWPF>true</UseWPF>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
@@ -46,7 +46,7 @@
 
   <Target Name="CopyTaskRunnerDll" BeforeTargets="GetCopyToOutputDirectoryItems" Condition="$(TargetFramework) == 'net472'">
     <PropertyGroup>
-      <CoreTaskRunnerOutDir>$([System.IO.Path]::GetFullPath(`$(OutDir)\..\..\..\TaskRunner\$(Configuration)\net6.0`))\</CoreTaskRunnerOutDir>
+      <CoreTaskRunnerOutDir>$([System.IO.Path]::GetFullPath(`$(OutDir)\..\..\..\TaskRunner\$(Configuration)\net7.0`))\</CoreTaskRunnerOutDir>
     </PropertyGroup>
     <ItemGroup>
       <TaskRunnerFile Include="$(CoreTaskRunnerOutDir)TaskRunner.dll" />
@@ -109,7 +109,7 @@
           DependsOnTargets="ExtractVersion"
           Inputs="@(ChocolateyInput)"
           Outputs="$(ChocolateyNupkgPath)">
-    <Exec Command="C:\ProgramData\chocolatey\choco.exe Pack &quot;$(ChocolateyNuspecPath)&quot; -OutputDirectory $(OutDir) currentVersion=$(Version) outdir=$(OutDir)" />
+    <Exec Command="C:\ProgramData\chocolatey\choco.exe Pack &quot;$(ChocolateyNuspecPath)&quot; -OutputDirectory $(OutDir) --version=$(Version) outdir=$(OutDir)" />
   </Target>
 
   <Target Name="SquirrelReleasify"

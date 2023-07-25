@@ -1,3 +1,4 @@
+﻿using Microsoft.Build.Framework;
 using Microsoft.Build.Logging.StructuredLogger;
 using Xunit;
 
@@ -13,6 +14,32 @@ namespace StructuredLogger.Tests
         {
             var result = CompilerInvocationsReader.TrimCompilerExeFromCommandLine(arg, CompilerInvocation.CSharp);
             Assert.Equal(expected, result);
+        }
+
+        //[Fact]
+        public void ReadRecordsTest()
+        {
+            var binlog = @"C:\temp\msbuild.binlog";
+            var records = BinaryLog.ReadRecords(binlog);
+            string lastTask = null;
+
+            foreach (var record in records)
+            {
+                if (record.Args is TaskStartedEventArgs taskStarted)
+                {
+                    lastTask = taskStarted.TaskName;
+                }
+                else if (record.Args is TaskParameterEventArgs taskParameters)
+                {
+                    if (lastTask == "Csc" && taskParameters.ItemType == "Compile")
+                    {
+                        foreach (ITaskItem item in taskParameters.Items)
+                        {
+                            var csFilePath = item.ItemSpec;
+                        }
+                    }
+                }
+            }
         }
     }
 }

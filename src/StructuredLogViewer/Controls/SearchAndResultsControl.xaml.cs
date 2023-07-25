@@ -14,12 +14,21 @@ namespace StructuredLogViewer.Controls
         public SearchAndResultsControl()
         {
             InitializeComponent();
-            typingConcurrentOperation.DisplayResults += (r, moreAvailable, cancellationToken) => DisplaySearchResults(r, moreAvailable, cancellationToken);
+            typingConcurrentOperation.DisplayResults += DisplaySearchResults;
             typingConcurrentOperation.SearchComplete += TypingConcurrentOperation_SearchComplete;
 
             VirtualizingPanel.SetIsVirtualizing(resultsList, SettingsService.EnableTreeViewVirtualization);
 
             this.Unloaded += SearchAndResultsControl_Unloaded;
+        }
+
+        public void Dispose()
+        {
+            this.Unloaded -= SearchAndResultsControl_Unloaded;
+            typingConcurrentOperation.DisplayResults -= DisplaySearchResults;
+            typingConcurrentOperation.SearchComplete -= TypingConcurrentOperation_SearchComplete;
+            this.clearSearchButton.Click -= clearSearchButton_Click;
+            this.resultsList.ItemsSource = null;
         }
 
         private void SearchAndResultsControl_Unloaded(object sender, RoutedEventArgs e)

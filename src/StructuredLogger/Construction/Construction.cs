@@ -70,22 +70,28 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Intern(nameof(Task));
             Intern(nameof(TimedNode));
 
-            bgJobPool = new(2000);
-            bgWorker = new System.Threading.Tasks.Task(() =>
+            if (PlatformUtilities.HasThreads)
             {
-                System.Threading.Tasks.Parallel.ForEach(bgJobPool.GetConsumingEnumerable(), task =>
+                bgJobPool = new(2000);
+                bgWorker = new System.Threading.Tasks.Task(() =>
                 {
-                    task.Start();
-                    task.Wait();
-                });
-            }, System.Threading.Tasks.TaskCreationOptions.LongRunning);
-            bgWorker.Start();
+                    System.Threading.Tasks.Parallel.ForEach(bgJobPool.GetConsumingEnumerable(), task =>
+                    {
+                        task.Start();
+                        task.Wait();
+                    });
+                }, System.Threading.Tasks.TaskCreationOptions.LongRunning);
+                bgWorker.Start();
+            }
         }
 
         public void Shutdown()
         {
-            bgJobPool.CompleteAdding();
-            bgWorker.Wait();
+            if (PlatformUtilities.HasThreads)
+            {
+                bgJobPool.CompleteAdding();
+                bgWorker.Wait();
+            }
         }
 
         private string Intern(string text) => stringTable.Intern(text);
@@ -542,16 +548,25 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             propertiesFolder = projectEvaluation.GetOrCreateNodeWithName<Folder>(Strings.Properties, addAtBeginning: true);
                         }
 
-                        bgJobPool.Add(new System.Threading.Tasks.Task(() =>
+                        if (PlatformUtilities.HasThreads)
+                        {
+                            bgJobPool.Add(new System.Threading.Tasks.Task(AddGlobalProperties));
+                        }
+                        else
+                        {
+                            AddGlobalProperties();
+                        }
+
+                        void AddGlobalProperties()
                         {
                             if (projectEvaluationFinished.GlobalProperties != null && globFolder != null)
                             {
-                                AddProperties(globFolder, (IEnumerable<KeyValuePair<string, string>>)projectEvaluationFinished.GlobalProperties, projectEvaluation);
+                                AddProperties(globFolder, (IEnumerable<KeyValuePair<string, string>>)projectEvaluationFinished.GlobalProperties, project: projectEvaluation);
                             }
 
-                            AddProperties(propertiesFolder, projectEvaluation, projectEvaluationFinished.Properties);
+                            AddPropertiesSorted(propertiesFolder, projectEvaluation, projectEvaluationFinished.Properties);
                             AddItems(itemsNode, projectEvaluation, projectEvaluationFinished.Items);
-                        }));
+                        }
                     }
                 }
             }
@@ -893,11 +908,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     propertyFolder = project.GetOrCreateNodeWithName<Folder>(Strings.Properties, addAtBeginning: true);
                 }
 
-                bgJobPool.Add(new System.Threading.Tasks.Task(() =>
+                if (PlatformUtilities.HasThreads)
+                {
+                    bgJobPool.Add(new System.Threading.Tasks.Task(AddGlobalProperties));
+                }
+                else
+                {
+                    AddGlobalProperties();
+                }
+
+                void AddGlobalProperties()
                 {
                     if (args.GlobalProperties != null && globalNode != null)
                     {
-                        AddProperties(globalNode, args.GlobalProperties, project);
+                        AddProperties(globalNode, args.GlobalProperties, project: project);
                     }
 
                     if (!string.IsNullOrEmpty(args.TargetNames))
@@ -905,9 +929,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         AddEntryTargets(targetsNode, project);
                     }
 
-                    AddProperties(propertyFolder, project, args.Properties);
+                    AddPropertiesSorted(propertyFolder, project, args.Properties);
                     AddItems(itemFolder, project, args.Items);
-                }));
+                }
             }
         }
 
@@ -990,18 +1014,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
             itemsNode.SortChildren();
         }
 
-        private void AddProperties(Folder propertiesFolder, TreeNode project, IEnumerable properties)
+        private void AddPropertiesSorted(Folder propertiesFolder, TreeNode project, IEnumerable properties)
         {
             if (properties == null)
             {
                 return;
             }
 
-            var list = (IEnumerable<KeyValuePair<string, string>>)properties;
+            var list = (ICollection<KeyValuePair<string, string>>)properties;
+            int count = list.Count;
 
             AddProperties(
                 propertiesFolder,
                 list.OrderBy(d => d.Key, StringComparer.OrdinalIgnoreCase),
+                count,
                 project as IProjectOrEvaluation);
         }
 
@@ -1120,14 +1146,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private void AddProperties(TreeNode parent, IEnumerable<KeyValuePair<string, string>> properties, IProjectOrEvaluation project = null)
+        private void AddProperties(TreeNode parent, IEnumerable<KeyValuePair<string, string>> properties, int count = 0, IProjectOrEvaluation project = null)
         {
             if (properties == null)
             {
                 return;
             }
 
-            if (properties is ICollection collection)
+            if (count > 0)
+            {
+                parent.EnsureChildrenCapacity(count);
+            }
+            else if (properties is ICollection collection)
             {
                 parent.EnsureChildrenCapacity(collection.Count);
             }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -136,7 +137,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         return (line, TimeSpan.Zero);
                     }
 
-                    if (!double.TryParse(columns[0].Trim(), out var totalTimeSeconds))
+                    if (!double.TryParse(columns[0].Trim(), NumberStyles.Number, CultureInfo.GetCultureInfo(Strings.ResourceSet.Culture), out var totalTimeSeconds))
                     {
                         totalTimeSeconds = 0;
                     }
