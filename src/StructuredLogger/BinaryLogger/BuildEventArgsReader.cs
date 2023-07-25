@@ -202,9 +202,69 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void ReadBlob(BinaryLogRecordKind kind)
         {
-            int length = ReadInt32();
-            byte[] bytes = binaryReader.ReadBytes(length);
-            OnBlobRead?.Invoke(kind, bytes);
+            // Work around bad logs caused by https://github.com/dotnet/msbuild/pull/9022#discussion_r1271468212
+            if (kind == BinaryLogRecordKind.ProjectImportArchive && fileFormatVersion == 16)
+            {
+                int length;
+                byte[] bytes;
+
+                // We have to preread some bytes to figure out if the log is buggy,
+                // so store bytes to backfill for the "real" read later.
+                byte[] prefixBytes;
+
+                // Version 16 is used by both 17.6 and 17.7, but some 17.7 builds have have a bug that writes length
+                // as a long instead of a 7-bit encoded int.  We can detect this by looking for the zip header, which
+                // is right after the length in either case.
+
+                byte[] nextBytes = binaryReader.ReadBytes(12 /* 8 for the accidental long, 4 for the zip header */ );
+
+                // Does the zip header start 8 bytes in? That should never happen with a 7-bit int which should
+                // take at most 5 bytes.
+                if (nextBytes[8] == 0x50 && nextBytes[9] == 0x4b && nextBytes[10] == 0x3 && nextBytes[11] == 0x4)
+                {
+                    // The "buggy 17.7" case.  Read the length as a long.
+
+                    long length64 = BitConverter.ToInt64(nextBytes, 0);
+
+                    if (length64 > int.MaxValue)
+                    {
+                        throw new NotSupportedException("Embedded archives larger than 2GB are not supported.");
+                    }
+
+                    length = (int)length64;
+
+                    prefixBytes = new byte[4];
+                    Array.Copy(nextBytes, 8, prefixBytes, 0, 4);
+                }
+                else
+                {
+                    // The 17.6/correct 17.7 case.  Read the length as a 7-bit encoded int.
+
+                    MemoryStream stream = new MemoryStream(nextBytes);
+                    BinaryReader reader = new BinaryReader(stream);
+
+                    length = reader.Read7BitEncodedInt();
+
+                    int bytesRead = (int)reader.BaseStream.Position;
+
+                    prefixBytes = reader.ReadBytes(12 - bytesRead);
+                }
+
+                bytes = binaryReader.ReadBytes(length - prefixBytes.Length);
+
+                byte[] fullBytes = new byte[length];
+                prefixBytes.CopyTo(fullBytes, 0);
+                bytes.CopyTo(fullBytes, prefixBytes.Length);
+                bytes = fullBytes;
+
+                OnBlobRead?.Invoke(kind, bytes);
+            }
+            else
+            {
+                int length = ReadInt32();
+                byte[] bytes = binaryReader.ReadBytes(length);
+                OnBlobRead?.Invoke(kind, bytes);
+            }
         }
 
         private void ReadNameValueList()
