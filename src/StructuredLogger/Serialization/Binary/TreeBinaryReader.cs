@@ -23,7 +23,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Initialize(stream);
         }
 
-        private void Initialize(Stream stream)
+        public TreeBinaryReader(Stream stream, Version version)
+        {
+            Initialize(stream, version);
+        }
+
+        private void Initialize(Stream stream, Version version = null)
         { 
             this.fileStream = stream;
             if (fileStream.Length < 8)
@@ -34,9 +39,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            int major = fileStream.ReadByte();
-            int minor = fileStream.ReadByte();
-            int build = fileStream.ReadByte();
+            int major, minor, build;
+
+            if (version == null)
+            {
+                major = fileStream.ReadByte();
+                minor = fileStream.ReadByte();
+                build = fileStream.ReadByte();
+            }
+            else
+            {
+                major = version.Major;
+                minor = version.Minor;
+                build = version.Build;
+            }
+
             Version = new Version(major, minor, build, 0);
 
             if (major < 1 || major > 2)
@@ -50,7 +67,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             try
             {
                 this.gzipStream = new GZipStream(fileStream, CompressionMode.Decompress);
-                this.binaryReader = new BetterBinaryReader(gzipStream);
+                var bufferedStream = new BufferedStream(gzipStream, 32768);
+                this.binaryReader = new BetterBinaryReader(bufferedStream);
 
                 var count = binaryReader.ReadInt32();
                 stringTable = new string[count];

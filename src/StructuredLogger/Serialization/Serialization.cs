@@ -62,9 +62,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
                 catch (Exception)
                 {
-                    if (DetectLogFormat(filePath) == ".buildlog")
+                    var format = DetectLogFormat(filePath);
+                    if (format == ".buildlog")
                     {
                         return BuildLogReader.Read(filePath);
+                    }
+                    else if (format == "1.2")
+                    {
+                        return ReadOld1_2FormatBuild(filePath);
                     }
                     else
                     {
@@ -94,6 +99,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return null;
         }
 
+        private static Build ReadOld1_2FormatBuild(string filePath)
+        {
+            using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete))
+            {
+                var b1 = stream.ReadByte();
+                var b2 = stream.ReadByte();
+                var b3 = stream.ReadByte();
+
+                return BuildLogReader.Read(stream, projectImportsArchive: null, new Version(b1, b2, b3));
+            }
+        }
+
         public static string DetectLogFormat(string filePath)
         {
             using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete))
@@ -108,6 +125,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (b1 == 0x1F && b2 == 0x8B)
                 {
                     return ".binlog";
+                }
+
+                if (b1 == 1 && b2 == 2)
+                {
+                    return "1.2";
                 }
 
                 if (b1 == 0x1)

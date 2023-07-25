@@ -33,7 +33,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static Build Read(Stream stream, byte[] projectImportsArchive = null)
         {
-            using (var binaryLogReader = new BuildLogReader(stream))
+            return Read(stream, projectImportsArchive, version: null);
+        }
+
+        public static Build Read(Stream stream, byte[] projectImportsArchive, Version version)
+        {
+            using (var binaryLogReader = new BuildLogReader(stream, version))
             {
                 if (!binaryLogReader.formatIsValid)
                 {
@@ -66,9 +71,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             this.formatIsValid = reader.IsValid();
         }
 
-        private BuildLogReader(Stream stream)
+        private BuildLogReader(Stream stream, Version version)
         {
-            this.reader = new TreeBinaryReader(stream);
+            this.reader = new TreeBinaryReader(stream, version);
             this.formatSupportsSourceFiles = reader.Version > new Version(1, 0, 130);
             this.formatSupportsEmbeddedProjectImportsArchive = reader.Version > new Version(1, 1, 87);
             this.formatSupportsTimedNodeId = reader.Version > new Version(1, 1, 153);
