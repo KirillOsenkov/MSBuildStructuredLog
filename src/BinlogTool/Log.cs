@@ -1,5 +1,5 @@
 using System;
-using StructuredLogger;
+using Microsoft.Build.Logging.StructuredLogger;
 
 namespace BinlogTool
 {

@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
-using StructuredLogger;
 using TPLTask = System.Threading.Tasks.Task;
 
 namespace StructuredLogViewer

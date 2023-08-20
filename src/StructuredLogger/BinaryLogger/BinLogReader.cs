@@ -7,7 +7,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using Microsoft.Build.Framework;
-using StructuredLogger;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
