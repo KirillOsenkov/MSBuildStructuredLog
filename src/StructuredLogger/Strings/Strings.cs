@@ -345,10 +345,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return TargetSkipReason.OutputsUpToDate;
             }
 
-            if (TargetSkippedWhenSkipNonexistentTargets.IsMatch(message))
-            {
-                return TargetSkipReason.TargetDoesNotExist;
-            }
+            //if (TargetSkippedWhenSkipNonexistentTargets.IsMatch(message))
+            //{
+            //    return TargetSkipReason.TargetDoesNotExist;
+            //}
 
             // realistically control never reaches here (for binlog versions 4 and newer)
             // these were converted from Message to TargetSkipped in binlog version 4

@@ -459,7 +459,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     var targetName = Intern(TextUtilities.ParseQuotedSubstring(message));
                     if (targetName != null)
                     {
-                        var args2 = new TargetSkippedEventArgs2(message);
+                        var args2 = new TargetSkippedEventArgs(message);
                         args2.TargetName = targetName;
                         args2.BuildEventContext = args.BuildEventContext;
                         args2.SkipReason = targetSkipReason;

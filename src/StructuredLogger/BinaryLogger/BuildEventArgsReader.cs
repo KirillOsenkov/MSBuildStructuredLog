@@ -386,7 +386,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 message = GetTargetSkippedMessage(skipReason, targetName, condition, evaluatedCondition, originallySucceeded);
             }
 
-            var e = new TargetSkippedEventArgs2(
+            var e = new TargetSkippedEventArgs(
                 message);
 
             SetCommonFields(e, fields);

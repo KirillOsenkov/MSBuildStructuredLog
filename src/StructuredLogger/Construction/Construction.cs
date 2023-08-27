@@ -318,7 +318,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        public void TargetSkipped(TargetSkippedEventArgs2 args)
+        public void TargetSkipped(TargetSkippedEventArgs args)
         {
             string targetName = Intern(args.TargetName);
             string messageText = args.Message;
@@ -438,7 +438,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 lock (syncLock)
                 {
-                    if (args is TargetSkippedEventArgs2 targetSkipped)
+                    if (args is TargetSkippedEventArgs targetSkipped)
                     {
                         TargetSkipped(targetSkipped);
                         return;
