@@ -1,5 +1,4 @@
 using System;
-using Microsoft.Build.Logging.StructuredLogger;
 
 namespace BinlogTool
 {
@@ -13,11 +12,6 @@ namespace BinlogTool
         {
             if (Quiet)
             {
-                return;
-            }
-            if (!PlatformUtilities.HasColor)
-            {
-                Console.Write(message);
                 return;
             }
 
@@ -39,11 +33,6 @@ namespace BinlogTool
             {
                 return;
             }
-            if (!PlatformUtilities.HasColor)
-            {
-                Console.WriteLine(message);
-                return;
-            }
 
             lock (consoleLock)
             {
@@ -59,12 +48,6 @@ namespace BinlogTool
 
         public static void WriteError(string message)
         {
-            if (!PlatformUtilities.HasColor)
-            {
-                Console.Error.WriteLine(message);
-                return;
-            }
-
             lock (consoleLock)
             {
                 var oldColor = Console.ForegroundColor;

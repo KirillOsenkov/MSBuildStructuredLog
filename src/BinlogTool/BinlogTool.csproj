@@ -3,14 +3,11 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <Version>1.0.6</Version>
-    <TargetFramework>net8.0</TargetFramework>
-    <RuntimeIdentifier>wasi-wasm</RuntimeIdentifier>
-    <WasmSingleFileBundle>true</WasmSingleFileBundle>
-    <PublishTrimmed>true</PublishTrimmed>
+    <TargetFramework>net7.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <DebugType>embedded</DebugType>
     <Prefer32Bit>false</Prefer32Bit>
-    <!-- <PackAsTool>true</PackAsTool> -->
+    <PackAsTool>true</PackAsTool>
     <ToolCommandName>binlogtool</ToolCommandName>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageId>binlogtool</PackageId>
