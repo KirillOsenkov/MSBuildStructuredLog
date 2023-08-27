@@ -836,7 +836,9 @@ Build
                 var method = Reflector.GetEnumerateItemsPerTypeMethod(type);
                 if (method != null)
                 {
+#pragma warning disable CS8974 // Converting method group to non-delegate type
                     method.Invoke(items, new object[] { WriteItems });
+#pragma warning restore CS8974 // Converting method group to non-delegate type
                 }
 
                 // signal the end
