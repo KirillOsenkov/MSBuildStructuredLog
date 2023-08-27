@@ -290,7 +290,23 @@ namespace StructuredLogViewer
             {
                 CancellationToken = cancellationToken,
             };
-            Parallel.ForEach(stringTable, options, stringInstance =>
+            if (PlatformUtilities.HasThreads)
+            {
+                Parallel.ForEach(stringTable, options, ProcessString);
+            }
+            else
+            {
+                foreach (var stringInstance in stringTable)
+                {
+                    ProcessString(stringInstance);
+                }
+            }
+#endif
+
+            var elapsed = sw.Elapsed;
+            PrecalculationDuration = elapsed;
+
+            void ProcessString(string stringInstance)
             {
                 for (int i = 0; i < Words.Count; i++)
                 {
@@ -310,11 +326,7 @@ namespace StructuredLogViewer
                         }
                     }
                 }
-            });
-#endif
-
-            var elapsed = sw.Elapsed;
-            PrecalculationDuration = elapsed;
+            }
         }
 
         private const int MaxArraySize = 6;
