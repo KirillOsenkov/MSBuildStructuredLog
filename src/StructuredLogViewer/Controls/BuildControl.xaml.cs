@@ -56,7 +56,6 @@ namespace StructuredLogViewer.Controls
         private MenuItem debugItem;
         private MenuItem hideItem;
         private MenuItem showTimeItem;
-        private MenuItem showExtendedData;
         private ContextMenu sharedTreeContextMenu;
         private ContextMenu filesTreeContextMenu;
 
