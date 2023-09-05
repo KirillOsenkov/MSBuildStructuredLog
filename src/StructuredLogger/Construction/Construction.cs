@@ -660,9 +660,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         parent = Build;
                     }
 
-                    Warning warning = args is IExtendedBuildEventArgs extended
-                        ? new ExtendedWarning(extended.ExtendedType, extended.ExtendedMetadata, extended.ExtendedData)
-                        : new Warning();
+                    var warning = new Warning();
 
                     string text = args.Message;
 
@@ -745,9 +743,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
 
                     var errors = parent.GetOrCreateNodeWithName<Folder>(Intern("Errors"));
-                    Error error = args is IExtendedBuildEventArgs extended
-                        ? new ExtendedError(extended.ExtendedType, extended.ExtendedMetadata, extended.ExtendedData)
-                        : new Error();
+                    var error = new Error();
                     Populate(error, args);
                     errors.AddChild(error);
                 }
@@ -770,6 +766,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             message.File = Intern(args.File);
             message.ProjectFile = Intern(args.ProjectFile);
             message.Subcategory = Intern(args.Subcategory);
+
+            PopulateWithExtendedData(message, args);
         }
 
         private void Populate(AbstractDiagnostic message, BuildErrorEventArgs args)
@@ -784,7 +782,56 @@ namespace Microsoft.Build.Logging.StructuredLogger
             message.File = Intern(args.File);
             message.ProjectFile = Intern(args.ProjectFile);
             message.Subcategory = Intern(args.Subcategory);
+
+            PopulateWithExtendedData(message, args);
         }
+
+        internal static void PopulateWithExtendedData(TreeNode node, BuildEventArgs args)
+        {
+            if (args is IExtendedBuildEventArgs extended)
+            {
+                node.EnsureChildrenCapacity(
+                    (node.Children?.Count ?? 0)
+                    + 1 // For extended type name
+                    + (string.IsNullOrWhiteSpace(extended.ExtendedData) ? 0 : 1)
+                    + (extended.ExtendedMetadata?.Count > 0 ? 1 : 0));
+
+                var typeNode = new Property
+                {
+                    Name = "Type",
+                    Value = extended.ExtendedType
+                };
+
+                node.AddChild(typeNode);
+
+                if (!string.IsNullOrWhiteSpace(extended.ExtendedData))
+                {
+                    var dataNode = new Message
+                    {
+                        Text = extended.ExtendedData,
+                    };
+
+                    node.AddChild(dataNode);
+                }
+
+                if (extended.ExtendedMetadata?.Count > 0)
+                {
+                    var metadataFolder = new Folder
+                    {
+                        Name = "Metadata"
+                    };
+                    metadataFolder.EnsureChildrenCapacity(extended.ExtendedMetadata.Count);
+
+                    foreach (KeyValuePair<string, string> kvp in extended.ExtendedMetadata)
+                    {
+                        var metadataNode = new Metadata { Name = kvp.Key, Value = kvp.Value };
+                        metadataFolder.AddChild(metadataNode);
+                    }
+
+                    node.AddChild(metadataFolder);
+                }
+            }
+        }   
 
         private void HandleException(Exception ex)
         {
