@@ -539,7 +539,8 @@
     </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
 
-  <DataTemplate DataType="{x:Type l:Message}">
+  <HierarchicalDataTemplate DataType="{x:Type l:Message}"
+                            ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
       <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{DynamicResource MessageStroke}" Fill="{DynamicResource MessageBrush}" />
       <TextBlock x:Name="messageText" Text="{Binding ShortenedText}" />
@@ -549,7 +550,7 @@
         <Setter TargetName="messageText" Property="Opacity" Value="0.25" />
       </DataTrigger>
     </DataTemplate.Triggers>
-  </DataTemplate>
+  </HierarchicalDataTemplate>
 
   <HierarchicalDataTemplate DataType="{x:Type l:Import}"
                             ItemsSource="{Binding Children}">
@@ -599,7 +600,7 @@
     </StackPanel>
   </DataTemplate>
 
-  <DataTemplate DataType="{x:Type l:Error}">
+  <HierarchicalDataTemplate DataType="{x:Type l:Error}"  ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
       <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{DynamicResource ErrorStroke}" Fill="{DynamicResource ErrorBrush}" />
       <TextBlock x:Name="text" Text="{Binding}" />
@@ -609,14 +610,14 @@
         <Setter TargetName="text" Property="Foreground" Value="{DynamicResource ErrorStroke}" />
       </DataTrigger>
     </DataTemplate.Triggers>
-  </DataTemplate>
+  </HierarchicalDataTemplate>
 
-  <DataTemplate DataType="{x:Type l:CriticalBuildMessage}">
+  <HierarchicalDataTemplate DataType="{x:Type l:CriticalBuildMessage}"  ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
       <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{DynamicResource WarningStroke}" Fill="{DynamicResource WarningBrush}" />
       <TextBlock x:Name="text" Text="{Binding}" />
     </StackPanel>
-  </DataTemplate>
+  </HierarchicalDataTemplate>
 
   <HierarchicalDataTemplate DataType="{x:Type l:Warning}" ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
