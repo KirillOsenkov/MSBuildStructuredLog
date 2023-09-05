@@ -612,11 +612,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
                 else
                 {
-                    nodeToAdd = new Message
-                    {
-                        Text = message,
-                        IsLowRelevance = lowRelevance
-                    };
+                    Message messageNode = args is IExtendedBuildEventArgs extended
+                        ? new ExtendedMessage(extended.ExtendedType, extended.ExtendedMetadata, extended.ExtendedData)
+                        : new Message();
+                    messageNode.Text = message;
+                    messageNode.IsLowRelevance = lowRelevance;
+
+                    nodeToAdd = messageNode;
                 }
             }
 

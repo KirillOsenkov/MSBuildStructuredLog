@@ -660,7 +660,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         parent = Build;
                     }
 
-                    var warning = new Warning();
+                    Warning warning = args is IExtendedBuildEventArgs extended
+                        ? new ExtendedWarning(extended.ExtendedType, extended.ExtendedMetadata, extended.ExtendedData)
+                        : new Warning();
 
                     string text = args.Message;
 
@@ -743,7 +745,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
 
                     var errors = parent.GetOrCreateNodeWithName<Folder>(Intern("Errors"));
-                    var error = new Error();
+                    Error error = args is IExtendedBuildEventArgs extended
+                        ? new ExtendedError(extended.ExtendedType, extended.ExtendedMetadata, extended.ExtendedData)
+                        : new Error();
                     Populate(error, args);
                     errors.AddChild(error);
                 }

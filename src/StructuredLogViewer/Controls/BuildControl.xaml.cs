@@ -56,6 +56,7 @@ namespace StructuredLogViewer.Controls
         private MenuItem debugItem;
         private MenuItem hideItem;
         private MenuItem showTimeItem;
+        private MenuItem showExtendedData;
         private ContextMenu sharedTreeContextMenu;
         private ContextMenu filesTreeContextMenu;
 
@@ -174,6 +175,7 @@ namespace StructuredLogViewer.Controls
             viewSourceItem = new MenuItem() { Header = "View source" };
             viewFullTextItem = new MenuItem { Header = "View full text" };
             showTimeItem = new MenuItem() { Header = "Show time and duration" };
+            showExtendedData = new MenuItem() { Header = "Show extended data" };
             openFileItem = new MenuItem() { Header = "Open File" };
             copyFilePathItem = new MenuItem() { Header = "Copy file path" };
             preprocessItem = new MenuItem() { Header = "Preprocess" };
@@ -194,6 +196,7 @@ namespace StructuredLogViewer.Controls
             viewSourceItem.Click += (s, a) => Invoke(treeView.SelectedItem as BaseNode);
             viewFullTextItem.Click += (s, a) => ViewFullText(treeView.SelectedItem as BaseNode);
             showTimeItem.Click += (s, a) => ShowTimeAndDuration();
+            showExtendedData.Click += (s, a) => ShowExtendedData();
             openFileItem.Click += (s, a) => OpenFile();
             copyFilePathItem.Click += (s, a) => CopyFilePath();
             preprocessItem.Click += (s, a) => Preprocess(treeView.SelectedItem as IPreprocessable);
@@ -220,6 +223,7 @@ namespace StructuredLogViewer.Controls
             contextMenu.AddItem(copyNameItem);
             contextMenu.AddItem(copyValueItem);
             contextMenu.AddItem(showTimeItem);
+            contextMenu.AddItem(showExtendedData);
             contextMenu.AddItem(hideItem);
 
             var existingTreeViewItemStyle = (Style)Application.Current.Resources[typeof(TreeViewItem)];
@@ -366,6 +370,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             debugItem = null;
             hideItem = null;
             showTimeItem = null;
+            showExtendedData = null;
 
             sharedTreeContextMenu = null;
             filesTreeContextMenu = null;
@@ -785,6 +790,7 @@ Recent:
             copySubtreeItem.Visibility = hasChildren ? Visibility.Visible : Visibility.Collapsed;
             viewSubtreeTextItem.Visibility = copySubtreeItem.Visibility;
             showTimeItem.Visibility = node is TimedNode ? Visibility.Visible : Visibility.Collapsed;
+            showExtendedData.Visibility = node is IHasExtendedData ? Visibility.Visible : Visibility.Collapsed;
             searchInSubtreeItem.Visibility = hasChildren && node is TimedNode ? Visibility.Visible : Visibility.Collapsed;
             excludeSubtreeFromSearchItem.Visibility = hasChildren && node is TimedNode ? Visibility.Visible : Visibility.Collapsed;
             goToTimeLineItem.Visibility = node is TimedNode ? Visibility.Visible : Visibility.Collapsed;
@@ -1390,6 +1396,28 @@ Recent:
             {
                 var text = timedNode.GetTimeAndDurationText(fullPrecision: true);
                 DisplayText(text, timedNode.ToString());
+            }
+        }
+        public void ShowExtendedData()
+        {
+            if (treeView.SelectedItem is IHasExtendedData extended)
+            {
+                var sb = new StringBuilder();
+                sb.AppendLine($"Type: {extended.ExtendedType}");
+                if (extended.ExtendedMetadata?.Count > 0)
+                {
+                    sb.AppendLine("Metadata:");
+                    foreach (var kvp in extended.ExtendedMetadata)
+                    {
+                        sb.AppendLine($"  {kvp.Key}: {kvp.Value}");
+                    }
+                }
+                if (!string.IsNullOrWhiteSpace(extended.ExtendedData))
+                {
+                    sb.AppendLine($"Data:");
+                    sb.AppendLine(extended.ExtendedData);
+                }
+                DisplayText(sb.ToString(), treeView.SelectedItem.ToString());
             }
         }
 

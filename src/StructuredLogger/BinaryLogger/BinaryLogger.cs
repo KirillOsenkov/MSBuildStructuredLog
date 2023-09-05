@@ -59,7 +59,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         //   - new record kind: FileUsedEventArgs
         // version 16:
         //   - AssemblyLoadBuildEventArgs
-        internal const int FileFormatVersion = 16;
+        // version 17:
+        //   - Added extended data for types implementing IExtendedBuildEventArgs
+        internal const int FileFormatVersion = 17;
 
         public static bool IsNewerVersionAvailable { get; set; }
 
