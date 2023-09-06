@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Internal;
@@ -612,11 +613,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
                 else
                 {
-                    nodeToAdd = new Message
+                    var messageNode = new Message
                     {
                         Text = message,
                         IsLowRelevance = lowRelevance
                     };
+
+                    Construction.PopulateWithExtendedData(messageNode, args);
+
+                    nodeToAdd = messageNode;
                 }
             }
 
