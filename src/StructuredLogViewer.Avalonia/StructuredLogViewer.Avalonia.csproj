@@ -40,7 +40,7 @@
     <PackageReference Include="Avalonia.AvaloniaEdit" Version="0.10.12.1" />
     <PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
     <!-- Bump transitive references to preview versions that contain osx-arm64 native assets -->
-    <PackageReference Include="SkiaSharp" Version="2.88.0-preview.187" />
+    <PackageReference Include="SkiaSharp" Version="2.88.6" />
     <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="2.88.0-preview.187" Condition="$(NETCoreSdkRuntimeIdentifier.StartsWith('linux'))" />
     <PackageReference Include="HarfBuzzSharp" Version="2.8.2-preview.187" />
     <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="7.0.0-*" Condition="$(PublishNativeAot) == True" />
