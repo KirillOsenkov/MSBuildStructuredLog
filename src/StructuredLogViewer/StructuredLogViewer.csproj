@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>net472;net7.0-windows</TargetFrameworks>
     <OutputType>WinExe</OutputType>
+    <RootNamespace>StructuredLogViewer</RootNamespace>
     <UseWPF>true</UseWPF>
     <ImportWindowsDesktopTargets>true</ImportWindowsDesktopTargets>
     <Prefer32Bit Condition="$(Prefer32Bit)==''">false</Prefer32Bit>
