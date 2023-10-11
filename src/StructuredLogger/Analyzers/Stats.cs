@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -52,23 +52,31 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public List<string> AllStrings = new List<string>();
 
+        private bool TrackStrings = true;
+
         private void OnStringRead(string text, long lengthInBytes)
         {
-            AllStrings.Add(text);
+            if (TrackStrings)
+            {
+                AllStrings.Add(text);
+            }
 
             int length = (int)lengthInBytes;
 
             UncompressedStreamSize += lengthInBytes;
 
-            if (StringSizes.Count <= length)
+            if (TrackStrings)
             {
-                for (int i = StringSizes.Count; i <= length; i++)
+                if (StringSizes.Count <= length)
                 {
-                    StringSizes.Add(0);
+                    for (int i = StringSizes.Count; i <= length; i++)
+                    {
+                        StringSizes.Add(0);
+                    }
                 }
-            }
 
-            StringSizes[length] += 1;
+                StringSizes[length] += 1;
+            }
 
             StringCount += 1;
             StringTotalSize += length;
