@@ -2087,9 +2087,13 @@ Recent:
         private Folder DisplayRecordStats(BinlogStats.RecordsByType stats, TreeNode parent, string titlePrefix = "")
         {
             var node = parent.GetOrCreateNodeWithName<Folder>(titlePrefix + stats.ToString());
-            foreach (var records in stats.CategorizedRecords)
+
+            if (stats.CategorizedRecords != null)
             {
-                DisplayRecordStats(records, node);
+                foreach (var records in stats.CategorizedRecords)
+                {
+                    DisplayRecordStats(records, node);
+                }
             }
 
             var top = stats.Records.Take(300).ToArray();
