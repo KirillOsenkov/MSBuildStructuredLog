@@ -16,6 +16,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var stats = new BinlogStats();
             stats.FileSize = new FileInfo(binlogFilePath).Length;
 
+            bool expensive = stats.FileSize > 20_000_000;
+            TrackStrings = !expensive;
+            Sort = !expensive;
+
             var reader = new BinLogReader();
             reader.OnBlobRead += (kind, bytes) => stats.OnBlobRead(kind, bytes);
             reader.OnStringRead += (text, lengthBytes) => stats.OnStringRead(text, lengthBytes);
