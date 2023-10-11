@@ -10,7 +10,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
     {
         private static bool TrackStrings = true;
         private static bool Sort = true;
-        private static bool Seal = true;
 
         public static BinlogStats Calculate(string binlogFilePath)
         {
@@ -174,7 +173,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     type.Value.Seal();
                 }
 
-                CategorizedRecords = recordsByType.Values.OrderByDescending(m => m.TotalLength).Take(30).ToArray();
+                CategorizedRecords = recordsByType.Values.OrderByDescending(m => m.TotalLength).ToArray();
             }
 
             public override string ToString()
@@ -233,10 +232,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             UncompressedStreamSize += totalSize;
             RecordCount = recordCount;
 
-            if (Seal)
-            {
-                recordsByType.Seal();
-            }
+            recordsByType.Seal();
 
             CategorizedRecords = recordsByType;
 
