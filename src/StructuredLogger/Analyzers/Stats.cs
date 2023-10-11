@@ -8,6 +8,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class BinlogStats
     {
+        private static bool TrackStrings = true;
+        private static bool Sort = true;
+
         public static BinlogStats Calculate(string binlogFilePath)
         {
             var stats = new BinlogStats();
@@ -51,8 +54,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public List<int> StringSizes = new List<int>();
 
         public List<string> AllStrings = new List<string>();
-
-        private bool TrackStrings = true;
 
         private void OnStringRead(string text, long lengthInBytes)
         {
@@ -141,28 +142,31 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             public virtual void Seal()
             {
-                list.Sort((l, r) =>
+                if (Sort)
                 {
-                    if (l == null || r == null)
+                    list.Sort((l, r) =>
                     {
+                        if (l == null || r == null)
+                        {
+                            return 0;
+                        }
+
+                        if (r.Args is BuildMessageEventArgs rightMessageArgs &&
+                            l.Args is BuildMessageEventArgs leftMessageArgs &&
+                            rightMessageArgs.Message is string rightMessage &&
+                            leftMessageArgs.Message is string leftMessage)
+                        {
+                            return Math.Sign(rightMessage.Length - leftMessage.Length);
+                        }
+
+                        if (r.Length != l.Length)
+                        {
+                            return Math.Sign(r.Length - l.Length);
+                        }
+
                         return 0;
-                    }
-
-                    if (r.Args is BuildMessageEventArgs rightMessageArgs &&
-                        l.Args is BuildMessageEventArgs leftMessageArgs &&
-                        rightMessageArgs.Message is string rightMessage &&
-                        leftMessageArgs.Message is string leftMessage)
-                    {
-                        return Math.Sign(rightMessage.Length - leftMessage.Length);
-                    }
-
-                    if (r.Length != l.Length)
-                    {
-                        return Math.Sign(r.Length - l.Length);
-                    }
-
-                    return 0;
-                });
+                    });
+                }
 
                 foreach (var type in recordsByType)
                 {
