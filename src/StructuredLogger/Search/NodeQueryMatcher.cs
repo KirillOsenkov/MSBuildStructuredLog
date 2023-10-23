@@ -427,13 +427,13 @@ namespace StructuredLogViewer
                             searchFields[count++] = evaluation.EvaluationText;
                         }
                     }
-                    else if (node is Target target)
-                    {
-                        if (!string.IsNullOrEmpty(target.ParentTarget))
-                        {
-                            searchFields[count++] = target.ParentTarget;
-                        }
-                    }
+                    //else if (node is Target target)
+                    //{
+                    //    if (!string.IsNullOrEmpty(target.ParentTarget))
+                    //    {
+                    //        searchFields[count++] = target.ParentTarget;
+                    //    }
+                    //}
                 }
             }
 
