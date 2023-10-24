@@ -214,6 +214,17 @@ Build
             Write(bytes);
         }
 
+        public void WriteBlob(BinaryLogRecordKind kind, Stream stream)
+        {
+            // write the blob directly to the underlying writer,
+            // bypassing the memory stream
+            using var redirection = RedirectWritesToOriginalWriter();
+
+            Write(kind);
+            Write(stream.Length);
+            Write(stream);
+        }
+
         /// <summary>
         /// Switches the binaryWriter used by the Write* methods to the direct underlying stream writer
         /// until the disposable is disposed. Useful to bypass the currentRecordWriter to write a string,
@@ -1111,6 +1122,11 @@ Build
         private void Write(byte[] bytes)
         {
             binaryWriter.Write(bytes);
+        }
+
+        private void Write(Stream stream)
+        {
+            stream.CopyTo(binaryWriter.BaseStream);
         }
 
         private void Write(byte b)

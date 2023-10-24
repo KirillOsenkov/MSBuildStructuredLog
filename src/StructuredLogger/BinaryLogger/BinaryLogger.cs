@@ -222,9 +222,23 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (projectImportsCollector != null)
             {
+                projectImportsCollector.Close();
+
                 if (CollectProjectImports == ProjectImportsCollectionMode.Embed)
                 {
-                    eventArgsWriter.WriteBlob(BinaryLogRecordKind.ProjectImportArchive, projectImportsCollector.GetAllBytes());
+                    var archiveFilePath = projectImportsCollector.ArchiveFilePath;
+
+                    // It is possible that the archive couldn't be created for some reason.
+                    // Only embed it if it actually exists.
+                    if (File.Exists(archiveFilePath))
+                    {
+                        using (FileStream fileStream = File.OpenRead(archiveFilePath))
+                        {
+                            eventArgsWriter.WriteBlob(BinaryLogRecordKind.ProjectImportArchive, fileStream);
+                        }
+
+                        File.Delete(archiveFilePath);
+                    }
                 }
 
                 projectImportsCollector.Close();
