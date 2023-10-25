@@ -103,10 +103,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (projectImportsCollector != null)
             {
-                var bytes = projectImportsCollector.GetAllBytes();
-                construction.Build.SourceFilesArchive = bytes;
-
                 projectImportsCollector.Close();
+                var archiveFilePath = projectImportsCollector.ArchiveFilePath;
+                if (File.Exists(archiveFilePath))
+                {
+                    var bytes = File.ReadAllBytes(archiveFilePath);
+                    construction.Build.SourceFilesArchive = bytes;
+                }
+
                 projectImportsCollector = null;
             }
 
