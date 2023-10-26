@@ -600,6 +600,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     critical.ProjectFile = Intern(criticalArgs.ProjectFile);
                     critical.Subcategory = Intern(criticalArgs.Subcategory);
 
+                    Construction.PopulateWithExtendedData(critical, args);
+
                     nodeToAdd = critical;
                 }
                 else if (parent is Task task && task is CppAnalyzer.CppTask)
