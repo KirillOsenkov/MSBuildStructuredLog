@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using FluentAssertions;
+using Microsoft.Build.Logging;
 using Microsoft.Build.Logging.StructuredLogger;
 using StructuredLogger.Tests;
 using Xunit;
@@ -123,6 +125,91 @@ namespace Microsoft.Build.UnitTests
 
             AssertEx.EqualOrDiff(File.ReadAllText(xml1), File.ReadAllText(GetTestFile("4.xml")));
         }
+
+        [Fact]
+        public void TestReaderWriterRoundtripEquality()
+        {
+            var binLog = GetTestFile("1.binlog");
+            var replayedBinlog = GetTestFile("1-replayed.binlog");
+
+            //need to have in this repo
+            var logReader = new Logging.StructuredLogger.BinaryLogReplayEventSource();
+
+            BinaryLogger outputBinlog = new BinaryLogger()
+            {
+                Parameters = replayedBinlog
+            };
+            outputBinlog.Initialize(logReader);
+            logReader.Replay(binLog);
+            outputBinlog.Shutdown();
+
+            //assert here
+            AssertBinlogsHaveEqualContent(binLog, replayedBinlog);
+
+            // TODO: removing for now - replaying embedded files is not supported
+            //// If this assertation complicates development - it can possibly be removed
+            //// The structured equality above should be enough.
+            //AssertFilesAreBinaryEqualAfterUnpack(binLog, replayedBinlog);
+        }
+
+        private static void AssertFilesAreBinaryEqualAfterUnpack(string firstPath, string secondPath)
+        {
+            using var br1 = Logging.StructuredLogger.BinaryLogReplayEventSource.OpenReader(firstPath);
+            using var br2 = Logging.StructuredLogger.BinaryLogReplayEventSource.OpenReader(secondPath);
+            const int bufferSize = 4096;
+
+            int readCount = 0;
+            while (br1.ReadBytes(bufferSize) is { Length: > 0 } bytes1)
+            {
+                var bytes2 = br2.ReadBytes(bufferSize);
+
+                bytes1.Should().BeEquivalentTo(bytes2,
+                    $"Buffers starting at position {readCount} differ. First:{Environment.NewLine}{string.Join(",", bytes1)}{Environment.NewLine}Second:{Environment.NewLine}{string.Join(",", bytes2)}");
+                readCount += bufferSize;
+            }
+
+            br2.ReadBytes(bufferSize).Length.Should().Be(0, "Second buffer contains bytes after first file end");
+        }
+
+        private static void AssertBinlogsHaveEqualContent(string firstPath, string secondPath)
+        {
+            using var reader1 = Logging.StructuredLogger.BinaryLogReplayEventSource.OpenBuildEventsReader(firstPath);
+            using var reader2 = Logging.StructuredLogger.BinaryLogReplayEventSource.OpenBuildEventsReader(secondPath);
+
+            //Dictionary<string, string> embedFiles1 = new();
+            //Dictionary<string, string> embedFiles2 = new();
+
+            //reader1.ArchiveFileEncountered += arg
+            //    => AddArchiveFile(embedFiles1, arg);
+            //reader2.ArchiveFileEncountered += arg
+            //   => AddArchiveFile(embedFiles2, arg);
+
+
+            int i = 0;
+            while (reader1.Read() is { } ev1)
+            {
+                i++;
+                var ev2 = reader2.Read();
+
+                ev1.Should().BeEquivalentTo(ev2,
+                    $"Binlogs ({firstPath} and {secondPath}) should be equal at event {i}");
+            }
+            // Read the second reader - to confirm there are no more events
+            //  and to force the embedded files to be read.
+            reader2.Read().Should().BeNull($"Binlogs ({firstPath} and {secondPath}) are not equal - second has more events >{i + 1}");
+
+            //Assert.Equal(embedFiles1, embedFiles2);
+
+            //void AddArchiveFile(Dictionary<string, string> files, ArchiveFileEventArgs arg)
+            //{
+            //    ArchiveFile embedFile = arg.ObtainArchiveFile();
+            //    string content = embedFile.GetContent();
+            //    files.Add(embedFile.FullPath, content);
+            //    arg.SetResult(embedFile.FullPath, content);
+            //}
+        }
+
+
 
         private static string GetProperty(Logging.StructuredLogger.Build build)
         {

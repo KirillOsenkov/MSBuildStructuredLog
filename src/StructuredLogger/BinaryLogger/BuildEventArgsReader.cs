@@ -21,7 +21,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
     /// <summary>
     /// Deserializes and returns BuildEventArgs-derived objects from a BinaryReader
     /// </summary>
-    internal partial class BuildEventArgsReader : IDisposable
+    public partial class BuildEventArgsReader : IDisposable
     {
         private readonly BinaryReader binaryReader;
         private readonly int fileFormatVersion;
@@ -59,12 +59,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
             this.fileFormatVersion = fileFormatVersion;
         }
 
+        /// <summary>
+        /// Directs whether the passed <see cref="BinaryReader"/> should be closed when this instance is disposed.
+        /// Defaults to "false".
+        /// </summary>
+        public bool CloseInput { private get; set; } = false;
+
         public void Dispose()
         {
             if (stringStorage != null)
             {
                 stringStorage.Dispose();
                 stringStorage = null;
+            }
+            if (CloseInput)
+            {
+                binaryReader.Dispose();
             }
         }
 
