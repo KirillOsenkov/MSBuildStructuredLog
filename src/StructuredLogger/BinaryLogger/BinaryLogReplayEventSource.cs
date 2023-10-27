@@ -16,6 +16,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
     internal interface IBinaryLogReplaySource :
         IEventSource,
         IBuildEventStringsReader,
+        IBuildFileReader,
         IEmbeddedContentSource
     { }
 
@@ -136,6 +137,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             //  https://stackoverflow.com/a/2268472/2308106
             add => _embeddedContentRead += value;
             remove => _embeddedContentRead -= value;
+        }
+
+        private Action<ArchiveFileEventArgs>? _archiveFileEncountered;
+        /// <inheritdoc cref="IBuildFileReader.ArchiveFileEncountered"/>
+        event Action<ArchiveFileEventArgs>? IBuildFileReader.ArchiveFileEncountered
+        {
+            add => _archiveFileEncountered += value;
+            remove => _archiveFileEncountered -= value;
         }
 
         private Action<StringReadEventArgs>? _stringReadDone;

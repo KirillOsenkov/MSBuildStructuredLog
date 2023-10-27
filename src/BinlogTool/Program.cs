@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Logging.StructuredLogger;
+using StructuredLogger.BinaryLogger.Postprocessing;
 
 namespace BinlogTool
 {
@@ -16,7 +17,8 @@ namespace BinlogTool
     binlogtool savefiles input.binlog output_path
     binlogtool reconstruct input.binlog output_path
     binlogtool savestrings input.binlog output.txt
-    binlogtool search *.binlog search string");
+    binlogtool search *.binlog search string
+    binlogtool redact input.binlog list of passwords to redact");
                 return;
             }
 
@@ -68,6 +70,19 @@ namespace BinlogTool
                 var binlogs = args[1];
                 var search = string.Join(" ", args.Skip(2));
                 Searcher.Search(binlogs, search);
+                return;
+            }
+
+            if (firstArg == "redact")
+            {
+                if (args.Length < 3)
+                {
+                    Console.Error.WriteLine("binlogtool redact input.binlog list of passwords to redact");
+                    return;
+                }
+
+                var binlog = args[1];
+                BinlogRedactor.RedactSecrets(binlog, args.Skip(2).ToArray());
                 return;
             }
 

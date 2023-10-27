@@ -1,4 +1,4 @@
-﻿<Window x:Class="StructuredLogViewer.MainWindow"
+<Window x:Class="StructuredLogViewer.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -30,7 +30,8 @@
         <MenuItem Header="_Open Log..." Click="Open_Click" InputGestureText="Ctrl+O" />
         <MenuItem x:Name="ReloadMenu" Header="_Reload" Click="Reload_Click" InputGestureText="F5" />
         <MenuItem x:Name="SaveAsMenu" Header="_Save Log As..." Click="SaveAs_Click" InputGestureText="Ctrl+S" />
-        <Separator />
+        <MenuItem x:Name="RedactSecretsMenu" Header="_Redact Secrets" Click="RedactSecrets_Click" InputGestureText="Ctrl+R" />
+                <Separator />
         <MenuItem x:Name="StatsMenu" Header="_Statistics..." Click="Stats_Click" />
         <Separator />
         <MenuItem x:Name="RecentProjectsMenu" Header="Recent Projects" Visibility="Collapsed">

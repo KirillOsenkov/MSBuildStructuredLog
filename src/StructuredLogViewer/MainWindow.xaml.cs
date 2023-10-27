@@ -13,6 +13,7 @@ using System.Windows.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Win32;
 using Squirrel;
+using StructuredLogger.BinaryLogger.Postprocessing;
 using StructuredLogViewer.Controls;
 
 namespace StructuredLogViewer
@@ -374,11 +375,13 @@ namespace StructuredLogViewer
             {
                 ReloadMenu.Visibility = logFilePath != null ? Visibility.Visible : Visibility.Collapsed;
                 SaveAsMenu.Visibility = Visibility.Visible;
+                RedactSecretsMenu.Visibility = Visibility.Visible;
             }
             else
             {
                 ReloadMenu.Visibility = Visibility.Collapsed;
                 SaveAsMenu.Visibility = Visibility.Collapsed;
+                RedactSecretsMenu.Visibility = Visibility.Collapsed;
             }
 
             // If we had text inside search log control bring it back
@@ -659,6 +662,16 @@ namespace StructuredLogViewer
             OpenLogFile(logFilePath);
         }
 
+        private void RedactSecrets()
+        {
+            RedactInputControl redactInputControl = new RedactInputControl();
+            if (redactInputControl.ShowDialog() == true)
+            {
+                BinlogRedactor.RedactSecrets(logFilePath, redactInputControl.Answer.Split());
+                OpenLogFile(logFilePath);
+            }
+        }
+
         private void SaveAs()
         {
             if (currentBuild != null)
@@ -812,6 +825,11 @@ namespace StructuredLogViewer
         private void SaveAs_Click(object sender, RoutedEventArgs e)
         {
             SaveAs();
+        }
+
+        private void RedactSecrets_Click(object sender, RoutedEventArgs e)
+        {
+            RedactSecrets();
         }
 
         private void HelpLink_Click(object sender, RoutedEventArgs e)
