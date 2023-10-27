@@ -15,7 +15,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
     /// </summary>
     internal interface IBinaryLogReplaySource :
         IEventSource,
-        // IBuildEventStringsReader,
+        IBuildEventStringsReader,
         IEmbeddedContentSource
     { }
 
@@ -120,6 +120,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             using BuildEventArgsReader reader = OpenBuildEventsReader(binaryReader, false);
 
             reader.EmbeddedContentRead += _embeddedContentRead;
+            reader.StringReadDone += _stringReadDone;
 
             while (!cancellationToken.IsCancellationRequested && reader.Read() is { } instance)
             {
@@ -135,6 +136,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             //  https://stackoverflow.com/a/2268472/2308106
             add => _embeddedContentRead += value;
             remove => _embeddedContentRead -= value;
+        }
+
+        private Action<StringReadEventArgs>? _stringReadDone;
+        /// <inheritdoc cref="IBuildEventStringsReader.StringReadDone"/>
+        event Action<StringReadEventArgs>? IBuildEventStringsReader.StringReadDone
+        {
+            add => _stringReadDone += value;
+            remove => _stringReadDone -= value;
         }
     }
 }
