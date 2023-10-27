@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -21,7 +22,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
     /// <summary>
     /// Deserializes and returns BuildEventArgs-derived objects from a BinaryReader
     /// </summary>
-    public partial class BuildEventArgsReader : IDisposable
+    public partial class BuildEventArgsReader : IBuildEventArgsReaderNotifications, IDisposable
     {
         private readonly BinaryReader binaryReader;
         private readonly int fileFormatVersion;
@@ -77,6 +78,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 binaryReader.Dispose();
             }
         }
+
+        /// <inheritdoc cref="IBuildEventStringsReader.StringReadDone"/>
+        public event Action<StringReadEventArgs>? StringReadDone;
+
+        /// <inheritdoc cref="IEmbeddedContentSource.EmbeddedContentRead"/>
+        internal event Action<EmbeddedContentEventArgs>? EmbeddedContentRead;
+
+        /// <inheritdoc cref="IBuildFileReader.ArchiveFileEncountered"/>
+        public event Action<ArchiveFileEventArgs>? ArchiveFileEncountered;
 
         /// <summary>
         /// Raised when the log reader encounters a binary blob embedded in the stream.
@@ -213,10 +223,91 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private void ReadBlob(BinaryLogRecordKind kind)
         {
             // Work around bad logs caused by https://github.com/dotnet/msbuild/pull/9022#discussion_r1271468212
-            if (kind == BinaryLogRecordKind.ProjectImportArchive && fileFormatVersion == 16)
+            var canHaveCorruptedSize = kind == BinaryLogRecordKind.ProjectImportArchive && fileFormatVersion == 16;
+            Stream embeddedStream = SliceOfEmdeddedContent(canHaveCorruptedSize);
+
+            if (ArchiveFileEncountered != null)
+            {
+                // We could create ZipArchive over the target stream, and write to that directly,
+                //  however, binlog format needs to know stream size upfront - which is unknown,
+                //  so we would need to write the size after - and that would require the target stream to be seekable (which it's not)
+                ProjectImportsCollector? projectImportsCollector = null;
+
+                if (EmbeddedContentRead != null)
+                {
+                    projectImportsCollector =
+                        new ProjectImportsCollector(Path.GetRandomFileName(), false, runOnBackground: false);
+                }
+
+                // We are intentionally not grace handling corrupt embedded stream
+
+                using var zipArchive = new ZipArchive(embeddedStream, ZipArchiveMode.Read);
+
+                foreach (var entry in zipArchive.Entries/*.OrderBy(e => e.LastWriteTime)*/)
+                {
+                    var file = ArchiveFile.From(entry, adjustPath: false);
+                    ArchiveFileEventArgs archiveFileEventArgs = new(file);
+                    ArchiveFileEncountered(archiveFileEventArgs);
+
+                    if (projectImportsCollector != null)
+                    {
+                        var resultFile = archiveFileEventArgs.ArchiveFile;
+
+                        projectImportsCollector.AddFileFromMemory(
+                            resultFile.FullPath,
+                            resultFile.Text,
+                            makePathAbsolute: false,
+                            entryCreationStamp: entry.LastWriteTime);
+                    }
+                }
+
+                // Once embedded files are replayed one by one - we can send the resulting stream to subscriber
+                if (OnBlobRead != null || EmbeddedContentRead != null)
+                {
+                    projectImportsCollector!.ProcessResult(
+                        streamToEmbed => InvokeEmbeddedDataListeners(kind, streamToEmbed),
+                        error => throw new InvalidDataException(error));
+                    projectImportsCollector.DeleteArchive();
+                }
+            }
+            else if (OnBlobRead != null || EmbeddedContentRead != null)
+            {
+                InvokeEmbeddedDataListeners(kind, embeddedStream);
+            }
+            else
+            {
+                embeddedStream.SkipBytes();
+            }
+        }
+
+        private void InvokeEmbeddedDataListeners(BinaryLogRecordKind kind, Stream embeddedStream)
+        {
+            byte[] bytes = null;
+            // we need to materialize the stream into a byte array
+            if (OnBlobRead != null)
+            {
+                bytes = embeddedStream.ReadToEnd();
+                OnBlobRead(kind, bytes);
+            }
+
+            if (EmbeddedContentRead != null)
+            {
+                // the embed stream was already read - we need to simulate the stream
+                if (bytes != null)
+                {
+                    embeddedStream = new MemoryStream(bytes, writable: false);
+                }
+
+                EmbeddedContentRead(new EmbeddedContentEventArgs(kind, embeddedStream));
+            }
+        }
+
+        private Stream SliceOfEmdeddedContent(bool canHaveCorruptedSize)
+        {
+            // Work around bad logs caused by https://github.com/dotnet/msbuild/pull/9022#discussion_r1271468212
+            if (canHaveCorruptedSize)
             {
                 int length;
-                byte[] bytes;
 
                 // We have to preread some bytes to figure out if the log is buggy,
                 // so store bytes to backfill for the "real" read later.
@@ -260,21 +351,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     prefixBytes = reader.ReadBytes(12 - bytesRead);
                 }
 
-                bytes = binaryReader.ReadBytes(length - prefixBytes.Length);
-
-                byte[] fullBytes = new byte[length];
-                prefixBytes.CopyTo(fullBytes, 0);
-                bytes.CopyTo(fullBytes, prefixBytes.Length);
-                bytes = fullBytes;
-
-                OnBlobRead?.Invoke(kind, bytes);
+                Stream prefixStream = new MemoryStream(prefixBytes);
+                Stream dataStream = binaryReader.BaseStream.Slice(length - prefixBytes.Length);
+                return prefixStream.Concat(dataStream);
             }
             else
             {
                 int length = ReadInt32();
-                byte[] bytes = binaryReader.ReadBytes(length);
-                OnBlobRead?.Invoke(kind, bytes);
+                return binaryReader.BaseStream.Slice(length);
             }
+        }
+
+        private void SkipBytes(int count)
+        {
+            binaryReader.BaseStream.SkipBytes(count, true);
         }
 
         private readonly List<(int name, int value)> nameValues = new List<(int name, int value)>(4096);
@@ -1458,9 +1548,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return list;
         }
 
+        private readonly StringReadEventArgs stringReadEventArgs = new StringReadEventArgs(string.Empty);
         private string ReadString()
         {
-            return binaryReader.ReadString();
+            string text = binaryReader.ReadString();
+            if (this.StringReadDone != null)
+            {
+                stringReadEventArgs.Reuse(text);
+                StringReadDone(stringReadEventArgs);
+                text = stringReadEventArgs.StringToBeUsed;
+            }
+            return text;
         }
 
         private string ReadOptionalString()

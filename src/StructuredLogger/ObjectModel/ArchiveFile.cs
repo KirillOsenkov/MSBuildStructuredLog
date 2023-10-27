@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.IO.Compression;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -15,8 +15,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public string Text { get; }
 
         public static ArchiveFile From(ZipArchiveEntry entry)
+            => From(entry, adjustPath: true);
+
+        public static ArchiveFile From(ZipArchiveEntry entry, bool adjustPath)
         {
-            var filePath = CalculateArchivePath(entry.FullName);
+            var filePath = adjustPath ? CalculateArchivePath(entry.FullName) : entry.FullName;
             var text = GetText(entry);
             var file = new ArchiveFile(filePath, text);
             return file;

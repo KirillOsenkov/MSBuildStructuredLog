@@ -2,6 +2,7 @@
 using System.IO;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using static Microsoft.Build.Logging.StructuredLogger.BinaryLogger;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -104,13 +105,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (projectImportsCollector != null)
             {
                 projectImportsCollector.Close();
-                var archiveFilePath = projectImportsCollector.ArchiveFilePath;
-                if (File.Exists(archiveFilePath))
-                {
-                    var bytes = File.ReadAllBytes(archiveFilePath);
-                    construction.Build.SourceFilesArchive = bytes;
-                }
 
+                
+                projectImportsCollector.ProcessResult(
+                    streamToEmbed => construction.Build.SourceFilesArchive = streamToEmbed.ReadToEnd(),
+                    _ => {});
+
+                projectImportsCollector.DeleteArchive();
                 projectImportsCollector = null;
             }
 

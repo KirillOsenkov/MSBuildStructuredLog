@@ -131,13 +131,14 @@ namespace Microsoft.Build.UnitTests
         {
             var binLog = GetTestFile("1.binlog");
             var replayedBinlog = GetTestFile("1-replayed.binlog");
+            File.Delete(replayedBinlog);
 
             //need to have in this repo
             var logReader = new Logging.StructuredLogger.BinaryLogReplayEventSource();
 
             BinaryLogger outputBinlog = new BinaryLogger()
             {
-                Parameters = replayedBinlog
+                Parameters = $"LogFile={replayedBinlog};OmitInitialInfo"
             };
             outputBinlog.Initialize(logReader);
             logReader.Replay(binLog);
@@ -146,7 +147,8 @@ namespace Microsoft.Build.UnitTests
             //assert here
             AssertBinlogsHaveEqualContent(binLog, replayedBinlog);
 
-            // TODO: removing for now - replaying embedded files is not supported
+            //TODO: temporarily disabling - as we do not have guarantee for binary equality of events
+            // there are few mismatches between null and empty - will be fixed along with porting in-flight changes in MSBuild (needs log version update)
             //// If this assertation complicates development - it can possibly be removed
             //// The structured equality above should be enough.
             //AssertFilesAreBinaryEqualAfterUnpack(binLog, replayedBinlog);
@@ -176,13 +178,13 @@ namespace Microsoft.Build.UnitTests
             using var reader1 = Logging.StructuredLogger.BinaryLogReplayEventSource.OpenBuildEventsReader(firstPath);
             using var reader2 = Logging.StructuredLogger.BinaryLogReplayEventSource.OpenBuildEventsReader(secondPath);
 
-            //Dictionary<string, string> embedFiles1 = new();
-            //Dictionary<string, string> embedFiles2 = new();
+            Dictionary<string, string> embedFiles1 = new();
+            Dictionary<string, string> embedFiles2 = new();
 
-            //reader1.ArchiveFileEncountered += arg
-            //    => AddArchiveFile(embedFiles1, arg);
-            //reader2.ArchiveFileEncountered += arg
-            //   => AddArchiveFile(embedFiles2, arg);
+            reader1.ArchiveFileEncountered += arg
+                => AddArchiveFile(embedFiles1, arg);
+            reader2.ArchiveFileEncountered += arg
+               => AddArchiveFile(embedFiles2, arg);
 
 
             int i = 0;
@@ -198,18 +200,14 @@ namespace Microsoft.Build.UnitTests
             //  and to force the embedded files to be read.
             reader2.Read().Should().BeNull($"Binlogs ({firstPath} and {secondPath}) are not equal - second has more events >{i + 1}");
 
-            //Assert.Equal(embedFiles1, embedFiles2);
+            Assert.Equal(embedFiles1, embedFiles2);
+            embedFiles1.Should().NotBeEmpty();
 
-            //void AddArchiveFile(Dictionary<string, string> files, ArchiveFileEventArgs arg)
-            //{
-            //    ArchiveFile embedFile = arg.ObtainArchiveFile();
-            //    string content = embedFile.GetContent();
-            //    files.Add(embedFile.FullPath, content);
-            //    arg.SetResult(embedFile.FullPath, content);
-            //}
+            void AddArchiveFile(Dictionary<string, string> files, ArchiveFileEventArgs arg)
+            {
+                files.Add(arg.ArchiveFile.FullPath, arg.ArchiveFile.Text);
+            }
         }
-
-
 
         private static string GetProperty(Logging.StructuredLogger.Build build)
         {

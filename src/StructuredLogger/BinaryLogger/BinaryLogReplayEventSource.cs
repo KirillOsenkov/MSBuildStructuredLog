@@ -6,15 +6,25 @@ using System.Text;
 using Microsoft.Build.BackEnd;
 using Microsoft.Build.Shared;
 using System.Threading;
+using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
+    /// <summary>
+    /// Interface for replaying a binary log file (*.binlog)
+    /// </summary>
+    internal interface IBinaryLogReplaySource :
+        IEventSource,
+        // IBuildEventStringsReader,
+        IEmbeddedContentSource
+    { }
+
     /// <summary>
     /// Provides a method to read a binary log file (*.binlog) and replay all stored BuildEventArgs
     /// by implementing IEventSource and raising corresponding events.
     /// </summary>
     /// <remarks>The class is public so that we can call it from MSBuild.exe when replaying a log file.</remarks>
-    public sealed class BinaryLogReplayEventSource : EventArgsDispatcher
+    public sealed class BinaryLogReplayEventSource : EventArgsDispatcher, IBinaryLogReplaySource
     {
         /// <summary>
         /// Read the provided binary log file and raise corresponding events for each BuildEventArgs
@@ -68,20 +78,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         /// <param name="binaryReader"></param>
         /// <param name="closeInput">Indicates whether the passed BinaryReader should be closed on disposing.</param>
-        /// <param name="allowForwardCompatibility">Unknown build events or unknown parts of known build events will be ignored if this is set to true.</param>
         /// <returns>BuildEventArgsReader over the given binlog file binary reader.</returns>
         public static BuildEventArgsReader OpenBuildEventsReader(
             BinaryReader binaryReader,
-            bool closeInput,
-            bool allowForwardCompatibility = true)
+            bool closeInput)
         {
             int fileFormatVersion = binaryReader.ReadInt32();
-            int minimumReaderVersion = binaryReader.ReadInt32();
 
             // the log file is written using a newer version of file format
             // that we don't know how to read
-            if (fileFormatVersion > BinaryLogger.FileFormatVersion &&
-                (!allowForwardCompatibility || minimumReaderVersion > BinaryLogger.FileFormatVersion))
+            if (fileFormatVersion > BinaryLogger.FileFormatVersion)
             {
                 var text = $"The log file format version is {fileFormatVersion}, whereas this version of MSBuild only supports versions up to {BinaryLogger.FileFormatVersion}.";
                 throw new NotSupportedException(text);
@@ -113,10 +119,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             using BuildEventArgsReader reader = OpenBuildEventsReader(binaryReader, false);
 
+            reader.EmbeddedContentRead += _embeddedContentRead;
+
             while (!cancellationToken.IsCancellationRequested && reader.Read() is { } instance)
             {
                 Dispatch(instance);
             }
+        }
+
+        private Action<EmbeddedContentEventArgs>? _embeddedContentRead;
+        /// <inheritdoc cref="IEmbeddedContentSource.EmbeddedContentRead"/>
+        event Action<EmbeddedContentEventArgs>? IEmbeddedContentSource.EmbeddedContentRead
+        {
+            // Explicitly implemented event has to declare explicit add/remove accessors
+            //  https://stackoverflow.com/a/2268472/2308106
+            add => _embeddedContentRead += value;
+            remove => _embeddedContentRead -= value;
         }
     }
 }

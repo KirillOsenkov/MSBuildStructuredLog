@@ -125,7 +125,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Environment.SetEnvironmentVariable("MSBUILDLOGIMPORTS", "1");
             bool logPropertiesAndItemsAfterEvaluation = true;
 
-            ProcessParameters();
+            ProcessParameters(out bool omitInitialInfo);
+            var replayEventsSource = eventSource as IBinaryLogReplaySource;
 
             try
             {
@@ -147,7 +148,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 stream = new FileStream(FilePath, FileMode.Create);
 
-                if (CollectProjectImports != ProjectImportsCollectionMode.None)
+                if (CollectProjectImports != ProjectImportsCollectionMode.None && replayEventsSource == null)
                 {
                     projectImportsCollector = new ProjectImportsCollector(FilePath, CollectProjectImports == ProjectImportsCollectionMode.ZipFile);
                 }
@@ -186,7 +187,24 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             binaryWriter.Write(FileFormatVersion);
 
-            LogInitialInfo();
+            if (replayEventsSource != null)
+            {
+                if (CollectProjectImports == ProjectImportsCollectionMode.Embed)
+                {
+                    replayEventsSource.EmbeddedContentRead += args =>
+                        eventArgsWriter.WriteBlob(args.ContentKind, args.ContentStream);
+                }
+                else if (CollectProjectImports == ProjectImportsCollectionMode.ZipFile)
+                {
+                    replayEventsSource.EmbeddedContentRead += args =>
+                        ProjectImportsCollector.FlushBlobToFile(FilePath, args.ContentStream);
+                }
+            }
+
+            if (!omitInitialInfo)
+            {
+                LogInitialInfo();
+            }
 
             eventSource.AnyEventRaised += EventSource_AnyEventRaised;
         }
@@ -226,22 +244,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 if (CollectProjectImports == ProjectImportsCollectionMode.Embed)
                 {
-                    var archiveFilePath = projectImportsCollector.ArchiveFilePath;
+                    projectImportsCollector.ProcessResult(
+                        streamToEmbed => eventArgsWriter.WriteBlob(BinaryLogRecordKind.ProjectImportArchive, streamToEmbed),
+                        LogMessage);
 
-                    // It is possible that the archive couldn't be created for some reason.
-                    // Only embed it if it actually exists.
-                    if (File.Exists(archiveFilePath))
-                    {
-                        using (FileStream fileStream = File.OpenRead(archiveFilePath))
-                        {
-                            eventArgsWriter.WriteBlob(BinaryLogRecordKind.ProjectImportArchive, fileStream);
-                        }
-
-                        File.Delete(archiveFilePath);
-                    }
+                    projectImportsCollector.DeleteArchive();
                 }
 
-                projectImportsCollector.Close();
                 projectImportsCollector = null;
             }
 
@@ -299,13 +308,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         /// <exception cref="LoggerException">
         /// </exception>
-        private void ProcessParameters()
+        private void ProcessParameters(out bool omitInitialInfo)
         {
             if (Parameters == null)
             {
                 throw new LoggerException(ResourceUtilities.FormatResourceStringStripCodeAndKeyword("InvalidBinaryLoggerParameters", ""));
             }
 
+            omitInitialInfo = false;
             var parameters = Parameters.Split(MSBuildConstants.SemicolonChar, StringSplitOptions.RemoveEmptyEntries);
             foreach (var parameter in parameters)
             {
@@ -320,6 +330,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 else if (string.Equals(parameter, "ProjectImports=ZipFile", StringComparison.OrdinalIgnoreCase))
                 {
                     CollectProjectImports = ProjectImportsCollectionMode.ZipFile;
+                }
+                else if (string.Equals(parameter, "OmitInitialInfo", StringComparison.OrdinalIgnoreCase))
+                {
+                    omitInitialInfo = true;
                 }
                 else if (parameter.EndsWith(".binlog", StringComparison.OrdinalIgnoreCase))
                 {
