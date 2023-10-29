@@ -42,10 +42,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 AnalyzeCopyTask(copyTask);
             }
-            else if (task is RobocopyTask robocopyTask)
-            {
-                AnalyzeCopyTask(robocopyTask);
-            }
             else if (task is CscTask cscTask && cscTask.CompilationWrites.HasValue)
             {
                 AnalyzeCompilationWrites(cscTask.CompilationWrites.Value);

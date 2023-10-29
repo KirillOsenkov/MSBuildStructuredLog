@@ -20,6 +20,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private readonly Build build;
         private readonly DoubleWritesAnalyzer doubleWritesAnalyzer;
+        private readonly FileCopyMap fileCopyMap;
         private readonly ResolveAssemblyReferenceAnalyzer resolveAssemblyReferenceAnalyzer;
         private readonly CppAnalyzer cppAnalyzer;
         private readonly Dictionary<string, TaskStatistic> taskDurations = new();
@@ -33,6 +34,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             doubleWritesAnalyzer = new DoubleWritesAnalyzer();
             resolveAssemblyReferenceAnalyzer = new ResolveAssemblyReferenceAnalyzer();
             cppAnalyzer = new CppAnalyzer();
+            fileCopyMap = new FileCopyMap();
         }
 
         public static void AnalyzeBuild(Build build)
@@ -360,6 +362,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 cppAnalyzer.AnalyzeTask(cppTask);
             }
 
+            // fileCopyMap.AnalyzeTask(task);
             doubleWritesAnalyzer.AnalyzeTask(task);
         }
 
