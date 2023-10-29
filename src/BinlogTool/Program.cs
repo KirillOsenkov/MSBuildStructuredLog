@@ -74,6 +74,19 @@ namespace BinlogTool
             Console.Error.WriteLine("Invalid arguments");
         }
 
+        private static void ReadStrings()
+        {
+            var strings = Serialization.ReadStringsFromFile(@"C:\temp\strings2.zip");
+            var ordered = strings.OrderByDescending(s => s.Length).ToArray();
+            var top100 = ordered.Take(3000);
+
+            int i = 1;
+            foreach (var str in top100)
+            {
+                File.WriteAllText($@"C:\temp\strings2\{i++}.txt", str);
+            }
+        }
+
         private static void CompareStrings()
         {
             var left = Serialization.ReadStringsFromFile(@"C:\temp\1.txt");
