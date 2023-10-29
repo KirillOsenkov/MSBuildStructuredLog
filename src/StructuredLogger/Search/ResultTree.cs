@@ -48,6 +48,17 @@ namespace StructuredLogViewer
             if (includeDuration)
             {
                 results = results.OrderByDescending(r => r.Duration).ToArray();
+
+                TimeSpan totalDuration = TimeSpan.Zero;
+                foreach (var result in results)
+                {
+                    totalDuration += result.Duration;
+                }
+
+                root.Children.Add(new Message
+                {
+                    Text = $"Total duration: {totalDuration}"
+                });
             }
             else if (includeStart)
             {
