@@ -363,7 +363,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 cppAnalyzer.AnalyzeTask(cppTask);
             }
 
-            // fileCopyMap.AnalyzeTask(task);
+            fileCopyMap.AnalyzeTask(task);
             doubleWritesAnalyzer.AnalyzeTask(task);
         }
 

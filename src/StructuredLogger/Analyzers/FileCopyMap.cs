@@ -18,6 +18,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
     public class FileData : IComparable<FileData>
     {
         public string Name { get; set; }
+        public string FilePath { get; set; }
+        public DirectoryData Directory { get; set; }
 
         public List<FileCopyInfo> Incoming { get; } = new List<FileCopyInfo>();
         public List<FileCopyInfo> Outgoing { get; } = new List<FileCopyInfo>();
@@ -142,6 +144,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     fileData = new FileData();
                     fileData.Name = fileName;
+                    fileData.FilePath = filePath;
+                    fileData.Directory = directoryData;
                     directoryData.Files.Insert(~index, fileData);
                 }
 
@@ -208,8 +212,30 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private void GetResults(FileData fileData, IList<SearchResult> resultSet)
+        private void GetResults(FileData fileData, IList<SearchResult> resultSet, string matchText = null)
         {
+            if (matchText == null)
+            {
+                matchText = fileData.FilePath;
+            }
+
+            foreach (var incoming in fileData.Incoming)
+            {
+                var message = incoming.FileCopyOperation.Message;
+                var result = new SearchResult(message);
+                result.AddMatch(message.Text, matchText);
+                result.RootFolder = "Incoming";
+                resultSet.Add(result);
+            }
+
+            foreach (var outgoing in fileData.Outgoing)
+            {
+                var message = outgoing.FileCopyOperation.Message;
+                var result = new SearchResult(message);
+                result.AddMatch(message.Text, matchText);
+                result.RootFolder = "Outgoing";
+                resultSet.Add(result);
+            }
         }
 
         private void GetResults(DirectoryData directoryData, IList<SearchResult> resultSet)
@@ -218,23 +244,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             foreach (var fileData in directoryData.Files)
             {
-                foreach (var incoming in fileData.Incoming)
-                {
-                    var message = incoming.FileCopyOperation.Message;
-                    var result = new SearchResult(message);
-                    result.AddMatch(message.Text, directoryPath);
-                    result.RootFolder = "Incoming";
-                    resultSet.Add(result);
-                }
-
-                foreach (var outgoing in fileData.Outgoing)
-                {
-                    var message = outgoing.FileCopyOperation.Message;
-                    var result = new SearchResult(message);
-                    result.AddMatch(message.Text, directoryPath);
-                    result.RootFolder = "Outgoing";
-                    resultSet.Add(result);
-                }
+                GetResults(fileData, resultSet, matchText: directoryPath);
             }
         }
 
