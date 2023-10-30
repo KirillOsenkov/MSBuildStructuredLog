@@ -1,6 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using StructuredLogViewer;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -10,6 +11,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public Task Task { get; set; }
         public Target Target { get; set; }
         public Project Project { get; set; }
+
+        public override string ToString() => FileCopyOperation.ToString();
     }
 
     public class FileData : IComparable<FileData>
@@ -28,6 +31,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             return StringComparer.OrdinalIgnoreCase.Compare(Name, other.Name);
         }
+
+        public override string ToString() => Name;
     }
 
     public class DirectoryData
@@ -36,6 +41,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public DirectoryData Parent { get; set; }
 
         public List<FileData> Files { get; } = new List<FileData>();
+
+        public override string ToString()
+        {
+            if (Parent != null)
+            {
+                return Path.Combine(Parent.ToString(), Name);
+            }
+
+            return Name;
+        }
     }
 
     public class FileCopyMap
@@ -103,22 +118,27 @@ namespace Microsoft.Build.Logging.StructuredLogger
             destinationData.Incoming.Add(info);
         }
 
-        public FileData GetFile(string filePath)
+        public FileData GetFile(string filePath, bool create = true)
         {
             lock (directories)
             {
                 var directory = Path.GetDirectoryName(filePath);
                 var fileName = Path.GetFileName(filePath);
 
-                FileData fileData;
+                FileData fileData = null;
 
-                var directoryData = GetDirectory(directory);
+                var directoryData = GetDirectory(directory, create);
+                if (directoryData == null)
+                {
+                    return null;
+                }
+
                 int index = directoryData.Files.BinarySearch(fileName, f => f.Name);
                 if (index >= 0)
                 {
                     fileData = directoryData.Files[index];
                 }
-                else
+                else if (create)
                 {
                     fileData = new FileData();
                     fileData.Name = fileName;
@@ -130,8 +150,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         private static char[] separators = new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
+        private static readonly string DirectorySeparator = Path.DirectorySeparatorChar.ToString();
+        private static readonly string AltDirectorySeparator = Path.AltDirectorySeparatorChar.ToString();
 
-        public DirectoryData GetDirectory(string path)
+        public DirectoryData GetDirectory(string path, bool create = true)
         {
             if (path.Length > 3)
             {
@@ -140,7 +162,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             lock (directories)
             {
-                if (!directories.TryGetValue(path, out var directoryData))
+                if (!directories.TryGetValue(path, out var directoryData) && create)
                 {
                     var parentDirectory = Path.GetDirectoryName(path);
                     var name = Path.GetFileName(path);
@@ -165,6 +187,77 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 return directoryData;
             }
+        }
+
+        public void GetResults(NodeQueryMatcher matcher, IList<SearchResult> resultSet)
+        {
+            if (matcher.Words.Count == 1)
+            {
+                var word = matcher.Words[0];
+                var text = word.Word;
+
+                object data = TryGetDirectoryOrFile(text);
+                if (data is DirectoryData directoryData)
+                {
+                    GetResults(directoryData, resultSet);
+                }
+                else if (data is FileData fileData)
+                {
+                    GetResults(fileData, resultSet);
+                }
+            }
+        }
+
+        private void GetResults(FileData fileData, IList<SearchResult> resultSet)
+        {
+        }
+
+        private void GetResults(DirectoryData directoryData, IList<SearchResult> resultSet)
+        {
+            string directoryPath = directoryData.ToString();
+
+            foreach (var fileData in directoryData.Files)
+            {
+                foreach (var incoming in fileData.Incoming)
+                {
+                    var message = incoming.FileCopyOperation.Message;
+                    var result = new SearchResult(message);
+                    result.AddMatch(message.Text, directoryPath);
+                    result.RootFolder = "Incoming";
+                    resultSet.Add(result);
+                }
+
+                foreach (var outgoing in fileData.Outgoing)
+                {
+                    var message = outgoing.FileCopyOperation.Message;
+                    var result = new SearchResult(message);
+                    result.AddMatch(message.Text, directoryPath);
+                    result.RootFolder = "Outgoing";
+                    resultSet.Add(result);
+                }
+            }
+        }
+
+        private object TryGetDirectoryOrFile(string text)
+        {
+            text = text.TrimEnd(separators);
+
+            if (text.Contains(DirectorySeparator))
+            {
+                var fileData = GetFile(text, create: false);
+                if (fileData != null)
+                {
+                    return fileData;
+                }
+
+                var directoryData = GetDirectory(text, create: false);
+                if (directoryData != null)
+                {
+                    return directoryData;
+                }
+            }
+
+            return null;
         }
     }
 }

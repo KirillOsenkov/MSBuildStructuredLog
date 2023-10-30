@@ -79,6 +79,15 @@ namespace StructuredLogViewer
 
                 if (!includeDuration && !includeStart && !includeEnd && !isProject)
                 {
+                    if (result.RootFolder is string rootFolderName)
+                    {
+                        parent = InsertParent(
+                            parent,
+                            actualParent: null,
+                            name: rootFolderName,
+                            existingProxy => existingProxy.Name == rootFolderName);
+                    }
+
                     var project = resultNode.GetNearestParent<Project>();
                     if (project != null)
                     {
@@ -153,7 +162,7 @@ namespace StructuredLogViewer
             string name = null,
             Func<ProxyNode, bool> existingNodeFinder = null)
         {
-            name ??= actualParent.Name;
+            name ??= actualParent?.Name;
 
             ProxyNode folderProxy = null;
 

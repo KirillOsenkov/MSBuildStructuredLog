@@ -35,6 +35,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             resolveAssemblyReferenceAnalyzer = new ResolveAssemblyReferenceAnalyzer();
             cppAnalyzer = new CppAnalyzer();
             fileCopyMap = new FileCopyMap();
+            build.FileCopyMap = fileCopyMap;
         }
 
         public static void AnalyzeBuild(Build build)

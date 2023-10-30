@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
 using TPLTask = System.Threading.Tasks.Task;
@@ -27,9 +28,18 @@ namespace StructuredLogViewer
 
         public IEnumerable<SearchResult> FindNodes(string query, CancellationToken cancellationToken)
         {
-            var matcher = new NodeQueryMatcher(query, strings, cancellationToken, stringTable);
-
             var resultSet = new List<SearchResult>();
+
+            var matcher = new NodeQueryMatcher(query, strings, cancellationToken, stringTable);
+            if (matcher.IsCopy)
+            {
+                if (roots.FirstOrDefault() is Build build && build.FileCopyMap is { } fileCopyMap)
+                {
+                    fileCopyMap.GetResults(matcher, resultSet);
+                    return resultSet;
+                }
+            }
+
             foreach (var root in roots)
             {
                 Visit(root, matcher, resultSet, cancellationToken);

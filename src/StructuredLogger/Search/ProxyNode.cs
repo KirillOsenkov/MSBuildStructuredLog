@@ -228,6 +228,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     return nameof(Task);
                 }
 
+                if (Original == null)
+                {
+                    return "Folder";
+                }
+
                 return Original.GetType().Name;
             }
         }

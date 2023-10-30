@@ -14,6 +14,8 @@ namespace StructuredLogViewer
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
 
+        public string RootFolder { get; set; }
+
         public SearchResult(BaseNode node, bool includeDuration = false, bool includeStart = false, bool includeEnd = false)
         {
             Node = node;
