@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft. All rights reserved.
+﻿// Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
@@ -21,6 +21,7 @@ namespace Microsoft.Build.Collections
         private TValue[] values;
 
         private int count;
+        private bool sorted;
 
         public ArrayDictionary(int capacity)
         {
@@ -215,6 +216,18 @@ namespace Microsoft.Build.Collections
         void IDictionary.Remove(object key)
         {
             throw new NotImplementedException();
+        }
+
+        public void Sort()
+        {
+            if (sorted)
+            {
+                return;
+            }
+
+            sorted = true;
+
+            Array.Sort(keys, values);
         }
 
         private struct Enumerator : IEnumerator<KeyValuePair<TKey, TValue>>, IDictionaryEnumerator
