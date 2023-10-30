@@ -30,6 +30,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private System.Threading.Tasks.Task bgWorker;
         private BlockingCollection<System.Threading.Tasks.Task> bgJobPool;
+        private bool populatePropertiesAndItemsInBackground = PlatformUtilities.HasThreads;
 
         public StringCache StringTable => stringTable;
 
@@ -70,7 +71,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Intern(nameof(Task));
             Intern(nameof(TimedNode));
 
-            if (PlatformUtilities.HasThreads)
+            if (populatePropertiesAndItemsInBackground)
             {
                 bgJobPool = new(2000);
                 bgWorker = new System.Threading.Tasks.Task(() =>
@@ -87,7 +88,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public void Shutdown()
         {
-            if (PlatformUtilities.HasThreads)
+            if (populatePropertiesAndItemsInBackground)
             {
                 bgJobPool.CompleteAdding();
                 bgWorker.Wait();
@@ -548,7 +549,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             propertiesFolder = projectEvaluation.GetOrCreateNodeWithName<Folder>(Strings.Properties, addAtBeginning: true);
                         }
 
-                        if (PlatformUtilities.HasThreads)
+                        if (populatePropertiesAndItemsInBackground)
                         {
                             bgJobPool.Add(new System.Threading.Tasks.Task(AddGlobalProperties));
                         }
@@ -961,7 +962,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     propertyFolder = project.GetOrCreateNodeWithName<Folder>(Strings.Properties, addAtBeginning: true);
                 }
 
-                if (PlatformUtilities.HasThreads)
+                if (populatePropertiesAndItemsInBackground)
                 {
                     bgJobPool.Add(new System.Threading.Tasks.Task(AddGlobalProperties));
                 }
@@ -1076,10 +1077,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             var list = (ICollection<KeyValuePair<string, string>>)properties;
             int count = list.Count;
+            IEnumerable<KeyValuePair<string, string>> sorted = list;
+
+            if (list is ArrayDictionary<string, string> arrayDictionary)
+            {
+                arrayDictionary.Sort();
+            }
+            else
+            {
+                sorted = list.OrderBy(d => d.Key, StringComparer.OrdinalIgnoreCase);
+            }
 
             AddProperties(
                 propertiesFolder,
-                list.OrderBy(d => d.Key, StringComparer.OrdinalIgnoreCase),
+                sorted,
                 count,
                 project as IProjectOrEvaluation);
         }
