@@ -15,6 +15,8 @@ namespace StructuredLogViewer
             DialogService.ShowMessageBoxEvent += message => MessageBox.Show(message);
             ClipboardService.Set += Clipboard.SetText;
 
+            AppDomain.MonitoringIsEnabled = true;
+
             var app = new Application();
             app.DispatcherUnhandledException += OnDispatcherUnhandledException;
             var window = new MainWindow();

@@ -439,6 +439,8 @@ namespace StructuredLogViewer
                 return;
             }
 
+            long allocatedBefore = AppDomain.CurrentDomain.MonitoringTotalAllocatedMemorySize;
+
             DisplayBuild(null);
             this.logFilePath = filePath;
             SettingsService.AddRecentLogFile(filePath);
@@ -498,7 +500,10 @@ namespace StructuredLogViewer
 
             if (currentBuild != null)
             {
-                currentBuild.UpdateBreadcrumb($"Opening: {Math.Round(openTime.TotalSeconds, 3)}s, Analyzing: {Math.Round(analyzingTime.TotalSeconds, 3)}s");
+                long allocatedAfter = AppDomain.CurrentDomain.MonitoringTotalAllocatedMemorySize;
+                long allocated = allocatedAfter - allocatedBefore;
+                currentBuild.UpdateBreadcrumb(
+                    $"Opening: {Math.Round(openTime.TotalSeconds, 3)}s, Analyzing: {Math.Round(analyzingTime.TotalSeconds, 3)}s, Allocated: {allocated:n0}");
             }
         }
 
