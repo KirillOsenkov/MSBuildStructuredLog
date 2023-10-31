@@ -497,13 +497,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     var propertyName = Strings.GetPropertyName(message);
                     parent = properties.GetOrCreateNodeWithName<Folder>(propertyName);
                 }
-                else if (parent == evaluation && parent.FindChild<Message>(message) != null)
+                else if (parent == evaluation && !evaluation.MessageTexts.Add(message))
                 {
                     // avoid duplicate messages
                     return;
                 }
             }
-            else if (args.Message.StartsWith(Strings.NodesReusal, StringComparison.Ordinal))
+            else if (message.StartsWith(Strings.NodesReusal, StringComparison.Ordinal))
             {
                 parent = construction.Build.GetOrCreateNodeWithName<Folder>(Strings.NodesManagementNode);
             }

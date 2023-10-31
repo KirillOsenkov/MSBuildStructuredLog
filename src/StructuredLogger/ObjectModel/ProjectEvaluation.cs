@@ -29,6 +29,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public override string TypeName => nameof(ProjectEvaluation);
 
+        public HashSet<string> MessageTexts { get; } = new HashSet<string>();
+
         public bool IsLowRelevance
         {
             get => HasFlag(NodeFlags.LowRelevance) && !IsSelected;
