@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -124,12 +125,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             children.Insert(0, child);
+            OnAdded(child);
+
+            child.Parent = this;
+        }
+
+        [Conditional("false")]
+        private void OnAdded(BaseNode child)
+        {
             if (child is NamedNode named)
             {
                 ((ChildrenList)children).OnAdded(named);
             }
-
-            child.Parent = this;
         }
 
         public virtual void AddChild(BaseNode child)
@@ -140,10 +147,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             children.Add(child);
-            if (child is NamedNode named)
-            {
-                ((ChildrenList)children).OnAdded(named);
-            }
+            OnAdded(child);
 
             child.Parent = this;
         }
