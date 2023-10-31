@@ -83,6 +83,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             build = structuredLogger.Construction.Build;
 
+            if (stream is FileStream)
+            {
+                structuredLogger.Construction.IsLargeBinlog = stream.Length > 100_000_000;
+            }
+
             eventSource.OnFileFormatVersionRead += fileFormatVersion =>
             {
                 build.FileFormatVersion = fileFormatVersion;

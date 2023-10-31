@@ -37,6 +37,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public NamedNode EvaluationFolder => Build.EvaluationFolder;
         public NamedNode EnvironmentFolder => Build.EnvironmentFolder;
 
+        public bool IsLargeBinlog { get; set; }
+
         public Construction()
         {
             Build = new Build();
@@ -566,7 +568,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             }
 
                             AddPropertiesSorted(propertiesFolder, projectEvaluation, projectEvaluationFinished.Properties);
-                            AddItems(itemsNode, projectEvaluation, projectEvaluationFinished.Items);
+                            AddItems(itemsNode, projectEvaluationFinished.Items);
                         }
                     }
                 }
@@ -984,7 +986,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
 
                     AddPropertiesSorted(propertyFolder, project, args.Properties);
-                    AddItems(itemFolder, project, args.Items);
+                    AddItems(itemFolder, args.Items);
                 }
             }
         }
@@ -1026,7 +1028,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 if (cloned is ICollection collection)
                 {
-                    itemNode.EnsureChildrenCapacity(collection.Count);
+                    int count = collection.Count;
+                    if (count == 0)
+                    {
+                        return;
+                    }
+
+                    itemNode.EnsureChildrenCapacity(count);
                 }
 
                 foreach (DictionaryEntry metadataName in cloned)
@@ -1043,17 +1051,23 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private void AddItems(Folder itemsNode, TreeNode parent, IEnumerable itemList)
+        private void AddItems(Folder itemsNode, IEnumerable itemList)
         {
             if (itemList == null)
             {
                 return;
             }
 
+            AddItem currentItemNode = null;
+
             foreach (DictionaryEntry kvp in itemList)
             {
                 var itemType = SoftIntern(Convert.ToString(kvp.Key));
-                var itemTypeNode = itemsNode.GetOrCreateNodeWithName<AddItem>(itemType);
+
+                if (currentItemNode == null || currentItemNode.Name != itemType)
+                {
+                    currentItemNode = itemsNode.GetOrCreateNodeWithName<AddItem>(itemType);
+                }
 
                 var itemNode = new Item();
 
@@ -1061,7 +1075,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     itemNode.Text = SoftIntern(taskItem.ItemSpec);
                     AddMetadata(taskItem, itemNode);
-                    itemTypeNode.AddChild(itemNode);
+                    currentItemNode.AddChild(itemNode);
                 }
             }
 
@@ -1081,7 +1095,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (list is ArrayDictionary<string, string> arrayDictionary)
             {
-                arrayDictionary.Sort();
+                // don't sort properties for large binlogs, this is very expensive
+                if (!IsLargeBinlog)
+                {
+                    arrayDictionary.Sort();
+                }
             }
             else
             {
@@ -1243,7 +1261,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 if (project != null)
                 {
-
                     if (!tfvFound && string.Equals(kvp.Key, Strings.TargetFramework, StringComparison.OrdinalIgnoreCase))
                     {
                         project.TargetFramework = kvp.Value;
