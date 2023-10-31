@@ -1,14 +1,18 @@
+﻿using System;
 using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class ImportTreeAnalyzer
     {
+        private static readonly Func<BuildEventArgs, string> getMessage = Reflector.GetFieldAccessor<BuildEventArgs, string>("message");
+        private static readonly Func<LazyFormattedBuildEventArgs, object> getArguments = Reflector.GetFieldAccessor<LazyFormattedBuildEventArgs, object>("argumentsOrFormattedMessage");
+
         public static TextNode TryGetImportOrNoImport(ProjectImportedEventArgs args, StringCache stringTable)
         {
-            var message = (string)Reflector.BuildEventArgs_message?.GetValue(args);
+            var message = getMessage(args);
+            var arguments = getArguments(args) as object[];
 
-            var arguments = Reflector.LazyFormattedBuildEventArgs_arguments?.GetValue(args) as object[];
             if (arguments != null && arguments.Length > 0)
             {
                 if (arguments.Length == 4)
@@ -101,6 +105,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
+            // This shouldn't be reachable for newer binlogs
             var parsed = TryGetImportOrNoImport(args.Message, stringTable);
             return parsed;
         }
@@ -153,26 +158,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             return 0;
-        }
-
-        public static void VisitMessage(Message message, StringCache stringTable)
-        {
-            var import = TryGetImportOrNoImport(message.Text, stringTable);
-            if (import == null)
-            {
-                return;
-            }
-
-            var evaluation = message.Parent as ProjectEvaluation;
-            if (evaluation == null)
-            {
-                // possible with localized logs
-                return;
-            }
-
-            evaluation.AddImport(import);
-
-            message.Parent.Children.Remove(message);
         }
     }
 }
