@@ -214,15 +214,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return found;
         }
 
-        private Dictionary<int, ProjectEvaluation> evaluationById;
+        private Dictionary<int, ProjectEvaluation> evaluationById = new Dictionary<int, ProjectEvaluation>();
 
         public ProjectEvaluation FindEvaluation(int id)
         {
-            if (evaluationById == null)
-            {
-                evaluationById = new Dictionary<int, ProjectEvaluation>();
-            }
-
             if (!evaluationById.TryGetValue(id, out var projectEvaluation))
             {
                 var evaluation = EvaluationFolder;
@@ -231,7 +226,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     return null;
                 }
 
-                projectEvaluation = evaluation.FindChild<ProjectEvaluation>(e => e.Id == id);
+                // the evaluation we want is likely to be at the end (recently added)
+                projectEvaluation = evaluation.FindLastChild<ProjectEvaluation>(e => e.Id == id);
                 if (projectEvaluation != null)
                 {
                     evaluationById[id] = projectEvaluation;
