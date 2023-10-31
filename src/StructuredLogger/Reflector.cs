@@ -1,4 +1,5 @@
-using System;
+﻿using System;
+using System.Linq.Expressions;
 using System.Reflection;
 using Microsoft.Build.Framework;
 
@@ -11,7 +12,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             get
             {
-                if (buildEventArgs_message == null)
+                if (buildEventArgs_message is null)
                 {
                     buildEventArgs_message = typeof(BuildEventArgs).GetField("message", BindingFlags.Instance | BindingFlags.NonPublic);
                 }
@@ -25,7 +26,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             get
             {
-                if (lazyFormattedBuildEventArgs_arguments == null)
+                if (lazyFormattedBuildEventArgs_arguments is null)
                 {
                     lazyFormattedBuildEventArgs_arguments =
                         typeof(LazyFormattedBuildEventArgs).GetField("arguments", BindingFlags.Instance | BindingFlags.NonPublic) ??
@@ -130,6 +131,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             return enumerateItemsPerType;
+        }
+
+        public static Func<T, R> GetFieldAccessor<T, R>(string fieldName)
+        {
+            ParameterExpression param = Expression.Parameter(typeof(T), "arg");
+            MemberExpression member = Expression.Field(param, fieldName);
+            LambdaExpression lambda = Expression.Lambda(typeof(Func<T, R>), member, param);
+            Func<T, R> compiled = (Func<T, R>)lambda.Compile();
+            return compiled;
         }
     }
 }
