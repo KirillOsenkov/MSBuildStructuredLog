@@ -267,24 +267,31 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        private readonly List<(int name, int value)> nameValues = new List<(int name, int value)>(4096);
+
         private void ReadNameValueList()
         {
             int count = ReadInt32();
 
-            var list = new (int, int)[count];
+            if (nameValues.Capacity < count)
+            {
+                nameValues.Capacity = count;
+            }
+
             for (int i = 0; i < count; i++)
             {
                 int key = ReadInt32();
                 int value = ReadInt32();
-                list[i] = (key, value);
+                nameValues.Add((key, value));
             }
 
             var record = new NameValueRecord()
             {
-                Array = list,
-                Dictionary = CreateDictionary(list)
+                Dictionary = CreateDictionary(nameValues)
             };
             nameValueListRecords.Add(record);
+
+            nameValues.Clear();
 
             OnNameValueListRead?.Invoke(record.Dictionary);
         }

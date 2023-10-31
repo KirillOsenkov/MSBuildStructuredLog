@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -20,14 +20,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private struct NameValueRecord
         {
-            public (int keyIndex, int valueIndex)[] Array;
             public IDictionary<string, string> Dictionary;
         }
 
-        private IDictionary<string, string> CreateDictionary((int keyIndex, int valueIndex)[] list)
+        private IDictionary<string, string> CreateDictionary(List<(int keyIndex, int valueIndex)> list)
         {
-            var dictionary = new ArrayDictionary<string, string>(list.Length);
-            for (int i = 0; i < list.Length; i++)
+            var dictionary = new ArrayDictionary<string, string>(list.Count);
+            for (int i = 0; i < list.Count; i++)
             {
                 string key = GetStringFromRecord(list[i].keyIndex);
                 string value = GetStringFromRecord(list[i].valueIndex);
