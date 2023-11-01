@@ -1078,9 +1078,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
+            IEnumerable<DictionaryEntry> entries = itemList as IEnumerable<DictionaryEntry> ??
+                itemList.Cast<DictionaryEntry>(); // this should be unreachable
+
             AddItem currentItemNode = null;
 
-            foreach (DictionaryEntry kvp in itemList)
+            foreach (DictionaryEntry kvp in entries)
             {
                 var itemType = SoftIntern(Convert.ToString(kvp.Key));
 
