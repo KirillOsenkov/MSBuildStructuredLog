@@ -6,7 +6,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class ChildrenList : List<BaseNode>, INotifyCollectionChanged
     {
-        public ChildrenList() : base(1)
+        public ChildrenList() : base(0)
         {
         }
 
