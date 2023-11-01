@@ -415,15 +415,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void MarkAsLowRelevanceIfNeeded(Target target)
         {
-            if (!target.HasChildren || target.Children.All(c => c is Message))
+            if (!target.HasChildren)
             {
                 target.IsLowRelevance = true;
-                if (target.HasChildren)
+                return;
+            }
+
+            if (target.Children.All(c => c is Message))
+            {
+                target.IsLowRelevance = true;
+                foreach (var child in target.Children.OfType<Message>())
                 {
-                    foreach (var child in target.Children.OfType<Message>())
-                    {
-                        child.IsLowRelevance = true;
-                    }
+                    child.IsLowRelevance = true;
                 }
             }
         }
