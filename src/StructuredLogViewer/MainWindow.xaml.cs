@@ -453,7 +453,7 @@ namespace StructuredLogViewer
                 Dispatcher.InvokeAsync(() =>
                 {
                     progress.Value = update.Ratio;
-                    progress.BufferText = "Buffer length: " + update.BufferLength.ToString();
+                    progress.BufferText = $"Buffer length: {update.BufferLength:n0}";
                 }, DispatcherPriority.Background);
             };
             progress.ProgressText = "Opening " + filePath + "...";
