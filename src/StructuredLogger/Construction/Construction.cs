@@ -302,12 +302,32 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         {
                             var item = new Item();
                             item.Text = Intern(targetOutput.ItemSpec);
-                            foreach (DictionaryEntry metadata in targetOutput.CloneCustomMetadata())
+
+                            var metadataArray = targetOutput.CloneCustomMetadata();
+                            if (metadataArray.Count > 0)
                             {
-                                var metadataNode = new Metadata();
-                                metadataNode.Name = Intern(Convert.ToString(metadata.Key));
-                                metadataNode.Value = Intern(Convert.ToString(metadata.Value));
-                                item.AddChild(metadataNode);
+                                if (metadataArray is ArrayDictionary<string, string> array)
+                                {
+                                    foreach (var metadata in array)
+                                    {
+                                        var metadataNode = new Metadata();
+                                        metadataNode.Name = Intern(Convert.ToString(metadata.Key));
+                                        metadataNode.Value = Intern(Convert.ToString(metadata.Value));
+                                        item.AddChild(metadataNode);
+                                    }
+                                }
+                                else
+                                {
+                                    // This should be unreachable or legacy scenarios only
+                                    // (someone passing StructuredLogger directly to MSBuild)
+                                    foreach (DictionaryEntry metadata in metadataArray)
+                                    {
+                                        var metadataNode = new Metadata();
+                                        metadataNode.Name = Intern(Convert.ToString(metadata.Key));
+                                        metadataNode.Value = Intern(Convert.ToString(metadata.Value));
+                                        item.AddChild(metadataNode);
+                                    }
+                                }
                             }
 
                             targetOutputsFolder.AddChild(item);
