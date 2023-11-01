@@ -235,16 +235,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     var taskItem = new Item
                     {
-                        Name = Intern(kvp.Key),
-                        Text = Intern($"{TextUtilities.DisplayDuration(kvp.Value.Duration)}, {kvp.Value.Count} calls.")
+                        Text = Intern(kvp.Key) + " = " + Intern($"{TextUtilities.DisplayDuration(kvp.Value.Duration)}, {kvp.Value.Count} calls.")
                     };
                     var childNodes = kvp.Value.ChildNodes.OrderByDescending(kv => kv.Value.Duration).Take(10);
                     foreach (var durationNodes in childNodes)
                     {
                         taskItem.AddChild(new Item
                         {
-                            Name = Intern(durationNodes.Key),
-                            Text = Intern($"{TextUtilities.DisplayDuration(durationNodes.Value.Duration)}, {durationNodes.Value.Count} calls.")
+                            Text = Intern(durationNodes.Key) + " = " + Intern($"{TextUtilities.DisplayDuration(durationNodes.Value.Duration)}, {durationNodes.Value.Count} calls.")
                         });
                     }
                     top10Tasks.AddChild(taskItem);

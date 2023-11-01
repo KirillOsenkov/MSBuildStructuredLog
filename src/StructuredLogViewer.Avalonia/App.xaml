@@ -191,11 +191,7 @@
                            Classes="nodeIcon"
                            Stroke="{StaticResource ItemStroke}"
                            Fill="{StaticResource ItemBrush}" />
-                <TextBlock Name="nameAndEquals"
-                           Classes="nodeBeforeText"
-                           Text="{Binding NameAndEquals}"
-                           Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={x:Static Brushes.Green}}"/>
-                <TextBlock Text="{Binding ShortenedText}"
+                <TextBlock Text="{Binding ShortenedName}"
                            Classes="nodeText" />
             </StackPanel>
         </TreeDataTemplate>

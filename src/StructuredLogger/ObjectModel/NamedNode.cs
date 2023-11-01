@@ -2,7 +2,9 @@
 {
     public class NamedNode : TreeNode, IHasTitle
     {
-        public string Name { get; set; }
+        public virtual string Name { get; set; }
+        public string ShortenedName => TextUtilities.ShortenValue(Name);
+        public bool IsNameShortened => Name != ShortenedName;
 
         public virtual string LookupKey => Name;
         string IHasTitle.Title => GetTitle();

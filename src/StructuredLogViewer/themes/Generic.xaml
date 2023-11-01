@@ -458,14 +458,8 @@
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
       <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{DynamicResource ItemStroke}" Fill="{DynamicResource ItemBrush}" />
-      <TextBlock x:Name="nameAndEquals" Text="{Binding NameAndEquals}" />
-      <TextBlock Text="{Binding ShortenedText}" />
+      <TextBlock Text="{Binding ShortenedName}" />
     </StackPanel>
-    <HierarchicalDataTemplate.Triggers>
-      <DataTrigger Binding="{Binding IsSelected}" Value="False">
-        <Setter TargetName="nameAndEquals" Property="Foreground" Value="Green" />
-      </DataTrigger>
-    </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
 
   <DataTemplate DataType="{x:Type l:Metadata}">
