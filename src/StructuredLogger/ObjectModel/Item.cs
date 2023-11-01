@@ -5,6 +5,11 @@
     /// </summary>
     public class Item : NamedNode
     {
+        public Item()
+        {
+            DisableChildrenCache = true;
+        }
+
         public override string TypeName => nameof(Item);
 
         public string Text

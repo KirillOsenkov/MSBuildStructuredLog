@@ -278,6 +278,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     if (args.TargetOutputs != null)
                     {
                         var targetOutputsFolder = target.GetOrCreateNodeWithName<Folder>(Intern(Strings.TargetOutputs));
+                        targetOutputsFolder.DisableChildrenCache = true;
 
                         foreach (ITaskItem targetOutput in args.TargetOutputs)
                         {
@@ -945,6 +946,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (args.GlobalProperties != null)
                 {
                     globalNode = GetOrCreateGlobalPropertiesFolder(project, project.GlobalProperties);
+                    globalNode.DisableChildrenCache = true;
                 }
 
                 Folder targetsNode = null;
@@ -953,16 +955,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (!string.IsNullOrEmpty(args.TargetNames))
                 {
                     targetsNode = project.GetOrCreateNodeWithName<Folder>(Strings.EntryTargets);
+                    targetsNode.DisableChildrenCache = true;
                 }
 
                 if (args.Items != null)
                 {
                     itemFolder = project.GetOrCreateNodeWithName<Folder>(Strings.Items, addAtBeginning: true);
+                    itemFolder.DisableChildrenCache = true;
                 }
 
                 if (args.Properties != null)
                 {
                     propertyFolder = project.GetOrCreateNodeWithName<Folder>(Strings.Properties, addAtBeginning: true);
+                    propertyFolder.DisableChildrenCache = true;
                 }
 
                 if (populatePropertiesAndItemsInBackground)
@@ -1238,6 +1243,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 return;
             }
+
+            parent.DisableChildrenCache = true;
 
             if (count > 0)
             {

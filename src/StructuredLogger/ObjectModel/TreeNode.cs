@@ -22,6 +22,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             set => SetFlag(NodeFlags.Expanded, value);
         }
 
+        public bool DisableChildrenCache
+        {
+            get => HasFlag(NodeFlags.DisableChildrenCache);
+            set => SetFlag(NodeFlags.DisableChildrenCache, value);
+        }
+
         public virtual string ToolTip
         {
             get => null;
@@ -36,11 +42,41 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 if (children == null)
                 {
-                    children = new ChildrenList();
+                    children = CreateChildrenList();
                 }
 
                 return children;
             }
+        }
+
+        protected ChildrenList CreateChildrenList()
+        {
+            if (DisableChildrenCache)
+            {
+                return new ChildrenList();
+            }
+
+            return new CacheByNameChildrenList();
+        }
+
+        protected ChildrenList CreateChildrenList(int capacity)
+        {
+            if (DisableChildrenCache)
+            {
+                return new ChildrenList(capacity);
+            }
+
+            return new CacheByNameChildrenList(capacity);
+        }
+
+        protected ChildrenList CreateChildrenList(IEnumerable<BaseNode> children)
+        {
+            if (DisableChildrenCache)
+            {
+                return new ChildrenList(children);
+            }
+
+            return new CacheByNameChildrenList(children);
         }
 
         public void EnsureChildrenCapacity(int capacity)
@@ -52,7 +88,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (children == null)
             {
-                children = new ChildrenList(capacity);
+                children = CreateChildrenList(capacity);
             }
             else if (children is ChildrenList list)
             {
@@ -69,7 +105,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (children is not ChildrenList list)
             {
-                list = new ChildrenList(children);
+                list = CreateChildrenList(children);
             }
 
             list.Sort((o1, o2) => string.Compare(o1.ToString(), o2.ToString(), StringComparison.OrdinalIgnoreCase));
@@ -113,7 +149,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             if (children is BaseNode[])
             {
-                children = new ChildrenList(children);
+                children = CreateChildrenList(children);
             }
         }
 
@@ -121,7 +157,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             if (children == null)
             {
-                children = new ChildrenList();
+                children = CreateChildrenList(1);
             }
 
             children.Insert(0, child);
@@ -143,7 +179,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             if (children == null)
             {
-                children = new ChildrenList();
+                children = CreateChildrenList(1);
             }
 
             children.Add(child);

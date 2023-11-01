@@ -18,8 +18,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
         }
 
-        private Dictionary<ChildrenCacheKey, BaseNode> childrenCache;
-
         public event NotifyCollectionChangedEventHandler CollectionChanged;
 
         public void RaiseCollectionChanged()
@@ -27,20 +25,56 @@ namespace Microsoft.Build.Logging.StructuredLogger
             CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
-        public T FindNode<T>(string name) where T : NamedNode
+        public virtual T FindNode<T>(string name) where T : NamedNode
+        {
+            for (int i = 0; i < Count; i++)
+            {
+                if (this[i] is T t && t.LookupKey == name)
+                {
+                    return t;
+                }
+            }
+
+            return default;
+        }
+
+        public void EnsureCapacity(int capacity)
+        {
+            this.Capacity = capacity;
+        }
+
+        public virtual void OnAdded(NamedNode child)
+        {
+        }
+    }
+
+    public class CacheByNameChildrenList : ChildrenList
+    {
+        private Dictionary<ChildrenCacheKey, BaseNode> childrenCache;
+
+        public CacheByNameChildrenList() : base()
+        {
+        }
+
+        public CacheByNameChildrenList(int capacity) : base(capacity)
+        {
+        }
+
+        public CacheByNameChildrenList(IEnumerable<BaseNode> children) : base(children)
+        {
+        }
+
+        public override T FindNode<T>(string name)
         {
             EnsureCacheCreated();
 
             var key = new ChildrenCacheKey(typeof(T), name);
             if (!childrenCache.TryGetValue(key, out var result))
             {
-                for (int i = 0; i < Count; i++)
+                result = base.FindNode<T>(name);
+                if (result != null)
                 {
-                    if (this[i] is T t && t.LookupKey == name)
-                    {
-                        childrenCache[key] = t;
-                        return t;
-                    }
+                    childrenCache[key] = result;
                 }
             }
 
@@ -55,12 +89,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        public void EnsureCapacity(int capacity)
-        {
-            this.Capacity = capacity;
-        }
-
-        public void OnAdded(NamedNode child)
+        public override void OnAdded(NamedNode child)
         {
             if (child?.LookupKey == null)
             {
