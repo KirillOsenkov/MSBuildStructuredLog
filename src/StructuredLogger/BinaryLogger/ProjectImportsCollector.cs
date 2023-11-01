@@ -6,6 +6,7 @@ using System.IO.Compression;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Build.Shared;
+using StructuredLogger;
 
 namespace Microsoft.Build.Logging
 {
@@ -90,7 +91,7 @@ namespace Microsoft.Build.Logging
 
         private static string GetCacheDirectory()
         {
-            string dir = Path.Combine(Path.GetTempPath(),
+            string dir = Path.Combine(PathUtils.TempPath,
                 $"MSBuildTemp-{Environment.UserName}-{Process.GetCurrentProcess().Id}-{AppDomain.CurrentDomain.Id}");
             Directory.CreateDirectory(dir);
             return dir;

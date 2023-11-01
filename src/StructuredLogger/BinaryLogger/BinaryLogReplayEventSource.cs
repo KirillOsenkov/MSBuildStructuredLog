@@ -70,7 +70,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         /// <param name="sourceFilePath"></param>
         /// <returns>BinaryReader of the given binlog file.</returns>
-        public static BuildEventArgsReader OpenBuildEventsReader(string sourceFilePath)
+        internal static BuildEventArgsReader OpenBuildEventsReader(string sourceFilePath)
             => OpenBuildEventsReader(OpenReader(sourceFilePath), true);
 
         /// <summary>
@@ -80,7 +80,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <param name="binaryReader"></param>
         /// <param name="closeInput">Indicates whether the passed BinaryReader should be closed on disposing.</param>
         /// <returns>BuildEventArgsReader over the given binlog file binary reader.</returns>
-        public static BuildEventArgsReader OpenBuildEventsReader(
+        internal static BuildEventArgsReader OpenBuildEventsReader(
             BinaryReader binaryReader,
             bool closeInput)
         {

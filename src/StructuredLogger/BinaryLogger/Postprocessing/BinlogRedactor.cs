@@ -19,20 +19,20 @@ namespace StructuredLogger.BinaryLogger.Postprocessing
     internal sealed class SimpleSensitiveDataProcessor : ISensitiveDataProcessor
     {
         public const string DefaultReplacementPattern = "*******";
-        private readonly (string pwd, string replacement)[] _passwordsToRedact;
+        private readonly (string token, string replacement)[] _secretsToRedact;
 
-        public SimpleSensitiveDataProcessor(string[] passwordsToRedact, bool identifyReplacements)
+        public SimpleSensitiveDataProcessor(string[] secretsToRedact, bool identifyReplacements)
         {
-            _passwordsToRedact = passwordsToRedact.Select((pwd, cnt) =>
-                    (pwd, identifyReplacements ? $"REDACTED__PWD{(cnt + 1):00}" : DefaultReplacementPattern))
+            _secretsToRedact = secretsToRedact.Select((secret, cnt) =>
+                    (token: secret, identifyReplacements ? $"REDACTED__TKN{(cnt + 1):00}" : DefaultReplacementPattern))
                 .ToArray();
         }
 
         public string ReplaceSensitiveData(string text)
         {
-            foreach ((string pwd, string replacement) pwd in _passwordsToRedact)
+            foreach ((string token, string replacement) secret in _secretsToRedact)
             {
-                text = text.Replace(pwd.pwd, pwd.replacement);
+                text = text.Replace(secret.token, secret.replacement);
             }
 
             return text;
@@ -46,7 +46,7 @@ namespace StructuredLogger.BinaryLogger.Postprocessing
         public static void RedactSecrets(string binlogPath, string[] secrets)
         {
             var sensitivityProcessor = new SimpleSensitiveDataProcessor(secrets, true);
-            string outputFile = Path.GetFileName(Path.GetTempFileName()) + ".binlog";
+            string outputFile = Path.Combine(PathUtils.TempPath, Path.GetFileName(Path.GetTempFileName()) + ".binlog");
             new BinlogRedactor(sensitivityProcessor).ProcessBinlog(binlogPath, outputFile, skipEmbeddedFiles: false);
             File.Delete(binlogPath);
             File.Move(outputFile, binlogPath);

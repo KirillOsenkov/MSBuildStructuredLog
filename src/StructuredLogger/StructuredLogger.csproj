@@ -60,4 +60,7 @@
     <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
     <DelaySign>False</DelaySign>
   </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="StructuredLogger.Tests" PublicKey="00240000048000009400000006020000002400005253413100040000010001003561d7bf83db97ec035979936a2c0cc26fb451f3494596911d0316db3980e75668f28e5128ec466da67c5380e729891bde24dda50bfb0c5b73c67640248869224a9906285e0dcf73c4b4546728800612a7b68e9491c64810738f58940bbb05cfcd9adbe7844133164a7417f9a501a660d799df1ba151470e71ff2e4e189ecdb2"/>
+  </ItemGroup>
 </Project>

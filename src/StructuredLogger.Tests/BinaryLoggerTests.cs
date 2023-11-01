@@ -57,16 +57,20 @@ namespace Microsoft.Build.UnitTests
         {
             this.output = output;
         }
+        private bool BuildProject(string projectFile, string binLog, bool useInMemoryProject)
+        {
+            File.Delete(binLog);
+            var binaryLogger = new BinaryLogger { Parameters = binLog };
+            return useInMemoryProject
+                ? MSBuild.BuildProjectInMemory(projectFile, binaryLogger)
+                : MSBuild.BuildProjectFromFile(projectFile, binaryLogger);
+        }
 
         [Fact]
         public void TestBuildTreeStructureCount()
         {
             var binLog = GetTestFile("1.binlog");
-            var binaryLogger = new BinaryLogger();
-            binaryLogger.Parameters = binLog;
-            var buildSuccessful = MSBuild.BuildProjectFromFile(s_testProject, binaryLogger);
-
-            Assert.True(buildSuccessful);
+            Assert.True(BuildProject(s_testProject, binLog, false));
 
             var build = Serialization.Read(binLog);
             BuildAnalyzer.AnalyzeBuild(build);
@@ -95,13 +99,7 @@ namespace Microsoft.Build.UnitTests
         public void TestBinaryLoggerRoundtrip(bool useInMemoryProject)
         {
             var binLog = GetTestFile("1.binlog");
-            var binaryLogger = new BinaryLogger();
-            binaryLogger.Parameters = binLog;
-            var buildSuccessful = useInMemoryProject
-                ? MSBuild.BuildProjectInMemory(s_testProject, binaryLogger)
-                : MSBuild.BuildProjectFromFile(s_testProject, binaryLogger);
-
-            Assert.True(buildSuccessful);
+            Assert.True(BuildProject(s_testProject, binLog, useInMemoryProject));
 
             var build = Serialization.Read(binLog);
             var xml1 = GetTestFile("1.xml");
@@ -130,6 +128,7 @@ namespace Microsoft.Build.UnitTests
         public void TestReaderWriterRoundtripEquality()
         {
             var binLog = GetTestFile("1.binlog");
+            Assert.True(BuildProject(s_testProject, binLog, false));
             var replayedBinlog = GetTestFile("1-replayed.binlog");
             File.Delete(replayedBinlog);
 

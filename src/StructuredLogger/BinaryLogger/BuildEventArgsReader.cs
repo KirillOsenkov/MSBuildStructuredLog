@@ -22,7 +22,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
     /// <summary>
     /// Deserializes and returns BuildEventArgs-derived objects from a BinaryReader
     /// </summary>
-    public partial class BuildEventArgsReader : IBuildEventArgsReaderNotifications, IDisposable
+    internal partial class BuildEventArgsReader : IBuildEventArgsReaderNotifications, IDisposable
     {
         private readonly BinaryReader binaryReader;
         private readonly int fileFormatVersion;

@@ -1,23 +1,12 @@
 ﻿using System;
 using System.IO;
+using StructuredLogger;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class ErrorReporting
     {
-        private static readonly string logFilePath = Path.Combine(GetRootPath(), "LoggerExceptions.txt");
-
-        private static string GetRootPath()
-        {
-#if NETCORE
-            var path = Path.GetTempPath();
-#else
-            var path = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-#endif
-
-            path = Path.Combine(path, "Microsoft", "MSBuildStructuredLog");
-            return path;
-        }
+        private static readonly string logFilePath = Path.Combine(PathUtils.RootPath, "LoggerExceptions.txt");
 
         public static void ReportException(Exception ex)
         {

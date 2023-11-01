@@ -18,7 +18,7 @@ namespace BinlogTool
     binlogtool reconstruct input.binlog output_path
     binlogtool savestrings input.binlog output.txt
     binlogtool search *.binlog search string
-    binlogtool redact input.binlog list of passwords to redact");
+    binlogtool redact input.binlog list of secrets to redact");
                 return;
             }
 
@@ -77,7 +77,7 @@ namespace BinlogTool
             {
                 if (args.Length < 3)
                 {
-                    Console.Error.WriteLine("binlogtool redact input.binlog list of passwords to redact");
+                    Console.Error.WriteLine("binlogtool redact input.binlog list of secrets to redact");
                     return;
                 }
 
