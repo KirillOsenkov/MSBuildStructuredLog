@@ -29,6 +29,13 @@
             set => SetField(ref this.value, value);
         }
 
+        private string bufferText;
+        public string BufferText
+        {
+            get => bufferText;
+            set => SetField(ref bufferText, value);
+        }
+
         private string msbuildCommandLine;
         public string MSBuildCommandLine
         {

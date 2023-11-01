@@ -1027,6 +1027,12 @@
                    Width="200" 
                    Height="23" 
                    Margin="10" />
+      <TextBlock x:Name="buffer"
+                 Grid.Row="2"
+                 Text="{Binding BufferText}"
+                 HorizontalAlignment="Center"
+                 Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
+                 TextWrapping="Wrap" />
       <StackPanel Grid.Row="2"
                   Margin="40"
                   Visibility="{Binding ShowCommandLine, Converter={StaticResource booleanToVisibilityConverter}}">

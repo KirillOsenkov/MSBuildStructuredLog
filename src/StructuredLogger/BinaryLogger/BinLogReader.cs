@@ -122,7 +122,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         stopwatch.Restart();
                         var streamPosition = stream.Position;
                         double ratio = (double)streamPosition / streamLength;
-                        progress.Report(ratio);
+                        progress.Report(new ProgressUpdate { Ratio = ratio, BufferLength = queue.Count });
                     }
                 }
 
@@ -175,7 +175,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         stopwatch.Restart();
                         var streamPosition = stream.Position;
                         double ratio = (double)streamPosition / streamLength;
-                        progress.Report(ratio);
+                        progress.Report(new ProgressUpdate { Ratio = ratio, BufferLength = queue.Count });
                     }
                 }
 
@@ -196,7 +196,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (progress != null)
             {
-                progress.Report(1.0);
+                progress.Report(new ProgressUpdate { Ratio = 1.0, BufferLength = 0 });
             }
         }
 
