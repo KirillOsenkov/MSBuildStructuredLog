@@ -72,29 +72,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Intern(nameof(Target));
             Intern(nameof(Task));
             Intern(nameof(TimedNode));
-
-            if (populatePropertiesAndItemsInBackground)
-            {
-                bgJobPool = new(2000);
-                bgWorker = new System.Threading.Tasks.Task(() =>
-                {
-                    System.Threading.Tasks.Parallel.ForEach(bgJobPool.GetConsumingEnumerable(), task =>
-                    {
-                        task.Start();
-                        task.Wait();
-                    });
-                }, System.Threading.Tasks.TaskCreationOptions.LongRunning);
-                bgWorker.Start();
-            }
         }
 
         public void Shutdown()
         {
-            if (populatePropertiesAndItemsInBackground)
-            {
-                bgJobPool.CompleteAdding();
-                bgWorker.Wait();
-            }
         }
 
         private string Intern(string text) => stringTable.Intern(text);
@@ -573,7 +554,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                         if (populatePropertiesAndItemsInBackground)
                         {
-                            bgJobPool.Add(new System.Threading.Tasks.Task(AddGlobalProperties));
+                            System.Threading.Tasks.Task.Run(() => AddGlobalProperties());
                         }
                         else
                         {
@@ -986,7 +967,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 if (populatePropertiesAndItemsInBackground)
                 {
-                    bgJobPool.Add(new System.Threading.Tasks.Task(AddGlobalProperties));
+                    System.Threading.Tasks.Task.Run(() => AddGlobalProperties());
                 }
                 else
                 {
