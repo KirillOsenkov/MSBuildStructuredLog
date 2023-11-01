@@ -30,7 +30,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private System.Threading.Tasks.Task bgWorker;
         private BlockingCollection<System.Threading.Tasks.Task> bgJobPool;
-        private bool populatePropertiesAndItemsInBackground = PlatformUtilities.HasThreads;
+
+        internal bool PopulatePropertiesAndItemsInBackground = PlatformUtilities.HasThreads;
 
         public StringCache StringTable => stringTable;
 
@@ -553,7 +554,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             propertiesFolder = projectEvaluation.GetOrCreateNodeWithName<Folder>(Strings.Properties, addAtBeginning: true);
                         }
 
-                        if (populatePropertiesAndItemsInBackground)
+                        if (PopulatePropertiesAndItemsInBackground)
                         {
                             System.Threading.Tasks.Task.Run(() => AddGlobalProperties());
                         }
@@ -970,7 +971,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     propertyFolder.DisableChildrenCache = true;
                 }
 
-                if (populatePropertiesAndItemsInBackground)
+                if (PopulatePropertiesAndItemsInBackground)
                 {
                     System.Threading.Tasks.Task.Run(() => AddGlobalProperties());
                 }
@@ -1057,7 +1058,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private void AddItems(Folder itemsNode, IEnumerable itemList)
+        public void AddItems(Folder itemsNode, IEnumerable itemList)
         {
             if (itemList == null)
             {
@@ -1088,7 +1089,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
-            itemsNode.SortChildren();
+            if (!IsLargeBinlog)
+            {
+                itemsNode.SortChildren();
+            }
         }
 
         private void AddPropertiesSorted(Folder propertiesFolder, TreeNode project, IEnumerable properties)

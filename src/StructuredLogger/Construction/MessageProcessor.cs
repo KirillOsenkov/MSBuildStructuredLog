@@ -178,6 +178,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 string folderName = isOutput ? Strings.OutputItems : Strings.Parameters;
                 parent = task.GetOrCreateNodeWithName<Folder>(folderName);
+                parent.DisableChildrenCache = true;
 
                 node = CreateParameterNode(itemType, items, isOutput);
             }
@@ -215,6 +216,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     {
                         itemType = Strings.Outputs;
                     }
+
+                    named.DisableChildrenCache = true;
                 }
 
                 named.Name = itemType;
@@ -249,6 +252,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             else
             {
                 parent = new Parameter { Name = itemName };
+                parent.DisableChildrenCache = true;
             }
 
             AddItems(items, parent);
@@ -257,6 +261,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         private void AddItems(IEnumerable items, TreeNode parent)
+        {
+            if (construction.PopulatePropertiesAndItemsInBackground)
+            {
+                System.Threading.Tasks.Task.Run(() => AddItemsCore(items, parent));
+            }
+            else
+            {
+                AddItemsCore(items, parent);
+            }
+        }
+
+        private void AddItemsCore(IEnumerable items, TreeNode parent)
         {
             if (items is ICollection collection)
             {
