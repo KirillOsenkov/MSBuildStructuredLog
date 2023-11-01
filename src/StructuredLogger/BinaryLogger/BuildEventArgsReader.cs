@@ -1076,84 +1076,147 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return fields;
         }
 
+        private readonly BuildEventArgsFields fields = new BuildEventArgsFields();
+
         private BuildEventArgsFields ReadBuildEventArgsFields(bool readImportance = false)
         {
             BuildEventArgsFieldFlags flags = (BuildEventArgsFieldFlags)ReadInt32();
-            var result = new BuildEventArgsFields();
+            var result = fields;
             result.Flags = flags;
 
             if ((flags & BuildEventArgsFieldFlags.Message) != 0)
             {
                 result.Message = ReadDeduplicatedString();
             }
+            else
+            {
+                result.Message = default;
+            }
 
             if ((flags & BuildEventArgsFieldFlags.BuildEventContext) != 0)
             {
                 result.BuildEventContext = ReadBuildEventContext();
+            }
+            else
+            {
+                result.BuildEventContext = default;
             }
 
             if ((flags & BuildEventArgsFieldFlags.ThreadId) != 0)
             {
                 result.ThreadId = ReadInt32();
             }
+            else
+            {
+                result.ThreadId = default;
+            }
 
             if ((flags & BuildEventArgsFieldFlags.HelpKeyword) != 0)
             {
                 result.HelpKeyword = ReadDeduplicatedString();
+            }
+            else
+            {
+                result.HelpKeyword = default;
             }
 
             if ((flags & BuildEventArgsFieldFlags.SenderName) != 0)
             {
                 result.SenderName = ReadDeduplicatedString();
             }
+            else
+            {
+                result.SenderName = default;
+            }
 
             if ((flags & BuildEventArgsFieldFlags.Timestamp) != 0)
             {
                 result.Timestamp = ReadDateTime();
+            }
+            else
+            {
+                result.Timestamp = default;
             }
 
             if ((flags & BuildEventArgsFieldFlags.Extended) != 0)
             {
                 result.Extended = ReadExtendedDataFields();
             }
+            else
+            {
+                result.Extended = default;
+            }
+
             if ((flags & BuildEventArgsFieldFlags.Subcategory) != 0)
             {
                 result.Subcategory = ReadDeduplicatedString();
+            }
+            else
+            {
+                result.Subcategory = default;
             }
 
             if ((flags & BuildEventArgsFieldFlags.Code) != 0)
             {
                 result.Code = ReadDeduplicatedString();
             }
+            else
+            {
+                result.Code = default;
+            }
 
             if ((flags & BuildEventArgsFieldFlags.File) != 0)
             {
                 result.File = ReadDeduplicatedString();
+            }
+            else
+            {
+                result.File = default;
             }
 
             if ((flags & BuildEventArgsFieldFlags.ProjectFile) != 0)
             {
                 result.ProjectFile = ReadDeduplicatedString();
             }
+            else
+            {
+                result.ProjectFile = default;
+            }
 
             if ((flags & BuildEventArgsFieldFlags.LineNumber) != 0)
             {
                 result.LineNumber = ReadInt32();
+            }
+            else
+            {
+                result.LineNumber = default;
             }
 
             if ((flags & BuildEventArgsFieldFlags.ColumnNumber) != 0)
             {
                 result.ColumnNumber = ReadInt32();
             }
+            else
+            {
+                result.ColumnNumber = default;
+            }
 
             if ((flags & BuildEventArgsFieldFlags.EndLineNumber) != 0)
             {
                 result.EndLineNumber = ReadInt32();
             }
+            else
+            {
+                result.EndLineNumber = default;
+            }
 
             if ((flags & BuildEventArgsFieldFlags.EndColumnNumber) != 0)
             {
                 result.EndColumnNumber = ReadInt32();
+            }
+            else
+            {
+                result.EndColumnNumber = default;
             }
 
             if ((flags & BuildEventArgsFieldFlags.Arguments) != 0)
@@ -1167,10 +1230,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 result.Arguments = arguments;
             }
+            else
+            {
+                result.Arguments = default;
+            }
 
             if ((fileFormatVersion < 13 && readImportance) || (fileFormatVersion >= 13 && (flags & BuildEventArgsFieldFlags.Importance) != 0))
             {
                 result.Importance = (MessageImportance)ReadInt32();
+            }
+            else
+            {
+                result.Importance = default;
             }
 
             return result;
