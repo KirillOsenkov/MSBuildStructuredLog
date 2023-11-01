@@ -213,8 +213,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             if (HasChildren)
             {
-                foreach (var child in Children)
+                var children = Children;
+                for (int i = 0; i < children.Count; i++)
                 {
+                    var child = children[i];
                     if (child is T typedChild && (predicate == null || predicate(typedChild)))
                     {
                         return typedChild;
@@ -229,8 +231,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             if (HasChildren)
             {
-                foreach (var child in Children)
+                var children = Children;
+                for (int i = 0; i < children.Count; i++)
                 {
+                    var child = children[i];
+
                     var treeNode = child as TreeNode;
                     if (treeNode != null)
                     {
