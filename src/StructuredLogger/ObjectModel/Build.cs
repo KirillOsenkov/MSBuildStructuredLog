@@ -76,31 +76,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return version.Major > major || (version.Major == major && version.Minor >= minor);
         }
 
-        private Dictionary<string, ArchiveFile> sourceFiles;
-        public Dictionary<string, ArchiveFile> SourceFiles
-        {
-            get
-            {
-                if (sourceFiles == null)
-                {
-                    lock (this)
-                    {
-                        if (sourceFiles == null)
-                        {
-                            sourceFiles = new Dictionary<string, ArchiveFile>();
-                            if (SourceFilesArchive != null)
-                            {
-                                var files = ReadSourceFiles(SourceFilesArchive);
-                                sourceFiles = files.ToDictionary(file => file.FullPath);
-                            }
-                        }
-                    }
-                }
-
-                return sourceFiles;
-            }
-        }
-
         private NamedNode evaluationFolder;
         public NamedNode EvaluationFolder
         {

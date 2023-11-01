@@ -120,10 +120,15 @@ namespace StructuredLogViewer.Controls
             DataContext = build;
             Build = build;
 
+            // first try to see if the source archive was embedded in the log
             if (build.SourceFilesArchive != null)
             {
-                // first try to see if the source archive was embedded in the log
-                sourceFileResolver = new SourceFileResolver(build.SourceFiles.Values);
+                var files = Build.ReadSourceFiles(build.SourceFilesArchive);
+
+                // release the large array since it's no longer necessary
+                build.SourceFilesArchive = null;
+
+                sourceFileResolver = new SourceFileResolver(files);
             }
             else
             {

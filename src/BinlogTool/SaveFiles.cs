@@ -181,7 +181,14 @@ namespace BinlogTool
 
         private void SaveFilesFrom(Build build, string outputDirectory)
         {
-            foreach (var file in build.SourceFiles.Values.OrderBy(f => f.FullPath))
+            if (build.SourceFilesArchive == null)
+            {
+                return;
+            }
+
+            var files = Build.ReadSourceFiles(build.SourceFilesArchive);
+
+            foreach (var file in files.OrderBy(f => f.FullPath))
             {
                 var filePath = file.FullPath;
                 if (filePath.EndsWith(".metaproj", StringComparison.OrdinalIgnoreCase) ||
