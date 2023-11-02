@@ -1259,7 +1259,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if ((fields.Flags & BuildEventArgsFieldFlags.SenderName) != 0)
             {
-                Reflector.BuildEventArgs_senderName.SetValue(buildEventArgs, fields.SenderName);
+                Reflector.SetSenderName(buildEventArgs, fields.SenderName);
             }
 
             if ((fields.Flags & BuildEventArgsFieldFlags.Timestamp) != 0)

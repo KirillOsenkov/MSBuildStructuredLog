@@ -5,13 +5,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class ImportTreeAnalyzer
     {
-        private static readonly Func<BuildEventArgs, string> getMessage = Reflector.GetFieldAccessor<BuildEventArgs, string>("message");
-        private static readonly Func<LazyFormattedBuildEventArgs, object> getArguments = Reflector.GetFieldAccessor<LazyFormattedBuildEventArgs, object>("argumentsOrFormattedMessage");
-
         public static TextNode TryGetImportOrNoImport(ProjectImportedEventArgs args, StringCache stringTable)
         {
-            var message = getMessage(args);
-            var arguments = getArguments(args) as object[];
+            var message = Reflector.GetMessage(args);
+            var arguments = Reflector.GetArguments(args);
 
             if (arguments != null && arguments.Length > 0)
             {

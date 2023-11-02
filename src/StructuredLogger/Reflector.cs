@@ -7,63 +7,62 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class Reflector
     {
-        private static FieldInfo buildEventArgs_message;
-        public static FieldInfo BuildEventArgs_message
+        static Reflector()
         {
-            get
+            string fieldName = "argumentsOrFormattedMessage";
+            FieldInfo field = typeof(LazyFormattedBuildEventArgs).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+            if (field is not null)
             {
-                if (buildEventArgs_message is null)
+                argumentsOrFormattedMessageGetter = GetFieldAccessor<LazyFormattedBuildEventArgs, object>(fieldName);
+            }
+            else
+            {
+                fieldName = "arguments";
+                field = typeof(LazyFormattedBuildEventArgs).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+                if (field is not null)
                 {
-                    buildEventArgs_message = typeof(BuildEventArgs).GetField("message", BindingFlags.Instance | BindingFlags.NonPublic);
+                    argumentsGetter = GetFieldAccessor<LazyFormattedBuildEventArgs, object[]>(fieldName);
                 }
+            }
 
-                return buildEventArgs_message;
+            var rawArgumentsPropertyInfo =
+                typeof(LazyFormattedBuildEventArgs).GetProperty("RawArguments", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (rawArgumentsPropertyInfo is not null)
+            {
+                lazyFormattedBuildEventArgs_RawArgumentsGetter = (Func<LazyFormattedBuildEventArgs, object[]>)Delegate.CreateDelegate(
+                    typeof(Func<LazyFormattedBuildEventArgs, object[]>),
+                    rawArgumentsPropertyInfo.GetMethod);
             }
         }
 
-        private static FieldInfo lazyFormattedBuildEventArgs_arguments;
-        public static FieldInfo LazyFormattedBuildEventArgs_arguments
-        {
-            get
-            {
-                if (lazyFormattedBuildEventArgs_arguments is null)
-                {
-                    lazyFormattedBuildEventArgs_arguments =
-                        typeof(LazyFormattedBuildEventArgs).GetField("arguments", BindingFlags.Instance | BindingFlags.NonPublic) ??
-                        typeof(LazyFormattedBuildEventArgs).GetField("argumentsOrFormattedMessage", BindingFlags.Instance | BindingFlags.NonPublic);
-                }
+        private static Func<LazyFormattedBuildEventArgs, object[]> argumentsGetter;
+        private static Func<LazyFormattedBuildEventArgs, object> argumentsOrFormattedMessageGetter;
+        private static Func<LazyFormattedBuildEventArgs, object[]> lazyFormattedBuildEventArgs_RawArgumentsGetter;
 
-                return lazyFormattedBuildEventArgs_arguments;
+        public static object[] GetArguments(LazyFormattedBuildEventArgs args)
+        {
+            if (lazyFormattedBuildEventArgs_RawArgumentsGetter is not null)
+            {
+                return lazyFormattedBuildEventArgs_RawArgumentsGetter(args);
             }
+            else if (argumentsOrFormattedMessageGetter is not null)
+            {
+                return (object[])argumentsOrFormattedMessageGetter(args);
+            }
+
+            return argumentsGetter(args);
         }
 
-        private static PropertyInfo lazyFormattedBuildEventArgs_RawArguments;
-        public static PropertyInfo LazyFormattedBuildEventArgs_RawArguments
+        private static Func<BuildEventArgs, string> messageGetter = GetFieldAccessor<BuildEventArgs, string>("message");
+        public static string GetMessage(BuildEventArgs args)
         {
-            get
-            {
-                if (lazyFormattedBuildEventArgs_RawArguments == null)
-                {
-                    lazyFormattedBuildEventArgs_RawArguments =
-                        typeof(LazyFormattedBuildEventArgs).GetProperty("RawArguments", BindingFlags.Instance | BindingFlags.NonPublic);
-                }
-
-                return lazyFormattedBuildEventArgs_RawArguments;
-            }
+            return messageGetter(args);
         }
 
-        private static FieldInfo buildEventArgs_senderName;
-        public static FieldInfo BuildEventArgs_senderName
+        private static Action<BuildEventArgs, string> senderNameSetter = GetFieldSetter<BuildEventArgs, string>("senderName");
+        public static void SetSenderName(BuildEventArgs args, string senderName)
         {
-            get
-            {
-                if (buildEventArgs_senderName == null)
-                {
-                    buildEventArgs_senderName = typeof(BuildEventArgs).GetField("senderName", BindingFlags.Instance | BindingFlags.NonPublic);
-                }
-
-                return buildEventArgs_senderName;
-            }
+            senderNameSetter(args, senderName);
         }
 
         private static Action<BuildEventArgs, DateTime> timeStampSetter = GetFieldSetter<BuildEventArgs, DateTime>("timestamp");
@@ -72,60 +71,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
             timeStampSetter(args, timestamp);
         }
 
-        private static FieldInfo buildEventArgs_timestamp;
-        public static FieldInfo BuildEventArgs_timestamp
+        private static Action<BuildMessageEventArgs, int> lineNumberSetter = GetFieldSetter<BuildMessageEventArgs, int>("lineNumber");
+        public static void SetLineNumber(BuildMessageEventArgs args, int lineNumber)
         {
-            get
-            {
-                if (buildEventArgs_timestamp == null)
-                {
-                    buildEventArgs_timestamp = typeof(BuildEventArgs).GetField("timestamp", BindingFlags.Instance | BindingFlags.NonPublic);
-                }
-
-                return buildEventArgs_timestamp;
-            }
+            lineNumberSetter(args, lineNumber);
         }
 
-        private static FieldInfo buildMessageEventArgs_lineNumber;
-        public static FieldInfo BuildMessageEventArgs_lineNumber
+        private static Action<BuildMessageEventArgs, int> columnNumberSetter = GetFieldSetter<BuildMessageEventArgs, int>("columnNumber");
+        public static void SetColumnNumber(BuildMessageEventArgs args, int columnNumber)
         {
-            get
-            {
-                if (buildMessageEventArgs_lineNumber == null)
-                {
-                    buildMessageEventArgs_lineNumber = typeof(BuildMessageEventArgs).GetField("lineNumber", BindingFlags.Instance | BindingFlags.NonPublic);
-                }
-
-                return buildMessageEventArgs_lineNumber;
-            }
-        }
-
-        private static FieldInfo buildMessageEventArgs_columnNumber;
-        public static FieldInfo BuildMessageEventArgs_columnNumber
-        {
-            get
-            {
-                if (buildMessageEventArgs_columnNumber == null)
-                {
-                    buildMessageEventArgs_columnNumber = typeof(BuildMessageEventArgs).GetField("columnNumber", BindingFlags.Instance | BindingFlags.NonPublic);
-                }
-
-                return buildMessageEventArgs_columnNumber;
-            }
-        }
-
-        public static object[] GetArguments(LazyFormattedBuildEventArgs args)
-        {
-            if (LazyFormattedBuildEventArgs_RawArguments != null)
-            {
-                return LazyFormattedBuildEventArgs_RawArguments.GetValue(args) as object[];
-            }
-            else if (LazyFormattedBuildEventArgs_arguments != null)
-            {
-                return LazyFormattedBuildEventArgs_arguments.GetValue(args) as object[];
-            }
-
-            return Array.Empty<object>();
+            columnNumberSetter(args, columnNumber);
         }
 
         private static MethodInfo enumerateItemsPerType;
@@ -141,7 +96,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static Func<T, R> GetFieldAccessor<T, R>(string fieldName)
         {
-            ParameterExpression param = Expression.Parameter(typeof(T), "arg");
+            ParameterExpression param = Expression.Parameter(typeof(T), "instance");
             MemberExpression member = Expression.Field(param, fieldName);
             LambdaExpression lambda = Expression.Lambda(typeof(Func<T, R>), member, param);
             Func<T, R> compiled = (Func<T, R>)lambda.Compile();

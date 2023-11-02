@@ -559,7 +559,7 @@ Build
         {
             if ((flags & BuildEventArgsFieldFlags.Message) != 0)
             {
-                string rawMessage = Reflector.BuildEventArgs_message.GetValue(e) as string;
+                string rawMessage = Reflector.GetMessage(e);
                 WriteDeduplicatedString(rawMessage);
             }
 

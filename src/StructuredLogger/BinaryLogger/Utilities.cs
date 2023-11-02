@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -11,9 +11,6 @@ namespace Microsoft.Build.BackEnd
 {
     internal class ItemGroupLoggingHelper
     {
-        internal static FieldInfo LineNumberField = Reflector.BuildMessageEventArgs_lineNumber;
-        internal static FieldInfo ColumnNumberField = Reflector.BuildMessageEventArgs_columnNumber;
-
         internal static TaskParameterEventArgs CreateTaskParameterEventArgs(
             BuildEventContext buildEventContext,
             TaskParameterMessageKind messageKind,
@@ -32,9 +29,15 @@ namespace Microsoft.Build.BackEnd
                 timestamp);
             args.BuildEventContext = buildEventContext;
 
-            // sigh this is terrible for perf
-            LineNumberField.SetValue(args, line);
-            ColumnNumberField.SetValue(args, column);
+            if (line != 0)
+            {
+                Reflector.SetLineNumber(args, line);
+            }
+
+            if (column != 0)
+            {
+                Reflector.SetColumnNumber(args, column);
+            }
 
             // Should probably make these public
             // args.LineNumber = line;
