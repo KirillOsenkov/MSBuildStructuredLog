@@ -37,6 +37,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         /// <summary>
+        /// Read the provided binary log file opened as a stream and raise corresponding events for each BuildEventArgs
+        /// </summary>
+        /// <param name="sourceFileStream">Stream over the binlog content.</param>
+        /// <param name="cancellationToken"></param>
+        public void Replay(Stream sourceFileStream, CancellationToken cancellationToken)
+        {
+            using var binaryReader = OpenReader(sourceFileStream);
+            Replay(binaryReader, cancellationToken);
+        }
+
+        /// <summary>
         /// Creates a <see cref="BinaryReader"/> for the provided binary log file.
         /// Performs decompression and buffering in the optimal way.
         /// Caller is responsible for disposing the returned reader.
@@ -49,19 +60,31 @@ namespace Microsoft.Build.Logging.StructuredLogger
             try
             {
                 stream = new FileStream(sourceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-                var gzipStream = new GZipStream(stream, CompressionMode.Decompress, leaveOpen: false);
-
-                // wrapping the GZipStream in a buffered stream significantly improves performance
-                // and the max throughput is reached with a 32K buffer. See details here:
-                // https://github.com/dotnet/runtime/issues/39233#issuecomment-745598847
-                var bufferedStream = new BufferedStream(gzipStream, 32768);
-                return new BinaryReader(bufferedStream);
+                return OpenReader(stream);
             }
             catch (Exception)
             {
                 stream?.Dispose();
                 throw;
             }
+        }
+
+        /// <summary>
+        /// Creates a <see cref="BinaryReader"/> for the provided binary log file.
+        /// Performs decompression and buffering in the optimal way.
+        /// Caller is responsible for disposing the returned reader.
+        /// </summary>
+        /// <param name="sourceFileStream">Stream over the binlog file</param>
+        /// <returns>BinaryReader of the given binlog file.</returns>
+        public static BinaryReader OpenReader(Stream sourceFileStream)
+        {
+            var gzipStream = new GZipStream(sourceFileStream, CompressionMode.Decompress, leaveOpen: false);
+
+            // wrapping the GZipStream in a buffered stream significantly improves performance
+            // and the max throughput is reached with a 32K buffer. See details here:
+            // https://github.com/dotnet/runtime/issues/39233#issuecomment-745598847
+            var bufferedStream = new BufferedStream(gzipStream, 32768);
+            return new BinaryReader(bufferedStream);
         }
 
         /// <summary>

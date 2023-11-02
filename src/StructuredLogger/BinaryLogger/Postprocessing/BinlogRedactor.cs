@@ -5,6 +5,7 @@ using System.Text;
 using Microsoft.Build.Logging;
 using Microsoft.Build.Logging.StructuredLogger;
 using System.IO;
+using System.Threading;
 
 namespace StructuredLogger.BinaryLogger.Postprocessing
 {
@@ -43,19 +44,48 @@ namespace StructuredLogger.BinaryLogger.Postprocessing
     {
         private readonly ISensitiveDataProcessor _sensitiveDataProcessor;
 
-        public static void RedactSecrets(string binlogPath, string[] secrets)
+        public static void RedactSecrets(
+            string binlogPath,
+            string[] secrets)
+         => RedactSecrets(binlogPath, secrets, processEmbeddedFiles: true, progress: null);
+
+        public static void RedactSecrets(
+            string binlogPath,
+            string[] secrets,
+            bool processEmbeddedFiles,
+            Progress progress)
         {
-            var sensitivityProcessor = new SimpleSensitiveDataProcessor(secrets, true);
             string outputFile = Path.Combine(PathUtils.TempPath, Path.GetFileName(Path.GetTempFileName()) + ".binlog");
-            new BinlogRedactor(sensitivityProcessor).ProcessBinlog(binlogPath, outputFile, skipEmbeddedFiles: false);
+            RedactSecrets(binlogPath, outputFile, secrets, processEmbeddedFiles, progress);
             File.Delete(binlogPath);
             File.Move(outputFile, binlogPath);
+        }
+
+        public static void RedactSecrets(
+            string binlogPath,
+            string outputFile,
+            string[] secrets,
+            bool processEmbeddedFiles,
+            Progress progress)
+        {
+            if (string.IsNullOrEmpty(outputFile) ||
+                string.Equals(binlogPath, outputFile, StringComparison.OrdinalIgnoreCase))
+            {
+                // This is in place redaction.
+                RedactSecrets(binlogPath, secrets, processEmbeddedFiles, progress);
+                return;
+            }
+            var sensitivityProcessor = new SimpleSensitiveDataProcessor(secrets, true);
+            new BinlogRedactor(sensitivityProcessor) { Progress = progress }
+                .ProcessBinlog(binlogPath, outputFile, skipEmbeddedFiles: !processEmbeddedFiles);
         }
 
         public BinlogRedactor(ISensitiveDataProcessor sensitiveDataProcessor)
         {
             _sensitiveDataProcessor = sensitiveDataProcessor;
         }
+
+        public Progress Progress { private get; set; }
 
         public void ProcessBinlog(
             string inputFileName,
@@ -77,10 +107,36 @@ namespace StructuredLogger.BinaryLogger.Postprocessing
             }
 
             outputBinlog.Initialize(originalEventsSource);
-            originalEventsSource.Replay(inputFileName);
+
+            var inputStream = new FileStream(inputFileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+
+            CancellationTokenSource cts = null;
+            if (Progress != null)
+            {
+                cts = new CancellationTokenSource();
+                long streamLength = inputStream.Length;
+                System.Threading.Tasks.Task.Run(async () =>
+                {
+                    while (!cts.IsCancellationRequested)
+                    {
+                        await System.Threading.Tasks.Task.Delay(200, cts.Token);
+                        Progress.Report((double)inputStream.Position / streamLength);
+                    }
+                }, cts.Token);
+            }
+
+            originalEventsSource.Replay(inputStream, CancellationToken.None);
             outputBinlog.Shutdown();
 
             // TODO: error handling
+
+            if (Progress != null)
+            {
+                cts.Cancel();
+                Progress.Report(1.0);
+            }
+
+            ((IBuildEventStringsReader)originalEventsSource).StringReadDone -= HandleStringRead;
 
             void HandleStringRead(StringReadEventArgs args)
             {

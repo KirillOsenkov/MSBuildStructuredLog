@@ -19,8 +19,19 @@ namespace StructuredLogViewer.Controls
     /// </summary>
     public partial class RedactInputControl : Window
     {
-        public RedactInputControl()
+        private readonly Func<string> _getSaveAsDestination;
+        public string DestinationFile { get; private set; }
+        public bool RedactCommonCredentials { get; private set; } = false;
+        public bool RedactUsername { get; set; } = true;
+        public bool RedactEmbeddedFiles { get; set; } = true;
+        public string SecretsBlock
         {
+            get { return ChckbxCustomSecrets.IsChecked == true ? TxtSecrets.Text : null; }
+        }
+
+        public RedactInputControl(Func<string> getSaveAsDestination)
+        {
+            _getSaveAsDestination = getSaveAsDestination;
             InitializeComponent();
         }
 
@@ -29,15 +40,44 @@ namespace StructuredLogViewer.Controls
             this.DialogResult = true;
         }
 
-        private void Window_ContentRendered(object sender, EventArgs e)
+        private void btnSaveAs_Click(object sender, RoutedEventArgs e)
         {
-            txtAnswer.SelectAll();
-            txtAnswer.Focus();
+            var destination = _getSaveAsDestination();
+            if (destination != null)
+            {
+                this.DestinationFile = destination;
+                this.DialogResult = true;
+            }
         }
 
-        public string Answer
+        private void Window_ContentRendered(object sender, EventArgs e)
         {
-            get { return txtAnswer.Text; }
+            ChckbxUsername.IsChecked = RedactUsername;
+            ChckbxCommonCredentials.IsChecked = RedactCommonCredentials;
+            ChckbxEmbeddedFiles.IsChecked = RedactEmbeddedFiles;
+
+            TxtSecrets.SelectAll();
+            TxtSecrets.Focus();
+        }
+
+        private void ChckbxCustomSecrets_OnChanged(object sender, RoutedEventArgs e)
+        {
+            TxtSecrets.IsEnabled = ChckbxCustomSecrets.IsChecked == true;
+        }
+
+        private void ChckbxUsername_OnChanged(object sender, RoutedEventArgs e)
+        {
+            RedactUsername = ChckbxUsername.IsChecked == true;
+        }
+
+        private void ChckbxCommonCredentials_OnChanged(object sender, RoutedEventArgs e)
+        {
+            RedactCommonCredentials = ChckbxCommonCredentials.IsChecked == true;
+        }
+
+        private void ChckbxEmbeddedFiles_OnChanged(object sender, RoutedEventArgs e)
+        {
+            RedactEmbeddedFiles = ChckbxEmbeddedFiles.IsChecked == true;
         }
     }
 }
