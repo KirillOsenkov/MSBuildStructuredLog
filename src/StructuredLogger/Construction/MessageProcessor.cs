@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Internal;
 
@@ -498,7 +498,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     parent = evaluation;
                 }
 
-                if (args is PropertyReassignmentEventArgs || (message.Contains(Strings.PropertyReassignment) && Strings.PropertyReassignmentRegex.IsMatch(message)))
+                Match match = null;
+                if (args is PropertyReassignmentEventArgs ||
+                    ((match = Strings.PropertyReassignmentRegex.Match(message)) != null && match.Success))
                 {
                     TimedNode properties;
                     if (evaluation != null)
@@ -510,7 +512,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         properties = parent.GetOrCreateNodeWithName<TimedNode>(Strings.PropertyReassignmentFolder, addAtBeginning: true);
                     }
 
-                    var propertyName = Strings.GetPropertyName(message);
+                    var propertyName = match != null ? match.Groups["Name"].Value : Strings.GetPropertyName(message);
                     parent = properties.GetOrCreateNodeWithName<Folder>(propertyName);
                 }
                 else if (parent == evaluation && !evaluation.MessageTexts.Add(message))
@@ -537,7 +539,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     parent = construction.EvaluationFolder;
                 }
-                else if (construction.Build.FileFormatVersion < 9 && message.Contains(Strings.PropertyReassignment) && Strings.PropertyReassignmentRegex.IsMatch(message))
+                else if (construction.Build.FileFormatVersion < 9 && Strings.PropertyReassignmentRegex.IsMatch(message))
                 {
                     if (!evaluationMessagesAlreadySeen.Add(message))
                     {
