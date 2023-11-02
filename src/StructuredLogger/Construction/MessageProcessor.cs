@@ -41,7 +41,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            var message = args.Message;
+            // This realizes the expensive message string from LazyFormattedBuildEventArgs
+            string message = args.Message;
+
             if (string.IsNullOrEmpty(message))
             {
                 return;
@@ -499,7 +501,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
 
                 Match match = null;
-                if (args is PropertyReassignmentEventArgs ||
+                PropertyReassignmentEventArgs propertyReassignment = args as PropertyReassignmentEventArgs;
+                if (propertyReassignment != null ||
                     ((match = Strings.PropertyReassignmentRegex.Match(message)) != null && match.Success))
                 {
                     TimedNode properties;
@@ -512,7 +515,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         properties = parent.GetOrCreateNodeWithName<TimedNode>(Strings.PropertyReassignmentFolder, addAtBeginning: true);
                     }
 
-                    var propertyName = match != null ? match.Groups["Name"].Value : Strings.GetPropertyName(message);
+                    var propertyName = propertyReassignment != null ?
+                        propertyReassignment.PropertyName :
+                        match != null ?
+                            match.Groups["Name"].Value :
+                            Strings.GetPropertyName(message);
+
                     parent = properties.GetOrCreateNodeWithName<Folder>(propertyName);
                 }
                 else if (parent == evaluation && !evaluation.MessageTexts.Add(message))

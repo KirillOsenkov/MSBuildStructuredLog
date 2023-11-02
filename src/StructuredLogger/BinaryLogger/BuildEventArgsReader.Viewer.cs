@@ -61,9 +61,41 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return FormatResourceStringIgnoreCodeAndKeyword(succeeded ? "Done building project \"{0}\"." : "Done building project \"{0}\" -- FAILED.", Path.GetFileName(projectFile));
         }
 
+        private readonly Dictionary<(string, string, string, string), string> propertyReassignmentCache =
+            new Dictionary<(string, string, string, string), string>();
+
         private string GetPropertyReassignmentMessage(string propertyName, string newValue, string previousValue, string location)
         {
-            return FormatResourceStringIgnoreCodeAndKeyword("Property reassignment: $({0})=\"{1}\" (previous value: \"{2}\") at {3}", propertyName, newValue, previousValue, location);
+            var key = (propertyName, newValue, previousValue, location);
+            if (!propertyReassignmentCache.TryGetValue(key, out var result))
+            {
+                result = FormatResourceStringIgnoreCodeAndKeyword(Strings.PropertyReassignment, propertyName, newValue, previousValue, location);
+                propertyReassignmentCache[key] = result;
+            }
+
+            return result;
+        }
+
+        private BuildEventArgs SynthesizePropertyReassignment(BuildEventArgsFields fields)
+        {
+            string propertyName = fields.Arguments[0] as string;
+            string previousValue = fields.Arguments[1] as string;
+            string newValue = fields.Arguments[2] as string;
+            string location = fields.Arguments[3] as string;
+            string message = GetPropertyReassignmentMessage(propertyName, newValue, previousValue, location);
+
+            var e = new PropertyReassignmentEventArgs(
+                propertyName,
+                previousValue,
+                newValue,
+                location,
+                message,
+                fields.HelpKeyword,
+                fields.SenderName,
+                fields.Importance);
+            SetCommonFields(e, fields);
+
+            return e;
         }
 
         private string GetTargetStartedMessage(string projectFile, string targetFile, string parentTarget, string targetName)

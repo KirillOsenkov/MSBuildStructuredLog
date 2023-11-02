@@ -141,9 +141,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 .Replace("({2},{3})", @"\((?<Line>\d+),(?<Column>\d+)\)");
             ProjectImportSkippedNoMatchesRegex = new Regex(skippedNoMatches, RegexOptions.Compiled);
 
-            var propertyReassignmentResourceString = GetString("PropertyReassignment");
+            PropertyReassignment = GetString("PropertyReassignment");
 
-            string propertyReassignment = "^" + propertyReassignmentResourceString
+            string propertyReassignment = "^" + PropertyReassignment
                 .Replace(@"$({0})=""{1}"" (", @"\$\((?<Name>\w+)\)="".*"" \(")
                 .Replace(@"""{2}"")", @""".*""\)")
                 .Replace("{3}", @"(?<File>.*) \((?<Line>\d+),(?<Column>\d+)\)$");
@@ -303,6 +303,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string ProjectImportSkippedFalseCondition { get; set; }
         public static string CouldNotResolveSdk { get; set; }
         public static string ProjectImportSkippedExpressionEvaluatedToEmpty { get; set; }
+        public static string PropertyReassignment { get; set; }
         public static string ProjectImportSkippedNoMatches { get; set; }
         public static string ProjectImportSkippedMissingFile { get; set; }
         public static string ProjectImportSkippedInvalidFile { get; set; }

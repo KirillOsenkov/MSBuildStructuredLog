@@ -796,6 +796,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             BuildEventArgs e;
             if (fields.Extended == null)
             {
+                // temporary workaround for https://github.com/dotnet/msbuild/issues/9385
+                if (fields.Arguments is { Length: 4 } && fields.Message == Strings.PropertyReassignment)
+                {
+                    return SynthesizePropertyReassignment(fields);
+                }
+
                 e = new BuildMessageEventArgs(
                     fields.Subcategory,
                     fields.Code,
