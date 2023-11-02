@@ -542,16 +542,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         if (projectEvaluationFinished.GlobalProperties != null)
                         {
                             globFolder = GetOrCreateGlobalPropertiesFolder(projectEvaluation, projectEvaluationFinished.GlobalProperties);
+                            globFolder.DisableChildrenCache = true;
                         }
 
                         if (projectEvaluationFinished.Items != null)
                         {
                             itemsNode = projectEvaluation.GetOrCreateNodeWithName<Folder>(Strings.Items, addAtBeginning: true);
+                            itemsNode.DisableChildrenCache = true;
                         }
 
                         if (projectEvaluationFinished.Properties != null)
                         {
                             propertiesFolder = projectEvaluation.GetOrCreateNodeWithName<Folder>(Strings.Properties, addAtBeginning: true);
+                            propertiesFolder.DisableChildrenCache = true;
                         }
 
                         if (PopulatePropertiesAndItemsInBackground)
