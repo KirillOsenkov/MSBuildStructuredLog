@@ -1264,7 +1264,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if ((fields.Flags & BuildEventArgsFieldFlags.Timestamp) != 0)
             {
-                Reflector.BuildEventArgs_timestamp.SetValue(buildEventArgs, fields.Timestamp);
+                Reflector.SetTimestamp(buildEventArgs, fields.Timestamp);
             }
         }
 

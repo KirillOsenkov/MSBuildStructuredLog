@@ -66,6 +66,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        private static Action<BuildEventArgs, DateTime> timeStampSetter = GetFieldSetter<BuildEventArgs, DateTime>("timestamp");
+        public static void SetTimestamp(BuildEventArgs args, DateTime timestamp)
+        {
+            timeStampSetter(args, timestamp);
+        }
+
         private static FieldInfo buildEventArgs_timestamp;
         public static FieldInfo BuildEventArgs_timestamp
         {
@@ -139,6 +145,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
             MemberExpression member = Expression.Field(param, fieldName);
             LambdaExpression lambda = Expression.Lambda(typeof(Func<T, R>), member, param);
             Func<T, R> compiled = (Func<T, R>)lambda.Compile();
+            return compiled;
+        }
+
+        public static Action<T, R> GetFieldSetter<T, R>(string fieldName)
+        {
+            ParameterExpression instance = Expression.Parameter(typeof(T), "instance");
+            ParameterExpression value = Expression.Parameter(typeof(R), "value");
+            MemberExpression member = Expression.Field(instance, fieldName);
+            BinaryExpression assign = Expression.Assign(member, value);
+            LambdaExpression lambda = Expression.Lambda<Action<T, R>>(assign, instance, value);
+            Action<T, R> compiled = (Action<T, R>)lambda.Compile();
             return compiled;
         }
     }
