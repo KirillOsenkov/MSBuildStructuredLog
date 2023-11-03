@@ -145,6 +145,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             reader.EmbeddedContentRead += _embeddedContentRead;
             reader.StringReadDone += _stringReadDone;
+            reader.ArchiveFileEncountered += _archiveFileEncountered;
 
             while (!cancellationToken.IsCancellationRequested && reader.Read() is { } instance)
             {

@@ -54,6 +54,7 @@ namespace StructuredLogViewer.Controls
         {
             ChckbxUsername.IsChecked = RedactUsername;
             ChckbxCommonCredentials.IsChecked = RedactCommonCredentials;
+            TxtSecrets.IsEnabled = RedactCommonCredentials;
             ChckbxEmbeddedFiles.IsChecked = RedactEmbeddedFiles;
 
             TxtSecrets.SelectAll();
