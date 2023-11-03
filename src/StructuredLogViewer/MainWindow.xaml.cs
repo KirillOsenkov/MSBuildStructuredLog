@@ -668,7 +668,12 @@ namespace StructuredLogViewer
             RedactInputControl redactInputControl = new RedactInputControl(GetSaveAsDestination);
             if (redactInputControl.ShowDialog() == true)
             {
-                List<string> stringsToRedact = new(redactInputControl.SecretsBlock?.Split() ?? new string[] { });
+                List<string> stringsToRedact =
+                    new(redactInputControl.SecretsBlock?
+                            .Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries)
+                            .Select(s => s.Trim())
+                            .Where(s => !string.IsNullOrWhiteSpace(s))
+                        ?? new string[] { });
 
                 if (
                     !stringsToRedact.Any() &&
