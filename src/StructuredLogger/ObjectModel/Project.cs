@@ -83,7 +83,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private Target CreateTargetInstance(string name)
         {
-            Interlocked.Increment(ref unparentedTargetIndex);
+            unparentedTargetIndex++;
 
             return new Target()
             {
