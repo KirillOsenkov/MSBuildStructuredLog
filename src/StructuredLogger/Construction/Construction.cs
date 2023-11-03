@@ -50,6 +50,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Intern(Strings.CommandLineArguments);
             Intern(Strings.DoubleWrites);
             Intern(Strings.Evaluation);
+            Intern(Strings.NoImportEmptyExpression);
+            Intern(Strings.NoImportNoMatches);
+            Intern(Strings.NoImportMissingFile);
+            Intern(Strings.NoImportInvalidFile);
             Intern(Strings.Note);
             Intern(Strings.OutputItems);
             Intern(Strings.Parameters);
