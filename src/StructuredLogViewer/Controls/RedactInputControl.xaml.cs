@@ -21,9 +21,10 @@ namespace StructuredLogViewer.Controls
     {
         private readonly Func<string> _getSaveAsDestination;
         public string DestinationFile { get; private set; }
-        public bool RedactCommonCredentials { get; private set; } = false;
+        public bool RedactCommonCredentials { get; private set; } = true;
         public bool RedactUsername { get; set; } = true;
         public bool RedactEmbeddedFiles { get; set; } = true;
+        public bool DistinguishSecretsReplacements { get; set; } = true;
         public string SecretsBlock
         {
             get { return ChckbxCustomSecrets.IsChecked == true ? TxtSecrets.Text : null; }
@@ -54,8 +55,10 @@ namespace StructuredLogViewer.Controls
         {
             ChckbxUsername.IsChecked = RedactUsername;
             ChckbxCommonCredentials.IsChecked = RedactCommonCredentials;
-            TxtSecrets.IsEnabled = RedactCommonCredentials;
+            ChckbxCustomSecrets.IsChecked = false;
+            TxtSecrets.IsEnabled = false;
             ChckbxEmbeddedFiles.IsChecked = RedactEmbeddedFiles;
+            ChckbxDistinguishReplacements.IsChecked = DistinguishSecretsReplacements;
 
             TxtSecrets.SelectAll();
             TxtSecrets.Focus();
@@ -79,6 +82,11 @@ namespace StructuredLogViewer.Controls
         private void ChckbxEmbeddedFiles_OnChanged(object sender, RoutedEventArgs e)
         {
             RedactEmbeddedFiles = ChckbxEmbeddedFiles.IsChecked == true;
+        }
+
+        private void ChckbxDistinguishReplacements_OnChanged(object sender, RoutedEventArgs e)
+        {
+            DistinguishSecretsReplacements = ChckbxDistinguishReplacements.IsChecked == true;
         }
     }
 }

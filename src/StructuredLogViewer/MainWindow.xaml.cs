@@ -669,14 +669,11 @@ namespace StructuredLogViewer
             if (redactInputControl.ShowDialog() == true)
             {
                 List<string> stringsToRedact = new(redactInputControl.SecretsBlock?.Split() ?? new string[] { });
-                if(redactInputControl.RedactUsername)
-                {
-                    // This will change as we have explicit username redactor
-                    //  (that can detect username in log produced on different machine)
-                    stringsToRedact.Add(Environment.UserName);
-                }
 
-                if (!stringsToRedact.Any())
+                if (
+                    !stringsToRedact.Any() &&
+                    !redactInputControl.RedactUsername &&
+                    !redactInputControl.RedactCommonCredentials)
                 {
                     MessageBox.Show("No secrets to redact - no action will be performed");
                     return;
@@ -697,11 +694,18 @@ namespace StructuredLogViewer
                 {
                     try
                     {
+                        BinlogRedactorOptions redactorOptions = new BinlogRedactorOptions(logFilePath)
+                        {
+                            OutputFileName = redactInputControl.DestinationFile,
+                            ProcessEmbeddedFiles = redactInputControl.RedactEmbeddedFiles,
+                            AutodetectUsername = redactInputControl.RedactUsername,
+                            AutodetectCommonPatterns = redactInputControl.RedactCommonCredentials,
+                            IdentifyReplacemenets = redactInputControl.DistinguishSecretsReplacements,
+                            TokensToRedact = stringsToRedact.ToArray(),
+                        };
+
                         BinlogRedactor.RedactSecrets(
-                            logFilePath,
-                            redactInputControl.DestinationFile,
-                            stringsToRedact.ToArray(),
-                            redactInputControl.RedactEmbeddedFiles,
+                            redactorOptions,
                             progress.Progress);
                     }
                     catch(Exception e)

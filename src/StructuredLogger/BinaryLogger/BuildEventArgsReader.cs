@@ -10,6 +10,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using DotUtils.StreamUtils;
 using Microsoft.Build.BackEnd;
 using Microsoft.Build.Collections;
 using Microsoft.Build.Framework;

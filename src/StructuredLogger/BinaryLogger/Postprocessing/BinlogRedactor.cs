@@ -6,83 +6,82 @@ using Microsoft.Build.Logging;
 using Microsoft.Build.Logging.StructuredLogger;
 using System.IO;
 using System.Threading;
+using Microsoft.Build.SensitiveDataDetector;
 
 namespace StructuredLogger.BinaryLogger.Postprocessing
 {
-    public interface ISensitiveDataProcessor
+    public sealed class BinlogRedactorOptions
     {
-        /// <summary>
-        /// Processes the given text and if needed, replaces sensitive data with a placeholder.
-        /// </summary>
-        string ReplaceSensitiveData(string text);
-    }
-
-    internal sealed class SimpleSensitiveDataProcessor : ISensitiveDataProcessor
-    {
-        public const string DefaultReplacementPattern = "*******";
-        private readonly (string token, string replacement)[] _secretsToRedact;
-
-        public SimpleSensitiveDataProcessor(string[] secretsToRedact, bool identifyReplacements)
+        public BinlogRedactorOptions(string inputPath)
         {
-            _secretsToRedact = secretsToRedact.Select((secret, cnt) =>
-                    (token: secret, identifyReplacements ? $"REDACTED__TKN{(cnt + 1):00}" : DefaultReplacementPattern))
-                .ToArray();
+            InputPath = inputPath;
         }
 
-        public string ReplaceSensitiveData(string text)
-        {
-            foreach ((string token, string replacement) secret in _secretsToRedact)
-            {
-                text = text.Replace(secret.token, secret.replacement);
-            }
-
-            return text;
-        }
+        public string[]? TokensToRedact { get; set; }
+        public string InputPath { get; }
+        public string? OutputFileName { get; set; }
+        public bool ProcessEmbeddedFiles { get; set; } = true;
+        public bool IdentifyReplacemenets { get; set; } = true;
+        public bool AutodetectCommonPatterns { get; set; } = true;
+        public bool AutodetectUsername { get; set; } = true;
     }
 
     public class BinlogRedactor
     {
-        private readonly ISensitiveDataProcessor _sensitiveDataProcessor;
+        private readonly ISensitiveDataRedactor _sensitiveDataRedactor;
 
         public static void RedactSecrets(
             string binlogPath,
             string[] secrets)
-         => RedactSecrets(binlogPath, secrets, processEmbeddedFiles: true, progress: null);
+            => RedactSecrets(
+                new BinlogRedactorOptions(binlogPath) { TokensToRedact = secrets, }, progress: null);
 
         public static void RedactSecrets(
-            string binlogPath,
-            string[] secrets,
-            bool processEmbeddedFiles,
+            BinlogRedactorOptions redactorOptions,
             Progress progress)
         {
-            string outputFile = Path.Combine(PathUtils.TempPath, Path.GetFileName(Path.GetTempFileName()) + ".binlog");
-            RedactSecrets(binlogPath, outputFile, secrets, processEmbeddedFiles, progress);
-            File.Delete(binlogPath);
-            File.Move(outputFile, binlogPath);
-        }
+            string outputFile;
+            bool replaceInPlace = false;
 
-        public static void RedactSecrets(
-            string binlogPath,
-            string outputFile,
-            string[] secrets,
-            bool processEmbeddedFiles,
-            Progress progress)
-        {
-            if (string.IsNullOrEmpty(outputFile) ||
-                string.Equals(binlogPath, outputFile, StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrEmpty(redactorOptions.OutputFileName) ||
+                string.Equals(redactorOptions.InputPath, redactorOptions.OutputFileName, StringComparison.OrdinalIgnoreCase))
             {
-                // This is in place redaction.
-                RedactSecrets(binlogPath, secrets, processEmbeddedFiles, progress);
-                return;
+                outputFile = Path.Combine(PathUtils.TempPath, Path.GetFileName(Path.GetTempFileName()) + ".binlog");
+                replaceInPlace = true;
             }
-            var sensitivityProcessor = new SimpleSensitiveDataProcessor(secrets, true);
-            new BinlogRedactor(sensitivityProcessor) { Progress = progress }
-                .ProcessBinlog(binlogPath, outputFile, skipEmbeddedFiles: !processEmbeddedFiles);
+            else
+            {
+                outputFile = redactorOptions.OutputFileName;
+            }
+
+            SensitiveDataKind sensitiveDataKind = SensitiveDataKind.ExplicitSecrets;
+            if (redactorOptions.AutodetectCommonPatterns)
+            {
+                sensitiveDataKind |= SensitiveDataKind.CommonSecrets;
+            }
+            if (redactorOptions.AutodetectUsername)
+            {
+                sensitiveDataKind |= SensitiveDataKind.Username;
+            }
+
+            ISensitiveDataRedactor sensitiveDataRedactor = SensitiveDataDetectorFactory.GetSecretsDetector(
+                sensitiveDataKind,
+                redactorOptions.IdentifyReplacemenets,
+                redactorOptions.TokensToRedact);
+
+            new BinlogRedactor(sensitiveDataRedactor) { Progress = progress }
+                .ProcessBinlog(redactorOptions.InputPath, outputFile, !redactorOptions.ProcessEmbeddedFiles);
+
+            if (replaceInPlace)
+            {
+                File.Delete(redactorOptions.InputPath);
+                File.Move(outputFile, redactorOptions.InputPath);
+            }
         }
 
-        public BinlogRedactor(ISensitiveDataProcessor sensitiveDataProcessor)
+        public BinlogRedactor(ISensitiveDataRedactor sensitiveDataRedactor)
         {
-            _sensitiveDataProcessor = sensitiveDataProcessor;
+            _sensitiveDataRedactor = sensitiveDataRedactor;
         }
 
         public Progress Progress { private get; set; }
@@ -92,9 +91,9 @@ namespace StructuredLogger.BinaryLogger.Postprocessing
             string outputFileName,
             bool skipEmbeddedFiles)
         {
-            BinaryLogReplayEventSource originalEventsSource = new BinaryLogReplayEventSource();
+            BinaryLogReplayEventSource originalEventsSource = new();
             
-            Microsoft.Build.Logging.StructuredLogger.BinaryLogger outputBinlog = new Microsoft.Build.Logging.StructuredLogger.BinaryLogger()
+            Microsoft.Build.Logging.StructuredLogger.BinaryLogger outputBinlog = new()
             {
                 Parameters = $"LogFile={outputFileName};OmitInitialInfo",
             };
@@ -140,7 +139,7 @@ namespace StructuredLogger.BinaryLogger.Postprocessing
 
             void HandleStringRead(StringReadEventArgs args)
             {
-                args.StringToBeUsed = _sensitiveDataProcessor.ReplaceSensitiveData(args.OriginalString);
+                args.StringToBeUsed = _sensitiveDataRedactor.Redact(args.OriginalString);
             }
         }
     }

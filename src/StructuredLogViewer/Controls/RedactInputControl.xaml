@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:StructuredLogViewer.Controls"
         mc:Ignorable="d"
         ContentRendered="Window_ContentRendered"
-        Title="Redact Binlog" SizeToContent="WidthAndHeight" Height="280">
+        Title="Redact Binlog" SizeToContent="WidthAndHeight" Height="310">
     <Grid Margin="5">
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
@@ -15,7 +15,8 @@
 
         <StackPanel Margin="10">
             <CheckBox Content="Process embedded files" Margin="0 5" IsChecked="True" Name="ChckbxEmbeddedFiles" Unchecked="ChckbxEmbeddedFiles_OnChanged" Checked="ChckbxEmbeddedFiles_OnChanged" />
-            <CheckBox Content="Autodetect and redact common credentials" Margin="0 5" Name="ChckbxCommonCredentials" Unchecked="ChckbxCommonCredentials_OnChanged" Checked="ChckbxCommonCredentials_OnChanged" IsChecked="False" IsEnabled="False" ToolTip="Not yet supported" />
+            <CheckBox Content="Use distinct replacements per secret type" Margin="0 5" IsChecked="True" Name="ChckbxDistinguishReplacements" Unchecked="ChckbxDistinguishReplacements_OnChanged" Checked="ChckbxDistinguishReplacements_OnChanged" />
+            <CheckBox Content="Autodetect and redact common credentials" Margin="0 5" Name="ChckbxCommonCredentials" Unchecked="ChckbxCommonCredentials_OnChanged" Checked="ChckbxCommonCredentials_OnChanged" IsChecked="True" />
             <CheckBox Content="Autodetect and redact username" Margin="0 5" IsChecked="True" Name="ChckbxUsername" Unchecked="ChckbxUsername_OnChanged" Checked="ChckbxUsername_OnChanged" />
             <CheckBox Content="Redact following newline-separated explicit strings" Name="ChckbxCustomSecrets" Margin="0 5" IsChecked="False" Unchecked="ChckbxCustomSecrets_OnChanged" Checked="ChckbxCustomSecrets_OnChanged" />
             <TextBox Name="TxtSecrets" Margin="0 5" IsEnabled="True" MinLines="3" MinHeight="50" TextWrapping="Wrap" AcceptsReturn="True"/>

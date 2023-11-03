@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using DotUtils.StreamUtils;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using static Microsoft.Build.Logging.StructuredLogger.BinaryLogger;
