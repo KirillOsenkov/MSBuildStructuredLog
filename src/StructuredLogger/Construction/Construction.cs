@@ -54,6 +54,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Intern(Strings.OutputItems);
             Intern(Strings.Parameters);
             Intern(Strings.Properties);
+            Intern(Strings.TargetOutputs);
             Intern(Strings.UnusedLocations);
             Intern(Strings.Warnings);
             Intern(nameof(AddItem));
@@ -278,13 +279,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     if (args.TargetOutputs != null)
                     {
-                        var targetOutputsFolder = target.GetOrCreateNodeWithName<Folder>(Intern(Strings.TargetOutputs));
+                        var targetOutputsFolder = target.GetOrCreateNodeWithName<Folder>(Strings.TargetOutputs);
                         targetOutputsFolder.DisableChildrenCache = true;
 
                         foreach (ITaskItem targetOutput in args.TargetOutputs)
                         {
                             var item = new Item();
-                            item.Text = Intern(targetOutput.ItemSpec);
+                            item.Text = SoftIntern(targetOutput.ItemSpec);
 
                             var metadataArray = targetOutput.CloneCustomMetadata();
                             if (metadataArray.Count > 0)
@@ -294,8 +295,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                     foreach (var metadata in array)
                                     {
                                         var metadataNode = new Metadata();
-                                        metadataNode.Name = Intern(Convert.ToString(metadata.Key));
-                                        metadataNode.Value = Intern(Convert.ToString(metadata.Value));
+                                        metadataNode.Name = SoftIntern(metadata.Key);
+                                        metadataNode.Value = SoftIntern(metadata.Value);
                                         item.AddChild(metadataNode);
                                     }
                                 }
@@ -305,10 +306,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                     // (someone passing StructuredLogger directly to MSBuild)
                                     foreach (DictionaryEntry metadata in metadataArray)
                                     {
-                                        var metadataNode = new Metadata();
-                                        metadataNode.Name = Intern(Convert.ToString(metadata.Key));
-                                        metadataNode.Value = Intern(Convert.ToString(metadata.Value));
-                                        item.AddChild(metadataNode);
+                                        if (metadata.Key is string key && metadata.Value is string value)
+                                        {
+                                            var metadataNode = new Metadata();
+                                            metadataNode.Name = SoftIntern(key);
+                                            metadataNode.Value = SoftIntern(value);
+                                            item.AddChild(metadataNode);
+                                        }
                                     }
                                 }
                             }
