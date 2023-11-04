@@ -515,6 +515,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string NoImportNoMatches = "no matches";
         public static string NoImportMissingFile = "missing file";
         public static string NoImportInvalidFile = "invalid file";
+        public static string Errors = "Errors";
 
         // These aren't localized, see https://github.com/microsoft/MSBuildSdks/blob/543e965191417dee65471ee57a6702289847b49b/src/Artifacts/Tasks/Robocopy.cs#L66-L77
         private const string RobocopyFileCopiedMessage = "Copied {0} to {1}";

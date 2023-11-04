@@ -49,6 +49,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Intern(Strings.Assembly);
             Intern(Strings.CommandLineArguments);
             Intern(Strings.DoubleWrites);
+            Intern(Strings.Errors);
             Intern(Strings.Evaluation);
             Intern(Strings.NoImportEmptyExpression);
             Intern(Strings.NoImportNoMatches);
@@ -759,10 +760,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         parent = Build;
                     }
 
-                    var errors = parent.GetOrCreateNodeWithName<Folder>(Intern("Errors"));
+                    var errors = parent.GetOrCreateNodeWithName<Folder>(Strings.Errors);
                     var error = new Error();
                     Populate(error, args);
                     errors.AddChild(error);
+
+                    if (Build.FirstError == null)
+                    {
+                        Build.FirstError = error;
+                    }
                 }
             }
             catch (Exception ex)

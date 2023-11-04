@@ -854,7 +854,7 @@ Recent:
 
             if (!Build.Succeeded)
             {
-                var firstError = Build.FindFirstInSubtreeIncludingSelf<Error>();
+                var firstError = Build.FirstError;
                 if (firstError != null)
                 {
                     SelectItem(firstError);
