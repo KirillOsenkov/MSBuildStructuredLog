@@ -403,12 +403,11 @@ namespace System.IO
             // If the requested read is larger than buffer size, avoid the buffer and still use a single read:
             if (count >= _bufferSize)
             {
-
                 return _stream.Read(array, offset, count) + alreadySatisfied;
             }
 
             // Ok. We can fill the buffer:
-            EnsureBufferAllocated();
+            // EnsureBufferAllocated();
             _readLen = _stream.Read(_buffer, 0, _bufferSize);
 
             bytesFromBuffer = ReadFromBuffer(array, offset, count);
@@ -438,34 +437,44 @@ namespace System.IO
 
                 //EnsureBufferAllocated();
 
-                if (prefetchTask == null)
-                {
-                    prefetchTask = Task.Run(() =>
-                    {
-                        prefetchReadBytes = _stream.Read(prefetchBuffer, 0, _bufferSize);
-                    });
-                }
-
-                prefetchTask.Wait();
-
-                (_buffer, prefetchBuffer) = (prefetchBuffer, _buffer);
-
-                _readLen = prefetchReadBytes;
+                RefillBuffer();
                 if (_readLen == 0)
                 {
                     return -1;
                 }
-
-                prefetchTask = Task.Run(() =>
-                {
-                    prefetchReadBytes = _stream.Read(prefetchBuffer, 0, _bufferSize);
-                });
 
                 _readPos = 0;
             }
 
             Int32 b = _buffer[_readPos++];
             return b;
+        }
+
+        private void RefillBuffer()
+        {
+            if (prefetchTask == null)
+            {
+                PrefetchNextBuffer();
+            }
+
+            prefetchTask.Wait();
+
+            (_buffer, prefetchBuffer) = (prefetchBuffer, _buffer);
+
+            _readLen = prefetchReadBytes;
+
+            if (_readLen != 0)
+            {
+                PrefetchNextBuffer();
+            }
+        }
+
+        private void PrefetchNextBuffer()
+        {
+            prefetchTask = Task.Run(() =>
+            {
+                prefetchReadBytes = _stream.Read(prefetchBuffer, 0, _bufferSize);
+            });
         }
 
         private void WriteToBuffer(Byte[] array, ref Int32 offset, ref Int32 count)
