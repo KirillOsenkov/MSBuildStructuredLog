@@ -37,7 +37,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             set => SetFlag(NodeFlags.LowRelevance, value);
         }
 
-        public override string ToString() => $"Evaluation Project={Name} File={ProjectFile}";
+        public override string ToString() => $"Evaluation Project={Name} File={ProjectFile} Id={Id:D6}";
 
         public override string ToolTip
         {
