@@ -99,16 +99,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
             else if (buildEventContext != null && buildEventContext.TargetId != BuildEventContext.InvalidTargetId)
             {
-                if (message.StartsWith(Strings.ItemGroupIncludeMessagePrefix, StringComparison.Ordinal))
+                // since version 11 these have been replaced with TaskParameterEventArgs
+                if (construction.Build.FileFormatVersion < 11)
                 {
-                    AddItemGroup(args, message, Strings.ItemGroupIncludeMessagePrefix, new AddItem());
-                    return;
-                }
+                    if (message.StartsWith(Strings.ItemGroupIncludeMessagePrefix, StringComparison.Ordinal))
+                    {
+                        AddItemGroup(args, message, Strings.ItemGroupIncludeMessagePrefix, new AddItem());
+                        return;
+                    }
 
-                if (message.StartsWith(Strings.ItemGroupRemoveMessagePrefix, StringComparison.Ordinal))
-                {
-                    AddItemGroup(args, message, Strings.ItemGroupRemoveMessagePrefix, new RemoveItem());
-                    return;
+                    if (message.StartsWith(Strings.ItemGroupRemoveMessagePrefix, StringComparison.Ordinal))
+                    {
+                        AddItemGroup(args, message, Strings.ItemGroupRemoveMessagePrefix, new RemoveItem());
+                        return;
+                    }
                 }
 
                 if (message.StartsWith(Strings.PropertyGroupMessagePrefix, StringComparison.Ordinal))
