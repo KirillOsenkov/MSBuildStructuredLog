@@ -42,22 +42,25 @@ namespace StructuredLogViewer
 
                 // under which circumstances can this happen?
                 // https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/274
-                if (projectEvaluation.ProjectFile == null)
+                if (string.IsNullOrEmpty(projectEvaluation.ProjectFile))
                 {
                     continue;
                 }
 
-                imports.VisitAllChildren<Import>(import => VisitImport(import, projectEvaluation));
+                string evaluationKey = GetEvaluationKey(projectEvaluation);
+                var importMap = GetOrCreateImportMap(evaluationKey, projectEvaluation.ProjectFile);
+                System.Threading.Tasks.Task.Run(() =>
+                {
+                    imports.VisitAllChildren<Import>(import => VisitImport(import, importMap));
+                });
             }
         }
 
-        private void VisitImport(Import import, ProjectEvaluation projectEvaluation)
+        private void VisitImport(Import import, Dictionary<string, Bucket> importMap)
         {
             if (sourceFileResolver.HasFile(import.ProjectFilePath) &&
-                sourceFileResolver.HasFile(import.ImportedProjectFilePath) &&
-                !string.IsNullOrEmpty(projectEvaluation.ProjectFile))
+                sourceFileResolver.HasFile(import.ImportedProjectFilePath))
             {
-                var importMap = GetOrCreateImportMap(GetEvaluationKey(projectEvaluation), import.ProjectFilePath);
                 AddImport(importMap, import.ProjectFilePath, import.ImportedProjectFilePath, import.Line, import.Column);
             }
         }
@@ -81,19 +84,22 @@ namespace StructuredLogViewer
 
         private Dictionary<string, Bucket> GetOrCreateImportMap(string key, string projectFilePath)
         {
-            if (!importMapsPerEvaluation.TryGetValue(key, out var importMap))
+            lock (importMapsPerEvaluation)
             {
-                importMap = new Dictionary<string, Bucket>(StringComparer.OrdinalIgnoreCase);
-                importMapsPerEvaluation[key] = importMap;
+                if (!importMapsPerEvaluation.TryGetValue(key, out var importMap))
+                {
+                    importMap = new Dictionary<string, Bucket>(StringComparer.OrdinalIgnoreCase);
+                    importMapsPerEvaluation[key] = importMap;
 
-                // we want to have a "default" import map for each project, without specifying an evaluation id
-                // this is when we click on a project and want to preprocess (we currently don't know which
-                // evaluation id is associated with this project).
-                // TODO: improve this when https://github.com/dotnet/msbuild/issues/4926 is fixed.
-                importMapsPerEvaluation[projectFilePath] = importMap;
+                    // we want to have a "default" import map for each project, without specifying an evaluation id
+                    // this is when we click on a project and want to preprocess (we currently don't know which
+                    // evaluation id is associated with this project).
+                    // TODO: improve this when https://github.com/dotnet/msbuild/issues/4926 is fixed.
+                    importMapsPerEvaluation[projectFilePath] = importMap;
+                }
+
+                return importMap;
             }
-
-            return importMap;
         }
 
         private Dictionary<string, Bucket> GetImportMap(string projectEvaluationKey)
@@ -136,13 +142,16 @@ namespace StructuredLogViewer
                 line--;
             }
 
-            if (!importMap.TryGetValue(project, out var bucket))
+            lock (importMap)
             {
-                bucket = new Bucket();
-                importMap[project] = bucket;
-            }
+                if (!importMap.TryGetValue(project, out var bucket))
+                {
+                    bucket = new Bucket();
+                    importMap[project] = bucket;
+                }
 
-            bucket.Add(new ProjectImport(importedProject, line, column));
+                bucket.Add(new ProjectImport(importedProject, line, column));
+            }
         }
 
         public Action GetPreprocessAction(string sourceFilePath, string preprocessEvaluationContext)
