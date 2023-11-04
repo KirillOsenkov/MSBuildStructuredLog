@@ -449,11 +449,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 //EnsureBufferAllocated();
                 _readLen = _stream.Read(_buffer, 0, _bufferSize);
+                if (_readLen == 0)
+                {
+                    return -1;
+                }
+
                 _readPos = 0;
             }
-
-            if (_readPos == _readLen)
-                return -1;
 
             Int32 b = _buffer[_readPos++];
             return b;
