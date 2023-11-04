@@ -117,8 +117,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     return;
                 }
 
-                // A task from assembly message (parses out the task name and assembly path).
-                var match = Strings.UsingTask(message);
+                string rawMessage = Reflector.GetMessage(args);
+                var match = Strings.UsingTask(message, rawMessage);
                 if (match.Success)
                 {
                     construction.SetTaskAssembly(

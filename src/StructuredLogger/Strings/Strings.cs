@@ -160,15 +160,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             MessageMetaprojectGenerated = new Regex(messageMetaprojectGeneratedString, RegexOptions.Compiled | RegexOptions.Singleline);
 
-            string taskFoundFromFactory = GetString("TaskFoundFromFactory")
+            TaskFoundFromFactory = GetString("TaskFoundFromFactory");
+            string taskFoundFromFactory = TaskFoundFromFactory
                 .Replace(@"""{0}""", @"\""(?<task>.+)\""")
                 .Replace(@"""{1}""", @"\""(?<assembly>.+)\""");
-            TaskFoundFromFactory = new Regex("^" + taskFoundFromFactory, RegexOptions.Compiled);
+            TaskFoundFromFactoryRegex = new Regex("^" + taskFoundFromFactory, RegexOptions.Compiled);
 
-            string taskFound = GetString("TaskFound")
+            TaskFound = GetString("TaskFound");
+            string taskFound = TaskFound
                .Replace(@"""{0}""", @"\""(?<task>.+)\""")
                .Replace(@"""{1}""", @"\""(?<assembly>.+)\""");
-            TaskFound = new Regex("^" + taskFound, RegexOptions.Compiled);
+            TaskFoundRegex = new Regex("^" + taskFound, RegexOptions.Compiled);
 
             ProjectImportSkippedFalseCondition = GetString("ProjectImportSkippedFalseCondition");
 
@@ -292,8 +294,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static Regex TaskSkippedFalseConditionRegex { get; set; }
         public static Regex TargetSkippedWhenSkipNonexistentTargets { get; set; }
         public static Regex SkipTargetBecauseOutputsUpToDateRegex { get; set; }
-        public static Regex TaskFoundFromFactory { get; set; }
-        public static Regex TaskFound { get; set; }
+        public static string TaskFoundFromFactory { get; set; }
+        public static Regex TaskFoundFromFactoryRegex { get; set; }
+        public static string TaskFound { get; set; }
+        public static Regex TaskFoundRegex { get; set; }
         public static Regex CouldNotResolveSdkRegex { get; set; }
 
         public static string TargetSkippedFalseCondition { get; set; }
@@ -311,16 +315,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string TaskSkippedFalseCondition { get; set; }
         public static string MetaprojectGenerated { get; set; }
 
-        public static Match UsingTask(string message)
+        public static Match UsingTask(string message, string rawMessage)
         {
-            if (TaskFoundFromFactory.Match(message) is Match foundFromFactory && foundFromFactory.Success)
-            {
-                return foundFromFactory;
-            }
-
-            if (TaskFound.Match(message) is Match found && found.Success)
+            if (rawMessage == TaskFound &&
+                TaskFoundRegex.Match(message) is Match found &&
+                found.Success)
             {
                 return found;
+            }
+
+            if (rawMessage == TaskFoundFromFactory &&
+                TaskFoundFromFactoryRegex.Match(message) is Match foundFromFactory &&
+                foundFromFactory.Success)
+            {
+                return foundFromFactory;
             }
 
             return Match.Empty;
