@@ -29,7 +29,7 @@
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MSBuildPackageVersion)" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="all" />
     <PackageReference Include="MSBuild.BinlogRedactor.SensitiveDataDetector" Version="0.0.4-beta" />
-    <PackageReference Include="DotUtils.StreamUtils" Version="0.0.5" />
+    <PackageReference Include="DotUtils.StreamUtils" Version="0.0.6" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Construction\TargetGraph.cs" />

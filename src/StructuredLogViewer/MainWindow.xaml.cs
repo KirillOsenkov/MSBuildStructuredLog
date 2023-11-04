@@ -670,7 +670,7 @@ namespace StructuredLogViewer
             {
                 List<string> stringsToRedact =
                     new(redactInputControl.SecretsBlock?
-                            .Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries)
+                            .Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
                             .Select(s => s.Trim())
                             .Where(s => !string.IsNullOrWhiteSpace(s))
                         ?? new string[] { });
