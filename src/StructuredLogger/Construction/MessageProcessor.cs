@@ -40,6 +40,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 ProcessProjectImported(projectImported);
                 return;
             }
+            else if (args is TaskCommandLineEventArgs taskArgs)
+            {
+                if (AddCommandLine(taskArgs))
+                {
+                    return;
+                }
+            }
 
             // This realizes the expensive message string from LazyFormattedBuildEventArgs
             string message = args.Message;
@@ -87,14 +94,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     var parameter = ItemGroupParser.ParsePropertyOrItemList(message, Strings.TaskParameterMessagePrefix, stringTable);
                     folder.AddChild(parameter);
                     return;
-                }
-
-                if (args is TaskCommandLineEventArgs taskArgs)
-                {
-                    if (AddCommandLine(taskArgs))
-                    {
-                        return;
-                    }
                 }
             }
             else if (buildEventContext != null && buildEventContext.TargetId != BuildEventContext.InvalidTargetId)
