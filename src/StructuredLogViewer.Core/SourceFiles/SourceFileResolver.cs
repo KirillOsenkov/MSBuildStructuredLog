@@ -50,23 +50,26 @@ namespace StructuredLogViewer
                 return null;
             }
 
-            if (fileContentsCache.TryGetValue(filePath, out var result))
+            lock (fileContentsCache)
             {
-                return result;
-            }
-
-            foreach (var resolver in resolvers)
-            {
-                var candidate = resolver.GetSourceFileText(filePath);
-                if (candidate != null)
+                if (fileContentsCache.TryGetValue(filePath, out var result))
                 {
-                    fileContentsCache[filePath] = candidate;
-                    return candidate;
+                    return result;
                 }
-            }
 
-            fileContentsCache[filePath] = null;
-            return null;
+                foreach (var resolver in resolvers)
+                {
+                    var candidate = resolver.GetSourceFileText(filePath);
+                    if (candidate != null)
+                    {
+                        fileContentsCache[filePath] = candidate;
+                        return candidate;
+                    }
+                }
+
+                fileContentsCache[filePath] = null;
+                return null;
+            }
         }
     }
 }
