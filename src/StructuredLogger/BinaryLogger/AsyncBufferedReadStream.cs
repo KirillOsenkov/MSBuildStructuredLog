@@ -66,7 +66,7 @@ namespace System.IO
             return readBytes;
         }
 
-        public override int Read([In, Out] byte[] array, int offset, int count)
+        public override int Read(byte[] array, int offset, int count)
         {
             if (array == null)
             {
@@ -83,72 +83,67 @@ namespace System.IO
                 throw new ArgumentOutOfRangeException("count");
             }
 
+            if (count == 0)
+            {
+                return 0;
+            }
+
             if (array.Length - offset < count)
             {
                 throw new ArgumentException();
             }
 
-            int bytesFromBuffer = ReadFromBuffer(array, offset, count);
+            int totalRead = 0;
 
-            // We may have read less than the number of bytes the user asked for, but that is part of the Stream contract.
-
-            // Reading again for more data may cause us to block if we're using a device with no clear end of file,
-            // such as a serial port or pipe. If we blocked here and this code was used with redirected pipes for a
-            // process's standard output, this can lead to deadlocks involving two processes.              
-            // BUT - this is a breaking change. 
-            // So: If we could not read all bytes the user asked for from the buffer, we will try once from the underlying
-            // stream thus ensuring the same blocking behaviour as if the underlying stream was not wrapped in this BufferedStream.
-            if (bytesFromBuffer == count)
+            while (true)
             {
-                return bytesFromBuffer;
+                int read = ReadFromBuffer(array, offset, count);
+                offset += read;
+                count -= read;
+                totalRead += read;
+
+                if (count == 0)
+                {
+                    break;
+                }
+
+                if (!RefillBufferIfNeeded())
+                {
+                    break;
+                }
             }
 
-            int alreadySatisfied = bytesFromBuffer;
-            if (bytesFromBuffer > 0)
-            {
-                count -= bytesFromBuffer;
-                offset += bytesFromBuffer;
-            }
-
-            // So the READ buffer is empty.
-            Contract.Assert(readLength == readPosition);
-            readPosition = readLength = 0;
-
-            // If the requested read is larger than buffer size, avoid the buffer and still use a single read:
-            if (count >= bufferSize)
-            {
-                return stream.Read(array, offset, count) + alreadySatisfied;
-            }
-
-            readLength = stream.Read(buffer, 0, bufferSize);
-
-            bytesFromBuffer = ReadFromBuffer(array, offset, count);
-
-            // We may have read less than the number of bytes the user asked for, but that is part of the Stream contract.
-            // Reading again for more data may cause us to block if we're using a device with no clear end of stream,
-            // such as a serial port or pipe.  If we blocked here & this code was used with redirected pipes for a process's
-            // standard output, this can lead to deadlocks involving two processes. Additionally, translating one read on the
-            // BufferedStream to more than one read on the underlying Stream may defeat the whole purpose of buffering of the
-            // underlying reads are significantly more expensive.
-
-            return bytesFromBuffer + alreadySatisfied;
+            return totalRead;
         }
 
         public override int ReadByte()
         {
-            if (readPosition == readLength)
+            if (NeedsRefill && !RefillBufferIfNeeded())
             {
-                RefillBuffer();
-                if (readLength == 0)
-                {
-                    return -1;
-                }
-
-                readPosition = 0;
+                return -1;
             }
 
             int b = buffer[readPosition++];
             return b;
+        }
+
+        private bool NeedsRefill => readPosition == readLength;
+
+        private bool RefillBufferIfNeeded()
+        {
+            if (!NeedsRefill)
+            {
+                return true;
+            }
+
+            RefillBuffer();
+            if (readLength == 0)
+            {
+                return false;
+            }
+
+            readPosition = 0;
+            return true;
         }
 
         private void RefillBuffer()
