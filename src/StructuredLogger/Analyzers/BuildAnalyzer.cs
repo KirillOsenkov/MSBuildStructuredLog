@@ -69,6 +69,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void Analyze()
         {
+            var evaluation = build.EvaluationFolder;
+            if (evaluation != null)
+            {
+                evaluation.SortChildren();
+                AnalyzeEvaluation(evaluation);
+            }
+
+            var environment = build.EnvironmentFolder;
+            if (environment != null)
+            {
+                AnalyzeEnvironment(environment);
+            }
+
             Visit(build);
             build.Statistics.TimedNodeCount = index;
             foreach (var property in typeof(Strings)
@@ -120,19 +133,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             else if (node is Message message)
             {
                 AnalyzeMessage(message);
-            }
-            else if (node is NamedNode folder)
-            {
-                if (folder.Name == Strings.Evaluation)
-                {
-                    folder.SortChildren();
-
-                    AnalyzeEvaluation(folder);
-                }
-                else if (folder.Name == Strings.Environment)
-                {
-                    AnalyzeEnvironment(folder);
-                }
             }
         }
 
