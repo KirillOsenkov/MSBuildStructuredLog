@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 using System.Globalization;
 using System.Diagnostics.Contracts;
@@ -69,8 +69,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             _stream = stream;
             _bufferSize = bufferSize;
 
-            // Allocate _buffer on its first use - it will not be used if all reads
-            // & writes are greater than or equal to buffer size.
+            EnsureBufferAllocated();
 
             if (!_stream.CanRead && !_stream.CanWrite)
                 __Error.StreamIsClosed();
@@ -445,10 +444,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (_readPos == _readLen)
             {
-                if (_writePos > 0)
-                    FlushWrite();
+                //if (_writePos > 0)
+                //    FlushWrite();
 
-                EnsureBufferAllocated();
+                //EnsureBufferAllocated();
                 _readLen = _stream.Read(_buffer, 0, _bufferSize);
                 _readPos = 0;
             }
