@@ -12,6 +12,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
     {
         private readonly Construction construction;
         private readonly StringCache stringTable;
+        private int fileFormatVersion = 0;
 
         public StringBuilder DetailedSummary { get; } = new StringBuilder();
 
@@ -28,6 +29,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (args == null)
             {
                 return;
+            }
+
+            if (fileFormatVersion == 0)
+            {
+                fileFormatVersion = construction.Build.FileFormatVersion;
             }
 
             if (args is TaskParameterEventArgs taskParameter)
@@ -59,7 +65,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var buildEventContext = args.BuildEventContext;
             if (buildEventContext != null && buildEventContext.TaskId != BuildEventContext.InvalidTaskId)
             {
-                if (message.StartsWith(Strings.OutputItemsMessagePrefix, StringComparison.Ordinal))
+                if (fileFormatVersion < 11 && message.StartsWith(Strings.OutputItemsMessagePrefix, StringComparison.Ordinal))
                 {
                     var task = GetTask(args);
 
@@ -99,7 +105,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             else if (buildEventContext != null && buildEventContext.TargetId != BuildEventContext.InvalidTargetId)
             {
                 // since version 11 these have been replaced with TaskParameterEventArgs
-                if (construction.Build.FileFormatVersion < 11)
+                if (fileFormatVersion < 11)
                 {
                     if (message.StartsWith(Strings.ItemGroupIncludeMessagePrefix, StringComparison.Ordinal))
                     {
