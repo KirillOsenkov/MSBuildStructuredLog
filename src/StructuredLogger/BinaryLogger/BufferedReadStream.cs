@@ -1,13 +1,10 @@
-﻿using System;
+﻿using System.Diagnostics.Contracts;
 using System.Runtime.InteropServices;
-using System.Globalization;
-using System.Diagnostics.Contracts;
-using System.Runtime.CompilerServices;
-using System.Threading;
-using System.IO;
 
-namespace Microsoft.Build.Logging.StructuredLogger
+namespace System.IO
 {
+    using Task = System.Threading.Tasks.Task;
+
     public class BufferedReadStream : Stream
     {
         private const Int32 _DefaultBufferSize = 4096;
@@ -15,6 +12,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private Stream _stream;                               // Underlying stream.  Close sets _stream to null.
 
         private Byte[] _buffer;                               // Shared read/write buffer.  Alloc on first use.
+        private byte[] prefetchBuffer;
 
         private readonly Int32 _bufferSize;                   // Length of internal buffer (not counting the shadow buffer).
 
@@ -136,6 +134,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             // BufferedStream is not intended for multi-threaded use, so no worries about the get/set ---- on _buffer.
             if (_buffer == null)
                 _buffer = new Byte[_bufferSize];
+            if (prefetchBuffer == null)
+            {
+                prefetchBuffer = new byte[_bufferSize];
+            }
         }
 
         internal Stream UnderlyingStream
@@ -228,6 +230,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 _stream = null;
                 _buffer = null;
+                prefetchBuffer = null;
 #if !FEATURE_PAL && FEATURE_ASYNC_IO
             _lastSyncCompletedReadTask = null;
 #endif  // !FEATURE_PAL && FEATURE_ASYNC_IO
@@ -354,23 +357,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return readBytes;
         }
 
-        private Int32 ReadFromBuffer(Byte[] array, Int32 offset, Int32 count, out Exception error)
-        {
-
-            try
-            {
-
-                error = null;
-                return ReadFromBuffer(array, offset, count);
-
-            }
-            catch (Exception ex)
-            {
-                error = ex;
-                return 0;
-            }
-        }
-
         public override int Read([In, Out] Byte[] array, Int32 offset, Int32 count)
         {
             if (array == null)
@@ -437,6 +423,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return bytesFromBuffer + alreadySatisfied;
         }
 
+        private System.Threading.Tasks.Task prefetchTask = null;
+        private int prefetchReadBytes = 0;
+
         public override Int32 ReadByte()
         {
             //EnsureNotClosed();
@@ -448,11 +437,29 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 //    FlushWrite();
 
                 //EnsureBufferAllocated();
-                _readLen = _stream.Read(_buffer, 0, _bufferSize);
+
+                if (prefetchTask == null)
+                {
+                    prefetchTask = Task.Run(() =>
+                    {
+                        prefetchReadBytes = _stream.Read(prefetchBuffer, 0, _bufferSize);
+                    });
+                }
+
+                prefetchTask.Wait();
+
+                (_buffer, prefetchBuffer) = (prefetchBuffer, _buffer);
+
+                _readLen = prefetchReadBytes;
                 if (_readLen == 0)
                 {
                     return -1;
                 }
+
+                prefetchTask = Task.Run(() =>
+                {
+                    prefetchReadBytes = _stream.Read(prefetchBuffer, 0, _bufferSize);
+                });
 
                 _readPos = 0;
             }
