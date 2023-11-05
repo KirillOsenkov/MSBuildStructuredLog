@@ -95,6 +95,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void Visit(TreeNode node)
         {
+            // items only have metadata, nothing to analyze.
+            // they also constitute the majority of nodes
+            if (node is AddItem or RemoveItem or Item)
+            {
+                return;
+            }
+
             ProcessBeforeChildrenVisited(node);
 
             if (node.HasChildren)
@@ -111,7 +118,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             ProcessAfterChildrenVisited(node);
-            node.Seal();
         }
 
         private void ProcessBeforeChildrenVisited(TreeNode node)
@@ -120,19 +126,27 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 timedNode.Index = index;
                 index++;
-            }
 
-            if (node is Task task)
-            {
-                AnalyzeTask(task);
+                if (node is Task task)
+                {
+                    AnalyzeTask(task);
+                }
+                else if (node is Target target)
+                {
+                    AnalyzeTarget(target);
+                }
             }
-            else if (node is Target target)
+        }
+
+        private void ProcessAfterChildrenVisited(TreeNode node)
+        {
+            if (node is Project project)
             {
-                AnalyzeTarget(target);
+                PostAnalyzeProject(project);
             }
-            else if (node is Message message)
+            else if (node is Build build)
             {
-                AnalyzeMessage(message);
+                PostAnalyzeBuild(build);
             }
         }
 
@@ -165,26 +179,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 properties.SortChildren();
                 projectEvaluation.RelativeDuration = projectEvaluation.Duration.TotalMilliseconds * 100.0 / longestDuration;
-            }
-        }
-
-        private void AnalyzeMessage(Message message)
-        {
-            if (message.Text != null && Strings.BuildingWithToolsVersionPrefix != null && Strings.BuildingWithToolsVersionPrefix.IsMatch(message.Text))
-            {
-                message.IsLowRelevance = true;
-            }
-        }
-
-        private void ProcessAfterChildrenVisited(TreeNode node)
-        {
-            if (node is Project project)
-            {
-                PostAnalyzeProject(project);
-            }
-            else if (node is Build build)
-            {
-                PostAnalyzeBuild(build);
             }
         }
 
