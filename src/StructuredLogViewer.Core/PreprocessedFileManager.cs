@@ -142,14 +142,18 @@ namespace StructuredLogViewer
                 line--;
             }
 
+            Bucket bucket;
             lock (importMap)
             {
-                if (!importMap.TryGetValue(project, out var bucket))
+                if (!importMap.TryGetValue(project, out bucket))
                 {
                     bucket = new Bucket();
                     importMap[project] = bucket;
                 }
+            }
 
+            lock (bucket)
+            {
                 bucket.Add(new ProjectImport(importedProject, line, column));
             }
         }
