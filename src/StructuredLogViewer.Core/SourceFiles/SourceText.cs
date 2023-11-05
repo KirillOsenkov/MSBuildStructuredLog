@@ -10,11 +10,23 @@ namespace StructuredLogViewer
         public SourceText(string text)
         {
             Text = text;
-            Lines = text.GetLineSpans();
         }
 
         public string Text { get; }
-        public IReadOnlyList<Span> Lines { get; }
+
+        private IReadOnlyList<Span> lines;
+        public IReadOnlyList<Span> Lines
+        {
+            get
+            {
+                if (lines == null)
+                {
+                    lines = Text.GetLineSpans();
+                }
+
+                return lines;
+            }
+        }
 
         private XmlDocumentSyntax xmlRoot;
         public XmlDocumentSyntax XmlRoot
