@@ -9,6 +9,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// Timestamp of the message
         /// </summary>
         public override DateTime Timestamp { get; set; }
+
+        public override string TypeName => nameof(Message);
+    }
+
+    public class MessageWithLocation : Message
+    {
+        public string FilePath { get; set; }
+        public int Line { get; set; }
+
+        public override string SourceFilePath => FilePath;
+        public override int? LineNumber => Line;
+
+        public override string TypeName => nameof(Message);
     }
 
     public class Message : TextNode, IHasRelevance, IHasSourceFile, IHasLineNumber
@@ -28,7 +41,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             set => SetFlag(NodeFlags.LowRelevance, value);
         }
 
-        public string SourceFilePath
+        public virtual string SourceFilePath
         {
             get
             {
@@ -67,7 +80,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         // These are recalculated and not stored because storage in this class is incredibly expensive
         // There are millions of Message instances in a decent size log
-        public int? LineNumber
+        public virtual int? LineNumber
         {
             get
             {

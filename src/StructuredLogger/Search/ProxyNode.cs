@@ -233,7 +233,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     return "Folder";
                 }
 
-                return Original.GetType().Name;
+                return Original.TypeName ?? Original.GetType().Name;
             }
         }
 

@@ -650,11 +650,34 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
                 else
                 {
-                    var messageNode = new Message
+                    Message messageNode = null;
+                    string text = message;
+
+                    if (args is BuildMessageEventArgs buildMessageEventArgs)
                     {
-                        Text = message,
-                        IsLowRelevance = lowRelevance
-                    };
+                        if (!string.IsNullOrEmpty(buildMessageEventArgs.Code))
+                        {
+                            text = $"{buildMessageEventArgs.Code}: {text}";
+                            Intern(text);
+                        }
+
+                        if (!string.IsNullOrEmpty(buildMessageEventArgs.File))
+                        {
+                            messageNode = new MessageWithLocation
+                            {
+                                FilePath = buildMessageEventArgs.File,
+                                Line = buildMessageEventArgs.LineNumber
+                            };
+                        }
+                    }
+
+                    if (messageNode == null)
+                    {
+                        messageNode = new Message();
+                    }
+
+                    messageNode.Text = text;
+                    messageNode.IsLowRelevance = lowRelevance;
 
                     Construction.PopulateWithExtendedData(messageNode, args);
 
