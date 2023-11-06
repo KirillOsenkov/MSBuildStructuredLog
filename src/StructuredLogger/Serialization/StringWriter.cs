@@ -4,6 +4,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class StringWriter
     {
+        public static int MaxStringLength = 100_000_000;
+
         public static string GetString(BaseNode rootNode)
         {
             var sb = new StringBuilder();
@@ -16,6 +18,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private static void WriteNode(BaseNode rootNode, StringBuilder sb, int indent = 0)
         {
             if (rootNode == null)
+            {
+                return;
+            }
+
+            if (sb.Length > MaxStringLength)
             {
                 return;
             }

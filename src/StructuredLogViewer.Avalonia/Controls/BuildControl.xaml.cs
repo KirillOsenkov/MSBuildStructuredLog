@@ -1051,6 +1051,11 @@ Recent:
                 {
                     sb.AppendLine();
                 }
+
+                if (sb.Length > Microsoft.Build.Logging.StructuredLogger.StringWriter.MaxStringLength)
+                {
+                    break;
+                }
             }
 
             CopyToClipboard(sb.ToString());
@@ -1069,6 +1074,11 @@ Recent:
             {
                 item.VisitAllChildren<BaseNode>(s =>
                 {
+                    if (sb.Length > Microsoft.Build.Logging.StructuredLogger.StringWriter.MaxStringLength)
+                    {
+                        return;
+                    }
+
                     if (s is SourceFile file && !string.IsNullOrEmpty(file.SourceFilePath))
                     {
                         sb.AppendLine(file.SourceFilePath);
