@@ -84,8 +84,7 @@ namespace StructuredLogViewer
                         parent = InsertParent(
                             parent,
                             actualParent: null,
-                            name: rootFolderName,
-                            existingProxy => existingProxy.Name == rootFolderName);
+                            name: rootFolderName);
                     }
 
                     var project = resultNode.GetNearestParent<Project>();
@@ -95,9 +94,7 @@ namespace StructuredLogViewer
                         parent = InsertParent(
                             parent,
                             project,
-                            projectName,
-                            existingProxy => existingProxy.Original is Project existing &&
-                                string.Equals(existing.SourceFilePath, project.SourceFilePath, StringComparison.OrdinalIgnoreCase));
+                            projectName);
                     }
 
                     if (project == null)
