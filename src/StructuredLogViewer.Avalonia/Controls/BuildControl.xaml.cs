@@ -1246,7 +1246,7 @@ Recent:
                 return false;
             }
 
-            string preprocessableFilePath = Utilities.InsertMissingDriveSeparator(sourceFilePath);
+            string preprocessableFilePath = sourceFilePath;
 
             Action preprocess = null;
             if (evaluation != null)

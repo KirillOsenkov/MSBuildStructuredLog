@@ -511,6 +511,95 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return sb.ToString();
         }
 
+        public static string NormalizeFilePath(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                return text;
+            }
+
+            int slashCount = text.Count(c => c == '/');
+            int backslashCount = text.Count(c => c == '\\');
+
+            if (slashCount == 0 && backslashCount == 0)
+            {
+                return text;
+            }
+
+            bool isWindows = false;
+
+            if (text.Length > 1 && text[1] == ':')
+            {
+                isWindows = true;
+            }
+            else
+            {
+                if (backslashCount > slashCount)
+                {
+                    isWindows = true;
+                }
+            }
+
+            bool startsWithTwoBackslashes = text.Length > 2 && text[0] == '\\' && text[1] == '\\';
+
+            // hack
+            // recognize paths such as \a\b\c as /a/b/c since that's what the binary logger gives us
+            if (slashCount == 0 && text.Length > 1 && text[0] == '\\' && text[1] != '\\' && text[1] != '/')
+            {
+                isWindows = false;
+            }
+
+            string directorySeparator;
+            string altDirectorySeparator;
+            if (isWindows)
+            {
+                directorySeparator = "\\";
+                altDirectorySeparator = "/";
+            }
+            else
+            {
+                directorySeparator = "/";
+                altDirectorySeparator = "\\";
+            }
+
+            text = text.Replace(altDirectorySeparator, directorySeparator);
+
+            var parts = text.Split(new[] { directorySeparator[0] }, StringSplitOptions.RemoveEmptyEntries);
+
+            var stack = new List<string>();
+
+            for (int i = 0; i < parts.Length; i++)
+            {
+                string part = parts[i];
+                if (stack.Count > 0 && parts[i] == "..")
+                {
+                    stack.RemoveAt(stack.Count - 1);
+                }
+                else
+                {
+                    stack.Add(part);
+                }
+            }
+
+            text = string.Join(directorySeparator, stack);
+
+            if (!isWindows)
+            {
+                text = '/' + text;
+            }
+            else if (text.Length > 1 && text[1] != ':')
+            {
+                text = "\\" + text;
+            }
+
+            if (isWindows && startsWithTwoBackslashes)
+            {
+                text = "\\" + text;
+            }
+
+            return text;
+        }
+
         public static IReadOnlyList<Span> GetHighlightedSpansInText(string text, IEnumerable<string> searchTerms)
         {
             var spans = new List<Span>();

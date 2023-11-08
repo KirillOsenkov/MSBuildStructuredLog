@@ -39,17 +39,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             string archivePath = filePath;
 
-            if (filePath.Contains(":") || (!filePath.StartsWith("\\") && !filePath.StartsWith("/")))
+            if (archivePath.Length > 1 && archivePath[1] == '\\' && archivePath[0] != '\\' && archivePath[0] != '/')
             {
-                archivePath = archivePath.Replace(":", "");
-                archivePath = archivePath.Replace("/", "\\");
-                archivePath = archivePath.Replace("\\\\", "\\");
+                archivePath = archivePath[0] + ":" + archivePath.Substring(1);
             }
-            else
-            {
-                archivePath = archivePath.Replace("\\", "/");
-                archivePath = archivePath.Replace("//", "/");
-            }
+
+            archivePath = TextUtilities.NormalizeFilePath(archivePath);
 
             return archivePath;
         }
