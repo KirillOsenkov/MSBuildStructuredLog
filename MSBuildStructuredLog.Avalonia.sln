@@ -22,6 +22,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TaskRunner", "src\TaskRunne
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StructuredLogViewer.Core", "src\StructuredLogViewer.Core\StructuredLogViewer.Core.csproj", "{3C655C5D-22C3-4B8D-969C-3FC497294703}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StructuredLogger.Utils", "src\StructuredLogger.Utils\StructuredLogger.Utils.csproj", "{087507C9-BAD5-EDBB-ABD5-DE26D3F215F7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Mixed Platforms = Debug|Mixed Platforms
@@ -48,6 +50,10 @@ Global
 		{B8DB3798-1636-417D-B57A-25C51C574F1E}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
 		{B8DB3798-1636-417D-B57A-25C51C574F1E}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{B8DB3798-1636-417D-B57A-25C51C574F1E}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{087507C9-BAD5-EDBB-ABD5-DE26D3F215F7}.Debug|Mixed Platforms.ActiveCfg = Debug|Mixed Platforms
+		{087507C9-BAD5-EDBB-ABD5-DE26D3F215F7}.Debug|Mixed Platforms.Build.0 = Debug|Mixed Platforms
+		{087507C9-BAD5-EDBB-ABD5-DE26D3F215F7}.Release|Mixed Platforms.ActiveCfg = Release|Mixed Platforms
+		{087507C9-BAD5-EDBB-ABD5-DE26D3F215F7}.Release|Mixed Platforms.Build.0 = Release|Mixed Platforms
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
