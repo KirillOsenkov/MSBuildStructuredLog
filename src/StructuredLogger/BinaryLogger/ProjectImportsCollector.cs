@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Build.Logging.StructuredLogger;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.Build.Logging
 {
@@ -15,30 +18,11 @@ namespace Microsoft.Build.Logging
     /// </summary>
     internal class ProjectImportsCollector
     {
-        private Stream _stream;
-        public byte[] GetAllBytes()
-        {
-            if (_stream == null)
-            {
-                return Array.Empty<byte>();
-            }
-            else if (ArchiveFilePath == null)
-            {
-                var stream = _stream as MemoryStream;
-                // Before we can use the zip archive, it must be closed.
-                Close(false);
-                return stream.ToArray();
-            }
-            else
-            {
-                Close();
-                return File.ReadAllBytes(ArchiveFilePath);
-            }
-        }
-
+        private Stream _fileStream;
         private ZipArchive _zipArchive;
-
-        private string ArchiveFilePath { get; set; }
+        private readonly string _archiveFilePath;
+        private readonly bool _runOnBackground;
+        private const string DefaultSourcesArchiveExtension = ".ProjectImports.zip";
 
         /// <summary>
         /// Avoid visiting each file more than once.
@@ -48,71 +32,126 @@ namespace Microsoft.Build.Logging
         // this will form a chain of file write tasks, running sequentially on a background thread
         private Task _currentTask = Task.CompletedTask;
 
-        public ProjectImportsCollector(string logFilePath, bool createFile, string sourcesArchiveExtension = ".ProjectImports.zip")
+        internal static void FlushBlobToFile(
+            string logFilePath,
+            Stream contentStream)
         {
+            string archiveFilePath = GetArchiveFilePath(logFilePath, DefaultSourcesArchiveExtension);
+
+            using var fileStream = new FileStream(archiveFilePath, FileMode.Create, FileAccess.ReadWrite, FileShare.Delete);
+            contentStream.CopyTo(fileStream);
+        }
+
+        // Archive file will be stored alongside the binlog
+        private static string GetArchiveFilePath(string logFilePath, string sourcesArchiveExtension)
+            => Path.ChangeExtension(logFilePath, sourcesArchiveExtension);
+
+        public ProjectImportsCollector(
+            string logFilePath,
+            bool createFile,
+            string sourcesArchiveExtension = DefaultSourcesArchiveExtension,
+            bool runOnBackground = true)
+        {
+            if (createFile)
+            {
+                // Archive file will be stored alongside the binlog
+                _archiveFilePath = GetArchiveFilePath(logFilePath, sourcesArchiveExtension);
+            }
+            else
+            {
+                string cacheDirectory = GetCacheDirectory();
+                if (!Directory.Exists(cacheDirectory))
+                {
+                    Directory.CreateDirectory(cacheDirectory);
+                }
+
+                // Archive file will be temporarily stored in MSBuild cache folder and deleted when no longer needed
+                _archiveFilePath = Path.Combine(
+                    cacheDirectory,
+                    GetArchiveFilePath(
+                        Path.GetFileName(logFilePath),
+                        sourcesArchiveExtension));
+            }
+
             try
             {
-                if (createFile)
-                {
-                    ArchiveFilePath = Path.ChangeExtension(logFilePath, sourcesArchiveExtension);
-                    _stream = new FileStream(ArchiveFilePath, FileMode.Create, FileAccess.ReadWrite, FileShare.Delete);
-                }
-                else
-                {
-                    _stream = new MemoryStream();
-                }
-                _zipArchive = new ZipArchive(_stream, ZipArchiveMode.Create, true);
+                _fileStream = new FileStream(_archiveFilePath, FileMode.Create, FileAccess.ReadWrite, FileShare.Delete);
+                _zipArchive = new ZipArchive(_fileStream, ZipArchiveMode.Create);
             }
             catch
             {
                 // For some reason we weren't able to create a file for the archive.
                 // Disable the file collector.
-                _stream = null;
+                _fileStream = null;
                 _zipArchive = null;
             }
+
+            _runOnBackground = runOnBackground;
         }
 
-        public void AddFile(string filePath)
+        private static string GetCacheDirectory()
         {
-            if (filePath != null && _stream != null)
+            string dir = Path.Combine(PathUtils.TempPath,
+                $"MSBuildTemp-{Environment.UserName}-{Process.GetCurrentProcess().Id}-{AppDomain.CurrentDomain.Id}");
+            Directory.CreateDirectory(dir);
+            return dir;
+        }
+
+        public void AddFile(string? filePath)
+        {
+            AddFileHelper(filePath, AddFileCore);
+        }
+
+        public void AddFileFromMemory(
+            string? filePath,
+            string data,
+            DateTimeOffset? entryCreationStamp = null,
+            bool makePathAbsolute = true)
+        {
+            AddFileHelper(filePath, path =>
+                AddFileFromMemoryCore(path, data, makePathAbsolute, entryCreationStamp));
+        }
+
+        public void AddFileFromMemory(
+            string? filePath,
+            Stream data,
+            DateTimeOffset? entryCreationStamp = null,
+            bool makePathAbsolute = true)
+        {
+            AddFileHelper(filePath, path => AddFileFromMemoryCore(path, data, makePathAbsolute, entryCreationStamp));
+        }
+
+        private void AddFileHelper(
+            string? filePath,
+            Action<string> addFileWorker)
+        {
+            if (filePath != null && _fileStream != null)
             {
-                lock (_stream)
+                lock (_fileStream)
                 {
-                    // enqueue the task to add a file and return quickly
-                    // to avoid holding up the current thread
-                    _currentTask = _currentTask.ContinueWith(t =>
+                    if (_runOnBackground)
                     {
-                        try
-                        {
-                            AddFileCore(filePath);
-                        }
-                        catch
-                        {
-                        }
-                    }, TaskScheduler.Default);
+                        // enqueue the task to add a file and return quickly
+                        // to avoid holding up the current thread
+                        _currentTask = _currentTask.ContinueWith(
+                            t => { TryAddFile(); },
+                            TaskScheduler.Default);
+                    }
+                    else
+                    {
+                        TryAddFile();
+                    }
                 }
             }
-        }
 
-        public void AddFileFromMemory(string filePath, string data)
-        {
-            if (filePath != null && data != null && _stream != null)
+            void TryAddFile()
             {
-                lock (_stream)
+                try
                 {
-                    // enqueue the task to add a file and return quickly
-                    // to avoid holding up the current thread
-                    _currentTask = _currentTask.ContinueWith(t =>
-                    {
-                        try
-                        {
-                            AddFileFromMemoryCore(filePath, data);
-                        }
-                        catch
-                        {
-                        }
-                    }, TaskScheduler.Default);
+                    addFileWorker(filePath);
                 }
+                catch
+                { }
             }
         }
 
@@ -123,64 +162,82 @@ namespace Microsoft.Build.Logging
         private void AddFileCore(string filePath)
         {
             // quick check to avoid repeated disk access for Exists etc.
-            if (_processedFiles.Contains(filePath))
+            if (!ShouldAddFile(ref filePath, true, true))
             {
                 return;
             }
 
-            var fileInfo = new FileInfo(filePath);
-            if (!fileInfo.Exists || fileInfo.Length == 0)
-            {
-                _processedFiles.Add(filePath);
-                return;
-            }
-
-            filePath = Path.GetFullPath(filePath);
-
-            // if the file is already included, don't include it again
-            if (!_processedFiles.Add(filePath))
-            {
-                return;
-            }
-
-            using (Stream entryStream = OpenArchiveEntry(filePath))
-            using (FileStream content = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete))
-            {
-                content.CopyTo(entryStream);
-            }
+            using FileStream content = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete);
+            AddFileData(filePath, content, null);
         }
 
         /// <remarks>
         /// This method doesn't need locking/synchronization because it's only called
         /// from a task that is chained linearly
         /// </remarks>
-        private void AddFileFromMemoryCore(string filePath, string data)
+        private void AddFileFromMemoryCore(string filePath, string data, bool makePathAbsolute, DateTimeOffset? entryCreationStamp)
+        {
+            // quick check to avoid repeated disk access for Exists etc.
+            if (!ShouldAddFile(ref filePath, false, makePathAbsolute))
+            {
+                return;
+            }
+
+            using var content = new MemoryStream(Encoding.UTF8.GetBytes(data));
+            AddFileData(filePath, content, entryCreationStamp);
+        }
+
+        private void AddFileFromMemoryCore(string filePath, Stream data, bool makePathAbsolute, DateTimeOffset? entryCreationStamp)
+        {
+            // quick check to avoid repeated disk access for Exists etc.
+            if (!ShouldAddFile(ref filePath, false, makePathAbsolute))
+            {
+                return;
+            }
+
+            AddFileData(filePath, data, entryCreationStamp);
+        }
+
+        private void AddFileData(string filePath, Stream data, DateTimeOffset? entryCreationStamp)
+        {
+            using Stream entryStream = OpenArchiveEntry(filePath, entryCreationStamp);
+            data.CopyTo(entryStream);
+        }
+
+        private bool ShouldAddFile(ref string filePath, bool checkFileExistence, bool makeAbsolute)
         {
             // quick check to avoid repeated disk access for Exists etc.
             if (_processedFiles.Contains(filePath))
             {
-                return;
+                return false;
             }
 
-            filePath = Path.GetFullPath(filePath);
+            if (checkFileExistence && !File.Exists(filePath))
+            {
+                _processedFiles.Add(filePath);
+                return false;
+            }
+
+            // Only make the path absolute if it's request. In the replay scenario, the file entries
+            // are read from zip archive - where ':' is stripped and path can then seem relative.
+            if (makeAbsolute)
+            {
+                filePath = Path.GetFullPath(filePath);
+            }
 
             // if the file is already included, don't include it again
-            if (!_processedFiles.Add(filePath))
-            {
-                return;
-            }
-
-            using (Stream entryStream = OpenArchiveEntry(filePath))
-            using (var content = new MemoryStream(Encoding.UTF8.GetBytes(data)))
-            {
-                content.CopyTo(entryStream);
-            }
+            return _processedFiles.Add(filePath);
         }
 
-        private Stream OpenArchiveEntry(string filePath)
+        private Stream OpenArchiveEntry(string filePath, DateTimeOffset? entryCreationStamp)
         {
             string archivePath = CalculateArchivePath(filePath);
-            var archiveEntry = _zipArchive.CreateEntry(archivePath);
+            var archiveEntry = _zipArchive!.CreateEntry(archivePath);
+            if (entryCreationStamp.HasValue)
+            {
+                archiveEntry.LastWriteTime = entryCreationStamp.Value;
+            }
+
             return archiveEntry.Open();
         }
 
@@ -195,7 +252,28 @@ namespace Microsoft.Build.Logging
             return archivePath;
         }
 
-        public void Close(bool closeStream = true)
+        public void ProcessResult(Action<Stream> consumeStream, Action<string> onError)
+        {
+            Close();
+
+            // It is possible that the archive couldn't be created for some reason.
+            // Only embed it if it actually exists.
+            if (File.Exists(_archiveFilePath))
+            {
+                using FileStream fileStream = File.OpenRead(_archiveFilePath);
+
+                if (fileStream.Length > int.MaxValue)
+                {
+                    onError("Imported files archive exceeded 2GB limit and it's not embedded.");
+                }
+                else
+                {
+                    consumeStream(fileStream);
+                }
+            }
+        }
+
+        public void Close()
         {
             // wait for all pending file writes to complete
             _currentTask.Wait();
@@ -206,11 +284,17 @@ namespace Microsoft.Build.Logging
                 _zipArchive = null;
             }
 
-            if (closeStream && (_stream != null))
+            if (_fileStream != null)
             {
-                _stream.Dispose();
-                _stream = null;
+                _fileStream.Dispose();
+                _fileStream = null;
             }
+        }
+
+        public void DeleteArchive()
+        {
+            Close();
+            File.Delete(_archiveFilePath);
         }
     }
 }

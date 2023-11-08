@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
+using DotUtils.StreamUtils;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using static Microsoft.Build.Logging.StructuredLogger.BinaryLogger;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -103,10 +105,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (projectImportsCollector != null)
             {
-                var bytes = projectImportsCollector.GetAllBytes();
-                construction.Build.SourceFilesArchive = bytes;
-
                 projectImportsCollector.Close();
+                projectImportsCollector.ProcessResult(
+                    streamToEmbed => construction.Build.SourceFilesArchive = streamToEmbed.ReadToEnd(),
+                    _ => {});
+
+                projectImportsCollector.DeleteArchive();
                 projectImportsCollector = null;
             }
 

@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -13,6 +14,7 @@ using System.Windows.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Win32;
 using Squirrel;
+using StructuredLogger.Utils;
 using StructuredLogViewer.Controls;
 
 namespace StructuredLogViewer
@@ -374,11 +376,13 @@ namespace StructuredLogViewer
             {
                 ReloadMenu.Visibility = logFilePath != null ? Visibility.Visible : Visibility.Collapsed;
                 SaveAsMenu.Visibility = Visibility.Visible;
+                RedactSecretsMenu.Visibility = Visibility.Visible;
             }
             else
             {
                 ReloadMenu.Visibility = Visibility.Collapsed;
                 SaveAsMenu.Visibility = Visibility.Collapsed;
+                RedactSecretsMenu.Visibility = Visibility.Collapsed;
             }
 
             // If we had text inside search log control bring it back
@@ -659,31 +663,120 @@ namespace StructuredLogViewer
             OpenLogFile(logFilePath);
         }
 
+        private async System.Threading.Tasks.Task RedactSecrets()
+        {
+            RedactInputControl redactInputControl = new RedactInputControl(GetSaveAsDestination);
+            if (redactInputControl.ShowDialog() != true)
+            {
+                return;
+            }
+            
+            List<string> stringsToRedact =
+                new(redactInputControl.SecretsBlock?
+                        .Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(s => s.Trim())
+                        .Where(s => !string.IsNullOrWhiteSpace(s))
+                    ?? new string[] { });
+
+            if (
+                !stringsToRedact.Any() &&
+                !redactInputControl.RedactUsername &&
+                !redactInputControl.RedactCommonCredentials)
+            {
+                MessageBox.Show("No secrets to redact - no action will be performed");
+                return;
+            }
+
+            var progress = new BuildProgress();
+            progress.Progress.Updated += update =>
+            {
+                Dispatcher.InvokeAsync(() =>
+                {
+                    progress.Value = update.Ratio;
+                }, DispatcherPriority.Background);
+            };
+            progress.ProgressText = "Performing the log redaction ...";
+            SetContent(progress);
+
+            string error = await System.Threading.Tasks.Task.Run(() =>
+            {
+                try
+                {
+                    BinlogRedactorOptions redactorOptions = new BinlogRedactorOptions(logFilePath)
+                    {
+                        OutputFileName = redactInputControl.DestinationFile,
+                        ProcessEmbeddedFiles = redactInputControl.RedactEmbeddedFiles,
+                        AutodetectUsername = redactInputControl.RedactUsername,
+                        AutodetectCommonPatterns = redactInputControl.RedactCommonCredentials,
+                        IdentifyReplacemenets = redactInputControl.DistinguishSecretsReplacements,
+                        TokensToRedact = stringsToRedact.ToArray(),
+                    };
+
+                    BinlogRedactor.RedactSecrets(
+                        redactorOptions,
+                        progress.Progress);
+                }
+                catch(Exception e)
+                {
+                    return e.ToString();
+                }
+
+                return null;
+            });
+
+            if (!string.IsNullOrEmpty(error))
+            {
+                MessageBox.Show($"Redaction failed:{Environment.NewLine}{error}");
+                SetContent(currentBuild);
+            }
+            else if (string.IsNullOrEmpty(redactInputControl.DestinationFile))
+            {
+                // Reload
+                OpenLogFile(logFilePath);
+            }
+            else
+            {
+                SetContent(currentBuild);
+                AnnounceFileSaved(redactInputControl.DestinationFile);
+            }
+        }
+
+        private string GetSaveAsDestination()
+        {
+            string currentFilePath = currentBuild.LogFilePath;
+
+            var saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = currentFilePath != null && currentFilePath.EndsWith(".binlog", StringComparison.OrdinalIgnoreCase) ? Serialization.BinlogFileDialogFilter : Serialization.FileDialogFilter;
+            saveFileDialog.Title = "Save log file as";
+            saveFileDialog.CheckFileExists = false;
+            saveFileDialog.OverwritePrompt = true;
+            saveFileDialog.ValidateNames = true;
+            var result = saveFileDialog.ShowDialog(this);
+
+            return result == true ? saveFileDialog.FileName : null;
+        }
+
+        private void AnnounceFileSaved(string filePath)
+        {
+            Dispatcher.InvokeAsync(() =>
+            {
+                currentBuild.UpdateBreadcrumb(new Message { Text = $"Saved {filePath}" });
+            });
+            SettingsService.AddRecentLogFile(filePath);
+        }
+
         private void SaveAs()
         {
             if (currentBuild != null)
             {
                 string currentFilePath = currentBuild.LogFilePath;
-
-                var saveFileDialog = new SaveFileDialog();
-                saveFileDialog.Filter = currentFilePath != null && currentFilePath.EndsWith(".binlog", StringComparison.OrdinalIgnoreCase) ? Serialization.BinlogFileDialogFilter : Serialization.FileDialogFilter;
-                saveFileDialog.Title = "Save log file as";
-                saveFileDialog.CheckFileExists = false;
-                saveFileDialog.OverwritePrompt = true;
-                saveFileDialog.ValidateNames = true;
-                var result = saveFileDialog.ShowDialog(this);
-                if (result != true)
-                {
-                    return;
-                }
-
-                string newFilePath = saveFileDialog.FileName;
+                string newFilePath = GetSaveAsDestination();
                 if (string.IsNullOrEmpty(newFilePath) || string.Equals(currentFilePath, newFilePath, StringComparison.OrdinalIgnoreCase))
                 {
                     return;
                 }
 
-                logFilePath = saveFileDialog.FileName;
+                logFilePath = newFilePath;
 
                 lock (inProgressOperationLock)
                 {
@@ -702,11 +795,7 @@ namespace StructuredLogViewer
 
                             currentBuild.Build.LogFilePath = logFilePath;
 
-                            Dispatcher.InvokeAsync(() =>
-                            {
-                                currentBuild.UpdateBreadcrumb(new Message { Text = $"Saved {logFilePath}" });
-                            });
-                            SettingsService.AddRecentLogFile(logFilePath);
+                            AnnounceFileSaved(logFilePath);
                         }
                         catch
                         {
@@ -812,6 +901,11 @@ namespace StructuredLogViewer
         private void SaveAs_Click(object sender, RoutedEventArgs e)
         {
             SaveAs();
+        }
+
+        private void RedactSecrets_Click(object sender, RoutedEventArgs e)
+        {
+            RedactSecrets().Ignore();
         }
 
         private void HelpLink_Click(object sender, RoutedEventArgs e)

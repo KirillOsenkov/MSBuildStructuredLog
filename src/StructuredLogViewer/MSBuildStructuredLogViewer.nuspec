@@ -32,6 +32,7 @@
     <file src="Microsoft.Build.Framework.dll" target="lib\net472" />
     <file src="Microsoft.Build.Locator.dll" target="lib\net472" />
     <file src="Microsoft.Build.Tasks.Core.dll" target="lib\net472" />
+    <file src="Microsoft.Build.SensitiveDataDetector.dll" target="lib\net472" />
     <file src="Microsoft.Build.Utilities.Core.dll" target="lib\net472" />
     <file src="Microsoft.Language.Xml.dll" target="lib\net472" />
     <file src="Mono.Cecil.dll" target="lib\net472" />
@@ -42,6 +43,7 @@
     <file src="Splat.dll" target="lib\net472" />
     <file src="Squirrel.dll" target="lib\net472" />
     <file src="StructuredLogger.dll" target="lib\net472" />
+    <file src="StructuredLogger.Utils.dll" target="lib\net472" />
     <file src="StructuredLogViewer.Core.dll" target="lib\net472" />
     <file src="StructuredLogViewer.exe" target="lib\net472" />
     <file src="StructuredLogViewer.exe.config" target="lib\net472" />

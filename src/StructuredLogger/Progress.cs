@@ -9,6 +9,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public event Action<ProgressUpdate> Updated;
 
+        public virtual void Report(double ratio)
+        {
+            Report(new ProgressUpdate { Ratio = ratio });
+        }
+
         public virtual void Report(ProgressUpdate progressUpdate) 
         {
             Updated?.Invoke(progressUpdate);

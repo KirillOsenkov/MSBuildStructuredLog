@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using FluentAssertions;
+using Microsoft.Build.Logging;
 using Microsoft.Build.Logging.StructuredLogger;
 using StructuredLogger.Tests;
 using Xunit;
@@ -55,16 +57,20 @@ namespace Microsoft.Build.UnitTests
         {
             this.output = output;
         }
+        private bool BuildProject(string projectFile, string binLog, bool useInMemoryProject)
+        {
+            File.Delete(binLog);
+            var binaryLogger = new BinaryLogger { Parameters = binLog };
+            return useInMemoryProject
+                ? MSBuild.BuildProjectInMemory(projectFile, binaryLogger)
+                : MSBuild.BuildProjectFromFile(projectFile, binaryLogger);
+        }
 
         [Fact]
         public void TestBuildTreeStructureCount()
         {
             var binLog = GetTestFile("1.binlog");
-            var binaryLogger = new BinaryLogger();
-            binaryLogger.Parameters = binLog;
-            var buildSuccessful = MSBuild.BuildProjectFromFile(s_testProject, binaryLogger);
-
-            Assert.True(buildSuccessful);
+            Assert.True(BuildProject(s_testProject, binLog, false));
 
             var build = Serialization.Read(binLog);
             BuildAnalyzer.AnalyzeBuild(build);
@@ -93,13 +99,7 @@ namespace Microsoft.Build.UnitTests
         public void TestBinaryLoggerRoundtrip(bool useInMemoryProject)
         {
             var binLog = GetTestFile("1.binlog");
-            var binaryLogger = new BinaryLogger();
-            binaryLogger.Parameters = binLog;
-            var buildSuccessful = useInMemoryProject
-                ? MSBuild.BuildProjectInMemory(s_testProject, binaryLogger)
-                : MSBuild.BuildProjectFromFile(s_testProject, binaryLogger);
-
-            Assert.True(buildSuccessful);
+            Assert.True(BuildProject(s_testProject, binLog, useInMemoryProject));
 
             var build = Serialization.Read(binLog);
             var xml1 = GetTestFile("1.xml");
@@ -122,6 +122,90 @@ namespace Microsoft.Build.UnitTests
             Serialization.Write(build, GetTestFile("4.xml"));
 
             AssertEx.EqualOrDiff(File.ReadAllText(xml1), File.ReadAllText(GetTestFile("4.xml")));
+        }
+
+        [Fact]
+        public void TestReaderWriterRoundtripEquality()
+        {
+            var binLog = GetTestFile("1.binlog");
+            Assert.True(BuildProject(s_testProject, binLog, false));
+            var replayedBinlog = GetTestFile("1-replayed.binlog");
+            File.Delete(replayedBinlog);
+
+            //need to have in this repo
+            var logReader = new Logging.StructuredLogger.BinaryLogReplayEventSource();
+
+            BinaryLogger outputBinlog = new BinaryLogger()
+            {
+                Parameters = $"LogFile={replayedBinlog};OmitInitialInfo"
+            };
+            outputBinlog.Initialize(logReader);
+            logReader.Replay(binLog);
+            outputBinlog.Shutdown();
+
+            //assert here
+            AssertBinlogsHaveEqualContent(binLog, replayedBinlog);
+
+            //TODO: temporarily disabling - as we do not have guarantee for binary equality of events
+            // there are few mismatches between null and empty - will be fixed along with porting in-flight changes in MSBuild (needs log version update)
+            //// If this assertation complicates development - it can possibly be removed
+            //// The structured equality above should be enough.
+            //AssertFilesAreBinaryEqualAfterUnpack(binLog, replayedBinlog);
+        }
+
+        private static void AssertFilesAreBinaryEqualAfterUnpack(string firstPath, string secondPath)
+        {
+            using var br1 = Logging.StructuredLogger.BinaryLogReplayEventSource.OpenReader(firstPath);
+            using var br2 = Logging.StructuredLogger.BinaryLogReplayEventSource.OpenReader(secondPath);
+            const int bufferSize = 4096;
+
+            int readCount = 0;
+            while (br1.ReadBytes(bufferSize) is { Length: > 0 } bytes1)
+            {
+                var bytes2 = br2.ReadBytes(bufferSize);
+
+                bytes1.Should().BeEquivalentTo(bytes2,
+                    $"Buffers starting at position {readCount} differ. First:{Environment.NewLine}{string.Join(",", bytes1)}{Environment.NewLine}Second:{Environment.NewLine}{string.Join(",", bytes2)}");
+                readCount += bufferSize;
+            }
+
+            br2.ReadBytes(bufferSize).Length.Should().Be(0, "Second buffer contains bytes after first file end");
+        }
+
+        private static void AssertBinlogsHaveEqualContent(string firstPath, string secondPath)
+        {
+            using var reader1 = Logging.StructuredLogger.BinaryLogReplayEventSource.OpenBuildEventsReader(firstPath);
+            using var reader2 = Logging.StructuredLogger.BinaryLogReplayEventSource.OpenBuildEventsReader(secondPath);
+
+            Dictionary<string, string> embedFiles1 = new();
+            Dictionary<string, string> embedFiles2 = new();
+
+            reader1.ArchiveFileEncountered += arg
+                => AddArchiveFile(embedFiles1, arg);
+            reader2.ArchiveFileEncountered += arg
+               => AddArchiveFile(embedFiles2, arg);
+
+            // Pull events from both logs simultaneously and compare them
+            int i = 0;
+            while (reader1.Read() is { } logRecord1)
+            {
+                i++;
+                var logRecord2 = reader2.Read();
+
+                logRecord1.Should().BeEquivalentTo(logRecord2,
+                    $"Binlogs ({firstPath} and {secondPath}) should be equal at event {i}");
+            }
+            // Read the second reader - to confirm there are no more events
+            //  and to force the embedded files to be read.
+            reader2.Read().Should().BeNull($"Binlogs ({firstPath} and {secondPath}) are not equal - second has more events >{i + 1}");
+
+            Assert.Equal(embedFiles1, embedFiles2);
+            embedFiles1.Should().NotBeEmpty();
+
+            void AddArchiveFile(Dictionary<string, string> files, ArchiveFileEventArgs arg)
+            {
+                files.Add(arg.ArchiveFile.FullPath, arg.ArchiveFile.Text);
+            }
         }
 
         private static string GetProperty(Logging.StructuredLogger.Build build)
