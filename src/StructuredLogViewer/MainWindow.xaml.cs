@@ -666,6 +666,8 @@ namespace StructuredLogViewer
         private async System.Threading.Tasks.Task RedactSecrets()
         {
             RedactInputControl redactInputControl = new RedactInputControl(GetSaveAsDestination);
+            redactInputControl.Owner = this;
+
             if (redactInputControl.ShowDialog() != true)
             {
                 return;
@@ -825,6 +827,10 @@ namespace StructuredLogViewer
             else if (e.Key == Key.O && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
             {
                 OpenLogFile();
+            }
+            else if (e.Key == Key.R && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
+            {
+                RedactSecrets().Ignore();
             }
             else if (e.Key == Key.F && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
             {
