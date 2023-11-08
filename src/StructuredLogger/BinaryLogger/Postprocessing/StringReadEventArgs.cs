@@ -3,7 +3,7 @@
 
 using System;
 
-namespace Microsoft.Build.Logging
+namespace Microsoft.Build.Logging.StructuredLogger
 {
     /// <summary>
     /// An event args for <see cref="IBuildEventStringsReader.StringReadDone"/> callback.

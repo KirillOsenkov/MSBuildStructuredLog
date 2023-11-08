@@ -185,14 +185,14 @@ namespace Microsoft.Build.UnitTests
             reader2.ArchiveFileEncountered += arg
                => AddArchiveFile(embedFiles2, arg);
 
-
+            // Pull events from both logs simultaneously and compare them
             int i = 0;
-            while (reader1.Read() is { } ev1)
+            while (reader1.Read() is { } logRecord1)
             {
                 i++;
-                var ev2 = reader2.Read();
+                var logRecord2 = reader2.Read();
 
-                ev1.Should().BeEquivalentTo(ev2,
+                logRecord1.Should().BeEquivalentTo(logRecord2,
                     $"Binlogs ({firstPath} and {secondPath}) should be equal at event {i}");
             }
             // Read the second reader - to confirm there are no more events

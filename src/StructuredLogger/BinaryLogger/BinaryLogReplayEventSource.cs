@@ -25,7 +25,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
     /// by implementing IEventSource and raising corresponding events.
     /// </summary>
     /// <remarks>The class is public so that we can call it from MSBuild.exe when replaying a log file.</remarks>
-    public sealed class BinaryLogReplayEventSource : EventArgsDispatcher, IBinaryLogReplaySource
+    internal sealed class BinaryLogReplayEventSource : EventArgsDispatcher, IBinaryLogReplaySource
     {
         /// <summary>
         /// Read the provided binary log file and raise corresponding events for each BuildEventArgs

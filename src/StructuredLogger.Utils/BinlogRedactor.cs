@@ -1,14 +1,11 @@
 ﻿using System;
-using System.Linq;
-using System.Collections.Generic;
-using System.Text;
-using Microsoft.Build.Logging;
-using Microsoft.Build.Logging.StructuredLogger;
 using System.IO;
 using System.Threading;
+using Microsoft.Build.Logging;
+using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Build.SensitiveDataDetector;
 
-namespace StructuredLogger.BinaryLogger.Postprocessing
+namespace StructuredLogger.Utils
 {
     public sealed class BinlogRedactorOptions
     {
@@ -18,7 +15,7 @@ namespace StructuredLogger.BinaryLogger.Postprocessing
         }
 
         public string[]? TokensToRedact { get; set; }
-        public string InputPath { get; }
+        public string InputPath { get; set; }
         public string? OutputFileName { get; set; }
         public bool ProcessEmbeddedFiles { get; set; } = true;
         public bool IdentifyReplacemenets { get; set; } = true;

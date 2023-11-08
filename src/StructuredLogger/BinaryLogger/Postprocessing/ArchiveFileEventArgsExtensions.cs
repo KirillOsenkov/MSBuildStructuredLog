@@ -2,9 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
-using Microsoft.Build.Logging.StructuredLogger;
 
-namespace Microsoft.Build.Logging;
+namespace Microsoft.Build.Logging.StructuredLogger;
 
 public static class ArchiveFileEventArgsExtensions
 {

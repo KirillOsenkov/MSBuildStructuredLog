@@ -3,7 +3,7 @@
 
 using System;
 
-namespace Microsoft.Build.Logging
+namespace Microsoft.Build.Logging.StructuredLogger
 {
     /// <summary>
     /// An interface for notifications about reading strings from the binary log.

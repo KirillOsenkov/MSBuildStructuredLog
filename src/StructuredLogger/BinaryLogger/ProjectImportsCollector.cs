@@ -5,8 +5,8 @@ using System.IO;
 using System.IO.Compression;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Build.Shared;
-using StructuredLogger;
+using Microsoft.Build.Logging.StructuredLogger;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.Build.Logging
 {

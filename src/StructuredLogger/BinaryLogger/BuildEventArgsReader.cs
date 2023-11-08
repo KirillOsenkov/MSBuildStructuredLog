@@ -237,7 +237,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (EmbeddedContentRead != null)
                 {
                     projectImportsCollector =
-                        new ProjectImportsCollector(Path.GetRandomFileName(), false, runOnBackground: false);
+                        new ProjectImportsCollector(PathUtils.TempPath, false, runOnBackground: false);
                 }
 
                 // We are intentionally not grace handling corrupt embedded stream
@@ -361,11 +361,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 int length = ReadInt32();
                 return binaryReader.BaseStream.Slice(length);
             }
-        }
-
-        private void SkipBytes(int count)
-        {
-            binaryReader.BaseStream.SkipBytes(count, true);
         }
 
         private readonly List<(int name, int value)> nameValues = new List<(int name, int value)>(4096);

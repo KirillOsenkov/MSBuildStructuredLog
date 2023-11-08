@@ -2,9 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
-using Microsoft.Build.Logging.StructuredLogger;
 
-namespace Microsoft.Build.Logging;
+namespace Microsoft.Build.Logging.StructuredLogger;
 
 /// <summary>
 /// Event arguments for <see cref="IBuildFileReader.ArchiveFileEncountered"/> event.
@@ -14,6 +13,5 @@ public sealed class ArchiveFileEventArgs : EventArgs
     public ArchiveFileEventArgs(ArchiveFile archiveFile) =>
         ArchiveFile = archiveFile;
 
-    
     public ArchiveFile ArchiveFile { get; set; }
 }

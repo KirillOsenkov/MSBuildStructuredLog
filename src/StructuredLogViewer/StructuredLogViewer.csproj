@@ -32,6 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\StructuredLogger.Utils\StructuredLogger.Utils.csproj" />
     <ProjectReference Include="..\StructuredLogger\StructuredLogger.csproj" />
     <ProjectReference Include="..\StructuredLogViewer.Core\StructuredLogViewer.Core.csproj" />
     <ProjectReference Include="..\TaskRunner\TaskRunner.csproj" />

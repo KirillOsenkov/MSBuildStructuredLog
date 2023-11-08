@@ -14,7 +14,7 @@ using System.Windows.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Win32;
 using Squirrel;
-using StructuredLogger.BinaryLogger.Postprocessing;
+using StructuredLogger.Utils;
 using StructuredLogViewer.Controls;
 
 namespace StructuredLogViewer
@@ -358,7 +358,7 @@ namespace StructuredLogViewer
         private void SetContent(object content)
         {
             // We save build control to allow to bring back states to new one
-             if (mainContent.Content is BuildControl current)
+            if (mainContent.Content is BuildControl current)
             {
                 lastSearchText = current.searchLogControl.SearchText;
             }
@@ -663,80 +663,81 @@ namespace StructuredLogViewer
             OpenLogFile(logFilePath);
         }
 
-        private async void RedactSecrets()
+        private async System.Threading.Tasks.Task RedactSecrets()
         {
             RedactInputControl redactInputControl = new RedactInputControl(GetSaveAsDestination);
-            if (redactInputControl.ShowDialog() == true)
+            if (redactInputControl.ShowDialog() != true)
             {
-                List<string> stringsToRedact =
-                    new(redactInputControl.SecretsBlock?
-                            .Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
-                            .Select(s => s.Trim())
-                            .Where(s => !string.IsNullOrWhiteSpace(s))
-                        ?? new string[] { });
+                return;
+            }
+            
+            List<string> stringsToRedact =
+                new(redactInputControl.SecretsBlock?
+                        .Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(s => s.Trim())
+                        .Where(s => !string.IsNullOrWhiteSpace(s))
+                    ?? new string[] { });
 
-                if (
-                    !stringsToRedact.Any() &&
-                    !redactInputControl.RedactUsername &&
-                    !redactInputControl.RedactCommonCredentials)
-                {
-                    MessageBox.Show("No secrets to redact - no action will be performed");
-                    return;
-                }
+            if (
+                !stringsToRedact.Any() &&
+                !redactInputControl.RedactUsername &&
+                !redactInputControl.RedactCommonCredentials)
+            {
+                MessageBox.Show("No secrets to redact - no action will be performed");
+                return;
+            }
 
-                var progress = new BuildProgress();
-                progress.Progress.Updated += update =>
+            var progress = new BuildProgress();
+            progress.Progress.Updated += update =>
+            {
+                Dispatcher.InvokeAsync(() =>
                 {
-                    Dispatcher.InvokeAsync(() =>
+                    progress.Value = update.Ratio;
+                }, DispatcherPriority.Background);
+            };
+            progress.ProgressText = "Performing the log redaction ...";
+            SetContent(progress);
+
+            string error = await System.Threading.Tasks.Task.Run(() =>
+            {
+                try
+                {
+                    BinlogRedactorOptions redactorOptions = new BinlogRedactorOptions(logFilePath)
                     {
-                        progress.Value = update.Ratio;
-                    }, DispatcherPriority.Background);
-                };
-                progress.ProgressText = "Performing the log redaction ...";
-                SetContent(progress);
+                        OutputFileName = redactInputControl.DestinationFile,
+                        ProcessEmbeddedFiles = redactInputControl.RedactEmbeddedFiles,
+                        AutodetectUsername = redactInputControl.RedactUsername,
+                        AutodetectCommonPatterns = redactInputControl.RedactCommonCredentials,
+                        IdentifyReplacemenets = redactInputControl.DistinguishSecretsReplacements,
+                        TokensToRedact = stringsToRedact.ToArray(),
+                    };
 
-                string error = await System.Threading.Tasks.Task.Run(() =>
-                {
-                    try
-                    {
-                        BinlogRedactorOptions redactorOptions = new BinlogRedactorOptions(logFilePath)
-                        {
-                            OutputFileName = redactInputControl.DestinationFile,
-                            ProcessEmbeddedFiles = redactInputControl.RedactEmbeddedFiles,
-                            AutodetectUsername = redactInputControl.RedactUsername,
-                            AutodetectCommonPatterns = redactInputControl.RedactCommonCredentials,
-                            IdentifyReplacemenets = redactInputControl.DistinguishSecretsReplacements,
-                            TokensToRedact = stringsToRedact.ToArray(),
-                        };
-
-                        BinlogRedactor.RedactSecrets(
-                            redactorOptions,
-                            progress.Progress);
-                    }
-                    catch(Exception e)
-                    {
-                        return e.ToString();
-                    }
-
-                    return null;
-                });
-
-                if (!string.IsNullOrEmpty(error))
-                {
-                    MessageBox.Show($"Redaction failed:{Environment.NewLine}{error}");
-                    SetContent(currentBuild);
+                    BinlogRedactor.RedactSecrets(
+                        redactorOptions,
+                        progress.Progress);
                 }
-                else if (string.IsNullOrEmpty(redactInputControl.DestinationFile))
+                catch(Exception e)
                 {
-                    // Reload
-                    OpenLogFile(logFilePath);
+                    return e.ToString();
                 }
-                else
-                {
-                    SetContent(currentBuild);
-                    AnnounceFileSaved(redactInputControl.DestinationFile);
-                }
-                
+
+                return null;
+            });
+
+            if (!string.IsNullOrEmpty(error))
+            {
+                MessageBox.Show($"Redaction failed:{Environment.NewLine}{error}");
+                SetContent(currentBuild);
+            }
+            else if (string.IsNullOrEmpty(redactInputControl.DestinationFile))
+            {
+                // Reload
+                OpenLogFile(logFilePath);
+            }
+            else
+            {
+                SetContent(currentBuild);
+                AnnounceFileSaved(redactInputControl.DestinationFile);
             }
         }
 
@@ -904,7 +905,7 @@ namespace StructuredLogViewer
 
         private void RedactSecrets_Click(object sender, RoutedEventArgs e)
         {
-            RedactSecrets();
+            RedactSecrets().Ignore();
         }
 
         private void HelpLink_Click(object sender, RoutedEventArgs e)

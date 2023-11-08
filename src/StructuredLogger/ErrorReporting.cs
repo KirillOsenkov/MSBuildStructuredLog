@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using StructuredLogger;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {

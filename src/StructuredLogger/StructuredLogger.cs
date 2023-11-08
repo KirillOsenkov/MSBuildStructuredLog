@@ -106,8 +106,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (projectImportsCollector != null)
             {
                 projectImportsCollector.Close();
-
-                
                 projectImportsCollector.ProcessResult(
                     streamToEmbed => construction.Build.SourceFilesArchive = streamToEmbed.ReadToEnd(),
                     _ => {});

@@ -1,4 +1,5 @@
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -7,23 +8,39 @@ using StructuredLogViewer;
 
 namespace BinlogTool
 {
-    public class Searcher
+    public static class Searcher
     {
         public static void Search(string binlogs, string search)
         {
-            if (string.IsNullOrEmpty(binlogs))
+            var files = FindBinlogs(binlogs, recurse: true).ToList();
+            Search(files, search);
+        }
+
+        public static IEnumerable<string> FindBinlogs(string inputPath, bool recurse)
+        {
+            if (string.IsNullOrEmpty(inputPath))
             {
-                binlogs = "*.binlog";
+                inputPath = "*.binlog";
             }
 
-            binlogs = binlogs.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+            inputPath = inputPath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+
+            if (File.Exists(inputPath))
+            {
+                return new[] { inputPath };
+            }
+
+            if (Directory.Exists(inputPath))
+            {
+                inputPath = Path.Combine(inputPath, "*.binlog");
+            }
 
             string fileName;
             string directory;
-            if (binlogs.Contains(Path.DirectorySeparatorChar))
+            if (inputPath.Contains(Path.DirectorySeparatorChar))
             {
-                fileName = Path.GetFileName(binlogs);
-                directory = Path.GetDirectoryName(binlogs);
+                fileName = Path.GetFileName(inputPath);
+                directory = Path.GetDirectoryName(inputPath);
                 if (!Path.IsPathRooted(directory))
                 {
                     directory = Path.GetFullPath(directory);
@@ -31,15 +48,15 @@ namespace BinlogTool
             }
             else
             {
-                fileName = binlogs;
+                fileName = inputPath;
                 directory = Environment.CurrentDirectory;
             }
 
-            var files = Directory.GetFiles(directory, fileName, SearchOption.AllDirectories);
-            Search(files, search);
+            return Directory.EnumerateFiles(directory, fileName,
+                new EnumerationOptions() { IgnoreInaccessible = true, RecurseSubdirectories = recurse, });
         }
 
-        private static void Search(string[] files, string search)
+        private static void Search(IEnumerable<string> files, string search)
         {
             foreach (var file in files)
             {

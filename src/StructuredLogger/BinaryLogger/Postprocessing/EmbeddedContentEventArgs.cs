@@ -3,9 +3,8 @@
 
 using System;
 using System.IO;
-using Microsoft.Build.Logging.StructuredLogger;
 
-namespace Microsoft.Build.Logging
+namespace Microsoft.Build.Logging.StructuredLogger
 {
     internal sealed class EmbeddedContentEventArgs : EventArgs
     {

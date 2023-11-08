@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace StructuredLogger
+namespace Microsoft.Build.Logging.StructuredLogger
 {
     public static class PathUtils
     {

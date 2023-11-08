@@ -3,7 +3,7 @@
 
 using System;
 
-namespace Microsoft.Build.Logging;
+namespace Microsoft.Build.Logging.StructuredLogger;
 
 public interface IBuildFileReader
 {
