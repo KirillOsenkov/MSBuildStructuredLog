@@ -942,6 +942,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 node = CreateFolder(node, "Merging in runtimes");
             }
+            else if (message.StartsWith("Package source mapping", StringComparison.Ordinal))
+            {
+                node = CreateFolder(node, "Package source mapping");
+            }
+            else if (message.StartsWith("Restored ", StringComparison.Ordinal))
+            {
+                node = CreateFolder(node, "Restored");
+            }
             else if (
                 message.StartsWith(Strings.RestoreTask_CheckingCompatibilityFor, StringComparison.Ordinal) ||
                 message.StartsWith(Strings.RestoreTask_CheckingCompatibilityOfPackages, StringComparison.Ordinal) ||
