@@ -443,7 +443,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             return;
                         }
                     }
-                    else if (string.Equals(task.Name, "RestoreTask", StringComparison.OrdinalIgnoreCase))
+                    else if (string.Equals(task.Name, "RestoreTask", StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(task.Name, "RestoreTaskEx", StringComparison.OrdinalIgnoreCase))
                     {
                         if (ProcessRestoreTask(task, ref parent, message))
                         {
