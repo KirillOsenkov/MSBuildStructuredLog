@@ -2,8 +2,9 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <Version>1.0.7</Version>
+    <Version>1.0.8</Version>
     <TargetFramework>net7.0</TargetFramework>
+    <RollForward>major</RollForward>
     <LangVersion>latest</LangVersion>
     <DebugType>embedded</DebugType>
     <Prefer32Bit>false</Prefer32Bit>
