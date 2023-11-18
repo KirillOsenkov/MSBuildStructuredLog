@@ -83,6 +83,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             Visit(build);
+
+            PostAnalyzeBuild(build);
+
             build.Statistics.TimedNodeCount = index;
             foreach (var property in typeof(Strings)
                 .GetProperties()
@@ -122,19 +125,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void ProcessBeforeChildrenVisited(TreeNode node)
         {
-            if (node is TimedNode timedNode)
+            if (node is not TimedNode timedNode)
             {
-                timedNode.Index = index;
-                index++;
+                return;
+            }
 
-                if (node is Task task)
-                {
-                    AnalyzeTask(task);
-                }
-                else if (node is Target target)
-                {
-                    AnalyzeTarget(target);
-                }
+            timedNode.Index = index;
+            index++;
+
+            if (node is Task task)
+            {
+                AnalyzeTask(task);
+            }
+            else if (node is Target target)
+            {
+                AnalyzeTarget(target);
             }
         }
 
@@ -143,10 +148,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (node is Project project)
             {
                 PostAnalyzeProject(project);
-            }
-            else if (node is Build build)
-            {
-                PostAnalyzeBuild(build);
             }
         }
 
