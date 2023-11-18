@@ -499,6 +499,7 @@ namespace StructuredLogViewer
 
             stopwatch.Restart();
             progress.ProgressText = "Reading embedded files...";
+            await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Loaded); // let the progress message be rendered before we block the UI again
             _ = build.SourceFiles;
             var embeddedFilesTime = stopwatch.Elapsed;
 

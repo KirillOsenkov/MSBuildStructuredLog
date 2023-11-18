@@ -333,6 +333,10 @@ namespace StructuredLogViewer.Avalonia
                 await QueueAnalyzeBuild(build);
             }
 
+            progress.ProgressText = "Reading embedded files...";
+            await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Loaded); // let the progress message be rendered before we block the UI again
+            _ = build.SourceFiles;
+
             progress.ProgressText = "Rendering tree...";
             await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Loaded); // let the progress message be rendered before we block the UI again
 
