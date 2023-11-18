@@ -244,7 +244,10 @@ namespace StructuredLogViewer
                 return;
             }
 
-            PrecomputeMatchesInStrings(stringTable, cancellationToken);
+            var sw = Stopwatch.StartNew();
+            MatchesInStrings = PrecomputeMatchesInStrings(stringTable, Words, cancellationToken);
+            var elapsed = sw.Elapsed;
+            PrecalculationDuration = elapsed;
         }
 
         private string PreprocessQuery(string query)
@@ -260,17 +263,18 @@ namespace StructuredLogViewer
             return query;
         }
 
-        private void PrecomputeMatchesInStrings(IEnumerable<string> stringTable, CancellationToken cancellationToken = default)
+        public static HashSet<string>[] PrecomputeMatchesInStrings(
+            IEnumerable<string> stringTable,
+            IList<Term> terms,
+            CancellationToken cancellationToken = default)
         {
-            int wordCount = Words.Count;
-            MatchesInStrings = new HashSet<string>[wordCount];
-            var wordTasks = new System.Threading.Tasks.Task[wordCount];
+            int termCount = terms.Count;
+            var matchesInStrings = new HashSet<string>[termCount];
+            var wordTasks = new System.Threading.Tasks.Task[termCount];
 
-            var sw = Stopwatch.StartNew();
-
-            for (int i = 0; i < Words.Count; i++)
+            for (int i = 0; i < termCount; i++)
             {
-                MatchesInStrings[i] = new HashSet<string>();
+                matchesInStrings[i] = new HashSet<string>();
             }
 
 #if false
@@ -314,14 +318,13 @@ namespace StructuredLogViewer
             }
 #endif
 
-            var elapsed = sw.Elapsed;
-            PrecalculationDuration = elapsed;
+            return matchesInStrings;
 
             void ProcessString(string stringInstance)
             {
-                for (int i = 0; i < Words.Count; i++)
+                for (int i = 0; i < terms.Count; i++)
                 {
-                    var term = Words[i];
+                    var term = terms[i];
                     if (term.Quotes)
                     {
                         continue;
@@ -330,7 +333,7 @@ namespace StructuredLogViewer
                     var word = term.Word;
                     if (stringInstance.IndexOf(word, StringComparison.OrdinalIgnoreCase) != -1)
                     {
-                        var matches = MatchesInStrings[i];
+                        var matches = matchesInStrings[i];
                         lock (matches)
                         {
                             matches.Add(stringInstance);
@@ -458,11 +461,6 @@ namespace StructuredLogViewer
         {
             SearchResult result = null;
 
-            if (node == null)
-            {
-                return null;
-            }
-
             if (NodeIndex > -1)
             {
                 if (node is TimedNode timedNode && timedNode.Index == NodeIndex)
@@ -508,10 +506,6 @@ namespace StructuredLogViewer
                 for (int j = 0; j < searchFields.count; j++)
                 {
                     string field = searchFields.array[j];
-
-                    //if (!stringCache.Contains(field))
-                    //{
-                    //}
 
                     if (!term.IsMatch(field, MatchesInStrings[i]))
                     {
