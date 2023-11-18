@@ -21,6 +21,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public int FileFormatVersion { get; set; }
         public byte[] SourceFilesArchive { get; set; }
 
+        private IReadOnlyList<ArchiveFile> sourceFiles;
+        public IReadOnlyList<ArchiveFile> SourceFiles
+        {
+            get
+            {
+                if (sourceFiles == null && SourceFilesArchive != null)
+                {
+                    sourceFiles = ReadSourceFiles(SourceFilesArchive);
+                    SourceFilesArchive = null;
+                }
+
+                return sourceFiles;
+            }
+        }
+
         private string msbuildVersion;
         public string MSBuildVersion 
         {

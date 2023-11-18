@@ -121,14 +121,9 @@ namespace StructuredLogViewer.Controls
             Build = build;
 
             // first try to see if the source archive was embedded in the log
-            if (build.SourceFilesArchive != null)
+            if (build.SourceFiles != null)
             {
-                var files = Build.ReadSourceFiles(build.SourceFilesArchive);
-
-                // release the large array since it's no longer necessary
-                build.SourceFilesArchive = null;
-
-                sourceFileResolver = new SourceFileResolver(files);
+                sourceFileResolver = new SourceFileResolver(build.SourceFiles);
             }
             else
             {

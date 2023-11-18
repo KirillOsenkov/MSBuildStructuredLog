@@ -181,12 +181,11 @@ namespace BinlogTool
 
         private void SaveFilesFrom(Build build, string outputDirectory)
         {
-            if (build.SourceFilesArchive == null)
+            var files = build.SourceFiles;
+            if (files == null)
             {
                 return;
             }
-
-            var files = Build.ReadSourceFiles(build.SourceFilesArchive);
 
             foreach (var file in files.OrderBy(f => f.FullPath))
             {

@@ -494,7 +494,13 @@ namespace StructuredLogViewer
                 progress.ProgressText = "Analyzing " + filePath + "...";
                 await QueueAnalyzeBuild(build);
             }
+
             var analyzingTime = stopwatch.Elapsed;
+
+            stopwatch.Restart();
+            progress.ProgressText = "Reading embedded files...";
+            _ = build.SourceFiles;
+            var embeddedFilesTime = stopwatch.Elapsed;
 
             stopwatch.Restart();
             progress.ProgressText = "Rendering tree...";
