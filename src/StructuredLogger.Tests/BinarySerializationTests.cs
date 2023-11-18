@@ -19,14 +19,14 @@ namespace StructuredLogger.Tests
             this.output = output;
         }
 
-        public void TimeRead()
+        internal void TimeRead()
         {
             var sw = Stopwatch.StartNew();
             var build = Serialization.Read(@"1.binlog");
             System.Windows.Forms.MessageBox.Show(sw.Elapsed.ToString());
         }
 
-        public void DumpTimedNodes()
+        internal void DumpTimedNodes()
         {
             var build = Serialization.Read("1.binlog");
             var sb = new StringBuilder();
@@ -35,7 +35,7 @@ namespace StructuredLogger.Tests
         }
 
         //[Fact]
-        public void GetBlobSize()
+        internal void GetBlobSize()
         {
             var filePath = @"1.binlog";
             long size = GetBinlogBlobSize(filePath);
@@ -51,13 +51,15 @@ namespace StructuredLogger.Tests
                 result = bytes.LongLength;
             };
             var records = reader.ReadRecords(filePath);
-            foreach (var record in records) ;
+            foreach (var record in records)
+            {
+            }
 
             return result;
         }
 
         //[Fact]
-        public void RecordStats()
+        internal void RecordStats()
         {
             var reader = new BinLogReader();
             var records = reader.ReadRecords(@"C:\msbuild\msbuild.binlog");
@@ -148,7 +150,7 @@ namespace StructuredLogger.Tests
         }
 
         //[Fact]
-        public void Stats()
+        internal void Stats()
         {
             var sw = Stopwatch.StartNew();
             var build = Serialization.Read(@"C:\temp\vsmac.binlog");
@@ -215,7 +217,7 @@ namespace StructuredLogger.Tests
         }
 
         //[Fact]
-        public void TestWriter()
+        internal void TestWriter()
         {
             var build = Serialization.Read(@"D:\XmlBuildLogs\contentsync.xml");
             Serialization.Write(build, @"D:\1.buildlog");

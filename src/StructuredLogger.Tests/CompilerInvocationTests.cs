@@ -17,7 +17,7 @@ namespace StructuredLogger.Tests
         }
 
         //[Fact]
-        public void ReadRecordsTest()
+        internal void ReadRecordsTest()
         {
             var binlog = @"C:\temp\msbuild.binlog";
             var records = BinaryLog.ReadRecords(binlog);
