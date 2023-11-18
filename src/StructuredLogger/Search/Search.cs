@@ -17,6 +17,7 @@ namespace StructuredLogViewer
         private int resultCount;
         private bool markResultsInTree = false;
         private readonly StringCache stringTable;
+        private readonly bool useMultithreading = PlatformUtilities.HasThreads;
 
         public TimeSpan PrecalculationDuration;
 
@@ -83,11 +84,8 @@ namespace StructuredLogViewer
                 if (result != null)
                 {
                     isMatch = true;
-                    lock (results)
-                    {
-                        results.Add(result);
-                        resultCount++;
-                    }
+                    results.Add(result);
+                    resultCount++;
                 }
             }
             else if (!markResultsInTree)
@@ -100,56 +98,33 @@ namespace StructuredLogViewer
             if (node is TreeNode treeNode && treeNode.HasChildren)
             {
                 var children = treeNode.Children;
-                if (node is Project)
+
+                bool parallelSearch = useMultithreading && node is Project;
+
+                if (parallelSearch)
                 {
-                    if (PlatformUtilities.HasThreads)
+                    var tasks = new System.Threading.Tasks.Task<List<SearchResult>>[children.Count];
+
+                    for (int i = 0; i < children.Count; i++)
                     {
-                        var tasks = new System.Threading.Tasks.Task<List<SearchResult>>[children.Count];
-
-                        for (int i = 0; i < children.Count; i++)
+                        var child = children[i];
+                        var task = TPLTask.Run(() =>
                         {
-                            var child = children[i];
-                            var task = TPLTask.Run(() =>
-                            {
-                                var list = new List<SearchResult>();
-                                Visit(child, matcher, list, cancellationToken);
-                                return list;
-                            });
-                            tasks[i] = task;
-                        }
-
-                        TPLTask.WaitAll(tasks);
-
-                        lock (results)
-                        {
-                            for (int i = 0; i < tasks.Length; i++)
-                            {
-                                var task = tasks[i];
-                                var subList = task.Result;
-                                results.AddRange(subList);
-                                containsMatch |= subList.Count > 0;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        var searchResults = new List<SearchResult>[children.Count];
-                        for (int i = 0; i < children.Count; i++)
-                        {
-                            var child = children[i];
                             var list = new List<SearchResult>();
                             Visit(child, matcher, list, cancellationToken);
-                            searchResults[i] = list;
-                        }
-                        lock (results)
-                        {
-                            for (int i = 0; i < searchResults.Length; i++)
-                            {
-                                var subList = searchResults[i];
-                                results.AddRange(subList);
-                                containsMatch |= subList.Count > 0;
-                            }
-                        }
+                            return list;
+                        });
+                        tasks[i] = task;
+                    }
+
+                    TPLTask.WaitAll(tasks);
+
+                    for (int i = 0; i < tasks.Length; i++)
+                    {
+                        var task = tasks[i];
+                        var subList = task.Result;
+                        results.AddRange(subList);
+                        containsMatch |= subList.Count > 0;
                     }
                 }
                 else
