@@ -502,12 +502,12 @@ namespace StructuredLogViewer
             for (int i = 0; i < Words.Count; i++)
             {
                 bool anyFieldMatched = false;
-                var term = Words[i];
-                var word = term.Word;
+                Term term = Words[i];
+                string word = term.Word;
 
                 for (int j = 0; j < searchFields.count; j++)
                 {
-                    var field = searchFields.array[j];
+                    string field = searchFields.array[j];
 
                     //if (!stringCache.Contains(field))
                     //{
