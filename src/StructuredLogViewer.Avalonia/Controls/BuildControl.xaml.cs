@@ -6,18 +6,17 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using System.Xml;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Data;
+using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.Markup.Xaml;
+using Avalonia.Styling;
+using Avalonia.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Language.Xml;
-using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
-using Avalonia.Interactivity;
-using Avalonia.Threading;
-using Avalonia.Input;
-using Avalonia;
-using Avalonia.Styling;
-using Avalonia.Data;
-using Avalonia.Layout;
-using System.Xml;
 
 namespace StructuredLogViewer.Avalonia.Controls
 {
@@ -27,7 +26,7 @@ namespace StructuredLogViewer.Avalonia.Controls
         public TreeViewItem SelectedTreeViewItem { get; private set; }
         public string LogFilePath => Build?.LogFilePath;
 
-        private ScrollViewer scrollViewer;
+        private ScrollViewer scrollViewer = null;
 
         private SourceFileResolver sourceFileResolver;
         private ArchiveFileResolver archiveFile => sourceFileResolver.ArchiveFile;
