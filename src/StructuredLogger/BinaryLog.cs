@@ -47,8 +47,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static Build ReadBuild(Stream stream, byte[] projectImportsArchive = null)
             => ReadBuild(stream, progress: null, projectImportsArchive: projectImportsArchive);
 
-        internal const bool ReuseBinlogStrings = false;
-
         public static Build ReadBuild(Stream stream, Progress progress, byte[] projectImportsArchive = null)
         {
             var eventSource = new BinLogReader();
@@ -97,10 +95,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     build.StringTable.NormalizeLineEndings = false;
                     build.StringTable.HasDeduplicatedStrings = true;
-                    if (ReuseBinlogStrings)
-                    {
-                        build.StringTable.DisableDeduplication = true;
-                    }
                 }
             };
 
@@ -112,17 +106,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (strings != null)
             {
-                if (ReuseBinlogStrings)
-                {
-                    // since strings are already deduplicated in the file, no need to do it again
-                    build.StringTable.SetStrings(strings);
-                }
-                else
-                {
-                    // intern all strings in one fell swoop here instead of interning multiple times
-                    // one by one when processing task parameters
-                    build.StringTable.Intern(strings);
-                }
+                // intern all strings in one fell swoop here instead of interning multiple times
+                // one by one when processing task parameters
+                build.StringTable.Intern(strings);
             }
 
             structuredLogger.Shutdown();

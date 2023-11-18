@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace Microsoft.Build.Framework
 {
@@ -21,7 +21,8 @@ namespace Microsoft.Build.Framework
         {
         }
 
-        public int LineNumber { get; set; }
-        public int ColumnNumber { get; set; }
+        // the properties in the base class have an internal setter
+        public new int LineNumber { get; set; }
+        public new int ColumnNumber { get; set; }
     }
 }

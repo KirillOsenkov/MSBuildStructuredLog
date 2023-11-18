@@ -28,9 +28,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private readonly MessageProcessor messageProcessor;
         private readonly StringCache stringTable;
 
-        private System.Threading.Tasks.Task bgWorker;
-        private BlockingCollection<System.Threading.Tasks.Task> bgJobPool;
-
         internal bool PopulatePropertiesAndItemsInBackground = PlatformUtilities.HasThreads;
 
         public StringCache StringTable => stringTable;
