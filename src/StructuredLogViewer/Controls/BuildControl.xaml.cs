@@ -79,6 +79,7 @@ namespace StructuredLogViewer.Controls
                     //, Build.StringTable // disable validation in production
                     );
                 var results = search.FindNodes(searchText, cancellationToken);
+                PrecalculationDuration = search.PrecalculationDuration;
                 return results;
             };
             searchLogControl.ResultsTreeBuilder = BuildResultTree;
@@ -1051,6 +1052,7 @@ Recent:
         /// </summary>
         private bool isProcessingBreadcrumbClick = false;
         internal static TimeSpan Elapsed;
+        internal static TimeSpan PrecalculationDuration;
 
         private void BreadCrumb_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -1858,7 +1860,7 @@ Recent:
 
         public IEnumerable BuildResultTree(object resultsObject, bool moreAvailable = false)
         {
-            var folder = ResultTree.BuildResultTree(resultsObject, moreAvailable, Elapsed);
+            var folder = ResultTree.BuildResultTree(resultsObject, moreAvailable, Elapsed, PrecalculationDuration);
 
             if (moreAvailable)
             {

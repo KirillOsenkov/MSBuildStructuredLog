@@ -451,14 +451,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 return showZero ? "0 ms" : "";
             }
+
             if (span.TotalHours >= 1)
             {
                 return span.ToString();
             }
+
             if (span.TotalMinutes >= 1)
             {
                 return span.ToString(@"m\:ss\.fff");
             }
+
             if (span.TotalSeconds >= 1)
             {
                 return span.ToString(@"s\.fff") + " s";

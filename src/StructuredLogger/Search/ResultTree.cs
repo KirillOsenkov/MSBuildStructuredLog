@@ -8,7 +8,11 @@ namespace StructuredLogViewer
 {
     public class ResultTree
     {
-        public static Folder BuildResultTree(object resultsObject, bool moreAvailable = false, TimeSpan elapsed = default)
+        public static Folder BuildResultTree(
+            object resultsObject,
+            bool moreAvailable = false,
+            TimeSpan elapsed = default,
+            TimeSpan precalculationDuration = default)
         {
             var root = new Folder();
 
@@ -18,9 +22,16 @@ namespace StructuredLogViewer
                 return root;
             }
 
+            string status = $"{results.Count} result{(results.Count == 1 ? "" : "s")}. Search took: {TextUtilities.DisplayDuration(elapsed)}";
+            //string precalculationString = TextUtilities.DisplayDuration(precalculationDuration);
+            //if (!string.IsNullOrWhiteSpace(precalculationString))
+            //{
+            //    status += $" (precalculation: {precalculationString})";
+            //}
+
             root.Children.Add(new Message
             {
-                Text = $"{results.Count} result{(results.Count == 1 ? "" : "s")}. Search took: {elapsed.ToString()}"
+                Text = status
             });
 
             bool includeDuration = false;
@@ -57,7 +68,7 @@ namespace StructuredLogViewer
 
                 root.Children.Add(new Message
                 {
-                    Text = $"Total duration: {totalDuration}"
+                    Text = $"Total duration: {TextUtilities.DisplayDuration(totalDuration)}"
                 });
             }
             else if (includeStart)

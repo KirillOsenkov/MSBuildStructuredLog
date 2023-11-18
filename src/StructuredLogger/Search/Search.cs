@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
@@ -16,6 +17,8 @@ namespace StructuredLogViewer
         private int resultCount;
         private bool markResultsInTree = false;
         private readonly StringCache stringTable;
+
+        public TimeSpan PrecalculationDuration;
 
         public Search(IEnumerable<TreeNode> roots, IEnumerable<string> strings, int maxResults, bool markResultsInTree, StringCache stringTable = null)
         {
@@ -44,6 +47,8 @@ namespace StructuredLogViewer
             {
                 Visit(root, matcher, resultSet, cancellationToken);
             }
+
+            PrecalculationDuration = matcher.PrecalculationDuration;
 
             return resultSet;
         }
