@@ -16,25 +16,23 @@ namespace StructuredLogViewer
         private readonly int maxResults;
         private int resultCount;
         private bool markResultsInTree = false;
-        private readonly StringCache stringTable;
         private readonly bool useMultithreading = PlatformUtilities.HasThreads;
 
         public TimeSpan PrecalculationDuration;
 
-        public Search(IEnumerable<TreeNode> roots, IEnumerable<string> strings, int maxResults, bool markResultsInTree, StringCache stringTable = null)
+        public Search(IEnumerable<TreeNode> roots, IEnumerable<string> strings, int maxResults, bool markResultsInTree)
         {
             this.roots = roots;
             this.strings = strings;
             this.maxResults = maxResults;
             this.markResultsInTree = markResultsInTree;
-            this.stringTable = stringTable;
         }
 
         public IEnumerable<SearchResult> FindNodes(string query, CancellationToken cancellationToken)
         {
             var resultSet = new List<SearchResult>();
 
-            var matcher = new NodeQueryMatcher(query, strings, cancellationToken, stringTable);
+            var matcher = new NodeQueryMatcher(query, strings, cancellationToken);
             if (matcher.IsCopy)
             {
                 if (roots.FirstOrDefault() is Build build && build.FileCopyMap is { } fileCopyMap)

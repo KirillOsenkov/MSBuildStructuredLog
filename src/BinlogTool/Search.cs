@@ -73,9 +73,7 @@ namespace BinlogTool
                     new[] { build },
                     build.StringTable.Instances,
                     5000,
-                    false
-                    //, Build.StringTable // disable validation in production
-                    );
+                    markResultsInTree: false);
             var results = search.FindNodes(searchText, CancellationToken.None);
             if (!results.Any())
             {

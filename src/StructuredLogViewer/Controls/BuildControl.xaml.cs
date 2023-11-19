@@ -75,9 +75,7 @@ namespace StructuredLogViewer.Controls
                     new[] { Build },
                     Build.StringTable.Instances,
                     maxResults,
-                    SettingsService.MarkResultsInTree
-                    //, Build.StringTable // disable validation in production
-                    );
+                    SettingsService.MarkResultsInTree);
                 var results = search.FindNodes(searchText, cancellationToken);
                 PrecalculationDuration = search.PrecalculationDuration;
                 return results;
