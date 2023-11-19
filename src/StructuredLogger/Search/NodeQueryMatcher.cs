@@ -561,6 +561,7 @@ namespace StructuredLogViewer
                 return null;
             }
 
+            // if both name and value are specified, they both have to match
             if (nameToSearch != default && valueToSearch != default && (!nameMatched || !valueMatched))
             {
                 return null;
@@ -589,6 +590,11 @@ namespace StructuredLogViewer
             }
 
             return result;
+        }
+
+        public SearchResult IsMatch(NodeEntry entry)
+        {
+
         }
 
         private static bool IsUnder(NodeQueryMatcher matcher, SearchResult result)
