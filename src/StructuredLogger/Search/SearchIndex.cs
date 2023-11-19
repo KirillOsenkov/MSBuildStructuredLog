@@ -47,26 +47,23 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return index;
         }
 
-        private void Visit(TreeNode node)
+        private void Visit(BaseNode node)
         {
             var entry = GetEntry(node);
             nodeEntries.Add(entry);
 
-            if (node.HasChildren)
+            if (node is TreeNode treeNode && treeNode.HasChildren)
             {
-                var children = node.Children;
+                var children = treeNode.Children;
                 for (int i = 0; i < children.Count; i++)
                 {
                     var child = children[i];
-                    if (child is TreeNode childNode)
-                    {
-                        Visit(childNode);
-                    }
+                    Visit(child);
                 }
             }
         }
 
-        private NodeEntry GetEntry(TreeNode node)
+        private NodeEntry GetEntry(BaseNode node)
         {
             var entry = new NodeEntry(node);
 
