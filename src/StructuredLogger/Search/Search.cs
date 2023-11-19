@@ -61,8 +61,7 @@ namespace StructuredLogViewer
 
             build.VisitAllChildren<BaseNode>(node =>
             {
-                node.IsSearchResult = false;
-                node.ContainsSearchResult = false;
+                node.ResetSearchResultStatus();
             });
         }
 

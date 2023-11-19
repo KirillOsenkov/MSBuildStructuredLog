@@ -72,6 +72,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
             set => SetFlag(NodeFlags.ContainsSearchResult, value);
         }
 
+        public void ResetSearchResultStatus()
+        {
+            NodeFlags searchFlags = NodeFlags.SearchResult | NodeFlags.ContainsSearchResult;
+            if ((flags & searchFlags) == 0)
+            {
+                return;
+            }
+
+            flags = flags & ~searchFlags;
+            RaisePropertyChanged(nameof(IsSearchResult));
+            RaisePropertyChanged(nameof(ContainsSearchResult));
+        }
+
         private protected bool HasFlag(NodeFlags flag) => (flags & flag) == flag;
 
         private protected void SetFlag(NodeFlags flag, bool isSet, [CallerMemberName] string propertyName = null)

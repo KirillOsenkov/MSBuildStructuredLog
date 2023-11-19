@@ -97,10 +97,11 @@ namespace StructuredLogViewer
         public bool UnderProject { get; set; } = false;
         public bool IsCopy { get; set; }
 
-        private Term nameToSearch { get; set; }
-        private Term valueToSearch { get; set; }
-        private List<NodeQueryMatcher> IncludeMatchers { get; set; } = new List<NodeQueryMatcher>();
-        private List<NodeQueryMatcher> ExcludeMatchers { get; set; } = new List<NodeQueryMatcher>();
+        public Term NameToSearch { get; set; }
+        public Term ValueToSearch { get; set; }
+
+        public IList<NodeQueryMatcher> IncludeMatchers { get; } = new List<NodeQueryMatcher>();
+        public IList<NodeQueryMatcher> ExcludeMatchers { get; } = new List<NodeQueryMatcher>();
 
         // avoid allocating this for every node
         [ThreadStatic]
@@ -180,7 +181,7 @@ namespace StructuredLogViewer
                 {
                     word = word.Substring(6, word.Length - 7);
                     Words.RemoveAt(i);
-                    var underMatcher = new NodeQueryMatcher(word, stringTable);
+                    var underMatcher = new NodeQueryMatcher(word, stringTable, precomputeMatchesInStrings: precomputeMatchesInStrings);
                     IncludeMatchers.Add(underMatcher);
                     continue;
                 }
@@ -189,7 +190,7 @@ namespace StructuredLogViewer
                 {
                     word = word.Substring(9, word.Length - 10);
                     Words.RemoveAt(i);
-                    var underMatcher = new NodeQueryMatcher(word, stringTable);
+                    var underMatcher = new NodeQueryMatcher(word, stringTable, precomputeMatchesInStrings: precomputeMatchesInStrings);
                     ExcludeMatchers.Add(underMatcher);
                     continue;
                 }
@@ -199,7 +200,7 @@ namespace StructuredLogViewer
                     word = word.Substring(8, word.Length - 9);
                     Words.RemoveAt(i);
 
-                    var underMatcher = new NodeQueryMatcher(word, stringTable);
+                    var underMatcher = new NodeQueryMatcher(word, stringTable, precomputeMatchesInStrings: precomputeMatchesInStrings);
                     underMatcher.UnderProject = true;
                     IncludeMatchers.Add(underMatcher);
                     continue;
@@ -213,7 +214,7 @@ namespace StructuredLogViewer
                     if (term != default)
                     {
                         Words.Insert(i, term);
-                        nameToSearch = term;
+                        NameToSearch = term;
                     }
 
                     continue;
@@ -227,7 +228,7 @@ namespace StructuredLogViewer
                     if (term != default)
                     {
                         Words.Insert(i, term);
-                        valueToSearch = term;
+                        ValueToSearch = term;
                     }
 
                     continue;
@@ -361,7 +362,7 @@ namespace StructuredLogViewer
             // for tasks derived from Task $task should still work
             if (node is Microsoft.Build.Logging.StructuredLogger.Task t && t.IsDerivedTask)
             {
-                searchFields[count++] = "Task";
+                searchFields[count++] = Strings.Task;
             }
 
             searchFields[count++] = typeName;
@@ -474,7 +475,9 @@ namespace StructuredLogViewer
                 // zeroth field is always the type
                 if (string.Equals(TypeKeyword, searchFields.array[0], StringComparison.OrdinalIgnoreCase) ||
                     // special case for types derived from Task, $task should still work
-                    (TypeKeyword == "task" && searchFields.count > 1 && searchFields.array[1] == "Task"))
+                    (string.Equals(TypeKeyword, "task", StringComparison.OrdinalIgnoreCase) &&
+                        searchFields.count > 1 &&
+                        searchFields.array[1] == Strings.Task))
                 {
                     // this node is of the type that we need, search other fields
                     if (result == null)
@@ -523,9 +526,9 @@ namespace StructuredLogViewer
                         var nameValueNode = node as NameValueNode;
 
                         // NameValueNode is a special case: have to check in which field to search
-                        if (nameValueNode != null && (nameToSearch != default || valueToSearch != default))
+                        if (nameValueNode != null && (NameToSearch != default || ValueToSearch != default))
                         {
-                            if (j == 1 && term == nameToSearch)
+                            if (j == 1 && term == NameToSearch)
                             {
                                 result.AddMatch(fullText, word, addAtBeginning: true);
                                 nameMatched = true;
@@ -533,7 +536,7 @@ namespace StructuredLogViewer
                                 break;
                             }
 
-                            if (j == 2 && term == valueToSearch)
+                            if (j == 2 && term == ValueToSearch)
                             {
                                 result.AddMatch(fullText, word);
                                 valueMatched = true;
@@ -561,7 +564,8 @@ namespace StructuredLogViewer
                 return null;
             }
 
-            if (nameToSearch != default && valueToSearch != default && (!nameMatched || !valueMatched))
+            // if both name and value are specified, they both have to match
+            if (NameToSearch != default && ValueToSearch != default && (!nameMatched || !valueMatched))
             {
                 return null;
             }
@@ -591,7 +595,7 @@ namespace StructuredLogViewer
             return result;
         }
 
-        private static bool IsUnder(NodeQueryMatcher matcher, SearchResult result)
+        public static bool IsUnder(NodeQueryMatcher matcher, SearchResult result)
         {
             if (matcher.UnderProject)
             {

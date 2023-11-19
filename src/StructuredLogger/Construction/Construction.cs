@@ -47,6 +47,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Intern(Strings.CommandLineArguments);
             Intern(Strings.DoubleWrites);
             Intern(Strings.Errors);
+            Intern(Strings.Task);
             Intern(Strings.Evaluation);
             Intern(Strings.NoImportEmptyExpression);
             Intern(Strings.NoImportNoMatches);
