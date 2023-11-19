@@ -256,7 +256,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var stringInstance = strings[stringIndex];
             byte bits = 0;
 
-            if (typeKeyword == 0 && typeString is not null && typeString == stringInstance)
+            if (typeKeyword == 0 && typeString is not null && string.Equals(typeString, stringInstance, StringComparison.OrdinalIgnoreCase))
             {
                 typeKeyword = stringIndex;
             }
