@@ -14,7 +14,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private readonly string[] strings;
         private byte[] bitVector;
         private Dictionary<string, int> stringToIndexMap = new Dictionary<string, int>();
-        private ChunkedList<NodeEntry> nodeEntries = new();
+        private ChunkedList<NodeEntry> nodeEntries;
 
         private int typeKeyword;
         private int taskString;
@@ -24,6 +24,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public SearchIndex(Build build)
         {
+            int chunkSize = 1048576;
+
+            nodeEntries = new(chunkSize);
+
             var stringInstances = (ICollection<string>)build.StringTable.Instances;
             stringCount = stringInstances.Count + 1;
             strings = new string[stringCount];
@@ -478,7 +482,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private List<List<T>> chunks = new List<List<T>>();
 
-        public ChunkedList() : this(2^20)
+        public ChunkedList() : this(1048576)
         {
         }
 
