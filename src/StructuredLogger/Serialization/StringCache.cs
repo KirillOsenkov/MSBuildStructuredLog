@@ -13,6 +13,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Instances = deduplicationMap.Keys;
         }
 
+        public void Seal()
+        {
+            int stringCount = deduplicationMap.Count + 1;
+            var strings = new string[stringCount];
+
+            strings[0] = "";
+            deduplicationMap.Keys.CopyTo(strings, 1);
+
+            deduplicationMap = null;
+
+            Instances = strings;
+        }
+
         /// <summary>
         /// Already deduplicated list of strings can be provided externally,
         /// in which case we should turn off deduplication and just use this

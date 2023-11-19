@@ -110,8 +110,7 @@ namespace StructuredLogViewer
         public NodeQueryMatcher(
             string query,
             IEnumerable<string> stringTable,
-            CancellationToken cancellationToken = default,
-            bool precomputeMatchesInStrings = true)
+            CancellationToken cancellationToken = default)
         {
             query = PreprocessQuery(query);
 
@@ -181,7 +180,7 @@ namespace StructuredLogViewer
                 {
                     word = word.Substring(6, word.Length - 7);
                     Words.RemoveAt(i);
-                    var underMatcher = new NodeQueryMatcher(word, stringTable, precomputeMatchesInStrings: precomputeMatchesInStrings);
+                    var underMatcher = new NodeQueryMatcher(word, stringTable);
                     IncludeMatchers.Add(underMatcher);
                     continue;
                 }
@@ -190,7 +189,7 @@ namespace StructuredLogViewer
                 {
                     word = word.Substring(9, word.Length - 10);
                     Words.RemoveAt(i);
-                    var underMatcher = new NodeQueryMatcher(word, stringTable, precomputeMatchesInStrings: precomputeMatchesInStrings);
+                    var underMatcher = new NodeQueryMatcher(word, stringTable);
                     ExcludeMatchers.Add(underMatcher);
                     continue;
                 }
@@ -200,7 +199,7 @@ namespace StructuredLogViewer
                     word = word.Substring(8, word.Length - 9);
                     Words.RemoveAt(i);
 
-                    var underMatcher = new NodeQueryMatcher(word, stringTable, precomputeMatchesInStrings: precomputeMatchesInStrings);
+                    var underMatcher = new NodeQueryMatcher(word, stringTable);
                     underMatcher.UnderProject = true;
                     IncludeMatchers.Add(underMatcher);
                     continue;
@@ -235,7 +234,7 @@ namespace StructuredLogViewer
                 }
             }
 
-            if (IsCopy || !precomputeMatchesInStrings)
+            if (IsCopy || stringTable is null)
             {
                 return;
             }

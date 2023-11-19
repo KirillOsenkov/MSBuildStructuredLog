@@ -31,14 +31,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             nodeEntries = new(chunkSize);
 
-            var stringInstances = (ICollection<string>)build.StringTable.Instances;
-            stringCount = stringInstances.Count + 1;
-            strings = new string[stringCount];
+            build.StringTable.Seal();
+
+            strings = (string[])build.StringTable.Instances;
+            stringCount = strings.Length;
+
             bitVector = new byte[stringCount];
-
-            strings[0] = "";
-
-            stringInstances.CopyTo(strings, 1);
 
             for (int i = 0; i < stringCount; i++)
             {
@@ -46,7 +44,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 stringToIndexMap[stringInstance] = i;
             }
 
+            taskString = GetStringIndex(Strings.Task);
+
             Visit(build);
+
+            stringToIndexMap = null;
         }
 
         private int GetStringIndex(string text)
@@ -112,10 +114,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             List<SearchResult> results = new();
 
-            var matcher = new NodeQueryMatcher(query, strings, cancellationToken, precomputeMatchesInStrings: false);
+            var matcher = new NodeQueryMatcher(query, stringTable: null, cancellationToken);
 
             // we assume there are 8 words or less in the query, so we can use 1 byte per string instance
             var terms = matcher.Words.Take(8).ToArray();
+            string typeString = matcher.TypeKeyword;
 
             var stopwatch = Stopwatch.StartNew();
 
@@ -123,14 +126,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 Parallel.For(0, stringCount, stringIndex =>
                 {
-                    ComputeBits(terms, stringIndex);
+                    ComputeBits(terms, stringIndex, typeString);
                 });
             }
             else
             {
                 for (int stringIndex = 0; stringIndex < stringCount; stringIndex++)
                 {
-                    ComputeBits(terms, stringIndex);
+                    ComputeBits(terms, stringIndex, typeString);
                 }
             }
 
@@ -140,9 +143,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 return results;
             }
-
-            typeKeyword = GetStringIndex(matcher.TypeKeyword);
-            taskString = GetStringIndex(Strings.Task);
 
             bool searching = true;
 
@@ -251,10 +251,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return searching;
         }
 
-        private void ComputeBits(Term[] terms, int stringIndex)
+        private void ComputeBits(Term[] terms, int stringIndex, string typeString)
         {
             var stringInstance = strings[stringIndex];
             byte bits = 0;
+
+            if (typeKeyword == 0 && typeString is not null && typeString == stringInstance)
+            {
+                typeKeyword = stringIndex;
+            }
 
             for (int termIndex = 0; termIndex < terms.Length; termIndex++)
             {
@@ -310,7 +315,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 // zeroth field is always the type
                 if (typeKeyword == entry.Field1 ||
                     // special case for types derived from Task, $task should still work
-                    (typeKeyword == taskString && entry.Field2 == taskString))
+                    (entry.Field1 == taskString && entry.Field2 == typeKeyword))
                 {
                     // this node is of the type that we need, search other fields
                     if (result == null)
