@@ -446,6 +446,7 @@ namespace StructuredLogViewer
             long allocatedBefore = AppDomain.CurrentDomain.MonitoringTotalAllocatedMemorySize;
 
             DisplayBuild(null);
+
             this.logFilePath = filePath;
             SettingsService.AddRecentLogFile(filePath);
             UpdateRecentItemsMenu();
@@ -480,6 +481,7 @@ namespace StructuredLogViewer
                     return GetErrorBuild(filePath, ex.ToString());
                 }
             });
+
             var openTime = stopwatch.Elapsed;
             stopwatch.Restart();
 
@@ -497,16 +499,22 @@ namespace StructuredLogViewer
 
             var analyzingTime = stopwatch.Elapsed;
 
+            progress.ProgressText = "Indexing...";
             stopwatch.Restart();
-            progress.ProgressText = "Reading embedded files...";
-            await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Loaded); // let the progress message be rendered before we block the UI again
-            _ = build.SourceFiles;
-            var embeddedFilesTime = stopwatch.Elapsed;
+            await System.Threading.Tasks.Task.Run(() => build.SearchIndex = new SearchIndex(build));
+            var indexingTime = stopwatch.Elapsed;
 
-            stopwatch.Restart();
+            progress.ProgressText = "Reading embedded files...";
+            TimeSpan embeddedFilesTime = TimeSpan.Zero;
+            await System.Threading.Tasks.Task.Run(() =>
+            {
+                stopwatch.Restart();
+                _ = build.SourceFiles;
+                embeddedFilesTime = stopwatch.Elapsed;
+            });
+
             progress.ProgressText = "Rendering tree...";
             await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Loaded); // let the progress message be rendered before we block the UI again
-            var renderTime = stopwatch.Elapsed;
 
             DisplayBuild(build);
 
@@ -514,8 +522,18 @@ namespace StructuredLogViewer
             {
                 long allocatedAfter = AppDomain.CurrentDomain.MonitoringTotalAllocatedMemorySize;
                 long allocated = allocatedAfter - allocatedBefore;
-                currentBuild.UpdateBreadcrumb(
-                    $"Opening: {Math.Round(openTime.TotalSeconds, 3)}s, Analyzing: {Math.Round(analyzingTime.TotalSeconds, 3)}s, Allocated: {allocated:n0}");
+                string readingFilesText = TextUtilities.DisplayDuration(embeddedFilesTime);
+
+                string text = $"Opening: {TextUtilities.DisplayDuration(openTime)}";
+                text += $", Analyzing: {TextUtilities.DisplayDuration(analyzingTime)}";
+                text += $", Indexing: {TextUtilities.DisplayDuration(indexingTime)}";
+                if (!string.IsNullOrEmpty(readingFilesText))
+                {
+                    text += $", Reading files: {readingFilesText}";
+                }
+
+                text += $", Allocated: {allocated:n0}";
+                currentBuild.UpdateBreadcrumb(text);
             }
         }
 
@@ -679,7 +697,7 @@ namespace StructuredLogViewer
             {
                 return;
             }
-            
+
             List<string> stringsToRedact =
                 new(redactInputControl.SecretsBlock?
                         .Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
@@ -725,7 +743,7 @@ namespace StructuredLogViewer
                         redactorOptions,
                         progress.Progress);
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
                     return e.ToString();
                 }
