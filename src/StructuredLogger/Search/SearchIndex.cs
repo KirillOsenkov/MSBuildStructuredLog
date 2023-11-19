@@ -14,7 +14,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private Dictionary<string, int> stringToIndexMap = new Dictionary<string, int>();
 
-        private List<NodeEntry> nodeEntries = new List<NodeEntry>();
+        private ChunkedList<NodeEntry> nodeEntries = new();
 
         public SearchIndex(Build build)
         {
@@ -145,29 +145,32 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             bool searching = true;
 
-            for (int i = 0; i < nodeEntries.Count; i++)
+            foreach (var chunk in nodeEntries.Chunks)
             {
-                var entry = nodeEntries[i];
-                bool match = false;
-
-                if (searching && IsMatch(matcher, entry, terms) is { } searchResult)
+                for (int i = 0; i < chunk.Count; i++)
                 {
-                    match = true;
-                    results.Add(searchResult);
-                    if (results.Count >= MaxResults)
+                    var entry = chunk[i];
+                    bool match = false;
+
+                    if (searching && IsMatch(matcher, entry, terms) is { } searchResult)
                     {
-                        searching = false;
-                        if (!MarkResultsInTree)
+                        match = true;
+                        results.Add(searchResult);
+                        if (results.Count >= MaxResults)
                         {
-                            break;
+                            searching = false;
+                            if (!MarkResultsInTree)
+                            {
+                                break;
+                            }
                         }
                     }
-                }
 
-                if (MarkResultsInTree)
-                {
-                    entry.Node.IsSearchResult = match;
-                    entry.Node.ContainsSearchResult = false;
+                    if (MarkResultsInTree)
+                    {
+                        entry.Node.IsSearchResult = match;
+                        entry.Node.ContainsSearchResult = false;
+                    }
                 }
             }
 
@@ -377,5 +380,38 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 _ => 0
             };
         }
+    }
+
+    public class ChunkedList<T>
+    {
+        public int ChunkSize { get; }
+
+        private List<List<T>> chunks = new List<List<T>>();
+
+        public ChunkedList() : this(2^20)
+        {
+        }
+
+        public ChunkedList(int chunkSize)
+        {
+            ChunkSize = chunkSize;
+        }
+
+        public void Add(T item)
+        {
+            AddChunk();
+            List<T> chunk = chunks[chunks.Count - 1];
+            chunk.Add(item);
+        }
+
+        private void AddChunk()
+        {
+            if (chunks.Count == 0 || chunks[chunks.Count - 1].Count >= ChunkSize)
+            {
+                chunks.Add(new List<T>(ChunkSize));
+            }
+        }
+
+        public IList<List<T>> Chunks => chunks;
     }
 }
