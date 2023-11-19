@@ -1175,12 +1175,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             Task result = taskName.ToLowerInvariant() switch
             {
+                "msbuild" => new MSBuildTask(),
+                "resolveassemblyreference" => new ResolveAssemblyReferenceTask(),
                 "copy" => new CopyTask(),
                 "robocopy" => new RobocopyTask(),
                 "csc" => new CscTask(),
                 "vbc" => new VbcTask(),
                 "fsc" => new FscTask(),
-                "resolveassemblyreference" => new ResolveAssemblyReferenceTask(),
                 "cl" => new CppAnalyzer.CppTask(),
                 "lib" => new CppAnalyzer.CppTask(),
                 "link" => new CppAnalyzer.CppTask(),

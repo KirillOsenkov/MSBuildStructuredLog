@@ -1,11 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Runtime.Versioning;
-
-namespace Microsoft.Build.Logging.StructuredLogger
+﻿namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class Task : TimedNode, IHasSourceFile, IHasLineNumber
     {
@@ -39,5 +32,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public int? LineNumber { get; set; }
 
         public override string ToString() => Title;
+    }
+
+    public class MSBuildTask : Task
+    {
+        public override string TypeName => nameof(MSBuildTask);
     }
 }
