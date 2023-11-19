@@ -29,7 +29,7 @@ namespace StructuredLogViewer
                 status += $" (precalculation: {precalculationString})";
             }
 
-            root.Children.Add(new Message
+            root.Children.Add(new Note
             {
                 Text = status
             });
