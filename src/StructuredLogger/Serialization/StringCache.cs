@@ -24,6 +24,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             deduplicationMap = null;
 
             Instances = strings;
+            DisableDeduplication = true;
         }
 
         /// <summary>
