@@ -10,15 +10,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class SearchIndex
     {
-        private int stringCount;
+        private readonly int stringCount;
 
         private readonly string[] strings;
-        private byte[] bitVector;
+        private readonly byte[] bitVector;
+        private readonly ChunkedList<NodeEntry> nodeEntries;
         private Dictionary<string, int> stringToIndexMap = new Dictionary<string, int>();
-        private ChunkedList<NodeEntry> nodeEntries;
 
+        private readonly int taskString;
         private int typeKeyword;
-        private int taskString;
 
         public int MaxResults { get; set; }
         public bool MarkResultsInTree { get; set; }
@@ -113,6 +113,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public IEnumerable<SearchResult> FindNodes(string query, CancellationToken cancellationToken)
         {
             List<SearchResult> results = new();
+            typeKeyword = 0;
 
             var matcher = new NodeQueryMatcher(query, stringTable: null, cancellationToken);
 
