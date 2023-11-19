@@ -8,13 +8,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class SearchIndex
     {
-        private readonly string[] strings;
-        private byte[] bitVector;
         private int stringCount;
 
+        private readonly string[] strings;
+        private byte[] bitVector;
         private Dictionary<string, int> stringToIndexMap = new Dictionary<string, int>();
-
         private ChunkedList<NodeEntry> nodeEntries = new();
+
+        private int typeKeyword;
+        private int taskString;
+
+        public int MaxResults { get; set; }
+        public bool MarkResultsInTree { get; set; }
 
         public SearchIndex(Build build)
         {
@@ -187,12 +192,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             return results;
         }
-
-        private int typeKeyword;
-        private int taskString;
-
-        public int MaxResults { get; set; }
-        public bool MarkResultsInTree { get; set; }
 
         public SearchResult IsMatch(NodeQueryMatcher matcher, NodeEntry entry, Term[] terms)
         {
