@@ -248,7 +248,32 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 for (int j = 0; j < 6; j++)
                 {
-                    int field = entry[j];
+                    int field;
+                    if (j == 0)
+                    {
+                        field = entry.Field1;
+                    }
+                    else if (j == 1)
+                    {
+                        field = entry.Field2;
+                    }
+                    else if (j == 2)
+                    {
+                        field = entry.Field3;
+                    }
+                    else if (j == 3)
+                    {
+                        field = entry.Field4;
+                    }
+                    else if (j == 4)
+                    {
+                        field = entry.Field5;
+                    }
+                    else
+                    {
+                        field = entry.Field6;
+                    }
+
                     if (field == 0)
                     {
                         break;
