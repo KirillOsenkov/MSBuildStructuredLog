@@ -9,7 +9,7 @@ namespace StructuredLogViewer
 {
     public class Search
     {
-        public const int DefaultMaxResults = 1000;
+        public const int DefaultMaxResults = 300;
 
         private readonly IEnumerable<TreeNode> roots;
         private readonly IEnumerable<string> strings;
