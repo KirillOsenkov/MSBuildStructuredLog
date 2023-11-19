@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using StructuredLogViewer;
+using TPLTask = System.Threading.Tasks.Task;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -24,6 +26,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public bool MarkResultsInTree { get; set; }
 
         public TimeSpan PrecalculationDuration;
+
+        private readonly bool hasThreads = false; // PlatformUtilities.HasThreads;
 
         public SearchIndex(Build build)
         {
@@ -46,9 +50,102 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             taskString = GetStringIndex(Strings.Task);
 
-            Visit(build);
+            if (hasThreads)
+            {
+                PopulateEntriesInParallel(build);
+            }
+            else
+            {
+                Visit(build);
+            }
 
             stringToIndexMap = null;
+        }
+
+        private void PopulateEntriesInParallel(Build build)
+        {
+            var nodeQueue = new BlockingCollection<BaseNode>(1048576);
+
+            var producerTask = TPLTask.Run(() =>
+            {
+                AddNodes(build, nodeQueue);
+                nodeQueue.CompleteAdding();
+            });
+
+            var bufferQueue = new BufferQueue<Work>(() => new());
+
+            var taskQueue = new BlockingCollection<Task<Work>>(Environment.ProcessorCount);
+
+            var consumerTask = TPLTask.Run(() =>
+            {
+                var enumerable = nodeQueue.GetConsumingEnumerable();
+
+                var buffer = bufferQueue.Get();
+                foreach (var node in enumerable)
+                {
+                    if (buffer.Nodes.Count < BufferSize)
+                    {
+                        buffer.Nodes.Add(node);
+                    }
+                    else
+                    {
+                        var capturedBuffer = buffer;
+                        var bufferTask = TPLTask.Run(() =>
+                        {
+                            for (int i = 0; i < capturedBuffer.Nodes.Count; i++)
+                            {
+                                var node = capturedBuffer.Nodes[i];
+                                var entry = GetEntry(node);
+                                capturedBuffer.Entries.Add(entry);
+                            }
+
+                            return capturedBuffer;
+                        });
+                        taskQueue.Add(bufferTask);
+
+                        buffer = bufferQueue.Get();
+                    }
+                }
+
+                taskQueue.CompleteAdding();
+            });
+
+            foreach (var workTask in taskQueue.GetConsumingEnumerable())
+            {
+                Work buffer = workTask.Result;
+
+                foreach (var entry in workTask.Result.Entries)
+                {
+                    nodeEntries.Add(entry);
+                }
+
+                buffer.Entries.Clear();
+                buffer.Nodes.Clear();
+                bufferQueue.Return(buffer);
+            }
+        }
+
+        public const int BufferSize = 65536;
+
+        class Work
+        {
+            public List<BaseNode> Nodes = new List<BaseNode>(BufferSize);
+            public List<NodeEntry> Entries = new List<NodeEntry>(BufferSize);
+        }
+
+        private void AddNodes(BaseNode node, BlockingCollection<BaseNode> queue)
+        {
+            queue.Add(node);
+
+            if (node is TreeNode treeNode && treeNode.HasChildren)
+            {
+                var children = treeNode.Children;
+                for (int i = 0; i < children.Count; i++)
+                {
+                    var child = children[i];
+                    AddNodes(child, queue);
+                }
+            }
         }
 
         private int GetStringIndex(string text)
@@ -612,5 +709,38 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         public IList<List<T>> Chunks => chunks;
+    }
+
+    public class BufferQueue<T>
+    {
+        private Queue<T> queue = new Queue<T>();
+
+        public Func<T> Factory;
+
+        public BufferQueue(Func<T> factory)
+        {
+            Factory = factory;
+        }
+
+        public T Get()
+        {
+            lock (queue)
+            {
+                if (queue.Count > 0)
+                {
+                    return queue.Dequeue();
+                }
+
+                return Factory();
+            }
+        }
+
+        public void Return(T item)
+        {
+            lock (queue)
+            {
+                queue.Enqueue(item);
+            }
+        }
     }
 }
