@@ -80,32 +80,71 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private NodeEntry GetEntry(BaseNode node)
         {
-            var entry = new NodeEntry(node);
-
             var fields = NodeQueryMatcher.PopulateSearchFields(node);
             int count = fields.count;
 
-            entry.Field1 = GetStringIndex(fields.array[0]);
-            if (count > 1)
+            NodeEntry entry = null;
+
+            // most nodes have 3 or 4 entries, so put these cases first
+            if (count == 3)
             {
-                entry.Field2 = GetStringIndex(fields.array[1]);
-                if (count > 2)
+                entry = new NodeEntry3()
                 {
-                    entry.Field3 = GetStringIndex(fields.array[2]);
-                    if (count > 3)
-                    {
-                        entry.Field4 = GetStringIndex(fields.array[3]);
-                        if (count > 4)
-                        {
-                            entry.Field5 = GetStringIndex(fields.array[4]);
-                            if (count > 5)
-                            {
-                                entry.Field6 = GetStringIndex(fields.array[5]);
-                            }
-                        }
-                    }
-                }
+                    Field1 = GetStringIndex(fields.array[0]),
+                    Field2 = GetStringIndex(fields.array[1]),
+                    Field3 = GetStringIndex(fields.array[2])
+                };
             }
+            else if (count == 4)
+            {
+                entry = new NodeEntry4()
+                {
+                    Field1 = GetStringIndex(fields.array[0]),
+                    Field2 = GetStringIndex(fields.array[1]),
+                    Field3 = GetStringIndex(fields.array[2]),
+                    Field4 = GetStringIndex(fields.array[3])
+                };
+            }
+            else if (count == 1)
+            {
+                entry = new NodeEntry()
+                {
+                    Field1 = GetStringIndex(fields.array[0])
+                };
+            }
+            else if (count == 2)
+            {
+                entry = new NodeEntry2()
+                {
+                    Field1 = GetStringIndex(fields.array[0]),
+                    Field2 = GetStringIndex(fields.array[1])
+                };
+            }
+            else if (count == 5)
+            {
+                entry = new NodeEntry5()
+                {
+                    Field1 = GetStringIndex(fields.array[0]),
+                    Field2 = GetStringIndex(fields.array[1]),
+                    Field3 = GetStringIndex(fields.array[2]),
+                    Field4 = GetStringIndex(fields.array[3]),
+                    Field5 = GetStringIndex(fields.array[4])
+                };
+            }
+            else if (count == 6)
+            {
+                entry = new NodeEntry6()
+                {
+                    Field1 = GetStringIndex(fields.array[0]),
+                    Field2 = GetStringIndex(fields.array[1]),
+                    Field3 = GetStringIndex(fields.array[2]),
+                    Field4 = GetStringIndex(fields.array[3]),
+                    Field5 = GetStringIndex(fields.array[4]),
+                    Field6 = GetStringIndex(fields.array[5])
+                };
+            }
+
+            entry.Node = node;
 
             return entry;
         }
@@ -316,7 +355,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 // zeroth field is always the type
                 if (typeKeyword == entry.Field1 ||
                     // special case for types derived from Task, $task should still work
-                    (entry.Field1 == taskString && entry.Field2 == typeKeyword))
+                    (entry.Field1 == taskString && entry.GetField(1) == typeKeyword))
                 {
                     // this node is of the type that we need, search other fields
                     if (result == null)
@@ -347,32 +386,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 for (int j = 0; j < 6; j++)
                 {
-                    int field;
-                    if (j == 0)
-                    {
-                        field = entry.Field1;
-                    }
-                    else if (j == 1)
-                    {
-                        field = entry.Field2;
-                    }
-                    else if (j == 2)
-                    {
-                        field = entry.Field3;
-                    }
-                    else if (j == 3)
-                    {
-                        field = entry.Field4;
-                    }
-                    else if (j == 4)
-                    {
-                        field = entry.Field5;
-                    }
-                    else
-                    {
-                        field = entry.Field6;
-                    }
-
+                    int field = entry.GetField(j);
                     if (field == 0)
                     {
                         break;
@@ -472,37 +486,98 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
     public class NodeEntry
     {
-        public NodeEntry(BaseNode node)
-        {
-            Node = node;
-        }
-
-        public BaseNode Node { get; }
+        public BaseNode Node;
 
         public int Field1;
-        public int Field2;
-        public int Field3;
-        public int Field4;
-        public int Field5;
-        public int Field6;
 
         public int this[int index]
         {
             get => GetField(index);
         }
 
-        public int GetField(int index)
+        public virtual int GetField(int index)
         {
-            return index switch
+            if (index == 0)
             {
-                0 => Field1,
-                1 => Field2,
-                2 => Field3,
-                3 => Field4,
-                4 => Field5,
-                5 => Field6,
-                _ => 0
-            };
+                return Field1;
+            }
+
+            return 0;
+        }
+    }
+
+    public class NodeEntry2 : NodeEntry
+    {
+        public int Field2;
+
+        public override int GetField(int index)
+        {
+            if (index == 1)
+            {
+                return Field2;
+            }
+
+            return base.GetField(index);
+        }
+    }
+
+    public class NodeEntry3 : NodeEntry2
+    {
+        public int Field3;
+
+        public override int GetField(int index)
+        {
+            if (index == 2)
+            {
+                return Field3;
+            }
+
+            return base.GetField(index);
+        }
+    }
+
+    public class NodeEntry4 : NodeEntry3
+    {
+        public int Field4;
+
+        public override int GetField(int index)
+        {
+            if (index == 3)
+            {
+                return Field4;
+            }
+
+            return base.GetField(index);
+        }
+    }
+
+    public class NodeEntry5 : NodeEntry4
+    {
+        public int Field5;
+
+        public override int GetField(int index)
+        {
+            if (index == 4)
+            {
+                return Field5;
+            }
+
+            return base.GetField(index);
+        }
+    }
+
+    public class NodeEntry6 : NodeEntry5
+    {
+        public int Field6;
+
+        public override int GetField(int index)
+        {
+            if (index == 5)
+            {
+                return Field6;
+            }
+
+            return base.GetField(index);
         }
     }
 
