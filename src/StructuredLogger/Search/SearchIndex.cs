@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using StructuredLogViewer;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -102,16 +103,26 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public IEnumerable<SearchResult> FindNodes(string query, CancellationToken cancellationToken)
         {
-            List<SearchResult> results = new List<SearchResult>();
+            List<SearchResult> results = new();
 
             var matcher = new NodeQueryMatcher(query, strings, cancellationToken, precomputeMatchesInStrings: false);
 
             // we assume there are 8 words or less in the query, so we can use 1 byte per string instance
             var terms = matcher.Words.Take(8).ToArray();
 
-            for (int stringIndex = 0; stringIndex < stringCount; stringIndex++)
+            if (PlatformUtilities.HasThreads)
             {
-                ComputeBits(terms, stringIndex);
+                Parallel.For(0, stringCount, stringIndex =>
+                {
+                    ComputeBits(terms, stringIndex);
+                });
+            }
+            else
+            {
+                for (int stringIndex = 0; stringIndex < stringCount; stringIndex++)
+                {
+                    ComputeBits(terms, stringIndex);
+                }
             }
 
             typeKeyword = GetStringIndex(matcher.TypeKeyword);
@@ -119,9 +130,47 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             bool searching = true;
 
-            foreach (var chunk in nodeEntries.Chunks)
+            if (PlatformUtilities.HasThreads)
             {
-                searching = SearchChunk(results, matcher, terms, searching, chunk);
+                Dictionary<List<NodeEntry>, List<SearchResult>> resultsByChunk = new();
+
+                Parallel.ForEach(nodeEntries.Chunks, chunk =>
+                {
+                    List<SearchResult> chunkResults = new();
+                    SearchChunk(chunkResults, matcher, terms, searching: true, chunk);
+                    lock (resultsByChunk)
+                    {
+                        resultsByChunk[chunk] = chunkResults;
+                    }
+                });
+
+                foreach (var chunk in nodeEntries.Chunks)
+                {
+                    if (resultsByChunk.TryGetValue(chunk, out var chunkResults))
+                    {
+                        for (int i = 0; i < chunkResults.Count; i++)
+                        {
+                            var result = chunkResults[i];
+                            results.Add(result);
+                            if (results.Count >= MaxResults)
+                            {
+                                break;
+                            }
+                        }
+                    }
+
+                    if (results.Count >= MaxResults)
+                    {
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                foreach (var chunk in nodeEntries.Chunks)
+                {
+                    searching = SearchChunk(results, matcher, terms, searching, chunk);
+                }
             }
 
             if (MarkResultsInTree)
