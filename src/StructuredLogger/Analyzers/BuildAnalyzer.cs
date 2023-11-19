@@ -94,6 +94,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 build.StringTable.Intern(property);
             }
+
+            // build.SearchIndex = new SearchIndex(build);
         }
 
         private void Visit(TreeNode node)

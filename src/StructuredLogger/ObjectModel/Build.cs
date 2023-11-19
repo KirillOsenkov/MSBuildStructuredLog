@@ -14,6 +14,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
     {
         public StringCache StringTable { get; } = new StringCache();
 
+        public SearchIndex SearchIndex { get; set; }
+
         public bool IsAnalyzed { get; set; }
         public bool Succeeded { get; set; }
 

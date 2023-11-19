@@ -71,6 +71,14 @@ namespace StructuredLogViewer.Controls
 
             searchLogControl.ExecuteSearch = (searchText, maxResults, cancellationToken) =>
             {
+                if (Build.SearchIndex is { } index)
+                {
+                    index.MaxResults = maxResults;
+                    index.MarkResultsInTree = SettingsService.MarkResultsInTree;
+                    var indexResults = index.FindNodes(searchText, cancellationToken);
+                    return indexResults;
+                }
+
                 var search = new Search(
                     new[] { Build },
                     Build.StringTable.Instances,
