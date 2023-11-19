@@ -111,38 +111,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             for (int stringIndex = 0; stringIndex < stringCount; stringIndex++)
             {
-                var stringInstance = strings[stringIndex];
-                byte bits = 0;
-
-                for (int termIndex = 0; termIndex < terms.Length; termIndex++)
-                {
-                    var term = terms[termIndex];
-                    var word = term.Word;
-
-                    bool stringMatchesWord = false;
-
-                    if (term.Quotes)
-                    {
-                        if (stringInstance.Equals(word, StringComparison.OrdinalIgnoreCase))
-                        {
-                            stringMatchesWord = true;
-                        }
-                    }
-                    else
-                    {
-                        if (stringInstance.IndexOf(word, StringComparison.OrdinalIgnoreCase) >= 0)
-                        {
-                            stringMatchesWord = true;
-                        }
-                    }
-
-                    if (stringMatchesWord)
-                    {
-                        bits |= (byte)(1 << (termIndex));
-                    }
-                }
-
-                bitVector[stringIndex] = bits;
+                ComputeBits(terms, stringIndex);
             }
 
             typeKeyword = GetStringIndex(matcher.TypeKeyword);
@@ -152,31 +121,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             foreach (var chunk in nodeEntries.Chunks)
             {
-                for (int i = 0; i < chunk.Count; i++)
-                {
-                    var entry = chunk[i];
-                    bool match = false;
-
-                    if (searching && IsMatch(matcher, entry, terms) is { } searchResult)
-                    {
-                        match = true;
-                        results.Add(searchResult);
-                        if (results.Count >= MaxResults)
-                        {
-                            searching = false;
-                            if (!MarkResultsInTree)
-                            {
-                                break;
-                            }
-                        }
-                    }
-
-                    if (MarkResultsInTree)
-                    {
-                        entry.Node.IsSearchResult = match;
-                        entry.Node.ContainsSearchResult = false;
-                    }
-                }
+                searching = SearchChunk(results, matcher, terms, searching, chunk);
             }
 
             if (MarkResultsInTree)
@@ -191,6 +136,78 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             return results;
+        }
+
+        private bool SearchChunk(
+            List<SearchResult> results,
+            NodeQueryMatcher matcher,
+            Term[] terms,
+            bool searching,
+            List<NodeEntry> chunk)
+        {
+            for (int i = 0; i < chunk.Count; i++)
+            {
+                var entry = chunk[i];
+                bool match = false;
+
+                if (searching && IsMatch(matcher, entry, terms) is { } searchResult)
+                {
+                    match = true;
+                    results.Add(searchResult);
+                    if (results.Count >= MaxResults)
+                    {
+                        searching = false;
+                        if (!MarkResultsInTree)
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                if (MarkResultsInTree)
+                {
+                    entry.Node.IsSearchResult = match;
+                    entry.Node.ContainsSearchResult = false;
+                }
+            }
+
+            return searching;
+        }
+
+        private void ComputeBits(Term[] terms, int stringIndex)
+        {
+            var stringInstance = strings[stringIndex];
+            byte bits = 0;
+
+            for (int termIndex = 0; termIndex < terms.Length; termIndex++)
+            {
+                var term = terms[termIndex];
+                var word = term.Word;
+
+                bool stringMatchesWord = false;
+
+                if (term.Quotes)
+                {
+                    if (stringInstance.Equals(word, StringComparison.OrdinalIgnoreCase))
+                    {
+                        stringMatchesWord = true;
+                    }
+                }
+                else
+                {
+                    if (stringInstance.IndexOf(word, StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        stringMatchesWord = true;
+                    }
+                }
+
+                if (stringMatchesWord)
+                {
+                    bits |= (byte)(1 << (termIndex));
+                }
+            }
+
+            bitVector[stringIndex] = bits;
         }
 
         public SearchResult IsMatch(NodeQueryMatcher matcher, NodeEntry entry, Term[] terms)
