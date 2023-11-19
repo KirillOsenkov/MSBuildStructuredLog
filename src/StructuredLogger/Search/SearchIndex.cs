@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,6 +22,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public int MaxResults { get; set; }
         public bool MarkResultsInTree { get; set; }
+
+        public TimeSpan PrecalculationDuration;
 
         public SearchIndex(Build build)
         {
@@ -114,6 +117,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             // we assume there are 8 words or less in the query, so we can use 1 byte per string instance
             var terms = matcher.Words.Take(8).ToArray();
 
+            var stopwatch = Stopwatch.StartNew();
+
             if (PlatformUtilities.HasThreads)
             {
                 Parallel.For(0, stringCount, stringIndex =>
@@ -127,6 +132,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     ComputeBits(terms, stringIndex);
                 }
+            }
+
+            PrecalculationDuration = stopwatch.Elapsed;
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return results;
             }
 
             typeKeyword = GetStringIndex(matcher.TypeKeyword);
@@ -173,6 +185,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 foreach (var chunk in nodeEntries.Chunks)
                 {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        if (MarkResultsInTree)
+                        {
+                            searching = false;
+                        }
+                        else
+                        {
+                            return results;
+                        }
+                    }
+
                     searching = SearchChunk(results, matcher, terms, searching, chunk);
                 }
             }

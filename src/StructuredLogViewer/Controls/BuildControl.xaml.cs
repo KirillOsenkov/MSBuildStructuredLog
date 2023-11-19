@@ -76,6 +76,7 @@ namespace StructuredLogViewer.Controls
                     index.MaxResults = maxResults;
                     index.MarkResultsInTree = SettingsService.MarkResultsInTree;
                     var indexResults = index.FindNodes(searchText, cancellationToken);
+                    PrecalculationDuration = index.PrecalculationDuration;
                     return indexResults;
                 }
 

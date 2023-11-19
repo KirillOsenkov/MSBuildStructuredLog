@@ -23,11 +23,11 @@ namespace StructuredLogViewer
             }
 
             string status = $"{results.Count} result{(results.Count == 1 ? "" : "s")}. Search took: {TextUtilities.DisplayDuration(elapsed)}";
-            //string precalculationString = TextUtilities.DisplayDuration(precalculationDuration);
-            //if (!string.IsNullOrWhiteSpace(precalculationString))
-            //{
-            //    status += $" (precalculation: {precalculationString})";
-            //}
+            string precalculationString = TextUtilities.DisplayDuration(precalculationDuration);
+            if (!string.IsNullOrWhiteSpace(precalculationString))
+            {
+                status += $" (precalculation: {precalculationString})";
+            }
 
             root.Children.Add(new Message
             {
