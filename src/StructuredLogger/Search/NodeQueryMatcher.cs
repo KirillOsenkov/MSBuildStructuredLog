@@ -107,6 +107,8 @@ namespace StructuredLogViewer
         [ThreadStatic]
         private static string[] searchFieldsThreadStatic;
 
+        private const int MaxArraySize = 6;
+
         public NodeQueryMatcher(
             string query,
             IEnumerable<string> stringTable,
@@ -337,8 +339,6 @@ namespace StructuredLogViewer
                 }
             }
         }
-
-        private const int MaxArraySize = 6;
 
         public static (string[] array, int count) PopulateSearchFields(BaseNode node)
         {
