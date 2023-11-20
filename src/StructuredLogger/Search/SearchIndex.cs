@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using StructuredLogViewer;
@@ -17,7 +18,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private readonly string[] strings;
         private readonly byte[] bitVector;
         private readonly ChunkedList<NodeEntry> nodeEntries;
-        private Dictionary<string, int> stringToIndexMap = new Dictionary<string, int>();
+        private Dictionary<string, int> stringToIndexMap = new(StringComparer.Ordinal);
 
         private readonly int taskString;
         private int typeKeyword;
@@ -741,6 +742,45 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 queue.Enqueue(item);
             }
+        }
+    }
+
+    /// <summary>
+    /// Getting string hashcode is very expensive. This was a failed experiment
+    /// to use object hashcode instead of string hashcode to look up strings.
+    /// Unfortunately strings aren't properly deduplicated in our string table,
+    /// so two equal strings can be two different instances with different
+    /// hashcodes. If we ever have proper deduplication, this might buy us
+    /// 28s -> 21s improvement.
+    /// </summary>
+    struct StringWrapper : IEquatable<StringWrapper>
+    {
+        public string StringInstance;
+
+        public StringWrapper(string instance)
+        {
+            StringInstance = instance;
+        }
+
+        public override int GetHashCode()
+        {
+            return RuntimeHelpers.GetHashCode(StringInstance);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Equals((StringWrapper)obj);
+        }
+
+        public bool Equals(StringWrapper other)
+        {
+            return object.ReferenceEquals(StringInstance, other.StringInstance) ||
+                StringInstance.Equals(other.StringInstance, StringComparison.Ordinal);
+        }
+
+        public override string ToString()
+        {
+            return StringInstance;
         }
     }
 }
