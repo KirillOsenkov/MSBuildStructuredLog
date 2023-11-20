@@ -63,9 +63,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             stringToIndexMap = null;
         }
 
+        public const int BufferSize = 8192;
+
         private void PopulateEntriesInParallel(Build build)
         {
-            var nodeQueue = new BlockingCollection<BaseNode>(1048576);
+            var nodeQueue = new BlockingCollection<BaseNode>(65536);
+            const int maxWorkBuffers = 16;
 
             var producerTask = TPLTask.Run(() =>
             {
@@ -75,7 +78,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             var bufferQueue = new BufferQueue<Work>(() => new());
 
-            var taskQueue = new BlockingCollection<Task<Work>>(Environment.ProcessorCount);
+            var taskQueue = new BlockingCollection<Task<Work>>(maxWorkBuffers);
 
             var consumerTask = TPLTask.Run(() =>
             {
@@ -125,8 +128,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 bufferQueue.Return(buffer);
             }
         }
-
-        public const int BufferSize = 65536;
 
         class Work
         {
