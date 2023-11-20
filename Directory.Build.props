@@ -8,6 +8,9 @@
     <BaseOutputPath>$(MSBuildThisFileDirectory)bin\$(MSBuildProjectName)\</BaseOutputPath>
     <BuildToCommonOutputDirectory>true</BuildToCommonOutputDirectory>
     <_FindDependencies>false</_FindDependencies>
+    <!--https://github.com/dotnet/sdk/issues/37027-->
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
   </PropertyGroup>
 
   <PropertyGroup Label="Common Properties">
