@@ -28,7 +28,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public TimeSpan PrecalculationDuration;
 
-        private readonly bool hasThreads = false; // PlatformUtilities.HasThreads;
+        private readonly bool hasThreads = PlatformUtilities.HasThreads;
 
         public SearchIndex(Build build)
         {
@@ -67,77 +67,95 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void PopulateEntriesInParallel(Build build)
         {
-            var nodeQueue = new BlockingCollection<BaseNode>(65536);
-            const int maxWorkBuffers = 16;
+            var workQueue = new BlockingCollection<Work>();
+            var bufferQueue = new BufferQueue<Work>(() => new() { SearchIndex = this });
+
+            var bucket = bufferQueue.Get();
+
+            void AddNode(BaseNode node)
+            {
+                var nodes = bucket.Nodes;
+                if (nodes.Count < BufferSize)
+                {
+                    nodes.Add(node);
+                }
+                else
+                {
+                    bucket.StartProcessing();
+                    workQueue.Add(bucket);
+                    bucket = bufferQueue.Get();
+                    bucket.Nodes.Add(node);
+                }
+            }
 
             var producerTask = TPLTask.Run(() =>
             {
-                AddNodes(build, nodeQueue);
-                nodeQueue.CompleteAdding();
+                AddNodes(build, AddNode);
+
+                // flush the last (incomplete) bucket
+                bucket.StartProcessing();
+                workQueue.Add(bucket);
+                workQueue.CompleteAdding();
             });
 
-            var bufferQueue = new BufferQueue<Work>(() => new());
+            var enumerable = workQueue.GetConsumingEnumerable();
 
-            var taskQueue = new BlockingCollection<Task<Work>>(maxWorkBuffers);
-
-            var consumerTask = TPLTask.Run(() =>
+            foreach (var work in enumerable)
             {
-                var enumerable = nodeQueue.GetConsumingEnumerable();
+                work.Wait();
 
-                var buffer = bufferQueue.Get();
-                foreach (var node in enumerable)
-                {
-                    if (buffer.Nodes.Count < BufferSize)
-                    {
-                        buffer.Nodes.Add(node);
-                    }
-                    else
-                    {
-                        var capturedBuffer = buffer;
-                        var bufferTask = TPLTask.Run(() =>
-                        {
-                            for (int i = 0; i < capturedBuffer.Nodes.Count; i++)
-                            {
-                                var node = capturedBuffer.Nodes[i];
-                                var entry = GetEntry(node);
-                                capturedBuffer.Entries.Add(entry);
-                            }
-
-                            return capturedBuffer;
-                        });
-                        taskQueue.Add(bufferTask);
-
-                        buffer = bufferQueue.Get();
-                    }
-                }
-
-                taskQueue.CompleteAdding();
-            });
-
-            foreach (var workTask in taskQueue.GetConsumingEnumerable())
-            {
-                Work buffer = workTask.Result;
-
-                foreach (var entry in workTask.Result.Entries)
+                foreach (var entry in work.Entries)
                 {
                     nodeEntries.Add(entry);
                 }
 
-                buffer.Entries.Clear();
-                buffer.Nodes.Clear();
-                bufferQueue.Return(buffer);
+                work.Clear();
+                bufferQueue.Return(work);
             }
         }
 
         class Work
         {
-            public List<BaseNode> Nodes = new List<BaseNode>(BufferSize);
-            public List<NodeEntry> Entries = new List<NodeEntry>(BufferSize);
+            public readonly List<BaseNode> Nodes = new List<BaseNode>(BufferSize);
+            public readonly List<NodeEntry> Entries = new List<NodeEntry>(BufferSize);
+            public SearchIndex SearchIndex;
+
+            private TPLTask task;
+
+            public void StartProcessing()
+            {
+                task = TPLTask.Run(() => Process());
+            }
+
+            private void Process()
+            {
+                var nodes = Nodes;
+                var entries = Entries;
+                int nodesCount = Nodes.Count;
+                for (int i = 0; i < nodesCount; i++)
+                {
+                    var node = nodes[i];
+                    var entry = SearchIndex.GetEntry(node);
+                    entries.Add(entry);
+                }
+            }
+
+            public void Wait()
+            {
+                task.Wait();
+            }
+
+            internal void Clear()
+            {
+                Entries.Clear();
+                Nodes.Clear();
+                task = null;
+            }
         }
 
-        private void AddNodes(BaseNode node, BlockingCollection<BaseNode> queue)
+        private void AddNodes(BaseNode node, Action<BaseNode> collector)
         {
-            queue.Add(node);
+            collector(node);
 
             if (node is TreeNode treeNode && treeNode.HasChildren)
             {
@@ -145,7 +163,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 for (int i = 0; i < children.Count; i++)
                 {
                     var child = children[i];
-                    AddNodes(child, queue);
+                    AddNodes(child, collector);
                 }
             }
         }
