@@ -20,7 +20,7 @@
     <NoWarn>$(NoWarn);NU1701;CS8632</NoWarn>
 
     <MSBuildPackageVersion>17.5.0</MSBuildPackageVersion>
-    <NuGetVersionNerdbankGitVersioning>3.5.107</NuGetVersionNerdbankGitVersioning>
+    <NuGetVersionNerdbankGitVersioning>3.6.133</NuGetVersionNerdbankGitVersioning>
   </PropertyGroup>
 
 </Project>
