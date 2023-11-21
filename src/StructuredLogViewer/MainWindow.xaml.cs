@@ -458,7 +458,13 @@ namespace StructuredLogViewer
                 Dispatcher.InvokeAsync(() =>
                 {
                     progress.Value = update.Ratio;
-                    progress.BufferText = $"Buffer length: {update.BufferLength:n0}";
+                    string bufferText = null;
+                    if (update.BufferLength > 0)
+                    {
+                        bufferText = $"Buffer length: {update.BufferLength:n0}";
+                    }
+
+                    progress.BufferText = bufferText;
                 }, DispatcherPriority.Background);
             };
             progress.ProgressText = "Opening " + filePath + "...";
@@ -533,6 +539,13 @@ namespace StructuredLogViewer
                 }
 
                 text += $", Allocated: {allocated:n0}";
+
+                if (currentBuild.Build.SearchIndex is { } index)
+                {
+                    text += $", Nodes: {index.NodeCount:n0}";
+                    text += $", Strings: {index.Strings.Length:n0}";
+                }
+
                 currentBuild.UpdateBreadcrumb(text);
             }
         }

@@ -590,6 +590,7 @@
               Content="{Binding Text}"
               Command="{Binding Command}"
               IsEnabled="{Binding IsEnabled}"
+              Margin="3"
               Padding="4,2,4,2" />
     </StackPanel>
   </DataTemplate>
@@ -622,7 +623,7 @@
 
   <DataTemplate DataType="{x:Type l:Note}">
     <StackPanel Orientation="Horizontal">
-      <Border BorderBrush="LightGray" BorderThickness="1" Margin="4" Background="{DynamicResource Theme_InfoBarBackground}" Padding="6">
+      <Border BorderBrush="LightGray" BorderThickness="1" Margin="3" Background="{DynamicResource Theme_InfoBarBackground}" Padding="6">
         <TextBlock Text="{Binding Text}"
                    Foreground="Gray"
                    TextWrapping="Wrap"/>
