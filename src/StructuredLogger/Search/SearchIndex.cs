@@ -25,6 +25,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public int MaxResults { get; set; }
         public bool MarkResultsInTree { get; set; }
+        public string[] Strings => strings;
+        public int NodeCount => nodeEntries.Count;
 
         public TimeSpan PrecalculationDuration;
 
@@ -49,7 +51,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 stringToIndexMap[stringInstance] = i;
             }
 
-            taskString = GetStringIndex(Strings.Task);
+            taskString = GetStringIndex(Logging.StructuredLogger.Strings.Task);
 
             if (hasThreads)
             {
@@ -68,7 +70,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private void PopulateEntriesInParallel(Build build)
         {
             var workQueue = new BlockingCollection<Work>();
-            var bufferQueue = new BufferQueue<Work>(() => new() { SearchIndex = this });
+            var bufferQueue = new Rental<Work>(() => new() { SearchIndex = this });
 
             var bucket = bufferQueue.Get();
 
@@ -695,72 +697,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             return base.GetField(index);
-        }
-    }
-
-    public class ChunkedList<T>
-    {
-        public int ChunkSize { get; }
-
-        private List<List<T>> chunks = new List<List<T>>();
-
-        public ChunkedList() : this(1048576)
-        {
-        }
-
-        public ChunkedList(int chunkSize)
-        {
-            ChunkSize = chunkSize;
-        }
-
-        public void Add(T item)
-        {
-            AddChunk();
-            List<T> chunk = chunks[chunks.Count - 1];
-            chunk.Add(item);
-        }
-
-        private void AddChunk()
-        {
-            if (chunks.Count == 0 || chunks[chunks.Count - 1].Count >= ChunkSize)
-            {
-                chunks.Add(new List<T>(ChunkSize));
-            }
-        }
-
-        public IList<List<T>> Chunks => chunks;
-    }
-
-    public class BufferQueue<T>
-    {
-        private Queue<T> queue = new Queue<T>();
-
-        public Func<T> Factory;
-
-        public BufferQueue(Func<T> factory)
-        {
-            Factory = factory;
-        }
-
-        public T Get()
-        {
-            lock (queue)
-            {
-                if (queue.Count > 0)
-                {
-                    return queue.Dequeue();
-                }
-
-                return Factory();
-            }
-        }
-
-        public void Return(T item)
-        {
-            lock (queue)
-            {
-                queue.Enqueue(item);
-            }
         }
     }
 
