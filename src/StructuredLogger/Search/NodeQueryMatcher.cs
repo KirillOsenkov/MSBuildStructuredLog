@@ -484,11 +484,11 @@ namespace StructuredLogViewer
             if (TypeKeyword != null)
             {
                 // zeroth field is always the type
-                if (string.Equals(TypeKeyword, searchFields.array[0], StringComparison.OrdinalIgnoreCase) ||
+                if (string.Equals(searchFields.array[0], TypeKeyword, StringComparison.OrdinalIgnoreCase) ||
                     // special case for types derived from Task, $task should still work
-                    (string.Equals(TypeKeyword, "task", StringComparison.OrdinalIgnoreCase) &&
-                        searchFields.count > 1 &&
-                        searchFields.array[1] == Strings.Task))
+                    (searchFields.count > 1 &&
+                    string.Equals(searchFields.array[0], Strings.Task, StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(searchFields.array[1], TypeKeyword, StringComparison.OrdinalIgnoreCase)))
                 {
                     // this node is of the type that we need, search other fields
                     if (result == null)
