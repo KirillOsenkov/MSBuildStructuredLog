@@ -54,6 +54,18 @@ namespace StructuredLogViewer
             }
         }
 
+        public bool IsMatch(string field)
+        {
+            if (Quotes)
+            {
+                return string.Equals(field, Word, StringComparison.OrdinalIgnoreCase);
+            }
+            else
+            {
+                return field.IndexOf(Word, StringComparison.OrdinalIgnoreCase) != -1;
+            }
+        }
+
         public override bool Equals(object obj)
         {
             if (obj is Term other)
@@ -504,9 +516,19 @@ namespace StructuredLogViewer
                 {
                     string field = searchFields.array[j];
 
-                    if (!term.IsMatch(field, MatchesInStrings[i]))
+                    if (MatchesInStrings != null)
                     {
-                        continue;
+                        if (!term.IsMatch(field, MatchesInStrings[i]))
+                        {
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        if (!term.IsMatch(field))
+                        {
+                            continue;
+                        }
                     }
 
                     if (result == null)
