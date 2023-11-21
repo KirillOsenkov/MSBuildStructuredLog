@@ -98,7 +98,7 @@ namespace StructuredLogViewer
     public class NodeQueryMatcher
     {
         public string Query { get; private set; }
-        public List<Term> Words { get; private set; }
+        public List<Term> Terms { get; private set; }
         public string TypeKeyword { get; private set; }
         public int NodeIndex { get; private set; } = -1;
         private HashSet<string>[] MatchesInStrings { get; set; }
@@ -130,19 +130,19 @@ namespace StructuredLogViewer
 
             this.Query = query;
 
-            var rawWords = TextUtilities.Tokenize(query);
-            this.Words = new List<Term>(rawWords.Count);
-            foreach (var rawWord in rawWords)
+            var rawTerms = TextUtilities.Tokenize(query);
+            this.Terms = new List<Term>(rawTerms.Count);
+            foreach (var rawTerm in rawTerms)
             {
-                var term = Term.Get(rawWord);
+                var term = Term.Get(rawTerm);
                 if (term != default)
                 {
-                    Words.Add(term);
+                    Terms.Add(term);
                 }
             }
 
-            if (Words.Count == 1 &&
-                Words[0].Word is string potentialNodeIndex &&
+            if (Terms.Count == 1 &&
+                Terms[0].Word is string potentialNodeIndex &&
                 potentialNodeIndex.Length > 1 &&
                 potentialNodeIndex[0] == '$')
             {
@@ -150,37 +150,37 @@ namespace StructuredLogViewer
                 if (int.TryParse(nodeIndexText, out var nodeIndex))
                 {
                     NodeIndex = nodeIndex;
-                    Words.RemoveAt(0);
+                    Terms.RemoveAt(0);
                     return;
                 }
             }
 
-            for (int i = Words.Count - 1; i >= 0; i--)
+            for (int i = Terms.Count - 1; i >= 0; i--)
             {
-                var word = Words[i].Word;
+                var word = Terms[i].Word;
 
                 if (string.Equals(word, "$time", StringComparison.OrdinalIgnoreCase) || string.Equals(word, "$duration", StringComparison.OrdinalIgnoreCase))
                 {
-                    Words.RemoveAt(i);
+                    Terms.RemoveAt(i);
                     IncludeDuration = true;
                     continue;
                 }
                 else if (string.Equals(word, "$start", StringComparison.OrdinalIgnoreCase) || string.Equals(word, "$starttime", StringComparison.OrdinalIgnoreCase))
                 {
-                    Words.RemoveAt(i);
+                    Terms.RemoveAt(i);
                     IncludeStart = true;
                     continue;
                 }
                 else if (string.Equals(word, "$end", StringComparison.OrdinalIgnoreCase) || string.Equals(word, "$endtime", StringComparison.OrdinalIgnoreCase))
                 {
-                    Words.RemoveAt(i);
+                    Terms.RemoveAt(i);
                     IncludeEnd = true;
                     continue;
                 }
 
                 if (word.Length > 2 && word[0] == '$' && word[1] != '(' && (TypeKeyword == null || !TypeKeyword.Contains(word.Substring(1).ToLowerInvariant())))
                 {
-                    Words.RemoveAt(i);
+                    Terms.RemoveAt(i);
                     TypeKeyword = word.Substring(1).ToLowerInvariant();
                     if (string.Equals(TypeKeyword, "copy", StringComparison.OrdinalIgnoreCase))
                     {
@@ -193,7 +193,7 @@ namespace StructuredLogViewer
                 if (word.StartsWith("under(", StringComparison.OrdinalIgnoreCase) && word.EndsWith(")"))
                 {
                     word = word.Substring(6, word.Length - 7);
-                    Words.RemoveAt(i);
+                    Terms.RemoveAt(i);
                     var underMatcher = new NodeQueryMatcher(word, stringTable);
                     IncludeMatchers.Add(underMatcher);
                     continue;
@@ -202,7 +202,7 @@ namespace StructuredLogViewer
                 if (word.StartsWith("notunder(", StringComparison.OrdinalIgnoreCase) && word.EndsWith(")"))
                 {
                     word = word.Substring(9, word.Length - 10);
-                    Words.RemoveAt(i);
+                    Terms.RemoveAt(i);
                     var underMatcher = new NodeQueryMatcher(word, stringTable);
                     ExcludeMatchers.Add(underMatcher);
                     continue;
@@ -211,7 +211,7 @@ namespace StructuredLogViewer
                 if (word.StartsWith("project(", StringComparison.OrdinalIgnoreCase) && word.EndsWith(")"))
                 {
                     word = word.Substring(8, word.Length - 9);
-                    Words.RemoveAt(i);
+                    Terms.RemoveAt(i);
 
                     var underMatcher = new NodeQueryMatcher(word, stringTable);
                     underMatcher.UnderProject = true;
@@ -222,11 +222,11 @@ namespace StructuredLogViewer
                 if (word.StartsWith("name=", StringComparison.OrdinalIgnoreCase) && word.Length > 5)
                 {
                     word = word.Substring(5, word.Length - 5);
-                    Words.RemoveAt(i);
+                    Terms.RemoveAt(i);
                     var term = Term.Get(word);
                     if (term != default)
                     {
-                        Words.Insert(i, term);
+                        Terms.Insert(i, term);
                         NameToSearch = term;
                     }
 
@@ -236,11 +236,11 @@ namespace StructuredLogViewer
                 if (word.StartsWith("value=", StringComparison.OrdinalIgnoreCase) && word.Length > 6)
                 {
                     word = word.Substring(6, word.Length - 6);
-                    Words.RemoveAt(i);
+                    Terms.RemoveAt(i);
                     var term = Term.Get(word);
                     if (term != default)
                     {
-                        Words.Insert(i, term);
+                        Terms.Insert(i, term);
                         ValueToSearch = term;
                     }
 
@@ -254,7 +254,7 @@ namespace StructuredLogViewer
             }
 
             var sw = Stopwatch.StartNew();
-            MatchesInStrings = PrecomputeMatchesInStrings(stringTable, Words, cancellationToken);
+            MatchesInStrings = PrecomputeMatchesInStrings(stringTable, Terms, cancellationToken);
             var elapsed = sw.Elapsed;
             PrecalculationDuration = elapsed;
         }
@@ -506,10 +506,10 @@ namespace StructuredLogViewer
 
             bool nameMatched = false;
             bool valueMatched = false;
-            for (int i = 0; i < Words.Count; i++)
+            for (int i = 0; i < Terms.Count; i++)
             {
                 bool anyFieldMatched = false;
-                Term term = Words[i];
+                Term term = Terms[i];
                 string word = term.Word;
 
                 for (int j = 0; j < searchFields.count; j++)

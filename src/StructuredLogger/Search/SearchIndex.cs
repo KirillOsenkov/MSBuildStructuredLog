@@ -276,7 +276,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var matcher = new NodeQueryMatcher(query, stringTable: null, cancellationToken);
 
             // we assume there are 8 words or less in the query, so we can use 1 byte per string instance
-            var terms = matcher.Words.Take(8).ToArray();
+            var terms = matcher.Terms.Take(8).ToArray();
             string typeString = matcher.TypeKeyword;
 
             var stopwatch = Stopwatch.StartNew();

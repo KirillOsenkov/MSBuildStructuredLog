@@ -195,9 +195,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public void GetResults(NodeQueryMatcher matcher, IList<SearchResult> resultSet)
         {
-            if (matcher.Words.Count == 1)
+            if (matcher.Terms.Count == 1)
             {
-                var word = matcher.Words[0];
+                var word = matcher.Terms[0];
                 var text = word.Word;
 
                 object data = TryGetDirectoryOrFile(text);
