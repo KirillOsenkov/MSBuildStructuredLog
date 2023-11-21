@@ -582,7 +582,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 if (!showResult)
                 {
-                    showResult = NodeQueryMatcher.IsUnder(includeMatcher, result);
+                    showResult = NodeQueryMatcher.IsUnder(includeMatcher, result.Node);
                 }
             }
 
@@ -593,7 +593,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             foreach (NodeQueryMatcher excludeMatcher in matcher.ExcludeMatchers)
             {
-                if (NodeQueryMatcher.IsUnder(excludeMatcher, result))
+                if (NodeQueryMatcher.IsUnder(excludeMatcher, result.Node))
                 {
                     return null;
                 }

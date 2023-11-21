@@ -574,7 +574,7 @@ namespace StructuredLogViewer
             {
                 if (!showResult)
                 {
-                    showResult = IsUnder(matcher, result);
+                    showResult = IsUnder(matcher, result.Node);
                 }
             }
 
@@ -585,7 +585,7 @@ namespace StructuredLogViewer
 
             foreach (NodeQueryMatcher matcher in ExcludeMatchers)
             {
-                if (IsUnder(matcher, result))
+                if (IsUnder(matcher, result.Node))
                 {
                     return null;
                 }
@@ -594,18 +594,12 @@ namespace StructuredLogViewer
             return result;
         }
 
-        public static bool IsUnder(NodeQueryMatcher matcher, SearchResult result)
+        public static bool IsUnder(NodeQueryMatcher matcher, BaseNode node)
         {
             if (matcher.UnderProject)
             {
-                var project = result.Node.GetNearestParent<Project>();
+                var project = node.GetNearestParent<TimedNode>(p => p is Project or ProjectEvaluation);
                 if (project != null && matcher.IsMatch(project) != null)
-                {
-                    return true;
-                }
-
-                var projectEvaluation = result.Node.GetNearestParent<ProjectEvaluation>();
-                if (projectEvaluation != null && matcher.IsMatch(projectEvaluation) != null)
                 {
                     return true;
                 }
@@ -613,7 +607,7 @@ namespace StructuredLogViewer
                 return false;
             }
 
-            foreach (var parent in result.Node.GetParentChainExcludingThis())
+            foreach (var parent in node.GetParentChainExcludingThis())
             {
                 if (matcher.IsMatch(parent) != null)
                 {
