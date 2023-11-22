@@ -109,8 +109,8 @@ namespace StructuredLogViewer
         public bool UnderProject { get; set; } = false;
         public bool IsCopy { get; set; }
 
-        public Term NameToSearch { get; set; }
-        public Term ValueToSearch { get; set; }
+        public int NameTermIndex { get; set; } = -1;
+        public int ValueTermIndex { get; set; } = -1;
 
         public IList<NodeQueryMatcher> IncludeMatchers { get; } = new List<NodeQueryMatcher>();
         public IList<NodeQueryMatcher> ExcludeMatchers { get; } = new List<NodeQueryMatcher>();
@@ -119,7 +119,7 @@ namespace StructuredLogViewer
         [ThreadStatic]
         private static string[] searchFieldsThreadStatic;
 
-        private const int MaxArraySize = 6;
+        public const int MaxArraySize = 6;
 
         public NodeQueryMatcher(
             string query,
@@ -170,32 +170,32 @@ namespace StructuredLogViewer
 
         private void ParseTerms(IEnumerable<string> stringTable)
         {
-            for (int i = Terms.Count - 1; i >= 0; i--)
+            for (int termIndex = Terms.Count - 1; termIndex >= 0; termIndex--)
             {
-                var word = Terms[i].Word;
+                var word = Terms[termIndex].Word;
 
                 if (string.Equals(word, "$time", StringComparison.OrdinalIgnoreCase) || string.Equals(word, "$duration", StringComparison.OrdinalIgnoreCase))
                 {
-                    Terms.RemoveAt(i);
+                    Terms.RemoveAt(termIndex);
                     IncludeDuration = true;
                     continue;
                 }
                 else if (string.Equals(word, "$start", StringComparison.OrdinalIgnoreCase) || string.Equals(word, "$starttime", StringComparison.OrdinalIgnoreCase))
                 {
-                    Terms.RemoveAt(i);
+                    Terms.RemoveAt(termIndex);
                     IncludeStart = true;
                     continue;
                 }
                 else if (string.Equals(word, "$end", StringComparison.OrdinalIgnoreCase) || string.Equals(word, "$endtime", StringComparison.OrdinalIgnoreCase))
                 {
-                    Terms.RemoveAt(i);
+                    Terms.RemoveAt(termIndex);
                     IncludeEnd = true;
                     continue;
                 }
 
                 if (word.Length > 2 && word[0] == '$' && word[1] != '(' && (TypeKeyword == null || !TypeKeyword.Contains(word.Substring(1).ToLowerInvariant())))
                 {
-                    Terms.RemoveAt(i);
+                    Terms.RemoveAt(termIndex);
                     TypeKeyword = word.Substring(1).ToLowerInvariant();
                     if (string.Equals(TypeKeyword, "copy", StringComparison.OrdinalIgnoreCase))
                     {
@@ -208,7 +208,7 @@ namespace StructuredLogViewer
                 if (word.StartsWith("under(", StringComparison.OrdinalIgnoreCase) && word.EndsWith(")"))
                 {
                     word = word.Substring(6, word.Length - 7);
-                    Terms.RemoveAt(i);
+                    Terms.RemoveAt(termIndex);
                     var underMatcher = new NodeQueryMatcher(word, stringTable);
                     IncludeMatchers.Add(underMatcher);
                     continue;
@@ -217,7 +217,7 @@ namespace StructuredLogViewer
                 if (word.StartsWith("notunder(", StringComparison.OrdinalIgnoreCase) && word.EndsWith(")"))
                 {
                     word = word.Substring(9, word.Length - 10);
-                    Terms.RemoveAt(i);
+                    Terms.RemoveAt(termIndex);
                     var underMatcher = new NodeQueryMatcher(word, stringTable);
                     ExcludeMatchers.Add(underMatcher);
                     continue;
@@ -226,7 +226,7 @@ namespace StructuredLogViewer
                 if (word.StartsWith("project(", StringComparison.OrdinalIgnoreCase) && word.EndsWith(")"))
                 {
                     word = word.Substring(8, word.Length - 9);
-                    Terms.RemoveAt(i);
+                    Terms.RemoveAt(termIndex);
 
                     var underMatcher = new NodeQueryMatcher(word, stringTable);
                     underMatcher.UnderProject = true;
@@ -237,12 +237,12 @@ namespace StructuredLogViewer
                 if (word.StartsWith("name=", StringComparison.OrdinalIgnoreCase) && word.Length > 5)
                 {
                     word = word.Substring(5, word.Length - 5);
-                    Terms.RemoveAt(i);
+                    Terms.RemoveAt(termIndex);
                     var term = Term.Get(word);
                     if (term != default)
                     {
-                        Terms.Insert(i, term);
-                        NameToSearch = term;
+                        Terms.Insert(termIndex, term);
+                        NameTermIndex = termIndex;
                     }
 
                     continue;
@@ -251,12 +251,12 @@ namespace StructuredLogViewer
                 if (word.StartsWith("value=", StringComparison.OrdinalIgnoreCase) && word.Length > 6)
                 {
                     word = word.Substring(6, word.Length - 6);
-                    Terms.RemoveAt(i);
+                    Terms.RemoveAt(termIndex);
                     var term = Term.Get(word);
                     if (term != default)
                     {
-                        Terms.Insert(i, term);
-                        ValueToSearch = term;
+                        Terms.Insert(termIndex, term);
+                        ValueTermIndex = termIndex;
                     }
 
                     continue;
@@ -513,19 +513,19 @@ namespace StructuredLogViewer
 
             bool nameMatched = false;
             bool valueMatched = false;
-            for (int i = 0; i < Terms.Count; i++)
+            for (int termIndex = 0; termIndex < Terms.Count; termIndex++)
             {
                 bool anyFieldMatched = false;
-                Term term = Terms[i];
+                Term term = Terms[termIndex];
                 string word = term.Word;
 
-                for (int j = 0; j < searchFields.count; j++)
+                for (int fieldIndex = 0; fieldIndex < searchFields.count; fieldIndex++)
                 {
-                    string field = searchFields.array[j];
+                    string field = searchFields.array[fieldIndex];
 
                     if (MatchesInStrings != null)
                     {
-                        if (!term.IsMatch(field, MatchesInStrings[i]))
+                        if (!term.IsMatch(field, MatchesInStrings[termIndex]))
                         {
                             continue;
                         }
@@ -544,19 +544,18 @@ namespace StructuredLogViewer
                     }
 
                     // if matched on the type of the node (always field 0), special case it
-                    if (j == 0)
+                    if (fieldIndex == 0)
                     {
                         result.AddMatchByNodeType();
                     }
                     else
                     {
                         string fullText = field;
-                        var nameValueNode = node as NameValueNode;
 
                         // NameValueNode is a special case: have to check in which field to search
-                        if (nameValueNode != null && (NameToSearch != default || ValueToSearch != default))
+                        if (node is NameValueNode && (NameTermIndex != -1 || ValueTermIndex != -1))
                         {
-                            if (j == 1 && term == NameToSearch)
+                            if (fieldIndex == 1 && termIndex == NameTermIndex)
                             {
                                 result.AddMatch(fullText, word, addAtBeginning: true);
                                 nameMatched = true;
@@ -564,7 +563,7 @@ namespace StructuredLogViewer
                                 break;
                             }
 
-                            if (j == 2 && term == ValueToSearch)
+                            if (fieldIndex == 2 && termIndex == ValueTermIndex)
                             {
                                 result.AddMatch(fullText, word);
                                 valueMatched = true;
@@ -593,7 +592,7 @@ namespace StructuredLogViewer
             }
 
             // if both name and value are specified, they both have to match
-            if (NameToSearch != default && ValueToSearch != default && (!nameMatched || !valueMatched))
+            if (NameTermIndex != -1 && ValueTermIndex != -1 && (!nameMatched || !valueMatched))
             {
                 return null;
             }

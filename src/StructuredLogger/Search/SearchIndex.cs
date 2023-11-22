@@ -496,25 +496,25 @@ namespace Microsoft.Build.Logging.StructuredLogger
             bool valueMatched = false;
             int termCount = terms.Length;
 
-            var nameToSearch = matcher.NameToSearch;
-            var valueToSearch = matcher.ValueToSearch;
+            int nameTermIndex = matcher.NameTermIndex;
+            int valueTermIndex = matcher.ValueTermIndex;
 
-            for (int i = 0; i < termCount; i++)
+            for (int termIndex = 0; termIndex < termCount; termIndex++)
             {
                 bool anyFieldMatched = false;
-                Term term = terms[i];
+                Term term = terms[termIndex];
                 string word = term.Word;
 
-                for (int j = 0; j < 6; j++)
+                for (int fieldIndex = 0; fieldIndex < NodeQueryMatcher.MaxArraySize; fieldIndex++)
                 {
-                    int field = entry.GetField(j);
+                    int field = entry.GetField(fieldIndex);
                     if (field == 0)
                     {
                         break;
                     }
 
                     byte bits = bitVector[field];
-                    if ((bits & (1 << i)) == 0)
+                    if ((bits & (1 << termIndex)) == 0)
                     {
                         continue;
                     }
@@ -525,7 +525,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
 
                     // if matched on the type of the node (always field 0), special case it
-                    if (j == 0)
+                    if (fieldIndex == 0)
                     {
                         result.AddMatchByNodeType();
                     }
@@ -535,9 +535,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         var nameValueNode = node as NameValueNode;
 
                         // NameValueNode is a special case: have to check in which field to search
-                        if (nameValueNode != null && (nameToSearch != default || valueToSearch != default))
+                        if (nameValueNode != null && (nameTermIndex != -1 || valueTermIndex != -1))
                         {
-                            if (j == 1 && term == nameToSearch)
+                            if (fieldIndex == 1 && termIndex == nameTermIndex)
                             {
                                 result.AddMatch(fullText, word, addAtBeginning: true);
                                 nameMatched = true;
@@ -545,7 +545,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                 break;
                             }
 
-                            if (j == 2 && term == valueToSearch)
+                            if (fieldIndex == 2 && termIndex == valueTermIndex)
                             {
                                 result.AddMatch(fullText, word);
                                 valueMatched = true;
@@ -574,7 +574,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             // if both name and value are specified, they both have to match
-            if (nameToSearch != default && valueToSearch != default && (!nameMatched || !valueMatched))
+            if (nameTermIndex != -1 && valueTermIndex != -1 && (!nameMatched || !valueMatched))
             {
                 return null;
             }
