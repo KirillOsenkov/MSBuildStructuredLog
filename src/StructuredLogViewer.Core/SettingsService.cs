@@ -365,7 +365,6 @@ namespace StructuredLogViewer
         }
 
         private static bool useDarkTheme = false;
-
         public static bool UseDarkTheme
         {
             get
@@ -386,6 +385,27 @@ namespace StructuredLogViewer
             }
         }
 
+        private static string? windowPosition;
+        public static string? WindowPosition
+        {
+            get
+            {
+                EnsureSettingsRead();
+                return windowPosition;
+            }
+
+            set
+            {
+                if (windowPosition == value)
+                {
+                    return;
+                }
+
+                windowPosition = value;
+                SaveSettings();
+            }
+        }
+
         private static void EnsureSettingsRead()
         {
             if (!settingsRead)
@@ -399,6 +419,7 @@ namespace StructuredLogViewer
         const string MarkResultsInTreeSetting = "MarkResultsInTree=";
         const string ShowConfigurationAndPlatformSetting = "ShowConfigurationAndPlatform=";
         const string UseDarkThemeSetting = "UseDarkTheme=";
+        const string WindowPositionSetting = "WindowPosition=";
 
         private static void SaveSettings()
         {
@@ -408,6 +429,7 @@ namespace StructuredLogViewer
             sb.AppendLine(MarkResultsInTreeSetting + markResultsInTree.ToString());
             sb.AppendLine(ShowConfigurationAndPlatformSetting + ShowConfigurationAndPlatform.ToString());
             sb.AppendLine(UseDarkThemeSetting + useDarkTheme.ToString());
+            sb.AppendLine(WindowPositionSetting + windowPosition);
 
             using (SingleGlobalInstance.Acquire(Path.GetFileName(settingsFilePath)))
             {
@@ -434,6 +456,18 @@ namespace StructuredLogViewer
                     ProcessLine(MarkResultsInTreeSetting, line, ref markResultsInTree);
                     ProcessLine(ShowConfigurationAndPlatformSetting, line, ref ProjectOrEvaluationHelper.ShowConfigurationAndPlatform);
                     ProcessLine(UseDarkThemeSetting, line, ref useDarkTheme);
+                    ProcessString(WindowPositionSetting, line, ref windowPosition);
+
+                    void ProcessString(string setting, string text, ref string? variable)
+                    {
+                        if (!text.StartsWith(setting))
+                        {
+                            return;
+                        }
+
+                        var value = text.Substring(setting.Length);
+                        variable = value;
+                    }
 
                     void ProcessLine(string setting, string text, ref bool variable)
                     {

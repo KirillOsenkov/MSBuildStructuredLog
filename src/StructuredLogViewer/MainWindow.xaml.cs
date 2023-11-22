@@ -34,15 +34,29 @@ namespace StructuredLogViewer
         public MainWindow()
         {
             InitializeComponent();
+
             var uri = new Uri("StructuredLogViewer;component/themes/Generic.xaml", UriKind.Relative);
             var generic = new ResourceDictionary { Source = uri };
             Application.Current.Resources.MergedDictionaries.Add(generic);
 
+            SourceInitialized += MainWindow_SourceInitialized;
             Loaded += MainWindow_Loaded;
             Drop += MainWindow_Drop;
+            Closing += MainWindow_Closing;
 
             ThemeManager.UseDarkTheme = SettingsService.UseDarkTheme;
             ThemeManager.UpdateTheme();
+        }
+
+        private void MainWindow_SourceInitialized(object sender, EventArgs e)
+        {
+            WindowPosition.RestoreWindowPosition(this, SettingsService.WindowPosition);
+        }
+
+        private void MainWindow_Closing(object sender, CancelEventArgs e)
+        {
+            var windowPosition = WindowPosition.GetWindowPosition(this);
+            SettingsService.WindowPosition = windowPosition;
         }
 
         protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
