@@ -155,6 +155,21 @@ namespace StructuredLogViewer
                 }
             }
 
+            ParseTerms(stringTable);
+
+            if (IsCopy || stringTable is null)
+            {
+                return;
+            }
+
+            var sw = Stopwatch.StartNew();
+            MatchesInStrings = PrecomputeMatchesInStrings(stringTable, Terms, cancellationToken);
+            var elapsed = sw.Elapsed;
+            PrecalculationDuration = elapsed;
+        }
+
+        private void ParseTerms(IEnumerable<string> stringTable)
+        {
             for (int i = Terms.Count - 1; i >= 0; i--)
             {
                 var word = Terms[i].Word;
@@ -247,16 +262,6 @@ namespace StructuredLogViewer
                     continue;
                 }
             }
-
-            if (IsCopy || stringTable is null)
-            {
-                return;
-            }
-
-            var sw = Stopwatch.StartNew();
-            MatchesInStrings = PrecomputeMatchesInStrings(stringTable, Terms, cancellationToken);
-            var elapsed = sw.Elapsed;
-            PrecalculationDuration = elapsed;
         }
 
         private string PreprocessQuery(string query)
