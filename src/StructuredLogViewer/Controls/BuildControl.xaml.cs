@@ -1721,6 +1721,8 @@ Recent:
                         return DisplayAddRemoveItem(addItem.Parent, addItem.LineNumber ?? 0);
                     case RemoveItem removeItem:
                         return DisplayAddRemoveItem(removeItem.Parent, removeItem.LineNumber ?? 0);
+                    case Item item when item.Parent is AddItem parentAddItem && parentAddItem.Name == "EmbedInBinlog":
+                        return DisplayEmbeddedFile(item);
                     case IHasSourceFile hasSourceFile when hasSourceFile.SourceFilePath != null:
                         int line = 0;
                         var hasLine = hasSourceFile as IHasLineNumber;
@@ -1746,6 +1748,19 @@ Recent:
             catch
             {
                 // in case our guessing of file path goes awry
+            }
+
+            return false;
+        }
+
+        private bool DisplayEmbeddedFile(Item item)
+        {
+            string path = item.Text;
+
+            var candidates = sourceFileResolver.ArchiveFile.FindFileNames(path).ToArray();
+            if (candidates.Length == 1)
+            {
+                return DisplayFile(candidates[0]);
             }
 
             return false;

@@ -18,6 +18,17 @@ namespace StructuredLogViewer
             }
         }
 
+        public IEnumerable<string> FindFileNames(string substring)
+        {
+            foreach (var file in Files)
+            {
+                if (file.Key.IndexOf(substring, StringComparison.OrdinalIgnoreCase) != -1)
+                {
+                    yield return file.Key;
+                }
+            }
+        }
+
         public SourceText GetSourceFileText(string filePath)
         {
             filePath = ArchiveFile.CalculateArchivePath(filePath);
