@@ -69,6 +69,7 @@ namespace StructuredLogViewer
         {
             var isMatch = false;
             var containsMatch = false;
+            bool visitChildren = true;
 
             if (cancellationToken.IsCancellationRequested)
             {
@@ -77,12 +78,25 @@ namespace StructuredLogViewer
 
             if (resultCount < maxResults)
             {
-                var result = matcher.IsMatch(node);
+                var result = matcher?.IsMatch(node);
                 if (result != null)
                 {
-                    isMatch = true;
-                    results.Add(result);
-                    resultCount++;
+                    if (matcher.HasTimeIntervalConstraints && !matcher.IsTimeIntervalMatch(node))
+                    {
+                        // if the current node is outside the requested time interval, only
+                        // visit the children if we mark results in the tree
+                        visitChildren = markResultsInTree;
+
+                        // ensure recursive calls don't bother matching, since we've failed the time
+                        // interval test. Only refresh the result marks.
+                        matcher = null;
+                    }
+                    else
+                    {
+                        isMatch = true;
+                        results.Add(result);
+                        resultCount++;
+                    }
                 }
             }
             else if (!markResultsInTree)
@@ -92,7 +106,7 @@ namespace StructuredLogViewer
                 return false;
             }
 
-            if (node is TreeNode treeNode && treeNode.HasChildren)
+            if (visitChildren && node is TreeNode treeNode && treeNode.HasChildren)
             {
                 var children = treeNode.Children;
 

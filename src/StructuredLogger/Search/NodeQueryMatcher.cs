@@ -112,6 +112,12 @@ namespace StructuredLogViewer
         public int NameTermIndex { get; set; } = -1;
         public int ValueTermIndex { get; set; } = -1;
 
+        public DateTime StartBefore { get; set; }
+        public DateTime StartAfter { get; set; }
+        public DateTime EndBefore { get; set; }
+        public DateTime EndAfter { get; set; }
+        public bool HasTimeIntervalConstraints { get; set; }
+
         public IList<NodeQueryMatcher> IncludeMatchers { get; } = new List<NodeQueryMatcher>();
         public IList<NodeQueryMatcher> ExcludeMatchers { get; } = new List<NodeQueryMatcher>();
 
@@ -234,6 +240,58 @@ namespace StructuredLogViewer
                     continue;
                 }
 
+                if (word.StartsWith("start<\"", StringComparison.OrdinalIgnoreCase) && word.Length > 8 && word.EndsWith("\""))
+                {
+                    word = word.Substring(7, word.Length - 8);
+                    Terms.RemoveAt(termIndex);
+
+                    if (DateTime.TryParse(word, out var startBefore))
+                    {
+                        StartBefore = startBefore;
+                        HasTimeIntervalConstraints = true;
+                        continue;
+                    }
+                }
+
+                if (word.StartsWith("start>\"", StringComparison.OrdinalIgnoreCase) && word.Length > 8 && word.EndsWith("\""))
+                {
+                    word = word.Substring(7, word.Length - 8);
+                    Terms.RemoveAt(termIndex);
+
+                    if (DateTime.TryParse(word, out var startAfter))
+                    {
+                        StartAfter = startAfter;
+                        HasTimeIntervalConstraints = true;
+                        continue;
+                    }
+                }
+
+                if (word.StartsWith("end<\"", StringComparison.OrdinalIgnoreCase) && word.Length > 6 && word.EndsWith("\""))
+                {
+                    word = word.Substring(5, word.Length - 6);
+                    Terms.RemoveAt(termIndex);
+
+                    if (DateTime.TryParse(word, out var endBefore))
+                    {
+                        EndBefore = endBefore;
+                        HasTimeIntervalConstraints = true;
+                        continue;
+                    }
+                }
+
+                if (word.StartsWith("end>\"", StringComparison.OrdinalIgnoreCase) && word.Length > 6 && word.EndsWith("\""))
+                {
+                    word = word.Substring(5, word.Length - 6);
+                    Terms.RemoveAt(termIndex);
+
+                    if (DateTime.TryParse(word, out var endAfter))
+                    {
+                        EndAfter = endAfter;
+                        HasTimeIntervalConstraints = true;
+                        continue;
+                    }
+                }
+
                 if (word.StartsWith("name=", StringComparison.OrdinalIgnoreCase) && word.Length > 5)
                 {
                     word = word.Substring(5, word.Length - 5);
@@ -273,6 +331,21 @@ namespace StructuredLogViewer
 
             query = query.Replace("$csc", "$task csc");
             query = query.Replace("$rar", "$task ResolveAssemblyReference");
+            query = query.Replace("project (", "project(");
+            query = query.Replace("under (", "under(");
+            query = query.Replace("notunder (", "notunder(");
+            query = query.Replace("start < ", "start<");
+            query = query.Replace("start <", "start<");
+            query = query.Replace("start< ", "start<");
+            query = query.Replace("start > ", "start>");
+            query = query.Replace("start >", "start>");
+            query = query.Replace("start> ", "start>");
+            query = query.Replace("end < ", "end<");
+            query = query.Replace("end <", "end<");
+            query = query.Replace("end< ", "end<");
+            query = query.Replace("end > ", "end>");
+            query = query.Replace("end >", "end>");
+            query = query.Replace("end> ", "end>");
 
             return query;
         }
@@ -622,12 +695,44 @@ namespace StructuredLogViewer
             return result;
         }
 
+        public bool IsTimeIntervalMatch(BaseNode node)
+        {
+            if (!HasTimeIntervalConstraints || node is not TimedNode timedNode)
+            {
+                return true;
+            }
+
+            if (StartBefore != default && timedNode.StartTime > StartBefore)
+            {
+                return false;
+            }
+
+            if (StartAfter != default && timedNode.StartTime < StartAfter)
+            {
+                return false;
+            }
+
+            if (EndBefore != default && timedNode.EndTime > EndBefore)
+            {
+                return false;
+            }
+
+            if (EndAfter != default && timedNode.EndTime < EndAfter)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         public static bool IsUnder(NodeQueryMatcher matcher, BaseNode node)
         {
             if (matcher.UnderProject)
             {
                 var project = node.GetNearestParent<TimedNode>(p => p is Project or ProjectEvaluation);
-                if (project != null && matcher.IsMatch(project) != null)
+                if (project != null &&
+                    matcher.IsMatch(project) != null &&
+                    matcher.IsTimeIntervalMatch(project))
                 {
                     return true;
                 }
@@ -637,7 +742,7 @@ namespace StructuredLogViewer
 
             foreach (var parent in node.GetParentChainExcludingThis())
             {
-                if (matcher.IsMatch(parent) != null)
+                if (matcher.IsMatch(parent) != null && matcher.IsTimeIntervalMatch(parent))
                 {
                     return true;
                 }

@@ -386,7 +386,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 var entry = chunk[i];
                 bool match = false;
 
-                if (searching && IsMatch(matcher, entry, terms) is { } searchResult)
+                if (searching &&
+                    IsMatch(matcher, entry, terms) is { } searchResult &&
+                    matcher.IsTimeIntervalMatch(entry.Node))
                 {
                     match = true;
                     results.Add(searchResult);
