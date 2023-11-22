@@ -482,6 +482,8 @@ namespace StructuredLogViewer
                     result.AddMatch(prefix + NodeIndex.ToString(), NodeIndex.ToString());
                     return result;
                 }
+
+                return null;
             }
 
             var searchFields = PopulateSearchFields(node);

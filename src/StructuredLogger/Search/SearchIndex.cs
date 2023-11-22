@@ -467,6 +467,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     result.AddMatch("Node id: " + indexString, indexString);
                     return result;
                 }
+
+                return null;
             }
 
             if (typeKeyword != 0)
