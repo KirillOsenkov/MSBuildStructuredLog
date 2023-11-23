@@ -195,7 +195,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (!build.Succeeded)
             {
-                build.AddChild(new Error { Text = Intern("Build failed.") });
+                build.AddChild(new BuildError
+                {
+                    Text = Intern("Build failed.")
+                });
             }
             else
             {

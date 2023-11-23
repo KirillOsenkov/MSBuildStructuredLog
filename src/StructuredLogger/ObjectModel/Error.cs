@@ -4,4 +4,9 @@
     {
         public override string TypeName => nameof(Error);
     }
+
+    public class BuildError : Error
+    {
+        public override string TypeName => "Build Error";
+    }
 }
