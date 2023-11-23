@@ -9,6 +9,10 @@
   <Geometry x:Key="SearchGeometry">F1 M 8.5,7.0 C 7.12,7.00 6.0,5.88 6.0,4.5 C 6.0,3.12 7.12,2.0 8.5,2.0 C 9.88,2.0 11.0,3.12 11.0,4.5 C 11.0,5.88 9.88,7.0 8.5,7.0 Z M 8.5,0.0 C 6.02,0.0 4.0,2.02 4.0,4.500 C 4.0,5.23 4.19,5.9 4.49,6.5 L 0.0,11.0 L 2.0,13.0 L 6.49,8.51 C 7.1,8.81 7.77,9.0 8.5,9.0 C 11.0,9.0 13.0,7.0 13.0,4.5 C 13.0,2.02 11.0,0.0 8.5,0.0 Z</Geometry>
   <BooleanToVisibilityConverter x:Key="booleanToVisibilityConverter" />
 
+  <Geometry x:Key="AddItemGeometry">M 2 4 L 5 4 L 5 1 L 8 1 L 8 4 L 11 4 L 11 7 L 8 7 L 8 10 L 5 10 L 5 7 L 2 7 Z</Geometry>
+  <Geometry x:Key="RemoveItemGeometry">M 2 4 L 11 4 L 11 7 L 2 7 Z</Geometry>
+  <Geometry x:Key="SquareIconGeometry">F1M0,0L15,0L15,15L0,15Z</Geometry>
+
   <Style x:Key="{x:Type TextBlock}" TargetType="{x:Type TextBlock}">
     <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
   </Style>
@@ -416,11 +420,11 @@
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
       <Path x:Name="icon"
-          Data="M 0 0 L 3 0 L 3 -3 L 6 -3 L 6 0 L 9 0 L 9 3 L 6 3 L 6 6 L 3 6 L 3 3 L 0 3 Z"
+          Data="{DynamicResource AddItemGeometry}"
           VerticalAlignment="Center"
           Width="14"
           Height="11"
-          Margin="5,5,5,-3"
+          Margin="3,3,6,3"
           Stroke="{DynamicResource ItemStroke}"
           Fill="{DynamicResource ItemBrush}" />
       <TextBlock x:Name="label" Text="Add Item " />
@@ -437,11 +441,11 @@
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
       <Path x:Name="icon"
-          Data="M 0 0 L 9 0 L 9 3 L 0 3 Z"
+          Data="{DynamicResource RemoveItemGeometry}"
           VerticalAlignment="Center"
           Width="14"
           Height="11"
-          Margin="5,5,5,-3"
+          Margin="3,3,6,3"
           Stroke="{DynamicResource ItemStroke}"
           Fill="{DynamicResource ItemBrush}" />
       <TextBlock x:Name="label" Text="Remove Item " />
@@ -669,7 +673,14 @@
   <HierarchicalDataTemplate DataType="{x:Type l:ProxyNode}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
-      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{DynamicResource ParameterStroke}" Fill="{DynamicResource ParameterBrush}" />
+      <Path x:Name="icon"
+          Data="F1M0,0L14,0L14,11L0,11Z"
+          Width="14"
+          Height="11"
+          Margin="3,3,6,3"
+          VerticalAlignment="Center"
+          Stroke="{DynamicResource ParameterStroke}"
+          Fill="{DynamicResource ParameterBrush}" />
       <ItemsControl x:Name="text" ItemsSource="{Binding Highlights}" Focusable="False">
         <ItemsControl.Resources>
         </ItemsControl.Resources>
@@ -696,10 +707,12 @@
       <DataTrigger Binding="{Binding OriginalType}" Value="AddItem">
         <Setter TargetName="icon" Property="Stroke" Value="{DynamicResource ItemStroke}" />
         <Setter TargetName="icon" Property="Fill" Value="{DynamicResource ItemBrush}" />
+        <Setter TargetName="icon" Property="Data" Value="{DynamicResource AddItemGeometry}" />
       </DataTrigger>
       <DataTrigger Binding="{Binding OriginalType}" Value="RemoveItem">
         <Setter TargetName="icon" Property="Stroke" Value="{DynamicResource ItemStroke}" />
         <Setter TargetName="icon" Property="Fill" Value="{DynamicResource ItemBrush}" />
+        <Setter TargetName="icon" Property="Data" Value="{DynamicResource RemoveItemGeometry}" />
       </DataTrigger>
       <DataTrigger Binding="{Binding OriginalType}" Value="Item">
         <Setter TargetName="icon" Property="Stroke" Value="{DynamicResource ItemStroke}" />
@@ -743,6 +756,7 @@
       </DataTrigger>
       <DataTrigger Binding="{Binding ProjectExtension}" Value=".sln">
         <Setter TargetName="icon" Property="Fill" Value="{StaticResource SlnIcon}" />
+        <Setter TargetName="icon" Property="Data" Value="{DynamicResource SquareIconGeometry}" />
         <Setter TargetName="icon" Property="Height" Value="16" />
         <Setter TargetName="icon" Property="Width" Value="16" />
         <Setter TargetName="icon" Property="StrokeThickness" Value="0" />
@@ -751,6 +765,7 @@
       </DataTrigger>
       <DataTrigger Binding="{Binding ProjectExtension}" Value=".csproj">
         <Setter TargetName="icon" Property="Fill" Value="{StaticResource CSProjIcon}" />
+        <Setter TargetName="icon" Property="Data" Value="{DynamicResource SquareIconGeometry}" />
         <Setter TargetName="icon" Property="Height" Value="16" />
         <Setter TargetName="icon" Property="Width" Value="16" />
         <Setter TargetName="icon" Property="StrokeThickness" Value="0" />
@@ -759,6 +774,7 @@
       </DataTrigger>
       <DataTrigger Binding="{Binding ProjectExtension}" Value=".vbproj">
         <Setter TargetName="icon" Property="Fill" Value="{StaticResource VBProjIcon}" />
+        <Setter TargetName="icon" Property="Data" Value="{DynamicResource SquareIconGeometry}" />
         <Setter TargetName="icon" Property="Height" Value="16" />
         <Setter TargetName="icon" Property="Width" Value="16" />
         <Setter TargetName="icon" Property="StrokeThickness" Value="0" />
@@ -767,6 +783,7 @@
       </DataTrigger>
       <DataTrigger Binding="{Binding ProjectExtension}" Value=".fsproj">
         <Setter TargetName="icon" Property="Fill" Value="{StaticResource FSProjIcon}" />
+        <Setter TargetName="icon" Property="Data" Value="{DynamicResource SquareIconGeometry}" />
         <Setter TargetName="icon" Property="Height" Value="16" />
         <Setter TargetName="icon" Property="Width" Value="16" />
         <Setter TargetName="icon" Property="StrokeThickness" Value="0" />
@@ -775,6 +792,7 @@
       </DataTrigger>
       <DataTrigger Binding="{Binding ProjectExtension}" Value=".vcxproj">
         <Setter TargetName="icon" Property="Fill" Value="{StaticResource CppProjIcon}" />
+        <Setter TargetName="icon" Property="Data" Value="{DynamicResource SquareIconGeometry}" />
         <Setter TargetName="icon" Property="Height" Value="16" />
         <Setter TargetName="icon" Property="Width" Value="16" />
         <Setter TargetName="icon" Property="StrokeThickness" Value="0" />
@@ -783,6 +801,7 @@
       </DataTrigger>
       <DataTrigger Binding="{Binding ProjectExtension}" Value="other">
         <Setter TargetName="icon" Property="Fill" Value="{StaticResource GenericProjectIcon}" />
+        <Setter TargetName="icon" Property="Data" Value="{DynamicResource SquareIconGeometry}" />
         <Setter TargetName="icon" Property="Height" Value="16" />
         <Setter TargetName="icon" Property="Width" Value="16" />
         <Setter TargetName="icon" Property="StrokeThickness" Value="0" />
