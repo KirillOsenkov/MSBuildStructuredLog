@@ -201,7 +201,7 @@ namespace StructuredLogViewer
             {
                 if (actualParent is Target or Task or AddItem or RemoveItem)
                 {
-                    folderProxy.Highlights.Add(actualParent.TypeName + " ");
+                    folderProxy.Highlights.Add(folderProxy.OriginalType + " ");
                 }
 
                 folderProxy.Highlights.Add(name);

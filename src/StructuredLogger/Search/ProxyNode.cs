@@ -43,6 +43,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     return $"{evaluation.Name} {evaluation.AdornmentString} {evaluation.EvaluationText}";
                 }
+                else if (node is TextNode textNode)
+                {
+                    return textNode.Text ?? namedNode.Name;
+                }
 
                 return namedNode.Name;
             }
