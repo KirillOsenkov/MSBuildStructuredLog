@@ -153,6 +153,11 @@ namespace StructuredLogViewer
                 var proxy = new ProxyNode();
                 proxy.Original = resultNode;
                 proxy.SearchResult = result;
+                if (resultNode is NamedNode originalNamedNode)
+                {
+                    proxy.Name = originalNamedNode.Name;
+                }
+
                 parent.Children.Add(proxy);
             }
 

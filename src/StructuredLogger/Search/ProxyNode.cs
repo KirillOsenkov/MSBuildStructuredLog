@@ -68,7 +68,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             string typePrefix = OriginalType;
-            if (typePrefix != Strings.Folder && typePrefix != Strings.Item)
+            if (typePrefix != Strings.Folder &&
+                typePrefix != Strings.Item &&
+                typePrefix != Strings.Metadata)
             {
                 Highlights.Add(typePrefix);
             }
@@ -174,8 +176,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             AddDuration(result);
-
-            Name = ToString();
         }
 
         private object GetNodeDifferentiator(BaseNode node)

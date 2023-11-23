@@ -682,8 +682,6 @@
           Stroke="{DynamicResource ParameterStroke}"
           Fill="{DynamicResource ParameterBrush}" />
       <ItemsControl x:Name="text" ItemsSource="{Binding Highlights}" Focusable="False">
-        <ItemsControl.Resources>
-        </ItemsControl.Resources>
         <ItemsControl.ItemsPanel>
           <ItemsPanelTemplate>
             <StackPanel Orientation="Horizontal" IsItemsHost="True" />
