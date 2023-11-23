@@ -203,8 +203,15 @@ namespace StructuredLogViewer
             }
 
             folderProxy.Original = actualParent;
+
             if (folderProxy.Highlights.Count == 0)
             {
+                var typePrefix = actualParent.TypeName;
+                if (typePrefix == Strings.AddItem)
+                {
+                    folderProxy.Highlights.Add(typePrefix + " ");
+                }
+
                 folderProxy.Highlights.Add(name);
             }
 

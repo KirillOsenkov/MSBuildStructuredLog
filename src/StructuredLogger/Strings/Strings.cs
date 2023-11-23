@@ -510,6 +510,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string Assembly => "Assembly";
         public static string CommandLineArguments => "CommandLineArguments";
         public static string Item => "Item";
+        public static string AddItem => "AddItem";
+        public static string RemoveItem => "RemoveItem";
         public static string Metadata => "Metadata";
         public static string Property => "Property";
         public static string Duration => "Duration";

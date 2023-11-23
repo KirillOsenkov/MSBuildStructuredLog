@@ -38,7 +38,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
             else if (node is ProjectEvaluation evaluation)
             {
-                return $"{evaluation.Name} {evaluation.EvaluationText}";
+                return $"{evaluation.Name} {evaluation.AdornmentString} {evaluation.EvaluationText}";
             }
 
             return node.ToString();
