@@ -146,7 +146,7 @@ namespace StructuredLogViewer
                         (grandparent is Folder || grandparent is AddItem || grandparent is RemoveItem))
                     {
                         parent = InsertParent(parent, grandparent);
-                        parent = InsertParent(parent, parentItem, parentItem.Text);
+                        parent = InsertParent(parent, parentItem);
                     }
                 }
 
