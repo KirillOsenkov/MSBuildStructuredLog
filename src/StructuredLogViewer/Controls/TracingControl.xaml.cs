@@ -696,7 +696,13 @@ namespace StructuredLogViewer.Controls
 
         private Panel CreatePanelForNodeDivider(bool showTime)
         {
-            var timeWidth = ConvertTimeToPixel(GlobalEndTime - GlobalStartTime);
+            var endTime = GlobalEndTime;
+            if (endTime < GlobalStartTime)
+            {
+                endTime = GlobalStartTime;
+            }
+
+            var timeWidth = ConvertTimeToPixel(endTime - GlobalStartTime);
 
             bool fiveSeconds = false;
             double gapWidth;
