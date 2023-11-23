@@ -101,36 +101,29 @@ namespace StructuredLogViewer
                     var project = resultNode.GetNearestParent<Project>();
                     if (project != null)
                     {
-                        var projectName = ProxyNode.GetNodeText(project);
-                        parent = InsertParent(
-                            parent,
-                            project,
-                            projectName);
+                        parent = InsertParent(parent, project);
                     }
-
-                    if (project == null)
+                    else
                     {
                         var evaluation = resultNode.GetNearestParent<ProjectEvaluation>();
                         if (evaluation != null)
                         {
-                            parent = InsertParent(parent, evaluation.Parent as TimedNode, Strings.Evaluation);
-
-                            var evaluationName = ProxyNode.GetNodeText(evaluation);
-                            parent = InsertParent(parent, evaluation, evaluationName);
+                            parent = InsertParent(parent, evaluation.Parent as TimedNode);
+                            parent = InsertParent(parent, evaluation);
                         }
                     }
 
                     var target = resultNode.GetNearestParent<Target>();
                     if (!isTarget && project != null && target != null && target.Project == project)
                     {
-                        parent = InsertParent(parent, target, target.TypeName + " " + target.Name);
+                        parent = InsertParent(parent, target);
                     }
 
                     // nest under a Task, unless it's an MSBuild task higher up the parent chain
                     var task = resultNode.GetNearestParent<Task>(t => !string.Equals(t.Name, "MSBuild", StringComparison.OrdinalIgnoreCase));
                     if (task != null && !isTarget && project != null && task.GetNearestParent<Project>() == project)
                     {
-                        parent = InsertParent(parent, task, "Task " + task.Name);
+                        parent = InsertParent(parent, task);
                     }
 
                     if (resultNode is Item item &&
@@ -175,7 +168,7 @@ namespace StructuredLogViewer
             string name = null,
             Func<ProxyNode, bool> existingNodeFinder = null)
         {
-            name ??= actualParent?.Name;
+            name ??= ProxyNode.GetNodeText(actualParent);
 
             ProxyNode folderProxy = null;
 
@@ -206,10 +199,9 @@ namespace StructuredLogViewer
 
             if (folderProxy.Highlights.Count == 0)
             {
-                var typePrefix = actualParent.TypeName;
-                if (typePrefix == Strings.AddItem)
+                if (actualParent is Target or Task or AddItem or RemoveItem)
                 {
-                    folderProxy.Highlights.Add(typePrefix + " ");
+                    folderProxy.Highlights.Add(actualParent.TypeName + " ");
                 }
 
                 folderProxy.Highlights.Add(name);

@@ -9,7 +9,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var message = task.Children.OfType<Message>().FirstOrDefault();
             if (message?.ShortenedText != null)
             {
-                task.Title = "Message: " + message.ShortenedText;
+                task.Name = "Message: " + message.ShortenedText;
             }
         }
     }
