@@ -291,6 +291,12 @@ namespace StructuredLogViewer
                         continue;
                     }
                 }
+            }
+
+            // need to do a second pass because previous loop might shift term indices by removing terms
+            for (int termIndex = Terms.Count - 1; termIndex >= 0; termIndex--)
+            {
+                var word = Terms[termIndex].Word;
 
                 if (word.StartsWith("name=", StringComparison.OrdinalIgnoreCase) && word.Length > 5)
                 {
