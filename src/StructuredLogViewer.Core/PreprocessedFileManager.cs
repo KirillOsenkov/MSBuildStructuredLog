@@ -58,11 +58,7 @@ namespace StructuredLogViewer
 
         private void VisitImport(Import import, Dictionary<string, Bucket> importMap)
         {
-            if (sourceFileResolver.HasFile(import.ProjectFilePath) &&
-                sourceFileResolver.HasFile(import.ImportedProjectFilePath))
-            {
-                AddImport(importMap, import.ProjectFilePath, import.ImportedProjectFilePath, import.Line, import.Column);
-            }
+            AddImport(importMap, import.ProjectFilePath, import.ImportedProjectFilePath, import.Line, import.Column);
         }
 
         public static string GetEvaluationKey(ProjectEvaluation evaluation) => evaluation == null ? null : evaluation.ProjectFile + evaluation.Id.ToString();
