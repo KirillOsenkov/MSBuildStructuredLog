@@ -25,11 +25,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
-        public virtual T FindNode<T>(string name) where T : NamedNode
+        public virtual T FindNode<T>(string name) where T : BaseNode
         {
             for (int i = 0; i < Count; i++)
             {
-                if (this[i] is T t && t.LookupKey == name)
+                if (this[i] is T t && t.Title == name)
                 {
                     return t;
                 }
@@ -43,7 +43,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             this.Capacity = capacity;
         }
 
-        public virtual void OnAdded(NamedNode child)
+        public virtual void OnAdded(BaseNode child)
         {
         }
     }
@@ -78,7 +78,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
-            return (T)result;
+            return result as T;
         }
 
         private void EnsureCacheCreated()
@@ -89,16 +89,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        public override void OnAdded(NamedNode child)
+        public override void OnAdded(BaseNode child)
         {
-            if (child?.LookupKey == null)
+            if (child?.Title == null)
             {
                 return;
             }
 
             EnsureCacheCreated();
 
-            var key = new ChildrenCacheKey(child.GetType(), child.LookupKey);
+            var key = new ChildrenCacheKey(child.GetType(), child.Title);
             childrenCache[key] = child;
         }
 

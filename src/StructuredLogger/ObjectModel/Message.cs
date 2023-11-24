@@ -33,8 +33,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public override string TypeName => nameof(Message);
 
-        public override string LookupKey => Text;
-
         public bool IsLowRelevance
         {
             get => HasFlag(NodeFlags.LowRelevance) && !IsSelected;

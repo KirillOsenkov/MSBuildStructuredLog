@@ -26,6 +26,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         public virtual string TypeName => nameof(BaseNode);
+        public virtual string Title => null;
 
         /// <summary>
         /// Since there can only be 1 selected node at a time, don't waste an instance field

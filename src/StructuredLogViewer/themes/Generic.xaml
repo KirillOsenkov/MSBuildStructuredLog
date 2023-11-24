@@ -573,9 +573,8 @@
     <StackPanel Orientation="Horizontal" x:Name="importPanel">
       <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{DynamicResource NoImportStroke}" Fill="{DynamicResource NoImportBrush}" />
       <TextBlock x:Name="label" Text="NoImport" Margin="0,0,6,0" />
-      <TextBlock x:Name="name" Text="{Binding Name}" />
-      <TextBlock x:Name="location" Text="{Binding Location}" Margin="0,0,6,0" />
-      <TextBlock x:Name="reason" Text="{Binding Text}" />
+      <TextBlock x:Name="text" Text="{Binding Text}" Margin="0,0,6,0" />
+      <TextBlock x:Name="reason" Text="{Binding Reason}" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
       <DataTrigger Binding="{Binding IsLowRelevance}" Value="True">

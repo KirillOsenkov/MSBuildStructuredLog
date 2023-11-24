@@ -1,13 +1,13 @@
 ﻿namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class TextNode : NamedNode
+    public class TextNode : TreeNode
     {
         public string Text { get; set; }
         public string ShortenedText => TextUtilities.ShortenValue(Text);
         public bool IsTextShortened => Text != ShortenedText;
 
-        protected override string GetTitle() => base.GetTitle() ?? Text;
         public override string TypeName => nameof(TextNode);
+        public override string Title => Text;
 
         public override string ToString()
         {

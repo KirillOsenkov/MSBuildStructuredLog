@@ -87,7 +87,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public void AddImport(TextNode textNode)
         {
-            NamedNode parent = ImportsFolder;
+            TreeNode parent = ImportsFolder;
 
             IHasSourceFile importOrNot = (IHasSourceFile)textNode;
 

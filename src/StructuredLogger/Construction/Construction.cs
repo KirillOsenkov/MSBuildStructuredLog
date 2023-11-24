@@ -137,7 +137,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     if (messageProcessor.DetailedSummary.Length > 0)
                     {
-                        var summary = Build.GetOrCreateNodeWithName<Message>(Intern(Strings.DetailedSummary));
+                        var summary = new Message();
+                        Build.AddChild(summary);
+
                         if (messageProcessor.DetailedSummary[0] == '\n')
                         {
                             messageProcessor.DetailedSummary.Remove(0, 1);
@@ -1091,7 +1093,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 if (currentItemNode == null || currentItemNode.Name != itemType)
                 {
-                    currentItemNode = itemsNode.GetOrCreateNodeWithName<AddItem>(itemType);
+                    currentItemNode = new AddItem { Name = itemType };
                 }
 
                 var itemNode = new Item();

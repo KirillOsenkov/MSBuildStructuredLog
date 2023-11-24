@@ -148,7 +148,7 @@ namespace StructuredLogViewer
                 proxy.SearchResult = result;
                 if (resultNode is NamedNode originalNamedNode)
                 {
-                    proxy.Name = originalNamedNode.Name;
+                    proxy.Text = originalNamedNode.Name;
                 }
 
                 parent.Children.Add(proxy);
@@ -185,14 +185,14 @@ namespace StructuredLogViewer
 
                 if (folderProxy == null)
                 {
-                    folderProxy = new ProxyNode { Name = name };
+                    folderProxy = new ProxyNode { Text = name };
                     parent.AddChild(folderProxy);
                 }
             }
 
             if (folderProxy == null)
             {
-                folderProxy = parent.GetOrCreateNodeWithName<ProxyNode>(name);
+                folderProxy = parent.GetOrCreateNodeWithText<ProxyNode>(name);
             }
 
             folderProxy.Original = actualParent;
