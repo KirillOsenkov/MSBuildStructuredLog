@@ -104,7 +104,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     queue.Add(instance);
 
-                    if (progress != null && stopwatch.ElapsedMilliseconds > 200)
+                    // only check the stopwatch every 1000 records, otherwise Stopwatch is showing up in profiles
+                    if (progress != null && (recordsRead % 1000) == 0 && stopwatch.ElapsedMilliseconds > 200)
                     {
                         stopwatch.Restart();
                         var streamPosition = stream.Position;
