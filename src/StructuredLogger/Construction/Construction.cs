@@ -1094,6 +1094,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (currentItemNode == null || currentItemNode.Name != itemType)
                 {
                     currentItemNode = new AddItem { Name = itemType };
+                    itemsNode.AddChild(currentItemNode);
                 }
 
                 var itemNode = new Item();
