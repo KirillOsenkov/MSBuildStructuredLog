@@ -100,7 +100,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 if (evaluationFolder == null)
                 {
-                    evaluationFolder = GetOrCreateNodeWithName<TimedNode>(Strings.Evaluation);
+                    evaluationFolder = new TimedNode { Name = Strings.Evaluation };
+                    AddChild(evaluationFolder);
                 }
 
                 return evaluationFolder;
