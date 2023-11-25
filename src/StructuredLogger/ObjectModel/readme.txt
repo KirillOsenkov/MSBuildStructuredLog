@@ -14,18 +14,31 @@ ObservableObject
                 SourceFile
                 TextNode
                     AbstractDiagnostic
+                        CriticalBuildMessage
                         Error
+                            BuildError
                         Warning
                     Import
                     Item
                     Message
+                        MessageWithLocation
+                        TimedMessage
                     NoImport
+                    Note
                 TimedNode
                     Build
                     Project
                     ProjectEvaluation
                     Target
                     Task
+                        CopyTask
+                            RobocopyTask
+                        ManagedCompilerTask
+                            VbcTask
+                            CscTask
+                            FscTask
+                        MSBuildTask
+                        ResolveAssemblyReferenceTask
             SourceFileLine
 
 Nesting:
