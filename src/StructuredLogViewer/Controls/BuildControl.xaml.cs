@@ -999,10 +999,21 @@ Recent:
             }
         }
 
+        private static HashSet<string> nonMSBuildExtensions = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ".dll",
+            ".json",
+            ".rsp",
+            ".sln",
+            ".tmp",
+            ".txt",
+            ".user"
+        };
+
         private IEnumerable<string> GetTargets(string file)
         {
-            if (file.EndsWith(".sln", StringComparison.OrdinalIgnoreCase) ||
-                file.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+            var extension = Path.GetExtension(file);
+            if (nonMSBuildExtensions.Contains(extension))
             {
                 yield break;
             }
