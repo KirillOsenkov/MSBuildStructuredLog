@@ -7,7 +7,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class ImportTreeAnalyzer
     {
-        public static TextNode TryGetImportOrNoImport(ProjectImportedEventArgs args, StringCache stringTable)
+        private StringCache stringTable;
+        private Dictionary<(string, string), string> falseConditionStrings = new();
+
+        public ImportTreeAnalyzer(StringCache stringTable)
+        {
+            this.stringTable = stringTable;
+        }
+
+        public TextNode TryGetImportOrNoImport(ProjectImportedEventArgs args)
         {
             var message = Reflector.GetMessage(args);
             var arguments = Reflector.GetArguments(args);
@@ -61,7 +69,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         var column = ParseInt(arguments[3]);
                         var condition = (string)arguments[4];
                         var evaluatedCondition = (string)arguments[5];
-                        string reason = GetFalseCondition(condition, evaluatedCondition, stringTable);
+                        string reason = GetFalseCondition(condition, evaluatedCondition);
 
                         var noImport = new NoImport(
                             stringTable.SoftIntern(containingProject),
@@ -93,8 +101,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return parsed;
         }
 
-        private static Dictionary<(string, string), string> falseConditionStrings = new();
-        private static string GetFalseCondition(string condition, string evaluated, StringCache stringTable)
+        private string GetFalseCondition(string condition, string evaluated)
         {
             var key = (condition, evaluated);
             lock (falseConditionStrings)

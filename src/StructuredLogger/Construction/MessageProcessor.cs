@@ -12,6 +12,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
     {
         private readonly Construction construction;
         private readonly StringCache stringTable;
+        private readonly ImportTreeAnalyzer importTreeAnalyzer;
         private int fileFormatVersion = 0;
 
         public StringBuilder DetailedSummary { get; } = new StringBuilder();
@@ -20,6 +21,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             this.construction = construction;
             this.stringTable = stringTable;
+            this.importTreeAnalyzer = new ImportTreeAnalyzer(stringTable);
         }
 
         private string Intern(string text) => stringTable.Intern(text);
@@ -155,7 +157,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void ProcessProjectImported(ProjectImportedEventArgs args)
         {
-            var import = ImportTreeAnalyzer.TryGetImportOrNoImport(args, stringTable);
+            var import = importTreeAnalyzer.TryGetImportOrNoImport(args);
             if (import == null)
             {
                 return;
