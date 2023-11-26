@@ -487,6 +487,7 @@ namespace StructuredLogViewer
             bool shouldAnalyze = true;
 
             var stopwatch = Stopwatch.StartNew();
+            var totalStopwatch = Stopwatch.StartNew();
 
             Build build = await System.Threading.Tasks.Task.Run(() =>
             {
@@ -544,7 +545,9 @@ namespace StructuredLogViewer
                 long allocated = allocatedAfter - allocatedBefore;
                 string readingFilesText = TextUtilities.DisplayDuration(embeddedFilesTime);
 
-                string text = $"Opening: {TextUtilities.DisplayDuration(openTime)}";
+                string text = $"Total opening time: {TextUtilities.DisplayDuration(totalStopwatch.Elapsed)}";
+
+                text += $", Loading: {TextUtilities.DisplayDuration(openTime)}";
                 text += $", Analyzing: {TextUtilities.DisplayDuration(analyzingTime)}";
                 text += $", Indexing: {TextUtilities.DisplayDuration(indexingTime)}";
                 if (!string.IsNullOrEmpty(readingFilesText))
@@ -552,7 +555,7 @@ namespace StructuredLogViewer
                     text += $", Reading files: {readingFilesText}";
                 }
 
-                text += $", Allocated: {allocated:n0}";
+                text += $", Allocated: {allocated:n0} bytes";
 
                 if (currentBuild.Build.SearchIndex is { } index)
                 {
