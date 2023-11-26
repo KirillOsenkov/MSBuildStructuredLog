@@ -1737,7 +1737,9 @@ Recent:
                 case NameValueNode nameValueNode when nameValueNode.IsValueShortened:
                     return DisplayText(nameValueNode.Value, nameValueNode.Name);
                 case TextNode textNode when textNode.IsTextShortened:
-                    return DisplayText(textNode.Text, textNode.Name ?? textNode.GetType().Name);
+                    return DisplayText(textNode.Text, textNode.Name ?? textNode.TypeName);
+                case NamedNode namedNode when namedNode.IsNameShortened:
+                    return DisplayText(namedNode.Name, namedNode.TypeName);
                 default:
                     return false;
             }
