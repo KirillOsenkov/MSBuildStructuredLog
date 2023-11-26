@@ -9,6 +9,7 @@ ObservableObject
                 AddItem
                 EntryTarget
                 Folder
+                Item
                 Parameter
                 RemoveItem
                 SourceFile
@@ -19,7 +20,6 @@ ObservableObject
                             BuildError
                         Warning
                     Import
-                    Item
                     Message
                         MessageWithLocation
                         TimedMessage
