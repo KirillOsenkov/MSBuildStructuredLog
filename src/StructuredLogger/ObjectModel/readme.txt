@@ -55,6 +55,7 @@ Nesting:
 (CscTask, Property)
 (Folder, AddItem)
 (Folder, EntryTarget)
+(Folder, Error)
 (Folder, Folder)
 (Folder, Item)
 (Folder, Message)
