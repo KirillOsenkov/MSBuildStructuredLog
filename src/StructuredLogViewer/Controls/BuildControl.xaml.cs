@@ -20,6 +20,7 @@ using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Language.Xml;
 using Mono.Cecil;
 using StructuredLogViewer.Core.ProjectGraph;
+using TPLTask = System.Threading.Tasks.Task;
 
 namespace StructuredLogViewer.Controls
 {
@@ -969,16 +970,14 @@ Recent:
                     Name = parts[index]
                 };
 
-                foreach (var target in GetTargets(filePath))
+                if (PlatformUtilities.HasThreads)
                 {
-                    file.AddChild(new Target
-                    {
-                        Name = target,
-                        SourceFilePath = filePath
-                    });
+                    TPLTask.Run(() => AddTargetsAsync(filePath, file));
                 }
-
-                file.SortChildren();
+                else
+                {
+                    AddTargets(filePath, file);
+                }
 
                 folder.AddChild(file);
                 return file;
@@ -996,6 +995,45 @@ Recent:
                 var subfolder = folder.GetOrCreateNodeWithName<Folder>(folderName);
                 subfolder.IsExpanded = true;
                 return AddSourceFile(subfolder, filePath, parts, index + 1);
+            }
+        }
+
+        private async TPLTask AddTargetsAsync(string filePath, SourceFile file)
+        {
+            var targets = GetTargets(filePath).OrderBy(t => t).ToArray();
+            if (targets.Length == 0)
+            {
+                return;
+            }
+
+            await Dispatcher.InvokeAsync(() =>
+            {
+                foreach (var target in targets)
+                {
+                    file.AddChild(new Target
+                    {
+                        Name = target,
+                        SourceFilePath = filePath
+                    });
+                }
+            });
+        }
+
+        private void AddTargets(string filePath, SourceFile file)
+        {
+            var targets = GetTargets(filePath).OrderBy(t => t).ToArray();
+            if (targets.Length == 0)
+            {
+                return;
+            }
+
+            foreach (var target in targets)
+            {
+                file.AddChild(new Target
+                {
+                    Name = target,
+                    SourceFilePath = filePath
+                });
             }
         }
 
