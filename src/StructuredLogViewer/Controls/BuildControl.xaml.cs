@@ -1031,6 +1031,11 @@ Recent:
                 yield break;
             }
 
+            if (contentText.IndexOf("<Target", StringComparison.Ordinal) == -1)
+            {
+                yield break;
+            }
+
             var doc = new XmlDocument();
             try
             {
