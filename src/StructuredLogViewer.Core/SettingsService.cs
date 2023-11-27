@@ -406,6 +406,27 @@ namespace StructuredLogViewer
             }
         }
 
+        private static string? ignoreEmbeddedFiles;
+        public static string? IgnoreEmbeddedFiles
+        {
+            get
+            {
+                EnsureSettingsRead();
+                return ignoreEmbeddedFiles;
+            }
+
+            set
+            {
+                if (ignoreEmbeddedFiles == value)
+                {
+                    return;
+                }
+
+                ignoreEmbeddedFiles = value;
+                SaveSettings();
+            }
+        }
+
         private static void EnsureSettingsRead()
         {
             if (!settingsRead)
@@ -420,6 +441,7 @@ namespace StructuredLogViewer
         const string ShowConfigurationAndPlatformSetting = "ShowConfigurationAndPlatform=";
         const string UseDarkThemeSetting = "UseDarkTheme=";
         const string WindowPositionSetting = "WindowPosition=";
+        const string IgnoreEmbeddedFilesSetting = "IgnoreEmbeddedFiles=";
 
         private static void SaveSettings()
         {
@@ -430,6 +452,7 @@ namespace StructuredLogViewer
             sb.AppendLine(ShowConfigurationAndPlatformSetting + ShowConfigurationAndPlatform.ToString());
             sb.AppendLine(UseDarkThemeSetting + useDarkTheme.ToString());
             sb.AppendLine(WindowPositionSetting + windowPosition);
+            sb.AppendLine(IgnoreEmbeddedFilesSetting + IgnoreEmbeddedFiles);
 
             using (SingleGlobalInstance.Acquire(Path.GetFileName(settingsFilePath)))
             {
@@ -457,6 +480,7 @@ namespace StructuredLogViewer
                     ProcessLine(ShowConfigurationAndPlatformSetting, line, ref ProjectOrEvaluationHelper.ShowConfigurationAndPlatform);
                     ProcessLine(UseDarkThemeSetting, line, ref useDarkTheme);
                     ProcessString(WindowPositionSetting, line, ref windowPosition);
+                    ProcessString(IgnoreEmbeddedFilesSetting, line, ref ignoreEmbeddedFiles);
 
                     void ProcessString(string setting, string text, ref string? variable)
                     {

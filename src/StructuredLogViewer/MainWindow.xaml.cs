@@ -463,6 +463,7 @@ namespace StructuredLogViewer
 
             this.logFilePath = filePath;
             SettingsService.AddRecentLogFile(filePath);
+            Build.IgnoreEmbeddedFiles = SettingsService.IgnoreEmbeddedFiles;
             UpdateRecentItemsMenu();
             Title = filePath + " - " + DefaultTitle;
 

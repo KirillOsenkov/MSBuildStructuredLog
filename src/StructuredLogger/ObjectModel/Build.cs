@@ -138,9 +138,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        public static string IgnoreEmbeddedFiles { get; set; }
+
         public static IReadOnlyList<ArchiveFile> ReadSourceFiles(Stream stream)
         {
             var result = new List<ArchiveFile>();
+
+            string[] ignoreSubstrings = null;
+            if (!string.IsNullOrWhiteSpace(IgnoreEmbeddedFiles))
+            {
+                ignoreSubstrings = IgnoreEmbeddedFiles.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+            }
 
             try
             {
@@ -148,6 +156,24 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     foreach (var entry in zipArchive.Entries)
                     {
+                        if (ignoreSubstrings != null)
+                        {
+                            bool ignore = false;
+                            foreach (var substring in ignoreSubstrings)
+                            {
+                                if (entry.FullName.IndexOf(substring, StringComparison.OrdinalIgnoreCase) != -1)
+                                {
+                                    ignore = true;
+                                    break;
+                                }
+                            }
+
+                            if (ignore)
+                            {
+                                continue;
+                            }
+                        }
+
                         var file = ArchiveFile.From(entry);
                         result.Add(file);
                     }
