@@ -131,6 +131,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             // Serialization.WriteStringsToFile(@"C:\temp\1.txt", strings.ToArray());
 
+            build.WaitForBackgroundTasks();
+
             return build;
         }
     }

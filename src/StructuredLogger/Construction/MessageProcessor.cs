@@ -275,14 +275,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void AddItems(IEnumerable items, TreeNode parent)
         {
-            if (construction.PopulatePropertiesAndItemsInBackground)
-            {
-                System.Threading.Tasks.Task.Run(() => AddItemsCore(items, parent));
-            }
-            else
-            {
-                AddItemsCore(items, parent);
-            }
+            construction.Build.RunInBackground(() => AddItemsCore(items, parent));
         }
 
         private void AddItemsCore(IEnumerable items, TreeNode parent)

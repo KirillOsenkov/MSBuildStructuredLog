@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Threading;
+using TPLTask = System.Threading.Tasks.Task;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -23,6 +23,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public int FileFormatVersion { get; set; }
         public byte[] SourceFilesArchive { get; set; }
 
+        private readonly List<TPLTask> backgroundTasks = new List<TPLTask>();
+
         private IReadOnlyList<ArchiveFile> sourceFiles;
         public IReadOnlyList<ArchiveFile> SourceFiles
         {
@@ -39,7 +41,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         private string msbuildVersion;
-        public string MSBuildVersion 
+        public string MSBuildVersion
         {
             get => msbuildVersion;
             set
@@ -254,6 +256,35 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             return projectEvaluation;
+        }
+
+        public void RunInBackground(Action action)
+        {
+            if (PlatformUtilities.HasThreads)
+            {
+                var task = TPLTask.Run(action);
+                lock (backgroundTasks)
+                {
+                    backgroundTasks.Add(task);
+                }
+            }
+            else
+            {
+                action();
+            }
+        }
+
+        public void WaitForBackgroundTasks()
+        {
+            lock (backgroundTasks)
+            {
+                foreach (var task in backgroundTasks)
+                {
+                    task.Wait();
+                }
+
+                backgroundTasks.Clear();
+            }
         }
     }
 }

@@ -28,8 +28,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private readonly MessageProcessor messageProcessor;
         private readonly StringCache stringTable;
 
-        internal bool PopulatePropertiesAndItemsInBackground = PlatformUtilities.HasThreads;
-
         public StringCache StringTable => stringTable;
 
         public NamedNode EvaluationFolder => Build.EvaluationFolder;
@@ -566,14 +564,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             propertiesFolder.DisableChildrenCache = true;
                         }
 
-                        if (PopulatePropertiesAndItemsInBackground)
-                        {
-                            System.Threading.Tasks.Task.Run(() => AddGlobalProperties());
-                        }
-                        else
-                        {
-                            AddGlobalProperties();
-                        }
+                        Build.RunInBackground(() => AddGlobalProperties());
 
                         void AddGlobalProperties()
                         {
@@ -988,14 +979,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     propertyFolder.DisableChildrenCache = true;
                 }
 
-                if (PopulatePropertiesAndItemsInBackground)
-                {
-                    System.Threading.Tasks.Task.Run(() => AddGlobalProperties());
-                }
-                else
-                {
-                    AddGlobalProperties();
-                }
+                Build.RunInBackground(() => AddGlobalProperties());
 
                 void AddGlobalProperties()
                 {
