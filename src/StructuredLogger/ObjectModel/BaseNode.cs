@@ -27,6 +27,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public virtual string TypeName => nameof(BaseNode);
 
+        public virtual string Title => ToString();
+
         /// <summary>
         /// Since there can only be 1 selected node at a time, don't waste an instance field
         /// just to store a bit. Store the currently selected node here and this way we save

@@ -953,14 +953,7 @@ Recent:
 
             string GetText(BaseNode node)
             {
-                if (node is IHasTitle hasTitle)
-                {
-                    return hasTitle.Title ?? "";
-                }
-                else
-                {
-                    return node.ToString() ?? "";
-                }
+                return node.Title ?? node.ToString();
             }
         }
 
@@ -1152,12 +1145,14 @@ Recent:
                 || (node is Task task && task.Parent is Target parentTarget && sourceFileResolver.HasFile(parentTarget.SourceFilePath))
                 || (node is IHasSourceFile ihsf && ihsf.SourceFilePath != null && sourceFileResolver.HasFile(ihsf.SourceFilePath))
                 || (node is NameValueNode nvn && nvn.IsValueShortened)
+                || (node is NamedNode nn && nn.IsNameShortened)
                 || (node is TextNode tn && tn.IsTextShortened);
         }
 
         private bool HasFullText(BaseNode node)
         {
             return (node is NameValueNode nvn && nvn.IsValueShortened)
+                || (node is NamedNode nn && nn.IsNameShortened)
                 || (node is TextNode tn && tn.IsTextShortened);
         }
 
@@ -1218,8 +1213,10 @@ Recent:
                         return DisplayFile(sourceFile.SourceFilePath, sourceFileLine.LineNumber);
                     case NameValueNode nameValueNode when nameValueNode.IsValueShortened:
                         return DisplayText(nameValueNode.Value, nameValueNode.Name);
+                    case NamedNode namedNode when namedNode.IsNameShortened:
+                        return DisplayText(namedNode.Name, namedNode.ShortenedName ?? namedNode.TypeName);
                     case TextNode textNode when textNode.IsTextShortened:
-                        return DisplayText(textNode.Text, textNode.Name ?? textNode.GetType().Name);
+                        return DisplayText(textNode.Text, textNode.Text ?? textNode.TypeName);
                     default:
                         return false;
                 }

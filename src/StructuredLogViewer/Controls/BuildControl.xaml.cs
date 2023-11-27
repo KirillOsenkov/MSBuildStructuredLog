@@ -1372,14 +1372,7 @@ Recent:
 
             string GetText(BaseNode node)
             {
-                if (node is IHasTitle hasTitle)
-                {
-                    return hasTitle.Title ?? "";
-                }
-                else
-                {
-                    return node.ToString() ?? "";
-                }
+                return node.Title ?? node.ToString();
             }
         }
 
@@ -1738,7 +1731,7 @@ Recent:
                 case NameValueNode nameValueNode when nameValueNode.IsValueShortened:
                     return DisplayText(nameValueNode.Value, nameValueNode.Name);
                 case TextNode textNode when textNode.IsTextShortened:
-                    return DisplayText(textNode.Text, textNode.Name ?? textNode.TypeName);
+                    return DisplayText(textNode.Text, textNode.ShortenedText ?? textNode.TypeName);
                 case NamedNode namedNode when namedNode.IsNameShortened:
                     return DisplayText(namedNode.Name, namedNode.TypeName);
                 default:

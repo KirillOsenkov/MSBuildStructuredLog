@@ -179,6 +179,27 @@ namespace Microsoft.Build.Logging.StructuredLogger
             child.Parent = this;
         }
 
+        public T GetOrCreateNodeWithText<T>(string text, bool addAtBeginning = false) where T : TextNode, new()
+        {
+            T node = FindChild<T>(text);
+            if (node != null)
+            {
+                return node;
+            }
+
+            var newNode = new T() { Text = text };
+            if (addAtBeginning)
+            {
+                this.AddChildAtBeginning(newNode);
+            }
+            else
+            {
+                this.AddChild(newNode);
+            }
+
+            return newNode;
+        }
+
         public T GetOrCreateNodeWithName<T>(string name, bool addAtBeginning = false) where T : NamedNode, new()
         {
             T node = FindChild<T>(name);
@@ -200,23 +221,25 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return newNode;
         }
 
-        public virtual T FindChild<T>(string name) where T : NamedNode
+        public virtual T FindChild<T>(string name) where T : BaseNode
         {
             if (Children is ChildrenList list)
             {
                 return list.FindNode<T>(name);
             }
 
-            return FindChild<T>(c => string.Equals(c.LookupKey, name, StringComparison.OrdinalIgnoreCase));
+            return FindChild<T>(c => string.Equals(c.Title, name, StringComparison.OrdinalIgnoreCase));
         }
 
         public virtual T FindChild<T>(Predicate<T> predicate = null) where T : BaseNode
         {
             if (HasChildren)
             {
-                for (int i = 0; i < Children.Count; i++)
+                var children = Children;
+                int count = children.Count;
+                for (int i = 0; i < count; i++)
                 {
-                    if (Children[i] is T child && (predicate == null || predicate(child)))
+                    if (children[i] is T child && (predicate == null || predicate(child)))
                     {
                         return child;
                     }

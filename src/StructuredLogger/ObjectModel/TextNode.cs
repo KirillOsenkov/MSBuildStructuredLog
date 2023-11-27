@@ -6,8 +6,8 @@
         public string ShortenedText => TextUtilities.ShortenValue(Text);
         public bool IsTextShortened => Text != ShortenedText;
 
-        protected override string GetTitle() => base.GetTitle() ?? Text;
         public override string TypeName => nameof(TextNode);
+        public override string Title => Text ?? TypeName;
 
         public override string ToString()
         {

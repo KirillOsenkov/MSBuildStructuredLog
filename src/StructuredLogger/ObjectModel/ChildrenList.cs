@@ -25,11 +25,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             CollectionChanged?.Invoke(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
 
-        public virtual T FindNode<T>(string name) where T : NamedNode
+        public virtual T FindNode<T>(string name) where T : BaseNode
         {
             for (int i = 0; i < Count; i++)
             {
-                if (this[i] is T t && t.LookupKey == name)
+                if (this[i] is T t && t.Title == name)
                 {
                     return t;
                 }
