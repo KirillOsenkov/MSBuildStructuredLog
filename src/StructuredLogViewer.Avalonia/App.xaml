@@ -313,15 +313,15 @@
                            Classes="nodeBeforeText"
                            Text="NoImport "
                            Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={StaticResource NoImportStroke}}" />
-                <TextBlock x:Name="name"
+                <TextBlock x:Name="text"
                            Classes="nodeText"
-                           Text="{Binding Name}" />
+                           Text="{Binding Text}" />
                 <TextBlock x:Name="location"
                            Classes="nodeText"
                            Text="{Binding Location}" />
                 <TextBlock x:Name="reason"
                            Classes="nodeText"
-                           Text="{Binding Text}" />
+                           Text="{Binding Reason}" />
             </StackPanel>
         </TreeDataTemplate>
 

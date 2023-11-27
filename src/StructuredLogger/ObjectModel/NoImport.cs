@@ -4,12 +4,12 @@
     {
         public string ProjectFilePath { get; set; }
         public string ImportedFileSpec { get; set; }
+        public string Reason { get; set; }
         public int Line { get; set; }
         public int Column { get; set; }
 
         public NoImport()
         {
-            //IsLowRelevance = true;
         }
 
         public override string TypeName => nameof(NoImport);
@@ -23,10 +23,10 @@
             : this()
         {
             ProjectFilePath = projectFilePath;
-            Name = importedFileSpec;
+            Text = importedFileSpec;
             Line = line;
             Column = column;
-            Text = reason;
+            Reason = reason;
         }
 
         public string Location => $" at ({Line};{Column})";
@@ -40,6 +40,6 @@
         string IHasSourceFile.SourceFilePath => ProjectFilePath;
         int? IHasLineNumber.LineNumber => Line;
 
-        public override string ToString() => $"NoImport: {Name}{Location} {Text}";
+        public override string ToString() => $"NoImport: {Text}{Location} {Reason}";
     }
 }
