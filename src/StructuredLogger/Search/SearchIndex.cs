@@ -31,6 +31,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public TimeSpan PrecalculationDuration;
 
         private readonly bool hasThreads = PlatformUtilities.HasThreads;
+        private readonly Build build;
 
         public SearchIndex(Build build)
         {
@@ -63,6 +64,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             stringToIndexMap = null;
+            this.build = build;
         }
 
         public const int BufferSize = 8192;
@@ -274,6 +276,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             typeKeyword = 0;
 
             var matcher = new NodeQueryMatcher(query, stringTable: null, cancellationToken);
+            if (matcher.IsCopy)
+            {
+                if (build.FileCopyMap is { } fileCopyMap)
+                {
+                    fileCopyMap.GetResults(matcher, results);
+                    return results;
+                }
+            }
 
             // we assume there are 8 words or less in the query, so we can use 1 byte per string instance
             var terms = matcher.Terms.Take(8).ToArray();
