@@ -49,7 +49,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public string FileName => Path.GetFileName(SourceFilePath);
 
-        public string Title
+        public override string Title
         {
             get
             {
