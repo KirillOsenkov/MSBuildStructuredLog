@@ -43,15 +43,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     return $"{evaluation.Name} {evaluation.AdornmentString} {evaluation.EvaluationText}";
                 }
-                else if (node is TextNode textNode)
-                {
-                    return textNode.Text ?? namedNode.Name;
-                }
 
                 return namedNode.Name;
             }
+            else if (node is TextNode textNode)
+            {
+                return textNode.Text;
+            }
 
-            return node.ToString();
+            return node.Title;
         }
 
         public void Populate(SearchResult result)

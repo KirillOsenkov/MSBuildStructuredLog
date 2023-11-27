@@ -150,6 +150,10 @@ namespace StructuredLogViewer
                 {
                     proxy.Text = originalNamedNode.Name;
                 }
+                else if (resultNode is TextNode originalTextNode)
+                {
+                    proxy.Text = originalTextNode.Text;
+                }
 
                 parent.Children.Add(proxy);
             }

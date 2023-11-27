@@ -1733,7 +1733,7 @@ Recent:
                 case TextNode textNode when textNode.IsTextShortened:
                     return DisplayText(textNode.Text, textNode.ShortenedText ?? textNode.TypeName);
                 case NamedNode namedNode when namedNode.IsNameShortened:
-                    return DisplayText(namedNode.Name, namedNode.TypeName);
+                    return DisplayText(namedNode.Name, namedNode.ShortenedName ?? namedNode.TypeName);
                 default:
                     return false;
             }
