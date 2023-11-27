@@ -163,18 +163,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             children.Insert(0, child);
-            OnAdded(child);
 
             child.Parent = this;
-        }
-
-        [Conditional("false")]
-        private void OnAdded(BaseNode child)
-        {
-            if (child is NamedNode named)
-            {
-                ((ChildrenList)children).OnAdded(named);
-            }
         }
 
         public virtual void AddChild(BaseNode child)
@@ -185,7 +175,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             children.Add(child);
-            OnAdded(child);
 
             child.Parent = this;
         }

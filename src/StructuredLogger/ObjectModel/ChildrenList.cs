@@ -42,10 +42,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             this.Capacity = capacity;
         }
-
-        public virtual void OnAdded(NamedNode child)
-        {
-        }
     }
 
     public class CacheByNameChildrenList : ChildrenList
@@ -87,19 +83,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 childrenCache = new Dictionary<ChildrenCacheKey, BaseNode>();
             }
-        }
-
-        public override void OnAdded(NamedNode child)
-        {
-            if (child?.LookupKey == null)
-            {
-                return;
-            }
-
-            EnsureCacheCreated();
-
-            var key = new ChildrenCacheKey(child.GetType(), child.LookupKey);
-            childrenCache[key] = child;
         }
 
         private struct ChildrenCacheKey : IEquatable<ChildrenCacheKey>
