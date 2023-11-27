@@ -22,7 +22,13 @@ namespace StructuredLogViewer
                 return root;
             }
 
-            string status = $"{results.Count} result{(results.Count == 1 ? "" : "s")}. Search took: {TextUtilities.DisplayDuration(elapsed)}";
+            string durationString = TextUtilities.DisplayDuration(elapsed);
+            if (!string.IsNullOrEmpty(durationString))
+            {
+                durationString = $" Search took: {durationString}";
+            }
+
+            string status = $"{results.Count} result{(results.Count == 1 ? "" : "s")}.{durationString}";
             string precalculationString = TextUtilities.DisplayDuration(precalculationDuration);
             if (!string.IsNullOrWhiteSpace(precalculationString))
             {
