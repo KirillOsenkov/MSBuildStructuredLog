@@ -280,7 +280,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 if (build.FileCopyMap is { } fileCopyMap)
                 {
-                    fileCopyMap.GetResults(matcher, results);
+                    fileCopyMap.GetResults(matcher, results, MaxResults);
                     return results;
                 }
             }

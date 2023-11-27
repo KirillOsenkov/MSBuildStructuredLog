@@ -37,7 +37,7 @@ namespace StructuredLogViewer
             {
                 if (roots.FirstOrDefault() is Build build && build.FileCopyMap is { } fileCopyMap)
                 {
-                    fileCopyMap.GetResults(matcher, resultSet);
+                    fileCopyMap.GetResults(matcher, resultSet, maxResults);
                     return resultSet;
                 }
             }

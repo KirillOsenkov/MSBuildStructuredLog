@@ -94,7 +94,7 @@ namespace StructuredLogViewer
                 bool isProject = resultNode is Project;
                 bool isTarget = resultNode is Target;
 
-                if (!includeDuration && !includeStart && !includeEnd && !isProject)
+                if (!includeDuration && !includeStart && !includeEnd && !isProject && resultNode != null)
                 {
                     if (result.RootFolder is string rootFolderName)
                     {
@@ -152,14 +152,7 @@ namespace StructuredLogViewer
                 var proxy = new ProxyNode();
                 proxy.Original = resultNode;
                 proxy.SearchResult = result;
-                if (resultNode is NamedNode originalNamedNode)
-                {
-                    proxy.Text = originalNamedNode.Name;
-                }
-                else if (resultNode is TextNode originalTextNode)
-                {
-                    proxy.Text = originalTextNode.Text;
-                }
+                proxy.Text = resultNode?.Title;
 
                 parent.Children.Add(proxy);
             }

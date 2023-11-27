@@ -57,6 +57,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
     public class FileCopyMap
     {
+        private static char[] separators = new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
+        private static readonly string DirectorySeparator = Path.DirectorySeparatorChar.ToString();
+        private static readonly string AltDirectorySeparator = Path.AltDirectorySeparatorChar.ToString();
+
         private Dictionary<string, DirectoryData> directories = new Dictionary<string, DirectoryData>(StringComparer.OrdinalIgnoreCase);
 
         public void AnalyzeTask(Task task)
@@ -153,10 +157,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private static char[] separators = new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
-        private static readonly string DirectorySeparator = Path.DirectorySeparatorChar.ToString();
-        private static readonly string AltDirectorySeparator = Path.AltDirectorySeparatorChar.ToString();
-
         public DirectoryData GetDirectory(string path, bool create = true)
         {
             if (path.Length > 3)
@@ -193,7 +193,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        public void GetResults(NodeQueryMatcher matcher, IList<SearchResult> resultSet)
+        public void GetResults(NodeQueryMatcher matcher, IList<SearchResult> resultSet, int maxResults)
         {
             if (matcher.Terms.Count == 1)
             {
@@ -203,16 +203,59 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 object data = TryGetDirectoryOrFile(text);
                 if (data is DirectoryData directoryData)
                 {
-                    GetResults(directoryData, resultSet);
+                    GetResults(directoryData, resultSet, maxResults);
                 }
                 else if (data is FileData fileData)
                 {
-                    GetResults(fileData, resultSet);
+                    GetResults(fileData, resultSet, maxResults);
+                }
+                else
+                {
+                    TryGetFiles(text, resultSet, maxResults);
                 }
             }
         }
 
-        private void GetResults(FileData fileData, IList<SearchResult> resultSet, string matchText = null)
+        private void TryGetFiles(string text, IList<SearchResult> resultSet, int maxResults)
+        {
+            var results = new List<SearchResult>();
+
+            lock (directories)
+            {
+                foreach (var kvp in directories)
+                {
+                    var directoryData = kvp.Value;
+                    foreach (var file in directoryData.Files)
+                    {
+                        if (file.FilePath.IndexOf(text, StringComparison.OrdinalIgnoreCase) != -1)
+                        {
+                            var item = new Item { Name = file.FilePath };
+                            var result = new SearchResult(item);
+                            result.AddMatch(file.FilePath, text);
+                            results.Add(result);
+                            if (results.Count >= maxResults)
+                            {
+                                break;
+                            }
+                        }
+                    }
+
+                    if (results.Count >= maxResults)
+                    {
+                        break;
+                    }
+                }
+            }
+
+            results.Sort((l, r) => l.Node.Title.CompareTo(r.Node.Title));
+
+            foreach (var result in results)
+            {
+                resultSet.Add(result);
+            }
+        }
+
+        private void GetResults(FileData fileData, IList<SearchResult> resultSet, int maxResults, string matchText = null)
         {
             if (matchText == null)
             {
@@ -226,6 +269,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 result.AddMatch(message.Text, matchText);
                 result.RootFolder = "Incoming";
                 resultSet.Add(result);
+                if (resultSet.Count >= maxResults)
+                {
+                    return;
+                }
             }
 
             foreach (var outgoing in fileData.Outgoing)
@@ -235,16 +282,24 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 result.AddMatch(message.Text, matchText);
                 result.RootFolder = "Outgoing";
                 resultSet.Add(result);
+                if (resultSet.Count >= maxResults)
+                {
+                    return;
+                }
             }
         }
 
-        private void GetResults(DirectoryData directoryData, IList<SearchResult> resultSet)
+        private void GetResults(DirectoryData directoryData, IList<SearchResult> resultSet, int maxResults)
         {
             string directoryPath = directoryData.ToString();
 
             foreach (var fileData in directoryData.Files)
             {
-                GetResults(fileData, resultSet, matchText: directoryPath);
+                GetResults(fileData, resultSet, maxResults, matchText: directoryPath);
+                if (resultSet.Count >= maxResults)
+                {
+                    return;
+                }
             }
         }
 
