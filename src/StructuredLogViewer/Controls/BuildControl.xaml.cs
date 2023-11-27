@@ -147,21 +147,27 @@ namespace StructuredLogViewer.Controls
 
             // Search Log | Properties and Items | Find in Files
             sharedTreeContextMenu = new ContextMenu();
+            var sharedCopyItem = new MenuItem() { Header = "Copy" };
             var sharedCopyAllItem = new MenuItem() { Header = "Copy All" };
             var sharedCopySubtreeItem = new MenuItem() { Header = "Copy subtree" };
+            sharedCopyItem.Click += (s, a) => Copy();
             sharedCopyAllItem.Click += (s, a) => CopyAll();
             sharedCopySubtreeItem.Click += (s, a) => CopySubtree();
+            sharedTreeContextMenu.AddItem(sharedCopyItem);
             sharedTreeContextMenu.AddItem(sharedCopyAllItem);
             sharedTreeContextMenu.AddItem(sharedCopySubtreeItem);
 
             // Files
             filesTreeContextMenu = new ContextMenu();
+            var filesCopyItem = new MenuItem { Header = "Copy" };
             var filesCopyAllItem = new MenuItem { Header = "Copy All" };
             var filesCopyPathsItem = new MenuItem { Header = "Copy file paths" };
             var filesCopySubtreeItem = new MenuItem { Header = "Copy subtree" };
+            filesCopyItem.Click += (s, a) => Copy();
             filesCopyAllItem.Click += (s, a) => CopyAll();
             filesCopyPathsItem.Click += (s, a) => CopyPaths();
             filesCopySubtreeItem.Click += (s, a) => CopySubtree();
+            filesTreeContextMenu.AddItem(filesCopyItem);
             filesTreeContextMenu.AddItem(filesCopyAllItem);
             filesTreeContextMenu.AddItem(filesCopyPathsItem);
             filesTreeContextMenu.AddItem(filesCopySubtreeItem);
@@ -541,8 +547,6 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             "is newer than output ",
             "Property reassignment: $(",
             "out-of-date",
-            "csc $task",
-            "ResolveAssemblyReference $task",
             "$task $time",
             "$message CompilerServer failed",
             "will be compiled because",
@@ -606,11 +610,14 @@ Search for multiple words separated by space (space means AND). Enclose multiple
 Use syntax like '$property Prop' to narrow results down by item kind. Supported kinds: ";
 
             string watermarkText2 = @"Use the under(FILTER) clause to only include results where any of the nodes in the parent chain matches the FILTER. Use project(...) to filter by parent project. Examples:
- • $task csc under($project Core)
+ • $csc under($project Core)
  • Copying file project(ProjectA)
 
 Append [[$time]], [[$start]] and/or [[$end]] to show times and/or durations and sort the results by start time or duration descending (for tasks, targets and projects).
+
 Use start<""2023-11-23 14:30:54.579"", start>, end< or end> to filter events that start or end before or after a given timestamp. Timestamp needs to be in quotes.
+
+Use '$copy path' where path is a file or directory to find file copy operations involving the file or directory. `$copy substring` will search for copied files containing the substring.
 
 Examples:
 ";
@@ -1311,11 +1318,6 @@ Recent:
                 Delete();
                 args.Handled = true;
             }
-            else if (args.Key == Key.C && args.KeyboardDevice.Modifiers == ModifierKeys.Control)
-            {
-                CopySubtree();
-                args.Handled = true;
-            }
             else if (args.Key >= Key.A && args.Key <= Key.Z && args.KeyboardDevice.Modifiers == ModifierKeys.None)
             {
                 SelectItemByKey((char)('A' + args.Key - Key.A));
@@ -1409,7 +1411,8 @@ Recent:
 
         public void Copy()
         {
-            var treeNode = treeView.SelectedItem;
+            var tree = ActiveTreeView;
+            var treeNode = tree?.SelectedItem;
             if (treeNode != null)
             {
                 var text = treeNode.ToString();
@@ -1419,7 +1422,7 @@ Recent:
 
         public void CopySubtree(TreeView tree = null)
         {
-            tree = tree ?? ActiveTreeView;
+            tree ??= ActiveTreeView;
             if (tree == null)
             {
                 return;
@@ -1542,7 +1545,7 @@ Recent:
 
         private void CopyAll(TreeView tree = null)
         {
-            tree = tree ?? ActiveTreeView;
+            tree ??= ActiveTreeView;
             if (tree == null)
             {
                 return;
@@ -1664,6 +1667,12 @@ Recent:
                 {
                     args.Handled = Invoke(treeNode) || ViewFullText(treeNode);
                 }
+            }
+
+            if (args.Key == Key.C && args.KeyboardDevice.Modifiers == ModifierKeys.Control)
+            {
+                Copy();
+                args.Handled = true;
             }
 
             if (args.Key == Key.Escape)
