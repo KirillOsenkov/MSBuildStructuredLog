@@ -22,7 +22,7 @@
             Line = line;
             Column = column;
 
-            Name = importedProjectFilePath;
+            Text = importedProjectFilePath;
         }
 
         public string Location => $" at ({Line};{Column})";
@@ -40,6 +40,6 @@
         string IHasSourceFile.SourceFilePath => ProjectFilePath;
         int? IHasLineNumber.LineNumber => Line;
 
-        public override string ToString() => $"Import: {Name}{Location}";
+        public override string ToString() => $"Import: {Text}{Location}";
     }
 }

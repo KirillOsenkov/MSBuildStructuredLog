@@ -294,7 +294,7 @@
                            Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={StaticResource ImportStroke}}" />
                 <TextBlock x:Name="name"
                            Classes="nodeText"
-                           Text="{Binding Name}" />
+                           Text="{Binding Text}" />
                 <TextBlock x:Name="location"
                            Classes="nodeText"
                            Text="{Binding Location}" />

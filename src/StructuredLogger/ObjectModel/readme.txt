@@ -25,6 +25,7 @@ ObservableObject
                         TimedMessage
                     NoImport
                     Note
+                    ProxyNode
                 TimedNode
                     Build
                     Project

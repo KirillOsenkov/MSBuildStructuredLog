@@ -555,7 +555,7 @@
     <StackPanel Orientation="Horizontal" x:Name="importPanel">
       <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{DynamicResource ImportStroke}" Fill="{DynamicResource ImportBrush}" />
       <TextBlock x:Name="label" Text="Import" Margin="0,0,6,0" />
-      <TextBlock x:Name="name" Text="{Binding Name}" />
+      <TextBlock x:Name="text" Text="{Binding Text}" />
       <TextBlock x:Name="location" Text="{Binding Location}" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
