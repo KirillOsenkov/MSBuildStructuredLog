@@ -481,32 +481,7 @@ namespace StructuredLogViewer
                     searchFields[count++] = named.Name;
                 }
 
-                if (node is TextNode textNode)
-                {
-                    if (!string.IsNullOrEmpty(textNode.Text))
-                    {
-                        searchFields[count++] = textNode.Text;
-                    }
-
-                    if (node is AbstractDiagnostic diagnostic)
-                    {
-                        if (!string.IsNullOrEmpty(diagnostic.Code))
-                        {
-                            searchFields[count++] = diagnostic.Code;
-                        }
-
-                        if (!string.IsNullOrEmpty(diagnostic.File))
-                        {
-                            searchFields[count++] = diagnostic.File;
-                        }
-
-                        if (!string.IsNullOrEmpty(diagnostic.ProjectFile))
-                        {
-                            searchFields[count++] = diagnostic.ProjectFile;
-                        }
-                    }
-                }
-                else if (node is TimedNode)
+                if (node is TimedNode)
                 {
                     if (node is Project project)
                     {
@@ -532,13 +507,60 @@ namespace StructuredLogViewer
                             searchFields[count++] = evaluation.EvaluationText;
                         }
                     }
-                    //else if (node is Target target)
-                    //{
-                    //    if (!string.IsNullOrEmpty(target.ParentTarget))
-                    //    {
-                    //        searchFields[count++] = target.ParentTarget;
-                    //    }
-                    //}
+                }
+            }
+            else if (node is TextNode textNode)
+            {
+                if (!string.IsNullOrEmpty(textNode.Text))
+                {
+                    searchFields[count++] = textNode.Text;
+                }
+
+                if (node is AbstractDiagnostic diagnostic)
+                {
+                    if (!string.IsNullOrEmpty(diagnostic.Code))
+                    {
+                        searchFields[count++] = diagnostic.Code;
+                    }
+
+                    if (!string.IsNullOrEmpty(diagnostic.File))
+                    {
+                        searchFields[count++] = diagnostic.File;
+                    }
+
+                    if (!string.IsNullOrEmpty(diagnostic.ProjectFile))
+                    {
+                        searchFields[count++] = diagnostic.ProjectFile;
+                    }
+                }
+                else if (node is Import import)
+                {
+                    if (!string.IsNullOrEmpty(import.ProjectFilePath))
+                    {
+                        searchFields[count++] = import.ProjectFilePath;
+                    }
+
+                    if (!string.IsNullOrEmpty(import.ImportedProjectFilePath))
+                    {
+                        searchFields[count++] = import.ImportedProjectFilePath;
+                    }
+                }
+                else if (node is NoImport noImport)
+                {
+                    if (!string.IsNullOrEmpty(noImport.ProjectFilePath))
+                    {
+                        searchFields[count++] = noImport.ProjectFilePath;
+                    }
+
+                    if (!string.IsNullOrEmpty(noImport.ImportedFileSpec))
+                    {
+                        searchFields[count++] = noImport.ImportedFileSpec;
+                    }
+
+                    if (!string.IsNullOrEmpty(noImport.Reason))
+                    {
+                        searchFields[count++] = noImport.Reason;
+                    }
                 }
             }
 

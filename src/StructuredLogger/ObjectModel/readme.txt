@@ -13,19 +13,6 @@ ObservableObject
                 Parameter
                 RemoveItem
                 SourceFile
-                TextNode
-                    AbstractDiagnostic
-                        CriticalBuildMessage
-                        Error
-                            BuildError
-                        Warning
-                    Import
-                    Message
-                        MessageWithLocation
-                        TimedMessage
-                    NoImport
-                    Note
-                    ProxyNode
                 TimedNode
                     Build
                     Project
@@ -41,6 +28,19 @@ ObservableObject
                         MSBuildTask
                         ResolveAssemblyReferenceTask
             SourceFileLine
+            TextNode
+                AbstractDiagnostic
+                    CriticalBuildMessage
+                    Error
+                        BuildError
+                    Warning
+                Import
+                Message
+                    MessageWithLocation
+                    TimedMessage
+                NoImport
+                Note
+                ProxyNode
 
 digraph {
   AddItem -> Item
