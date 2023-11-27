@@ -603,8 +603,10 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
         private void UpdateWatermark()
         {
-            string watermarkText1 = @"Type in the search box to search. Press Ctrl+F to focus the search box. Results (up to 1000) will display here.
+            string watermarkText0 = @"Type in the search box to search. Press Ctrl+F to focus the search box. Results (up to 1000) will display here.
+";
 
+            string watermarkText1 = @"
 Search for multiple words separated by space (space means AND). Enclose multiple words in double-quotes """" to search for the exact phrase. A single word in quotes means exact match (turns off substring search).
 
 Use syntax like '$property Prop' to narrow results down by item kind. Supported kinds: ";
@@ -623,6 +625,21 @@ Examples:
 ";
 
             var watermark = new TextBlock();
+            watermark.Inlines.Add(watermarkText0);
+
+            var recentSearches = SettingsService.GetRecentSearchStrings();
+            if (recentSearches.Any())
+            {
+                watermark.Inlines.Add(@"
+Recent:
+");
+
+                foreach (var recentSearch in recentSearches.Where(s => !searchExamples.Contains(s) && !nodeKinds.Contains(s)))
+                {
+                    watermark.Inlines.Add(MakeLink(recentSearch, searchLogControl));
+                }
+            }
+
             watermark.Inlines.Add(watermarkText1);
 
             bool isFirst = true;
@@ -645,19 +662,6 @@ Examples:
             foreach (var example in searchExamples)
             {
                 watermark.Inlines.Add(MakeLink(example, searchLogControl));
-            }
-
-            var recentSearches = SettingsService.GetRecentSearchStrings();
-            if (recentSearches.Any())
-            {
-                watermark.Inlines.Add(@"
-Recent:
-");
-
-                foreach (var recentSearch in recentSearches.Where(s => !searchExamples.Contains(s) && !nodeKinds.Contains(s)))
-                {
-                    watermark.Inlines.Add(MakeLink(recentSearch, searchLogControl));
-                }
             }
 
             searchLogControl.WatermarkContent = watermark;
