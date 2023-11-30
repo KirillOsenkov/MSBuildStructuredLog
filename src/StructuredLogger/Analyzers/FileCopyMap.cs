@@ -101,10 +101,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 destination = Path.Combine(project.ProjectDirectory, destination);
             }
 
-            source = Path.GetFullPath(source);
-            destination = Path.GetFullPath(destination);
+            source = TextUtilities.NormalizeFilePath(source);
+            destination = TextUtilities.NormalizeFilePath(destination);
 
-            if (string.Equals(source, destination))
+            if (string.Equals(source, destination, StringComparison.OrdinalIgnoreCase))
             {
                 return;
             }
