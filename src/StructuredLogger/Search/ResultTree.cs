@@ -91,10 +91,9 @@ namespace StructuredLogViewer
                 TreeNode parent = root;
                 var resultNode = result.Node;
 
-                bool isProject = resultNode is Project;
-                bool isTarget = resultNode is Target;
+                bool nest = !includeDuration && !includeStart && !includeEnd;
 
-                if (!includeDuration && !includeStart && !includeEnd && !isProject && resultNode != null)
+                if (nest && resultNode != null && resultNode is not Project)
                 {
                     if (result.RootFolder is string rootFolderName)
                     {
@@ -118,6 +117,8 @@ namespace StructuredLogViewer
                             parent = InsertParent(parent, evaluation);
                         }
                     }
+
+                    bool isTarget = resultNode is Target;
 
                     var target = resultNode.GetNearestParent<Target>();
                     if (!isTarget && project != null && target != null && target.Project == project)
@@ -149,12 +150,17 @@ namespace StructuredLogViewer
                     }
                 }
 
-                var proxy = new ProxyNode();
-                proxy.Original = resultNode;
-                proxy.SearchResult = result;
-                proxy.Text = resultNode?.Title;
+                if (resultNode == null || resultNode.Parent != null)
+                {
+                    var proxy = new ProxyNode();
+                    proxy.Original = resultNode;
+                    proxy.SearchResult = result;
+                    proxy.Text = resultNode?.Title;
 
-                parent.Children.Add(proxy);
+                    resultNode = proxy;
+                }
+
+                parent.Children.Add(resultNode);
             }
 
             if (!root.HasChildren)
