@@ -107,7 +107,6 @@ namespace StructuredLogViewer
         public bool IncludeEnd { get; set; }
         public TimeSpan PrecalculationDuration { get; set; }
         public bool UnderProject { get; set; } = false;
-        public bool IsCopy { get; set; }
 
         public int NameTermIndex { get; set; } = -1;
         public int ValueTermIndex { get; set; } = -1;
@@ -204,11 +203,6 @@ namespace StructuredLogViewer
                 {
                     Terms.RemoveAt(termIndex);
                     TypeKeyword = word.Substring(1).ToLowerInvariant();
-                    if (string.Equals(TypeKeyword, "copy", StringComparison.OrdinalIgnoreCase))
-                    {
-                        IsCopy = true;
-                    }
-
                     continue;
                 }
 

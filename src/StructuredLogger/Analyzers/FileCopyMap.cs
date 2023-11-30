@@ -195,7 +195,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public bool TryGetResults(NodeQueryMatcher matcher, IList<SearchResult> resultSet, int maxResults)
         {
-            if (!matcher.IsCopy)
+            if (!string.Equals(matcher.TypeKeyword, "copy", StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }
