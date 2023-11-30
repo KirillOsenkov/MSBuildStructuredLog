@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using NuGet.ProjectModel;
 using StructuredLogViewer;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -12,6 +13,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public string AssetsFilePath { get; set; }
         public string ProjectFilePath { get; set; }
         public string Text { get; set; }
+        public LockFile LockFile { get; set; }
     }
 
     public class NuGetSearch : ISearchExtension
@@ -41,7 +43,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             PopulateAssetsFiles();
 
-            var files = FindAssetsFiles(underProjectMatcher);
+            var files = FindAssetsFiles(underProjectMatcher, maxResults);
             if (files.Count == 0)
             {
                 resultCollector.Add(new SearchResult(new Error { Text = "No matching project.assets.json files found" }));
@@ -53,15 +55,109 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 var project = new Project
                 {
                     ProjectFile = file.ProjectFilePath,
-                    Name = Path.GetFileName(file.ProjectFilePath)
+                    Name = Path.GetFileName(file.ProjectFilePath),
+                    IsExpanded = matcher.Terms.Count > 0
                 };
                 resultCollector.Add(new SearchResult(project));
+
+                PopulateProject(project, matcher, file);
             }
 
             return true;
         }
 
-        private IReadOnlyList<AssetsFile> FindAssetsFiles(NodeQueryMatcher underProjectMatcher)
+        private void PopulateProject(Project project, NodeQueryMatcher matcher, AssetsFile file)
+        {
+            var lockFile = file.LockFile ??= new LockFileFormat().Parse(file.Text, file.AssetsFilePath);
+
+            var dependencies = new Dictionary<string, List<string>>();
+
+            foreach (var target in lockFile.Targets)
+            {
+                foreach (var package in target.Libraries)
+                {
+                    if (package.Dependencies.Count == 0)
+                    {
+                        continue;
+                    }
+
+                    var list = new List<string>();
+                    dependencies[$"{package.Name}"] = list;
+                    foreach (var dependency in package.Dependencies)
+                    {
+                        list.Add(dependency.Id);
+                    }
+                }
+            }
+
+            bool expand = matcher.Terms.Count > 0;
+            bool addedAnything = false;
+
+            foreach (var framework in lockFile.PackageSpec.TargetFrameworks)
+            {
+                var frameworkNode = new Item
+                {
+                    Name = framework.TargetAlias ?? framework.FrameworkName.ToString(),
+                    IsExpanded = expand
+                };
+
+                HashSet<string> topLevel = new(framework.Dependencies.Select(d => d.Name));
+
+                foreach (var dependency in framework.Dependencies)
+                {
+                    string name = dependency.Name;
+                    var dependencyNode = new Item { Name = name, IsExpanded = expand };
+
+                    bool added = AddDependencies(dependencyNode, dependencies, topLevel, matcher);
+                    if (matcher.IsMatch(name) || added)
+                    {
+                        frameworkNode.AddChild(dependencyNode);
+                        addedAnything = true;
+                    }
+                }
+
+                if (addedAnything)
+                {
+                    project.AddChild(frameworkNode);
+                }
+            }
+        }
+
+        private bool AddDependencies(
+            Item dependencyNode,
+            Dictionary<string, List<string>> dependencies,
+            HashSet<string> topLevel,
+            NodeQueryMatcher matcher)
+        {
+            if (!dependencies.TryGetValue(dependencyNode.Name, out var list))
+            {
+                return false;
+            }
+
+            bool result = false;
+            bool expand = matcher.Terms.Count > 0;
+
+            foreach (var dependency in list)
+            {
+                var node = new Item { Name = dependency, IsExpanded = expand };
+
+                bool added = false;
+                if (!topLevel.Contains(dependency))
+                {
+                    added = AddDependencies(node, dependencies, topLevel, matcher);
+                }
+
+                if (matcher.IsMatch(dependency) || added)
+                {
+                    dependencyNode.AddChild(node);
+                    result = true;
+                }
+            }
+
+            return result;
+        }
+
+        private IReadOnlyList<AssetsFile> FindAssetsFiles(NodeQueryMatcher underProjectMatcher, int maxResults)
         {
             var files = new List<AssetsFile>();
             foreach (var assetFile in assetsFiles)
@@ -72,6 +168,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         term.IsMatch(assetFile.AssetsFilePath))
                     {
                         files.Add(assetFile);
+                        if (files.Count >= maxResults)
+                        {
+                            return files;
+                        }
                     }
                 }
             }

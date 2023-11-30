@@ -718,6 +718,19 @@ namespace StructuredLogViewer
             return result;
         }
 
+        public bool IsMatch(string field)
+        {
+            foreach (var term in Terms)
+            {
+                if (!term.IsMatch(field))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         public bool IsTimeIntervalMatch(BaseNode node)
         {
             if (!HasTimeIntervalConstraints || node is not TimedNode timedNode)

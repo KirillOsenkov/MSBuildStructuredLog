@@ -93,7 +93,7 @@ namespace StructuredLogViewer
 
                 bool nest = !includeDuration && !includeStart && !includeEnd;
 
-                if (nest && resultNode != null && resultNode is not Project)
+                if (nest && resultNode != null && resultNode is not Project && resultNode.Parent != null)
                 {
                     if (result.RootFolder is string rootFolderName)
                     {
