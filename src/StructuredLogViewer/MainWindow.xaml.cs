@@ -575,7 +575,7 @@ namespace StructuredLogViewer
                 try
                 {
                     BuildAnalyzer.AnalyzeBuild(build);
-                    build.SearchExtensions.Add(new NuGetSearch());
+                    build.SearchExtensions.Add(new NuGetSearch(build));
                 }
                 catch (Exception ex)
                 {
