@@ -276,11 +276,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             typeKeyword = 0;
 
             var matcher = new NodeQueryMatcher(query, stringTable: null, cancellationToken);
-            if (matcher.IsCopy)
+
+            foreach (var searchExtension in build.SearchExtensions)
             {
-                if (build.FileCopyMap is { } fileCopyMap)
+                if (searchExtension.TryGetResults(matcher, results, MaxResults))
                 {
-                    fileCopyMap.GetResults(matcher, results, MaxResults);
                     return results;
                 }
             }

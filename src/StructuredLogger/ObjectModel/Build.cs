@@ -16,6 +16,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public SearchIndex SearchIndex { get; set; }
 
+        public IList<ISearchExtension> SearchExtensions { get; } = new List<ISearchExtension>();
+
         public bool IsAnalyzed { get; set; }
         public bool Succeeded { get; set; }
 

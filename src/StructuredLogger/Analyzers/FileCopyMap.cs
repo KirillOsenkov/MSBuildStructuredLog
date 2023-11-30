@@ -55,7 +55,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
     }
 
-    public class FileCopyMap
+    public class FileCopyMap : ISearchExtension
     {
         private static char[] separators = new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
         private static readonly string DirectorySeparator = Path.DirectorySeparatorChar.ToString();
@@ -193,8 +193,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        public void GetResults(NodeQueryMatcher matcher, IList<SearchResult> resultSet, int maxResults)
+        public bool TryGetResults(NodeQueryMatcher matcher, IList<SearchResult> resultSet, int maxResults)
         {
+            if (!matcher.IsCopy)
+            {
+                return false;
+            }
+
             if (matcher.Terms.Count == 1)
             {
                 var word = matcher.Terms[0];
@@ -213,7 +218,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     TryGetFiles(text, resultSet, maxResults);
                 }
+
+                return true;
             }
+
+            return false;
         }
 
         private void TryGetFiles(string text, IList<SearchResult> resultSet, int maxResults)
