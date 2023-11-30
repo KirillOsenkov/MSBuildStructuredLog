@@ -275,7 +275,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             List<SearchResult> results = new();
             typeKeyword = 0;
 
-            var matcher = new NodeQueryMatcher(query, stringTable: null, cancellationToken);
+            var matcher = new NodeQueryMatcher(query);
 
             foreach (var searchExtension in build.SearchExtensions)
             {
@@ -342,6 +342,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                 break;
                             }
                         }
+                    }
+
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        break;
                     }
 
                     if (results.Count >= MaxResults)

@@ -127,10 +127,7 @@ namespace StructuredLogViewer
 
         public const int MaxArraySize = 6;
 
-        public NodeQueryMatcher(
-            string query,
-            IEnumerable<string> stringTable,
-            CancellationToken cancellationToken = default)
+        public NodeQueryMatcher(string query)
         {
             query = PreprocessQuery(query);
 
@@ -138,6 +135,7 @@ namespace StructuredLogViewer
 
             var rawTerms = TextUtilities.Tokenize(query);
             this.Terms = new List<Term>(rawTerms.Count);
+
             foreach (var rawTerm in rawTerms)
             {
                 var term = Term.Get(rawTerm);
@@ -161,9 +159,12 @@ namespace StructuredLogViewer
                 }
             }
 
-            ParseTerms(stringTable);
+            ParseTerms();
+        }
 
-            if (IsCopy || stringTable is null)
+        public void Initialize(IEnumerable<string> stringTable, CancellationToken cancellationToken = default)
+        {
+            if (stringTable == null)
             {
                 return;
             }
@@ -174,7 +175,7 @@ namespace StructuredLogViewer
             PrecalculationDuration = elapsed;
         }
 
-        private void ParseTerms(IEnumerable<string> stringTable)
+        private void ParseTerms()
         {
             for (int termIndex = Terms.Count - 1; termIndex >= 0; termIndex--)
             {
@@ -215,7 +216,7 @@ namespace StructuredLogViewer
                 {
                     word = word.Substring(6, word.Length - 7);
                     Terms.RemoveAt(termIndex);
-                    var underMatcher = new NodeQueryMatcher(word, stringTable);
+                    var underMatcher = new NodeQueryMatcher(word);
                     IncludeMatchers.Add(underMatcher);
                     continue;
                 }
@@ -224,7 +225,7 @@ namespace StructuredLogViewer
                 {
                     word = word.Substring(9, word.Length - 10);
                     Terms.RemoveAt(termIndex);
-                    var underMatcher = new NodeQueryMatcher(word, stringTable);
+                    var underMatcher = new NodeQueryMatcher(word);
                     ExcludeMatchers.Add(underMatcher);
                     continue;
                 }
@@ -234,7 +235,7 @@ namespace StructuredLogViewer
                     word = word.Substring(8, word.Length - 9);
                     Terms.RemoveAt(termIndex);
 
-                    var underMatcher = new NodeQueryMatcher(word, stringTable);
+                    var underMatcher = new NodeQueryMatcher(word);
                     underMatcher.UnderProject = true;
                     IncludeMatchers.Add(underMatcher);
                     continue;
