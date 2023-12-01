@@ -13,7 +13,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public string AssetsFilePath { get; set; }
         public string ProjectFilePath { get; set; }
         public string Text { get; set; }
-        public LockFile LockFile { get; set; }
+
+        private LockFile lockFile;
+        public LockFile LockFile
+        {
+            get
+            {
+                lock (this)
+                {
+                    lockFile ??= new LockFileFormat().Parse(Text, AssetsFilePath);
+                }
+
+                return lockFile;
+            }
+        }
     }
 
     public class NuGetSearch : ISearchExtension
@@ -73,7 +86,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void PopulateProject(Project project, NodeQueryMatcher matcher, AssetsFile file)
         {
-            var lockFile = file.LockFile ??= new LockFileFormat().Parse(file.Text, file.AssetsFilePath);
+            var lockFile = file.LockFile;
 
             bool expand = matcher.Terms.Count > 0;
             bool addedAnything = false;
@@ -125,6 +138,62 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     project.AddChild(frameworkNode);
                 }
+            }
+
+            if (!addedAnything)
+            {
+                return;
+            }
+
+            PopulatePackageFolders(project, lockFile);
+            PopulateLogs(project, lockFile);
+        }
+
+        private void PopulateLogs(Project project, LockFile lockFile)
+        {
+            foreach (var logMessage in lockFile.LogMessages)
+            {
+                string text = logMessage.Message;
+
+                TextNode node;
+                if (logMessage.Level == NuGet.Common.LogLevel.Error)
+                {
+                    node = new Error
+                    {
+                        Code = logMessage.Code.ToString()
+                    };
+                }
+                else if (logMessage.Level == NuGet.Common.LogLevel.Warning)
+                {
+                    node = new Warning
+                    {
+                        Code = logMessage.Code.ToString()
+                    };
+                }
+                else
+                {
+                    node = new MessageWithLocation();
+                    text = $"{logMessage.Code}: {text}";
+                }
+
+                node.Text = text;
+
+                project.AddChild(node);
+            }
+        }
+
+        private static void PopulatePackageFolders(Project project, LockFile lockFile)
+        {
+            var packageFoldersNode = new Folder { Name = "PackageFolders" };
+            foreach (var packageFolder in lockFile.PackageFolders)
+            {
+                var item = new Item { Name = packageFolder.Path };
+                packageFoldersNode.AddChild(item);
+            }
+
+            if (packageFoldersNode.HasChildren)
+            {
+                project.AddChild(packageFoldersNode);
             }
         }
 
