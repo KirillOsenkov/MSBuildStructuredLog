@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using StructuredLogViewer;
@@ -81,7 +82,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (typePrefix != Strings.Folder &&
                 typePrefix != Strings.Item &&
                 typePrefix != Strings.Metadata &&
-                typePrefix != Strings.Property)
+                typePrefix != Strings.Property &&
+                typePrefix != "Package")
             {
                 Highlights.Add(typePrefix);
             }
@@ -126,7 +128,33 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
-            foreach (var wordsInField in result.WordsInFields.GroupBy(t => t.field, t => t.match))
+            IEnumerable<(string Key, IEnumerable<string> Occurrences)> fieldsWithMatches = null;
+            if (result.FieldsToDisplay != null)
+            {
+                fieldsWithMatches = result.FieldsToDisplay.Select(f =>
+                {
+                    List<string> matches = null;
+
+                    foreach (var kvp in result.WordsInFields)
+                    {
+                        if (kvp.field == f)
+                        {
+                            matches ??= new();
+                            matches.Add(kvp.match);
+                        }
+                    }
+
+                    return (f, (IEnumerable<string>)matches);
+                });
+            }
+            else
+            {
+                fieldsWithMatches = result.WordsInFields
+                    .GroupBy(t => t.field, t => t.match)
+                    .Select(g => (g.Key, (IEnumerable<string>)g));
+            }
+
+            foreach (var wordsInField in fieldsWithMatches)
             {
                 var fieldText = wordsInField.Key;
                 if (fieldText == OriginalType || (node is Task task && task.IsDerivedTask))
@@ -147,7 +175,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 fieldText = TextUtilities.ShortenValue(fieldText, "...");
 
-                var highlightSpans = TextUtilities.GetHighlightedSpansInText(fieldText, wordsInField);
+                var highlightSpans = TextUtilities.GetHighlightedSpansInText(fieldText, wordsInField.Occurrences);
                 int index = 0;
                 foreach (var span in highlightSpans)
                 {
@@ -165,7 +193,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     Highlights.Add(fieldText.Substring(index, fieldText.Length - index));
                 }
 
-                if (nameValueNode != null && wordsInField.Key.Equals(nameValueNode.Name))
+                if (nameValueNode != null && fieldText.Equals(nameValueNode.Name))
                 {
                     if (!valueFound)
                     {
@@ -177,7 +205,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                 }
 
-                if (namedNode != null && namedNode.Name == wordsInField.Key)
+                if (namedNode != null && namedNode.Name == fieldText)
                 {
                     if (GetNodeDifferentiator(node) is object differentiator)
                     {

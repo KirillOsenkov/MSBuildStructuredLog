@@ -37,7 +37,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var underProjectMatcher = matcher.IncludeMatchers.FirstOrDefault(m => m.UnderProject);
             if (underProjectMatcher == null || underProjectMatcher.Terms.Count == 0)
             {
-                resultCollector.Add(new SearchResult(new Error { Text = "Add a 'project(...)' clause to filter which project(s) to search" }));
+                resultCollector.Add(new SearchResult(new Error { Text = "Add a 'project(...)' clause to filter which project(s) to search." }));
+                resultCollector.Add(new SearchResult(new Note { Text = "Specify '$nuget project(.csproj)' to search all projects (expensive)." }));
                 return true;
             }
 
@@ -56,11 +57,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     ProjectFile = file.ProjectFilePath,
                     Name = Path.GetFileName(file.ProjectFilePath),
-                    IsExpanded = matcher.Terms.Count > 0
+                    IsExpanded = true
                 };
-                resultCollector.Add(new SearchResult(project));
 
                 PopulateProject(project, matcher, file);
+
+                if (project.HasChildren)
+                {
+                    resultCollector.Add(new SearchResult(project));
+                }
             }
 
             return true;
@@ -86,23 +91,30 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 var frameworkNode = new Folder
                 {
                     Name = framework.FrameworkName,
-                    IsExpanded = expand
+                    IsExpanded = true
                 };
 
                 HashSet<string> topLevel = new(framework.Dependencies.Select(d => ParsePackageId(d).name));
 
-                foreach (var dependency in framework.Dependencies)
+                var topLevelLibraries = new List<LockFileTargetLibrary>();
+
+                foreach (var name in topLevel)
                 {
-                    var (name, version) = ParsePackageId(dependency);
                     if (!libraries.TryGetValue(name, out var topLibrary))
                     {
                         continue;
                     }
 
-                    NamedNode topLevelNode = CreateNode(topLibrary, expand);
+                    topLevelLibraries.Add(topLibrary);
+                }
 
-                    bool added = AddDependencies(topLevelNode, libraries, topLevel, matcher);
-                    if (matcher.IsMatch(name) || added)
+                foreach (var topLibrary in topLevelLibraries.OrderByDescending(l => l.Type))
+                {
+                    SearchResult match = matcher.IsMatch(topLibrary.Name, topLibrary.Version.ToString());
+                    TreeNode topLevelNode = CreateNode(topLibrary, expand, match);
+
+                    bool added = AddDependencies(topLibrary.Name, topLevelNode, libraries, topLevel, matcher);
+                    if (match != null || added)
                     {
                         frameworkNode.AddChild(topLevelNode);
                         addedAnything = true;
@@ -116,10 +128,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private NamedNode CreateNode(LockFileTargetLibrary library, bool expand)
+        private TreeNode CreateNode(LockFileTargetLibrary library, bool expand, SearchResult match)
         {
             string name = library.Name;
-            NamedNode node;
+            TreeNode node;
             if (library.Type == "project")
             {
                 node = new Project
@@ -139,6 +151,33 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 };
             }
 
+            if (match != null && match != SearchResult.EmptyQueryMatch)
+            {
+                if (node is Package package)
+                {
+                    match.FieldsToDisplay = new List<string>
+                    {
+                        package.Name,
+                        package.Version
+                    };
+                }
+
+                var proxy = new ProxyNode();
+                proxy.Original = node;
+                proxy.Populate(match);
+                proxy.Text = node.ToString();
+                proxy.IsExpanded = expand;
+
+                var children = node.Children.ToArray();
+                node.Children.Clear();
+                foreach (var child in children)
+                {
+                    proxy.AddChild(child);
+                }
+
+                node = proxy;
+            }
+
             return node;
         }
 
@@ -148,12 +187,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         private bool AddDependencies(
-            NamedNode dependencyNode,
+            string id,
+            TreeNode dependencyNode,
             Dictionary<string, LockFileTargetLibrary> libraries,
             HashSet<string> topLevel,
             NodeQueryMatcher matcher)
         {
-            if (!libraries.TryGetValue(dependencyNode.Name, out var library))
+            if (!libraries.TryGetValue(id, out var library))
             {
                 return false;
             }
@@ -168,15 +208,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     continue;
                 }
 
-                var node = CreateNode(dependencyLibrary, expand);
+                SearchResult match = matcher.IsMatch(dependencyLibrary.Name, dependencyLibrary.Version.ToString());
+                var node = CreateNode(dependencyLibrary, expand, match);
 
                 bool added = false;
                 if (!topLevel.Contains(dependency.Id))
                 {
-                    added = AddDependencies(node, libraries, topLevel, matcher);
+                    added = AddDependencies(dependency.Id, node, libraries, topLevel, matcher);
                 }
 
-                if (matcher.IsMatch(dependency.ToString()) || added)
+                if (match != null || added)
                 {
                     dependencyNode.AddChild(node);
                     result = true;

@@ -637,6 +637,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static IReadOnlyList<Span> GetHighlightedSpansInText(string text, IEnumerable<string> searchTerms)
         {
+            if (searchTerms == null || !searchTerms.Any())
+            {
+                return Array.Empty<Span>();
+            }
+
             var spans = new List<Span>();
 
             foreach (var searchTerm in searchTerms)

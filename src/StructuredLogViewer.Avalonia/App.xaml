@@ -196,6 +196,20 @@
             </StackPanel>
         </TreeDataTemplate>
 
+        <TreeDataTemplate DataType="{x:Type l:Package}"
+                          ItemsSource="{Binding Children}">
+            <StackPanel Orientation="Horizontal">
+                <Rectangle Name="icon"
+                           Classes="nodeIcon"
+                           Stroke="{StaticResource ItemStroke}"
+                           Fill="{StaticResource ItemBrush}" />
+                <TextBlock Text="{Binding ShortenedName}"
+                           Classes="nodeText" />
+                <TextBlock Text="{Binding Version}"
+                           Classes="nodeText" />
+            </StackPanel>
+        </TreeDataTemplate>
+
         <DataTemplate DataType="{x:Type l:Metadata}">
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"

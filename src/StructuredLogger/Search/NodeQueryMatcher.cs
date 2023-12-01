@@ -718,17 +718,49 @@ namespace StructuredLogViewer
             return result;
         }
 
-        public bool IsMatch(string field)
+        public SearchResult IsMatch(string field)
         {
+            SearchResult result = null;
+
             foreach (var term in Terms)
             {
                 if (!term.IsMatch(field))
                 {
-                    return false;
+                    return null;
+                }
+
+                result ??= new();
+                result.AddMatch(field, term.Word);
+            }
+
+            return result ?? SearchResult.EmptyQueryMatch;
+        }
+
+        public SearchResult IsMatch(params string[] fields)
+        {
+            SearchResult result = null;
+
+            foreach (var term in Terms)
+            {
+                bool matched = false;
+                foreach (var field in fields)
+                {
+                    if (term.IsMatch(field))
+                    {
+                        matched = true;
+                        result ??= new();
+                        result.AddMatch(field, term.Word);
+                        break;
+                    }
+                }
+
+                if (!matched)
+                {
+                    return null;
                 }
             }
 
-            return true;
+            return result ?? SearchResult.EmptyQueryMatch;
         }
 
         public bool IsTimeIntervalMatch(BaseNode node)

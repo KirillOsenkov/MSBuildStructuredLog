@@ -9,12 +9,20 @@ namespace StructuredLogViewer
         public BaseNode Node { get; }
         public List<(string field, string match)> WordsInFields = new List<(string, string)>();
 
+        public IList<string> FieldsToDisplay { get; set; }
+
         public bool MatchedByType { get; private set; }
         public TimeSpan Duration { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
 
         public string RootFolder { get; set; }
+
+        public static SearchResult EmptyQueryMatch { get; } = new SearchResult();
+
+        public SearchResult()
+        {
+        }
 
         public SearchResult(BaseNode node, bool includeDuration = false, bool includeStart = false, bool includeEnd = false)
         {

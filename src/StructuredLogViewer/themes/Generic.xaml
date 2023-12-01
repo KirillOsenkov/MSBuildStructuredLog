@@ -259,7 +259,7 @@
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal" x:Name="projectRoot">
       <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}"
-                 Width="16" Height="16" Margin="2,2,6,2" StrokeThickness="0"
+                 Width="16" Height="16" Margin="2,2,5,2" StrokeThickness="0"
                  Fill="{StaticResource GenericProjectIcon}" />
       <TextBlock Text="{Binding Name}" Margin="0,2,0,0" ToolTip="{Binding ToolTip}" ToolTipService.ShowDuration="60000" />
       <TextBlock
@@ -473,10 +473,14 @@
     <StackPanel Orientation="Horizontal">
       <Path Data="{DynamicResource NuGetGeometry}"
             Stroke="{DynamicResource NuGet}"
+            VerticalAlignment="Center"
             StrokeThickness="1"
+            Width="16"
+            Height="16"
+            Margin="1,2,0,2"
             Fill="{DynamicResource NuGet}" />
-      <TextBlock Text="{Binding ShortenedName}" Margin="6,0,0,0" />
-      <TextBlock Text="{Binding Version}" Margin="6,0,0,0" Foreground="{DynamicResource PropertyStroke}" />
+      <TextBlock Text="{Binding ShortenedName}" Margin="6,0,0,0" VerticalAlignment="Center" />
+      <TextBlock Text="{Binding Version}" Margin="6,0,0,0" Foreground="{DynamicResource PropertyStroke}" VerticalAlignment="Center" />
     </StackPanel>
   </HierarchicalDataTemplate>
 
@@ -695,7 +699,7 @@
           VerticalAlignment="Center"
           Stroke="{DynamicResource ParameterStroke}"
           Fill="{DynamicResource ParameterBrush}" />
-      <ItemsControl x:Name="text" ItemsSource="{Binding Highlights}" Focusable="False">
+      <ItemsControl x:Name="text" ItemsSource="{Binding Highlights}" Focusable="False" VerticalAlignment="Center">
         <ItemsControl.ItemsPanel>
           <ItemsPanelTemplate>
             <StackPanel Orientation="Horizontal" IsItemsHost="True" />
@@ -765,6 +769,14 @@
       <DataTrigger Binding="{Binding OriginalType}" Value="NoImport">
         <Setter TargetName="icon" Property="Stroke" Value="{DynamicResource NoImportStroke}" />
         <Setter TargetName="icon" Property="Fill" Value="{DynamicResource NoImportBrush}" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding OriginalType}" Value="Package">
+        <Setter TargetName="icon" Property="Stroke" Value="{DynamicResource NuGet}" />
+        <Setter TargetName="icon" Property="Fill" Value="{DynamicResource NuGet}" />
+        <Setter TargetName="icon" Property="Data" Value="{DynamicResource NuGetGeometry}" />
+        <Setter TargetName="icon" Property="Width" Value="16" />
+        <Setter TargetName="icon" Property="Height" Value="16" />
+        <Setter TargetName="icon" Property="Margin" Value="1,2,6,2" />
       </DataTrigger>
       <DataTrigger Binding="{Binding ProjectExtension}" Value=".sln">
         <Setter TargetName="icon" Property="Fill" Value="{StaticResource SlnIcon}" />
