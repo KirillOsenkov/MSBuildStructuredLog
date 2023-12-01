@@ -383,6 +383,38 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return new KeyValuePair<string, string>(name, value);
         }
 
+        public static string GetFirstPart(this string text, char separator)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return text;
+            }
+
+            int index = text.IndexOf(separator);
+            if (index == -1)
+            {
+                return text;
+            }
+
+            return text.Substring(0, index);
+        }
+
+        public static (string first, string rest) GetFirstAndRest(this string text, char separator)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return (text, "");
+            }
+
+            int index = text.IndexOf(separator);
+            if (index == -1)
+            {
+                return (text, "");
+            }
+
+            return (text.Substring(0, index), text.Substring(index + 1, text.Length - index - 1));
+        }
+
         public static int GetNumberOfLeadingSpaces(string line)
         {
             int result = 0;

@@ -93,20 +93,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
             bool expand = matcher.Terms.Count > 0;
             bool addedAnything = false;
 
-            foreach (var framework in lockFile.PackageSpec.TargetFrameworks)
+            foreach (var framework in lockFile.ProjectFileDependencyGroups)
             {
-                var frameworkNode = new Item
+                var frameworkNode = new Folder
                 {
-                    Name = framework.TargetAlias ?? framework.FrameworkName.ToString(),
+                    Name = framework.FrameworkName,
                     IsExpanded = expand
                 };
 
-                HashSet<string> topLevel = new(framework.Dependencies.Select(d => d.Name));
+                HashSet<string> topLevel = new(framework.Dependencies.Select(d => ParsePackageId(d).name));
 
                 foreach (var dependency in framework.Dependencies)
                 {
-                    string name = dependency.Name;
-                    var dependencyNode = new Item { Name = name, IsExpanded = expand };
+                    var (name, version) = ParsePackageId(dependency);
+                    var dependencyNode = new Package { Name = name, Version = version, IsExpanded = expand };
 
                     bool added = AddDependencies(dependencyNode, dependencies, topLevel, matcher);
                     if (matcher.IsMatch(name) || added)
@@ -123,8 +123,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        private (string name, string version) ParsePackageId(string dependency)
+        {
+            return dependency.GetFirstAndRest(' ');
+        }
+
         private bool AddDependencies(
-            Item dependencyNode,
+            Package dependencyNode,
             Dictionary<string, List<string>> dependencies,
             HashSet<string> topLevel,
             NodeQueryMatcher matcher)
@@ -139,7 +144,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             foreach (var dependency in list)
             {
-                var node = new Item { Name = dependency, IsExpanded = expand };
+                var node = new Package { Name = dependency, IsExpanded = expand };
 
                 bool added = false;
                 if (!topLevel.Contains(dependency))

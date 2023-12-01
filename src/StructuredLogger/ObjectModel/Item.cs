@@ -17,10 +17,5 @@
             get => Name;
             set => Name = value;
         }
-
-        public override string ToString()
-        {
-            return Name ?? Text;
-        }
     }
 }

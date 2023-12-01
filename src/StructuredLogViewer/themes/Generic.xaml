@@ -13,6 +13,8 @@
   <Geometry x:Key="RemoveItemGeometry">M 2 4 L 11 4 L 11 7 L 2 7 Z</Geometry>
   <Geometry x:Key="SquareIconGeometry">F1M0,0L15,0L15,15L0,15Z</Geometry>
 
+  <Geometry x:Key="NuGetGeometry">F1 M11.433,4 L7.568,4 A3.569,3.569 0 0 0 4,7.568L4,11.433 A3.568,3.568 0 0 0 7.568,15L11.433,15 A3.567,3.567 0 0 0 15,11.433L15,7.568 A3.568,3.568 0 0 0 11.433,4M7,8.447 A1.447,1.447 0 1 1 8.447,7A1.447,1.447 0 0 1 7,8.447M11.484,13.8 A2.316,2.316 0 1 1 13.8,11.484A2.316,2.316 0 0 1 11.484,13.8M3.665,2.5 A1.165,1.165 0 1 1 2.5,1.335A1.165,1.165 0 0 1 3.665,2.5</Geometry>
+
   <Style x:Key="{x:Type TextBlock}" TargetType="{x:Type TextBlock}">
     <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
   </Style>
@@ -463,6 +465,18 @@
     <StackPanel Orientation="Horizontal">
       <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{DynamicResource ItemStroke}" Fill="{DynamicResource ItemBrush}" />
       <TextBlock Text="{Binding ShortenedName}" />
+    </StackPanel>
+  </HierarchicalDataTemplate>
+
+  <HierarchicalDataTemplate DataType="{x:Type l:Package}"
+                            ItemsSource="{Binding Children}">
+    <StackPanel Orientation="Horizontal">
+      <Path Data="{DynamicResource NuGetGeometry}"
+            Stroke="{DynamicResource NuGet}"
+            StrokeThickness="1"
+            Fill="{DynamicResource NuGet}" />
+      <TextBlock Text="{Binding ShortenedName}" Margin="6,0,0,0" />
+      <TextBlock Text="{Binding Version}" Margin="6,0,0,0" Foreground="{DynamicResource PropertyStroke}" />
     </StackPanel>
   </HierarchicalDataTemplate>
 

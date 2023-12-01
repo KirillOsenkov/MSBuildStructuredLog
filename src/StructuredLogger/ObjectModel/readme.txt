@@ -10,6 +10,7 @@ ObservableObject
                 EntryTarget
                 Folder
                 Item
+                Package
                 Parameter
                 RemoveItem
                 SourceFile
@@ -61,6 +62,7 @@ digraph {
   Folder -> Item
   Folder -> Message
   Folder -> Note
+  Folder -> Package
   Folder -> Parameter
   Folder -> Property
   Folder -> Warning
