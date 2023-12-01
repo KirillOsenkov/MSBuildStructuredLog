@@ -111,9 +111,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 foreach (var topLibrary in topLevelLibraries.OrderByDescending(l => l.Type))
                 {
                     SearchResult match = matcher.IsMatch(topLibrary.Name, topLibrary.Version.ToString());
-                    TreeNode topLevelNode = CreateNode(topLibrary, expand, match);
+                    TreeNode topLevelNode = CreateNode(lockFile, topLibrary, expand, match);
 
-                    bool added = AddDependencies(topLibrary.Name, topLevelNode, libraries, topLevel, matcher);
+                    bool added = AddDependencies(lockFile, topLibrary.Name, topLevelNode, libraries, topLevel, matcher);
                     if (match != null || added)
                     {
                         frameworkNode.AddChild(topLevelNode);
@@ -128,16 +128,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private TreeNode CreateNode(LockFileTargetLibrary library, bool expand, SearchResult match)
+        private TreeNode CreateNode(LockFile lockFile, LockFileTargetLibrary library, bool expand, SearchResult match)
         {
             string name = library.Name;
             TreeNode node;
             if (library.Type == "project")
             {
+                var libraryInfo = lockFile.GetLibrary(library.Name, library.Version);
                 node = new Project
                 {
-                    Name = name,
-                    ProjectFile = library.ToString() + ".csproj",
+                    Name = Path.GetFileName(libraryInfo.MSBuildProject),
+                    ProjectFile = libraryInfo.MSBuildProject,
                     IsExpanded = expand
                 };
             }
@@ -187,6 +188,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         private bool AddDependencies(
+            LockFile lockFile,
             string id,
             TreeNode dependencyNode,
             Dictionary<string, LockFileTargetLibrary> libraries,
@@ -209,12 +211,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
 
                 SearchResult match = matcher.IsMatch(dependencyLibrary.Name, dependencyLibrary.Version.ToString());
-                var node = CreateNode(dependencyLibrary, expand, match);
+                var node = CreateNode(lockFile, dependencyLibrary, expand, match);
 
                 bool added = false;
                 if (!topLevel.Contains(dependency.Id))
                 {
-                    added = AddDependencies(dependency.Id, node, libraries, topLevel, matcher);
+                    added = AddDependencies(lockFile, dependency.Id, node, libraries, topLevel, matcher);
                 }
 
                 if (match != null || added)
