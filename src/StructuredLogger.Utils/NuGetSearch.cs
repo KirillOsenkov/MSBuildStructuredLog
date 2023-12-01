@@ -171,7 +171,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 var node = CreateNode(dependencyLibrary, expand);
 
                 bool added = false;
-                if (!topLevel.Contains(dependency.ToString()))
+                if (!topLevel.Contains(dependency.Id))
                 {
                     added = AddDependencies(node, libraries, topLevel, matcher);
                 }
