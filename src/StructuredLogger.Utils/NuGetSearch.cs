@@ -147,6 +147,109 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             PopulatePackageFolders(project, lockFile);
             PopulateLogs(project, lockFile);
+            PopulatePackageContents(project, lockFile, matcher);
+        }
+
+        private void PopulatePackageContents(Project project, LockFile lockFile, NodeQueryMatcher matcher)
+        {
+            foreach (var target in lockFile.Targets)
+            {
+                foreach (var package in target.Libraries)
+                {
+                    if (package.Type == "project")
+                    {
+                        continue;
+                    }
+
+                    var match = matcher.IsMatch(package.Name, package.Version.ToString());
+                    if (match == null || match == SearchResult.EmptyQueryMatch)
+                    {
+                        continue;
+                    }
+
+                    AddPackage(project, lockFile, package, match);
+                }
+            }
+        }
+
+        private void AddPackage(Project project, LockFile lockFile, LockFileTargetLibrary package, SearchResult match)
+        {
+            var node = new Package
+            {
+                Name = package.Name,
+                Version = package.Version.ToString(),
+                IsExpanded = true
+            };
+
+            if (package.Dependencies.Count > 0)
+            {
+                var folder = new Folder { Name = "Dependencies", IsExpanded = true };
+                node.AddChild(folder);
+
+                foreach (var item in package.Dependencies)
+                {
+                    var itemNode = new Package { Name = item.Id, Version = item.VersionRange.ToString() };
+                    folder.AddChild(itemNode);
+                }
+            }
+
+            AddItems(node, package.Build, "build");
+            AddItems(node, package.BuildMultiTargeting, "buildMultitargeting");
+            AddItems(node, package.FrameworkAssemblies, "frameworkAssemblies");
+            AddItems(node, package.CompileTimeAssemblies, "compile");
+            AddItems(node, package.ContentFiles.OfType<LockFileItem>().ToArray(), "contentFiles");
+            AddItems(node, package.EmbedAssemblies, "embed");
+            AddItems(node, package.NativeLibraries, "native");
+            AddItems(node, package.ResourceAssemblies, "resource");
+            AddItems(node, package.RuntimeAssemblies, "runtime");
+            AddItems(node, package.RuntimeTargets.OfType<LockFileItem>().ToArray(), "runtimeTargets");
+            AddItems(node, package.ToolsAssemblies, "tools");
+            AddItems(node, package.FrameworkReferences, "frameworkReferences");
+
+            project.AddChild(node);
+        }
+
+        private void AddItems(Package node, IList<string> items, string itemName)
+        {
+            if (items == null || items.Count == 0)
+            {
+                return;
+            }
+
+            var folder = new Folder { Name = itemName, IsExpanded = true };
+            node.AddChild(folder);
+
+            foreach (var item in items)
+            {
+                var itemNode = new Item { Name = item };
+                folder.AddChild(itemNode);
+            }
+        }
+
+        private void AddItems(Package node, IList<LockFileItem> items, string itemName)
+        {
+            if (items == null || items.Count == 0)
+            {
+                return;
+            }
+
+            var folder = new Folder { Name = itemName, IsExpanded = true };
+            node.AddChild(folder);
+
+            foreach (var item in items)
+            {
+                var itemNode = new Item { Name = item.Path };
+                if (item.Properties is { } properties && properties.Count > 0)
+                {
+                    foreach (var property in properties)
+                    {
+                        var metadata = new Metadata { Name = property.Key, Value = property.Value };
+                        itemNode.AddChild(metadata);
+                    }
+                }
+
+                folder.AddChild(itemNode);
+            }
         }
 
         private void PopulateLogs(Project project, LockFile lockFile)
