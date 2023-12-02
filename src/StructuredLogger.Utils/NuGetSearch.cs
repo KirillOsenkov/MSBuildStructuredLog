@@ -91,9 +91,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             bool expand = matcher.Terms.Count > 0;
             bool addedAnything = false;
 
+            Dictionary<string, Folder> targetsByDependencyHash = new(StringComparer.OrdinalIgnoreCase);
+
             foreach (var framework in lockFile.ProjectFileDependencyGroups)
             {
-                var target = lockFile.Targets.FirstOrDefault(t => t.Name == framework.FrameworkName);
+                string frameworkName = framework.FrameworkName;
+                var frameworkDependencies = framework.Dependencies;
+
+                var target = lockFile.Targets.FirstOrDefault(t => t.Name == frameworkName);
                 if (target == null)
                 {
                     continue;
@@ -103,11 +108,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 var frameworkNode = new Folder
                 {
-                    Name = framework.FrameworkName,
+                    Name = frameworkName,
                     IsExpanded = true
                 };
 
-                HashSet<string> topLevel = new(framework.Dependencies.Select(d => ParsePackageId(d).name));
+                HashSet<string> topLevel = new(frameworkDependencies.Select(d => ParsePackageId(d).name));
 
                 var topLevelLibraries = new List<LockFileTargetLibrary>();
 
@@ -121,7 +126,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     topLevelLibraries.Add(topLibrary);
                 }
 
-                foreach (var topLibrary in topLevelLibraries.OrderByDescending(l => l.Type))
+                var topLevelLibrariesSorted = topLevelLibraries.OrderByDescending(l => l.Type);
+
+                string dependenciesHash = string.Join(",", topLevelLibrariesSorted.Select(t => $"{t.Name}/{t.Version}"));
+                if (targetsByDependencyHash.TryGetValue(dependenciesHash, out var existingFolder))
+                {
+                    existingFolder.Name = $"{existingFolder.Name};{frameworkName}";
+                    continue;
+                }
+
+                targetsByDependencyHash[dependenciesHash] = frameworkNode;
+
+                foreach (var topLibrary in topLevelLibrariesSorted)
                 {
                     SearchResult match = matcher.IsMatch(topLibrary.Name, topLibrary.Version.ToString());
                     TreeNode topLevelNode = CreateNode(lockFile, topLibrary, expand, match);
