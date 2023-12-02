@@ -139,8 +139,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 foreach (var topLibrary in topLevelLibrariesSorted)
                 {
-                    SearchResult match = matcher.IsMatch(topLibrary.Name, topLibrary.Version.ToString());
-                    TreeNode topLevelNode = CreateNode(lockFile, topLibrary, expand, match);
+                    (TreeNode topLevelNode, SearchResult match) = CreateNode(lockFile, topLibrary, expand, matcher);
 
                     bool added = AddDependencies(lockFile, topLibrary.Name, topLevelNode, libraries, topLevel, matcher);
                     if (match != null || added)
@@ -349,28 +348,39 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private TreeNode CreateNode(LockFile lockFile, LockFileTargetLibrary library, bool expand, SearchResult match)
+        private (TreeNode node, SearchResult match) CreateNode(
+            LockFile lockFile,
+            LockFileTargetLibrary library,
+            bool expand,
+            NodeQueryMatcher matcher)
         {
             string name = library.Name;
+            string version = library.Version.ToString();
+
             TreeNode node;
+            SearchResult match;
+
             if (library.Type == "project")
             {
-                var libraryInfo = lockFile.GetLibrary(library.Name, library.Version);
+                var libraryInfo = lockFile.GetLibrary(name, library.Version);
+                name = Path.GetFileName(libraryInfo.MSBuildProject);
                 node = new Project
                 {
-                    Name = Path.GetFileName(libraryInfo.MSBuildProject),
+                    Name = name,
                     ProjectFile = libraryInfo.MSBuildProject,
                     IsExpanded = expand
                 };
+                match = matcher.IsMatch(name);
             }
             else
             {
                 node = new Package
                 {
                     Name = name,
-                    Version = library.Version.ToString(),
+                    Version = version,
                     IsExpanded = expand
                 };
+                match = matcher.IsMatch(name, version);
             }
 
             if (match != null && match != SearchResult.EmptyQueryMatch)
@@ -400,7 +410,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 node = proxy;
             }
 
-            return node;
+            return (node, match);
         }
 
         private (string name, string version) ParsePackageId(string dependency)
@@ -431,8 +441,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     continue;
                 }
 
-                SearchResult match = matcher.IsMatch(dependencyLibrary.Name, dependencyLibrary.Version.ToString());
-                var node = CreateNode(lockFile, dependencyLibrary, expand, match);
+                var (node, match) = CreateNode(lockFile, dependencyLibrary, expand, matcher);
 
                 bool added = false;
                 if (!topLevel.Contains(dependency.Id))
