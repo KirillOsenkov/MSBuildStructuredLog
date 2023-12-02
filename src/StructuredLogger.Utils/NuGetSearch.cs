@@ -205,13 +205,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 foreach (var kvp in nodesByTarget)
                 {
-                    var folder = new Folder
-                    {
-                        Name = string.Join(",", kvp.Value.targets),
-                        IsExpanded = true
-                    };
-                    folder.AddChild(kvp.Value.node);
-                    project.AddChild(folder);
+                    var folderName = string.Join(",", kvp.Value.targets);
+                    var folder = project.GetOrCreateNodeWithName<Folder>(folderName);
+                    var node = kvp.Value.node;
+                    node.IsExpanded = false;
+                    folder.IsExpanded = true;
+                    folder.AddChild(node);
                 }
             }
         }
