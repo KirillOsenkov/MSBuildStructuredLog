@@ -434,19 +434,28 @@ namespace Microsoft.Build.Logging.StructuredLogger
             bool result = false;
             bool expand = matcher.Terms.Count > 0;
 
-            foreach (var dependency in library.Dependencies)
+            var dependencyLibraries = new List<LockFileTargetLibrary>();
+
+            foreach (var name in library.Dependencies.Select(d => d.Id))
             {
-                if (!libraries.TryGetValue(dependency.Id, out var dependencyLibrary))
+                if (!libraries.TryGetValue(name, out var dependencyLibrary))
                 {
                     continue;
                 }
 
+                dependencyLibraries.Add(dependencyLibrary);
+            }
+
+            var dependencyLibrariesSorted = dependencyLibraries.OrderByDescending(l => l.Type);
+
+            foreach (var dependencyLibrary in dependencyLibrariesSorted)
+            {
                 var (node, match) = CreateNode(lockFile, dependencyLibrary, expand, matcher);
 
                 bool added = false;
-                if (!topLevel.Contains(dependency.Id))
+                if (!topLevel.Contains(dependencyLibrary.Name))
                 {
-                    added = AddDependencies(lockFile, dependency.Id, node, libraries, topLevel, matcher);
+                    added = AddDependencies(lockFile, dependencyLibrary.Name, node, libraries, topLevel, matcher);
                 }
 
                 if (match != null || added)
