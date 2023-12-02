@@ -168,6 +168,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void PopulatePackageContents(Project project, LockFile lockFile, NodeQueryMatcher matcher)
         {
+            var nodesByTarget = new Dictionary<string, (List<string> targets, TreeNode node)>();
+
             foreach (var target in lockFile.Targets)
             {
                 foreach (var package in target.Libraries)
@@ -183,12 +185,39 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         continue;
                     }
 
-                    AddPackage(project, lockFile, package, match);
+                    var node = AddPackage(package);
+                    string contentHash = StringWriter.GetString(node);
+                    if (nodesByTarget.TryGetValue(contentHash, out var existing))
+                    {
+                        existing.targets.Add(target.Name);
+                    }
+                    else
+                    {
+                        nodesByTarget[contentHash] = (new List<string> { target.Name }, node);
+                    }
+                }
+            }
+
+            if (nodesByTarget.Count == 1)
+            {
+                project.AddChild(nodesByTarget.FirstOrDefault().Value.node);
+            }
+            else
+            {
+                foreach (var kvp in nodesByTarget)
+                {
+                    var folder = new Folder
+                    {
+                        Name = string.Join(",", kvp.Value.targets),
+                        IsExpanded = true
+                    };
+                    folder.AddChild(kvp.Value.node);
+                    project.AddChild(folder);
                 }
             }
         }
 
-        private void AddPackage(Project project, LockFile lockFile, LockFileTargetLibrary package, SearchResult match)
+        private TreeNode AddPackage(LockFileTargetLibrary package)
         {
             var node = new Package
             {
@@ -222,7 +251,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             AddItems(node, package.ToolsAssemblies, "tools");
             AddItems(node, package.FrameworkReferences, "frameworkReferences");
 
-            project.AddChild(node);
+            return node;
         }
 
         private void AddItems(Package node, IList<string> items, string itemName)
@@ -303,7 +332,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private static void PopulatePackageFolders(Project project, LockFile lockFile)
         {
-            var packageFoldersNode = new Folder { Name = "PackageFolders" };
+            var packageFoldersNode = new Folder
+            {
+                Name = "PackageFolders",
+                IsLowRelevance = true
+            };
             foreach (var packageFolder in lockFile.PackageFolders)
             {
                 var item = new Item { Name = packageFolder.Path };
