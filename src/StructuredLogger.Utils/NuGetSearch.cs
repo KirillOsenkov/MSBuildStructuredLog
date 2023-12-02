@@ -108,7 +108,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 var frameworkNode = new Folder
                 {
-                    Name = frameworkName,
+                    Name = $"Dependencies for {frameworkName}",
                     IsExpanded = true
                 };
 
@@ -131,7 +131,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 string dependenciesHash = string.Join(",", topLevelLibrariesSorted.Select(t => $"{t.Name}/{t.Version}"));
                 if (targetsByDependencyHash.TryGetValue(dependenciesHash, out var existingFolder))
                 {
-                    existingFolder.Name = $"{existingFolder.Name};{frameworkName}";
+                    existingFolder.Name = $"{existingFolder.Name}; {frameworkName}";
                     continue;
                 }
 
