@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using NuGet.Frameworks;
 using NuGet.ProjectModel;
 using StructuredLogViewer;
 
@@ -96,10 +97,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             foreach (var framework in lockFile.ProjectFileDependencyGroups)
             {
-                string frameworkName = framework.FrameworkName;
+                string shortFrameworkName = ShortenFrameworkName(framework.FrameworkName);
                 var frameworkDependencies = framework.Dependencies.Select(d => ParsePackageId(d)).ToArray();
 
-                var target = lockFile.Targets.FirstOrDefault(t => string.Equals(t.Name, frameworkName, StringComparison.OrdinalIgnoreCase));
+                var target = lockFile.Targets.FirstOrDefault(t => string.Equals(t.Name, framework.FrameworkName, StringComparison.OrdinalIgnoreCase));
                 if (target == null)
                 {
                     continue;
@@ -109,7 +110,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 var frameworkNode = new Folder
                 {
-                    Name = $"Dependencies for {frameworkName}",
+                    Name = $"Dependencies for {shortFrameworkName}",
                     IsExpanded = true
                 };
 
@@ -132,7 +133,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 string dependenciesHash = string.Join(",", topLevelLibrariesSorted.Select(t => $"{t.Name}/{t.Version}"));
                 if (targetsByDependencyHash.TryGetValue(dependenciesHash, out var existingFolder))
                 {
-                    existingFolder.Name = $"{existingFolder.Name}; {frameworkName}";
+                    existingFolder.Name = $"{existingFolder.Name}; {shortFrameworkName}";
                     continue;
                 }
 
@@ -240,6 +241,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             foreach (var target in lockFile.Targets)
             {
+                string targetName = ShortenFrameworkName(target.Name);
+
                 foreach (var package in target.Libraries)
                 {
                     if (string.Equals(package.Type, "project", StringComparison.OrdinalIgnoreCase))
@@ -258,11 +261,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     string contentHash = StringWriter.GetString(node);
                     if (nodesByTarget.TryGetValue(contentHash, out var existing))
                     {
-                        existing.targets.Add(target.Name);
+                        existing.targets.Add(targetName);
                     }
                     else
                     {
-                        nodesByTarget[contentHash] = (new List<string> { target.Name }, node);
+                        nodesByTarget[contentHash] = (new List<string> { targetName }, node);
                     }
                 }
             }
@@ -276,7 +279,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 foreach (var kvp in nodesByTarget)
                 {
-                    var folderName = "Packages for " + string.Join(",", kvp.Value.targets);
+                    var folderName = "Packages for " + string.Join("; ", kvp.Value.targets);
                     var folder = project.GetOrCreateNodeWithName<Folder>(folderName);
                     var node = kvp.Value.node;
                     node.IsExpanded = false;
@@ -560,6 +563,42 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 assetFile.ProjectFilePath = projectFilePath;
 
                 assetsFiles.Add(assetFile);
+            }
+        }
+
+        private string ShortenFrameworkName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return name;
+            }
+
+            int slash = name.IndexOf('/');
+            if (slash >= 0)
+            {
+                string framework = name.Substring(0, slash);
+                string suffix = name.Substring(slash + 1);
+
+                name = ParseFrameworkName(framework) + "/" + suffix;
+            }
+            else
+            {
+                name = ParseFrameworkName(name);
+            }
+
+            return name;
+        }
+
+        private static string ParseFrameworkName(string name)
+        {
+            try
+            {
+                var parsed = NuGetFramework.Parse(name);
+                return parsed?.GetShortFolderName() ?? name;
+            }
+            catch
+            {
+                return name;
             }
         }
     }
