@@ -97,7 +97,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             foreach (var framework in lockFile.ProjectFileDependencyGroups)
             {
                 string frameworkName = framework.FrameworkName;
-                var frameworkDependencies = framework.Dependencies;
+                var frameworkDependencies = framework.Dependencies.Select(d => ParsePackageId(d)).ToArray();
 
                 var target = lockFile.Targets.FirstOrDefault(t => t.Name == frameworkName);
                 if (target == null)
@@ -113,7 +113,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     IsExpanded = true
                 };
 
-                HashSet<string> expandedPackages = new(frameworkDependencies.Select(d => ParsePackageId(d).name));
+                HashSet<string> expandedPackages = new(frameworkDependencies.Select(d => d.name));
 
                 var topLevelLibraries = new List<LockFileTargetLibrary>();
 
@@ -140,7 +140,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 foreach (var topLibrary in topLevelLibrariesSorted)
                 {
-                    (TreeNode topLevelNode, SearchResult match) = CreateNode(lockFile, topLibrary, expand, matcher);
+                    var dependency = frameworkDependencies.FirstOrDefault(d => d.name == topLibrary.Name).version;
+                    (TreeNode topLevelNode, SearchResult match) = CreateNode(lockFile, dependency, topLibrary, expand, matcher);
 
                     bool added = AddDependencies(lockFile, topLibrary.Name, topLevelNode, libraries, expandedPackages, matcher);
                     if (match != null || added)
@@ -208,7 +209,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             foreach (var dependencyLibrary in dependencyLibrariesSorted)
             {
-                var (node, match) = CreateNode(lockFile, dependencyLibrary, expand, matcher);
+                var dependency = library.Dependencies.FirstOrDefault(d => d.Id == dependencyLibrary.Name).VersionRange.ToString();
+                var (node, match) = CreateNode(lockFile, dependency, dependencyLibrary, expand, matcher);
 
                 bool added = false;
                 if (needToAddChildren.Contains(dependencyLibrary))
@@ -292,7 +294,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 foreach (var item in package.Dependencies)
                 {
-                    var itemNode = new Package { Name = item.Id, Version = item.VersionRange.ToString() };
+                    var itemNode = new Package { Name = item.Id, VersionSpec = item.VersionRange.ToString() };
                     folder.AddChild(itemNode);
                 }
             }
@@ -410,6 +412,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private (TreeNode node, SearchResult match) CreateNode(
             LockFile lockFile,
+            string dependency,
             LockFileTargetLibrary library,
             bool expand,
             NodeQueryMatcher matcher)
@@ -438,9 +441,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     Name = name,
                     Version = version,
+                    VersionSpec = dependency,
                     IsExpanded = expand
                 };
-                match = matcher.IsMatch(name, version);
+                match = matcher.IsMatch(name, version, dependency);
             }
 
             if (match != null && match != SearchResult.EmptyQueryMatch)
@@ -450,7 +454,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     match.FieldsToDisplay = new List<string>
                     {
                         package.Name,
-                        package.Version
+                        package.Version,
+                        package.VersionSpec
                     };
                 }
 

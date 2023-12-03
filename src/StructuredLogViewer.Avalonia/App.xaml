@@ -207,6 +207,8 @@
                            Classes="nodeText" />
                 <TextBlock Text="{Binding Version}"
                            Classes="nodeText" />
+                <TextBlock Text="{Binding VersionSpec}"
+                           Classes="nodeText" />
             </StackPanel>
         </TreeDataTemplate>
 

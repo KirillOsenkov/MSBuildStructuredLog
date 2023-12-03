@@ -750,7 +750,7 @@ namespace StructuredLogViewer
                         matched = true;
                         result ??= new();
                         result.AddMatch(field, term.Word);
-                        break;
+                        continue;
                     }
                 }
 
