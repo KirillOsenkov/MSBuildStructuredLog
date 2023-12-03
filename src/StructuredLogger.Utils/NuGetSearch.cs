@@ -113,11 +113,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     IsExpanded = true
                 };
 
-                HashSet<string> topLevel = new(frameworkDependencies.Select(d => ParsePackageId(d).name));
+                HashSet<string> expandedPackages = new(frameworkDependencies.Select(d => ParsePackageId(d).name));
 
                 var topLevelLibraries = new List<LockFileTargetLibrary>();
 
-                foreach (var name in topLevel)
+                foreach (var name in expandedPackages)
                 {
                     if (!libraries.TryGetValue(name, out var topLibrary))
                     {
@@ -142,7 +142,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     (TreeNode topLevelNode, SearchResult match) = CreateNode(lockFile, topLibrary, expand, matcher);
 
-                    bool added = AddDependencies(lockFile, topLibrary.Name, topLevelNode, libraries, topLevel, matcher);
+                    bool added = AddDependencies(lockFile, topLibrary.Name, topLevelNode, libraries, expandedPackages, matcher);
                     if (match != null || added)
                     {
                         frameworkNode.AddChild(topLevelNode);
@@ -171,7 +171,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             string id,
             TreeNode dependencyNode,
             Dictionary<string, LockFileTargetLibrary> libraries,
-            HashSet<string> topLevel,
+            HashSet<string> expandedPackages,
             NodeQueryMatcher matcher)
         {
             if (!libraries.TryGetValue(id, out var library))
@@ -196,14 +196,24 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             var dependencyLibrariesSorted = dependencyLibraries.OrderByDescending(l => l.Type);
 
+            HashSet<LockFileTargetLibrary> needToAddChildren = new();
+
+            foreach (var dependencyLibrary in dependencyLibrariesSorted)
+            {
+                if (expandedPackages.Add(dependencyLibrary.Name))
+                {
+                    needToAddChildren.Add(dependencyLibrary);
+                }
+            }
+
             foreach (var dependencyLibrary in dependencyLibrariesSorted)
             {
                 var (node, match) = CreateNode(lockFile, dependencyLibrary, expand, matcher);
 
                 bool added = false;
-                if (!topLevel.Contains(dependencyLibrary.Name))
+                if (needToAddChildren.Contains(dependencyLibrary))
                 {
-                    added = AddDependencies(lockFile, dependencyLibrary.Name, node, libraries, topLevel, matcher);
+                    added = AddDependencies(lockFile, dependencyLibrary.Name, node, libraries, expandedPackages, matcher);
                 }
 
                 if (match != null || added)
