@@ -237,6 +237,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             bool addedAnything = false;
 
+            if (matcher.Terms.Count == 0)
+            {
+                return false;
+            }
+
             var nodesByTarget = new Dictionary<string, (List<string> targets, TreeNode node)>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var target in lockFile.Targets)
@@ -250,13 +255,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         continue;
                     }
 
-                    var match = matcher.IsMatch(package.Name, package.Version.ToString());
-                    if (match == null || match == SearchResult.EmptyQueryMatch)
+                    var match = IsMatch(package, matcher);
+                    if (match == null)
                     {
                         continue;
                     }
 
-                    var node = AddPackage(package);
+                    var node = AddPackage(package, matcher);
+                    if (node == null)
+                    {
+                        continue;
+                    }
 
                     string contentHash = StringWriter.GetString(node);
                     if (nodesByTarget.TryGetValue(contentHash, out var existing))
@@ -292,7 +301,79 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return addedAnything;
         }
 
-        private TreeNode AddPackage(LockFileTargetLibrary package)
+        private SearchResult IsMatch(LockFileTargetLibrary package, NodeQueryMatcher matcher)
+        {
+            var match = matcher.IsMatch(package.Name, package.Version.ToString());
+            if (match != null)
+            {
+                return match;
+            }
+
+            foreach (var dependency in package.Dependencies)
+            {
+                match = matcher.IsMatch(dependency.Id, dependency.VersionRange.ToString());
+                if (match != null)
+                {
+                    return match;
+                }
+            }
+
+            match =
+                IsMatch(package.Build, matcher) ??
+                IsMatch(package.BuildMultiTargeting, matcher) ??
+                IsMatch(package.FrameworkAssemblies, matcher) ??
+                IsMatch(package.CompileTimeAssemblies, matcher) ??
+                IsMatch(package.ContentFiles.OfType<LockFileItem>().ToArray(), matcher) ??
+                IsMatch(package.EmbedAssemblies, matcher) ??
+                IsMatch(package.NativeLibraries, matcher) ??
+                IsMatch(package.ResourceAssemblies, matcher) ??
+                IsMatch(package.RuntimeAssemblies, matcher) ??
+                IsMatch(package.RuntimeTargets.OfType<LockFileItem>().ToArray(), matcher) ??
+                IsMatch(package.ToolsAssemblies, matcher) ??
+                IsMatch(package.FrameworkReferences, matcher);
+
+            return match;
+        }
+
+        private SearchResult IsMatch(IList<LockFileItem> list, NodeQueryMatcher matcher)
+        {
+            if (list == null || list.Count == 0)
+            {
+                return null;
+            }
+
+            foreach (var item in list)
+            {
+                var match = matcher.IsMatch(item.Path);
+                if (match != null)
+                {
+                    return match;
+                }
+            }
+
+            return null;
+        }
+
+        private SearchResult IsMatch(IList<string> list, NodeQueryMatcher matcher)
+        {
+            if (list == null || list.Count == 0)
+            {
+                return null;
+            }
+
+            foreach (var item in list)
+            {
+                var match = matcher.IsMatch(item);
+                if (match != null)
+                {
+                    return match;
+                }
+            }
+
+            return null;
+        }
+
+        private TreeNode AddPackage(LockFileTargetLibrary package, NodeQueryMatcher matcher)
         {
             var node = new Package
             {
