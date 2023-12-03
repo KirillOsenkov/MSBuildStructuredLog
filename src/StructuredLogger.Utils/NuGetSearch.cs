@@ -31,9 +31,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
     public class NuGetSearch : ISearchExtension
     {
-        public Build Build { get; }
-
+        private Regex projectFilePathRegex = new Regex(@"\""projectPath\""\: \""(?<Path>[^\""]+)\"",", RegexOptions.Compiled);
         private List<AssetsFile> assetsFiles;
+
+        public Build Build { get; }
 
         public NuGetSearch(Build build)
         {
@@ -163,6 +164,56 @@ namespace Microsoft.Build.Logging.StructuredLogger
             PopulatePackageFolders(project, lockFile);
             PopulateLogs(project, lockFile);
             PopulatePackageContents(project, lockFile, matcher);
+        }
+
+        private bool AddDependencies(
+            LockFile lockFile,
+            string id,
+            TreeNode dependencyNode,
+            Dictionary<string, LockFileTargetLibrary> libraries,
+            HashSet<string> topLevel,
+            NodeQueryMatcher matcher)
+        {
+            if (!libraries.TryGetValue(id, out var library))
+            {
+                return false;
+            }
+
+            bool result = false;
+            bool expand = matcher.Terms.Count > 0;
+
+            var dependencyLibraries = new List<LockFileTargetLibrary>();
+
+            foreach (var name in library.Dependencies.Select(d => d.Id))
+            {
+                if (!libraries.TryGetValue(name, out var dependencyLibrary))
+                {
+                    continue;
+                }
+
+                dependencyLibraries.Add(dependencyLibrary);
+            }
+
+            var dependencyLibrariesSorted = dependencyLibraries.OrderByDescending(l => l.Type);
+
+            foreach (var dependencyLibrary in dependencyLibrariesSorted)
+            {
+                var (node, match) = CreateNode(lockFile, dependencyLibrary, expand, matcher);
+
+                bool added = false;
+                if (!topLevel.Contains(dependencyLibrary.Name))
+                {
+                    added = AddDependencies(lockFile, dependencyLibrary.Name, node, libraries, topLevel, matcher);
+                }
+
+                if (match != null || added)
+                {
+                    dependencyNode.AddChild(node);
+                    result = true;
+                }
+            }
+
+            return result;
         }
 
         private void PopulatePackageContents(Project project, LockFile lockFile, NodeQueryMatcher matcher)
@@ -417,56 +468,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return dependency.GetFirstAndRest(' ');
         }
 
-        private bool AddDependencies(
-            LockFile lockFile,
-            string id,
-            TreeNode dependencyNode,
-            Dictionary<string, LockFileTargetLibrary> libraries,
-            HashSet<string> topLevel,
-            NodeQueryMatcher matcher)
-        {
-            if (!libraries.TryGetValue(id, out var library))
-            {
-                return false;
-            }
-
-            bool result = false;
-            bool expand = matcher.Terms.Count > 0;
-
-            var dependencyLibraries = new List<LockFileTargetLibrary>();
-
-            foreach (var name in library.Dependencies.Select(d => d.Id))
-            {
-                if (!libraries.TryGetValue(name, out var dependencyLibrary))
-                {
-                    continue;
-                }
-
-                dependencyLibraries.Add(dependencyLibrary);
-            }
-
-            var dependencyLibrariesSorted = dependencyLibraries.OrderByDescending(l => l.Type);
-
-            foreach (var dependencyLibrary in dependencyLibrariesSorted)
-            {
-                var (node, match) = CreateNode(lockFile, dependencyLibrary, expand, matcher);
-
-                bool added = false;
-                if (!topLevel.Contains(dependencyLibrary.Name))
-                {
-                    added = AddDependencies(lockFile, dependencyLibrary.Name, node, libraries, topLevel, matcher);
-                }
-
-                if (match != null || added)
-                {
-                    dependencyNode.AddChild(node);
-                    result = true;
-                }
-            }
-
-            return result;
-        }
-
         private IReadOnlyList<AssetsFile> FindAssetsFiles(NodeQueryMatcher underProjectMatcher, int maxResults)
         {
             var files = new List<AssetsFile>();
@@ -488,8 +489,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             return files;
         }
-
-        private Regex projectFilePathRegex = new Regex(@"\""projectPath\""\: \""(?<Path>[^\""]+)\"",", RegexOptions.Compiled);
 
         private void PopulateAssetsFiles()
         {
