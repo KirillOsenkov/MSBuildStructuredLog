@@ -255,13 +255,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         continue;
                     }
 
-                    var match = IsMatch(package, matcher);
-                    if (match == null)
-                    {
-                        continue;
-                    }
+                    var lockFileLibrary = lockFile.GetLibrary(package.Name, package.Version);
 
-                    var node = AddPackage(package, matcher);
+                    var node = AddPackage(package, matcher, lockFileLibrary);
                     if (node == null)
                     {
                         continue;
@@ -374,7 +370,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return null;
         }
 
-        private TreeNode AddPackage(LockFileTargetLibrary package, NodeQueryMatcher matcher)
+        private TreeNode AddPackage(LockFileTargetLibrary package, NodeQueryMatcher matcher, LockFileLibrary lockFileLibrary)
         {
             var packageNode = new Package
             {
@@ -384,8 +380,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             TreeNode node = packageNode;
 
             bool expand = false;
+            bool hasMatch = false;
 
             (node, var match) = WrapWithProxy(node, matcher, packageNode.Name, packageNode.Version);
+            hasMatch |= match != null;
 
             if (package.Dependencies.Count > 0)
             {
@@ -405,34 +403,48 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     {
                         folder.IsExpanded = true;
                         expand = true;
+                        hasMatch = true;
                     }
 
                     folder.AddChild(itemNode);
                 }
             }
 
-            expand |= AddItems(node, matcher, package.Build, "build");
-            expand |= AddItems(node, matcher, package.BuildMultiTargeting, "buildMultitargeting");
-            expand |= AddItems(node, matcher, package.FrameworkAssemblies, "frameworkAssemblies");
-            expand |= AddItems(node, matcher, package.CompileTimeAssemblies, "compile");
-            expand |= AddItems(node, matcher, package.ContentFiles.OfType<LockFileItem>().ToArray(), "contentFiles");
-            expand |= AddItems(node, matcher, package.EmbedAssemblies, "embed");
-            expand |= AddItems(node, matcher, package.NativeLibraries, "native");
-            expand |= AddItems(node, matcher, package.ResourceAssemblies, "resource");
-            expand |= AddItems(node, matcher, package.RuntimeAssemblies, "runtime");
-            expand |= AddItems(node, matcher, package.RuntimeTargets.OfType<LockFileItem>().ToArray(), "runtimeTargets");
-            expand |= AddItems(node, matcher, package.ToolsAssemblies, "tools");
-            expand |= AddItems(node, matcher, package.FrameworkReferences, "frameworkReferences");
+            HashSet<string> files = new(lockFileLibrary.Files, StringComparer.OrdinalIgnoreCase);
+            files.Remove(".nupkg.metadata");
+            files.Remove(".signature.p7s");
+            files.Remove(package.Name + ".nuspec");
+            files.RemoveWhere(f => f.EndsWith(".nupkg.sha512", StringComparison.OrdinalIgnoreCase));
+
+            expand |= AddItems(node, matcher, files, package.Build, "build");
+            expand |= AddItems(node, matcher, files, package.BuildMultiTargeting, "buildMultitargeting");
+            expand |= AddItems(node, matcher, files, package.FrameworkAssemblies, "frameworkAssemblies");
+            expand |= AddItems(node, matcher, files, package.CompileTimeAssemblies, "compile");
+            expand |= AddItems(node, matcher, files, package.ContentFiles.OfType<LockFileItem>().ToArray(), "contentFiles");
+            expand |= AddItems(node, matcher, files, package.EmbedAssemblies, "embed");
+            expand |= AddItems(node, matcher, files, package.NativeLibraries, "native");
+            expand |= AddItems(node, matcher, files, package.ResourceAssemblies, "resource");
+            expand |= AddItems(node, matcher, files, package.RuntimeAssemblies, "runtime");
+            expand |= AddItems(node, matcher, files, package.RuntimeTargets.OfType<LockFileItem>().ToArray(), "runtimeTargets");
+            expand |= AddItems(node, matcher, files, package.ToolsAssemblies, "tools");
+            expand |= AddItems(node, matcher, files, package.FrameworkReferences, "frameworkReferences");
+            expand |= AddItems(node, matcher, files, files.ToArray(), "Files");
 
             if (expand)
             {
                 node.IsExpanded = true;
+                hasMatch = true;
+            }
+
+            if (!hasMatch)
+            {
+                return null;
             }
 
             return node;
         }
 
-        private bool AddItems(TreeNode node, NodeQueryMatcher matcher, IList<string> items, string itemName)
+        private bool AddItems(TreeNode node, NodeQueryMatcher matcher, HashSet<string> files, IList<string> items, string itemName)
         {
             if (items == null || items.Count == 0)
             {
@@ -445,6 +457,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             foreach (var item in items)
             {
                 TreeNode itemNode = new Item { Name = item };
+                files.Remove(item);
 
                 (itemNode, var match) = WrapWithProxy(itemNode, matcher, item);
                 if (match != null)
@@ -458,7 +471,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return folder.IsExpanded;
         }
 
-        private bool AddItems(TreeNode node, NodeQueryMatcher matcher, IList<LockFileItem> items, string itemName)
+        private bool AddItems(TreeNode node, NodeQueryMatcher matcher, HashSet<string> files, IList<LockFileItem> items, string itemName)
         {
             if (items == null || items.Count == 0)
             {
@@ -471,6 +484,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             foreach (var item in items)
             {
                 TreeNode itemNode = new Item { Name = item.Path };
+                files.Remove(item.Path);
 
                 (itemNode, var match) = WrapWithProxy(itemNode, matcher, item.Path);
                 if (match != null)
