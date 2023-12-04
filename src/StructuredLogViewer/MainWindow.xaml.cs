@@ -531,7 +531,14 @@ namespace StructuredLogViewer
             await System.Threading.Tasks.Task.Run(() =>
             {
                 stopwatch.Restart();
-                _ = build.SourceFiles;
+                var sourceFiles = build.SourceFiles;
+                if (sourceFiles != null &&
+                    sourceFiles.FirstOrDefault(s =>
+                        s.FullPath.EndsWith("project.assets.json", StringComparison.OrdinalIgnoreCase)) != null)
+                {
+                    AddNuGetNode(build);
+                }
+
                 embeddedFilesTime = stopwatch.Elapsed;
             });
 
@@ -566,6 +573,30 @@ namespace StructuredLogViewer
 
                 currentBuild.UpdateBreadcrumb(text);
             }
+        }
+
+        private void AddNuGetNode(Build build)
+        {
+            var nuget = new Package { Name = "NuGet" };
+            var note = new Note { Text = @"This binlog contains project.assets.json files.
+You can search for NuGet packages (by name or version), dependencies (direct or transitive)
+and files coming from NuGet packages:
+
+List MyProject.csproj dependencies:
+    $nuget project(MyProject.csproj)
+
+Search for Package.Name in both dependencies and resolved packages:
+    $nuget project(MyProject.csproj) Package.Name
+
+Search for a file coming from a NuGet package:
+    $nuget project(MyProject.csproj) File.dll
+
+Search for a specific version or version range:
+    $nuget project(.csproj) 13.0.3
+
+Use project(.) or project(.csproj) to search all projects (slow)." };
+            nuget.AddChild(note);
+            build.AddChild(nuget);
         }
 
         private async System.Threading.Tasks.Task QueueAnalyzeBuild(Build build)

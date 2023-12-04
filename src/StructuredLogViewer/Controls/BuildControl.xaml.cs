@@ -292,12 +292,12 @@ on the node will navigate to the corresponding source code associated with the n
 
 More functionality is available from the right-click context menu for each node.
 Right-clicking a project node may show the 'Preprocess' option if the version of MSBuild was at least 15.3.";
-                build.Unseal();
 #if DEBUG
                 text = build.StringTable.Intern(text);
 #endif
-                build.AddChild(new Note { Text = text });
-                build.Seal();
+                var folder = new Folder { Name = "Embedded files" };
+                folder.AddChild(new Note { Text = text });
+                build.AddChild(folder);
             }
 
             breadCrumb.SelectionChanged += BreadCrumb_SelectionChanged;
@@ -620,6 +620,8 @@ Append [[$time]], [[$start]] and/or [[$end]] to show times and/or durations and 
 Use start<""2023-11-23 14:30:54.579"", start>, end< or end> to filter events that start or end before or after a given timestamp. Timestamp needs to be in quotes.
 
 Use '$copy path' where path is a file or directory to find file copy operations involving the file or directory. `$copy substring` will search for copied files containing the substring.
+
+Use '$nuget project(MyProject.csproj) Package.Name' to search for NuGet packages (by name or version), dependencies (direct and transitive) and files coming from NuGet packages.
 
 Examples:
 ";
@@ -2021,8 +2023,6 @@ Recent:
 
             var recordStats = BinlogStats.Calculate(this.LogFilePath);
             var records = recordStats.CategorizedRecords;
-
-            Build.Unseal();
 
             statsRoot = DisplayRecordStats(records, Build);
 
