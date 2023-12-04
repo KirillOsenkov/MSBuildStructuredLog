@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using NuGet.Frameworks;
 using NuGet.ProjectModel;
+using NuGet.Versioning;
 using StructuredLogViewer;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -89,6 +90,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private void PopulateProject(Project project, NodeQueryMatcher matcher, AssetsFile file)
         {
             var lockFile = file.LockFile;
+            var libraryMap = lockFile.Libraries.ToDictionary(l => (l.Name, l.Version));
 
             bool expand = matcher.Terms.Count > 0;
             bool addedAnything = false;
@@ -142,9 +144,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 foreach (var topLibrary in topLevelLibrariesSorted)
                 {
                     var dependency = frameworkDependencies.FirstOrDefault(d => string.Equals(d.name, topLibrary.Name, StringComparison.OrdinalIgnoreCase)).version;
-                    (TreeNode topLevelNode, SearchResult match) = CreateNode(lockFile, dependency, topLibrary, expand, matcher);
+                    (TreeNode topLevelNode, SearchResult match) = CreateNode(
+                        lockFile,
+                        dependency,
+                        topLibrary,
+                        expand,
+                        matcher,
+                        libraryMap);
 
-                    bool added = AddDependencies(lockFile, topLibrary.Name, topLevelNode, libraries, expandedPackages, matcher);
+                    bool added = AddDependencies(
+                        lockFile,
+                        topLibrary.Name,
+                        topLevelNode,
+                        libraries,
+                        expandedPackages,
+                        matcher,
+                        libraryMap);
                     if (match != null || added)
                     {
                         frameworkNode.AddChild(topLevelNode);
@@ -158,7 +173,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
-            addedAnything |= PopulatePackageContents(project, lockFile, matcher);
+            addedAnything |= PopulatePackageContents(project, lockFile, matcher, libraryMap);
 
             if (!addedAnything)
             {
@@ -173,11 +188,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             LockFile lockFile,
             string id,
             TreeNode dependencyNode,
-            Dictionary<string, LockFileTargetLibrary> libraries,
+            Dictionary<string, LockFileTargetLibrary> lockFileTargetLibraries,
             HashSet<string> expandedPackages,
-            NodeQueryMatcher matcher)
+            NodeQueryMatcher matcher,
+            Dictionary<(string Name, NuGetVersion Version), LockFileLibrary> libraryMap)
         {
-            if (!libraries.TryGetValue(id, out var library))
+            if (!lockFileTargetLibraries.TryGetValue(id, out var lockFileTargetLibrary))
             {
                 return false;
             }
@@ -185,42 +201,53 @@ namespace Microsoft.Build.Logging.StructuredLogger
             bool result = false;
             bool expand = matcher.Terms.Count > 0;
 
-            var dependencyLibraries = new List<LockFileTargetLibrary>();
+            var dependencyLibraries = new List<(LockFileTargetLibrary targetLibrary, string versionSpec)>();
 
-            foreach (var name in library.Dependencies.Select(d => d.Id))
+            foreach (var dependency in lockFileTargetLibrary.Dependencies)
             {
-                if (!libraries.TryGetValue(name, out var dependencyLibrary))
+                if (!lockFileTargetLibraries.TryGetValue(dependency.Id, out var dependencyLibrary))
                 {
                     continue;
                 }
 
-                dependencyLibraries.Add(dependencyLibrary);
+                dependencyLibraries.Add((dependencyLibrary, dependency.VersionRange.ToString()));
             }
 
-            var dependencyLibrariesSorted = dependencyLibraries.OrderByDescending(l => l.Type);
+            var dependencyLibrariesSorted = dependencyLibraries.OrderByDescending(l => l.targetLibrary.Type);
 
-            HashSet<LockFileTargetLibrary> needToAddChildren = new();
+            HashSet<string> needToAddChildren = new(StringComparer.OrdinalIgnoreCase);
 
             foreach (var dependencyLibrary in dependencyLibrariesSorted)
             {
-                if (expandedPackages.Add(dependencyLibrary.Name))
+                string dependencyId = dependencyLibrary.targetLibrary.Name;
+                if (expandedPackages.Add(dependencyId))
                 {
-                    needToAddChildren.Add(dependencyLibrary);
+                    needToAddChildren.Add(dependencyId);
                 }
             }
 
-            foreach (var dependencyLibrary in dependencyLibrariesSorted)
+            foreach (var dependencyLibraryAndVersionSpec in dependencyLibrariesSorted)
             {
-                var dependency = library.Dependencies
-                    .FirstOrDefault(d => string.Equals(d.Id, dependencyLibrary.Name, StringComparison.OrdinalIgnoreCase))
-                    .VersionRange
-                    .ToString();
-                var (node, match) = CreateNode(lockFile, dependency, dependencyLibrary, expand, matcher);
+                var dependencyLibrary = dependencyLibraryAndVersionSpec.targetLibrary;
+                var (node, match) = CreateNode(
+                    lockFile,
+                    dependencyLibraryAndVersionSpec.versionSpec,
+                    dependencyLibrary,
+                    expand,
+                    matcher,
+                    libraryMap);
 
                 bool added = false;
-                if (needToAddChildren.Contains(dependencyLibrary))
+                if (needToAddChildren.Contains(dependencyLibrary.Name))
                 {
-                    added = AddDependencies(lockFile, dependencyLibrary.Name, node, libraries, expandedPackages, matcher);
+                    added = AddDependencies(
+                        lockFile,
+                        dependencyLibrary.Name,
+                        node,
+                        lockFileTargetLibraries,
+                        expandedPackages,
+                        matcher,
+                        libraryMap);
                 }
 
                 if (match != null || added)
@@ -233,7 +260,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return result;
         }
 
-        private bool PopulatePackageContents(Project project, LockFile lockFile, NodeQueryMatcher matcher)
+        private bool PopulatePackageContents(Project project, LockFile lockFile, NodeQueryMatcher matcher, Dictionary<(string Name, NuGetVersion Version), LockFileLibrary> libraryMap)
         {
             bool addedAnything = false;
 
@@ -255,7 +282,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         continue;
                     }
 
-                    var lockFileLibrary = lockFile.GetLibrary(package.Name, package.Version);
+                    libraryMap.TryGetValue((package.Name, package.Version), out var lockFileLibrary);
 
                     var node = AddPackage(package, matcher, lockFileLibrary);
                     if (node == null)
@@ -410,7 +437,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
-            HashSet<string> files = new(lockFileLibrary.Files, StringComparer.OrdinalIgnoreCase);
+            HashSet<string> files = new(lockFileLibrary?.Files ?? Array.Empty<string>(), StringComparer.OrdinalIgnoreCase);
             files.Remove(".nupkg.metadata");
             files.Remove(".signature.p7s");
             files.Remove(package.Name + ".nuspec");
@@ -564,7 +591,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             string dependency,
             LockFileTargetLibrary library,
             bool expand,
-            NodeQueryMatcher matcher)
+            NodeQueryMatcher matcher,
+            Dictionary<(string Name, NuGetVersion Version), LockFileLibrary> libraryMap)
         {
             string name = library.Name;
             string version = library.Version.ToString();
@@ -574,12 +602,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (string.Equals(library.Type, "project", StringComparison.OrdinalIgnoreCase))
             {
-                var libraryInfo = lockFile.GetLibrary(name, library.Version);
-                name = Path.GetFileName(libraryInfo.MSBuildProject);
+                libraryMap.TryGetValue((name, library.Version), out var libraryInfo);
+                string msbuildProject = libraryInfo?.MSBuildProject ?? name;
+
+                name = Path.GetFileName(msbuildProject);
                 node = new Project
                 {
                     Name = name,
-                    ProjectFile = libraryInfo.MSBuildProject,
+                    ProjectFile = msbuildProject,
                     IsExpanded = expand
                 };
                 fields = new[] { name };
