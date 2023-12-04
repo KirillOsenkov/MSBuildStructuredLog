@@ -481,7 +481,7 @@
             Fill="{DynamicResource NuGet}" />
       <TextBlock Text="{Binding ShortenedName}" Margin="6,0,0,0" VerticalAlignment="Center" />
       <TextBlock Text="{Binding Version}" Margin="6,0,0,0" Foreground="{DynamicResource PropertyStroke}" VerticalAlignment="Center" />
-      <TextBlock Text="{Binding VersionSpec}" Margin="6,0,0,0" Foreground="{DynamicResource TargetStroke}" VerticalAlignment="Center" />
+      <TextBlock Text="{Binding VersionSpec}" Margin="6,0,0,0" Foreground="{DynamicResource ImportStroke}" VerticalAlignment="Center" />
     </StackPanel>
   </HierarchicalDataTemplate>
 
