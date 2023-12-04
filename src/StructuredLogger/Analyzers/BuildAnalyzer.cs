@@ -57,7 +57,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             int index = 0;
             build.VisitAllChildren<TreeNode>(t =>
             {
-                t.Seal();
                 if (t is TimedNode timedNode)
                 {
                     timedNode.Index = index;

@@ -237,12 +237,10 @@ on the node will navigate to the corresponding source code associated with the n
 
 More functionality is available from the right-click context menu for each node.
 Right-clicking a project node may show the 'Preprocess' option if the version of MSBuild was at least 15.3.";
-                build.Unseal();
 #if DEBUG
                 text = build.StringTable.Intern(text);
 #endif
                 build.AddChild(new Note { Text = text });
-                build.Seal();
             }
 
             breadCrumb.SelectionChanged += BreadCrumb_SelectionChanged;

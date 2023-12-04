@@ -123,15 +123,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        [System.Diagnostics.Conditional("TurnedOff")]
-        public void Seal()
-        {
-            if (children != null)
-            {
-                children = children.ToArray();
-            }
-        }
-
         public void MakeChildrenObservable()
         {
             if (children == null)
@@ -145,14 +136,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             RaisePropertyChanged(nameof(HasChildren));
             RaisePropertyChanged(nameof(Children));
-        }
-
-        public void Unseal()
-        {
-            if (children is BaseNode[])
-            {
-                children = CreateChildrenList(children);
-            }
         }
 
         public void AddChildAtBeginning(BaseNode child)
