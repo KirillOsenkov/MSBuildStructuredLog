@@ -281,7 +281,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (nodesByTarget.Count == 1)
             {
-                project.AddChild(nodesByTarget.FirstOrDefault().Value.node);
+                var node = nodesByTarget.FirstOrDefault().Value.node;
+                node.IsExpanded = true;
+                project.AddChild(node);
                 addedAnything = true;
             }
             else
@@ -291,7 +293,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     var folderName = "Packages for " + string.Join("; ", kvp.Value.targets);
                     var folder = project.GetOrCreateNodeWithName<Folder>(folderName);
                     var node = kvp.Value.node;
-                    node.IsExpanded = false;
                     folder.IsExpanded = true;
                     folder.AddChild(node);
                     addedAnything = true;
@@ -375,71 +376,108 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private TreeNode AddPackage(LockFileTargetLibrary package, NodeQueryMatcher matcher)
         {
-            var node = new Package
+            var packageNode = new Package
             {
                 Name = package.Name,
-                Version = package.Version.ToString(),
-                IsExpanded = true
+                Version = package.Version.ToString()
             };
+            TreeNode node = packageNode;
+
+            bool expand = false;
+
+            (node, var match) = WrapWithProxy(node, matcher, packageNode.Name, packageNode.Version);
 
             if (package.Dependencies.Count > 0)
             {
-                var folder = new Folder { Name = "Dependencies", IsExpanded = true };
+                var folder = new Folder { Name = "Dependencies" };
                 node.AddChild(folder);
 
                 foreach (var item in package.Dependencies)
                 {
-                    var itemNode = new Package { Name = item.Id, VersionSpec = item.VersionRange.ToString() };
+                    packageNode = new Package
+                    {
+                        Name = item.Id, VersionSpec = item.VersionRange.ToString()
+                    };
+                    TreeNode itemNode = packageNode;
+
+                    (itemNode, match) = WrapWithProxy(itemNode, matcher, packageNode.Name, packageNode.VersionSpec);
+                    if (match != null)
+                    {
+                        folder.IsExpanded = true;
+                        expand = true;
+                    }
+
                     folder.AddChild(itemNode);
                 }
             }
 
-            AddItems(node, package.Build, "build");
-            AddItems(node, package.BuildMultiTargeting, "buildMultitargeting");
-            AddItems(node, package.FrameworkAssemblies, "frameworkAssemblies");
-            AddItems(node, package.CompileTimeAssemblies, "compile");
-            AddItems(node, package.ContentFiles.OfType<LockFileItem>().ToArray(), "contentFiles");
-            AddItems(node, package.EmbedAssemblies, "embed");
-            AddItems(node, package.NativeLibraries, "native");
-            AddItems(node, package.ResourceAssemblies, "resource");
-            AddItems(node, package.RuntimeAssemblies, "runtime");
-            AddItems(node, package.RuntimeTargets.OfType<LockFileItem>().ToArray(), "runtimeTargets");
-            AddItems(node, package.ToolsAssemblies, "tools");
-            AddItems(node, package.FrameworkReferences, "frameworkReferences");
+            expand |= AddItems(node, matcher, package.Build, "build");
+            expand |= AddItems(node, matcher, package.BuildMultiTargeting, "buildMultitargeting");
+            expand |= AddItems(node, matcher, package.FrameworkAssemblies, "frameworkAssemblies");
+            expand |= AddItems(node, matcher, package.CompileTimeAssemblies, "compile");
+            expand |= AddItems(node, matcher, package.ContentFiles.OfType<LockFileItem>().ToArray(), "contentFiles");
+            expand |= AddItems(node, matcher, package.EmbedAssemblies, "embed");
+            expand |= AddItems(node, matcher, package.NativeLibraries, "native");
+            expand |= AddItems(node, matcher, package.ResourceAssemblies, "resource");
+            expand |= AddItems(node, matcher, package.RuntimeAssemblies, "runtime");
+            expand |= AddItems(node, matcher, package.RuntimeTargets.OfType<LockFileItem>().ToArray(), "runtimeTargets");
+            expand |= AddItems(node, matcher, package.ToolsAssemblies, "tools");
+            expand |= AddItems(node, matcher, package.FrameworkReferences, "frameworkReferences");
+
+            if (expand)
+            {
+                node.IsExpanded = true;
+            }
 
             return node;
         }
 
-        private void AddItems(Package node, IList<string> items, string itemName)
+        private bool AddItems(TreeNode node, NodeQueryMatcher matcher, IList<string> items, string itemName)
         {
             if (items == null || items.Count == 0)
             {
-                return;
+                return false;
             }
 
-            var folder = new Folder { Name = itemName, IsExpanded = true };
+            var folder = new Folder { Name = itemName };
             node.AddChild(folder);
 
             foreach (var item in items)
             {
-                var itemNode = new Item { Name = item };
+                TreeNode itemNode = new Item { Name = item };
+
+                (itemNode, var match) = WrapWithProxy(itemNode, matcher, item);
+                if (match != null)
+                {
+                    folder.IsExpanded = true;
+                }
+
                 folder.AddChild(itemNode);
             }
+
+            return folder.IsExpanded;
         }
 
-        private void AddItems(Package node, IList<LockFileItem> items, string itemName)
+        private bool AddItems(TreeNode node, NodeQueryMatcher matcher, IList<LockFileItem> items, string itemName)
         {
             if (items == null || items.Count == 0)
             {
-                return;
+                return false;
             }
 
-            var folder = new Folder { Name = itemName, IsExpanded = true };
+            var folder = new Folder { Name = itemName };
             node.AddChild(folder);
 
             foreach (var item in items)
             {
-                var itemNode = new Item { Name = item.Path };
+                TreeNode itemNode = new Item { Name = item.Path };
+
+                (itemNode, var match) = WrapWithProxy(itemNode, matcher, item.Path);
+                if (match != null)
+                {
+                    folder.IsExpanded = true;
+                }
+
                 if (item.Properties is { } properties && properties.Count > 0)
                 {
                     foreach (var property in properties)
@@ -451,6 +489,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 folder.AddChild(itemNode);
             }
+
+            return folder.IsExpanded;
         }
 
         private void PopulateLogs(Project project, LockFile lockFile)
@@ -516,7 +556,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             string version = library.Version.ToString();
 
             TreeNode node;
-            SearchResult match;
+            string[] fields;
 
             if (string.Equals(library.Type, "project", StringComparison.OrdinalIgnoreCase))
             {
@@ -528,49 +568,42 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     ProjectFile = libraryInfo.MSBuildProject,
                     IsExpanded = expand
                 };
-                match = matcher.IsMatch(name);
+                fields = new[] { name };
             }
             else
             {
-                node = new Package
+                var package = new Package
                 {
                     Name = name,
                     Version = version,
                     VersionSpec = dependency,
                     IsExpanded = expand
                 };
-                match = matcher.IsMatch(name, version, dependency);
+                node = package;
+                fields = new[] { name, version, dependency };
             }
 
-            if (match != null && match != SearchResult.EmptyQueryMatch)
+            var result = WrapWithProxy(node, matcher, fields);
+            return result;
+        }
+
+        private (TreeNode node, SearchResult match) WrapWithProxy(TreeNode original, NodeQueryMatcher matcher, params string[] fields)
+        {
+            var match = matcher.IsMatch(fields);
+            if (match == null || match == SearchResult.EmptyQueryMatch)
             {
-                if (node is Package package)
-                {
-                    match.FieldsToDisplay = new List<string>
-                    {
-                        package.Name,
-                        package.Version,
-                        package.VersionSpec
-                    };
-                }
-
-                var proxy = new ProxyNode();
-                proxy.Original = node;
-                proxy.Populate(match);
-                proxy.Text = node.ToString();
-                proxy.IsExpanded = expand;
-
-                var children = node.Children.ToArray();
-                node.Children.Clear();
-                foreach (var child in children)
-                {
-                    proxy.AddChild(child);
-                }
-
-                node = proxy;
+                return (original, match);
             }
 
-            return (node, match);
+            match.FieldsToDisplay = fields;
+
+            var proxy = new ProxyNode();
+            proxy.Original = original;
+            proxy.Populate(match);
+            proxy.Text = original.ToString();
+            proxy.IsExpanded = original.IsExpanded;
+
+            return (proxy, match);
         }
 
         private (string name, string version) ParsePackageId(string dependency)
