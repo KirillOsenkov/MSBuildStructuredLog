@@ -5,6 +5,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public interface IProjectOrEvaluation
     {
+        string ProjectFile { get; set; }
         string TargetFramework { get; set; }
         string Platform { get; set; }
         string Configuration { get; set; }

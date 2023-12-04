@@ -53,6 +53,7 @@ namespace StructuredLogViewer.Controls
         private MenuItem openFileItem;
         private MenuItem copyFilePathItem;
         private MenuItem preprocessItem;
+        private MenuItem searchNuGetItem;
         private MenuItem runItem;
         private MenuItem debugItem;
         private MenuItem hideItem;
@@ -192,6 +193,16 @@ namespace StructuredLogViewer.Controls
             openFileItem = new MenuItem() { Header = "Open File" };
             copyFilePathItem = new MenuItem() { Header = "Copy file path" };
             preprocessItem = new MenuItem() { Header = "Preprocess" };
+            var nugetImage = new System.Windows.Shapes.Path
+            {
+                Data = (Geometry)Application.Current.FindResource("NuGetGeometry"),
+                Stroke = (Brush)Application.Current.FindResource("NuGet"),
+                Fill = (Brush)Application.Current.FindResource("NuGet"),
+                Width = 16,
+                Height = 16,
+                StrokeThickness = 1
+            };
+            searchNuGetItem = new MenuItem() { Header = "Search project.assets.json", Icon = nugetImage };
             hideItem = new MenuItem() { Header = "Hide" };
             runItem = new MenuItem() { Header = "Run" };
             debugItem = new MenuItem() { Header = "Debug" };
@@ -212,6 +223,7 @@ namespace StructuredLogViewer.Controls
             openFileItem.Click += (s, a) => OpenFile();
             copyFilePathItem.Click += (s, a) => CopyFilePath();
             preprocessItem.Click += (s, a) => Preprocess(treeView.SelectedItem as IPreprocessable);
+            searchNuGetItem.Click += (s, a) => SearchNuGet(treeView.SelectedItem as IProjectOrEvaluation);
             runItem.Click += (s, a) => Run(treeView.SelectedItem as Task, debug: false);
             debugItem.Click += (s, a) => Run(treeView.SelectedItem as Task, debug: true);
             hideItem.Click += (s, a) => Delete();
@@ -222,6 +234,7 @@ namespace StructuredLogViewer.Controls
             contextMenu.AddItem(viewFullTextItem);
             contextMenu.AddItem(openFileItem);
             contextMenu.AddItem(preprocessItem);
+            contextMenu.AddItem(searchNuGetItem);
             contextMenu.AddItem(searchInSubtreeItem);
             contextMenu.AddItem(excludeSubtreeFromSearchItem);
             contextMenu.AddItem(goToTimeLineItem);
@@ -377,6 +390,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             openFileItem = null;
             copyFilePathItem = null;
             preprocessItem = null;
+            searchNuGetItem = null;
             runItem = null;
             debugItem = null;
             hideItem = null;
@@ -721,6 +735,13 @@ Recent:
             }
         }
 
+        private void SearchNuGet(IProjectOrEvaluation node)
+        {
+            string projectName = Path.GetFileName(node.ProjectFile);
+            searchLogControl.SearchText = $"$nuget project({projectName})";
+            SelectSearchTab();
+        }
+
         private void Preprocess(IPreprocessable project) => preprocessedFileManager.ShowPreprocessed(project);
 
         private void Run(Task task, bool debug = false)
@@ -815,6 +836,7 @@ Recent:
             copyChildrenItem.Visibility = copySubtreeItem.Visibility;
             sortChildrenItem.Visibility = copySubtreeItem.Visibility;
             preprocessItem.Visibility = node is IPreprocessable p && preprocessedFileManager.CanPreprocess(p) ? Visibility.Visible : Visibility.Collapsed;
+            searchNuGetItem.Visibility = node is IProjectOrEvaluation ? Visibility.Visible : Visibility.Collapsed;
             Visibility canRun = Build?.LogFilePath != null && node is Task ? Visibility.Visible : Visibility.Collapsed;
             runItem.Visibility = canRun;
             debugItem.Visibility = canRun;
