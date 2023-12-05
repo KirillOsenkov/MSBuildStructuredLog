@@ -20,7 +20,7 @@ namespace StructuredLogViewer
 
         public static Term Get(string input)
         {
-            var trimmed = input.TrimQuotes();
+            var trimmed = input.Trim('"');
             if (trimmed == input)
             {
                 return new Term(input);
