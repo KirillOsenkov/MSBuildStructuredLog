@@ -335,6 +335,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
+            if (!addedDependencySection && addedPackageIds.Count == 1)
+            {
+                var packageMatcher = new NodeQueryMatcher(addedPackageIds.First());
+                PopulateDependencies(project, lockFile, packageMatcher, libraryMap);
+            }
+
             if (nodesByTarget.Count == 1)
             {
                 var node = nodesByTarget.FirstOrDefault().Value.node;
@@ -353,10 +359,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     folder.AddChild(node);
                     addedAnything = true;
                 }
-            }
-
-            if (!addedDependencySection && addedAnything && addedPackageIds.Count == 1)
-            {
             }
 
             return addedAnything;
