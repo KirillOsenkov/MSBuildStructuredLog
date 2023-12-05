@@ -55,6 +55,52 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public NuGetSearch(Build build)
         {
             Build = build;
+            build.FileCopyMap.FoundSingleFileCopy += FileCopyMap_FoundSingleFileCopy;
+        }
+
+        private void FileCopyMap_FoundSingleFileCopy(FileData fileData, IList<SearchResult> resultCollector)
+        {
+            var fileCopyInfo = fileData.Incoming.FirstOrDefault() ?? fileData.Outgoing.FirstOrDefault();
+            var project = fileCopyInfo.Project;
+
+            var filePath = fileData.FilePath;
+            if (fileData.Incoming.Count == 1)
+            {
+                filePath = fileCopyInfo.FileCopyOperation.Source;
+            }
+
+            var fileName = Path.GetFileName(filePath);
+            var assetsFile = FindAssetsFile(project.ProjectFile);
+            if (assetsFile == null)
+            {
+                return;
+            }
+
+            var lockFile = assetsFile.LockFile;
+
+            string packageSource = null;
+
+            foreach (var source in lockFile.PackageFolders)
+            {
+                if (filePath.StartsWith(source.Path, StringComparison.OrdinalIgnoreCase))
+                {
+                    packageSource = source.Path;
+                    break;
+                }
+            }
+
+            if (packageSource == null)
+            {
+                return;
+            }
+
+            var projectNode = CreateProject(assetsFile);
+            var matcher = new NodeQueryMatcher(fileName);
+            if (PopulatePackageContents(projectNode, lockFile, matcher, assetsFile.LibraryMap, addedDependencySection: false))
+            {
+                var result = new SearchResult(projectNode);
+                resultCollector.Add(result);
+            }
         }
 
         public bool TryGetResults(NodeQueryMatcher matcher, IList<SearchResult> resultCollector, int maxResults)
@@ -83,22 +129,32 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             foreach (var file in files)
             {
-                var project = new Project
-                {
-                    ProjectFile = file.ProjectFilePath,
-                    Name = Path.GetFileName(file.ProjectFilePath),
-                    IsExpanded = true
-                };
-
-                PopulateProject(project, matcher, file);
-
-                if (project.HasChildren)
-                {
-                    resultCollector.Add(new SearchResult(project));
-                }
+                AddProject(matcher, resultCollector, file);
             }
 
             return true;
+        }
+
+        private void AddProject(NodeQueryMatcher matcher, IList<SearchResult> resultCollector, AssetsFile file)
+        {
+            var project = CreateProject(file);
+
+            PopulateProject(project, matcher, file);
+
+            if (project.HasChildren)
+            {
+                resultCollector.Add(new SearchResult(project));
+            }
+        }
+
+        private Project CreateProject(AssetsFile file)
+        {
+            return new Project
+            {
+                ProjectFile = file.ProjectFilePath,
+                Name = Path.GetFileName(file.ProjectFilePath),
+                IsExpanded = true
+            };
         }
 
         private void PopulateProject(Project project, NodeQueryMatcher matcher, AssetsFile file)
@@ -692,6 +748,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private (string name, string version) ParsePackageId(string dependency)
         {
             return dependency.GetFirstAndRest(' ');
+        }
+
+        private AssetsFile FindAssetsFile(string projectFilePath)
+        {
+            PopulateAssetsFiles();
+
+            return assetsFiles.FirstOrDefault(f => f.ProjectFilePath.Equals(projectFilePath, StringComparison.OrdinalIgnoreCase));
         }
 
         private IReadOnlyList<AssetsFile> FindAssetsFiles(NodeQueryMatcher underProjectMatcher, int maxResults)

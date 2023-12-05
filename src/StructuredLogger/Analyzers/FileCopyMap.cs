@@ -63,6 +63,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private Dictionary<string, DirectoryData> directories = new Dictionary<string, DirectoryData>(StringComparer.OrdinalIgnoreCase);
 
+        public event Action<FileData, IList<SearchResult>> FoundSingleFileCopy;
+
         public void AnalyzeTask(Task task)
         {
             if (task is CopyTask copyTask)
@@ -220,6 +222,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 else if (data is FileData fileData)
                 {
                     GetResults(fileData, resultSet, maxResults);
+                    if (resultSet.Count == 1)
+                    {
+                        FoundSingleFileCopy?.Invoke(fileData, resultSet);
+                    }
                 }
                 else
                 {
