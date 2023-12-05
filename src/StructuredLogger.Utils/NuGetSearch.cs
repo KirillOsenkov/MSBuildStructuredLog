@@ -29,6 +29,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return lockFile;
             }
         }
+
+        private Dictionary<(string Name, NuGetVersion Version), LockFileLibrary> libraryMap;
+        public Dictionary<(string Name, NuGetVersion Version), LockFileLibrary> LibraryMap
+        {
+            get
+            {
+                lock (this)
+                {
+                    libraryMap ??= LockFile.Libraries.ToDictionary(l => (l.Name, l.Version));
+                }
+
+                return libraryMap;
+            }
+        }
     }
 
     public class NuGetSearch : ISearchExtension
@@ -90,8 +104,27 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private void PopulateProject(Project project, NodeQueryMatcher matcher, AssetsFile file)
         {
             var lockFile = file.LockFile;
-            var libraryMap = lockFile.Libraries.ToDictionary(l => (l.Name, l.Version));
+            var libraryMap = file.LibraryMap;
 
+            bool addedAnything = PopulateDependencies(project, lockFile, matcher, libraryMap);
+
+            addedAnything |= PopulatePackageContents(project, lockFile, matcher, libraryMap, addedDependencySection: addedAnything);
+
+            if (!addedAnything)
+            {
+                return;
+            }
+
+            PopulatePackageFolders(project, lockFile);
+            PopulateLogs(project, lockFile);
+        }
+
+        private bool PopulateDependencies(
+            Project project,
+            LockFile lockFile,
+            NodeQueryMatcher matcher,
+            Dictionary<(string Name, NuGetVersion Version), LockFileLibrary> libraryMap)
+        {
             bool expand = matcher.Terms.Count > 0;
             bool addedAnything = false;
 
@@ -173,15 +206,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
-            addedAnything |= PopulatePackageContents(project, lockFile, matcher, libraryMap);
-
-            if (!addedAnything)
-            {
-                return;
-            }
-
-            PopulatePackageFolders(project, lockFile);
-            PopulateLogs(project, lockFile);
+            return addedAnything;
         }
 
         private bool AddDependencies(
@@ -260,7 +285,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return result;
         }
 
-        private bool PopulatePackageContents(Project project, LockFile lockFile, NodeQueryMatcher matcher, Dictionary<(string Name, NuGetVersion Version), LockFileLibrary> libraryMap)
+        private bool PopulatePackageContents(
+            Project project,
+            LockFile lockFile,
+            NodeQueryMatcher matcher,
+            Dictionary<(string Name, NuGetVersion Version), LockFileLibrary> libraryMap,
+            bool addedDependencySection)
         {
             bool addedAnything = false;
 
@@ -270,6 +300,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             var nodesByTarget = new Dictionary<string, (List<string> targets, TreeNode node)>(StringComparer.OrdinalIgnoreCase);
+            HashSet<string> addedPackageIds = new(StringComparer.OrdinalIgnoreCase);
 
             foreach (var target in lockFile.Targets)
             {
@@ -289,6 +320,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     {
                         continue;
                     }
+
+                    addedPackageIds.Add(package.Name);
 
                     string contentHash = StringWriter.GetString(node);
                     if (nodesByTarget.TryGetValue(contentHash, out var existing))
@@ -320,6 +353,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     folder.AddChild(node);
                     addedAnything = true;
                 }
+            }
+
+            if (!addedDependencySection && addedAnything && addedPackageIds.Count == 1)
+            {
             }
 
             return addedAnything;

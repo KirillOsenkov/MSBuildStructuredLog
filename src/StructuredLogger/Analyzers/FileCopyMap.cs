@@ -200,6 +200,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return false;
             }
 
+            if (matcher.Terms.Count == 0)
+            {
+                resultSet.Add(new SearchResult(new Note { Text = "Specify a directory or file path, or a partial file name" }));
+
+                return true;
+            }
+
             if (matcher.Terms.Count == 1)
             {
                 var word = matcher.Terms[0];
