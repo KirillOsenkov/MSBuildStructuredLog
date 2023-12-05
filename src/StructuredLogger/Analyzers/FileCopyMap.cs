@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using StructuredLogViewer;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -225,6 +226,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     if (resultSet.Count == 1)
                     {
                         FoundSingleFileCopy?.Invoke(fileData, resultSet);
+                        TryExplainSingleFileCopy(fileData, resultSet);
                     }
                 }
                 else
@@ -236,6 +238,60 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             return false;
+        }
+
+        private void TryExplainSingleFileCopy(FileData fileData, IList<SearchResult> resultSet)
+        {
+            var fileCopyInfo = fileData.Incoming.FirstOrDefault() ?? fileData.Outgoing.FirstOrDefault();
+            var project = fileCopyInfo.Project;
+
+            var filePath = fileData.FilePath;
+            if (fileData.Incoming.Count == 1)
+            {
+                filePath = fileCopyInfo.FileCopyOperation.Source;
+            }
+
+            var fileName = Path.GetFileName(filePath);
+
+            var build = project.GetRoot() as Build;
+            if (build == null)
+            {
+                return;
+            }
+
+            var evaluation = build.FindEvaluation(project.EvaluationId);
+            if (evaluation == null)
+            {
+                return;
+            }
+
+            var itemsFolder = evaluation.FindChild<NamedNode>("Items");
+            if (itemsFolder == null)
+            {
+                return;
+            }
+
+            FindCopyToOutputDirectoryItem(resultSet, itemsFolder, fileName, "None");
+            FindCopyToOutputDirectoryItem(resultSet, itemsFolder, fileName, "Content");
+        }
+
+        private static void FindCopyToOutputDirectoryItem(IList<SearchResult> resultSet, NamedNode itemsFolder, string fileName, string itemName)
+        {
+            var addItem = itemsFolder.FindChild<AddItem>(itemName);
+            if (addItem != null)
+            {
+                foreach (var item in addItem.Children.OfType<Item>())
+                {
+                    string name = Path.GetFileName(item.Name);
+                    if (fileName.Equals(name, StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (item.FindChild<Metadata>("CopyToOutputDirectory") is { } metadata && (metadata.Value == "Always" || metadata.Value == "PreserveNewest"))
+                        {
+                            resultSet.Add(new SearchResult(item));
+                        }
+                    }
+                }
+            }
         }
 
         private void TryGetFiles(string text, IList<SearchResult> resultSet, int maxResults)
