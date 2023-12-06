@@ -120,7 +120,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             PopulateAssetsFiles();
 
-            var files = FindAssetsFiles(underProjectMatcher, maxResults);
+            var files = FindAssetsFiles(underProjectMatcher);
             if (files.Count == 0)
             {
                 resultCollector.Add(new SearchResult(new Error { Text = "No matching project.assets.json files found" }));
@@ -130,6 +130,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             foreach (var file in files)
             {
                 AddProject(matcher, resultCollector, file);
+                if (resultCollector.Count >= maxResults)
+                {
+                    break;
+                }
             }
 
             return true;
@@ -757,7 +761,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return assetsFiles.FirstOrDefault(f => f.ProjectFilePath.Equals(projectFilePath, StringComparison.OrdinalIgnoreCase));
         }
 
-        private IReadOnlyList<AssetsFile> FindAssetsFiles(NodeQueryMatcher underProjectMatcher, int maxResults)
+        private IReadOnlyList<AssetsFile> FindAssetsFiles(NodeQueryMatcher underProjectMatcher)
         {
             var files = new List<AssetsFile>();
             foreach (var assetFile in assetsFiles)
@@ -768,10 +772,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         term.IsMatch(assetFile.AssetsFilePath))
                     {
                         files.Add(assetFile);
-                        if (files.Count >= maxResults)
-                        {
-                            return files;
-                        }
                     }
                 }
             }
