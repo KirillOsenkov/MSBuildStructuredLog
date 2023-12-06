@@ -223,7 +223,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     topLevelLibraries.Add(topLibrary);
                 }
 
-                var topLevelLibrariesSorted = topLevelLibraries.OrderByDescending(l => l.Type);
+                var topLevelLibrariesSorted = OrderByPredicate(topLevelLibraries, l => l.Type.Equals("project", StringComparison.OrdinalIgnoreCase));
 
                 string dependenciesHash = string.Join(",", topLevelLibrariesSorted.Select(t => $"{t.Name}/{t.Version}"));
                 if (targetsByDependencyHash.TryGetValue(dependenciesHash, out var existingFolder))
@@ -269,6 +269,39 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return addedAnything;
         }
 
+        /// <summary>
+        /// true first
+        /// </summary>
+        private static IEnumerable<T> OrderByPredicate<T>(IList<T> list, Func<T, bool> predicate)
+        {
+            int count = list.Count;
+            var result = new T[count];
+
+            int index = 0;
+
+            for (int i = 0; i < count; i++)
+            {
+                T item = list[i];
+                if (predicate(item))
+                {
+                    result[index] = item;
+                    index++;
+                }
+            }
+
+            for (int i = 0; i < count; i++)
+            {
+                T item = list[i];
+                if (!predicate(item))
+                {
+                    result[index] = item;
+                    index++;
+                }
+            }
+
+            return result;
+        }
+
         private bool AddDependencies(
             LockFile lockFile,
             string id,
@@ -298,7 +331,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 dependencyLibraries.Add((dependencyLibrary, dependency.VersionRange.ToString()));
             }
 
-            var dependencyLibrariesSorted = dependencyLibraries.OrderByDescending(l => l.targetLibrary.Type);
+            var dependencyLibrariesSorted = OrderByPredicate(dependencyLibraries, l => l.targetLibrary.Type.Equals("project", StringComparison.OrdinalIgnoreCase));
 
             HashSet<string> needToAddChildren = new(StringComparer.OrdinalIgnoreCase);
 
