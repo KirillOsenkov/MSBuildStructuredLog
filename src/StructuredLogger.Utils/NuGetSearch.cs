@@ -316,6 +316,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return false;
             }
 
+            if (lockFileTargetLibrary.Dependencies.Count == 0)
+            {
+                return false;
+            }
+
             bool result = false;
             bool expand = matcher.Terms.Count > 0;
 
