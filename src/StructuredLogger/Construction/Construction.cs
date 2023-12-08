@@ -350,12 +350,23 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             messageText = Intern(messageText);
 
-            var target = AddTargetCore(
-                args,
-                targetName,
-                Intern(args.ParentTarget),
-                Intern(args.TargetFile),
-                args.BuildReason);
+            Target target = null;
+
+            var project = GetProject(args.BuildEventContext.ProjectContextId);
+            if (project != null && args.BuildEventContext.TargetId != BuildEventContext.InvalidTargetId)
+            {
+                target = project.FindLastChild<Target>(t => t.Id == args.BuildEventContext.TargetId);
+            }
+
+            if (target == null)
+            {
+                target = AddTargetCore(
+                    args,
+                    targetName,
+                    Intern(args.ParentTarget),
+                    Intern(args.TargetFile),
+                    args.BuildReason);
+            }
 
             if (originalBuildEventContext != null && originalBuildEventContext.ProjectContextId != BuildEventContext.InvalidProjectContextId)
             {
