@@ -33,6 +33,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public event Action<Exception> OnException;
 
         /// <summary>
+        /// If set - controls the behavior of forward compatibility reading.
+        /// </summary>
+        public IForwardCompatibilityReadSettings ForwardCompatibilitySettings { private get; set; }
+
+        /// <summary>
         /// Read the provided binary log file and raise corresponding events for each BuildEventArgs
         /// </summary>
         /// <param name="sourceFilePath">The full file path of the binary log file</param>
@@ -62,11 +67,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var bufferedStream = new BufferedStream(gzipStream, 32768);
             var binaryReader = new BinaryReader(bufferedStream);
 
-            int fileFormatVersion = binaryReader.ReadInt32();
-
-            OnFileFormatVersionRead?.Invoke(fileFormatVersion);
-
-            EnsureFileFormatVersionKnown(fileFormatVersion);
+            using var reader = OpenReader(binaryReader);
 
             if (PlatformUtilities.HasThreads)
             {
@@ -75,7 +76,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 int recordsRead = 0;
 
-                using var reader = new BuildEventArgsReader(binaryReader, fileFormatVersion);
                 reader.OnBlobRead += OnBlobRead;
 
                 Stopwatch stopwatch = Stopwatch.StartNew();
@@ -116,7 +116,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 queue.Completion.Wait();
 
-                if (fileFormatVersion >= 10)
+                if (reader.FileFormatVersion >= 10)
                 {
                     var strings = reader.GetStrings();
                     if (strings != null && strings.Any())
@@ -131,7 +131,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 int recordsRead = 0;
 
-                using var reader = new BuildEventArgsReader(binaryReader, fileFormatVersion);
                 reader.OnBlobRead += OnBlobRead;
 
                 Stopwatch stopwatch = Stopwatch.StartNew();
@@ -172,7 +171,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     Dispatch(args);
                 }
-                if (fileFormatVersion >= 10)
+                if (reader.FileFormatVersion >= 10)
                 {
                     var strings = reader.GetStrings();
                     if (strings != null && strings.Any())
@@ -188,19 +187,94 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private void EnsureFileFormatVersionKnown(int fileFormatVersion)
+        private BuildEventArgsReader OpenReader(BinaryReader binaryReader)
         {
-            // the log file is written using a newer version of file format
-            // that we don't know how to read
-            if (fileFormatVersion > BinaryLogger.FileFormatVersion)
+            int fileFormatVersion = binaryReader.ReadInt32();
+            // Is this the new log format that contains the minimum reader version?
+            bool hasEventOffsets = fileFormatVersion >= BinaryLogger.ForwardCompatibilityMinimalVersion;
+            int minimumReaderVersion = hasEventOffsets
+                ? binaryReader.ReadInt32()
+                : fileFormatVersion;
+
+            OnFileFormatVersionRead?.Invoke(fileFormatVersion);
+
+            EnsureFileFormatVersionKnown(fileFormatVersion, minimumReaderVersion);
+
+            bool isLogOfNewerVersion = fileFormatVersion > BinaryLogger.FileFormatVersion;
+
+            var reader = new BuildEventArgsReader(binaryReader, fileFormatVersion);
+
+            reader.SkipUnknownEventParts = hasEventOffsets;
+            reader.SkipUnknownEvents = hasEventOffsets;
+            if (hasEventOffsets && !isLogOfNewerVersion)
             {
-                var text = $"Unsupported log file format. Latest supported version is {BinaryLogger.FileFormatVersion}, the log file has version {fileFormatVersion}.";
-                if (BinaryLogger.IsNewerVersionAvailable)
+                reader.OnRecoverableReadError += HandleReadingErrorOnKnownVersion;
+            }
+
+            // ensure some handler is subscribed, even if we are not interested in the events
+            reader.OnRecoverableReadError += ForwardCompatibilitySettings?.ErrorHandler ?? (_ => { });
+
+            return reader;
+
+            void HandleReadingErrorOnKnownVersion(BinaryLogReaderErrorEventArgs arg)
+            {
+                string text =
+                    $"Log is of a known format ({fileFormatVersion}, latest known version is {BinaryLogger.FileFormatVersion}), but reader encountered a recoverable reading error ({arg.GetFormattedMessage()}), which probably means the format version was forgotten to be incremented. The log can be read with current reader, the newer events and data will however be skipped.";
+                if (!IsForwardCompatibilityModeAllowed(text))
                 {
-                    text += " Update available - restart this instance to automatically use newer version.";
+                    throw new NotSupportedException(text);
                 }
 
-                throw new NotSupportedException(text);
+                // We want this to be only one time event handler
+                reader.OnRecoverableReadError -= HandleReadingErrorOnKnownVersion;
+            }
+        }
+
+        public bool IsCompatibilityMode { get; private set; }
+
+        // Store the user's decision about forward compatibility mode
+        //  for the future calls, that won't pass the user handler.
+        // This is needed to avoid asking the user for each action (e.g.
+        //  once the log is opened, we do not want to ask again when
+        //  calculating stats, redacting, etc.). But at the same time we
+        //  *do* want to ask the user again if the log (same or different)
+        //  is being opened again within same app run.
+        private static bool? _allowForwardCompatibility = null;
+        private bool IsForwardCompatibilityModeAllowed(string text)
+        {
+            IsCompatibilityMode = true;
+            if (ForwardCompatibilitySettings != null)
+            {
+                _allowForwardCompatibility = ForwardCompatibilitySettings.AllowForwardCompatibility(text);
+            }
+
+            return _allowForwardCompatibility ?? false;
+        }
+
+        private void EnsureFileFormatVersionKnown(int fileFormatVersion, int minimumReaderVersion)
+        {
+            if (fileFormatVersion > BinaryLogger.FileFormatVersion)
+            {
+                bool forwardCompatibilityModeAllowed = false;
+                // prefer the update to newer version to forward compatibility mode
+                if (minimumReaderVersion <= BinaryLogger.FileFormatVersion && !BinaryLogger.IsNewerVersionAvailable)
+                {
+                    var text =
+                        $"Newer log file format. Latest known version is {BinaryLogger.FileFormatVersion}, the log file has version {fileFormatVersion}. The log has minimum required reader version {minimumReaderVersion} - so it can be read with current reader, the newer events and data will however be skipped.";
+                    forwardCompatibilityModeAllowed = IsForwardCompatibilityModeAllowed(text);
+                }
+
+                // prefer the update to newer version to forward compatibility mode
+                if (!forwardCompatibilityModeAllowed || BinaryLogger.IsNewerVersionAvailable)
+                {
+                    var text = $"Unsupported log file format. Latest supported version is {BinaryLogger.FileFormatVersion}, the log file has version {fileFormatVersion} (with minimum required reader version {minimumReaderVersion}).";
+                    if (BinaryLogger.IsNewerVersionAvailable)
+                    {
+                        text += " Update available - restart this instance to automatically use newer version.";
+                    }
+
+                    throw new NotSupportedException(text);
+                }
             }
         }
 
@@ -269,15 +343,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             var binaryReader = new BinaryReader(wrapper);
 
-            int fileFormatVersion = binaryReader.ReadInt32();
-
-            EnsureFileFormatVersionKnown(fileFormatVersion);
-
             long lengthOfBlobsAddedLastTime = 0;
 
             List<Record> blobs = new List<Record>();
 
-            using var reader = new BuildEventArgsReader(binaryReader, fileFormatVersion);
+            using var reader = OpenReader(binaryReader);
 
             // forward the events from the reader to the subscribers of this class
             reader.OnBlobRead += OnBlobRead;

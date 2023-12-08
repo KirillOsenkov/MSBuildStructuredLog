@@ -7,7 +7,7 @@ using Microsoft.Build.Logging.StructuredLogger;
 
 namespace BinlogTool
 {
-    public class SaveFiles
+    public class SaveFiles : BinlogToolCommandBase
     {
         private string[] args;
 
@@ -18,7 +18,8 @@ namespace BinlogTool
 
         public void Run(string binlog, string outputDirectory, bool reconstruct = false)
         {
-            if (string.IsNullOrEmpty(binlog) || !File.Exists(binlog))
+            Build build = this.ReadBuild(binlog, false);
+            if (build == null)
             {
                 return;
             }
@@ -29,15 +30,14 @@ namespace BinlogTool
                 Directory.CreateDirectory(outputDirectory);
             }
 
-            binlog = Path.GetFullPath(binlog);
-
-            var build = BinaryLog.ReadBuild(binlog);
             SaveFilesFrom(build, outputDirectory);
 
             if (reconstruct)
             {
                 GenerateSources(build, outputDirectory);
             }
+
+            CompatibilityHandler?.HandleBuildResults(build);
         }
 
         private void GenerateSources(Build build, string outputDirectory)

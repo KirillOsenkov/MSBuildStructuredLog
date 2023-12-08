@@ -10,13 +10,34 @@ using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
+    internal interface IRawLogEventsSource
+    {
+        /// <summary>
+        /// Event raised when non-textual log record is read.
+        /// This means all event args and key-value pairs.
+        /// Strings and Embedded files are not included.
+        /// </summary>
+        event Action<BinaryLogRecordKind, Stream>? RawLogRecordReceived;
+
+        /// <summary>
+        /// Enables initialization (e.g. subscription to events) - that is deferred until Replay is triggered.
+        /// At this point all other possible subscribers should be already subscribed -
+        ///  so it can be determined if raw events or structured events should be replayed.
+        /// </summary>
+        /// <param name="onRawReadingPossible"></param>
+        /// <param name="onStructuredReadingOnly"></param>
+        void DeferredInitialize(
+            Action onRawReadingPossible,
+            Action onStructuredReadingOnly);
+    }
+
     /// <summary>
     /// Interface for replaying a binary log file (*.binlog)
     /// </summary>
     internal interface IBinaryLogReplaySource :
         IEventSource,
-        IBuildEventStringsReader,
-        IBuildFileReader,
+        IRawLogEventsSource,
+        IBuildEventArgsReaderNotifications,
         IEmbeddedContentSource
     { }
 
@@ -27,6 +48,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
     /// <remarks>The class is public so that we can call it from MSBuild.exe when replaying a log file.</remarks>
     internal sealed class BinaryLogReplayEventSource : EventArgsDispatcher, IBinaryLogReplaySource
     {
+        /// <summary>
+        /// Unknown build events or unknown parts of known build events will be ignored if this is set to true.
+        /// </summary>
+        public bool AllowForwardCompatibility { private get; init; }
+
+        /// <inheritdoc cref="IBuildEventArgsReaderNotifications.OnRecoverableReadError"/>
+        public event Action<BinaryLogReaderErrorEventArgs>? OnRecoverableReadError;
+
         /// <summary>
         /// Read the provided binary log file and raise corresponding events for each BuildEventArgs
         /// </summary>
@@ -88,32 +117,30 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         /// <summary>
-        /// Creates a <see cref="BinaryReader"/> for the provided binary log file.
-        /// Performs decompression and buffering in the optimal way.
-        /// </summary>
-        /// <param name="sourceFilePath"></param>
-        /// <returns>BinaryReader of the given binlog file.</returns>
-        internal static BuildEventArgsReader OpenBuildEventsReader(string sourceFilePath)
-            => OpenBuildEventsReader(OpenReader(sourceFilePath), true);
-
-        /// <summary>
         /// Creates a <see cref="BuildEventArgsReader"/> for the provided binary reader over binary log file.
         /// Caller is responsible for disposing the returned reader.
         /// </summary>
         /// <param name="binaryReader"></param>
         /// <param name="closeInput">Indicates whether the passed BinaryReader should be closed on disposing.</param>
+        /// <param name="allowForwardCompatibility">Unknown build events or unknown parts of known build events will be ignored if this is set to true.</param>
         /// <returns>BuildEventArgsReader over the given binlog file binary reader.</returns>
-        internal static BuildEventArgsReader OpenBuildEventsReader(
+        public static BuildEventArgsReader OpenBuildEventsReader(
             BinaryReader binaryReader,
-            bool closeInput)
+            bool closeInput,
+            bool allowForwardCompatibility = true)
         {
             int fileFormatVersion = binaryReader.ReadInt32();
+            // Is this the new log format that contains the minimum reader version?
+            int minimumReaderVersion = fileFormatVersion >= BinaryLogger.ForwardCompatibilityMinimalVersion
+                ? binaryReader.ReadInt32()
+                : fileFormatVersion;
 
             // the log file is written using a newer version of file format
             // that we don't know how to read
-            if (fileFormatVersion > BinaryLogger.FileFormatVersion)
+            if (fileFormatVersion > BinaryLogger.FileFormatVersion &&
+                (!allowForwardCompatibility || minimumReaderVersion > BinaryLogger.FileFormatVersion))
             {
-                var text = $"The log file format version is {fileFormatVersion}, whereas this version of MSBuild only supports versions up to {BinaryLogger.FileFormatVersion}.";
+                var text = $"The log file format version is {fileFormatVersion} with minimum required reader version {minimumReaderVersion}, whereas this version of MSBuild only supports versions up to {BinaryLogger.FileFormatVersion}.";
                 throw new NotSupportedException(text);
             }
 
@@ -122,6 +149,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 CloseInput = closeInput,
             };
         }
+
+        /// <summary>
+        /// Creates a <see cref="BinaryReader"/> for the provided binary log file.
+        /// Performs decompression and buffering in the optimal way.
+        /// Caller is responsible for disposing the returned reader.
+        /// </summary>
+        /// <param name="sourceFilePath"></param>
+        /// <returns>BinaryReader of the given binlog file.</returns>
+        public static BuildEventArgsReader OpenBuildEventsReader(string sourceFilePath)
+            => OpenBuildEventsReader(OpenReader(sourceFilePath), true);
 
         /// <summary>
         /// Read the provided binary log file and raise corresponding events for each BuildEventArgs
@@ -140,19 +177,97 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <param name="binaryReader">The binary log content binary reader - caller is responsible for disposing.</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> indicating the replay should stop as soon as possible.</param>
         public void Replay(BinaryReader binaryReader, CancellationToken cancellationToken)
+            => Replay(binaryReader, false, cancellationToken);
+
+        /// <summary>
+        /// Read the provided binary log file and raise corresponding events for each BuildEventArgs
+        /// </summary>
+        /// <param name="binaryReader">The binary log content binary reader - caller is responsible for disposing, unless <paramref name="closeInput"/> is set to true.</param>
+        /// <param name="closeInput">Indicates whether the passed BinaryReader should be closed on disposing.</param>
+        /// <param name="cancellationToken">A <see cref="CancellationToken"/> indicating the replay should stop as soon as possible.</param>
+        public void Replay(BinaryReader binaryReader, bool closeInput, CancellationToken cancellationToken)
         {
-            using BuildEventArgsReader reader = OpenBuildEventsReader(binaryReader, false);
-
-            reader.EmbeddedContentRead += _embeddedContentRead;
-            reader.StringReadDone += _stringReadDone;
-            reader.ArchiveFileEncountered += _archiveFileEncountered;
-
-            while (!cancellationToken.IsCancellationRequested && reader.Read() is { } instance)
-            {
-                Dispatch(instance);
-            }
+            using var reader = OpenBuildEventsReader(binaryReader, closeInput, AllowForwardCompatibility);
+            Replay(reader, cancellationToken);
         }
 
+        /// <summary>
+        /// Read the provided binary log file and raise corresponding events for each BuildEventArgs
+        /// </summary>
+        /// <param name="reader">The build events reader - caller is responsible for disposing.</param>
+        /// <param name="cancellationToken">A <see cref="CancellationToken"/> indicating the replay should stop as soon as possible.</param>
+        public void Replay(BuildEventArgsReader reader, CancellationToken cancellationToken)
+        {
+            bool supportsForwardCompatibility = reader.FileFormatVersion >= BinaryLogger.ForwardCompatibilityMinimalVersion;
+
+            // Allow any possible deferred subscriptions to be registered
+            if (HasStructuredEventsSubscribers || !supportsForwardCompatibility)
+            {
+                _onStructuredReadingOnly?.Invoke();
+            }
+            else
+            {
+                _onRawReadingPossible?.Invoke();
+            }
+
+            reader.EmbeddedContentRead += _embeddedContentRead;
+            reader.ArchiveFileEncountered += _archiveFileEncountered;
+            reader.StringReadDone += _stringReadDone;
+
+            if (HasStructuredEventsSubscribers || !supportsForwardCompatibility)
+            {
+                if (this._rawLogRecordReceived != null)
+                {
+                    throw new NotSupportedException(
+                        ResourceUtilities.GetResourceString("Binlog_Source_MultiSubscribeError"));
+                }
+
+                // Forward compatible reading makes sense only for structured events reading.
+                reader.SkipUnknownEvents = supportsForwardCompatibility && AllowForwardCompatibility;
+                reader.SkipUnknownEventParts = supportsForwardCompatibility && AllowForwardCompatibility;
+                reader.OnRecoverableReadError += OnRecoverableReadError;
+
+                while (!cancellationToken.IsCancellationRequested && reader.Read() is { } instance)
+                {
+                    Dispatch(instance);
+                }
+            }
+            else
+            {
+                if (this._rawLogRecordReceived == null &&
+                    this._embeddedContentRead == null &&
+                    this._stringReadDone == null &&
+                    this._archiveFileEncountered == null)
+                {
+                    throw new NotSupportedException(
+                        ResourceUtilities.GetResourceString("Binlog_Source_MissingSubscribeError"));
+                }
+
+                while (!cancellationToken.IsCancellationRequested && reader.ReadRaw() is { } instance &&
+                       instance.RecordKind != BinaryLogRecordKind.EndOfFile)
+                {
+                    _rawLogRecordReceived?.Invoke(instance.RecordKind, instance.Stream);
+                }
+            }
+
+            // Unsubscribe from events for a case if the reader is reused (upon cancellation).
+            reader.EmbeddedContentRead -= _embeddedContentRead;
+            reader.ArchiveFileEncountered -= _archiveFileEncountered;
+            reader.StringReadDone -= _stringReadDone;
+            reader.OnRecoverableReadError -= OnRecoverableReadError;
+        }
+
+        /// <inheritdoc cref="IRawLogEventsSource.DeferredInitialize"/>
+        void IRawLogEventsSource.DeferredInitialize(
+            Action onRawReadingPossible,
+            Action onStructuredReadingOnly)
+        {
+            this._onRawReadingPossible += onRawReadingPossible;
+            this._onStructuredReadingOnly += onStructuredReadingOnly;
+        }
+
+        private Action? _onRawReadingPossible;
+        private Action? _onStructuredReadingOnly;
         private Action<EmbeddedContentEventArgs>? _embeddedContentRead;
         /// <inheritdoc cref="IEmbeddedContentSource.EmbeddedContentRead"/>
         event Action<EmbeddedContentEventArgs>? IEmbeddedContentSource.EmbeddedContentRead
@@ -165,7 +280,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private Action<ArchiveFileEventArgs>? _archiveFileEncountered;
         /// <inheritdoc cref="IBuildFileReader.ArchiveFileEncountered"/>
-        event Action<ArchiveFileEventArgs>? IBuildFileReader.ArchiveFileEncountered
+        event Action<ArchiveFileEventArgs>? IBuildEventArgsReaderNotifications.ArchiveFileEncountered
         {
             add => _archiveFileEncountered += value;
             remove => _archiveFileEncountered -= value;
@@ -173,10 +288,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private Action<StringReadEventArgs>? _stringReadDone;
         /// <inheritdoc cref="IBuildEventStringsReader.StringReadDone"/>
-        event Action<StringReadEventArgs>? IBuildEventStringsReader.StringReadDone
+        event Action<StringReadEventArgs>? IBuildEventArgsReaderNotifications.StringReadDone
         {
             add => _stringReadDone += value;
             remove => _stringReadDone -= value;
+        }
+
+        private Action<BinaryLogRecordKind, Stream>? _rawLogRecordReceived;
+        /// <inheritdoc cref="IRawLogEventsSource.RawLogRecordReceived"/>
+        event Action<BinaryLogRecordKind, Stream>? IRawLogEventsSource.RawLogRecordReceived
+        {
+            add => _rawLogRecordReceived += value;
+            remove => _rawLogRecordReceived -= value;
         }
     }
 }

@@ -450,6 +450,9 @@ namespace StructuredLogViewer
             }
         }
 
+        private bool AllowForwardCompatibleMode(string compatibilityErrorMessage)
+            => Dispatcher.Invoke(() => new CompatibleModePrompt(compatibilityErrorMessage).ShowDialog() == true);
+
         private async void OpenLogFile(string filePath)
         {
             if (!File.Exists(filePath))
@@ -494,7 +497,8 @@ namespace StructuredLogViewer
             {
                 try
                 {
-                    return Serialization.Read(filePath, progress.Progress);
+                    return Serialization.Read(filePath, progress.Progress,
+                        ((AllowForwardCompatibilityDelegate)AllowForwardCompatibleMode).WithDefaultHandler());
                 }
                 catch (Exception ex)
                 {
@@ -569,6 +573,11 @@ namespace StructuredLogViewer
                 {
                     text += $", Nodes: {index.NodeCount:n0}";
                     text += $", Strings: {index.Strings.Length:n0}";
+                }
+
+                if (currentBuild.Build.IsCompatibilityMode)
+                {
+                    text += $", Compatibility Issues: {currentBuild.Build.RecoverableReadingErrors.Sum(e => e.count):n0}";
                 }
 
                 currentBuild.UpdateBreadcrumb(text);

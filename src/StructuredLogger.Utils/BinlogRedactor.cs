@@ -88,17 +88,23 @@ namespace StructuredLogger.Utils
             string outputFileName,
             bool skipEmbeddedFiles)
         {
-            BinaryLogReplayEventSource originalEventsSource = new();
+            BinaryLogReplayEventSource originalEventsSource = new()
+            {
+                // Let's allow this always for redacting - as in GUI
+                // the file already needed to be opened and in the CLI
+                // we run the fwd compat mode always.
+                AllowForwardCompatibility = true,
+            };
             
             Microsoft.Build.Logging.StructuredLogger.BinaryLogger outputBinlog = new()
             {
                 Parameters = $"LogFile={outputFileName};OmitInitialInfo",
             };
 
-            ((IBuildEventStringsReader) originalEventsSource).StringReadDone += HandleStringRead;
+            ((IBuildEventArgsReaderNotifications) originalEventsSource).StringReadDone += HandleStringRead;
             if (!skipEmbeddedFiles)
             {
-                ((IBuildFileReader)originalEventsSource).ArchiveFileEncountered +=
+                ((IBuildEventArgsReaderNotifications)originalEventsSource).ArchiveFileEncountered +=
                     ((Action<StringReadEventArgs>)HandleStringRead).ToArchiveFileHandler();
             }
 
@@ -132,7 +138,7 @@ namespace StructuredLogger.Utils
                 Progress.Report(1.0);
             }
 
-            ((IBuildEventStringsReader)originalEventsSource).StringReadDone -= HandleStringRead;
+            ((IBuildEventArgsReaderNotifications)originalEventsSource).StringReadDone -= HandleStringRead;
 
             void HandleStringRead(StringReadEventArgs args)
             {

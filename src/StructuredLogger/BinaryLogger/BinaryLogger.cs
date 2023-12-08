@@ -61,7 +61,23 @@ namespace Microsoft.Build.Logging.StructuredLogger
         //   - AssemblyLoadBuildEventArgs
         // version 17:
         //   - Added extended data for types implementing IExtendedBuildEventArgs
-        internal const int FileFormatVersion = 17;
+        // version 18:
+        //   - Making ProjectStartedEventArgs, ProjectEvaluationFinishedEventArgs, AssemblyLoadBuildEventArgs equal
+        //     between de/serialization roundtrips.
+        //   - Adding serialized events lengths - to support forward compatible reading
+
+        // This should be never changed.
+        // The minimum version of the binary log reader that can read log of above version.
+        internal const int ForwardCompatibilityMinimalVersion = 18;
+
+        // The current version of the binary log representation.
+        // Changes with each update of the binary log format.
+        internal const int FileFormatVersion = 18;
+        // The minimum version of the binary log reader that can read log of above version.
+        // This should be changed only when the binary log format is changed in a way that would prevent it from being
+        // read by older readers. (changing of the individual BuildEventArgs or adding new is fine - as reader can
+        // skip them if they are not known to it. Example of change requiring the increment would be the introduction of strings deduplication)
+        internal const int MinimumReaderVersion = 18;
 
         public static bool IsNewerVersionAvailable { get; set; }
 
@@ -186,6 +202,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             binaryWriter.Write(FileFormatVersion);
+            binaryWriter.Write(MinimumReaderVersion);
 
             if (replayEventsSource != null)
             {
@@ -199,6 +216,24 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     replayEventsSource.EmbeddedContentRead += args =>
                         ProjectImportsCollector.FlushBlobToFile(FilePath, args.ContentStream);
                 }
+
+                // If raw events are provided - let's try to use the advantage.
+                // But other subscribers can later on subscribe to structured events -
+                //  for this reason we do only subscribe delayed.
+                replayEventsSource.DeferredInitialize(
+                    // For raw events we cannot write the initial info - as we cannot write
+                    //  at the same time as raw events are being written - this would break the deduplicated strings store.
+                    () =>
+                    {
+                        replayEventsSource.RawLogRecordReceived += RawEvents_LogDataSliceReceived;
+                        // Replay separated strings here as well (and do not deduplicate! It would skew string indexes)
+                        replayEventsSource.StringReadDone += strArg => eventArgsWriter.WriteStringRecord(strArg.StringToBeUsed);
+                    },
+                    SubscribeToStructuredEvents);
+            }
+            else
+            {
+                SubscribeToStructuredEvents();
             }
 
             if (!omitInitialInfo)
@@ -206,7 +241,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 LogInitialInfo();
             }
 
-            eventSource.AnyEventRaised += EventSource_AnyEventRaised;
+            void SubscribeToStructuredEvents()
+            {
+                if (!omitInitialInfo)
+                {
+                    LogInitialInfo();
+                }
+
+                eventSource.AnyEventRaised += EventSource_AnyEventRaised;
+            }
         }
 
         private void EventArgsWriter_EmbedFile(string filePath)
@@ -263,6 +306,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 stream.Dispose();
                 stream = null;
             }
+        }
+
+        private void RawEvents_LogDataSliceReceived(BinaryLogRecordKind recordKind, Stream stream)
+        {
+            eventArgsWriter.WriteBlob(recordKind, stream);
         }
 
         private void EventSource_AnyEventRaised(object sender, BuildEventArgs e)

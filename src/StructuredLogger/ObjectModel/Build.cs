@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Threading;
 using TPLTask = System.Threading.Tasks.Task;
 
@@ -288,5 +289,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 backgroundTasks.Clear();
             }
         }
+
+        /// <summary>
+        /// Indicates whether current log/build is of a higher than known version
+        ///  or that there were unknown events or data detected during reading.
+        /// </summary>
+        public bool IsCompatibilityMode { get; internal set; }
+
+        /// <summary>
+        /// In case forward compatible reading was allowed and encountered recoverable errors, this method
+        ///  will return the list of errors encountered during reading.
+        /// </summary>
+        public IReadOnlyList<(ReaderErrorType errorType, BinaryLogRecordKind recordKind, int count)>
+            RecoverableReadingErrors { get; internal set; }
     }
 }

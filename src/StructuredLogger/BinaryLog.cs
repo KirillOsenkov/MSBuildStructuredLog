@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using static Microsoft.Build.Logging.StructuredLogger.BinLogReader;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -25,9 +27,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return reader.ReadRecords(binlogBytes);
         }
 
-        public static Build ReadBuild(string filePath) => ReadBuild(filePath, progress: null);
+        public static Build ReadBuild(string filePath, IForwardCompatibilityReadSettings forwardCompatibilitySettings = null)
+            => ReadBuild(filePath, progress: null, forwardCompatibilitySettings);
 
-        public static Build ReadBuild(string filePath, Progress progress)
+        public static Build ReadBuild(string filePath, Progress progress, IForwardCompatibilityReadSettings forwardCompatibilitySettings)
         {
             using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
@@ -38,7 +41,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     projectImportsArchive = File.ReadAllBytes(projectImportsZipFile);
                 }
 
-                var build = ReadBuild(stream, progress, projectImportsArchive);
+                var build = ReadBuild(stream, progress, projectImportsArchive, forwardCompatibilitySettings);
                 build.LogFilePath = filePath;
                 return build;
             }
@@ -47,12 +50,25 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static Build ReadBuild(Stream stream, byte[] projectImportsArchive = null)
             => ReadBuild(stream, progress: null, projectImportsArchive: projectImportsArchive);
 
-        public static Build ReadBuild(Stream stream, Progress progress, byte[] projectImportsArchive = null)
+        public static Build ReadBuild(Stream stream, Progress progress, byte[] projectImportsArchive = null, IForwardCompatibilityReadSettings forwardCompatibilitySettings = null)
         {
-            var eventSource = new BinLogReader();
-
             Build build = null;
             IEnumerable<string> strings = null;
+            ReaderErrorsRegistry readerErrorsRegistry = null;
+
+            void AddRecoverableReaderError(BinaryLogReaderErrorEventArgs errorEventArgs)
+            {
+                // Build is read synchronously. If that ever changes - this should change to proper Lazy.
+                readerErrorsRegistry ??= new ReaderErrorsRegistry();
+                readerErrorsRegistry.Add(errorEventArgs);
+            }
+
+            forwardCompatibilitySettings =
+                forwardCompatibilitySettings?.WithCustomErrorHandler(AddRecoverableReaderError);
+            var eventSource = new BinLogReader()
+            {
+                ForwardCompatibilitySettings = forwardCompatibilitySettings
+            };
 
             eventSource.OnBlobRead += (kind, bytes) =>
             {
@@ -133,7 +149,41 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             build.WaitForBackgroundTasks();
 
+            build.IsCompatibilityMode = eventSource.IsCompatibilityMode;
+            build.RecoverableReadingErrors = readerErrorsRegistry?.GetErrors().ToList() ??
+                new List<(ReaderErrorType errorType, BinaryLogRecordKind recordKind, int count)>();
+
             return build;
+        }
+
+        private class ReaderErrorsRegistry
+        {
+            private readonly Dictionary<int, int>[] _errorsByKind =
+                Enum.GetValues(typeof(ReaderErrorType))
+                    .Cast<ReaderErrorType>()
+                    .Select(_ => new Dictionary<int, int>())
+                    .ToArray();
+
+            public void Add(BinaryLogReaderErrorEventArgs errorEventArgs)
+            {
+                int errorType = (int)errorEventArgs.ErrorType;
+                int kind = (int)errorEventArgs.RecordKind;
+
+                _errorsByKind[errorType].TryGetValue(kind, out var currentCount);
+                _errorsByKind[errorType][kind] = currentCount + 1;
+            }
+
+            public IEnumerable<(ReaderErrorType errorType, BinaryLogRecordKind recordKind, int count)> GetErrors()
+            {
+                for (int errorType = 0; errorType < _errorsByKind.Length; errorType++)
+                {
+                    Dictionary<int, int> errors = _errorsByKind[errorType];
+                    foreach (KeyValuePair<int, int> kvp in errors)
+                    {
+                        yield return ((ReaderErrorType)errorType, (BinaryLogRecordKind)kvp.Key, kvp.Value);
+                    }
+                }
+            }
         }
     }
 }
