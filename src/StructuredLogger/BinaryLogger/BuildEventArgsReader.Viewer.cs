@@ -79,8 +79,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private BuildEventArgs SynthesizePropertyReassignment(BuildEventArgsFields fields)
         {
             string propertyName = fields.Arguments[0] as string;
-            string previousValue = fields.Arguments[1] as string;
-            string newValue = fields.Arguments[2] as string;
+            string newValue = fields.Arguments[1] as string;
+            string previousValue = fields.Arguments[2] as string;
             string location = fields.Arguments[3] as string;
             string message = GetPropertyReassignmentMessage(propertyName, newValue, previousValue, location);
 
