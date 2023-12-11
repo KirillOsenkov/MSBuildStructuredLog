@@ -8,7 +8,7 @@ namespace BinlogTool
 {
     public class ForwardCompatibilityReadingHandler
     {
-        private enum Mode
+        public enum Mode
         {
             Disallow,
             FailOnError,
@@ -27,6 +27,12 @@ namespace BinlogTool
             {
                 throw new InvalidOperationException("ForwardCompatibilityReadingHandler is not initialized");
             }
+        }
+
+        public void SetMode(Mode mode)
+        {
+            _isInitialized = true;
+            _mode = mode;
         }
 
         public bool ForwardCompatibilityExplicitlyConfigured { get; private set; }
@@ -121,9 +127,11 @@ namespace BinlogTool
             }
         }
 
-        public void HandleBuildResults(Build build)
+        public void HandleBuildResults(Build build, TextWriter? errorWriter = null)
         {
             CheckInitialized();
+
+            errorWriter ??= Console.Error;
 
             if (_mode != Mode.LogErrorsSummary && _mode != Mode.LogErrorsDetailed)
             {
@@ -155,10 +163,10 @@ namespace BinlogTool
 
             var summary = string.Join(Environment.NewLine, summaryLines);
 
-            Console.Error.WriteLine();
-            Console.Error.WriteLine($"Forward compatibility recoverable errors summary:");
-            Console.Error.WriteLine();
-            Console.Error.WriteLine(summary);
+            errorWriter.WriteLine();
+            errorWriter.WriteLine($"Forward compatibility recoverable errors summary:");
+            errorWriter.WriteLine();
+            errorWriter.WriteLine(summary);
         }
 
         private static readonly int _maxErrorTypeLength = Enum.GetNames(typeof(ReaderErrorType)).Max(s => s.Length);
