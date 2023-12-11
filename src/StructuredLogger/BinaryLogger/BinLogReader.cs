@@ -208,11 +208,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             reader.SkipUnknownEvents = hasEventOffsets;
             if (hasEventOffsets && !isLogOfNewerVersion)
             {
-                reader.OnRecoverableReadError += HandleReadingErrorOnKnownVersion;
+                reader.RecoverableReadError += HandleReadingErrorOnKnownVersion;
             }
 
             // ensure some handler is subscribed, even if we are not interested in the events
-            reader.OnRecoverableReadError += ForwardCompatibilitySettings?.ErrorHandler ?? (_ => { });
+            reader.RecoverableReadError += ForwardCompatibilitySettings?.ErrorHandler ?? (_ => { });
 
             return reader;
 
@@ -226,7 +226,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
 
                 // We want this to be only one time event handler
-                reader.OnRecoverableReadError -= HandleReadingErrorOnKnownVersion;
+                reader.RecoverableReadError -= HandleReadingErrorOnKnownVersion;
             }
         }
 

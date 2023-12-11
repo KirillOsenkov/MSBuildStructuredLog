@@ -201,9 +201,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 eventArgsWriter.EmbedFile += EventArgsWriter_EmbedFile;
             }
 
-            binaryWriter.Write(FileFormatVersion);
-            binaryWriter.Write(MinimumReaderVersion);
-
             if (replayEventsSource != null)
             {
                 if (CollectProjectImports == ProjectImportsCollectionMode.Embed)
@@ -223,8 +220,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 replayEventsSource.DeferredInitialize(
                     // For raw events we cannot write the initial info - as we cannot write
                     //  at the same time as raw events are being written - this would break the deduplicated strings store.
+                    // But we need to write the version info - but since we read/write raw - let's not change the version info.
                     () =>
                     {
+                        binaryWriter.Write(replayEventsSource.FileFormatVersion);
+                        binaryWriter.Write(replayEventsSource.MinimumReaderVersion);
                         replayEventsSource.RawLogRecordReceived += RawEvents_LogDataSliceReceived;
                         // Replay separated strings here as well (and do not deduplicate! It would skew string indexes)
                         replayEventsSource.StringReadDone += strArg => eventArgsWriter.WriteStringRecord(strArg.StringToBeUsed);
@@ -236,13 +236,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 SubscribeToStructuredEvents();
             }
 
-            if (!omitInitialInfo)
-            {
-                LogInitialInfo();
-            }
-
             void SubscribeToStructuredEvents()
             {
+                // Write the version info - the latest version is written only for structured events replaying
+                //  as raw events do not change structure - hence the version is the same as the one they were written with.
+                binaryWriter.Write(FileFormatVersion);
+                binaryWriter.Write(MinimumReaderVersion);
+
                 if (!omitInitialInfo)
                 {
                     LogInitialInfo();

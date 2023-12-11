@@ -120,10 +120,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         /// <summary>
-        /// Receives recoverable errors during reading. See <see cref="IBuildEventArgsReaderNotifications.OnRecoverableReadError"/> for documentation on arguments.
+        /// Receives recoverable errors during reading. See <see cref="IBuildEventArgsReaderNotifications.RecoverableReadError"/> for documentation on arguments.
         /// Applicable mainly when <see cref="SkipUnknownEvents"/> or <see cref="SkipUnknownEventParts"/> is set to true."/>
         /// </summary>
-        public event Action<BinaryLogReaderErrorEventArgs>? OnRecoverableReadError;
+        public event Action<BinaryLogReaderErrorEventArgs>? RecoverableReadError;
 
         public void Dispose()
         {
@@ -138,6 +138,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public event Action<StringReadEventArgs>? StringReadDone;
 
         internal int FileFormatVersion => _fileFormatVersion;
+        internal int MinimumReaderVersion { get; set; } = BinaryLogger.ForwardCompatibilityMinimalVersion;
 
         /// <inheritdoc cref="IEmbeddedContentSource.EmbeddedContentRead"/>
         internal event Action<EmbeddedContentEventArgs>? EmbeddedContentRead;
@@ -195,7 +196,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void CheckErrorsSubscribed()
         {
-            if ((_skipUnknownEvents || _skipUnknownEventParts) && OnRecoverableReadError == null)
+            if ((_skipUnknownEvents || _skipUnknownEventParts) && RecoverableReadError == null)
             {
                 throw new InvalidOperationException(
                     ResourceUtilities.GetResourceString("Binlog_MissingRecoverableErrorSubscribeError"));
@@ -282,7 +283,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 if (noThrow)
                 {
-                    OnRecoverableReadError?.Invoke(new BinaryLogReaderErrorEventArgs(readerErrorType, recordKind, msgFactory));
+                    RecoverableReadError?.Invoke(new BinaryLogReaderErrorEventArgs(readerErrorType, recordKind, msgFactory));
                     SkipBytes(_readStream.BytesCountAllowedToReadRemaining);
                 }
                 else

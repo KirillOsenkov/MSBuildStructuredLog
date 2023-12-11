@@ -29,6 +29,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
         void DeferredInitialize(
             Action onRawReadingPossible,
             Action onStructuredReadingOnly);
+
+        /// <summary>
+        /// File format version of the binary log file.
+        /// </summary>
+        int FileFormatVersion { get; }
+        /// <summary>
+        /// The minimum reader version for the binary log file.
+        /// </summary>
+        int MinimumReaderVersion { get; }
     }
 
     /// <summary>
@@ -53,8 +62,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         public bool AllowForwardCompatibility { private get; init; }
 
-        /// <inheritdoc cref="IBuildEventArgsReaderNotifications.OnRecoverableReadError"/>
-        public event Action<BinaryLogReaderErrorEventArgs>? OnRecoverableReadError;
+        /// <inheritdoc cref="IBuildEventArgsReaderNotifications.RecoverableReadError"/>
+        public event Action<BinaryLogReaderErrorEventArgs>? RecoverableReadError;
 
         /// <summary>
         /// Read the provided binary log file and raise corresponding events for each BuildEventArgs
@@ -147,6 +156,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return new BuildEventArgsReader(binaryReader, fileFormatVersion)
             {
                 CloseInput = closeInput,
+                MinimumReaderVersion = minimumReaderVersion
             };
         }
 
@@ -198,6 +208,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> indicating the replay should stop as soon as possible.</param>
         public void Replay(BuildEventArgsReader reader, CancellationToken cancellationToken)
         {
+            _fileFormatVersion = reader.FileFormatVersion;
+            _minimumReaderVersion = reader.MinimumReaderVersion;
             bool supportsForwardCompatibility = reader.FileFormatVersion >= BinaryLogger.ForwardCompatibilityMinimalVersion;
 
             // Allow any possible deferred subscriptions to be registered
@@ -225,7 +237,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 // Forward compatible reading makes sense only for structured events reading.
                 reader.SkipUnknownEvents = supportsForwardCompatibility && AllowForwardCompatibility;
                 reader.SkipUnknownEventParts = supportsForwardCompatibility && AllowForwardCompatibility;
-                reader.OnRecoverableReadError += OnRecoverableReadError;
+                reader.RecoverableReadError += RecoverableReadError;
 
                 while (!cancellationToken.IsCancellationRequested && reader.Read() is { } instance)
                 {
@@ -254,7 +266,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             reader.EmbeddedContentRead -= _embeddedContentRead;
             reader.ArchiveFileEncountered -= _archiveFileEncountered;
             reader.StringReadDone -= _stringReadDone;
-            reader.OnRecoverableReadError -= OnRecoverableReadError;
+            reader.RecoverableReadError -= RecoverableReadError;
         }
 
         /// <inheritdoc cref="IRawLogEventsSource.DeferredInitialize"/>
@@ -266,6 +278,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             this._onStructuredReadingOnly += onStructuredReadingOnly;
         }
 
+        public int FileFormatVersion => _fileFormatVersion ?? throw new InvalidOperationException("Version info not yet initialized. Replay must be called first.");
+        public int MinimumReaderVersion => _minimumReaderVersion ?? throw new InvalidOperationException("Version info not yet initialized. Replay must be called first.");
+        private int? _fileFormatVersion;
+        private int? _minimumReaderVersion;
         private Action? _onRawReadingPossible;
         private Action? _onStructuredReadingOnly;
         private Action<EmbeddedContentEventArgs>? _embeddedContentRead;
