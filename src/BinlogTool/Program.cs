@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using Microsoft.Build.Logging.StructuredLogger;
 using StructuredLogger.Utils;
-using static Microsoft.Build.Logging.StructuredLogger.IForwardCompatibilityReadSettings;
 
 namespace BinlogTool
 {
