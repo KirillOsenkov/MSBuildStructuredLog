@@ -35,8 +35,13 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
+            <CheckBox Content="Do not ask me again"
+                      Name="ChckbxDoNotAsk"
+                      IsChecked="False"
+                      ToolTip="Use current choice in the future"/>
+
             <Button Grid.Column="1" IsDefault="True" Click="btnDialogOk_Click" Name="BtnDialogOk" MinWidth="75" MinHeight="23" Margin="0,0,10,0" Padding="15, 2">_OK</Button>
-            <Button Grid.Column="2" IsCancel="True" MinWidth="75" MinHeight="23" Padding="15, 2">_Cancel</Button>
+            <Button Grid.Column="2" IsCancel="True" Click="btnCancel_Click" MinWidth="75" MinHeight="23" Padding="15, 2">_Cancel</Button>
         </Grid>
 
         <Grid Grid.Row="2">

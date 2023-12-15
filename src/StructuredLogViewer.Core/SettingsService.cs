@@ -299,57 +299,45 @@ namespace StructuredLogViewer
             }
         }
 
+        private static T Get<T>(ref T backingField)
+        {
+            EnsureSettingsRead();
+            return backingField;
+        }
+
+        private static void Set<T>(ref T backingField, T value)
+        {
+            if (backingField == null && value == null
+                || (backingField?.Equals(value) ?? false))
+            {
+                return;
+            }
+
+            backingField = value;
+            SaveSettings();
+        }
+
         private static bool enableTreeViewVirtualization = true;
 
         public static bool EnableTreeViewVirtualization
         {
-            get
-            {
-                EnsureSettingsRead();
-                return enableTreeViewVirtualization;
-            }
+            get => Get(ref enableTreeViewVirtualization);
 
-            set
-            {
-                if (enableTreeViewVirtualization == value)
-                {
-                    return;
-                }
-
-                enableTreeViewVirtualization = value;
-                SaveSettings();
-            }
+            set => Set(ref enableTreeViewVirtualization, value);
         }
 
         private static bool markResultsInTree = false;
 
         public static bool MarkResultsInTree
         {
-            get
-            {
-                EnsureSettingsRead();
-                return markResultsInTree;
-            }
+            get => Get(ref markResultsInTree);
 
-            set
-            {
-                if (markResultsInTree == value)
-                {
-                    return;
-                }
-
-                markResultsInTree = value;
-                SaveSettings();
-            }
+            set => Set(ref markResultsInTree, value);
         }
 
         public static bool ShowConfigurationAndPlatform
         {
-            get
-            {
-                EnsureSettingsRead();
-                return ProjectOrEvaluationHelper.ShowConfigurationAndPlatform;
-            }
+            get => Get(ref ProjectOrEvaluationHelper.ShowConfigurationAndPlatform);
 
             set
             {
@@ -367,64 +355,33 @@ namespace StructuredLogViewer
         private static bool useDarkTheme = false;
         public static bool UseDarkTheme
         {
-            get
-            {
-                EnsureSettingsRead();
-                return useDarkTheme;
-            }
+            get => Get(ref useDarkTheme);
 
-            set
-            {
-                if (useDarkTheme == value)
-                {
-                    return;
-                }
-
-                useDarkTheme = value;
-                SaveSettings();
-            }
+            set => Set(ref useDarkTheme, value);
         }
 
         private static string? windowPosition;
         public static string? WindowPosition
         {
-            get
-            {
-                EnsureSettingsRead();
-                return windowPosition;
-            }
+            get => Get(ref windowPosition);
 
-            set
-            {
-                if (windowPosition == value)
-                {
-                    return;
-                }
-
-                windowPosition = value;
-                SaveSettings();
-            }
+            set => Set(ref windowPosition, value);
         }
 
         private static string? ignoreEmbeddedFiles;
         public static string? IgnoreEmbeddedFiles
         {
-            get
-            {
-                EnsureSettingsRead();
-                return ignoreEmbeddedFiles;
-            }
+            get => Get(ref ignoreEmbeddedFiles);
 
-            set
-            {
-                if (ignoreEmbeddedFiles == value)
-                {
-                    return;
-                }
+            set => Set(ref ignoreEmbeddedFiles, value);
+        }
 
-                ignoreEmbeddedFiles = value;
-                SaveSettings();
-            }
+        private static bool? useForwardCompatibility;
+        public static bool? UseForwardCompatibility
+        {
+            get => Get(ref useForwardCompatibility);
+
+            set => Set(ref useForwardCompatibility, value);
         }
 
         private static void EnsureSettingsRead()
@@ -442,6 +399,7 @@ namespace StructuredLogViewer
         const string UseDarkThemeSetting = "UseDarkTheme=";
         const string WindowPositionSetting = "WindowPosition=";
         const string IgnoreEmbeddedFilesSetting = "IgnoreEmbeddedFiles=";
+        const string UseForwardCompatibilitySettings = "UseForwardCompatibility=";
 
         private static void SaveSettings()
         {
@@ -453,6 +411,7 @@ namespace StructuredLogViewer
             sb.AppendLine(UseDarkThemeSetting + useDarkTheme.ToString());
             sb.AppendLine(WindowPositionSetting + windowPosition);
             sb.AppendLine(IgnoreEmbeddedFilesSetting + IgnoreEmbeddedFiles);
+            sb.AppendLine(UseForwardCompatibilitySettings + UseForwardCompatibility);
 
             using (SingleGlobalInstance.Acquire(Path.GetFileName(settingsFilePath)))
             {
@@ -479,6 +438,7 @@ namespace StructuredLogViewer
                     ProcessLine(MarkResultsInTreeSetting, line, ref markResultsInTree);
                     ProcessLine(ShowConfigurationAndPlatformSetting, line, ref ProjectOrEvaluationHelper.ShowConfigurationAndPlatform);
                     ProcessLine(UseDarkThemeSetting, line, ref useDarkTheme);
+                    ProcessLineTriState(UseForwardCompatibilitySettings, line, ref useForwardCompatibility);
                     ProcessString(WindowPositionSetting, line, ref windowPosition);
                     ProcessString(IgnoreEmbeddedFilesSetting, line, ref ignoreEmbeddedFiles);
 
@@ -494,6 +454,16 @@ namespace StructuredLogViewer
                     }
 
                     void ProcessLine(string setting, string text, ref bool variable)
+                    {
+                        bool? result = null;
+                        ProcessLineTriState(setting, text, ref result);
+                        if (result.HasValue)
+                        {
+                            variable = result.Value;
+                        }
+                    }
+
+                    void ProcessLineTriState(string setting, string text, ref bool? variable)
                     {
                         if (!text.StartsWith(setting))
                         {

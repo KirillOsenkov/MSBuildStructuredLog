@@ -28,9 +28,25 @@ namespace StructuredLogViewer.Controls
             }
         }
 
+        public bool DoNotAskAgain
+        {
+            get { return ChckbxDoNotAsk.IsChecked == true; }
+        }
+
         private void btnDialogOk_Click(object sender, RoutedEventArgs e)
         {
-            this.DialogResult = true;
+            ConfirmButtonClicked(true);
+        }
+
+        private void btnCancel_Click(object sender, RoutedEventArgs e)
+        {
+            ConfirmButtonClicked(false);
+        }
+
+        private void ConfirmButtonClicked(bool useForwardCompat)
+        {
+            SettingsService.UseForwardCompatibility = DoNotAskAgain ? useForwardCompat : null;
+            this.DialogResult = useForwardCompat;
         }
     }
 }

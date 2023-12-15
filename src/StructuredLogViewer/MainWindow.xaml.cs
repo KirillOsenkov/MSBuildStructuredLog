@@ -451,7 +451,14 @@ namespace StructuredLogViewer
         }
 
         private bool AllowForwardCompatibleMode(string compatibilityErrorMessage)
-            => Dispatcher.Invoke(() => new CompatibleModePrompt(compatibilityErrorMessage).ShowDialog() == true);
+        {
+            if (SettingsService.UseForwardCompatibility.HasValue)
+            {
+                return SettingsService.UseForwardCompatibility.Value;
+            }
+
+            return Dispatcher.Invoke(() => new CompatibleModePrompt(compatibilityErrorMessage).ShowDialog() == true);
+        }
 
         private async void OpenLogFile(string filePath)
         {
