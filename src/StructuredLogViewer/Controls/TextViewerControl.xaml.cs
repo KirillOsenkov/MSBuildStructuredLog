@@ -111,13 +111,15 @@ namespace StructuredLogViewer.Controls
             DisplaySource(lineNumber, column);
 
             if (IsXml)
+            {
                 ImportLinkHighlighter.Install(textEditor, sourceFilePath, navigationHelper);
+            }
         }
 
         protected override void OnKeyUp(KeyEventArgs e)
         {
             // Mark Ctrl+F handle to not steal focus from search panel
-            if (e.Key == Key.F  && Keyboard.Modifiers == ModifierKeys.Control)
+            if (e.Key == Key.F && Keyboard.Modifiers == ModifierKeys.Control)
             {
                 e.Handled = true;
             }
@@ -203,6 +205,8 @@ namespace StructuredLogViewer.Controls
 
                 var foldingStrategy = new XmlFoldingStrategy();
                 foldingStrategy.UpdateFoldings(foldingManager, textEditor.Document);
+
+                gotoProjectMenu.Visibility = Visibility.Visible;
             }
             else if (!looksLikeXml && IsXml)
             {
@@ -259,7 +263,7 @@ async
                 Title = "Save file as...",
                 FileName = Path.GetFileName(filePath)
             };
-            
+
             var result = saveFileDialog.ShowDialog(Application.Current.MainWindow);
 
             if (result is true)
@@ -311,6 +315,22 @@ async
         private void copyMenu_Click(object sender, RoutedEventArgs e)
         {
             textEditor.Copy();
+        }
+
+        private void gotoProjectFoldingMenu_Click(object sender, RoutedEventArgs e)
+        {
+            var selectionStart = textEditor.SelectionStart;
+            if (selectionStart > 0)
+            {
+                selectionStart--;
+            }
+
+            var projFolding = foldingManager.GetFoldingsContaining(selectionStart)?.LastOrDefault(f => f.Title == "<Project>");
+            if (projFolding != null)
+            {
+                textEditor.Select(projFolding.StartOffset, projFolding.Title.Length);
+                textEditor.ScrollTo(textEditor.Document.GetLineByOffset(projFolding.StartOffset).LineNumber, 0);
+            }
         }
     }
 }
