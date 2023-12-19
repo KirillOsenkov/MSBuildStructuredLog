@@ -59,22 +59,32 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Intern(Strings.UnusedLocations);
             Intern(Strings.Warnings);
             Intern(nameof(AddItem));
+            Intern(nameof(CriticalBuildMessage));
             Intern(nameof(CopyTask));
+            Intern(nameof(RobocopyTask));
             Intern(nameof(CscTask));
+            Intern(nameof(VbcTask));
+            Intern(nameof(FscTask));
+            Intern(nameof(MSBuildTask));
             Intern(nameof(ResolveAssemblyReferenceTask));
             Intern(nameof(EntryTarget));
+            Intern(nameof(Error));
             Intern(nameof(Folder));
             Intern(nameof(Import));
             Intern(nameof(Item));
+            Intern(nameof(Message));
             Intern(nameof(Metadata));
             Intern(nameof(NoImport));
+            Intern(nameof(Package));
             Intern(nameof(Parameter));
+            Intern(nameof(Project));
             Intern(nameof(ProjectEvaluation));
             Intern(nameof(Property));
             Intern(nameof(RemoveItem));
             Intern(nameof(Target));
             Intern(nameof(Task));
             Intern(nameof(TimedNode));
+            Intern(nameof(Warning));
         }
 
         public void Shutdown()
