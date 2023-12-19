@@ -898,7 +898,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     return SynthesizePropertyReassignment(fields);
                 }
 
-                e = new BuildMessageEventArgs(
+                var buildMessageEventArgs = new BuildMessageEventArgs(
                     fields.Subcategory,
                     fields.Code,
                     fields.File,
@@ -915,6 +915,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     ProjectFile = fields.ProjectFile,
                 };
+
+                e = buildMessageEventArgs;
+
+                OnMessageRead(buildMessageEventArgs);
             }
             else
             {

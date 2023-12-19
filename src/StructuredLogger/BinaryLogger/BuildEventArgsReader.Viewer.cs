@@ -98,6 +98,29 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return e;
         }
 
+        private bool sawCulture;
+
+        private void OnMessageRead(BuildMessageEventArgs args)
+        {
+            if (sawCulture)
+            {
+                return;
+            }
+
+            if (args.SenderName == "BinaryLogger" &&
+                args.Message is string message &&
+                message.StartsWith("CurrentUICulture", StringComparison.Ordinal))
+            {
+                sawCulture = true;
+                var kvp = TextUtilities.ParseNameValue(message);
+                string culture = kvp.Value;
+                if (!string.IsNullOrEmpty(culture))
+                {
+                    Strings.Initialize(culture);
+                }
+            }
+        }
+
         private string GetTargetStartedMessage(string projectFile, string targetFile, string parentTarget, string targetName)
         {
             if (string.Equals(projectFile, targetFile, StringComparison.OrdinalIgnoreCase))

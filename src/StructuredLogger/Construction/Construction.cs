@@ -464,8 +464,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private bool sawCulture = false;
-
         public void MessageRaised(object sender, BuildMessageEventArgs args)
         {
             try
@@ -476,20 +474,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     {
                         TargetSkipped(targetSkipped);
                         return;
-                    }
-
-                    if (!sawCulture &&
-                        args.SenderName == "BinaryLogger" &&
-                        args.Message is string message &&
-                        message.StartsWith("CurrentUICulture", StringComparison.Ordinal))
-                    {
-                        sawCulture = true;
-                        var kvp = TextUtilities.ParseNameValue(message);
-                        string culture = kvp.Value;
-                        if (!string.IsNullOrEmpty(culture))
-                        {
-                            Strings.Initialize(culture);
-                        }
                     }
 
                     messageProcessor.Process(args);
