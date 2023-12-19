@@ -627,7 +627,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
         private void UpdateWatermark()
         {
-            string watermarkText0 = $@"Type in the search box to search. Press Ctrl+F to focus the search box. Results (up to {Search.DefaultMaxResults}) will display here.
+            string watermarkText0 = @"Type in the search box to search. Press Ctrl+F to focus the search box. Results (up to 1000) will display here.
 ";
 
             string watermarkText1 = @"
