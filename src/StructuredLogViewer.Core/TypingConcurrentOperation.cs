@@ -39,6 +39,11 @@ namespace StructuredLogViewer
 
         public void TextChanged(string searchText, int maxResults)
         {
+            if (searchText.Equals(this.searchText))
+            {
+                return;
+            }
+
             if (ExecuteSearch == null)
             {
                 Reset();

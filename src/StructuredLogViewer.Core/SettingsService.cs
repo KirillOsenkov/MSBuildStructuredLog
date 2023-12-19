@@ -104,6 +104,12 @@ namespace StructuredLogViewer
             SaveText(recentProjectsFilePath, Enumerable.Empty<string>());
         }
 
+        public static void RemoveAllRecentSearchText(string recentItemsCategory = "")
+        {
+            var file = GetRecentSearchFilePath(recentItemsCategory);
+            SaveText(file, Enumerable.Empty<string>());
+        }
+
         private static string GetRecentSearchFilePath(string category = "")
         {
             return recentSearchesFilePath.Replace("$", category);

@@ -64,7 +64,7 @@ namespace StructuredLogViewer.Controls
 
         private void searchTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            var searchText = searchTextBox.Text;
+            var searchText = searchTextBox.Text.Trim();
             TextChanged?.Invoke(searchText);
 
             if (string.IsNullOrWhiteSpace(searchText) || searchText.Length < 3)
