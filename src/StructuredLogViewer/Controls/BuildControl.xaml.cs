@@ -41,7 +41,9 @@ namespace StructuredLogViewer.Controls
         private MenuItem copySubtreeItem;
         private MenuItem viewSubtreeTextItem;
         private MenuItem searchInSubtreeItem;
+        private MenuItem searchInNodeByNameItem;
         private MenuItem excludeSubtreeFromSearchItem;
+        private MenuItem excludeNodeByNameFromSearch;
         private MenuItem goToTimeLineItem;
         private MenuItem goToTracingItem;
         private MenuItem copyChildrenItem;
@@ -181,6 +183,8 @@ namespace StructuredLogViewer.Controls
             viewSubtreeTextItem = new MenuItem() { Header = "View subtree text" };
             searchInSubtreeItem = new MenuItem() { Header = "Search in subtree" };
             excludeSubtreeFromSearchItem = new MenuItem() { Header = "Exclude subtree from search" };
+            excludeNodeByNameFromSearch = new MenuItem() { Header = "Exclude node from search" };
+            searchInNodeByNameItem = new MenuItem() { Header = "Search in this node." };
             goToTimeLineItem = new MenuItem() { Header = "Go to timeline" };
             goToTracingItem = new MenuItem() { Header = "Go to tracing" };
             copyChildrenItem = new MenuItem() { Header = "Copy children" };
@@ -211,6 +215,8 @@ namespace StructuredLogViewer.Controls
             viewSubtreeTextItem.Click += (s, a) => ViewSubtreeText();
             searchInSubtreeItem.Click += (s, a) => SearchInSubtree();
             excludeSubtreeFromSearchItem.Click += (s, a) => ExcludeSubtreeFromSearch();
+            excludeNodeByNameFromSearch.Click += (s, a) => ExcludeNodeByNameFromSearch();
+            searchInNodeByNameItem.Click += (s, a) => SearchInNodeByName();
             goToTimeLineItem.Click += (s, a) => GoToTimeLine();
             goToTracingItem.Click += (s, a) => GoToTracing();
             copyChildrenItem.Click += (s, a) => CopyChildren();
@@ -236,7 +242,9 @@ namespace StructuredLogViewer.Controls
             contextMenu.AddItem(preprocessItem);
             contextMenu.AddItem(searchNuGetItem);
             contextMenu.AddItem(searchInSubtreeItem);
+            contextMenu.AddItem(searchInNodeByNameItem);
             contextMenu.AddItem(excludeSubtreeFromSearchItem);
+            contextMenu.AddItem(excludeNodeByNameFromSearch);
             contextMenu.AddItem(goToTimeLineItem);
             contextMenu.AddItem(goToTracingItem);
             contextMenu.AddItem(copyItem);
@@ -379,6 +387,8 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             viewSubtreeTextItem = null;
             searchInSubtreeItem = null;
             excludeSubtreeFromSearchItem = null;
+            excludeNodeByNameFromSearch = null;
+            searchInNodeByNameItem = null;
             goToTimeLineItem = null;
             goToTracingItem = null;
             copyChildrenItem = null;
@@ -647,7 +657,11 @@ Examples:
             if (recentSearches.Any())
             {
                 watermark.Inlines.Add(@"
-Recent:
+Recent (");
+                var clearRecentHyperlink = new Hyperlink(new Run("clear"));
+                clearRecentHyperlink.Click += (s, e) => { SettingsService.RemoveAllRecentSearchText(); UpdateWatermark(); };
+                watermark.Inlines.Add(clearRecentHyperlink);
+                watermark.Inlines.Add(@"):
 ");
 
                 foreach (var recentSearch in recentSearches.Where(s => !searchExamples.Contains(s) && !nodeKinds.Contains(s)))
@@ -704,7 +718,11 @@ Recent:
             if (recentSearches.Any())
             {
                 watermark.Inlines.Add(@"
-Recent:
+Recent (");
+                var clearRecentHyperlink = new Hyperlink(new Run("clear"));
+                clearRecentHyperlink.Click += (s, e) => { SettingsService.RemoveAllRecentSearchText("PropertiesAndItems"); UpdatePropertiesAndItemsWatermark(); };
+                watermark.Inlines.Add(clearRecentHyperlink);
+                watermark.Inlines.Add(@"):
 ");
 
                 foreach (var recentSearch in recentSearches)
@@ -828,11 +846,6 @@ Recent:
             var hasChildren = node is TreeNode t && t.HasChildren;
             copySubtreeItem.Visibility = hasChildren ? Visibility.Visible : Visibility.Collapsed;
             viewSubtreeTextItem.Visibility = copySubtreeItem.Visibility;
-            showTimeItem.Visibility = node is TimedNode ? Visibility.Visible : Visibility.Collapsed;
-            searchInSubtreeItem.Visibility = hasChildren && node is TimedNode ? Visibility.Visible : Visibility.Collapsed;
-            excludeSubtreeFromSearchItem.Visibility = hasChildren && node is TimedNode ? Visibility.Visible : Visibility.Collapsed;
-            goToTimeLineItem.Visibility = node is TimedNode ? Visibility.Visible : Visibility.Collapsed;
-            goToTracingItem.Visibility = node is TimedNode ? Visibility.Visible : Visibility.Collapsed;
             copyChildrenItem.Visibility = copySubtreeItem.Visibility;
             sortChildrenItem.Visibility = copySubtreeItem.Visibility;
             preprocessItem.Visibility = node is IPreprocessable p && preprocessedFileManager.CanPreprocess(p) ? Visibility.Visible : Visibility.Collapsed;
@@ -841,6 +854,37 @@ Recent:
             runItem.Visibility = canRun;
             debugItem.Visibility = canRun;
             hideItem.Visibility = node is TreeNode ? Visibility.Visible : Visibility.Collapsed;
+
+            if (node is TimedNode timedNode)
+            {
+                showTimeItem.Visibility = Visibility.Visible;
+                searchInSubtreeItem.Visibility = hasChildren ? Visibility.Visible : Visibility.Collapsed;
+                excludeSubtreeFromSearchItem.Visibility = hasChildren ? Visibility.Visible : Visibility.Collapsed;
+                goToTimeLineItem.Visibility = Visibility.Visible;
+                goToTracingItem.Visibility = Visibility.Visible;
+                excludeNodeByNameFromSearch.Visibility = hasChildren ? Visibility.Visible : Visibility.Collapsed;
+                searchInNodeByNameItem.Visibility = hasChildren ? Visibility.Visible : Visibility.Collapsed;
+
+                if (excludeNodeByNameFromSearch.Visibility == Visibility.Visible)
+                {
+                    excludeNodeByNameFromSearch.Header = $"Exclude '{timedNode.Name}' from search";
+                }
+
+                if (searchInNodeByNameItem.Visibility == Visibility.Visible)
+                {
+                    searchInNodeByNameItem.Header = $"Search in '{timedNode.Name}'";
+                }
+            }
+            else
+            {
+                showTimeItem.Visibility = Visibility.Collapsed;
+                searchInSubtreeItem.Visibility = Visibility.Collapsed;
+                excludeSubtreeFromSearchItem.Visibility = Visibility.Collapsed;
+                goToTimeLineItem.Visibility = Visibility.Collapsed;
+                goToTracingItem.Visibility = Visibility.Collapsed;
+                excludeNodeByNameFromSearch.Visibility = Visibility.Collapsed;
+                searchInNodeByNameItem.Visibility = Visibility.Collapsed;
+            }
         }
 
         private object FindInFiles(string searchText, int maxResults, CancellationToken cancellationToken)
@@ -1516,11 +1560,29 @@ Recent:
             }
         }
 
+        public void SearchInNodeByName()
+        {
+            if (treeView.SelectedItem is TimedNode treeNode)
+            {
+                searchLogControl.SearchText += $" under(${treeNode.TypeName} {treeNode.Name})";
+                SelectSearchTab();
+            }
+        }
+
         public void ExcludeSubtreeFromSearch()
         {
             if (treeView.SelectedItem is TimedNode treeNode)
             {
                 searchLogControl.SearchText += $" notunder(${treeNode.Index})";
+                SelectSearchTab();
+            }
+        }
+
+        public void ExcludeNodeByNameFromSearch()
+        {
+            if (treeView.SelectedItem is TimedNode treeNode)
+            {
+                searchLogControl.SearchText += $" notunder(${treeNode.TypeName} {treeNode.Name})";
                 SelectSearchTab();
             }
         }
