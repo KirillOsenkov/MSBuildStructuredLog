@@ -494,7 +494,7 @@ namespace StructuredLogViewer
             {
                 try
                 {
-                    return Serialization.Read(filePath, progress.Progress, UnknownDataBehavior.Error);
+                    return Serialization.Read(filePath, progress.Progress, ReaderSettings.Default);
                 }
                 catch (Exception ex)
                 {

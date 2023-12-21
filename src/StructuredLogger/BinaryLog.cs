@@ -27,10 +27,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return reader.ReadRecords(binlogBytes);
         }
 
-        public static Build ReadBuild(string filePath, UnknownDataBehavior unknownDataBehavior = UnknownDataBehavior.Error)
-            => ReadBuild(filePath, progress: null, unknownDataBehavior);
+        public static Build ReadBuild(string filePath, ReaderSettings readerSettings = null)
+            => ReadBuild(filePath, progress: null, readerSettings);
 
-        public static Build ReadBuild(string filePath, Progress progress, UnknownDataBehavior unknownDataBehavior)
+        public static Build ReadBuild(string filePath, Progress progress, ReaderSettings readerSettings)
         {
             using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
@@ -41,7 +41,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     projectImportsArchive = File.ReadAllBytes(projectImportsZipFile);
                 }
 
-                var build = ReadBuild(stream, progress, projectImportsArchive, unknownDataBehavior);
+                var build = ReadBuild(stream, progress, projectImportsArchive, readerSettings);
                 build.LogFilePath = filePath;
                 return build;
             }
@@ -56,10 +56,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Stream stream,
             Progress progress,
             byte[] projectImportsArchive = null,
-            UnknownDataBehavior unknownDataBehavior = UnknownDataBehavior.Error)
+            ReaderSettings readerSettings = null)
         {
             Build build = null;
             IEnumerable<string> strings = null;
+            readerSettings ??= ReaderSettings.Default;
 
             var eventSource = new BinLogReader();
 
@@ -84,12 +85,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             int[] errorByType = new int[Enum.GetValues(typeof(ReaderErrorType)).Length];
             eventSource.RecoverableReadError += eArg =>
             {
-                if (unknownDataBehavior == UnknownDataBehavior.ThrowException)
+                if (readerSettings.UnknownDataBehavior == UnknownDataBehavior.ThrowException)
                 {
                     throw new Exception($"Unknown data encountered in the log file ({eArg.ErrorType}-{eArg.RecordKind}): {eArg.GetFormattedMessage()}");
                 }
 
-                if (unknownDataBehavior == UnknownDataBehavior.Ignore)
+                if (readerSettings.UnknownDataBehavior == UnknownDataBehavior.Ignore)
                 {
                     return;
                 }
@@ -161,15 +162,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (errorByType.Any(i => i != 0))
             {
-                string summary = string.Join(", ", errorByType.Where((count, index) => count > 0).Select((count, index) => $"{((ReaderErrorType)index).ToString()}: {count}"));
+                string summary = string.Join(", ", errorByType.Where((count, index) => count > 0).Select((count, index) => $"{((ReaderErrorType)index)}: {count}"));
                 string message = $"{errorByType.Sum()} reading errors encountered ({summary}) - unknown data was skipped in current compatibility mode.";
 
-                TreeNode node = unknownDataBehavior switch
+                TreeNode node = readerSettings.UnknownDataBehavior switch
                 {
                     UnknownDataBehavior.Error => new Error() { Text = message },
                     UnknownDataBehavior.Warning => new Warning() { Text = message },
                     UnknownDataBehavior.Message => new CriticalBuildMessage() { Text = message },
-                    _ => throw new ArgumentOutOfRangeException(nameof(unknownDataBehavior), unknownDataBehavior, null)
+                    _ => throw new ArgumentOutOfRangeException(nameof(readerSettings.UnknownDataBehavior), readerSettings.UnknownDataBehavior, "Unexpected value")
                 };
 
                 build.AddChildAtBeginning(node);
