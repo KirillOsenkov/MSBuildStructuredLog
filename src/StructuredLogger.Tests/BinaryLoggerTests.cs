@@ -316,7 +316,7 @@ namespace Microsoft.Build.UnitTests
             var deserializedEvent = buildEventArgsReader.Read();
 
             readerErrors.Count.Should().Be(1);
-            readerErrors[0].ErrorType.Should().Be(ReaderErrorType.UnkownEventType);
+            readerErrors[0].ErrorType.Should().Be(ReaderErrorType.UnknownEventType);
             readerErrors[0].RecordKind.Should().Be(unknownType);
 
             deserializedEvent.Should().BeEquivalentTo(finished);

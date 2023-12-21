@@ -2075,7 +2075,7 @@ Recent:
                     foreach (var groupByEventType in groupByErrorType.GroupBy(e => e.recordKind))
                     {
                         string eventName = groupByEventType.Key.ToString();
-                        if (groupByErrorType.Key == ReaderErrorType.UnkownEventType)
+                        if (groupByErrorType.Key == ReaderErrorType.UnknownEventType)
                         {
                             eventName = $"Unknown event with id: {eventName}";
                         }

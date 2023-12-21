@@ -10,7 +10,12 @@ using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    internal interface IRawLogEventsSource
+    /// <summary>
+    /// Interface for replaying a binary log file (*.binlog)
+    /// </summary>
+    internal interface IBinaryLogReplaySource :
+        IEventSource,
+        IBuildEventArgsReaderNotifications
     {
         /// <summary>
         /// Event raised when non-textual log record is read.
@@ -38,17 +43,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// The minimum reader version for the binary log file.
         /// </summary>
         int MinimumReaderVersion { get; }
-    }
 
-    /// <summary>
-    /// Interface for replaying a binary log file (*.binlog)
-    /// </summary>
-    internal interface IBinaryLogReplaySource :
-        IEventSource,
-        IRawLogEventsSource,
-        IBuildEventArgsReaderNotifications,
-        IEmbeddedContentSource
-    { }
+        /// <summary>
+        /// Raised when the log reader encounters a project import archive (embedded content) in the stream.
+        /// The subscriber must read the exactly given length of binary data from the stream - otherwise exception is raised.
+        /// If no subscriber is attached, the data is skipped.
+        /// </summary>
+        event Action<EmbeddedContentEventArgs> EmbeddedContentRead;
+    }
 
     /// <summary>
     /// Provides a method to read a binary log file (*.binlog) and replay all stored BuildEventArgs
@@ -57,6 +59,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
     /// <remarks>The class is public so that we can call it from MSBuild.exe when replaying a log file.</remarks>
     internal sealed class BinaryLogReplayEventSource : EventArgsDispatcher, IBinaryLogReplaySource
     {
+        private int? _fileFormatVersion;
+        private int? _minimumReaderVersion;
+
+        public int FileFormatVersion => _fileFormatVersion ?? throw new InvalidOperationException("Version info not yet initialized. Replay must be called first.");
+        public int MinimumReaderVersion => _minimumReaderVersion ?? throw new InvalidOperationException("Version info not yet initialized. Replay must be called first.");
+        
+
         /// <summary>
         /// Unknown build events or unknown parts of known build events will be ignored if this is set to true.
         /// </summary>
@@ -269,8 +278,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
             reader.RecoverableReadError -= RecoverableReadError;
         }
 
-        /// <inheritdoc cref="IRawLogEventsSource.DeferredInitialize"/>
-        void IRawLogEventsSource.DeferredInitialize(
+        // Following members are explicit implementations of the IBinaryLogReplaySource interface
+        //  to avoid exposing them publicly.
+        // We want an interface so that BinaryLogger can fine tune its initialization logic
+        //  in case the given event source is the replay source. On the other hand we don't want
+        //  to expose these members publicly because they are not intended to be used by the consumers.
+
+        private Action? _onRawReadingPossible;
+        private Action? _onStructuredReadingOnly;
+        /// <inheritdoc cref="IBinaryLogReplaySource.DeferredInitialize"/>
+        void IBinaryLogReplaySource.DeferredInitialize(
             Action onRawReadingPossible,
             Action onStructuredReadingOnly)
         {
@@ -278,15 +295,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             this._onStructuredReadingOnly += onStructuredReadingOnly;
         }
 
-        public int FileFormatVersion => _fileFormatVersion ?? throw new InvalidOperationException("Version info not yet initialized. Replay must be called first.");
-        public int MinimumReaderVersion => _minimumReaderVersion ?? throw new InvalidOperationException("Version info not yet initialized. Replay must be called first.");
-        private int? _fileFormatVersion;
-        private int? _minimumReaderVersion;
-        private Action? _onRawReadingPossible;
-        private Action? _onStructuredReadingOnly;
         private Action<EmbeddedContentEventArgs>? _embeddedContentRead;
-        /// <inheritdoc cref="IEmbeddedContentSource.EmbeddedContentRead"/>
-        event Action<EmbeddedContentEventArgs>? IEmbeddedContentSource.EmbeddedContentRead
+        /// <inheritdoc cref="IBinaryLogReplaySource.EmbeddedContentRead"/>
+        event Action<EmbeddedContentEventArgs>? IBinaryLogReplaySource.EmbeddedContentRead
         {
             // Explicitly implemented event has to declare explicit add/remove accessors
             //  https://stackoverflow.com/a/2268472/2308106
@@ -295,7 +306,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         private Action<ArchiveFileEventArgs>? _archiveFileEncountered;
-        /// <inheritdoc cref="IBuildFileReader.ArchiveFileEncountered"/>
+        /// <inheritdoc cref="IBuildEventArgsReaderNotifications.ArchiveFileEncountered"/>
         event Action<ArchiveFileEventArgs>? IBuildEventArgsReaderNotifications.ArchiveFileEncountered
         {
             add => _archiveFileEncountered += value;
@@ -303,7 +314,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         private Action<StringReadEventArgs>? _stringReadDone;
-        /// <inheritdoc cref="IBuildEventStringsReader.StringReadDone"/>
+        /// <inheritdoc cref="IBuildEventArgsReaderNotifications.StringReadDone"/>
         event Action<StringReadEventArgs>? IBuildEventArgsReaderNotifications.StringReadDone
         {
             add => _stringReadDone += value;
@@ -311,8 +322,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         private Action<BinaryLogRecordKind, Stream>? _rawLogRecordReceived;
-        /// <inheritdoc cref="IRawLogEventsSource.RawLogRecordReceived"/>
-        event Action<BinaryLogRecordKind, Stream>? IRawLogEventsSource.RawLogRecordReceived
+        /// <inheritdoc cref="IBinaryLogReplaySource.RawLogRecordReceived"/>
+        event Action<BinaryLogRecordKind, Stream>? IBinaryLogReplaySource.RawLogRecordReceived
         {
             add => _rawLogRecordReceived += value;
             remove => _rawLogRecordReceived -= value;

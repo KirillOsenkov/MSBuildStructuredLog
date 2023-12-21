@@ -140,7 +140,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         internal int FileFormatVersion => _fileFormatVersion;
         internal int MinimumReaderVersion { get; set; } = BinaryLogger.ForwardCompatibilityMinimalVersion;
 
-        /// <inheritdoc cref="IEmbeddedContentSource.EmbeddedContentRead"/>
+        /// <inheritdoc cref="IBinaryLogReplaySource.EmbeddedContentRead"/>
         internal event Action<EmbeddedContentEventArgs>? EmbeddedContentRead;
 
         /// <inheritdoc cref="IBuildEventArgsReaderNotifications.ArchiveFileEncountered"/>
@@ -262,7 +262,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             ? " Skipping the record."
                             : string.Empty);
 
-                    HandleError(ErrorFactory, _skipUnknownEvents, ReaderErrorType.UnkownEventType, recordKind);
+                    HandleError(ErrorFactory, _skipUnknownEvents, ReaderErrorType.UnknownEventType, recordKind);
                 }
 
                 if (_readStream.BytesCountAllowedToReadRemaining > 0)
