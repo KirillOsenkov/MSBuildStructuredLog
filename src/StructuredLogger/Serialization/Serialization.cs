@@ -10,6 +10,15 @@ using static Microsoft.Build.Logging.StructuredLogger.BinLogReader;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
+    public enum UnknownDataBehavior
+    {
+        Error,
+        Warning,
+        Message,
+        Ignore,
+        ThrowException
+    }
+
     public static class Serialization
     {
         public static readonly string FileDialogFilter = "Structured Log (*.buildlog)|*.buildlog|Readable (large) XML Log (*.xml)|*.xml";
@@ -47,9 +56,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static Build ReadBuildLog(Stream stream, byte[] projectImportsArchive = null) => BuildLogReader.Read(stream, projectImportsArchive);
         public static Build ReadBinLog(Stream stream, byte[] projectImportsArchive = null) => BinaryLog.ReadBuild(stream, projectImportsArchive);
 
-        public static Build Read(string filePath) => Read(filePath, progress: null, forwardCompatibilitySettings: null);
+        public static Build Read(string filePath) => Read(filePath, progress: null, unknownDataBehavior: UnknownDataBehavior.Error);
 
-        public static Build Read(string filePath, Progress progress, IForwardCompatibilityReadSettings forwardCompatibilitySettings)
+        public static Build Read(string filePath, Progress progress, UnknownDataBehavior unknownDataBehavior)
         {
             if (filePath.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
             {
@@ -59,7 +68,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 try
                 {
-                    return BinaryLog.ReadBuild(filePath, progress, forwardCompatibilitySettings);
+                    return BinaryLog.ReadBuild(filePath, progress, unknownDataBehavior);
                 }
                 catch (Exception)
                 {
@@ -88,7 +97,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     if (DetectLogFormat(filePath) == ".binlog")
                     {
-                        return BinaryLog.ReadBuild(filePath, progress, forwardCompatibilitySettings);
+                        return BinaryLog.ReadBuild(filePath, progress, unknownDataBehavior);
                     }
                     else
                     {

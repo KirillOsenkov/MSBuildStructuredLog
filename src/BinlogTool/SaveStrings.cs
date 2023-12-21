@@ -11,8 +11,6 @@ namespace BinlogTool
             var strings = build.StringTable.Instances.OrderBy(s => s).ToArray();
 
             Serialization.WriteStringsToFile(outputFilePath, strings);
-
-            this.CompatibilityHandler?.HandleBuildResults(build);
         }
     }
 }

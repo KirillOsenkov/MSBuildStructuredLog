@@ -33,9 +33,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public event Action<Exception> OnException;
 
         /// <summary>
-        /// If set - controls the behavior of forward compatibility reading.
+        /// Receives recoverable errors during reading. See <see cref="IBuildEventArgsReaderNotifications.RecoverableReadError"/> for documentation on arguments.
         /// </summary>
-        public IForwardCompatibilityReadSettings ForwardCompatibilitySettings { private get; set; }
+        public event Action<BinaryLogReaderErrorEventArgs>? RecoverableReadError;
 
         /// <summary>
         /// Read the provided binary log file and raise corresponding events for each BuildEventArgs
@@ -200,81 +200,34 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             EnsureFileFormatVersionKnown(fileFormatVersion, minimumReaderVersion);
 
-            bool isLogOfNewerVersion = fileFormatVersion > BinaryLogger.FileFormatVersion;
-
             var reader = new BuildEventArgsReader(binaryReader, fileFormatVersion);
 
             reader.SkipUnknownEventParts = hasEventOffsets;
             reader.SkipUnknownEvents = hasEventOffsets;
-            if (hasEventOffsets && !isLogOfNewerVersion)
-            {
-                reader.RecoverableReadError += HandleReadingErrorOnKnownVersion;
-            }
 
             // ensure some handler is subscribed, even if we are not interested in the events
-            reader.RecoverableReadError += ForwardCompatibilitySettings?.ErrorHandler ?? (_ => { });
+            reader.RecoverableReadError += RecoverableReadError ?? (_ => { });
 
             return reader;
-
-            void HandleReadingErrorOnKnownVersion(BinaryLogReaderErrorEventArgs arg)
-            {
-                string text =
-                    $"Log is of a known format ({fileFormatVersion}, latest known version is {BinaryLogger.FileFormatVersion}), but reader encountered a recoverable reading error ({arg.GetFormattedMessage()}), which probably means the format version was forgotten to be incremented. The log can be read with current reader, the newer events and data will however be skipped.";
-                if (!IsForwardCompatibilityModeAllowed(text))
-                {
-                    throw new NotSupportedException(text);
-                }
-
-                // We want this to be only one time event handler
-                reader.RecoverableReadError -= HandleReadingErrorOnKnownVersion;
-            }
-        }
-
-        public bool IsCompatibilityMode { get; private set; }
-
-        // Store the user's decision about forward compatibility mode
-        //  for the future calls, that won't pass the user handler.
-        // This is needed to avoid asking the user for each action (e.g.
-        //  once the log is opened, we do not want to ask again when
-        //  calculating stats, redacting, etc.). But at the same time we
-        //  *do* want to ask the user again if the log (same or different)
-        //  is being opened again within same app run.
-        private static bool? _allowForwardCompatibility = null;
-        private bool IsForwardCompatibilityModeAllowed(string text)
-        {
-            IsCompatibilityMode = true;
-            if (ForwardCompatibilitySettings != null)
-            {
-                _allowForwardCompatibility = ForwardCompatibilitySettings.AllowForwardCompatibility(text);
-            }
-
-            return _allowForwardCompatibility ?? false;
         }
 
         private void EnsureFileFormatVersionKnown(int fileFormatVersion, int minimumReaderVersion)
         {
             if (fileFormatVersion > BinaryLogger.FileFormatVersion)
             {
-                bool forwardCompatibilityModeAllowed = false;
                 // prefer the update to newer version to forward compatibility mode
                 if (minimumReaderVersion <= BinaryLogger.FileFormatVersion && !BinaryLogger.IsNewerVersionAvailable)
                 {
-                    var text =
-                        $"Newer log file format. Latest known version is {BinaryLogger.FileFormatVersion}, the log file has version {fileFormatVersion}. The log has minimum required reader version {minimumReaderVersion} - so it can be read with current reader, the newer events and data will however be skipped.";
-                    forwardCompatibilityModeAllowed = IsForwardCompatibilityModeAllowed(text);
+                    return;
                 }
 
+                var text = $"Unsupported log file format. Latest supported version is {BinaryLogger.FileFormatVersion}, the log file has version {fileFormatVersion} (with minimum required reader version {minimumReaderVersion}).";
                 // prefer the update to newer version to forward compatibility mode
-                if (!forwardCompatibilityModeAllowed || BinaryLogger.IsNewerVersionAvailable)
+                if (BinaryLogger.IsNewerVersionAvailable)
                 {
-                    var text = $"Unsupported log file format. Latest supported version is {BinaryLogger.FileFormatVersion}, the log file has version {fileFormatVersion} (with minimum required reader version {minimumReaderVersion}).";
-                    if (BinaryLogger.IsNewerVersionAvailable)
-                    {
-                        text += " Update available - restart this instance to automatically use newer version.";
-                    }
-
-                    throw new NotSupportedException(text);
+                    text += " Update available - restart this instance to automatically use newer version.";
                 }
+                throw new NotSupportedException(text);
             }
         }
 

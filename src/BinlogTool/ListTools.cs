@@ -38,8 +38,6 @@ namespace BinlogTool
             {
                 Console.WriteLine(tool);
             }
-
-            CompatibilityHandler?.HandleBuildResults(build);
         }
 
         private string GetSourceCommitId(Build build)

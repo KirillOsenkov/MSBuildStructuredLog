@@ -89,8 +89,6 @@ namespace BinlogTool
             PrintTree(resultTree);
             Log.WriteLine("====================================", ConsoleColor.Green);
             Log.WriteLine("");
-
-            this.CompatibilityHandler?.HandleBuildResults(build);
         }
 
         private const int IndentSize = 2;

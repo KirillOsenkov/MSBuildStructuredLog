@@ -1,17 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.IO;
 using Microsoft.Build.Logging.StructuredLogger;
 
 namespace BinlogTool
 {
     public abstract class BinlogToolCommandBase
     {
-        public ForwardCompatibilityReadingHandler CompatibilityHandler { protected get; init; }
-
         protected Build ReadBuild(string binLogFilePath, bool throwOnPathNotFound = true)
         {
             if (string.IsNullOrEmpty(binLogFilePath) || !File.Exists(binLogFilePath))
@@ -24,7 +17,7 @@ namespace BinlogTool
                 return null;
             }
 
-            return CompatibilityHandler?.ReadBuild(binLogFilePath) ?? BinaryLog.ReadBuild(binLogFilePath);
+            return BinaryLog.ReadBuild(binLogFilePath);
         }
     }
 }

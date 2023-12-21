@@ -376,14 +376,6 @@ namespace StructuredLogViewer
             set => Set(ref ignoreEmbeddedFiles, value);
         }
 
-        private static bool? useForwardCompatibility;
-        public static bool? UseForwardCompatibility
-        {
-            get => Get(ref useForwardCompatibility);
-
-            set => Set(ref useForwardCompatibility, value);
-        }
-
         private static void EnsureSettingsRead()
         {
             if (!settingsRead)
@@ -399,7 +391,6 @@ namespace StructuredLogViewer
         const string UseDarkThemeSetting = "UseDarkTheme=";
         const string WindowPositionSetting = "WindowPosition=";
         const string IgnoreEmbeddedFilesSetting = "IgnoreEmbeddedFiles=";
-        const string UseForwardCompatibilitySettings = "UseForwardCompatibility=";
 
         private static void SaveSettings()
         {
@@ -411,7 +402,6 @@ namespace StructuredLogViewer
             sb.AppendLine(UseDarkThemeSetting + useDarkTheme.ToString());
             sb.AppendLine(WindowPositionSetting + windowPosition);
             sb.AppendLine(IgnoreEmbeddedFilesSetting + IgnoreEmbeddedFiles);
-            sb.AppendLine(UseForwardCompatibilitySettings + UseForwardCompatibility);
 
             using (SingleGlobalInstance.Acquire(Path.GetFileName(settingsFilePath)))
             {
@@ -438,7 +428,6 @@ namespace StructuredLogViewer
                     ProcessLine(MarkResultsInTreeSetting, line, ref markResultsInTree);
                     ProcessLine(ShowConfigurationAndPlatformSetting, line, ref ProjectOrEvaluationHelper.ShowConfigurationAndPlatform);
                     ProcessLine(UseDarkThemeSetting, line, ref useDarkTheme);
-                    ProcessLineTriState(UseForwardCompatibilitySettings, line, ref useForwardCompatibility);
                     ProcessString(WindowPositionSetting, line, ref windowPosition);
                     ProcessString(IgnoreEmbeddedFilesSetting, line, ref ignoreEmbeddedFiles);
 
@@ -454,16 +443,6 @@ namespace StructuredLogViewer
                     }
 
                     void ProcessLine(string setting, string text, ref bool variable)
-                    {
-                        bool? result = null;
-                        ProcessLineTriState(setting, text, ref result);
-                        if (result.HasValue)
-                        {
-                            variable = result.Value;
-                        }
-                    }
-
-                    void ProcessLineTriState(string setting, string text, ref bool? variable)
                     {
                         if (!text.StartsWith(setting))
                         {

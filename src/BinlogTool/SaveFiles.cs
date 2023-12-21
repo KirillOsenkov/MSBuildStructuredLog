@@ -36,8 +36,6 @@ namespace BinlogTool
             {
                 GenerateSources(build, outputDirectory);
             }
-
-            CompatibilityHandler?.HandleBuildResults(build);
         }
 
         private void GenerateSources(Build build, string outputDirectory)

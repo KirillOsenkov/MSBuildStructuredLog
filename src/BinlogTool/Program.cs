@@ -19,32 +19,7 @@ namespace BinlogTool
     binlogtool reconstruct input.binlog output_path
     binlogtool savestrings input.binlog output.txt
     binlogtool search *.binlog search string
-    binlogtool redact --input:path --recurse --in-place -p:list -p:of -p:secrets -p:to -p:redact
-
-    Global Options:
-    [--forwardCompatibility|-fwd][:specifier] - Optional. Controls forward compatibility mode. Optional mode specifier:
-        d|disallow - Not allowed to read logs with higher then current version.
-        f|failOnError - Fail if the log contains any unsupported records.
-        l|logErrorsSummary - Default, if mode unspecified.
-                             Log errors summary if the log contains any unsupported records.
-        lv|logErrorsDetailed - Log detailed summary if the log contains any unsupported records.
-        i|ignoreErrors - Silently ignore any unsupported records.
-
-    Sampe usage:
-     // List all tools used in the build. Allow reading newer versions of the log, but fail if any unsupported records are encountered.
-     binlogtool --forwardCompatibility:failOnError listtools input.binlog
-     // List all tools used in the build. Allow reading only known versions of the log.
-     binlogtool listtools input.binlog
-     // List all tools used in the build. Allow reading newer versions of the log, log summary of errors if any unsupported records are encountered.
-     binlogtool listtools input.binlog -fwd
-
-");
-                return;
-            }
-
-            ForwardCompatibilityReadingHandler forwardCompatibilityReadingHandler = new();
-            if (!forwardCompatibilityReadingHandler.ProcessCommandLine(ref args))
-            {
+    binlogtool redact --input:path --recurse --in-place -p:list -p:of -p:secrets -p:to -p:redact");
                 return;
             }
 
@@ -55,8 +30,7 @@ namespace BinlogTool
                 var binlog = args[1];
                 var outputRoot = args[2];
 
-                new SaveFiles(args) { CompatibilityHandler = forwardCompatibilityReadingHandler }
-                    .Run(binlog, outputRoot);
+                new SaveFiles(args).Run(binlog, outputRoot);
                 return;
             }
 
@@ -65,8 +39,7 @@ namespace BinlogTool
                 var binlog = args[1];
                 var outputRoot = args[2];
 
-                new SaveFiles(args) { CompatibilityHandler = forwardCompatibilityReadingHandler }
-                    .Run(binlog, outputRoot, reconstruct: true);
+                new SaveFiles(args).Run(binlog, outputRoot, reconstruct: true);
                 return;
             }
 
@@ -75,8 +48,7 @@ namespace BinlogTool
                 var binlog = args[1];
                 var outputFile = args[2];
 
-                new SaveStrings() { CompatibilityHandler = forwardCompatibilityReadingHandler }
-                    .Run(binlog, outputFile);
+                new SaveStrings().Run(binlog, outputFile);
                 return;
             }
 
@@ -84,8 +56,7 @@ namespace BinlogTool
             {
                 var binlog = args[1];
 
-                new ListTools() { CompatibilityHandler = forwardCompatibilityReadingHandler }
-                    .Run(binlog);
+                new ListTools().Run(binlog);
                 return;
             }
 
@@ -99,19 +70,12 @@ namespace BinlogTool
 
                 var binlogs = args[1];
                 var search = string.Join(" ", args.Skip(2));
-                new Searcher() { CompatibilityHandler = forwardCompatibilityReadingHandler }
-                    .Search2(binlogs, search);
+                new Searcher().Search2(binlogs, search);
                 return;
             }
 
             if (firstArg == "redact")
             {
-                if (forwardCompatibilityReadingHandler.ForwardCompatibilityExplicitlyConfigured)
-                {
-                    Console.Error.WriteLine(
-                        "Forward compatibility mode will be ignored. Redact command doesn't interpret structured events - so it doesn't need to know the binlog format.");
-                }
-
                 List<string> redactTokens = new List<string>();
                 List<string> inputPaths = new List<string>();
                 bool recurse = false;

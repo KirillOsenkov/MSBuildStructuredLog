@@ -2056,33 +2056,6 @@ Recent:
             //statsRoot.AddChild(histogramNode);
 
             statsRoot.AddChild(new Property { Name = "BinlogFileFormatVersion", Value = Build.FileFormatVersion.ToString() });
-            if (Build.IsCompatibilityMode)
-            {
-                var totalErrors = new Parameter
-                {
-                    Name = $"CompatibilityIssuesCount = {Build.RecoverableReadingErrors.Sum(e => e.count):N0}",
-                };
-                statsRoot.AddChild(totalErrors);
-
-                foreach (var groupByErrorType in Build.RecoverableReadingErrors.GroupBy(e => e.errorType))
-                {
-                    var errorsOfType = new Parameter
-                    {
-                        Name = $"{groupByErrorType.Key} = {groupByErrorType.Sum(e => e.count):N0}"
-                    };
-                    totalErrors.AddChild(errorsOfType);
-
-                    foreach (var groupByEventType in groupByErrorType.GroupBy(e => e.recordKind))
-                    {
-                        string eventName = groupByEventType.Key.ToString();
-                        if (groupByErrorType.Key == ReaderErrorType.UnknownEventType)
-                        {
-                            eventName = $"Unknown event with id: {eventName}";
-                        }
-                        errorsOfType.AddChild(new Property { Name = eventName, Value = groupByEventType.Sum(e => e.count).ToString("N0")});
-                    }
-                }
-            }
             statsRoot.AddChild(new Property { Name = "FileSize", Value = recordStats.FileSize.ToString("N0") });
             statsRoot.AddChild(new Property { Name = "UncompressedStreamSize", Value = recordStats.UncompressedStreamSize.ToString("N0") });
             statsRoot.AddChild(new Property { Name = "RecordCount", Value = recordStats.RecordCount.ToString("N0") });
