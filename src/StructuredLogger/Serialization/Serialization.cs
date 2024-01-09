@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Xml.Linq;
+using static Microsoft.Build.Logging.StructuredLogger.BinLogReader;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -46,9 +47,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static Build ReadBuildLog(Stream stream, byte[] projectImportsArchive = null) => BuildLogReader.Read(stream, projectImportsArchive);
         public static Build ReadBinLog(Stream stream, byte[] projectImportsArchive = null) => BinaryLog.ReadBuild(stream, projectImportsArchive);
 
-        public static Build Read(string filePath) => Read(filePath, progress: null);
+        public static Build Read(string filePath) => Read(filePath, progress: null, readerSettings: ReaderSettings.Default);
 
-        public static Build Read(string filePath, Progress progress)
+        public static Build Read(string filePath, Progress progress, ReaderSettings readerSettings)
         {
             if (filePath.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
             {
@@ -58,7 +59,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 try
                 {
-                    return BinaryLog.ReadBuild(filePath, progress);
+                    return BinaryLog.ReadBuild(filePath, progress, readerSettings);
                 }
                 catch (Exception)
                 {
@@ -87,7 +88,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     if (DetectLogFormat(filePath) == ".binlog")
                     {
-                        return BinaryLog.ReadBuild(filePath);
+                        return BinaryLog.ReadBuild(filePath, progress, readerSettings);
                     }
                     else
                     {

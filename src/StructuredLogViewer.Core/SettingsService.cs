@@ -305,57 +305,45 @@ namespace StructuredLogViewer
             }
         }
 
+        private static T Get<T>(ref T backingField)
+        {
+            EnsureSettingsRead();
+            return backingField;
+        }
+
+        private static void Set<T>(ref T backingField, T value)
+        {
+            if (backingField == null && value == null
+                || (backingField?.Equals(value) ?? false))
+            {
+                return;
+            }
+
+            backingField = value;
+            SaveSettings();
+        }
+
         private static bool enableTreeViewVirtualization = true;
 
         public static bool EnableTreeViewVirtualization
         {
-            get
-            {
-                EnsureSettingsRead();
-                return enableTreeViewVirtualization;
-            }
+            get => Get(ref enableTreeViewVirtualization);
 
-            set
-            {
-                if (enableTreeViewVirtualization == value)
-                {
-                    return;
-                }
-
-                enableTreeViewVirtualization = value;
-                SaveSettings();
-            }
+            set => Set(ref enableTreeViewVirtualization, value);
         }
 
         private static bool markResultsInTree = false;
 
         public static bool MarkResultsInTree
         {
-            get
-            {
-                EnsureSettingsRead();
-                return markResultsInTree;
-            }
+            get => Get(ref markResultsInTree);
 
-            set
-            {
-                if (markResultsInTree == value)
-                {
-                    return;
-                }
-
-                markResultsInTree = value;
-                SaveSettings();
-            }
+            set => Set(ref markResultsInTree, value);
         }
 
         public static bool ShowConfigurationAndPlatform
         {
-            get
-            {
-                EnsureSettingsRead();
-                return ProjectOrEvaluationHelper.ShowConfigurationAndPlatform;
-            }
+            get => Get(ref ProjectOrEvaluationHelper.ShowConfigurationAndPlatform);
 
             set
             {
@@ -373,64 +361,25 @@ namespace StructuredLogViewer
         private static bool useDarkTheme = false;
         public static bool UseDarkTheme
         {
-            get
-            {
-                EnsureSettingsRead();
-                return useDarkTheme;
-            }
+            get => Get(ref useDarkTheme);
 
-            set
-            {
-                if (useDarkTheme == value)
-                {
-                    return;
-                }
-
-                useDarkTheme = value;
-                SaveSettings();
-            }
+            set => Set(ref useDarkTheme, value);
         }
 
         private static string? windowPosition;
         public static string? WindowPosition
         {
-            get
-            {
-                EnsureSettingsRead();
-                return windowPosition;
-            }
+            get => Get(ref windowPosition);
 
-            set
-            {
-                if (windowPosition == value)
-                {
-                    return;
-                }
-
-                windowPosition = value;
-                SaveSettings();
-            }
+            set => Set(ref windowPosition, value);
         }
 
         private static string? ignoreEmbeddedFiles;
         public static string? IgnoreEmbeddedFiles
         {
-            get
-            {
-                EnsureSettingsRead();
-                return ignoreEmbeddedFiles;
-            }
+            get => Get(ref ignoreEmbeddedFiles);
 
-            set
-            {
-                if (ignoreEmbeddedFiles == value)
-                {
-                    return;
-                }
-
-                ignoreEmbeddedFiles = value;
-                SaveSettings();
-            }
+            set => Set(ref ignoreEmbeddedFiles, value);
         }
 
         private static void EnsureSettingsRead()

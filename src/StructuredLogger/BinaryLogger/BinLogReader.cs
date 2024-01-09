@@ -33,6 +33,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public event Action<Exception> OnException;
 
         /// <summary>
+        /// Receives recoverable errors during reading. See <see cref="IBuildEventArgsReaderNotifications.RecoverableReadError"/> for documentation on arguments.
+        /// </summary>
+        public event Action<BinaryLogReaderErrorEventArgs>? RecoverableReadError;
+
+        /// <summary>
         /// Read the provided binary log file and raise corresponding events for each BuildEventArgs
         /// </summary>
         /// <param name="sourceFilePath">The full file path of the binary log file</param>
@@ -62,11 +67,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var bufferedStream = new BufferedStream(gzipStream, 32768);
             var binaryReader = new BinaryReader(bufferedStream);
 
-            int fileFormatVersion = binaryReader.ReadInt32();
-
-            OnFileFormatVersionRead?.Invoke(fileFormatVersion);
-
-            EnsureFileFormatVersionKnown(fileFormatVersion);
+            using var reader = OpenReader(binaryReader);
 
             if (PlatformUtilities.HasThreads)
             {
@@ -75,7 +76,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 int recordsRead = 0;
 
-                using var reader = new BuildEventArgsReader(binaryReader, fileFormatVersion);
                 reader.OnBlobRead += OnBlobRead;
 
                 Stopwatch stopwatch = Stopwatch.StartNew();
@@ -116,7 +116,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 queue.Completion.Wait();
 
-                if (fileFormatVersion >= 10)
+                if (reader.FileFormatVersion >= 10)
                 {
                     var strings = reader.GetStrings();
                     if (strings != null && strings.Any())
@@ -131,7 +131,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 int recordsRead = 0;
 
-                using var reader = new BuildEventArgsReader(binaryReader, fileFormatVersion);
                 reader.OnBlobRead += OnBlobRead;
 
                 Stopwatch stopwatch = Stopwatch.StartNew();
@@ -172,7 +171,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     Dispatch(args);
                 }
-                if (fileFormatVersion >= 10)
+                if (reader.FileFormatVersion >= 10)
                 {
                     var strings = reader.GetStrings();
                     if (strings != null && strings.Any())
@@ -188,18 +187,46 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private void EnsureFileFormatVersionKnown(int fileFormatVersion)
+        private BuildEventArgsReader OpenReader(BinaryReader binaryReader)
         {
-            // the log file is written using a newer version of file format
-            // that we don't know how to read
+            int fileFormatVersion = binaryReader.ReadInt32();
+            // Is this the new log format that contains the minimum reader version?
+            bool hasEventOffsets = fileFormatVersion >= BinaryLogger.ForwardCompatibilityMinimalVersion;
+            int minimumReaderVersion = hasEventOffsets
+                ? binaryReader.ReadInt32()
+                : fileFormatVersion;
+
+            OnFileFormatVersionRead?.Invoke(fileFormatVersion);
+
+            EnsureFileFormatVersionKnown(fileFormatVersion, minimumReaderVersion);
+
+            var reader = new BuildEventArgsReader(binaryReader, fileFormatVersion);
+
+            reader.SkipUnknownEventParts = hasEventOffsets;
+            reader.SkipUnknownEvents = hasEventOffsets;
+
+            // ensure some handler is subscribed, even if we are not interested in the events
+            reader.RecoverableReadError += RecoverableReadError ?? (_ => { });
+
+            return reader;
+        }
+
+        private void EnsureFileFormatVersionKnown(int fileFormatVersion, int minimumReaderVersion)
+        {
             if (fileFormatVersion > BinaryLogger.FileFormatVersion)
             {
-                var text = $"Unsupported log file format. Latest supported version is {BinaryLogger.FileFormatVersion}, the log file has version {fileFormatVersion}.";
+                // prefer the update to newer version to forward compatibility mode
+                if (minimumReaderVersion <= BinaryLogger.FileFormatVersion && !BinaryLogger.IsNewerVersionAvailable)
+                {
+                    return;
+                }
+
+                var text = $"Unsupported log file format. Latest supported version is {BinaryLogger.FileFormatVersion}, the log file has version {fileFormatVersion} (with minimum required reader version {minimumReaderVersion}).";
+                // prefer the update to newer version to forward compatibility mode
                 if (BinaryLogger.IsNewerVersionAvailable)
                 {
                     text += " Update available - restart this instance to automatically use newer version.";
                 }
-
                 throw new NotSupportedException(text);
             }
         }
@@ -269,15 +296,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             var binaryReader = new BinaryReader(wrapper);
 
-            int fileFormatVersion = binaryReader.ReadInt32();
-
-            EnsureFileFormatVersionKnown(fileFormatVersion);
-
             long lengthOfBlobsAddedLastTime = 0;
 
             List<Record> blobs = new List<Record>();
 
-            using var reader = new BuildEventArgsReader(binaryReader, fileFormatVersion);
+            using var reader = OpenReader(binaryReader);
 
             // forward the events from the reader to the subscribers of this class
             reader.OnBlobRead += OnBlobRead;

@@ -8,9 +8,12 @@ using StructuredLogViewer;
 
 namespace BinlogTool
 {
-    public static class Searcher
+    public class Searcher : BinlogToolCommandBase
     {
         public static void Search(string binlogs, string search)
+            => new Searcher().Search2(binlogs, search);
+
+        public void Search2(string binlogs, string search)
         {
             var files = FindBinlogs(binlogs, recurse: true).ToList();
             Search(files, search);
@@ -56,7 +59,7 @@ namespace BinlogTool
                 new EnumerationOptions() { IgnoreInaccessible = true, RecurseSubdirectories = recurse, });
         }
 
-        private static void Search(IEnumerable<string> files, string search)
+        private void Search(IEnumerable<string> files, string search)
         {
             foreach (var file in files)
             {
@@ -64,9 +67,9 @@ namespace BinlogTool
             }
         }
 
-        private static void SearchInFile(string binlogFilePath, string searchText)
+        private void SearchInFile(string binlogFilePath, string searchText)
         {
-            var build = BinaryLog.ReadBuild(binlogFilePath);
+            var build = this.ReadBuild(binlogFilePath);
             BuildAnalyzer.AnalyzeBuild(build);
             
             var search = new Search(

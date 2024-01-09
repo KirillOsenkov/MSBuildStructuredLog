@@ -1,13 +1,13 @@
-using System.Linq;
+﻿using System.Linq;
 using Microsoft.Build.Logging.StructuredLogger;
 
 namespace BinlogTool
 {
-    public class SaveStrings
+    public class SaveStrings : BinlogToolCommandBase
     {
         public void Run(string binLogFilePath, string outputFilePath)
         {
-            var build = BinaryLog.ReadBuild(binLogFilePath);
+            var build = this.ReadBuild(binLogFilePath);
             var strings = build.StringTable.Instances.OrderBy(s => s).ToArray();
 
             Serialization.WriteStringsToFile(outputFilePath, strings);

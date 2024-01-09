@@ -70,7 +70,7 @@ namespace BinlogTool
 
                 var binlogs = args[1];
                 var search = string.Join(" ", args.Skip(2));
-                Searcher.Search(binlogs, search);
+                new Searcher().Search2(binlogs, search);
                 return;
             }
 

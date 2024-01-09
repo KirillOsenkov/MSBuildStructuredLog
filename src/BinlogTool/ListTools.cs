@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -6,11 +6,11 @@ using Microsoft.Build.Logging.StructuredLogger;
 
 namespace BinlogTool
 {
-    public class ListTools
+    public class ListTools : BinlogToolCommandBase
     {
         public void Run(string binLogFilePath)
         {
-            var build = BinaryLog.ReadBuild(binLogFilePath);
+            var build = this.ReadBuild(binLogFilePath);
             BuildAnalyzer.AnalyzeBuild(build);
             var strings = build.StringTable.Instances.OrderBy(s => s).ToArray();
 
