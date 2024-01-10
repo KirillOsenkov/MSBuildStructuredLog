@@ -724,7 +724,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (_fileFormatVersion >= 12)
             {
                 IEnumerable globalProperties = null;
-                if (ReadBoolean())
+                // In newer versions, we store the global properties always, as it handles
+                //  null and empty within WriteProperties already.
+                // This saves a single boolean, but mainly doesn't hide the difference between null and empty
+                //  during write->read roundtrip.
+                if (_fileFormatVersion >= BinaryLogger.ForwardCompatibilityMinimalVersion ||
+                    ReadBoolean())
                 {
                     globalProperties = ReadStringDictionary();
                 }
@@ -778,12 +783,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (_fileFormatVersion > 6)
             {
-                if (_fileFormatVersion < BinaryLogger.ForwardCompatibilityMinimalVersion)
+                // See ReadProjectEvaluationFinishedEventArgs for details on why we always store global properties in newer version.
+                if (_fileFormatVersion >= BinaryLogger.ForwardCompatibilityMinimalVersion ||
+                    ReadBoolean())
                 {
-                    // Throw away, but need to advance past it
-                    ReadBoolean();
+                    globalProperties = ReadStringDictionary();
                 }
-                globalProperties = ReadStringDictionary();
             }
 
             var propertyList = ReadPropertyList();
