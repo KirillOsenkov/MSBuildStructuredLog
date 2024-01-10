@@ -723,12 +723,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (_fileFormatVersion >= 12)
             {
-                if (_fileFormatVersion < BinaryLogger.ForwardCompatibilityMinimalVersion)
+                IEnumerable globalProperties = null;
+                if (ReadBoolean())
                 {
-                    // Throw away, but need to advance past it
-                    ReadBoolean();
+                    globalProperties = ReadStringDictionary();
                 }
-                IEnumerable? globalProperties = ReadStringDictionary();
 
                 var propertyList = ReadPropertyList();
                 var itemList = ReadProjectItems();
