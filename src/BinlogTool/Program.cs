@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Microsoft.Build.Logging.StructuredLogger;
 using StructuredLogger.Utils;
 
@@ -9,8 +10,37 @@ namespace BinlogTool
 {
     class Program
     {
+        private static void Work()
+        {
+            string filePath = @"C:\Dropbox\Work\Bugs\Binlogs\740\FromRider.binlog";
+            var records = BinaryLog.ReadRecords(filePath);
+            var sb = new StringBuilder();
+
+            int i = 0;
+
+            foreach (var record in records)
+            {
+                string kind = record.Args?.GetType().Name ?? "Blob";
+                if (record.Kind == BinaryLogRecordKind.String)
+                {
+                    kind = "String";
+                }
+                else if (record.Kind == BinaryLogRecordKind.NameValueList)
+                {
+                    kind = "NameValueList";
+                }
+
+                WrapperStream.sb.AppendLine($"{i++} {kind} {record.Length}");
+            }
+
+            //File.WriteAllText(@"C:\temp\1.txt", sb.ToString());
+        }
+
         static void Main(string[] args)
         {
+            Work();
+            return;
+
             if (args.Length == 0)
             {
                 Console.WriteLine(@"Usage:

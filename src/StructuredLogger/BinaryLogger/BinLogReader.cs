@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Text;
 using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -263,6 +264,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return ReadRecordsFromDecompressedStream(bufferedStream);
         }
 
+        public class LoggingBinaryReader : BinaryReader
+        {
+            public LoggingBinaryReader(Stream input) : base(input)
+            {
+            }
+        }
+
         public IEnumerable<Record> ReadRecordsFromDecompressedStream(Stream decompressedStream)
         {
             var wrapper = new WrapperStream(decompressedStream);
@@ -300,9 +308,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 lengthOfBlobsAddedLastTime += blob.Length;
             };
 
+            List<Record> auxRecords = new List<Record>();
+
             reader.OnStringRead += text =>
             {
                 long length = wrapper.Position - start;
+
+                auxRecords.Add(new Record { Kind = BinaryLogRecordKind.String, Start = start, Length = length });
 
                 // re-read the current position as we're just about to start reading
                 // the actual BuildEventArgs record
@@ -314,6 +326,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             reader.OnNameValueListRead += list =>
             {
                 long length = wrapper.Position - start;
+
+                auxRecords.Add(new Record { Kind = BinaryLogRecordKind.NameValueList, Start = start, Length = length });
+
                 start = wrapper.Position;
                 OnNameValueListRead?.Invoke(list, length);
             };
@@ -325,6 +340,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 start = wrapper.Position;
 
                 instance = reader.Read();
+
+                foreach (var aux in auxRecords)
+                {
+                    yield return aux;
+                }
+
+                auxRecords.Clear();
+
                 if (instance == null)
                 {
                     break;
@@ -343,6 +366,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 lengthOfBlobsAddedLastTime = 0;
             }
 
+            wrapper.Save();
+
             foreach (var blob in blobs)
             {
                 yield return blob;
@@ -353,6 +378,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
     public class WrapperStream : Stream
     {
         private readonly Stream stream;
+        public static StringBuilder sb = new StringBuilder();
 
         public WrapperStream(Stream stream)
         {
@@ -374,6 +400,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             set => throw new NotImplementedException();
         }
 
+        public void Save()
+        {
+            File.WriteAllText(@"C:\temp\1.txt", sb.ToString());
+        }
+
         public override void Flush()
         {
             stream.Flush();
@@ -381,6 +412,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public override int Read(byte[] buffer, int offset, int count)
         {
+            sb.AppendLine($"    {offset}, {count}");
+
             var result = stream.Read(buffer, offset, count);
             position += result;
             return result;
