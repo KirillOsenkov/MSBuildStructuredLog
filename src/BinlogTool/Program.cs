@@ -3,24 +3,24 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Logging.StructuredLogger;
-using StructuredLogger.Utils;
 
 namespace BinlogTool
 {
     class Program
     {
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
             if (args.Length == 0)
             {
                 Console.WriteLine(@"Usage:
     binlogtool listtools input.binlog
     binlogtool savefiles input.binlog output_path
+    binlogtool listnuget input.binlog output_path
     binlogtool reconstruct input.binlog output_path
     binlogtool savestrings input.binlog output.txt
     binlogtool search *.binlog search string
     binlogtool redact --input:path --recurse --in-place -p:list -p:of -p:secrets -p:to -p:redact");
-                return;
+                return 0;
             }
 
             var firstArg = args[0];
@@ -31,7 +31,26 @@ namespace BinlogTool
                 var outputRoot = args[2];
 
                 new SaveFiles(args).Run(binlog, outputRoot);
-                return;
+                return 0;
+            }
+
+            if (args.Length >= 2 && string.Equals(firstArg, "listnuget", StringComparison.OrdinalIgnoreCase))
+            {
+                var binlog = args[1];
+                if (!File.Exists(binlog))
+                {
+                    Console.Error.WriteLine($"Binlog file {binlog} not found");
+                    return -6;
+                }
+
+                string outputFile = null;
+                if (args.Length == 3)
+                {
+                    outputFile = args[2];
+                }
+
+                int result = new ListNuget(args).Run(binlog, outputFile);
+                return result;
             }
 
             if (args.Length == 3 && string.Equals(firstArg, "reconstruct", StringComparison.OrdinalIgnoreCase))
@@ -40,7 +59,7 @@ namespace BinlogTool
                 var outputRoot = args[2];
 
                 new SaveFiles(args).Run(binlog, outputRoot, reconstruct: true);
-                return;
+                return 0;
             }
 
             if (args.Length == 3 && string.Equals(firstArg, "savestrings", StringComparison.OrdinalIgnoreCase))
@@ -49,7 +68,7 @@ namespace BinlogTool
                 var outputFile = args[2];
 
                 new SaveStrings().Run(binlog, outputFile);
-                return;
+                return 0;
             }
 
             if (args.Length == 2 && string.Equals(firstArg, "listtools", StringComparison.OrdinalIgnoreCase))
@@ -57,7 +76,7 @@ namespace BinlogTool
                 var binlog = args[1];
 
                 new ListTools().Run(binlog);
-                return;
+                return 0;
             }
 
             if (firstArg == "search")
@@ -65,13 +84,13 @@ namespace BinlogTool
                 if (args.Length < 3)
                 {
                     Console.Error.WriteLine("binlogtool search *.binlog search string");
-                    return;
+                    return -2;
                 }
 
                 var binlogs = args[1];
                 var search = string.Join(" ", args.Skip(2));
                 new Searcher().Search2(binlogs, search);
-                return;
+                return 0;
             }
 
             if (firstArg == "redact")
@@ -89,7 +108,7 @@ namespace BinlogTool
                         if (string.IsNullOrEmpty(input))
                         {
                             Console.Error.WriteLine("Invalid input path");
-                            return;
+                            return -3;
                         }
 
                         inputPaths.Add(input);
@@ -100,7 +119,7 @@ namespace BinlogTool
                         if (string.IsNullOrEmpty(redactToken))
                         {
                             Console.Error.WriteLine("Invalid redact token");
-                            return;
+                            return -4;
                         }
 
                         redactTokens.Add(redactToken);
@@ -118,15 +137,16 @@ namespace BinlogTool
                         Console.Error.WriteLine($"Invalid argument: {arg}");
                         Console.Error.WriteLine("binlogtool redact --input:path --recurse --in-place -p:list -p:of -p:secrets -p:to -p:redact");
                         Console.Error.WriteLine("All arguments are optional (missing input assumes current working directory. Missing tokens lead only to autoredactions. Missing --in-place will create new logs with suffix.)");
-                        return;
+                        return -5;
                     }
                 }
 
                 Redact.Run(inputPaths, redactTokens, inPlace, recurse);
-                return;
+                return 0;
             }
 
             Console.Error.WriteLine("Invalid arguments");
+            return -1;
         }
 
         private static void ReadStrings()

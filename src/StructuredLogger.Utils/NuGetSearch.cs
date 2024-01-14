@@ -55,7 +55,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public NuGetSearch(Build build)
         {
             Build = build;
-            build.FileCopyMap.FoundSingleFileCopy += FileCopyMap_FoundSingleFileCopy;
+            if (build.FileCopyMap is { } fileCopyMap)
+            {
+                fileCopyMap.FoundSingleFileCopy += FileCopyMap_FoundSingleFileCopy;
+            }
         }
 
         private void FileCopyMap_FoundSingleFileCopy(FileData fileData, IList<SearchResult> resultCollector)
@@ -137,6 +140,45 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             return true;
+        }
+
+        public class PackageReport
+        {
+            public IEnumerable<PackageInfo> Packages { get; set; }
+        }
+
+        public record PackageInfo(string Id, string Version)
+        {
+            public override string ToString()
+            {
+                return $"{Id}/{Version}";
+            }
+        }
+
+        public PackageReport ListAllPackages()
+        {
+            var list = new HashSet<PackageInfo>();
+
+            PopulateAssetsFiles();
+
+            foreach (var file in assetsFiles)
+            {
+                foreach (var library in file.LockFile.Libraries)
+                {
+                    if (library.Type == "package")
+                    {
+                        var packageInfo = new PackageInfo(library.Name, library.Version.ToString());
+                        list.Add(packageInfo);
+                    }
+                }
+            }
+
+            var ordered = list.OrderBy(p => p.Id, StringComparer.OrdinalIgnoreCase).ThenBy(p => p.Version).ToArray();
+
+            return new PackageReport
+            {
+                Packages = ordered
+            };
         }
 
         private void AddProject(NodeQueryMatcher matcher, IList<SearchResult> resultCollector, AssetsFile file)
