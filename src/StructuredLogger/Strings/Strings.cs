@@ -23,6 +23,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        public static string Culture => ResourceSet?.Culture;
+
         public static string GetString(string key)
         {
             return ResourceSet.GetString(key);
@@ -61,11 +63,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             ProjectImported = GetString("ProjectImported");
 
-            string projectImported = "^" + ProjectImported
-                .Replace(".", "\\.")
-                .Replace("{0}", @"(?<ImportedProject>[^\""]+)")
-                .Replace("{1}", @"(?<File>[^\""]+)")
-                .Replace("({2},{3})", @"\((?<Line>\d+),(?<Column>\d+)\)") + "$";
+            string projectImported = GetProjectImportedText();
             ProjectImportedRegex = new Regex(projectImported, RegexOptions.Compiled);
 
             TargetSkippedFalseCondition = GetString("TargetSkippedFalseCondition");
@@ -95,7 +93,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             RobocopyFileCopiedRegex = new Regex(Escape(RobocopyFileCopiedMessage)
                 .Replace(@"\{0}", @"(?<From>[^\""]+)")
-                .Replace(@"\{1}", @"(?<To>[^\""]+)"), RegexOptions.Compiled );
+                .Replace(@"\{1}", @"(?<To>[^\""]+)"), RegexOptions.Compiled);
 
             RobocopyFileSkippedRegex = new Regex(Escape(RobocopyFileSkippedMessage)
                 .Replace(@"\{0}", @"(?<From>[^\""]+)")
@@ -124,29 +122,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
             ProjectImportSkippedInvalidFileRegex = new Regex(skippedInvalidFile, RegexOptions.Compiled);
 
             ProjectImportSkippedEmptyFile = GetString("ProjectImportSkippedEmptyFile");
-
-            string skippedEmptyFile = "^" + ProjectImportSkippedEmptyFile
-                .Replace(".", "\\.")
-                .Replace("{0}", @"(?<ImportedProject>[^\""]+)")
-                .Replace("{1}", @"(?<File>[^\""]+)")
-                .Replace("({2},{3})", @"\((?<Line>\d+),(?<Column>\d+)\)");
+            var skippedEmptyFile = GetSkippedEmptyFileText();
             ProjectImportSkippedEmptyFileRegex = new Regex(skippedEmptyFile, RegexOptions.Compiled);
 
             ProjectImportSkippedNoMatches = GetString("ProjectImportSkippedNoMatches");
 
-            string skippedNoMatches = "^" + ProjectImportSkippedNoMatches
-                .Replace(".", "\\.")
-                .Replace("{0}", @"(?<ImportedProject>[^\""]+)")
-                .Replace("{1}", @"(?<File>.*)")
-                .Replace("({2},{3})", @"\((?<Line>\d+),(?<Column>\d+)\)");
+            string skippedNoMatches = GetSkippedNoMatchesText();
             ProjectImportSkippedNoMatchesRegex = new Regex(skippedNoMatches, RegexOptions.Compiled);
 
             PropertyReassignment = GetString("PropertyReassignment");
 
-            string propertyReassignment = "^" + PropertyReassignment
-                .Replace(@"$({0})=""{1}"" (", @"\$\((?<Name>\w+)\)="".*"" \(")
-                .Replace(@"""{2}"")", @""".*""\)")
-                .Replace("{3}", @"(?<File>.*) \((?<Line>\d+),(?<Column>\d+)\)$");
+            string propertyReassignment = GetPropertyReassignmentText();
             PropertyReassignmentRegex = new Regex(propertyReassignment, RegexOptions.Compiled | RegexOptions.Singleline);
 
             // MSBuild 17.6 shipped with this hardcoded to English (the first part of the regex), but it was switched to a different
@@ -174,13 +160,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             ProjectImportSkippedFalseCondition = GetString("ProjectImportSkippedFalseCondition");
 
-            string skippedFalseCondition = "^" + ProjectImportSkippedFalseCondition
-                .Replace(".", "\\.")
-                .Replace("{0}", @"(?<ImportedProject>[^\""]+)")
-                .Replace("{1}", @"(?<File>[^\""]+)")
-                .Replace("({2},{3})", @"\((?<Line>\d+),(?<Column>\d+)\)")
-                .Replace("{4}", "(?<Reason>.+)")
-                .Replace("{5}", "(?<Evaluated>.+)");
+            string skippedFalseCondition = GetSkippedFalseConditionText();
             ProjectImportSkippedFalseConditionRegex = new Regex(skippedFalseCondition, RegexOptions.Compiled);
 
             CouldNotResolveSdk = GetString("CouldNotResolveSdk");
@@ -189,11 +169,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             ProjectImportSkippedExpressionEvaluatedToEmpty = GetString("ProjectImportSkippedExpressionEvaluatedToEmpty");
 
-            string emptyCondition = "^" + ProjectImportSkippedExpressionEvaluatedToEmpty
-                .Replace(".", "\\.")
-               .Replace("{0}", @"(?<ImportedProject>[^\""]+)")
-               .Replace("{1}", @"(?<File>[^\""]+)")
-               .Replace("({2},{3})", @"\((?<Line>\d+),(?<Column>\d+)\)");
+            string emptyCondition = GetEmptyConditionText();
             ProjectImportSkippedExpressionEvaluatedToEmptyRegex = new Regex(emptyCondition, RegexOptions.Compiled);
 
             ConflictReferenceSameSDK = CreateRegex(GetString("GetSDKReferenceFiles.ConflictReferenceSameSDK"), 3);
@@ -227,6 +203,141 @@ namespace Microsoft.Build.Logging.StructuredLogger
             RemovingPropertiesPrefix = GetString("General.UndefineProperties");
             EvaluationStarted = GetString("EvaluationStarted");
             EvaluationFinished = GetString("EvaluationFinished");
+        }
+
+        private static string GetEmptyConditionText()
+        {
+            if (Culture == "zh-Hans")
+            {
+                return "^" + ProjectImportSkippedExpressionEvaluatedToEmpty
+                    .Replace(".", "\\.")
+                    .Replace("{0}", @"(?<ImportedProject>[^\""]+)")
+                    .Replace("{1}", @"(?<File>[^\""]+)")
+                    .Replace("({2}、{3})", @"\((?<Line>\d+)、(?<Column>\d+)\)");
+            }
+
+            return "^" + ProjectImportSkippedExpressionEvaluatedToEmpty
+                .Replace(".", "\\.")
+                .Replace("{0}", @"(?<ImportedProject>[^\""]+)")
+                .Replace("{1}", @"(?<File>[^\""]+)")
+                .Replace("({2},{3})", @"\((?<Line>\d+),(?<Column>\d+)\)");
+        }
+
+        private static string GetSkippedFalseConditionText()
+        {
+            if (Culture == "zh-Hans")
+            {
+                return "^" + ProjectImportSkippedFalseCondition
+                    .Replace(".", "\\.")
+                    .Replace("{0}", @"(?<ImportedProject>[^\""]+)")
+                    .Replace("{1}", @"(?<File>[^\""]+)")
+                    .Replace("({2}、{3})", @"\((?<Line>\d+)、(?<Column>\d+)\)")
+                    .Replace("{4}", "(?<Reason>.+)")
+                    .Replace("{5}", "(?<Evaluated>.+)");
+            }
+
+            return "^" + ProjectImportSkippedFalseCondition
+                .Replace(".", "\\.")
+                .Replace("{0}", @"(?<ImportedProject>[^\""]+)")
+                .Replace("{1}", @"(?<File>[^\""]+)")
+                .Replace("({2},{3})", @"\((?<Line>\d+),(?<Column>\d+)\)")
+                .Replace("{4}", "(?<Reason>.+)")
+                .Replace("{5}", "(?<Evaluated>.+)");
+        }
+
+        private static string GetSkippedNoMatchesText()
+        {
+            if (Culture == "zh-Hans")
+            {
+                return "^" + ProjectImportSkippedNoMatches
+                    .Replace(".", "\\.")
+                    .Replace("{0}", @"(?<ImportedProject>[^\""]+)")
+                    .Replace("{1}", @"(?<File>.*)")
+                    .Replace("({2}、{3})", @"\((?<Line>\d+)、(?<Column>\d+)\)");
+            }
+
+            return "^" + ProjectImportSkippedNoMatches
+                .Replace(".", "\\.")
+                .Replace("{0}", @"(?<ImportedProject>[^\""]+)")
+                .Replace("{1}", @"(?<File>.*)")
+                .Replace("({2},{3})", @"\((?<Line>\d+),(?<Column>\d+)\)");
+        }
+
+        private static string GetSkippedEmptyFileText()
+        {
+            if (Culture == "zh-Hans")
+            {
+                return "^" + ProjectImportSkippedEmptyFile
+                    .Replace(".", "\\.")
+                    .Replace("{0}", @"(?<ImportedProject>[^\""]+)")
+                    .Replace("{1}", @"(?<File>[^\""]+)")
+                    .Replace("({2}、{3})", @"\((?<Line>\d+)、(?<Column>\d+)\)");
+            }
+
+            return "^" + ProjectImportSkippedEmptyFile
+                .Replace(".", "\\.")
+                .Replace("{0}", @"(?<ImportedProject>[^\""]+)")
+                .Replace("{1}", @"(?<File>[^\""]+)")
+                .Replace("({2},{3})", @"\((?<Line>\d+),(?<Column>\d+)\)");
+        }
+
+        private static string GetProjectImportedText()
+        {
+            if (Culture == "zh-Hans")
+            {
+                return "^" + ProjectImported
+                    .Replace(".", "\\.")
+                    .Replace("{0}", @"(?<ImportedProject>[^\""]+)")
+                    .Replace("{1}", @"(?<File>[^\""]+)")
+                    .Replace("({2}、{3})", @"\((?<Line>\d+)、(?<Column>\d+)\)") + "$";
+            }
+
+            return "^" + ProjectImported
+                .Replace(".", "\\.")
+                .Replace("{0}", @"(?<ImportedProject>[^\""]+)")
+                .Replace("{1}", @"(?<File>[^\""]+)")
+                .Replace("({2},{3})", @"\((?<Line>\d+),(?<Column>\d+)\)") + "$";
+        }
+
+        private static string GetPropertyReassignmentText()
+        {
+            string text = PropertyReassignment;
+
+            switch (Culture)
+            {
+                case "cs-CZ":
+                    text = text
+                        .Replace(@"$({0})={1} (", @"\$\((?<Name>\w+)\)="".*"" \(")
+                        .Replace(@"{2})", @".*\)")
+                        .Replace("{3}", @"(?<File>.*) \((?<Line>\d+),(?<Column>\d+)\)");
+                    break;
+                case "ko-KR":
+                    text = text
+                        .Replace(@"$({0})={3}", @"\$\((?<Name>\w+)\)=(?<File>.*) \((?<Line>\d+),(?<Column>\d+)\)")
+                        .Replace("{1}", ".*")
+                        .Replace("{2}", ".*");
+                    break;
+                case "pl-PL":
+                    text = text
+                        .Replace(@"$({0})=„{1}” (", @"\$\((?<Name>\w+)\)=„.*” \(")
+                        .Replace(@"„{2}”)", @"„.*”\)")
+                        .Replace("{3}", @"(?<File>.*) \((?<Line>\d+),(?<Column>\d+)\)");
+                    break;
+                case "zh-Hans":
+                    text = text
+                        .Replace(@"$({0})=“{1}”(", @"\$\((?<Name>\w+)\)=“.*”\(")
+                        .Replace(@"{2}”)", @".*”\)")
+                        .Replace("{3}", @"(?<File>.*) \((?<Line>\d+),(?<Column>\d+)\)");
+                    break;
+                default:
+                    text = text
+                        .Replace(@"$({0})=""{1}"" (", @"\$\((?<Name>\w+)\)="".*"" \(")
+                        .Replace(@"{2}"")", @".*""\)")
+                        .Replace("{3}", @"(?<File>.*) \((?<Line>\d+),(?<Column>\d+)\)");
+                    break;
+            }
+
+            return "^" + text + "$";
         }
 
         public static Regex CreateRegex(string text, int replacePlaceholders = 0, RegexOptions options = RegexOptions.Compiled)
