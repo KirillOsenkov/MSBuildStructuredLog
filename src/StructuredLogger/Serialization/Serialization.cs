@@ -49,6 +49,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static Build Read(string filePath) => Read(filePath, progress: null, readerSettings: ReaderSettings.Default);
 
+        public static Build Read(string filePath, Progress progress) => Read(filePath, progress, readerSettings: ReaderSettings.Default);
+
         public static Build Read(string filePath, Progress progress, ReaderSettings readerSettings)
         {
             if (filePath.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
