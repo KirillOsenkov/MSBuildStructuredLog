@@ -24,6 +24,8 @@ namespace StructuredLogger.Tests
         public void ParseSuggestedBindingRedirectsMetadata()
         {
             Strings.Initialize();
+            Assert.Equal("en-US", Strings.ResourceSet.Culture);
+            Assert.NotNull(Strings.OutputItemsMessagePrefix);
             var parameter = ItemGroupParser.ParsePropertyOrItemList(@"Output Item(s): 
     SuggestedBindingRedirects=
         Microsoft.Build, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
