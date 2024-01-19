@@ -27,7 +27,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return reader.ReadRecords(binlogBytes);
         }
 
-        public static Build ReadBuild(string filePath, ReaderSettings readerSettings = null)
+        public static Build ReadBuild(string filePath) => ReadBuild(filePath, progress: null);
+        public static Build ReadBuild(string filePath, Progress progress) => ReadBuild(filePath, progress, readerSettings: null);
+        public static Build ReadBuild(string filePath, ReaderSettings readerSettings)
             => ReadBuild(filePath, progress: null, readerSettings);
 
         public static Build ReadBuild(string filePath, Progress progress, ReaderSettings readerSettings)
@@ -50,7 +52,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static Build ReadBuild(Stream stream, byte[] projectImportsArchive = null)
             => ReadBuild(stream, progress: null, projectImportsArchive: projectImportsArchive);
 
-        //UnknownDataBehavior
+        public static Build ReadBuild(Stream stream, Progress progress, byte[] projectImportsArchive = null)
+            => ReadBuild(stream, progress, projectImportsArchive, readerSettings: null);
 
         public static Build ReadBuild(
             Stream stream,
