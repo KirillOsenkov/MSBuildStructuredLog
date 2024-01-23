@@ -194,9 +194,7 @@ namespace BinlogTool
                     }
                 }
 
-                Stopwatch sw = Stopwatch.StartNew();
                 DumpRecords.Run(inputPaths, includeTotal, includeRollup, includeDetails);
-                Console.Error.WriteLine(sw.Elapsed);
                 return 0;
             }
 
