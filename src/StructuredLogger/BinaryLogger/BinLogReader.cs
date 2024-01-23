@@ -272,6 +272,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return DisposableEnumerable<Record>.Create(ReadRecords(stream), () => stream.Dispose());
         }
 
+        /// <summary>
+        /// Enumerate over all records in the file. For each record reports
+        /// the start position in the stream, length in bytes and the type of record.
+        /// </summary>
+        /// <remarks>Useful for debugging and analyzing binary logs</remarks>
+        public IEnumerable<(BinaryLogRecordKind RecordKind, long Start, long Length)> ChunkBinlog(string logFilePath)
+        {
+            var stream = new FileStream(logFilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            return DisposableEnumerable<(BinaryLogRecordKind, long start, long length)>.Create(
+                ChunkBinlogFromDecompressedStream(GetDecompressedStream(stream)), () => stream.Dispose());
+        }
+
         public IEnumerable<Record> ReadRecords(byte[] bytes)
         {
             var stream = new MemoryStream(bytes);
@@ -284,60 +296,138 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         /// <remarks>Useful for debugging and analyzing binary logs</remarks>
         public IEnumerable<Record> ReadRecords(Stream binaryLogStream)
+            => ReadRecordsFromDecompressedStream(GetDecompressedStream(binaryLogStream));
+
+        private static Stream GetDecompressedStream(Stream binaryLogStream)
         {
             var gzipStream = new GZipStream(binaryLogStream, CompressionMode.Decompress, leaveOpen: true);
             var bufferedStream = new BufferedStream(gzipStream, 32768);
-            return ReadRecordsFromDecompressedStream(bufferedStream);
+            return bufferedStream;
         }
 
-        public IEnumerable<Record> ReadRecordsFromDecompressedStream(Stream decompressedStream)
+
+        private IEnumerable<(BinaryLogRecordKind RecordKind, long Start, long Length)> ChunkBinlogFromDecompressedStream(Stream decompressedStream)
         {
-            var wrapper = new WrapperStream(decompressedStream);
+            var binaryReader = new BinaryReader(decompressedStream);
+            using BuildEventArgsReader reader = OpenReader(binaryReader);
+            var hasOffsets = reader.FileFormatVersion >= BinaryLogger.ForwardCompatibilityMinimalVersion;
 
-            var binaryReader = new BinaryReader(wrapper);
+            if (hasOffsets)
+            {
+                return ChunkBinlogWithOffsets(reader);
+            }
+            else
+            {
+                return ReadRecordsFromDecompressedStream(reader, true)
+                    .Select(r => (r.Args != null ? ToBinaryLogRecordKind(r.Args) : r.Kind, r.Start, r.Length));
+            }
+        }
 
-            long lengthOfBlobsAddedLastTime = 0;
+        private IEnumerable<(BinaryLogRecordKind, long start, long length)> ChunkBinlogWithOffsets(
+            BuildEventArgsReader reader)
+        {
+            long start = 0;
+            BuildEventArgsReader.RawRecord chunk;
+            do
+            {
+                chunk = reader.ReadRaw(false);
+                yield return (chunk.RecordKind, start, chunk.Stream.Length);
+                start += chunk.Stream.Length;
+            } while (chunk.RecordKind != BinaryLogRecordKind.EndOfFile);
+        }
 
-            List<Record> blobs = new List<Record>();
+        public static BinaryLogRecordKind ToBinaryLogRecordKind(BuildEventArgs args)
+            => args switch
+            {
+                BuildStartedEventArgs _ => BinaryLogRecordKind.BuildStarted,
+                BuildFinishedEventArgs _ => BinaryLogRecordKind.BuildFinished,
+                ProjectStartedEventArgs _ => BinaryLogRecordKind.ProjectStarted,
+                ProjectFinishedEventArgs _ => BinaryLogRecordKind.ProjectFinished,
+                TargetStartedEventArgs _ => BinaryLogRecordKind.TargetStarted,
+                TargetFinishedEventArgs _ => BinaryLogRecordKind.TargetFinished,
+                TaskStartedEventArgs _ => BinaryLogRecordKind.TaskStarted,
+                TaskFinishedEventArgs _ => BinaryLogRecordKind.TaskFinished,
+                BuildErrorEventArgs _ => BinaryLogRecordKind.Error,
+                BuildWarningEventArgs _ => BinaryLogRecordKind.Warning,
+                CriticalBuildMessageEventArgs _ => BinaryLogRecordKind.CriticalBuildMessage,
+                TaskCommandLineEventArgs _ => BinaryLogRecordKind.TaskCommandLine,
+                TaskParameterEventArgs _ => BinaryLogRecordKind.TaskParameter,
+                ProjectEvaluationStartedEventArgs _ => BinaryLogRecordKind.ProjectEvaluationStarted,
+                ProjectEvaluationFinishedEventArgs _ => BinaryLogRecordKind.ProjectEvaluationFinished,
+                ProjectImportedEventArgs _ => BinaryLogRecordKind.ProjectImported,
+                TargetSkippedEventArgs _ => BinaryLogRecordKind.TargetSkipped,
+                EnvironmentVariableReadEventArgs _ => BinaryLogRecordKind.EnvironmentVariableRead,
+                FileUsedEventArgs _ => BinaryLogRecordKind.FileUsed,
+                PropertyReassignmentEventArgs _ => BinaryLogRecordKind.PropertyReassignment,
+                UninitializedPropertyReadEventArgs _ => BinaryLogRecordKind.UninitializedPropertyRead,
+                PropertyInitialValueSetEventArgs _ => BinaryLogRecordKind.PropertyInitialValueSet,
+                AssemblyLoadBuildEventArgs _ => BinaryLogRecordKind.AssemblyLoad,
+                BuildMessageEventArgs _ => BinaryLogRecordKind.Message,
+                _ => throw new NotImplementedException(),
+            };
 
+        public IEnumerable<Record> ReadRecordsFromDecompressedStream(Stream decompressedStream)
+            => ReadRecordsFromDecompressedStream(decompressedStream, includeAuxiliaryRecords: false);
+
+        public IEnumerable<Record> ReadRecordsFromDecompressedStream(Stream decompressedStream,
+            bool includeAuxiliaryRecords)
+        {
+            var binaryReader = new BinaryReader(decompressedStream);
             using var reader = OpenReader(binaryReader);
+            return ReadRecordsFromDecompressedStream(reader, includeAuxiliaryRecords);
+        }
+
+        internal IEnumerable<Record> ReadRecordsFromDecompressedStream(BuildEventArgsReader reader, bool includeAuxiliaryRecords)
+        {
+            List<Record> blobs = new List<Record>();
 
             // forward the events from the reader to the subscribers of this class
             reader.OnBlobRead += OnBlobRead;
 
             long start = 0;
 
+            List<Record>? auxiliaryRecords = includeAuxiliaryRecords ? [] : null;
+
             reader.OnBlobRead += (kind, blob) =>
             {
-                start = wrapper.Position;
+                start = reader.Position;
 
                 var record = new Record
                 {
                     Bytes = blob,
+                    Kind = BinaryLogRecordKind.ProjectImportArchive,
                     Args = null,
-                    Start = start - blob.Length, // TODO: check if this is accurate
+                    Start = start - blob.Length,
                     Length = blob.Length
                 };
 
-                blobs.Add(record);
-                lengthOfBlobsAddedLastTime += blob.Length;
+                if (auxiliaryRecords != null)
+                {
+                    auxiliaryRecords.Add(record);
+                }
+                else
+                {
+                    blobs.Add(record);
+                }
             };
 
             reader.OnStringRead += text =>
             {
-                long length = wrapper.Position - start;
+                long length = reader.Position - start;
+                auxiliaryRecords?.Add(new Record { Kind = BinaryLogRecordKind.String, Start = start, Length = length });
 
                 // re-read the current position as we're just about to start reading
                 // the actual BuildEventArgs record
-                start = wrapper.Position;
+                start = reader.Position;
 
                 OnStringRead?.Invoke(text, length);
             };
 
             reader.OnNameValueListRead += list =>
             {
-                long length = wrapper.Position - start;
-                start = wrapper.Position;
+                long length = reader.Position - start;
+                auxiliaryRecords?.Add(new Record { Kind = BinaryLogRecordKind.NameValueList, Start = start, Length = length });
+                start = reader.Position;
                 OnNameValueListRead?.Invoke(list, length);
             };
 
@@ -345,9 +435,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 BuildEventArgs instance = null;
 
-                start = wrapper.Position;
+                start = reader.Position;
 
                 instance = reader.Read();
+                if (instance == null)
+                {
+                    auxiliaryRecords?.Add(new Record { Kind = BinaryLogRecordKind.EndOfFile, Start = start, Length = reader.Position - start });
+                }
+                foreach (Record auxiliaryRecord in auxiliaryRecords ?? Enumerable.Empty<Record>())
+                {
+                    yield return auxiliaryRecord;
+                }
+                auxiliaryRecords?.Clear();
                 if (instance == null)
                 {
                     break;
@@ -358,70 +457,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     Bytes = null, // probably can reconstruct this from the Args if necessary
                     Args = instance,
                     Start = start,
-                    Length = wrapper.Position - start
+                    Length = reader.Position - start
                 };
 
                 yield return record;
-
-                lengthOfBlobsAddedLastTime = 0;
             }
 
             foreach (var blob in blobs)
             {
                 yield return blob;
             }
-        }
-    }
-
-    public class WrapperStream : Stream
-    {
-        private readonly Stream stream;
-
-        public WrapperStream(Stream stream)
-        {
-            this.stream = stream;
-        }
-
-        public override bool CanRead => stream.CanRead;
-
-        public override bool CanSeek => stream.CanSeek;
-
-        public override bool CanWrite => stream.CanWrite;
-
-        public override long Length => stream.Length;
-
-        private long position;
-        public override long Position
-        {
-            get => position;
-            set => throw new NotImplementedException();
-        }
-
-        public override void Flush()
-        {
-            stream.Flush();
-        }
-
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            var result = stream.Read(buffer, offset, count);
-            position += result;
-            return result;
-        }
-
-        public override long Seek(long offset, SeekOrigin origin)
-        {
-            return stream.Seek(offset, origin);
-        }
-
-        public override void SetLength(long value)
-        {
-            stream.SetLength(value);
-        }
-
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            stream.Write(buffer, offset, count);
         }
     }
 }

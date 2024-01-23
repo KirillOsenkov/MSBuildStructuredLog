@@ -77,6 +77,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         public bool CloseInput { private get; set; } = false;
 
+        public long Position => _readStream.Position;
+
         /// <summary>
         /// Indicates whether unknown BuildEvents should be silently skipped. Read returns null otherwise.
         /// Parameter is supported only if the file format supports forward compatible reading (version is 18 or higher).
@@ -161,6 +163,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         /// <returns>ArraySegment containing serialized BuildEventArgs record</returns>
         internal RawRecord ReadRaw()
+            => ReadRaw(decodeTextualRecords: true);
+
+        /// <summary>
+        /// Reads the next serialized log record from the <see cref="BinaryReader"/>.
+        /// </summary>
+        /// <returns>ArraySegment containing serialized BuildEventArgs record</returns>
+        internal RawRecord ReadRaw(bool decodeTextualRecords)
         {
             // This method is internal and condition is checked once before calling in loop,
             //  so avoiding it here on each call.
@@ -176,7 +185,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 _lastSubStream.ReadToEnd();
             }
 
-            BinaryLogRecordKind recordKind = PreprocessRecordsTillNextEvent(IsTextualDataRecord);
+            BinaryLogRecordKind recordKind =
+                PreprocessRecordsTillNextEvent(decodeTextualRecords ? IsTextualDataRecord : (_ => false));
 
             if (recordKind == BinaryLogRecordKind.EndOfFile)
             {
