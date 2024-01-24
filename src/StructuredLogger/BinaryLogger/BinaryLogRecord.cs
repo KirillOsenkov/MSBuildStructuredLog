@@ -11,4 +11,6 @@ namespace Microsoft.Build.Logging
         public long Start;
         public long Length;
     }
+
+    public readonly record struct RecordInfo(BinaryLogRecordKind Kind, long Start, long Length);
 }

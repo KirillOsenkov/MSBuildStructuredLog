@@ -277,10 +277,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// the start position in the stream, length in bytes and the type of record.
         /// </summary>
         /// <remarks>Useful for debugging and analyzing binary logs</remarks>
-        public IEnumerable<(BinaryLogRecordKind RecordKind, long Start, long Length)> ChunkBinlog(string logFilePath)
+        public IEnumerable<RecordInfo> ChunkBinlog(string logFilePath)
         {
             var stream = new FileStream(logFilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-            return DisposableEnumerable<(BinaryLogRecordKind, long start, long length)>.Create(
+            return DisposableEnumerable<RecordInfo>.Create(
                 ChunkBinlogFromDecompressedStream(GetDecompressedStream(stream)), () => stream.Dispose());
         }
 
@@ -306,7 +306,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
 
-        private IEnumerable<(BinaryLogRecordKind RecordKind, long Start, long Length)> ChunkBinlogFromDecompressedStream(Stream decompressedStream)
+        private IEnumerable<RecordInfo> ChunkBinlogFromDecompressedStream(Stream decompressedStream)
         {
             var binaryReader = new BinaryReader(decompressedStream);
             using BuildEventArgsReader reader = OpenReader(binaryReader);
@@ -319,11 +319,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             else
             {
                 return ReadRecordsFromDecompressedStream(reader, true)
-                    .Select(r => (r.Args != null ? ToBinaryLogRecordKind(r.Args) : r.Kind, r.Start, r.Length));
+                    .Select(r => new RecordInfo(r.Args != null ? ToBinaryLogRecordKind(r.Args) : r.Kind, r.Start, r.Length));
             }
         }
 
-        private IEnumerable<(BinaryLogRecordKind, long start, long length)> ChunkBinlogWithOffsets(
+        private IEnumerable<RecordInfo> ChunkBinlogWithOffsets(
             BuildEventArgsReader reader)
         {
             long start = 0;
@@ -331,7 +331,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             do
             {
                 chunk = reader.ReadRaw(false);
-                yield return (chunk.RecordKind, start, chunk.Stream.Length);
+                yield return new RecordInfo(chunk.RecordKind, start, chunk.Stream.Length);
                 start += chunk.Stream.Length;
             } while (chunk.RecordKind != BinaryLogRecordKind.EndOfFile);
         }

@@ -55,7 +55,7 @@ namespace BinlogTool
 
             IEnumerable<(BinaryLogRecordKind, long)> records =
                 new BinLogReader().ChunkBinlog(input)
-                    .Select(r => (r.RecordKind, r.Length));
+                    .Select(r => (r.Kind, r.Length));
 
             int totalRecords = 0;
 
