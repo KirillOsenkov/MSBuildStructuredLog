@@ -218,11 +218,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 object data = TryGetDirectoryOrFile(text);
                 if (data is DirectoryData directoryData)
                 {
-                    GetResults(directoryData, resultSet, maxResults);
+                    GetResults(directoryData, resultSet, matcher, maxResults);
                 }
                 else if (data is FileData fileData)
                 {
-                    GetResults(fileData, resultSet, maxResults);
+                    GetResults(fileData, resultSet, matcher, maxResults);
                     if (resultSet.Count == 1)
                     {
                         FoundSingleFileCopy?.Invoke(fileData, resultSet);
@@ -340,35 +340,43 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private bool FileMatches(FileData file, NodeQueryMatcher matcher)
         {
-            foreach (var includeMatcher in matcher.IncludeMatchers)
+            foreach (var fileCopyInfo in file.Incoming.Concat(file.Outgoing))
             {
-                if (includeMatcher.UnderProject)
+                if (FileCopyMatches(fileCopyInfo, matcher))
                 {
-                    bool matched = false;
-
-                    foreach (var fileCopyInfo in file.Incoming.Concat(file.Outgoing))
-                    {
-                        if (fileCopyInfo.Project is { } project)
-                        {
-                            if (includeMatcher.IsMatch(project.Name, project.SourceFilePath) != null)
-                            {
-                                matched = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    if (!matched)
-                    {
-                        return false;
-                    }
+                    return true;
                 }
             }
 
-            return true;
+            return false;
         }
 
-        private void GetResults(FileData fileData, IList<SearchResult> resultSet, int maxResults, string matchText = null)
+        private bool FileCopyMatches(FileCopyInfo fileCopyInfo, NodeQueryMatcher matcher)
+        {
+            if (fileCopyInfo.Project is not { } project)
+            {
+                return true;
+            }
+
+            var projectMatchers = matcher.ProjectMatchers;
+            if (projectMatchers.Count == 0)
+            {
+                return true;
+            }
+
+            foreach (var includeMatcher in projectMatchers)
+            {
+                var matchResult = includeMatcher.IsMatch(project.Name, project.SourceFilePath);
+                if (matchResult != null)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void GetResults(FileData fileData, IList<SearchResult> resultSet, NodeQueryMatcher matcher, int maxResults, string matchText = null)
         {
             if (matchText == null)
             {
@@ -377,6 +385,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             foreach (var incoming in fileData.Incoming)
             {
+                if (!FileCopyMatches(incoming, matcher))
+                {
+                    continue;
+                }
+
                 var message = incoming.FileCopyOperation.Message;
                 var result = new SearchResult(message);
                 result.AddMatch(message.Text, matchText);
@@ -390,6 +403,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             foreach (var outgoing in fileData.Outgoing)
             {
+                if (!FileCopyMatches(outgoing, matcher))
+                {
+                    continue;
+                }
+
                 var message = outgoing.FileCopyOperation.Message;
                 var result = new SearchResult(message);
                 result.AddMatch(message.Text, matchText);
@@ -402,13 +420,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private void GetResults(DirectoryData directoryData, IList<SearchResult> resultSet, int maxResults)
+        private void GetResults(DirectoryData directoryData, IList<SearchResult> resultSet, NodeQueryMatcher matcher, int maxResults)
         {
             string directoryPath = directoryData.ToString();
 
             foreach (var fileData in directoryData.Files)
             {
-                GetResults(fileData, resultSet, maxResults, matchText: directoryPath);
+                if (!FileMatches(fileData, matcher))
+                {
+                    continue;
+                }
+
+                GetResults(fileData, resultSet, matcher, maxResults, matchText: directoryPath);
                 if (resultSet.Count >= maxResults)
                 {
                     return;
