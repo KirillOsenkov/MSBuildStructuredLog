@@ -231,7 +231,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
                 else
                 {
-                    TryGetFiles(text, resultSet, maxResults);
+                    TryGetFiles(text, resultSet, matcher, maxResults);
                 }
 
                 return true;
@@ -294,7 +294,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private void TryGetFiles(string text, IList<SearchResult> resultSet, int maxResults)
+        private void TryGetFiles(string text, IList<SearchResult> resultSet, NodeQueryMatcher matcher, int maxResults)
         {
             var results = new List<SearchResult>();
 
@@ -307,6 +307,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     {
                         if (file.FilePath.IndexOf(text, StringComparison.OrdinalIgnoreCase) != -1)
                         {
+                            if (!FileMatches(file, matcher))
+                            {
+                                continue;
+                            }
+
                             var item = new Item { Name = file.FilePath };
                             var result = new SearchResult(item);
                             result.AddMatch(file.FilePath, text);
@@ -331,6 +336,36 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 resultSet.Add(result);
             }
+        }
+
+        private bool FileMatches(FileData file, NodeQueryMatcher matcher)
+        {
+            foreach (var includeMatcher in matcher.IncludeMatchers)
+            {
+                if (includeMatcher.UnderProject)
+                {
+                    bool matched = false;
+
+                    foreach (var fileCopyInfo in file.Incoming.Concat(file.Outgoing))
+                    {
+                        if (fileCopyInfo.Project is { } project)
+                        {
+                            if (includeMatcher.IsMatch(project.Name, project.SourceFilePath) != null)
+                            {
+                                matched = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!matched)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
         }
 
         private void GetResults(FileData fileData, IList<SearchResult> resultSet, int maxResults, string matchText = null)
