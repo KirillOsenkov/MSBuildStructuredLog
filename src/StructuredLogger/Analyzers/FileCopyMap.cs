@@ -218,11 +218,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 object data = TryGetDirectoryOrFile(text);
                 if (data is DirectoryData directoryData)
                 {
-                    GetResults(directoryData, resultSet, maxResults);
+                    GetResults(directoryData, resultSet, matcher, maxResults);
                 }
                 else if (data is FileData fileData)
                 {
-                    GetResults(fileData, resultSet, maxResults);
+                    GetResults(fileData, resultSet, matcher, maxResults);
                     if (resultSet.Count == 1)
                     {
                         FoundSingleFileCopy?.Invoke(fileData, resultSet);
@@ -231,7 +231,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
                 else
                 {
-                    TryGetFiles(text, resultSet, maxResults);
+                    TryGetFiles(text, resultSet, matcher, maxResults);
                 }
 
                 return true;
@@ -294,7 +294,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private void TryGetFiles(string text, IList<SearchResult> resultSet, int maxResults)
+        private void TryGetFiles(string text, IList<SearchResult> resultSet, NodeQueryMatcher matcher, int maxResults)
         {
             var results = new List<SearchResult>();
 
@@ -307,6 +307,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     {
                         if (file.FilePath.IndexOf(text, StringComparison.OrdinalIgnoreCase) != -1)
                         {
+                            if (!FileMatches(file, matcher))
+                            {
+                                continue;
+                            }
+
                             var item = new Item { Name = file.FilePath };
                             var result = new SearchResult(item);
                             result.AddMatch(file.FilePath, text);
@@ -333,7 +338,45 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private void GetResults(FileData fileData, IList<SearchResult> resultSet, int maxResults, string matchText = null)
+        private bool FileMatches(FileData file, NodeQueryMatcher matcher)
+        {
+            foreach (var fileCopyInfo in file.Incoming.Concat(file.Outgoing))
+            {
+                if (FileCopyMatches(fileCopyInfo, matcher))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool FileCopyMatches(FileCopyInfo fileCopyInfo, NodeQueryMatcher matcher)
+        {
+            if (fileCopyInfo.Project is not { } project)
+            {
+                return true;
+            }
+
+            var projectMatchers = matcher.ProjectMatchers;
+            if (projectMatchers.Count == 0)
+            {
+                return true;
+            }
+
+            foreach (var includeMatcher in projectMatchers)
+            {
+                var matchResult = includeMatcher.IsMatch(project.Name, project.SourceFilePath);
+                if (matchResult != null)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void GetResults(FileData fileData, IList<SearchResult> resultSet, NodeQueryMatcher matcher, int maxResults, string matchText = null)
         {
             if (matchText == null)
             {
@@ -342,6 +385,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             foreach (var incoming in fileData.Incoming)
             {
+                if (!FileCopyMatches(incoming, matcher))
+                {
+                    continue;
+                }
+
                 var message = incoming.FileCopyOperation.Message;
                 var result = new SearchResult(message);
                 result.AddMatch(message.Text, matchText);
@@ -355,6 +403,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             foreach (var outgoing in fileData.Outgoing)
             {
+                if (!FileCopyMatches(outgoing, matcher))
+                {
+                    continue;
+                }
+
                 var message = outgoing.FileCopyOperation.Message;
                 var result = new SearchResult(message);
                 result.AddMatch(message.Text, matchText);
@@ -367,13 +420,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private void GetResults(DirectoryData directoryData, IList<SearchResult> resultSet, int maxResults)
+        private void GetResults(DirectoryData directoryData, IList<SearchResult> resultSet, NodeQueryMatcher matcher, int maxResults)
         {
             string directoryPath = directoryData.ToString();
 
             foreach (var fileData in directoryData.Files)
             {
-                GetResults(fileData, resultSet, maxResults, matchText: directoryPath);
+                if (!FileMatches(fileData, matcher))
+                {
+                    continue;
+                }
+
+                GetResults(fileData, resultSet, matcher, maxResults, matchText: directoryPath);
                 if (resultSet.Count >= maxResults)
                 {
                     return;

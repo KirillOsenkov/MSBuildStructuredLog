@@ -40,6 +40,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     continue;
                 }
 
+                match = Strings.RobocopyFileSkippedAsDuplicateRegex.Match(text);
+                if (match.Success && match.Groups.Count > 2)
+                {
+                    var operation = ParseCopyingFileFrom(match, copied: false);
+                    operation.Message = message;
+                    list.Add(operation);
+                    continue;
+                }
+
                 match = Strings.RobocopyFileFailedRegex.Match(text);
                 if (match.Success && match.Groups.Count > 2)
                 {

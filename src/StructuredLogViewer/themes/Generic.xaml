@@ -665,6 +665,7 @@
     <StackPanel Orientation="Horizontal">
       <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{DynamicResource MessageStroke}" Fill="{DynamicResource MessageBrush}" />
       <TextBlock x:Name="messageText" Text="{Binding Name}" />
+      <TextBlock Text="{Binding SourceFilePath}" Opacity="0.4" Margin="8,0,0,0" />
     </StackPanel>
   </HierarchicalDataTemplate>
 

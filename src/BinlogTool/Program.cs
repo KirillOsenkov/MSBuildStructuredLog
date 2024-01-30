@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
 
 namespace BinlogTool
@@ -19,7 +21,8 @@ namespace BinlogTool
     binlogtool reconstruct input.binlog output_path
     binlogtool savestrings input.binlog output.txt
     binlogtool search *.binlog search string
-    binlogtool redact --input:path --recurse --in-place -p:list -p:of -p:secrets -p:to -p:redact");
+    binlogtool redact --input:path --recurse --in-place -p:list -p:of -p:secrets -p:to -p:redact
+    binlogtool dumprecords [[--input:]path] [--include-total] [--include-rollup] [--exclude-details]");
                 return 0;
             }
 
@@ -142,6 +145,56 @@ namespace BinlogTool
                 }
 
                 Redact.Run(inputPaths, redactTokens, inPlace, recurse);
+                return 0;
+            }
+
+            if (firstArg == "dumprecords")
+            {
+                bool includeTotal = false;
+                bool includeRollup = false;
+                bool includeDetails = true;
+                List<string> inputPaths = new List<string>();
+
+                foreach (var arg in args.Skip(1))
+                {
+                    if (arg.StartsWith("--input:", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var input = arg.Substring("--input:".Length);
+                        if (string.IsNullOrEmpty(input))
+                        {
+                            Console.Error.WriteLine("Invalid input path");
+                            return -3;
+                        }
+
+                        inputPaths.Add(input);
+                    }
+                    // [--include-total] [--include-rollup] [--exclude-details]
+                    else if (arg.Equals("--include-total", StringComparison.OrdinalIgnoreCase))
+                    {
+                        includeTotal = true;
+                    }
+                    else if (arg.Equals("--include-rollup", StringComparison.OrdinalIgnoreCase))
+                    {
+                        includeRollup = true;
+                    }
+                    else if (arg.Equals("--exclude-details", StringComparison.OrdinalIgnoreCase))
+                    {
+                        includeDetails = false;
+                    }
+                    else if (arg.EndsWith(".binlog", StringComparison.OrdinalIgnoreCase))
+                    {
+                        inputPaths.Add(arg);
+                    }
+                    else
+                    {
+                        Console.Error.WriteLine($"Invalid argument: {arg}");
+                        Console.Error.WriteLine("binlogtool dumprecords [[--input:]path] [--include-total] [--include-rollup] [--exclude-details]");
+                        Console.Error.WriteLine("All arguments are optional (Missing input assumes current working directory. Rollup and total is disabled by default, detail overview is enabled by default. Input(s) arguments can be specified without switch.)");
+                        return -5;
+                    }
+                }
+
+                DumpRecords.Run(inputPaths, includeTotal, includeRollup, includeDetails);
                 return 0;
             }
 

@@ -1897,6 +1897,12 @@ Recent (");
                         return DisplayAddRemoveItem(removeItem.Parent, removeItem.LineNumber ?? 0);
                     case Item item when item.Parent is AddItem parentAddItem && parentAddItem.Name == "EmbedInBinlog":
                         return DisplayEmbeddedFile(item);
+                    case Item item when
+                        item.Parent == null &&
+                        searchLogControl.SearchText.Contains("$copy") &&
+                        searchLogControl.ResultsList.ItemsSource is IEnumerable<BaseNode> results &&
+                        results.Contains(item):
+                        return SearchForFullPath(item.Text);
                     case IHasSourceFile hasSourceFile when hasSourceFile.SourceFilePath != null:
                         int line = 0;
                         var hasLine = hasSourceFile as IHasLineNumber;
@@ -1922,6 +1928,22 @@ Recent (");
             catch
             {
                 // in case our guessing of file path goes awry
+            }
+
+            return false;
+        }
+
+        private bool SearchForFullPath(string filePath)
+        {
+            var text = searchLogControl.SearchText;
+            var matcher = new NodeQueryMatcher(text);
+            if (matcher.Terms.Count == 1 &&
+                matcher.Terms[0].Word is string substring &&
+                filePath.IndexOf(substring, StringComparison.OrdinalIgnoreCase) != -1)
+            {
+                text = text.Replace(substring, filePath);
+                searchLogControl.SearchText = text;
+                return true;
             }
 
             return false;

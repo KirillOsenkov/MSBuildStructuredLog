@@ -173,6 +173,10 @@ namespace StructuredLogViewer
             }
 
             var sourceText = sourceFileResolver.GetSourceFileText(sourceFilePath);
+            if (sourceText == null)
+            {
+                return string.Empty;
+            }
 
             var importMap = GetImportMap(projectEvaluationContext);
             if (importMap == null)

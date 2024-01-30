@@ -119,6 +119,7 @@ namespace StructuredLogViewer
 
         public IList<NodeQueryMatcher> IncludeMatchers { get; } = new List<NodeQueryMatcher>();
         public IList<NodeQueryMatcher> ExcludeMatchers { get; } = new List<NodeQueryMatcher>();
+        public IList<NodeQueryMatcher> ProjectMatchers { get; } = new List<NodeQueryMatcher>();
 
         // avoid allocating this for every node
         [ThreadStatic]
@@ -232,6 +233,7 @@ namespace StructuredLogViewer
                     var underMatcher = new NodeQueryMatcher(word);
                     underMatcher.UnderProject = true;
                     IncludeMatchers.Add(underMatcher);
+                    ProjectMatchers.Add(underMatcher);
                     continue;
                 }
 
@@ -736,6 +738,15 @@ namespace StructuredLogViewer
             return result ?? SearchResult.EmptyQueryMatch;
         }
 
+        /// <summary>
+        /// Matches Terms against the given set of fields
+        /// </summary>
+        /// <param name="fields">Fields to match against</param>
+        /// <returns>
+        /// EmptyQueryMatch if there are no terms.
+        /// null if there was a term that didn't match any fields.
+        /// SearchResult if all terms matched at least one field.
+        /// </returns>
         public SearchResult IsMatch(params string[] fields)
         {
             SearchResult result = null;
