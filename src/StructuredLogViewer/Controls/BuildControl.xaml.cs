@@ -42,6 +42,7 @@ namespace StructuredLogViewer.Controls
         private MenuItem viewSubtreeTextItem;
         private MenuItem searchInSubtreeItem;
         private MenuItem searchInNodeByNameItem;
+        private MenuItem searchThisNode;
         private MenuItem excludeSubtreeFromSearchItem;
         private MenuItem excludeNodeByNameFromSearch;
         private MenuItem goToTimeLineItem;
@@ -185,6 +186,7 @@ namespace StructuredLogViewer.Controls
             excludeSubtreeFromSearchItem = new MenuItem() { Header = "Exclude subtree from search" };
             excludeNodeByNameFromSearch = new MenuItem() { Header = "Exclude node from search" };
             searchInNodeByNameItem = new MenuItem() { Header = "Search in this node." };
+            searchThisNode = new MenuItem() { Header = "Search This Node" };
             goToTimeLineItem = new MenuItem() { Header = "Go to timeline" };
             goToTracingItem = new MenuItem() { Header = "Go to tracing" };
             copyChildrenItem = new MenuItem() { Header = "Copy children" };
@@ -217,6 +219,7 @@ namespace StructuredLogViewer.Controls
             excludeSubtreeFromSearchItem.Click += (s, a) => ExcludeSubtreeFromSearch();
             excludeNodeByNameFromSearch.Click += (s, a) => ExcludeNodeByNameFromSearch();
             searchInNodeByNameItem.Click += (s, a) => SearchInNodeByName();
+            searchThisNode.Click += (s, a) => SearchThisNode();
             goToTimeLineItem.Click += (s, a) => GoToTimeLine();
             goToTracingItem.Click += (s, a) => GoToTracing();
             copyChildrenItem.Click += (s, a) => CopyChildren();
@@ -243,6 +246,7 @@ namespace StructuredLogViewer.Controls
             contextMenu.AddItem(searchNuGetItem);
             contextMenu.AddItem(searchInSubtreeItem);
             contextMenu.AddItem(searchInNodeByNameItem);
+            contextMenu.AddItem(searchThisNode);
             contextMenu.AddItem(excludeSubtreeFromSearchItem);
             contextMenu.AddItem(excludeNodeByNameFromSearch);
             contextMenu.AddItem(goToTimeLineItem);
@@ -389,6 +393,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             excludeSubtreeFromSearchItem = null;
             excludeNodeByNameFromSearch = null;
             searchInNodeByNameItem = null;
+            searchThisNode = null;
             goToTimeLineItem = null;
             goToTracingItem = null;
             copyChildrenItem = null;
@@ -854,6 +859,16 @@ Recent (");
             runItem.Visibility = canRun;
             debugItem.Visibility = canRun;
             hideItem.Visibility = node is TreeNode ? Visibility.Visible : Visibility.Collapsed;
+
+            if (node is SearchableItem searchItem)
+            {
+                searchThisNode.Visibility = Visibility.Visible;
+                searchThisNode.Header = $"Search {searchItem.SearchText}";
+            }
+            else
+            {
+                searchThisNode.Visibility = Visibility.Collapsed;
+            }
 
             if (node is TimedNode timedNode)
             {
@@ -1565,6 +1580,15 @@ Recent (");
             if (treeView.SelectedItem is TimedNode treeNode)
             {
                 searchLogControl.SearchText += $" under(${treeNode.TypeName} {treeNode.Name})";
+                SelectSearchTab();
+            }
+        }
+
+        public void SearchThisNode()
+        {
+            if (treeView.SelectedItem is SearchableItem searchNode)
+            {
+                searchLogControl.SearchText = searchNode.SearchText;
                 SelectSearchTab();
             }
         }

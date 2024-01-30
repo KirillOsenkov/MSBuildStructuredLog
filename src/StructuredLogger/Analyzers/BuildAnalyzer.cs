@@ -231,16 +231,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 var top10Tasks = build.GetOrCreateNodeWithName<Folder>(folderName);
                 foreach (var kvp in durations)
                 {
-                    var taskItem = new Item
+                    var taskItem = new SearchableItem
                     {
-                        Text = Intern(kvp.Key) + " = " + Intern($"{TextUtilities.DisplayDuration(kvp.Value.Duration)}, {kvp.Value.Count} calls.")
+                        Text = Intern(kvp.Key) + " = " + Intern($"{TextUtilities.DisplayDuration(kvp.Value.Duration)}, {kvp.Value.Count} calls."),
+                        SearchText = $@"$task ""{kvp.Key}""",
                     };
                     var childNodes = kvp.Value.ChildNodes.OrderByDescending(kv => kv.Value.Duration).Take(10);
                     foreach (var durationNodes in childNodes)
                     {
-                        taskItem.AddChild(new Item
+                        taskItem.AddChild(new SearchableItem
                         {
-                            Text = Intern(durationNodes.Key) + " = " + Intern($"{TextUtilities.DisplayDuration(durationNodes.Value.Duration)}, {durationNodes.Value.Count} calls.")
+                            Text = Intern(durationNodes.Key) + " = " + Intern($"{TextUtilities.DisplayDuration(durationNodes.Value.Duration)}, {durationNodes.Value.Count} calls."),
+                            SearchText = $@"$target ""{durationNodes.Key}""",
                         });
                     }
                     top10Tasks.AddChild(taskItem);

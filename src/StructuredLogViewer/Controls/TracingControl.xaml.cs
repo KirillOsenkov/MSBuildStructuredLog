@@ -741,6 +741,10 @@ namespace StructuredLogViewer.Controls
                         var textBlock = new TextBlock();
                         textBlock.Text = $"{i}s";
 
+                        // Set these to make TextBlock scale like TrueType.
+                        textBlock.SnapsToDevicePixels = true;
+                        TextOptions.SetTextFormattingMode(textBlock, TextFormattingMode.Ideal);
+
                         // add textHeight/2 pixels of front padding
                         Canvas.SetLeft(textBlock, textHeight / 2 + i * OneSecondPixelWidth);
                         canvas.Children.Add(textBlock);
