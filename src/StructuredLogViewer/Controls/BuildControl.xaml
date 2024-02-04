@@ -46,6 +46,11 @@
             <TabItem x:Name="findInFilesTab" Header="Find in Files" Visibility="Collapsed">
               <local:SearchAndResultsControl x:Name="findInFilesControl" WatermarkContent="Search in files"></local:SearchAndResultsControl>
             </TabItem>
+
+            <TabItem x:Name="favoritesTab" Header="Favorites">
+              <local:SearchAndResultsControl x:Name="favoritesTree"></local:SearchAndResultsControl>
+            </TabItem>
+
           </TabControl>
         </local:SplitterPanel.FirstChild>
         <local:SplitterPanel.SecondChild>

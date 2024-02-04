@@ -1343,7 +1343,12 @@ Recent:
 
         public IEnumerable BuildResultTree(object resultsObject, bool moreAvailable = false)
         {
-            var folder = ResultTree.BuildResultTree(resultsObject, moreAvailable, Elapsed);
+            return BuildResultTree(resultsObject, moreAvailable, addDuration: true);
+        }
+
+        public IEnumerable BuildResultTree(object resultsObject, bool moreAvailable = false, bool addDuration = true)
+        {
+            var folder = ResultTree.BuildResultTree(resultsObject, Elapsed, addDuration: addDuration);
 
             if (moreAvailable)
             {

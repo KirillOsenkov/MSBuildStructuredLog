@@ -10,9 +10,9 @@ namespace StructuredLogViewer
     {
         public static Folder BuildResultTree(
             object resultsObject,
-            bool moreAvailable = false,
             TimeSpan elapsed = default,
-            TimeSpan precalculationDuration = default)
+            TimeSpan precalculationDuration = default,
+            bool addDuration = true)
         {
             var root = new Folder();
 
@@ -35,10 +35,13 @@ namespace StructuredLogViewer
                 status += $" (precalculation: {precalculationString})";
             }
 
-            root.Children.Add(new Note
+            if (addDuration)
             {
-                Text = status
-            });
+                root.Children.Add(new Note
+                {
+                    Text = status
+                });
+            }
 
             bool includeDuration = false;
             bool includeStart = false;

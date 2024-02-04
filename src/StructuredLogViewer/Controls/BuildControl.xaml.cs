@@ -62,6 +62,9 @@ namespace StructuredLogViewer.Controls
         private MenuItem debugItem;
         private MenuItem hideItem;
         private MenuItem showTimeItem;
+        private MenuItem favoriteItem;
+        private MenuItem unfavoriteItem;
+
         private ContextMenu sharedTreeContextMenu;
         private ContextMenu filesTreeContextMenu;
 
@@ -198,6 +201,8 @@ namespace StructuredLogViewer.Controls
             viewSourceItem = new MenuItem() { Header = "View source" };
             viewFullTextItem = new MenuItem { Header = "View full text" };
             showTimeItem = new MenuItem() { Header = "Show time and duration" };
+            favoriteItem = new MenuItem() { Header = "Add to Favorites" };
+            unfavoriteItem = new MenuItem() { Header = "Remove from Favorites" };
             openFileItem = new MenuItem() { Header = "Open File" };
             copyFilePathItem = new MenuItem() { Header = "Copy file path" };
             preprocessItem = new MenuItem() { Header = "Preprocess" };
@@ -232,6 +237,8 @@ namespace StructuredLogViewer.Controls
             viewSourceItem.Click += (s, a) => Invoke(treeView.SelectedItem as BaseNode);
             viewFullTextItem.Click += (s, a) => ViewFullText(treeView.SelectedItem as BaseNode);
             showTimeItem.Click += (s, a) => ShowTimeAndDuration();
+            favoriteItem.Click += (s, a) => AddToFavorites();
+            unfavoriteItem.Click += (s, a) => RemoveFromFavorites();
             openFileItem.Click += (s, a) => OpenFile();
             copyFilePathItem.Click += (s, a) => CopyFilePath();
             preprocessItem.Click += (s, a) => Preprocess(treeView.SelectedItem as IPreprocessable);
@@ -240,6 +247,8 @@ namespace StructuredLogViewer.Controls
             debugItem.Click += (s, a) => Run(treeView.SelectedItem as Task, debug: true);
             hideItem.Click += (s, a) => Delete();
 
+            contextMenu.AddItem(favoriteItem);
+            contextMenu.AddItem(unfavoriteItem);
             contextMenu.AddItem(runItem);
             contextMenu.AddItem(debugItem);
             contextMenu.AddItem(viewSourceItem);
@@ -332,6 +341,10 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                 build.AddChild(folder);
             }
 
+            favoritesTree.TopPanel.Visibility = Visibility.Collapsed;
+            favoritesTree.ResultsList.ItemContainerStyle = treeViewItemStyle;
+            favoritesTree.ResultsList.SelectedItemChanged += ResultsList_SelectionChanged;
+
             breadCrumb.SelectionChanged += BreadCrumb_SelectionChanged;
 
             Loaded += BuildControl_Loaded;
@@ -366,6 +379,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             filesTree.ResultsList.ItemContainerStyle = null;
             filesTree.ContextMenu = null;
             filesTree.DisplayItems(null);
+            favoritesTree.ResultsList.ItemContainerStyle = null;
             findInFilesControl.ResultsList.ItemContainerStyle = null;
             treeView.RemoveHandler(TreeViewItem.SelectedEvent, (RoutedEventHandler)TreeViewItem_Selected);
             treeView.SelectedItemChanged -= TreeView_SelectedItemChanged;
@@ -421,6 +435,8 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             debugItem = null;
             hideItem = null;
             showTimeItem = null;
+            favoriteItem = null;
+            unfavoriteItem = null;
 
             sharedTreeContextMenu = null;
             filesTreeContextMenu = null;
@@ -882,6 +898,10 @@ Recent (");
             {
                 searchThisNode.Visibility = Visibility.Collapsed;
             }
+
+            bool isFavorite = IsFavorite(node);
+            favoriteItem.Visibility = !isFavorite ? Visibility.Visible : Visibility.Collapsed;
+            unfavoriteItem.Visibility = isFavorite ? Visibility.Visible : Visibility.Collapsed;
 
             if (node is TimedNode timedNode)
             {
@@ -1705,6 +1725,48 @@ Recent (");
             }
         }
 
+        private readonly HashSet<BaseNode> favorites = new HashSet<BaseNode>();
+
+        public void AddToFavorites()
+        {
+            var node = ActiveTreeView?.SelectedItem as BaseNode;
+            if (node != null)
+            {
+                if (favorites.Add(node))
+                {
+                    RefreshFavorites();
+                }
+            }
+        }
+
+        public void RemoveFromFavorites()
+        {
+            var node = ActiveTreeView?.SelectedItem as BaseNode;
+            if (node != null)
+            {
+                if (favorites.Remove(node))
+                {
+                    RefreshFavorites();
+                }
+            }
+        }
+
+        public bool IsFavorite(BaseNode node)
+        {
+            return favorites.Contains(node);
+        }
+
+        public void RefreshFavorites()
+        {
+            var list = favorites.Select(f =>
+            {
+                var searchResult = new SearchResult(f);
+                return searchResult;
+            }).ToArray();
+            var tree = BuildResultTree(list, addDuration: false);
+            favoritesTree.DisplayItems(tree);
+        }
+
         public void OpenFile()
         {
             if (treeView.SelectedItem is Import import)
@@ -2248,7 +2310,12 @@ Recent (");
 
         public IEnumerable BuildResultTree(object resultsObject, bool moreAvailable = false)
         {
-            var folder = ResultTree.BuildResultTree(resultsObject, moreAvailable, Elapsed, PrecalculationDuration);
+            return BuildResultTree(resultsObject, moreAvailable, addDuration: true);
+        }
+
+        public IEnumerable BuildResultTree(object resultsObject, bool moreAvailable = false, bool addDuration = true)
+        {
+            var folder = ResultTree.BuildResultTree(resultsObject, Elapsed, addDuration: addDuration);
 
             if (moreAvailable)
             {

@@ -8,7 +8,27 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class ProxyNode : TextNode
     {
-        public BaseNode Original { get; set; }
+        private BaseNode original;
+        public BaseNode Original
+        {
+            get => original;
+            set
+            {
+                if (original == value)
+                {
+                    return;
+                }
+
+                original = value;
+                if (original != null)
+                {
+                    if (Text == null)
+                    {
+                        Text = GetNodeText(original);
+                    }
+                }
+            }
+        }
 
         public SearchResult SearchResult { get; set; }
 
