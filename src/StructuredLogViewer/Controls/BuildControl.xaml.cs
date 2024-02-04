@@ -1448,9 +1448,13 @@ Recent (");
                 {
                     findTextBox.Focus();
                     var node = treeView.SelectedItem as TreeNode;
-                    if (node != null && nodeFilters.TryGetValue(node, out var filter))
+                    if (node != null)
                     {
-                        findTextBox.Text = filter;
+                        findLabel.Content = $"Filter children of: {GetText(node)}";
+                        if (nodeFilters.TryGetValue(node, out var filter))
+                        {
+                            findTextBox.Text = filter;
+                        }
                     }
                 }
                 else

@@ -69,14 +69,19 @@
                           HorizontalAlignment="Right"
                           VerticalAlignment="Top"
                           Visibility="Collapsed"
+                          Background="{DynamicResource Theme_Background}"
                           Margin="0,0,20,0">
-                      <TextBox x:Name="findTextBox"
+                      <StackPanel Orientation="Horizontal">
+                        <Label x:Name="findLabel"></Label>
+                        <TextBox x:Name="findTextBox"
                                TextChanged="findTextBox_TextChanged"
                                MinHeight="23"
                                MinWidth="200"
                                BorderThickness="2"
                                Padding="2"
-                               VerticalContentAlignment="Center" />
+                               VerticalContentAlignment="Center"
+                               ToolTip="Enter: close, Esc: clear or close, Ctrl+F: focus main search box" />
+                      </StackPanel>
                     </Grid>
                   </Grid>
                 </TabItem>
