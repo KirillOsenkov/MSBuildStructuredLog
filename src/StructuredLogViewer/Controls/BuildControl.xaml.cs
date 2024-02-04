@@ -1799,7 +1799,15 @@ Recent (");
 
         public void RefreshFavorites()
         {
-            var list = favorites.Select(f =>
+            var list = favorites.OrderBy(f =>
+            {
+                if (f is TimedNode timed)
+                {
+                    return timed.Index;
+                }
+
+                return 0;
+            }).Select(f =>
             {
                 var searchResult = new SearchResult(f);
                 return searchResult;
