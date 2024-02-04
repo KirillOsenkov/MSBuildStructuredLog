@@ -64,6 +64,8 @@ namespace StructuredLogViewer.Controls
         private MenuItem showTimeItem;
         private MenuItem favoriteItem;
         private MenuItem unfavoriteItem;
+        private MenuItem favoriteSharedItem;
+        private MenuItem unfavoriteSharedItem;
 
         private ContextMenu sharedTreeContextMenu;
         private ContextMenu filesTreeContextMenu;
@@ -155,12 +157,19 @@ namespace StructuredLogViewer.Controls
 
             // Search Log | Properties and Items | Find in Files
             sharedTreeContextMenu = new ContextMenu();
+            sharedTreeContextMenu.Opened += SharedTreeContextMenu_Opened;
+            favoriteSharedItem = new MenuItem { Header = "Add to Favorites" };
+            unfavoriteSharedItem = new MenuItem { Header = "Remove from Favorites" };
             var sharedCopyItem = new MenuItem() { Header = "Copy" };
             var sharedCopyAllItem = new MenuItem() { Header = "Copy All" };
             var sharedCopySubtreeItem = new MenuItem() { Header = "Copy subtree" };
+            favoriteSharedItem.Click += (s, a) => AddToFavorites();
+            unfavoriteSharedItem.Click += (s, a) => RemoveFromFavorites();
             sharedCopyItem.Click += (s, a) => Copy();
             sharedCopyAllItem.Click += (s, a) => CopyAll();
             sharedCopySubtreeItem.Click += (s, a) => CopySubtree();
+            sharedTreeContextMenu.AddItem(favoriteSharedItem);
+            sharedTreeContextMenu.AddItem(unfavoriteSharedItem);
             sharedTreeContextMenu.AddItem(sharedCopyItem);
             sharedTreeContextMenu.AddItem(sharedCopyAllItem);
             sharedTreeContextMenu.AddItem(sharedCopySubtreeItem);
@@ -344,6 +353,8 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             favoritesTree.TopPanel.Visibility = Visibility.Collapsed;
             favoritesTree.ResultsList.ItemContainerStyle = treeViewItemStyle;
             favoritesTree.ResultsList.SelectedItemChanged += ResultsList_SelectionChanged;
+            favoritesTree.ResultsList.ContextMenu = sharedTreeContextMenu;
+            favoritesTree.DisplayItems(new[] { new Note { Text = "Right-click any note and Favorite it to add it here" } });
 
             breadCrumb.SelectionChanged += BreadCrumb_SelectionChanged;
 
@@ -437,6 +448,8 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             showTimeItem = null;
             favoriteItem = null;
             unfavoriteItem = null;
+            favoriteSharedItem = null;
+            unfavoriteSharedItem = null;
 
             sharedTreeContextMenu = null;
             filesTreeContextMenu = null;
@@ -933,6 +946,19 @@ Recent (");
                 excludeNodeByNameFromSearch.Visibility = Visibility.Collapsed;
                 searchInNodeByNameItem.Visibility = Visibility.Collapsed;
             }
+        }
+
+        private void SharedTreeContextMenu_Opened(object sender, RoutedEventArgs e)
+        {
+            var node = ActiveTreeView.SelectedItem as BaseNode;
+            if (node == null)
+            {
+                return;
+            }
+
+            bool isFavorite = IsFavorite(node);
+            favoriteSharedItem.Visibility = !isFavorite ? Visibility.Visible : Visibility.Collapsed;
+            unfavoriteSharedItem.Visibility = isFavorite ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private object FindInFiles(string searchText, int maxResults, CancellationToken cancellationToken)
@@ -1732,6 +1758,11 @@ Recent (");
             var node = ActiveTreeView?.SelectedItem as BaseNode;
             if (node != null)
             {
+                if (node is ProxyNode proxy)
+                {
+                    node = proxy.Original ?? node;
+                }
+
                 if (favorites.Add(node))
                 {
                     RefreshFavorites();
@@ -1744,6 +1775,11 @@ Recent (");
             var node = ActiveTreeView?.SelectedItem as BaseNode;
             if (node != null)
             {
+                if (node is ProxyNode proxy)
+                {
+                    node = proxy.Original ?? node;
+                }
+
                 if (favorites.Remove(node))
                 {
                     RefreshFavorites();
@@ -1753,6 +1789,11 @@ Recent (");
 
         public bool IsFavorite(BaseNode node)
         {
+            if (node is ProxyNode proxy)
+            {
+                node = proxy.Original ?? node;
+            }
+
             return favorites.Contains(node);
         }
 
