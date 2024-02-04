@@ -57,13 +57,28 @@
                           SelectedIndex="0"
                           MinWidth="10">
                 <TabItem x:Name="mainTreeTab" Header="Log">
-                  <TreeView x:Name="treeView"
+                  <Grid>
+                    <TreeView x:Name="treeView"
                             BorderBrush="Transparent"
                             BorderThickness="0"
                             VirtualizingPanel.IsVirtualizing="True"
                             VirtualizingPanel.VirtualizationMode="Recycling"
                             ItemsSource="{Binding Children}"
                             structuredLogViewer:ScrollViewerHelper.ShiftWheelScrollsHorizontally="True" />
+                    <Grid x:Name="findControl"
+                          HorizontalAlignment="Right"
+                          VerticalAlignment="Top"
+                          Visibility="Collapsed"
+                          Margin="0,0,20,0">
+                      <TextBox x:Name="findTextBox"
+                               TextChanged="findTextBox_TextChanged"
+                               MinHeight="23"
+                               MinWidth="200"
+                               BorderThickness="2"
+                               Padding="2"
+                               VerticalContentAlignment="Center" />
+                    </Grid>
+                  </Grid>
                 </TabItem>
 
                 <TabItem x:Name="timelineTab" Header="Timeline">
