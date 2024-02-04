@@ -20,6 +20,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public bool IsAnalyzed { get; set; }
         public bool Succeeded { get; set; }
+        public Error FirstError { get; set; }
 
         public string LogFilePath { get; set; }
         public int FileFormatVersion { get; set; }

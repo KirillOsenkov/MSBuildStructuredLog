@@ -33,8 +33,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             get => null;
         }
 
-        public Error FirstError { get; set; }
-
         private IList<BaseNode> children;
         public bool HasChildren => children != null && children.Count > 0;
 
@@ -125,6 +123,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public void MakeChildrenObservable()
         {
+            if (children is ObservableCollection<BaseNode>)
+            {
+                return;
+            }
+
             if (children == null)
             {
                 children = new ObservableCollection<BaseNode>();
