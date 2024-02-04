@@ -291,7 +291,6 @@ namespace StructuredLogViewer.Controls
             treeViewItemStyle.Setters.Add(new Setter(TreeViewItem.VisibilityProperty, new Binding("IsVisible") { Mode = BindingMode.TwoWay, Converter = new BooleanToVisibilityConverter() }));
 
             treeViewItemStyle.Setters.Add(new EventSetter(MouseDoubleClickEvent, (MouseButtonEventHandler)OnItemDoubleClick));
-            treeViewItemStyle.Setters.Add(new EventSetter(PreviewMouseRightButtonDownEvent, (MouseButtonEventHandler)OnPreviewMouseRightButtonDown));
             treeViewItemStyle.Setters.Add(new EventSetter(RequestBringIntoViewEvent, (RequestBringIntoViewEventHandler)TreeViewItem_RequestBringIntoView));
             treeViewItemStyle.Setters.Add(new EventSetter(KeyDownEvent, (KeyEventHandler)OnItemKeyDown));
 
@@ -2092,14 +2091,6 @@ Recent (");
             if (node != null)
             {
                 args.Handled = Invoke(node) || ViewFullText(node);
-            }
-        }
-
-        private void OnPreviewMouseRightButtonDown(object sender, MouseButtonEventArgs args)
-        {
-            if (sender is TreeViewItem treeViewItem)
-            {
-                treeViewItem.IsSelected = true;
             }
         }
 

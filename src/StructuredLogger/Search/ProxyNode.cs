@@ -79,6 +79,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             if (result == null)
             {
+                Highlights.Add(Text);
                 return;
             }
 
@@ -235,6 +236,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             AddDuration(result);
+
+            if (Highlights.Count == 0)
+            {
+                if (Original is Target or Task or AddItem or RemoveItem)
+                {
+                    Highlights.Add(OriginalType + " ");
+                }
+
+                Highlights.Add(Title);
+            }
         }
 
         private object GetNodeDifferentiator(BaseNode node)

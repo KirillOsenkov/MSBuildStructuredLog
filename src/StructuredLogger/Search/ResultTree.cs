@@ -209,16 +209,6 @@ namespace StructuredLogViewer
 
             folderProxy.Original = actualParent;
 
-            if (folderProxy.Highlights.Count == 0)
-            {
-                if (actualParent is Target or Task or AddItem or RemoveItem)
-                {
-                    folderProxy.Highlights.Add(folderProxy.OriginalType + " ");
-                }
-
-                folderProxy.Highlights.Add(name);
-            }
-
             folderProxy.IsExpanded = true;
             return folderProxy;
         }
