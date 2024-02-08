@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -12,6 +13,17 @@ namespace StructuredLogViewer.Controls
 {
     public static class TreeViewExtensions
     {
+        public static readonly DependencyPropertyKey IsSelectionActivePropertyKey =
+            (DependencyPropertyKey)typeof(Selector)
+            .GetField("IsSelectionActivePropertyKey", BindingFlags.Static | BindingFlags.NonPublic)
+            .GetValue(null);
+
+        public static void Virtualize(this TreeView treeView)
+        {
+            VirtualizingPanel.SetIsVirtualizing(treeView, true);
+            VirtualizingPanel.SetVirtualizationMode(treeView, VirtualizationMode.Recycling);
+        }
+
         /// <summary>
         /// Selects an item in a (possibly virtualized) TreeView using a custom item chain
         /// </summary>
@@ -137,7 +149,7 @@ namespace StructuredLogViewer.Controls
                 {
                     // Since the TreeViewItems are in a virtualized panel, the item to be selected may not be realized,
                     // need to ensure it is brought into view, so it can be selected.
-                    ItemsPresenter itemsPresenter = FindVisualChild<ItemsPresenter>(container);
+                    ItemsPresenter itemsPresenter = container.FindVisualChild<ItemsPresenter>();
                     var containerFromItem = itemContainerGenerator.ContainerFromItem(item) as FrameworkElement;
                     if (itemsPresenter != null && (containerFromItem == null || !containerFromItem.IsOnScreen(treeView)))
                     {
@@ -199,36 +211,6 @@ namespace StructuredLogViewer.Controls
                     break;
                 }
             }
-        }
-
-        /// <summary>
-        /// Finds a visual child of a given type down the visual tree.
-        /// </summary>
-        /// <typeparam name="T">The type of the queried item.</typeparam>
-        /// <param name="element">The element in the visual tree to commence searching below from.</param>
-        /// <returns>The first child item that matches the queried type, null is returned otherwise.</returns>
-        public static T FindVisualChild<T>(this UIElement element) where T : UIElement
-        {
-            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(element); i++)
-            {
-                UIElement child = (UIElement)VisualTreeHelper.GetChild(element, i);
-                if (child != null)
-                {
-                    T correctlyTyped = child as T;
-                    if (correctlyTyped != null)
-                    {
-                        return correctlyTyped;
-                    }
-
-                    T descendent = FindVisualChild<T>(child);
-                    if (descendent != null)
-                    {
-                        return descendent;
-                    }
-                }
-            }
-
-            return null;
         }
     }
 
