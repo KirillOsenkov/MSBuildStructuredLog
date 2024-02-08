@@ -30,8 +30,6 @@ namespace StructuredLogViewer.Controls
         public TreeViewItem SelectedTreeViewItem { get; private set; }
         public string LogFilePath => Build?.LogFilePath;
 
-        private ScrollViewer scrollViewer;
-
         private SourceFileResolver sourceFileResolver;
         private ArchiveFileResolver archiveFile => sourceFileResolver.ArchiveFile;
         private PreprocessedFileManager preprocessedFileManager;
@@ -284,11 +282,9 @@ namespace StructuredLogViewer.Controls
             contextMenu.AddItem(showTimeItem);
             contextMenu.AddItem(hideItem);
 
-            var existingTreeViewItemStyle = (Style)Application.Current.Resources[typeof(TreeViewItem)];
-            var treeViewItemStyle = new Style(typeof(TreeViewItem), existingTreeViewItemStyle);
+            var treeViewItemStyle = TreeViewExtensions.CreateTreeViewItemStyleWithEvents<BaseNode, TreeViewItem>();
 
             treeViewItemStyle.Setters.Add(new EventSetter(MouseDoubleClickEvent, (MouseButtonEventHandler)OnItemDoubleClick));
-            treeViewItemStyle.Setters.Add(new EventSetter(RequestBringIntoViewEvent, (RequestBringIntoViewEventHandler)TreeViewItem_RequestBringIntoView));
             treeViewItemStyle.Setters.Add(new EventSetter(KeyDownEvent, (KeyEventHandler)OnItemKeyDown));
 
             treeView.ContextMenu = contextMenu;
@@ -456,7 +452,6 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             projectContext = null;
             SelectedTreeViewItem = null;
             sourceFileResolver = null;
-            scrollViewer = null;
             BaseNode.ClearSelectedNode();
             this.Build = null;
         }
@@ -1414,8 +1409,6 @@ Recent (");
 
         private void BuildControl_Loaded(object sender, RoutedEventArgs e)
         {
-            scrollViewer = treeView.Template.FindName("_tv_scrollviewer_", treeView) as ScrollViewer;
-
             if (!Build.Succeeded)
             {
                 var firstError = Build.FirstError;
@@ -2375,36 +2368,6 @@ Recent (");
             }
 
             return folder.Children;
-        }
-
-        private void TreeViewItem_RequestBringIntoView(object sender, RequestBringIntoViewEventArgs e)
-        {
-            if (scrollViewer == null)
-            {
-                return;
-            }
-
-            var treeViewItem = (TreeViewItem)sender;
-            var treeView = (TreeView)typeof(TreeViewItem).GetProperty("ParentTreeView", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(treeViewItem);
-
-            if (PresentationSource.FromDependencyObject(treeViewItem) == null)
-            {
-                // the item might have disconnected by the time we run this
-                return;
-            }
-
-            Point topLeftInTreeViewCoordinates = treeViewItem.TransformToAncestor(treeView).Transform(new Point(0, 0));
-            var treeViewItemTop = topLeftInTreeViewCoordinates.Y;
-            if (treeViewItemTop < 0
-                || treeViewItemTop + treeViewItem.ActualHeight > scrollViewer.ViewportHeight
-                || treeViewItem.ActualHeight > scrollViewer.ViewportHeight)
-            {
-                // if the item is not visible or too "tall", don't do anything; let them scroll it into view
-                return;
-            }
-
-            // if the item is already fully within the viewport vertically, disallow horizontal scrolling
-            e.Handled = true;
         }
 
         private void TreeViewItem_Selected(object sender, RoutedEventArgs e)

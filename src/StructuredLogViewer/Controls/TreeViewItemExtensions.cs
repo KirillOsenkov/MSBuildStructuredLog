@@ -25,6 +25,11 @@ namespace StructuredLogViewer.Controls
 
         public static TreeView GetTreeView(this TreeViewItem item)
         {
+            if (item == null)
+            {
+                return null;
+            }
+
             return ParentTreeViewProperty.GetValue(item) as TreeView;
         }
 

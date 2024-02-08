@@ -31,7 +31,7 @@ namespace StructuredLogViewer.Controls
             Action<T> itemDoubleClick = null,
             Action<T, KeyEventArgs> itemKeyUp = null,
             Action<T> itemLeftButtonUp = null,
-            IValueConverter contextMenuConverter = null,
+            ContextMenu contextMenu = null,
             Binding tooltipBinding = null)
             where T : class
         {
@@ -42,7 +42,6 @@ namespace StructuredLogViewer.Controls
             treeViewItemStyle.Setters.Add(new EventSetter(FrameworkElement.ContextMenuClosingEvent, (ContextMenuEventHandler)OnContextMenuClosing));
             treeViewItemStyle.Setters.Add(new EventSetter(UIElement.PreviewMouseRightButtonDownEvent, (MouseButtonEventHandler)OnPreviewMouseRightButtonDown));
             treeViewItemStyle.Setters.Add(new EventSetter(FrameworkElement.RequestBringIntoViewEvent, (RequestBringIntoViewEventHandler)OnRequestBringIntoView));
-            treeViewItemStyle.Setters.Add(new Setter(UIElement.VisibilityProperty, new Binding("IsVisible") { Mode = BindingMode.TwoWay, Converter = new BooleanToVisibilityConverter() }));
 
             if (itemLeftButtonUp != null)
             {
@@ -56,15 +55,12 @@ namespace StructuredLogViewer.Controls
 
             if (itemDoubleClick != null)
             {
-                treeViewItemStyle.Setters.Add(new EventSetter(Control.MouseDoubleClickEvent, (MouseButtonEventHandler)((s, e) => OnItemDoubleClick(e, itemDoubleClick))));
+                treeViewItemStyle.Setters.Add(new EventSetter(Control.MouseDoubleClickEvent, (MouseButtonEventHandler)((s, e) => OnItemDoubleClick(s, e, itemDoubleClick))));
             }
 
-            if (contextMenuConverter != null)
+            if (contextMenu != null)
             {
-                treeViewItemStyle.Setters.Add(
-                    new Setter(
-                        FrameworkElement.ContextMenuProperty,
-                        new Binding("ContextMenu") { Converter = contextMenuConverter }));
+                treeViewItemStyle.Setters.Add(new Setter(FrameworkElement.ContextMenuProperty, contextMenu));
             }
 
             if (tooltipBinding != null)
@@ -78,17 +74,15 @@ namespace StructuredLogViewer.Controls
         private static void OnRequestBringIntoView(object sender, RequestBringIntoViewEventArgs e)
         {
             var treeViewItem = GetTreeViewItem(sender);
-            var treeView = (TreeView)typeof(TreeViewItem).GetProperty("ParentTreeView", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(treeViewItem);
-
-            if (treeView == null)
+            if (treeViewItem == null || PresentationSource.FromDependencyObject(treeViewItem) == null)
             {
-                // treeViewItem could be {DisconnectedItem}
+                // the item might have disconnected by the time we run this
                 return;
             }
 
-            if (PresentationSource.FromDependencyObject(treeViewItem) == null)
+            var treeView = treeViewItem.GetTreeView();
+            if (treeView == null)
             {
-                // the item might have disconnected by the time we run this
                 return;
             }
 
@@ -117,14 +111,14 @@ namespace StructuredLogViewer.Controls
             Action<T> itemDoubleClick = null,
             Action<T, KeyEventArgs> itemKeyUp = null,
             Action<T> itemLeftButtonUp = null,
-            IValueConverter contextMenuConverter = null)
+            ContextMenu contextMenu = null)
             where T : class
         {
             treeView.ItemContainerStyle = CreateTreeViewItemStyleWithEvents<T, TTreeViewItem>(
                 itemDoubleClick,
                 itemKeyUp,
                 itemLeftButtonUp,
-                contextMenuConverter);
+                contextMenu);
             treeView.TextInput += TreeView_TextInput;
         }
 
@@ -153,14 +147,10 @@ namespace StructuredLogViewer.Controls
 
         private static void OnPreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
-            var original = e.OriginalSource as UIElement;
-            if (original != null)
+            var treeViewItem = GetTreeViewItem(e.OriginalSource);
+            if (treeViewItem != null)
             {
-                var treeViewItem = original.FindAncestor<TreeViewItem>();
-                if (treeViewItem != null)
-                {
-                    treeViewItem.IsSelected = true;
-                }
+                treeViewItem.IsSelected = true;
             }
         }
 
@@ -216,10 +206,17 @@ namespace StructuredLogViewer.Controls
             }
         }
 
-        private static void OnItemDoubleClick<T>(MouseButtonEventArgs args, Action<T> action)
+        private static void OnItemDoubleClick<T>(object sender, MouseButtonEventArgs args, Action<T> action)
             where T : class
         {
             if (args.Handled || args.ChangedButton != MouseButton.Left)
+            {
+                return;
+            }
+
+            // workaround for http://stackoverflow.com/a/36244243/37899
+            var treeViewItem = sender as TreeViewItem;
+            if (!treeViewItem.IsSelected)
             {
                 return;
             }
@@ -249,7 +246,14 @@ namespace StructuredLogViewer.Controls
 
         private static TreeViewItem GetTreeViewItem(object instance)
         {
-            return instance as TreeViewItem ?? (instance as FrameworkElement)?.TemplatedParent as TreeViewItem;
+            if (instance == null)
+            {
+                return null;
+            }
+
+            return instance as TreeViewItem ??
+                (instance as FrameworkElement)?.TemplatedParent as TreeViewItem ??
+                VisualTreeUtilities.FindAncestor<TreeViewItem>(instance as UIElement);
         }
 
         private static T GetSelectedTreeNode<T>(RoutedEventArgs args)
