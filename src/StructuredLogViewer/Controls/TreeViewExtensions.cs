@@ -55,10 +55,9 @@ namespace StructuredLogViewer.Controls
                             return;
                         }
 
-                        //treeItem.Focus();
                         treeItem.IsSelected = true;
-                        //treeItem.IsExpanded = true;
-                        var header = (FrameworkElement)treeItem.Template?.FindName("PART_Header", treeItem);
+
+                        var header = treeItem.GetHeaderControl();
                         if (header == null || !header.IsOnScreen(treeView))
                         {
                             treeItem.BringIntoView();
@@ -120,10 +119,21 @@ namespace StructuredLogViewer.Controls
             // in the chain.
             foreach (object item in container.Items)
             {
-                var convertedItem = (T)item;
+                var convertedItem = default(T);
+
+                // Convert the item if a conversion method exists. Otherwise
+                // just cast the item to the desired type.
+                if (selectInfo.ConvertMethod != null)
+                {
+                    convertedItem = selectInfo.ConvertMethod(item);
+                }
+                else
+                {
+                    convertedItem = (T)item;
+                }
 
                 // Compare the converted item with the item in the chain
-                if ((selectInfo.CompareMethod != null) && selectInfo.CompareMethod(convertedItem, currentItem))
+                if (selectInfo.CompareMethod != null && selectInfo.CompareMethod(convertedItem, currentItem))
                 {
                     // Since the TreeViewItems are in a virtualized panel, the item to be selected may not be realized,
                     // need to ensure it is brought into view, so it can be selected.
@@ -233,6 +243,11 @@ namespace StructuredLogViewer.Controls
         /// Gets or sets the method used to compare items in the control with items in the chain
         /// </summary>
         public Func<T, T, bool> CompareMethod { get; set; }
+
+        /// <summary>
+        /// Gets or sets the method used to convert items in the control to be compare with items in the chain
+        /// </summary>
+        public Func<object, T> ConvertMethod { get; set; }
 
         /// <summary>
         /// Gets or sets the method used to select the final item in the chain
