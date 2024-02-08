@@ -81,8 +81,6 @@ namespace StructuredLogViewer.Controls
 
                 current = next;
             }
-
-            return null;
         }
 
         public static TreeViewItem FindLastItem(this TreeViewItem item)
@@ -98,8 +96,6 @@ namespace StructuredLogViewer.Controls
 
                 current = next;
             }
-
-            return null;
         }
 
         public static TreeViewItem GetPreviousVisibleItemInTraversalOrder(this TreeViewItem current)
