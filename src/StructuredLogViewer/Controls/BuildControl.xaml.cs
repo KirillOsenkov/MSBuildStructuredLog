@@ -1474,6 +1474,27 @@ Recent (");
             }
         }
 
+        private TreeNode TryGetTreeNodeForFind()
+        {
+            BaseNode node = treeView.SelectedItem as BaseNode;
+            if (node is Property or Metadata)
+            {
+                node = node.Parent;
+            }
+            else if (node is Item item && !item.HasChildren)
+            {
+                node = node.Parent;
+            }
+
+            var treeNode = node as TreeNode;
+            if (treeNode != null && treeNode.HasChildren)
+            {
+                return treeNode;
+            }
+
+            return null;
+        }
+
         private void UpdateFindContent()
         {
             if (!IsFindVisible)
@@ -1481,11 +1502,11 @@ Recent (");
                 return;
             }
 
-            var node = treeView.SelectedItem as TreeNode;
-            if (node != null)
+            var treeNode = TryGetTreeNodeForFind();
+            if (treeNode != null)
             {
-                findLabel.Content = $"Filter children of: {TextUtilities.ShortenValue(GetText(node), trimPrompt: "", maxChars: 100)}";
-                if (nodeFilters.TryGetValue(node, out var filter))
+                findLabel.Content = $"Filter children of: {TextUtilities.ShortenValue(GetText(treeNode), trimPrompt: "", maxChars: 100)}";
+                if (nodeFilters.TryGetValue(treeNode, out var filter))
                 {
                     findTextBox.Text = filter;
                 }
@@ -1493,6 +1514,10 @@ Recent (");
                 {
                     findTextBox.Clear();
                 }
+            }
+            else
+            {
+                IsFindVisible = false;
             }
         }
 
@@ -1557,23 +1582,13 @@ Recent (");
         {
             var searchText = findTextBox.Text.Trim();
 
-            var node = treeView.SelectedItem as BaseNode;
+            var node = TryGetTreeNodeForFind();
             if (node == null)
             {
                 return;
             }
 
-            if (node is Metadata)
-            {
-                node = node.Parent;
-            }
-
-            if (node is not TreeNode treeNode)
-            {
-                return;
-            }
-
-            ApplyFilter(treeNode, searchText);
+            ApplyFilter(node, searchText);
         }
 
         private readonly Dictionary<TreeNode, string> nodeFilters = new Dictionary<TreeNode, string>();
@@ -1606,7 +1621,7 @@ Recent (");
                     }
 
                     var nodeText = GetText(childNode);
-                    if (nodeText.IndexOf(text, StringComparison.OrdinalIgnoreCase) >= 0)
+                    if (nodeText != null && nodeText.IndexOf(text, StringComparison.OrdinalIgnoreCase) >= 0)
                     {
                         return true;
                     }
@@ -2100,8 +2115,16 @@ Recent (");
 
                 if (args.Key == Key.F)
                 {
-                    IsFindVisible = !IsFindVisible;
-                    args.Handled = true;
+                    if (IsFindVisible)
+                    {
+                        IsFindVisible = false;
+                        args.Handled = true;
+                    }
+                    else if (TryGetTreeNodeForFind() != null)
+                    {
+                        IsFindVisible = true;
+                        args.Handled = true;
+                    }
                 }
             }
         }
