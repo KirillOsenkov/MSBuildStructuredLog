@@ -2,7 +2,7 @@ using System.Windows;
 
 namespace StructuredLogViewer.Controls
 {
-    public class ContextMenuUtilities
+    public class ContextMenuUtilities : UIElement
     {
         public static readonly DependencyProperty IsContextMenuOpenProperty = DependencyProperty.RegisterAttached(
             "IsContextMenuOpen",
