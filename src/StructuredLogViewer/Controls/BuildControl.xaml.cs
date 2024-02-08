@@ -227,7 +227,7 @@ namespace StructuredLogViewer.Controls
             runItem = new MenuItem() { Header = "Run" };
             debugItem = new MenuItem() { Header = "Debug" };
             copyItem.Click += (s, a) => Copy();
-            copySubtreeItem.Click += (s, a) => CopySubtree(treeView);
+            copySubtreeItem.Click += (s, a) => CopySubtree(ActiveTreeView);
             viewSubtreeTextItem.Click += (s, a) => ViewSubtreeText();
             searchInSubtreeItem.Click += (s, a) => SearchInSubtree();
             excludeSubtreeFromSearchItem.Click += (s, a) => ExcludeSubtreeFromSearch();
@@ -294,7 +294,7 @@ namespace StructuredLogViewer.Controls
             treeView.GotFocus += TreeView_GetFocus;
             treeView.AddHandler(TreeViewItem.SelectedEvent, (RoutedEventHandler)TreeViewItem_Selected);
 
-            findTextBox.KeyUp += FindTextBox_KeyUp;
+            findTextBox.KeyDown += FindTextBox_KeyDown;
             searchLogControl.searchTextBox.KeyUp += SearchTextBox_KeyUp;
 
             ActiveTreeView = treeView;
@@ -393,7 +393,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             treeView.ContextMenu = null;
             centralTabControl.SelectionChanged -= CentralTabControl_SelectionChanged;
 
-            findTextBox.KeyUp -= FindTextBox_KeyUp;
+            findTextBox.KeyDown -= FindTextBox_KeyDown;
             searchLogControl.searchTextBox.KeyUp -= SearchTextBox_KeyUp;
 
             if (this.tracing.Timeline != null)
@@ -1298,6 +1298,7 @@ Recent (");
             {
                 UpdateBreadcrumb(item);
                 UpdateProjectContext(item);
+                UpdateFindContent();
             }
         }
 
@@ -1448,28 +1449,10 @@ Recent (");
 
         private void TreeView_KeyDown(object sender, KeyEventArgs args)
         {
-            if (args.Key == Key.Delete)
-            {
-                Delete();
-                args.Handled = true;
-            }
-            else if (args.Key >= Key.A && args.Key <= Key.Z && args.KeyboardDevice.Modifiers == ModifierKeys.None)
+            if (args.Key >= Key.A && args.Key <= Key.Z && args.KeyboardDevice.Modifiers == ModifierKeys.None)
             {
                 SelectItemByKey((char)('A' + args.Key - Key.A));
                 args.Handled = true;
-            }
-            else if (args.Key == Key.F && args.KeyboardDevice.Modifiers == ModifierKeys.Control)
-            {
-                IsFindVisible = !IsFindVisible;
-                args.Handled = true;
-            }
-            else if (args.Key == Key.Escape && args.KeyboardDevice.Modifiers == ModifierKeys.None)
-            {
-                if (IsFindVisible)
-                {
-                    IsFindVisible = false;
-                    args.Handled = true;
-                }
             }
         }
 
@@ -1482,19 +1465,33 @@ Recent (");
                 if (value)
                 {
                     findTextBox.Focus();
-                    var node = treeView.SelectedItem as TreeNode;
-                    if (node != null)
-                    {
-                        findLabel.Content = $"Filter children of: {GetText(node)}";
-                        if (nodeFilters.TryGetValue(node, out var filter))
-                        {
-                            findTextBox.Text = filter;
-                        }
-                    }
+                    UpdateFindContent();
                 }
                 else
                 {
                     ActiveTreeView.Focus();
+                }
+            }
+        }
+
+        private void UpdateFindContent()
+        {
+            if (!IsFindVisible)
+            {
+                return;
+            }
+
+            var node = treeView.SelectedItem as TreeNode;
+            if (node != null)
+            {
+                findLabel.Content = $"Filter children of: {TextUtilities.ShortenValue(GetText(node), trimPrompt: "", maxChars: 100)}";
+                if (nodeFilters.TryGetValue(node, out var filter))
+                {
+                    findTextBox.Text = filter;
+                }
+                else
+                {
+                    findTextBox.Clear();
                 }
             }
         }
@@ -1516,31 +1513,43 @@ Recent (");
             }
         }
 
-        private void FindTextBox_KeyUp(object sender, KeyEventArgs e)
+        private void FindTextBox_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Escape && e.KeyboardDevice.Modifiers == ModifierKeys.None)
+            if (e.Handled == true)
             {
-                if (!string.IsNullOrEmpty(findTextBox.Text))
+                return;
+            }
+
+            if (e.KeyboardDevice.Modifiers == ModifierKeys.None)
+            {
+                if (e.Key == Key.Escape)
                 {
-                    findTextBox.Clear();
-                }
-                else
-                {
-                    IsFindVisible = false;
+                    if (!string.IsNullOrEmpty(findTextBox.Text))
+                    {
+                        findTextBox.Clear();
+                    }
+                    else
+                    {
+                        IsFindVisible = false;
+                    }
+
+                    e.Handled = true;
                 }
 
-                e.Handled = true;
+                if (e.Key == Key.Return)
+                {
+                    IsFindVisible = false;
+                    e.Handled = true;
+                }
             }
-            else if (e.Key == Key.Return && e.KeyboardDevice.Modifiers == ModifierKeys.None)
+            else if (e.KeyboardDevice.Modifiers == ModifierKeys.Control)
             {
-                IsFindVisible = false;
-                e.Handled = true;
-            }
-            else if (e.Key == Key.F && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
-            {
-                IsFindVisible = false;
-                FocusSearch();
-                e.Handled = true;
+                if (e.Key == Key.F)
+                {
+                    IsFindVisible = false;
+                    FocusSearch();
+                    e.Handled = true;
+                }
             }
         }
 
@@ -2044,26 +2053,55 @@ Recent (");
 
         private void OnItemKeyDown(object sender, KeyEventArgs args)
         {
-            if (args.Key == Key.Space || args.Key == Key.Return)
+            if (args.Handled)
             {
-                var treeNode = GetNode(args);
-                if (treeNode != null)
+                return;
+            }
+
+            if (args.KeyboardDevice.Modifiers == ModifierKeys.None)
+            {
+                if (args.Key == Key.Delete)
                 {
-                    args.Handled = Invoke(treeNode) || ViewFullText(treeNode);
+                    Delete();
+                    args.Handled = true;
+                }
+
+                if (args.Key == Key.Space || args.Key == Key.Return)
+                {
+                    var treeNode = GetNode(args);
+                    if (treeNode != null)
+                    {
+                        args.Handled = Invoke(treeNode) || ViewFullText(treeNode);
+                    }
+                }
+
+                if (args.Key == Key.Escape)
+                {
+                    if (IsFindVisible)
+                    {
+                        IsFindVisible = false;
+                        args.Handled = true;
+                    }
+                    else if (documentWell.IsVisible)
+                    {
+                        documentWell.Hide();
+                        args.Handled = true;
+                    }
                 }
             }
 
-            if (args.Key == Key.C && args.KeyboardDevice.Modifiers == ModifierKeys.Control)
+            if (args.KeyboardDevice.Modifiers == ModifierKeys.Control)
             {
-                Copy();
-                args.Handled = true;
-            }
-
-            if (args.Key == Key.Escape)
-            {
-                if (documentWell.IsVisible)
+                if (args.Key == Key.C)
                 {
-                    documentWell.Hide();
+                    Copy();
+                    args.Handled = true;
+                }
+
+                if (args.Key == Key.F)
+                {
+                    IsFindVisible = !IsFindVisible;
+                    args.Handled = true;
                 }
             }
         }

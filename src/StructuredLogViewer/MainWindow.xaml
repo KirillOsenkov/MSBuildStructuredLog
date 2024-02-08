@@ -8,6 +8,7 @@
         UseLayoutRounding="True"
         TextOptions.TextFormattingMode="Display"
         TextOptions.TextRenderingMode="ClearType"
+        KeyDown="Window_KeyDown"
         KeyUp="Window_KeyUp"
         SnapsToDevicePixels="True">
   <DockPanel>

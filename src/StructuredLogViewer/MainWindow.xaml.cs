@@ -898,6 +898,14 @@ Use project(.) or project(.csproj) to search all projects (slow)." };
         private object inProgressOperationLock = new object();
         public System.Threading.Tasks.Task InProgressTask = System.Threading.Tasks.Task.CompletedTask;
 
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.F && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
+            {
+                FocusSearch();
+            }
+        }
+
         private void Window_KeyUp(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.F5)
@@ -919,10 +927,6 @@ Use project(.) or project(.csproj) to search all projects (slow)." };
             else if (e.Key == Key.R && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
             {
                 RedactSecrets().Ignore();
-            }
-            else if (e.Key == Key.F && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
-            {
-                FocusSearch();
             }
             else if (e.Key == Key.C && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
             {
