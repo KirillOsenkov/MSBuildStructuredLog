@@ -347,6 +347,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             favoritesTree.ResultsList.SelectedItemChanged += ResultsList_SelectionChanged;
             favoritesTree.ResultsList.ContextMenu = sharedTreeContextMenu;
             favoritesTree.DisplayItems(new[] { new Note { Text = "Right-click any note and Favorite it to add it here" } });
+            favoritesTree.ResultsList.GotFocus += (s, a) => ActiveTreeView = favoritesTree.ResultsList;
 
             breadCrumb.SelectionChanged += BreadCrumb_SelectionChanged;
 
