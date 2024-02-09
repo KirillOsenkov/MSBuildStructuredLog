@@ -131,7 +131,7 @@ namespace StructuredLogViewer
                     }
 
                     // nest under a Task, unless it's an MSBuild task higher up the parent chain
-                    var task = resultNode.GetNearestParent<Task>(t => !string.Equals(t.Name, "MSBuild", StringComparison.OrdinalIgnoreCase));
+                    var task = resultNode.GetNearestParent<Task>(t => t is not MSBuildTask);
                     if (task != null && !isTarget && project != null && task.GetNearestParent<Project>() == project)
                     {
                         parent = InsertParent(parent, task);

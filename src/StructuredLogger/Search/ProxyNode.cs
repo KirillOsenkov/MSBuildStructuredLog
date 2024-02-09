@@ -65,7 +65,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     return $"{evaluation.Name} {evaluation.AdornmentString} {evaluation.EvaluationText}";
                 }
 
-                return namedNode.Name;
+                string text = namedNode.Name;
+
+                if (node is not Folder and not Item)
+                {
+                    text = $"{node.TypeName} {text}";
+                }
+
+                return text;
             }
             else if (node is TextNode textNode)
             {
