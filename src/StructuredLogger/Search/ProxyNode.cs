@@ -67,7 +67,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 string text = namedNode.Name;
 
-                if (node is not Folder and not Item && includeType)
+                if (node is not Folder and not Item && includeType && node.GetType() != typeof(TimedNode))
                 {
                     text = $"{node.TypeName} {text}";
                 }
