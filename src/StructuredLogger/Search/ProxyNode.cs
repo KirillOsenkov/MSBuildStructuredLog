@@ -47,7 +47,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        public static string GetNodeText(BaseNode node)
+        public static string GetNodeText(BaseNode node, bool includeType = true)
         {
             if (node == null)
             {
@@ -67,7 +67,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 string text = namedNode.Name;
 
-                if (node is not Folder and not Item)
+                if (node is not Folder and not Item && includeType)
                 {
                     text = $"{node.TypeName} {text}";
                 }
@@ -99,7 +99,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     Highlights.Add(new HighlightedText { Text = OriginalType });
                 }
 
-                Highlights.Add((Highlights.Count > 0 ? " " : "") + TextUtilities.ShortenValue(GetNodeText(node), "..."));
+                Highlights.Add((Highlights.Count > 0 ? " " : "") + TextUtilities.ShortenValue(GetNodeText(node, includeType: false), "..."));
 
                 AddDuration(result);
 
