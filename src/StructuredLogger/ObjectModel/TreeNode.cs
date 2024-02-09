@@ -96,19 +96,24 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        public void SortChildren()
+        private static int CompareByToString(BaseNode o1, BaseNode o2)
+            => string.Compare(o1.ToString(), o2.ToString(), StringComparison.OrdinalIgnoreCase);
+
+        public void SortChildren(Comparison<BaseNode> comparison = null)
         {
             if (children == null || children.Count < 2)
             {
                 return;
             }
 
+            comparison ??= CompareByToString;
+
             if (children is not ChildrenList list)
             {
                 list = CreateChildrenList(children);
             }
 
-            list.Sort((o1, o2) => string.Compare(o1.ToString(), o2.ToString(), StringComparison.OrdinalIgnoreCase));
+            list.Sort(comparison);
             if (list != children)
             {
                 children = list.ToArray();

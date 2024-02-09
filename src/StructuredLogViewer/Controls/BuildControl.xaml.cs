@@ -1825,11 +1825,52 @@ Recent (");
                 var searchResult = new SearchResult(f);
                 return searchResult;
             }).ToArray();
+
             var tree = ResultTree.BuildResultTree(
                 list,
                 addDuration: false,
-                addWhenNoResults: () => new Note { Text = "Right-click any node and Favorite it to add it here" }).Children;
-            favoritesTree.DisplayItems(tree);
+                addWhenNoResults: () => new Note { Text = "Right-click any node and Favorite it to add it here" });
+
+            SortByIndex(tree);
+
+            favoritesTree.DisplayItems(tree.Children);
+        }
+
+        private static int CompareByIndex(BaseNode l, BaseNode r)
+        {
+            if (l == r)
+            {
+                return 0;
+            }
+
+            if (l is null || r is null)
+            {
+                return -1;
+            }
+
+            if (l is TimedNode timedLeft && r is TimedNode timedRight)
+            {
+                return timedLeft.Index - timedRight.Index;
+            }
+
+            return 0;
+        }
+
+        private void SortByIndex(TreeNode node)
+        {
+            node.SortChildren(CompareByIndex);
+            SortByIndex(node.Children);
+        }
+
+        private void SortByIndex(IList<BaseNode> list)
+        {
+            foreach (var child in list)
+            {
+                if (child is TreeNode childNode)
+                {
+                    SortByIndex(childNode);
+                }
+            }
         }
 
         public void OpenFile()
