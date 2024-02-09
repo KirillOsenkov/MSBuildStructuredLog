@@ -346,7 +346,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             favoritesTree.ResultsList.ItemContainerStyle = treeViewItemStyle;
             favoritesTree.ResultsList.SelectedItemChanged += ResultsList_SelectionChanged;
             favoritesTree.ResultsList.ContextMenu = sharedTreeContextMenu;
-            favoritesTree.DisplayItems(new[] { new Note { Text = "Right-click any note and Favorite it to add it here" } });
+            favoritesTree.DisplayItems(new[] { new Note { Text = "Right-click any node and Favorite it to add it here" } });
             favoritesTree.ResultsList.GotFocus += (s, a) => ActiveTreeView = favoritesTree.ResultsList;
 
             breadCrumb.SelectionChanged += BreadCrumb_SelectionChanged;
@@ -1826,7 +1826,10 @@ Recent (");
                 var searchResult = new SearchResult(f);
                 return searchResult;
             }).ToArray();
-            var tree = BuildResultTree(list, addDuration: false);
+            var tree = ResultTree.BuildResultTree(
+                list,
+                addDuration: false,
+                addWhenNoResults: () => new Note { Text = "Right-click any node and Favorite it to add it here" }).Children;
             favoritesTree.DisplayItems(tree);
         }
 
@@ -2407,7 +2410,11 @@ Recent (");
 
         public IEnumerable BuildResultTree(object resultsObject, bool moreAvailable = false, bool addDuration = true)
         {
-            var folder = ResultTree.BuildResultTree(resultsObject, Elapsed, addDuration: addDuration);
+            var folder = ResultTree.BuildResultTree(
+                resultsObject,
+                Elapsed,
+                addDuration: addDuration,
+                addWhenNoResults: () => new Message { Text = "No results found." });
 
             if (moreAvailable)
             {

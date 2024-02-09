@@ -85,7 +85,7 @@ namespace BinlogTool
 
             Log.WriteLine(binlogFilePath, ConsoleColor.Cyan);
 
-            var resultTree = ResultTree.BuildResultTree(results);
+            var resultTree = ResultTree.BuildResultTree(results, addWhenNoResults: () => new Message { Text = "No results found." });
             PrintTree(resultTree);
             Log.WriteLine("====================================", ConsoleColor.Green);
             Log.WriteLine("");

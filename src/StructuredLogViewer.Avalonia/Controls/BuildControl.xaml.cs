@@ -1348,7 +1348,11 @@ Recent:
 
         public IEnumerable BuildResultTree(object resultsObject, bool moreAvailable = false, bool addDuration = true)
         {
-            var folder = ResultTree.BuildResultTree(resultsObject, Elapsed, addDuration: addDuration);
+            var folder = ResultTree.BuildResultTree(
+                resultsObject,
+                Elapsed,
+                addDuration: addDuration,
+                addWhenNoResults: () => new Message { Text = "No results found." });
 
             if (moreAvailable)
             {

@@ -12,7 +12,8 @@ namespace StructuredLogViewer
             object resultsObject,
             TimeSpan elapsed = default,
             TimeSpan precalculationDuration = default,
-            bool addDuration = true)
+            bool addDuration = true,
+            Func<BaseNode> addWhenNoResults = null)
         {
             var root = new Folder();
 
@@ -166,9 +167,10 @@ namespace StructuredLogViewer
                 parent.Children.Add(resultNode);
             }
 
-            if (!root.HasChildren)
+            if (!root.HasChildren && addWhenNoResults != null)
             {
-                root.Children.Add(new Message { Text = "No results found." });
+                var node = addWhenNoResults();
+                root.Children.Add(node);
             }
 
             return root;
