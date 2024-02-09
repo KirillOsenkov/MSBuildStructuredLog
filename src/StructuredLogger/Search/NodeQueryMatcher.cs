@@ -452,10 +452,11 @@ namespace StructuredLogViewer
             var typeName = node.TypeName;
 
             // for tasks derived from Task $task should still work
-            if (node is Microsoft.Build.Logging.StructuredLogger.Task t && t.IsDerivedTask)
-            {
-                searchFields[count++] = Strings.Task;
-            }
+            //if (node is Microsoft.Build.Logging.StructuredLogger.Task t && t.IsDerivedTask)
+            //{
+            //    //searchFields[count++] = Strings.Task;
+            //    typeName = Strings.Task;
+            //}
 
             searchFields[count++] = typeName;
 

@@ -15,6 +15,6 @@
 
     public class MSBuildTask : Task
     {
-        public override string TypeName => nameof(MSBuildTask);
+        //public override string TypeName => nameof(MSBuildTask);
     }
 }

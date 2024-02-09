@@ -100,6 +100,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             string typePrefix = OriginalType;
+            bool addedTypePrefix = false;
             if (typePrefix != Strings.Folder &&
                 typePrefix != Strings.Item &&
                 typePrefix != Strings.Metadata &&
@@ -107,6 +108,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 typePrefix != "Package")
             {
                 Highlights.Add(typePrefix);
+                addedTypePrefix = true;
             }
 
             // NameValueNode is special case: have to show name=value when searched only in one (name or value)
@@ -178,9 +180,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             foreach (var wordsInField in fieldsWithMatches)
             {
                 var fieldText = wordsInField.Key;
-                if (fieldText == OriginalType || (node is Task task && task.IsDerivedTask))
+                if (fieldText == typePrefix && addedTypePrefix)
                 {
-                    // OriginalType already added above
+                    // already added above
                     continue;
                 }
 
@@ -245,15 +247,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
 
                 Highlights.Add(Title);
-            }
-            else if (
-                Highlights.Count == 1 &&
-                Original is Task derived &&
-                derived.IsDerivedTask &&
-                Highlights[0] is string s &&
-                s == typePrefix)
-            {
-                Highlights.Add(" " + Title);
             }
         }
 

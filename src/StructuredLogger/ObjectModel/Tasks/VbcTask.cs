@@ -2,6 +2,6 @@
 {
     public class VbcTask : ManagedCompilerTask
     {
-        public override string TypeName => nameof(VbcTask);
+        //public override string TypeName => nameof(VbcTask);
     }
 }

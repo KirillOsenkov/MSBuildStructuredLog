@@ -491,9 +491,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (typeKeyword != 0)
             {
                 // zeroth field is always the type
-                if (entry.Field1 == typeKeyword ||
+                if (entry.Field1 == typeKeyword
                     // special case for types derived from Task, $task should still work
-                    (entry.Field1 == taskString && entry.GetField(1) == typeKeyword))
+                    // || (entry.Field1 == taskString && entry.GetField(1) == typeKeyword)
+                    )
                 {
                     // this node is of the type that we need, search other fields
                     if (result == null)

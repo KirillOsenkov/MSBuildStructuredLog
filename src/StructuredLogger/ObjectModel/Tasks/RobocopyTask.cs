@@ -6,7 +6,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class RobocopyTask : CopyTask
     {
-        public override string TypeName => nameof(RobocopyTask);
+        //public override string TypeName => nameof(RobocopyTask);
 
         protected override IEnumerable<FileCopyOperation> GetFileCopyOperations()
         {
