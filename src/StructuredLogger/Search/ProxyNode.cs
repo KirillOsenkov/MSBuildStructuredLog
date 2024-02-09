@@ -246,6 +246,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 Highlights.Add(Title);
             }
+            else if (
+                Highlights.Count == 1 &&
+                Original is Task derived &&
+                derived.IsDerivedTask &&
+                Highlights[0] is string s &&
+                s == typePrefix)
+            {
+                Highlights.Add(" " + Title);
+            }
         }
 
         private object GetNodeDifferentiator(BaseNode node)
