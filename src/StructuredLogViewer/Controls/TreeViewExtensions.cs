@@ -89,7 +89,7 @@ namespace StructuredLogViewer.Controls
             var scrollViewer = treeView.Template.FindName("_tv_scrollviewer_", treeView) as ScrollViewer;
             if (scrollViewer == null)
             {
-                scrollViewer = treeView.FindAncestor<ScrollViewer>();
+                scrollViewer = treeView.FindVisualChild<ScrollViewer>();
             }
 
             Point topLeftInTreeViewCoordinates = treeViewItem.TransformToAncestor(treeView).Transform(new Point(0, 0));
