@@ -86,17 +86,28 @@ namespace StructuredLogViewer.Controls
                 return;
             }
 
-            var scrollViewer = treeView.Template.FindName("_tv_scrollviewer_", treeView) as ScrollViewer;
-            if (scrollViewer == null)
+            var scrollViewer =
+                // sometimes the name is 1_T instead? see #758
+                treeView.Template.FindName("_tv_scrollviewer_", treeView) as ScrollViewer ??
+                treeView.Template.FindName("1_T", treeView) as ScrollViewer ??
+                treeView.FindVisualChild<ScrollViewer>() ??
+                // a treeview might not have a scrollviewer, so look for the ambient scrollviewer
+                treeView.FindAncestor<ScrollViewer>();
+
+            double viewportHeight = treeView.ActualHeight;
+
+            // scrollViewer can be null sometimes, see issue https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/758
+            if (scrollViewer != null)
             {
-                scrollViewer = treeView.FindAncestor<ScrollViewer>();
+                viewportHeight = scrollViewer.ViewportHeight;
             }
 
             Point topLeftInTreeViewCoordinates = treeViewItem.TransformToAncestor(treeView).Transform(new Point(0, 0));
             var itemTop = topLeftInTreeViewCoordinates.Y;
+            var itemHeight = treeViewItem.ActualHeight;
             if (itemTop < 0
-                || itemTop + treeViewItem.ActualHeight > scrollViewer.ViewportHeight
-                || treeViewItem.ActualHeight > scrollViewer.ViewportHeight)
+                || itemTop + itemHeight > viewportHeight
+                || itemHeight > viewportHeight)
             {
                 // if the item is not visible or too "tall", don't do anything; let them scroll it into view
                 return;
