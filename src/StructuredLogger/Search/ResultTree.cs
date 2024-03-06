@@ -238,7 +238,10 @@ namespace StructuredLogViewer
             if (folderProxy == null)
             {
                 folderProxy = parent.GetOrCreateNodeWithText<ProxyNode>(name);
-                map[actualParent] = folderProxy;
+                if (map != null)
+                {
+                    map[actualParent] = folderProxy;
+                }
             }
 
             folderProxy.Original = actualParent;
