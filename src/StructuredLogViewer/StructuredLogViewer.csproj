@@ -12,6 +12,7 @@
     <Company>Microsoft</Company>
     <Product>MSBuild Structured Log Viewer</Product>
     <AssemblyTitle>MSBuild Structured Log Viewer</AssemblyTitle>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <ItemGroup Condition="$(TargetFramework) == 'net472'">
