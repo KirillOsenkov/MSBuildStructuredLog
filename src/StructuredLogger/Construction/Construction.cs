@@ -1147,20 +1147,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             "WriteLinesToFile"
         };
 
-        private bool IgnoreAssembly(string taskName)
-        {
-            return ignoreAssemblyForTasks.Contains(taskName);
-        }
-
         private Task CreateTask(TaskStartedEventArgs taskStartedEventArgs)
         {
             var taskName = Intern(taskStartedEventArgs.TaskName);
 
-            string assembly = null;
-            if (!IgnoreAssembly(taskName))
-            {
-                assembly = Intern(GetTaskAssembly(taskName));
-            }
+            string assembly = GetTaskAssembly(taskName);
 
             var taskId = taskStartedEventArgs.BuildEventContext.TaskId;
             var startTime = taskStartedEventArgs.Timestamp;
@@ -1200,7 +1191,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             lock (_taskToAssemblyMap)
             {
-                return _taskToAssemblyMap.TryGetValue(taskName, out string assembly) ? assembly : string.Empty;
+                _taskToAssemblyMap.TryGetValue(taskName, out string assembly);
+
+                // ignore built-in tasks from our Core assembly
+                if (assembly == "Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" &&
+                    ignoreAssemblyForTasks.Contains(taskName))
+                {
+                    assembly = null;
+                }
+
+                return assembly;
             }
         }
 
@@ -1216,7 +1216,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 // Important to overwrite because the Using task ... message is usually logged immediately before the TaskStarted
                 // so need to make sure we remember the last assembly used for this task
                 // see issue https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/669
-                _taskToAssemblyMap[taskName] = assembly;
+                _taskToAssemblyMap[taskName] = Intern(assembly);
             }
         }
 
