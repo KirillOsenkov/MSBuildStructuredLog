@@ -6,7 +6,7 @@
     public class ReaderSettings
     {
         public static ReaderSettings Default { get; } =
-            new() { UnknownDataBehavior = UnknownDataBehavior.Error };
+            new() { UnknownDataBehavior = UnknownDataBehavior.Warning };
 
         /// <summary>
         /// Indication of how the unknown data in future versions of binlogs should be handled.
