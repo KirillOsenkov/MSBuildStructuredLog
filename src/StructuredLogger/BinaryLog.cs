@@ -166,7 +166,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (errorByType.Any(i => i != 0))
             {
                 string summary = string.Join(", ", errorByType.Where((count, index) => count > 0).Select((count, index) => $"{((ReaderErrorType)index)}: {count}"));
-                string message = $"{errorByType.Sum()} reading errors encountered ({summary}) - unknown data was skipped in current compatibility mode.";
+                string message = $"Skipped some data unknown to this version of Viewer. {errorByType.Sum()} case{(errorByType.Sum() > 1 ? "s" : string.Empty)} encountered ({summary}).";
 
                 TreeNode node = readerSettings.UnknownDataBehavior switch
                 {
@@ -176,7 +176,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     _ => throw new ArgumentOutOfRangeException(nameof(readerSettings.UnknownDataBehavior), readerSettings.UnknownDataBehavior, "Unexpected value")
                 };
 
-                build.AddChildAtBeginning(node);
+                build.AddChild(node);
             }
 
             return build;
