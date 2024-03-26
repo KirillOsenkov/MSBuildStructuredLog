@@ -326,7 +326,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 var shortText = text.Substring(0, newLength);
 
-                if (maxChars <= newLength && IsWhitespace(text, new Span(newLength, text.Length - newLength)))
+                if (newLength <= maxChars && IsWhitespace(text, new Span(newLength, text.Length - newLength)))
                 {
                     return shortText + '\u21b5';
                 }
