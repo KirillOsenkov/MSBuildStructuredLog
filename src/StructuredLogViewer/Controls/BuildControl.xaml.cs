@@ -35,6 +35,9 @@ namespace StructuredLogViewer.Controls
         private PreprocessedFileManager preprocessedFileManager;
         private NavigationHelper navigationHelper;
 
+        private MenuItem searchMenuGroup;
+        private MenuItem copyMenuGroup;
+        private MenuItem gotoMenuGroup;
         private MenuItem copyItem;
         private MenuItem copySubtreeItem;
         private MenuItem viewSubtreeTextItem;
@@ -190,6 +193,10 @@ namespace StructuredLogViewer.Controls
             // Build Log
             var contextMenu = new ContextMenu();
             contextMenu.Opened += ContextMenu_Opened;
+            searchMenuGroup = new() { Header = "Search ..." };
+            copyMenuGroup = new() { Header = "Copy ..." };
+            gotoMenuGroup = new() { Header = "Go to ..." };
+
             copyItem = new MenuItem() { Header = "Copy" };
             copySubtreeItem = new MenuItem() { Header = "Copy subtree" };
             viewSubtreeTextItem = new MenuItem() { Header = "View subtree text" };
@@ -198,8 +205,8 @@ namespace StructuredLogViewer.Controls
             excludeNodeByNameFromSearch = new MenuItem() { Header = "Exclude node from search" };
             searchInNodeByNameItem = new MenuItem() { Header = "Search in this node." };
             searchThisNode = new MenuItem() { Header = "Search This Node" };
-            goToTimeLineItem = new MenuItem() { Header = "Go to timeline" };
-            goToTracingItem = new MenuItem() { Header = "Go to tracing" };
+            goToTimeLineItem = new MenuItem() { Header = "Timeline" };
+            goToTracingItem = new MenuItem() { Header = "Tracing" };
             copyChildrenItem = new MenuItem() { Header = "Copy children" };
             sortChildrenItem = new MenuItem() { Header = "Sort children" };
             filterChildrenItem = new MenuItem() { Header = "Filter children (Ctrl+F)" };
@@ -261,25 +268,28 @@ namespace StructuredLogViewer.Controls
             contextMenu.AddItem(viewSourceItem);
             contextMenu.AddItem(viewFullTextItem);
             contextMenu.AddItem(openFileItem);
-            contextMenu.AddItem(preprocessItem);
-            contextMenu.AddItem(searchNuGetItem);
-            contextMenu.AddItem(searchInSubtreeItem);
-            contextMenu.AddItem(searchInNodeByNameItem);
-            contextMenu.AddItem(searchThisNode);
-            contextMenu.AddItem(excludeSubtreeFromSearchItem);
-            contextMenu.AddItem(excludeNodeByNameFromSearch);
-            contextMenu.AddItem(goToTimeLineItem);
-            contextMenu.AddItem(goToTracingItem);
-            contextMenu.AddItem(copyItem);
-            contextMenu.AddItem(copySubtreeItem);
-            contextMenu.AddItem(copyFilePathItem);
-            contextMenu.AddItem(viewSubtreeTextItem);
-            contextMenu.AddItem(copyChildrenItem);
+            gotoMenuGroup.AddItem(preprocessItem);
+            contextMenu.AddItem(searchMenuGroup);
+            searchMenuGroup.AddItem(searchNuGetItem);
+            searchMenuGroup.AddItem(searchInSubtreeItem);
+            searchMenuGroup.AddItem(searchInNodeByNameItem);
+            searchMenuGroup.AddItem(searchThisNode);
+            searchMenuGroup.AddItem(excludeSubtreeFromSearchItem);
+            searchMenuGroup.AddItem(excludeNodeByNameFromSearch);
+            contextMenu.AddItem(gotoMenuGroup);
+            gotoMenuGroup.AddItem(goToTimeLineItem);
+            gotoMenuGroup.AddItem(goToTracingItem);
+            contextMenu.AddItem(copyMenuGroup);
+            copyMenuGroup.AddItem(copyItem);
+            copyMenuGroup.AddItem(copySubtreeItem);
+            copyMenuGroup.AddItem(copyFilePathItem);
+            gotoMenuGroup.AddItem(viewSubtreeTextItem);
+            copyMenuGroup.AddItem(copyChildrenItem);
             contextMenu.AddItem(sortChildrenItem);
             contextMenu.AddItem(filterChildrenItem);
-            contextMenu.AddItem(copyNameItem);
-            contextMenu.AddItem(copyValueItem);
-            contextMenu.AddItem(showTimeItem);
+            copyMenuGroup.AddItem(copyNameItem);
+            copyMenuGroup.AddItem(copyValueItem);
+            gotoMenuGroup.AddItem(showTimeItem);
             contextMenu.AddItem(hideItem);
 
             var treeViewItemStyle = TreeViewExtensions.CreateTreeViewItemStyleWithEvents<BaseNode, TreeViewItem>();
@@ -870,9 +880,9 @@ Recent (");
         private void ContextMenu_Opened(object sender, RoutedEventArgs e)
         {
             var node = treeView.SelectedItem as BaseNode;
-            var visibility = node is NameValueNode ? Visibility.Visible : Visibility.Collapsed;
-            copyNameItem.Visibility = visibility;
-            copyValueItem.Visibility = visibility;
+            var nameValueVisibility = node is NameValueNode ? Visibility.Visible : Visibility.Collapsed;
+            copyNameItem.Visibility = nameValueVisibility;
+            copyValueItem.Visibility = nameValueVisibility;
             viewSourceItem.Visibility = CanView(node) ? Visibility.Visible : Visibility.Collapsed;
             viewFullTextItem.Visibility = HasFullText(node) ? Visibility.Visible : Visibility.Collapsed;
             openFileItem.Visibility = CanOpenFile(node) ? Visibility.Visible : Visibility.Collapsed;
@@ -937,6 +947,15 @@ Recent (");
                 excludeNodeByNameFromSearch.Visibility = Visibility.Collapsed;
                 searchInNodeByNameItem.Visibility = Visibility.Collapsed;
             }
+
+            searchMenuGroup.Visibility = searchMenuGroup.Items.Cast<MenuItem>().Any(p => p.Visibility != Visibility.Collapsed) ?
+                Visibility.Visible : Visibility.Collapsed;
+
+            copyMenuGroup.Visibility = copyMenuGroup.Items.Cast<MenuItem>().Any(p => p.Visibility != Visibility.Collapsed) ?
+                Visibility.Visible : Visibility.Collapsed;
+
+            gotoMenuGroup.Visibility = gotoMenuGroup.Items.Cast<MenuItem>().Any(p => p.Visibility != Visibility.Collapsed) ?
+                Visibility.Visible : Visibility.Collapsed;
         }
 
         private void SharedTreeContextMenu_Opened(object sender, RoutedEventArgs e)
