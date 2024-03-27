@@ -193,9 +193,9 @@ namespace StructuredLogViewer.Controls
             // Build Log
             var contextMenu = new ContextMenu();
             contextMenu.Opened += ContextMenu_Opened;
-            searchMenuGroup = new() { Header = "Search ..." };
-            copyMenuGroup = new() { Header = "Copy ..." };
-            gotoMenuGroup = new() { Header = "Go to ..." };
+            searchMenuGroup = new() { Header = "Search" };
+            copyMenuGroup = new() { Header = "Copy" };
+            gotoMenuGroup = new() { Header = "Go to" };
 
             copyItem = new MenuItem() { Header = "Copy" };
             copySubtreeItem = new MenuItem() { Header = "Copy subtree" };
