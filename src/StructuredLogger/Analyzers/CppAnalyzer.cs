@@ -83,7 +83,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private bool globalLinkTime = false;
 
         private TimeSpan oneMilliSecond = TimeSpan.FromMilliseconds(1);
-        private static HashSet<string> hashCppTasks = new HashSet<string>() { MultiToolTaskName, CLTaskName, LinkTaskName, LibTaskName };
         private List<CppTimedNode> resultTimedNode = new List<CppTimedNode>();
 
         public CppAnalyzer()
