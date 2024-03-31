@@ -287,6 +287,32 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public const int MaxDisplayedValueLength = 260;
         private const string TrimPrompt = "... (Space: view, Ctrl+C: copy)";
 
+        public static int GetShortenLength(string text, int maxChars = MaxDisplayedValueLength)
+        {
+            if (text == null)
+            {
+                return 0;
+            }
+
+            int lineBreak = text.IndexOfFirstLineBreak();
+            if (lineBreak != -1)
+            {
+                if (lineBreak < maxChars)
+                {
+                    return lineBreak;
+                }
+            }
+            else
+            {
+                if (text.Length <= maxChars)
+                {
+                    return text.Length;
+                }
+            }
+
+            return maxChars;
+        }
+
         public static string ShortenValue(string text, string trimPrompt = TrimPrompt, int maxChars = MaxDisplayedValueLength)
         {
             if (text == null)
@@ -294,31 +320,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return text;
             }
 
-            int newLength = maxChars;
-            int lineBreak = text.IndexOfFirstLineBreak();
-            if (lineBreak == -1)
+            int newLength = GetShortenLength(text, maxChars);
+
+            if (text.Length != newLength)
             {
-                if (text.Length <= newLength)
+                var shortText = text.Substring(0, newLength);
+
+                if (newLength <= maxChars && IsWhitespace(text, new Span(newLength, text.Length - newLength)))
                 {
-                    return text;
+                    return shortText + '\u21b5';
                 }
-            }
-            else
-            {
-                if (lineBreak < newLength)
-                {
-                    newLength = lineBreak;
-                }
+
+                return shortText + trimPrompt;
             }
 
-            var shortText = text.Substring(0, newLength);
-
-            if (lineBreak == newLength && IsWhitespace(text, new Span(newLength, text.Length - newLength)))
-            {
-                return shortText + '\u21b5';
-            }
-
-            return shortText + trimPrompt;
+            return text;
         }
 
         public static int IndexOfFirstLineBreak(this string text)
