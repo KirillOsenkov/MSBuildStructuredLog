@@ -7,6 +7,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class Strings
     {
+        private static readonly object locker = new object();
+
         public static StringsSet ResourceSet { get; private set; }
 
         public static void Initialize(string culture = "en-US")
@@ -16,10 +18,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 culture = "en-US";
             }
 
-            if (ResourceSet == null || ResourceSet.Culture != culture)
+            lock (locker)
             {
-                ResourceSet = new StringsSet(culture);
-                InitializeRegex();
+                if (ResourceSet == null || ResourceSet.Culture != culture)
+                {
+                    ResourceSet = new StringsSet(culture);
+                    InitializeRegex();
+                }
             }
         }
 

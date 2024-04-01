@@ -14,6 +14,8 @@ namespace StructuredLogger.Tests
             foreach (var culture in cultures)
             {
                 Strings.Initialize(culture);
+                Assert.Equal(culture, Strings.ResourceSet.Culture);
+                Assert.NotNull(Strings.OutputItemsMessagePrefix);
             }
         }
     }
