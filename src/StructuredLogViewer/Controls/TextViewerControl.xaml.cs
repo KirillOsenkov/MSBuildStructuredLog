@@ -15,6 +15,7 @@ using ICSharpCode.AvalonEdit.Folding;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 using ICSharpCode.AvalonEdit.Search;
+using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Win32;
 
 namespace StructuredLogViewer.Controls
@@ -156,6 +157,63 @@ namespace StructuredLogViewer.Controls
                     textEditor.SyntaxHighlighting = HighlightingLoader.Load(reader, HighlightingManager.Instance);
                 }
 
+                return;
+            }
+
+            Match matches;
+            matches = Strings.TargetSkippedFalseConditionRegex.Match(text);
+            if (!matches.Success)
+            {
+                matches = Strings.TaskSkippedFalseConditionRegex.Match(text);
+            }
+
+            if (matches.Success)
+            {
+                string unevaluated = matches.Groups[2].Value;
+                string evaluated = matches.Groups[3].Value;
+
+                try
+                {
+                    var nodeResult = ConditionNode.ParseAndProcess(unevaluated, evaluated);
+                    StringBuilder sb = new StringBuilder();
+                    sb.AppendLine(text);
+                    sb.AppendLine();
+
+                    Action<ConditionNode> nodeFormat = null;
+
+                    nodeFormat = (ConditionNode node) =>
+                    {
+                        if (node.Result)
+                        {
+                            return;
+                            // sb.Append('\u2714');
+                        }
+
+                        if (!string.IsNullOrEmpty(node.Text))
+                        {
+                            sb.Append('\u274C'); // X marker
+
+                            for (int i = 0; i < node.Level; i++)
+                            {
+                                sb.Append('\t');
+                            }
+
+                            sb.AppendLine(node.Text);
+                        }
+
+                        foreach (var child in node.Children)
+                        {
+                            nodeFormat(child);
+                        }
+                    };
+
+                    nodeFormat(nodeResult);
+
+                    textEditor.Text = sb.ToString();
+                }
+                catch { }
+
+                // Show why this task/target skipped.
                 return;
             }
 

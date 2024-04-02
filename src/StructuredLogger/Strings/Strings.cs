@@ -68,11 +68,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             TargetSkippedFalseCondition = GetString("TargetSkippedFalseCondition");
 
-            TargetSkippedFalseConditionRegex = CreateRegex(TargetSkippedFalseCondition, 3);
+            TargetSkippedFalseConditionRegex = CreateRegex(TargetSkippedFalseCondition, 3, capture: true);
 
             TaskSkippedFalseCondition = GetString("TaskSkippedFalseCondition");
 
-            TaskSkippedFalseConditionRegex = CreateRegex(TaskSkippedFalseCondition, 3);
+            TaskSkippedFalseConditionRegex = CreateRegex(TaskSkippedFalseCondition, 3, capture: true);
 
             TargetDoesNotExistBeforeTargetMessage = CreateRegex(GetString("TargetDoesNotExistBeforeTargetMessage"), 2);
 
@@ -344,14 +344,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return "^" + text + "$";
         }
 
-        public static Regex CreateRegex(string text, int replacePlaceholders = 0, RegexOptions options = RegexOptions.Compiled)
+        public static Regex CreateRegex(string text, int replacePlaceholders = 0, RegexOptions options = RegexOptions.Compiled | RegexOptions.Singleline, bool capture = false)
         {
-            text = Regex.Escape(text);
+            text = "^" + Regex.Escape(text) + "$";
             if (replacePlaceholders > 0)
             {
                 for (int i = 0; i < replacePlaceholders; i++)
                 {
-                    text = text.Replace(@$"\{{{i}}}", ".*?");
+                    if (capture)
+                    {
+                        text = text.Replace(@$"\{{{i}}}", $"(?<group{i}>.*?)");
+                    }
+                    else
+                    {
+                        text = text.Replace(@$"\{{{i}}}", $"(.*?)");
+                    }
                 }
             }
 
