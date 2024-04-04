@@ -84,9 +84,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public void Populate(SearchResult result)
         {
+            var highlights = this.highlights;
+
             if (result == null)
             {
-                Highlights.Add(Text);
+                highlights.Add(Text);
                 return;
             }
 
@@ -96,10 +98,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 if (result.MatchedByType)
                 {
-                    Highlights.Add(new HighlightedText { Text = OriginalType });
+                    highlights.Add(new HighlightedText { Text = OriginalType });
                 }
 
-                Highlights.Add((Highlights.Count > 0 ? " " : "") + TextUtilities.ShortenValue(GetNodeText(node, includeType: false), "..."));
+                highlights.Add((highlights.Count > 0 ? " " : "") + TextUtilities.ShortenValue(GetNodeText(node, includeType: false), "..."));
 
                 AddDuration(result);
 
@@ -114,7 +116,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 typePrefix != Strings.Property &&
                 typePrefix != "Package")
             {
-                Highlights.Add(typePrefix);
+                highlights.Add(typePrefix);
                 addedTypePrefix = true;
             }
 
@@ -151,10 +153,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (namedNode != null && !namedNodeNameFound)
             {
-                Highlights.Add((Highlights.Count > 0 ? " " : "") + namedNode.Name);
+                highlights.Add((highlights.Count > 0 ? " " : "") + namedNode.Name);
                 if (GetNodeDifferentiator(node) is object differentiator)
                 {
-                    Highlights.Add(differentiator);
+                    highlights.Add(differentiator);
                 }
             }
 
@@ -175,13 +177,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
 
                     return (f, (IEnumerable<string>)matches);
-                });
+                }).ToArray();
             }
             else
             {
                 fieldsWithMatches = result.WordsInFields
                     .GroupBy(t => t.field, t => t.match)
-                    .Select(g => (g.Key, (IEnumerable<string>)g));
+                    .Select(g => (g.Key, (IEnumerable<string>)g))
+                    .ToArray();
             }
 
             foreach (var wordsInField in fieldsWithMatches)
@@ -193,14 +196,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     continue;
                 }
 
-                if (Highlights.Count > 0)
+                if (highlights.Count > 0)
                 {
-                    Highlights.Add(" ");
+                    highlights.Add(" ");
                 }
 
                 if (nameValueNode != null && fieldText.Equals(nameValueNode.Value) && !nameFound)
                 {
-                    Highlights.Add(nameValueNode.Name + " = ");
+                    highlights.Add(nameValueNode.Name + " = ");
                 }
 
                 fieldText = TextUtilities.ShortenValue(fieldText, "...");
@@ -211,27 +214,27 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     if (span.Start > index)
                     {
-                        Highlights.Add(fieldText.Substring(index, span.Start - index));
+                        highlights.Add(fieldText.Substring(index, span.Start - index));
                     }
 
-                    Highlights.Add(new HighlightedText { Text = fieldText.Substring(span.Start, span.Length) });
+                    highlights.Add(new HighlightedText { Text = fieldText.Substring(span.Start, span.Length) });
                     index = span.End;
                 }
 
                 if (index < fieldText.Length)
                 {
-                    Highlights.Add(fieldText.Substring(index, fieldText.Length - index));
+                    highlights.Add(fieldText.Substring(index, fieldText.Length - index));
                 }
 
                 if (nameValueNode != null && fieldText.Equals(nameValueNode.Name))
                 {
                     if (!valueFound)
                     {
-                        Highlights.Add(" = " + TextUtilities.ShortenValue(nameValueNode.Value, "..."));
+                        highlights.Add(" = " + TextUtilities.ShortenValue(nameValueNode.Value, "..."));
                     }
                     else
                     {
-                        Highlights.Add(" = ");
+                        highlights.Add(" = ");
                     }
                 }
 
@@ -239,21 +242,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     if (GetNodeDifferentiator(node) is object differentiator)
                     {
-                        Highlights.Add(differentiator);
+                        highlights.Add(differentiator);
                     }
                 }
             }
 
             AddDuration(result);
 
-            if (Highlights.Count == 0)
+            if (highlights.Count == 0)
             {
                 if (Original is Target or Task or AddItem or RemoveItem)
                 {
-                    Highlights.Add(OriginalType + " ");
+                    highlights.Add(OriginalType + " ");
                 }
 
-                Highlights.Add(Title);
+                highlights.Add(Title);
             }
         }
 

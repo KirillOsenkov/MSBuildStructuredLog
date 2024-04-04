@@ -32,7 +32,8 @@ namespace StructuredLogViewer
                 return;
             }
 
-            foreach (var projectEvaluation in evaluation.Children.OfType<ProjectEvaluation>())
+            var allEvaluations = evaluation.Children.OfType<ProjectEvaluation>().ToArray();
+            foreach (var projectEvaluation in allEvaluations)
             {
                 var imports = projectEvaluation.FindChild<NamedNode>(Strings.Imports);
                 if (imports == null)
