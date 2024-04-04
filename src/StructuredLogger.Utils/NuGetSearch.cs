@@ -823,7 +823,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var proxy = new ProxyNode();
             proxy.Original = original;
             proxy.SearchResult = match;
-            _ = proxy.Highlights;
             proxy.Text = original.ToString();
             proxy.IsExpanded = original.IsExpanded;
 
