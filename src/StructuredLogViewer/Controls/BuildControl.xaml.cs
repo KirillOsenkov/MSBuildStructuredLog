@@ -2302,6 +2302,11 @@ Recent (");
                         {
                             // TODO: https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/392
                             evaluation = node.GetNearestParentOrSelf<ProjectEvaluation>();
+
+                            if (evaluation == null && node is Project project)
+                            {
+                                evaluation = Build.FindEvaluation(project.EvaluationId);
+                            }
                         }
 
                         return DisplayFile(hasSourceFile.SourceFilePath, line, evaluation: evaluation);
