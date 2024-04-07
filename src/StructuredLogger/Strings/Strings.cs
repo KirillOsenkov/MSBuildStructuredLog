@@ -346,7 +346,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static Regex CreateRegex(string text, int replacePlaceholders = 0, RegexOptions options = RegexOptions.Compiled | RegexOptions.Singleline, bool capture = false)
         {
-            text = "^" + Regex.Escape(text) + "$";
+            if (text.StartsWith("^") || !text.EndsWith("$"))
+            {
+                text = Regex.Escape(text);
+            }
+            else
+            {
+                text = "^" + Regex.Escape(text) + "$";
+            }
+
             if (replacePlaceholders > 0)
             {
                 for (int i = 0; i < replacePlaceholders; i++)
@@ -357,7 +365,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                     else
                     {
-                        text = text.Replace(@$"\{{{i}}}", $"(.*?)");
+                        text = text.Replace(@$"\{{{i}}}", $".*?");
                     }
                 }
             }
