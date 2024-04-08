@@ -346,13 +346,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static Regex CreateRegex(string text, int replacePlaceholders = 0, RegexOptions options = RegexOptions.Compiled | RegexOptions.Singleline, bool capture = false)
         {
-            if (text.StartsWith("^") || !text.EndsWith("$"))
+            if (capture)
             {
-                text = Regex.Escape(text);
+                text = "^" + Regex.Escape(text) + "$";
             }
             else
             {
-                text = "^" + Regex.Escape(text) + "$";
+                text = Regex.Escape(text);
             }
 
             if (replacePlaceholders > 0)
