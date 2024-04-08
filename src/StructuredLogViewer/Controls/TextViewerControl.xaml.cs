@@ -15,6 +15,7 @@ using ICSharpCode.AvalonEdit.Folding;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 using ICSharpCode.AvalonEdit.Search;
+using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Win32;
 
 namespace StructuredLogViewer.Controls
@@ -159,6 +160,12 @@ namespace StructuredLogViewer.Controls
                 return;
             }
 
+            if (TryParseCondition(text, out string newText))
+            {
+                textEditor.Text = newText;
+                return;
+            }
+
             bool looksLikeXml = Utilities.LooksLikeXml(text);
             if (looksLikeXml && !IsXml)
             {
@@ -214,6 +221,68 @@ namespace StructuredLogViewer.Controls
 
                 textEditor.SyntaxHighlighting = null;
             }
+        }
+
+        private bool TryParseCondition(string text, out string newText)
+        {
+            Match matches = Strings.TargetSkippedFalseConditionRegex.Match(text);
+            if (!matches.Success)
+            {
+                matches = Strings.TaskSkippedFalseConditionRegex.Match(text);
+            }
+
+            if (matches.Success)
+            {
+                string unevaluated = matches.Groups[2].Value;
+                string evaluated = matches.Groups[3].Value;
+
+                try
+                {
+                    var nodeResult = ConditionNode.ParseAndProcess(unevaluated, evaluated);
+                    StringBuilder sb = new StringBuilder();
+                    sb.AppendLine(text);
+
+                    bool firstPrint = true;
+
+                    Action<ConditionNode> nodeFormat = null;
+
+                    nodeFormat = (ConditionNode node) =>
+                    {
+                        if (node.Result)
+                        {
+                            // sb.Append('\u2714'); // check mark
+                            return;
+                        }
+
+                        if (!string.IsNullOrEmpty(node.Text))
+                        {
+                            if (firstPrint)
+                            {
+                                sb.AppendLine();
+                                sb.AppendLine("Condition Analyzer:");
+                                firstPrint = false;
+                            }
+
+                            sb.Append("\u274C "); // X marker
+                            sb.AppendLine(node.Text);
+                        }
+
+                        foreach (var child in node.Children)
+                        {
+                            nodeFormat(child);
+                        }
+                    };
+
+                    nodeFormat(nodeResult);
+
+                    newText = sb.ToString();
+                    return true;
+                }
+                catch { }
+            }
+
+            newText = null;
+            return false;
         }
 
         public void SetPathDisplay(bool displayPath)
