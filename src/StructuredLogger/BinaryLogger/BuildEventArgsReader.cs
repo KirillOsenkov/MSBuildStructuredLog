@@ -910,6 +910,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var taskName = ReadOptionalString();
             var projectFile = ReadOptionalString();
             var taskFile = ReadOptionalString();
+            var taskAssemblyLocation = _fileFormatVersion >= 20 ? ReadOptionalString() : null;
 
             string message = fields.Message;
             if (_fileFormatVersion >= 13)
@@ -926,6 +927,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 fields.Timestamp);
             e.LineNumber = fields.LineNumber;
             e.ColumnNumber = fields.ColumnNumber;
+            e.TaskAssemblyLocation = taskAssemblyLocation;
             SetCommonFields(e, fields);
             return e;
         }
