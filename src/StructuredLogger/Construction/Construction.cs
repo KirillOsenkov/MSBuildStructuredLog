@@ -1151,7 +1151,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             var taskName = Intern(taskStartedEventArgs.TaskName);
 
-            string assembly = GetTaskAssembly(taskName);
+            string assembly = taskStartedEventArgs is TaskStartedEventArgs2 taskStartedEventArgs2 && !string.IsNullOrEmpty(taskStartedEventArgs2.TaskAssemblyLocation) ?
+                taskStartedEventArgs2.TaskAssemblyLocation :
+                GetTaskAssembly(taskName);
 
             var taskId = taskStartedEventArgs.BuildEventContext.TaskId;
             var startTime = taskStartedEventArgs.Timestamp;
