@@ -413,6 +413,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             WriteDeduplicatedString(e.ProjectFile);
             WriteDeduplicatedString(e.TaskFile);
 
+            if (e is TaskStartedEventArgs2 taskStarted2)
+            {
+                WriteDeduplicatedString(taskStarted2.TaskAssemblyLocation);
+            }
+
             return BinaryLogRecordKind.TaskStarted;
         }
 
