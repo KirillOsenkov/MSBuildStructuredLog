@@ -106,6 +106,8 @@ namespace Microsoft.Build.UnitTests
             var xml1 = GetTestFile("1.xml");
             var xml2 = GetTestFile("2.xml");
 
+            build.Children.Where(c => c.TypeName == "Error").Should().BeEmpty("There should be no errors in the build");
+
             Serialization.Write(build, xml1);
 
             Serialization.Write(build, GetTestFile("1.buildlog"));
