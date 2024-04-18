@@ -412,11 +412,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             WriteDeduplicatedString(e.TaskName);
             WriteDeduplicatedString(e.ProjectFile);
             WriteDeduplicatedString(e.TaskFile);
-
-            if (e is TaskStartedEventArgs2 taskStarted2)
-            {
-                WriteDeduplicatedString(taskStarted2.TaskAssemblyLocation);
-            }
+            WriteDeduplicatedString(e is TaskStartedEventArgs2 taskStarted2 ?
+                taskStarted2.TaskAssemblyLocation :
+                null);
 
             return BinaryLogRecordKind.TaskStarted;
         }
@@ -797,7 +795,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 // We're only going to write the arguments for messages,
                 // warnings and errors. Only set the flag for these.
-                if (e is LazyFormattedBuildEventArgs lazy && Reflector.GetArguments(lazy) is { Length: > 0} &&
+                if (e is LazyFormattedBuildEventArgs lazy && Reflector.GetArguments(lazy) is { Length: > 0 } &&
                     (e is BuildMessageEventArgs or BuildWarningEventArgs or BuildErrorEventArgs))
                 {
                     flags |= BuildEventArgsFieldFlags.Arguments;
