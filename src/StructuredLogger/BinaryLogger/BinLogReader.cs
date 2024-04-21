@@ -381,6 +381,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             List<Record> blobs = new List<Record>();
 
+            Strings.Initialize();
+
             // forward the events from the reader to the subscribers of this class
             reader.OnBlobRead += OnBlobRead;
 
