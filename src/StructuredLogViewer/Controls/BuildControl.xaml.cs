@@ -2043,7 +2043,7 @@ Recent (");
 
         private void CopyPaths(TreeView tree = null)
         {
-            tree = tree ?? ActiveTreeView;
+            tree ??= ActiveTreeView;
             if (tree == null)
             {
                 return;
