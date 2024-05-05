@@ -113,7 +113,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return false;
             }
 
-            var underProjectMatcher = matcher.IncludeMatchers.FirstOrDefault(m => m.UnderProject);
+            var underProjectMatcher = matcher.ProjectMatchers.FirstOrDefault();
             if (underProjectMatcher == null || underProjectMatcher.Terms.Count == 0)
             {
                 resultCollector.Add(new SearchResult(new Error { Text = "Add a 'project(...)' clause to filter which project(s) to search." }));

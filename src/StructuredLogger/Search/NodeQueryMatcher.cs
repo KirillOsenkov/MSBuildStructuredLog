@@ -106,7 +106,7 @@ namespace StructuredLogViewer
         public bool IncludeStart { get; set; }
         public bool IncludeEnd { get; set; }
         public TimeSpan PrecalculationDuration { get; set; }
-        public bool UnderProject { get; set; } = false;
+        public bool IsProjectMatcher { get; set; } = false;
 
         public int NameTermIndex { get; set; } = -1;
         public int ValueTermIndex { get; set; } = -1;
@@ -231,7 +231,7 @@ namespace StructuredLogViewer
                     Terms.RemoveAt(termIndex);
 
                     var underMatcher = new NodeQueryMatcher(word);
-                    underMatcher.UnderProject = true;
+                    underMatcher.IsProjectMatcher = true;
                     IncludeMatchers.Add(underMatcher);
                     ProjectMatchers.Add(underMatcher);
                     continue;
@@ -807,7 +807,7 @@ namespace StructuredLogViewer
 
         public static bool IsUnder(NodeQueryMatcher matcher, BaseNode node)
         {
-            if (matcher.UnderProject)
+            if (matcher.IsProjectMatcher)
             {
                 var project = node.GetNearestParent<TimedNode>(p => p is Project or ProjectEvaluation);
                 if (project != null &&
