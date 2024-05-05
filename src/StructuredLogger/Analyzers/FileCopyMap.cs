@@ -205,7 +205,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (matcher.Terms.Count == 0)
             {
-                resultSet.Add(new SearchResult(new Note { Text = "Specify a directory or file path, or a partial file name" }));
+                if (matcher.ProjectMatchers.Count > 0)
+                {
+                    TryGetFiles(text: null, resultSet, matcher, maxResults);
+                    return true;
+                }
+
+                resultSet.Add(new SearchResult(new Note { Text = "Specify a directory or file path, a partial file name or a project() clause." }));
 
                 return true;
             }
@@ -305,7 +311,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     var directoryData = kvp.Value;
                     foreach (var file in directoryData.Files)
                     {
-                        if (file.FilePath.IndexOf(text, StringComparison.OrdinalIgnoreCase) != -1)
+                        if (text == null || file.FilePath.IndexOf(text, StringComparison.OrdinalIgnoreCase) != -1)
                         {
                             if (!FileMatches(file, matcher))
                             {
@@ -314,7 +320,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                             var item = new Item { Name = file.FilePath };
                             var result = new SearchResult(item);
-                            result.AddMatch(file.FilePath, text);
+                            if (text != null)
+                            {
+                                result.AddMatch(file.FilePath, text);
+                            }
+
                             results.Add(result);
                             if (results.Count >= maxResults)
                             {

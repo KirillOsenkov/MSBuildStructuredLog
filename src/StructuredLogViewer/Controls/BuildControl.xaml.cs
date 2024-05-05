@@ -2336,6 +2336,12 @@ Recent (");
                 searchLogControl.SearchText = text;
                 return true;
             }
+            else if (matcher.Terms.Count == 0 && matcher.ProjectMatchers.Count > 0)
+            {
+                text = $"{text} {filePath}";
+                searchLogControl.SearchText = text;
+                return true;
+            }
 
             return false;
         }
