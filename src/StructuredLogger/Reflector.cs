@@ -71,18 +71,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             timeStampSetter(args, timestamp);
         }
 
-        private static Action<BuildMessageEventArgs, int> lineNumberSetter = GetFieldSetter<BuildMessageEventArgs, int>("lineNumber");
-        public static void SetLineNumber(BuildMessageEventArgs args, int lineNumber)
-        {
-            lineNumberSetter(args, lineNumber);
-        }
-
-        private static Action<BuildMessageEventArgs, int> columnNumberSetter = GetFieldSetter<BuildMessageEventArgs, int>("columnNumber");
-        public static void SetColumnNumber(BuildMessageEventArgs args, int columnNumber)
-        {
-            columnNumberSetter(args, columnNumber);
-        }
-
         private static MethodInfo enumerateItemsPerType;
         public static MethodInfo GetEnumerateItemsPerTypeMethod(Type itemDictionary)
         {

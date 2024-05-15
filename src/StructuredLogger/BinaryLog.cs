@@ -165,7 +165,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (errorByType.Any(i => i != 0))
             {
-                string summary = string.Join(", ", errorByType.Where((count, index) => count > 0).Select((count, index) => $"{((ReaderErrorType)index)}: {count}"));
+                string summary = string.Join(", ", errorByType.Where((count, index) => count > 0).Select((count, index) => $"{((ReaderErrorType)index)}: {count} cases"));
                 string message = $"Skipped some data unknown to this version of Viewer. {errorByType.Sum()} case{(errorByType.Sum() > 1 ? "s" : string.Empty)} encountered ({summary}).";
 
                 TreeNode node = readerSettings.UnknownDataBehavior switch

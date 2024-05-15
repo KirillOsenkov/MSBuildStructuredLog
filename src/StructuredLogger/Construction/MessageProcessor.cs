@@ -174,6 +174,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private void ProcessTaskParameter(TaskParameterEventArgs args)
         {
             string itemType = args.ItemType;
+            var (parameterName, propertyName) = args is TaskParameterEventArgs2 taskParameterEventArgs2
+                ? (taskParameterEventArgs2.ParameterName, taskParameterEventArgs2.PropertyName)
+                : (null, null);
             var items = args.Items;
             var kind = args.Kind;
 
@@ -189,11 +192,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 bool isOutput = kind == TaskParameterMessageKind.TaskOutput;
 
-                string folderName = isOutput ? Strings.OutputItems : Strings.Parameters;
+                string folderName = isOutput
+                    ? (propertyName is null ? Strings.OutputItems : Strings.OutputProperties)
+                    : Strings.Parameters;
                 parent = task.GetOrCreateNodeWithName<Folder>(folderName);
                 parent.DisableChildrenCache = true;
 
-                node = CreateParameterNode(itemType, items, isOutput);
+                string itemName = isOutput && parameterName is not null
+                    ? $"{propertyName ?? itemType} from parameter {parameterName}"
+                    : propertyName ?? itemType;
+
+                node = CreateParameterNode(itemName, items, isOutput);
             }
             else if (
                 kind == TaskParameterMessageKind.AddItem ||
@@ -208,14 +217,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     named = new AddItem
                     {
-                        LineNumber = args.LineNumber
+                        LineNumber = (args as TaskParameterEventArgs2)?.LineNumber ?? args.LineNumber
                     };
                 }
                 else if (kind == TaskParameterMessageKind.RemoveItem)
                 {
                     named = new RemoveItem
                     {
-                        LineNumber = args.LineNumber
+                        LineNumber = (args as TaskParameterEventArgs2)?.LineNumber ?? args.LineNumber
                     };
                 }
                 else
