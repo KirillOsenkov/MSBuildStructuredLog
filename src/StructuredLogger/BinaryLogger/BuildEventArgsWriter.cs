@@ -589,6 +589,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Write((int)e.Kind);
             WriteDeduplicatedString(e.ItemType);
             WriteTaskItemList(e.Items, e.LogItemMetadata);
+
+            TaskParameterEventArgs2 taskParameters2 = e as TaskParameterEventArgs2;
+            WriteDeduplicatedString(taskParameters2?.ParameterName);
+            WriteDeduplicatedString(taskParameters2?.PropertyName);
+
             if (e.Kind == TaskParameterMessageKind.AddItem
                 || e.Kind == TaskParameterMessageKind.TaskOutput)
             {

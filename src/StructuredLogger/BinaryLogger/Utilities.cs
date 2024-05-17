@@ -2,10 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Logging.StructuredLogger;
 
 namespace Microsoft.Build.BackEnd
 {
@@ -14,6 +12,8 @@ namespace Microsoft.Build.BackEnd
         internal static TaskParameterEventArgs CreateTaskParameterEventArgs(
             BuildEventContext buildEventContext,
             TaskParameterMessageKind messageKind,
+            string parameterName,
+            string propertyName,
             string itemType,
             IList items,
             bool logItemMetadata,
@@ -21,27 +21,18 @@ namespace Microsoft.Build.BackEnd
             int line,
             int column)
         {
-            var args = new TaskParameterEventArgs(
+            var args = new TaskParameterEventArgs2(
                 messageKind,
+                parameterName,
+                propertyName,
                 itemType,
                 items,
                 logItemMetadata,
                 timestamp);
             args.BuildEventContext = buildEventContext;
 
-            if (line != 0)
-            {
-                Reflector.SetLineNumber(args, line);
-            }
-
-            if (column != 0)
-            {
-                Reflector.SetColumnNumber(args, column);
-            }
-
-            // Should probably make these public
-            // args.LineNumber = line;
-            // args.ColumnNumber = column;
+            args.LineNumber = line;
+            args.ColumnNumber = column;
             return args;
         }
     }

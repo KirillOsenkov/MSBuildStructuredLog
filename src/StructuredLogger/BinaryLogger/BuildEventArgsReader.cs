@@ -1149,10 +1149,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var kind = (TaskParameterMessageKind)ReadInt32();
             var itemType = ReadDeduplicatedString() ?? "N/A";
             var items = ReadTaskItemList() as IList ?? Array.Empty<ITaskItem>();
+            var (parameterName, propertyName) = _fileFormatVersion >= 21
+                ? (ReadDeduplicatedString(), ReadDeduplicatedString())
+                : (null, null);
 
             var e = ItemGroupLoggingHelper.CreateTaskParameterEventArgs(
                 fields.BuildEventContext,
                 kind,
+                parameterName,
+                propertyName,
                 itemType,
                 items,
                 logItemMetadata: true,
