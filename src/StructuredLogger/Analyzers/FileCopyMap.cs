@@ -246,16 +246,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return false;
         }
 
-        private void TryExplainSingleFileCopy(FileData fileData, IList<SearchResult> resultSet)
+        private void TryExplainSingleFileCopy(Project project, string filePath, IList<SearchResult> resultSet)
         {
-            var fileCopyInfo = fileData.Incoming.FirstOrDefault() ?? fileData.Outgoing.FirstOrDefault();
-            var project = fileCopyInfo.Project;
-
-            var filePath = fileData.FilePath;
-            if (fileData.Incoming.Count == 1)
-            {
-                filePath = fileCopyInfo.FileCopyOperation.Source;
-            }
+            var fileData = GetFile(filePath);
 
             var fileName = Path.GetFileName(filePath);
 
@@ -278,7 +271,66 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             FindCopyToOutputDirectoryItem(resultSet, itemsFolder, fileName, "None");
+            FindCopyToOutputDirectoryItem(resultSet, itemsFolder, fileName, "Compile");
             FindCopyToOutputDirectoryItem(resultSet, itemsFolder, fileName, "Content");
+            FindCopyToOutputDirectoryItem(resultSet, itemsFolder, fileName, "EmbeddedResource");
+
+            var target = project.FindTarget("_GetCopyToOutputDirectoryItemsFromTransitiveProjectReferences");
+            if (target != null)
+            {
+                var task = target.FindChild<MSBuildTask>();
+                if (task != null)
+                {
+                    var outputItems = task.FindLastChild<Folder>(f => f.Name == "OutputItems");
+                    if (outputItems != null)
+                    {
+                        var addItem = outputItems.FindChild<AddItem>();
+                        if (addItem != null)
+                        {
+                            var item = addItem.FindChild<Item>(filePath);
+                            if (item != null)
+                            {
+                                var metadata = item.FindChild<Metadata>(m => m.Name == "MSBuildSourceProjectFile");
+                                if (metadata != null)
+                                {
+                                    var metadataValue = metadata.Value;
+                                    resultSet.Add(new SearchResult(metadata));
+
+                                    var referencedProject = task.FindChild<Project>(p => p.Name == Path.GetFileName(metadataValue));
+                                    if (referencedProject != null)
+                                    {
+                                        var getCopyToOutputDirectoryItems = referencedProject.FindTarget("GetCopyToOutputDirectoryItems");
+                                        if (getCopyToOutputDirectoryItems != null)
+                                        {
+                                            if (getCopyToOutputDirectoryItems.OriginalNode is Target original)
+                                            {
+                                                getCopyToOutputDirectoryItems = original;
+                                                referencedProject = getCopyToOutputDirectoryItems.Project;
+                                            }
+
+                                            TryExplainSingleFileCopy(referencedProject, filePath, resultSet);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private void TryExplainSingleFileCopy(FileData fileData, IList<SearchResult> resultSet)
+        {
+            var fileCopyInfo = fileData.Incoming.FirstOrDefault() ?? fileData.Outgoing.FirstOrDefault();
+            var project = fileCopyInfo.Project;
+
+            var sourceFilePath = fileData.FilePath;
+            if (fileData.Incoming.Count == 1)
+            {
+                sourceFilePath = fileCopyInfo.FileCopyOperation.Source;
+            }
+
+            TryExplainSingleFileCopy(project, sourceFilePath, resultSet);
         }
 
         private static void FindCopyToOutputDirectoryItem(IList<SearchResult> resultSet, NamedNode itemsFolder, string fileName, string itemName)

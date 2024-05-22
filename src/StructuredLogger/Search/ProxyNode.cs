@@ -78,6 +78,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 return textNode.Text;
             }
+            else if (node is NameValueNode nameValue)
+            {
+                return $"{nameValue.Name}={nameValue.Value}";
+            }
 
             return node.Title;
         }

@@ -180,5 +180,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             tasksById.TryGetValue(id, out var task);
             return task;
         }
+
+        public Target FindTarget(string targetName)
+        {
+            return Children.OfType<Target>().Where(t => t.Name == targetName).FirstOrDefault();
+        }
     }
 }
