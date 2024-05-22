@@ -313,6 +313,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             FindCopyToOutputDirectoryItem(resultSet, itemsFolder, fileName, "None");
             FindCopyToOutputDirectoryItem(resultSet, itemsFolder, fileName, "Compile");
+            FindCopyToOutputDirectoryItem(resultSet, itemsFolder, fileName, "_CompileItemsToCopy");
             FindCopyToOutputDirectoryItem(resultSet, itemsFolder, fileName, "Content");
             FindCopyToOutputDirectoryItem(resultSet, itemsFolder, fileName, "EmbeddedResource");
         }
