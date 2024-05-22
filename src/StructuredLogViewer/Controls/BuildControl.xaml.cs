@@ -67,6 +67,8 @@ namespace StructuredLogViewer.Controls
         private MenuItem unfavoriteItem;
         private MenuItem favoriteSharedItem;
         private MenuItem unfavoriteSharedItem;
+        private Separator separator1;
+        private Separator separator2;
 
         private ContextMenu sharedTreeContextMenu;
         private ContextMenu filesTreeContextMenu;
@@ -260,6 +262,8 @@ namespace StructuredLogViewer.Controls
             runItem.Click += (s, a) => Run(treeView.SelectedItem as Task, debug: false);
             debugItem.Click += (s, a) => Run(treeView.SelectedItem as Task, debug: true);
             hideItem.Click += (s, a) => Delete();
+            separator1 = new Separator();
+            separator2 = new Separator();
 
             contextMenu.AddItem(favoriteItem);
             contextMenu.AddItem(unfavoriteItem);
@@ -268,7 +272,8 @@ namespace StructuredLogViewer.Controls
             contextMenu.AddItem(viewSourceItem);
             contextMenu.AddItem(viewFullTextItem);
             contextMenu.AddItem(openFileItem);
-            gotoMenuGroup.AddItem(preprocessItem);
+            contextMenu.AddItem(preprocessItem);
+
             contextMenu.AddItem(searchMenuGroup);
             searchMenuGroup.AddItem(searchNuGetItem);
             searchMenuGroup.AddItem(searchInSubtreeItem);
@@ -276,20 +281,29 @@ namespace StructuredLogViewer.Controls
             searchMenuGroup.AddItem(searchThisNode);
             searchMenuGroup.AddItem(excludeSubtreeFromSearchItem);
             searchMenuGroup.AddItem(excludeNodeByNameFromSearch);
+
             contextMenu.AddItem(gotoMenuGroup);
             gotoMenuGroup.AddItem(goToTimeLineItem);
             gotoMenuGroup.AddItem(goToTracingItem);
-            contextMenu.AddItem(copyMenuGroup);
-            copyMenuGroup.AddItem(copyItem);
-            copyMenuGroup.AddItem(copySubtreeItem);
-            copyMenuGroup.AddItem(copyFilePathItem);
-            gotoMenuGroup.AddItem(viewSubtreeTextItem);
-            copyMenuGroup.AddItem(copyChildrenItem);
+
+            contextMenu.AddItem(new Separator());
+
+            contextMenu.AddItem(copyItem);
+            contextMenu.AddItem(copySubtreeItem);
+            contextMenu.AddItem(copyFilePathItem);
+            contextMenu.AddItem(copyChildrenItem);
+            contextMenu.AddItem(copyNameItem);
+            contextMenu.AddItem(copyValueItem);
+
+            contextMenu.AddItem(separator2);
+
+            contextMenu.AddItem(viewSubtreeTextItem);
+            contextMenu.AddItem(showTimeItem);
+
+            contextMenu.AddItem(separator1);
+
             contextMenu.AddItem(sortChildrenItem);
             contextMenu.AddItem(filterChildrenItem);
-            copyMenuGroup.AddItem(copyNameItem);
-            copyMenuGroup.AddItem(copyValueItem);
-            gotoMenuGroup.AddItem(showTimeItem);
             contextMenu.AddItem(hideItem);
 
             var treeViewItemStyle = TreeViewExtensions.CreateTreeViewItemStyleWithEvents<BaseNode, TreeViewItem>();
@@ -902,6 +916,7 @@ Recent (");
             runItem.Visibility = canRun;
             debugItem.Visibility = canRun;
             hideItem.Visibility = node is TreeNode ? Visibility.Visible : Visibility.Collapsed;
+            separator2.Visibility = Visibility.Visible;
 
             if (node is SearchableItem searchItem)
             {
@@ -920,6 +935,7 @@ Recent (");
             if (node is TimedNode timedNode)
             {
                 showTimeItem.Visibility = Visibility.Visible;
+                separator1.Visibility = Visibility.Visible;
                 searchInSubtreeItem.Visibility = hasChildren ? Visibility.Visible : Visibility.Collapsed;
                 excludeSubtreeFromSearchItem.Visibility = hasChildren ? Visibility.Visible : Visibility.Collapsed;
                 goToTimeLineItem.Visibility = Visibility.Visible;
@@ -939,6 +955,7 @@ Recent (");
             }
             else
             {
+                separator1.Visibility = Visibility.Collapsed;
                 showTimeItem.Visibility = Visibility.Collapsed;
                 searchInSubtreeItem.Visibility = Visibility.Collapsed;
                 excludeSubtreeFromSearchItem.Visibility = Visibility.Collapsed;
@@ -946,6 +963,10 @@ Recent (");
                 goToTracingItem.Visibility = Visibility.Collapsed;
                 excludeNodeByNameFromSearch.Visibility = Visibility.Collapsed;
                 searchInNodeByNameItem.Visibility = Visibility.Collapsed;
+                if (!hasChildren)
+                {
+                    separator2.Visibility = Visibility.Collapsed;
+                }
             }
 
             searchMenuGroup.Visibility = searchMenuGroup.Items.Cast<MenuItem>().Any(p => p.Visibility != Visibility.Collapsed) ?
@@ -1931,7 +1952,15 @@ Recent (");
         {
             if (treeView.SelectedItem is TimedNode treeNode)
             {
-                searchLogControl.SearchText += $" under(${treeNode.TypeName} {treeNode.Name})";
+                if (treeNode is Project)
+                {
+                    searchLogControl.SearchText += $" project({treeNode.Name})";
+                }
+                else
+                {
+                    searchLogControl.SearchText += $" under(${treeNode.TypeName} {treeNode.Name})";
+                }
+
                 SelectSearchTab();
             }
         }
