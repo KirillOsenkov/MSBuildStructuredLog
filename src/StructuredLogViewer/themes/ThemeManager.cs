@@ -88,6 +88,7 @@ namespace StructuredLogViewer
                 SetResource("NoImportStroke", GetBrush("#FF0000"));
                 SetResource("NoImportFill", Brushes.BlanchedAlmond);
                 SetResource("NuGet", Brushes.DeepSkyBlue);
+                SetResource(SystemColors.MenuBarBrushKey, SystemColors.MenuBarBrush);
             }
             else if (UseDarkTheme)
             {
@@ -133,6 +134,7 @@ namespace StructuredLogViewer
                 SetResource("AddItemStroke", Brushes.Teal);
                 SetResource("NuGet", GetBrush("#004880"));
                 SetResource("\u01D6", GetBrush("#595959"));
+                SetResource(SystemColors.MenuBarBrushKey, "#F5F5F5");
             }
 
             SetResource(SystemColors.ControlBrushKey, SystemColors.ControlBrush);
@@ -140,7 +142,6 @@ namespace StructuredLogViewer
             SetResource(SystemColors.WindowBrushKey, SystemColors.WindowBrush);
             SetResource(SystemColors.HighlightBrushKey, Brushes.LightSkyBlue);
             SetResource(SystemColors.InactiveSelectionHighlightBrushKey, SystemColors.InactiveSelectionHighlightBrush);
-            SetResource(SystemColors.MenuBarBrushKey, SystemColors.MenuBarBrush);
             SetResource(SystemColors.MenuHighlightBrushKey, SystemColors.MenuHighlightBrush);
             SetResource(SystemColors.MenuTextBrushKey, SystemColors.MenuTextBrush);
             SetResource(SystemColors.MenuBrushKey, SystemColors.MenuBrush);
