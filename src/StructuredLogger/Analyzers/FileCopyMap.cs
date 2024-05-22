@@ -248,32 +248,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void TryExplainSingleFileCopy(Project project, string filePath, IList<SearchResult> resultSet)
         {
-            var fileData = GetFile(filePath);
-
             var fileName = Path.GetFileName(filePath);
-
-            var build = project.GetRoot() as Build;
-            if (build == null)
-            {
-                return;
-            }
-
-            var evaluation = build.FindEvaluation(project.EvaluationId);
-            if (evaluation == null)
-            {
-                return;
-            }
-
-            var itemsFolder = evaluation.FindChild<NamedNode>("Items");
-            if (itemsFolder == null)
-            {
-                return;
-            }
-
-            FindCopyToOutputDirectoryItem(resultSet, itemsFolder, fileName, "None");
-            FindCopyToOutputDirectoryItem(resultSet, itemsFolder, fileName, "Compile");
-            FindCopyToOutputDirectoryItem(resultSet, itemsFolder, fileName, "Content");
-            FindCopyToOutputDirectoryItem(resultSet, itemsFolder, fileName, "EmbeddedResource");
 
             var target = project.FindTarget("_GetCopyToOutputDirectoryItemsFromTransitiveProjectReferences");
             if (target != null)
@@ -317,6 +292,29 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                 }
             }
+
+            var build = project.GetRoot() as Build;
+            if (build == null)
+            {
+                return;
+            }
+
+            var evaluation = build.FindEvaluation(project.EvaluationId);
+            if (evaluation == null)
+            {
+                return;
+            }
+
+            var itemsFolder = evaluation.FindChild<NamedNode>("Items");
+            if (itemsFolder == null)
+            {
+                return;
+            }
+
+            FindCopyToOutputDirectoryItem(resultSet, itemsFolder, fileName, "None");
+            FindCopyToOutputDirectoryItem(resultSet, itemsFolder, fileName, "Compile");
+            FindCopyToOutputDirectoryItem(resultSet, itemsFolder, fileName, "Content");
+            FindCopyToOutputDirectoryItem(resultSet, itemsFolder, fileName, "EmbeddedResource");
         }
 
         private void TryExplainSingleFileCopy(FileData fileData, IList<SearchResult> resultSet)
