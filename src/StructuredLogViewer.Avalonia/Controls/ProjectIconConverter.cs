@@ -36,7 +36,7 @@ namespace StructuredLogViewer.Avalonia.Controls
         {
             if (!icons.TryGetValue(resourceName, out var icon))
             {
-                if (!Application.Current.Resources.TryGetResource(resourceName, out var resource))
+                if (!Application.Current.Resources.TryGetResource(resourceName, null, out var resource))
                     resource = null;
 
                 icon = resource as DrawingGroup;

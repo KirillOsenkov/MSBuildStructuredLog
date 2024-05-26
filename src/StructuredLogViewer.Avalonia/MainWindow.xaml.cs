@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
@@ -12,6 +13,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
+using Avalonia.Platform.Storage;
 using Microsoft.Build.Logging.StructuredLogger;
 using StructuredLogViewer.Avalonia.Controls;
 using Task = System.Threading.Tasks.Task;
@@ -84,7 +86,7 @@ namespace StructuredLogViewer.Avalonia
 
         private async Task<bool> TryOpenFromClipboard()
         {
-            var text = await Application.Current.Clipboard.GetTextAsync();
+            var text = await Clipboard.GetTextAsync();
             if (string.IsNullOrEmpty(text) || text.Length > 260)
             {
                 return false;
@@ -424,30 +426,38 @@ namespace StructuredLogViewer.Avalonia
 
         private async Task OpenLogFile()
         {
-            var openFileDialog = new OpenFileDialog();
-            openFileDialog.Filters.Add(new FileDialogFilter { Name = "Build Log (*.binlog;*.buildlog;*.xml)", Extensions = { "binlog", "buildlog", "xml" } });
-            openFileDialog.Title = "Open a build log file";
-            var result = await openFileDialog.ShowAndGetFileAsync(this);
-            if (!File.Exists(result))
+            var files = await TopLevel.GetTopLevel(this)!.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                Title = "Build Log",
+                FileTypeFilter = new[] { FilePickerFileTypes.All, FileTypes.Binlog, FileTypes.Xml }
+            });
+
+            var firstFile = files.FirstOrDefault();
+            if (firstFile is null)
             {
                 return;
             }
 
-            OpenLogFile(result);
+            if (firstFile.Path is { IsAbsoluteUri: true, Scheme: "file" } fileNameUri)
+            {
+                OpenLogFile(fileNameUri.LocalPath);
+            }
         }
 
         private async Task OpenProjectOrSolution()
         {
-            var openFileDialog = new OpenFileDialog();
-            openFileDialog.Filters.Add(new FileDialogFilter { Name = "MSBuild projects and solutions (*.sln;*.*proj)", Extensions = { "sln", "*proj" } });
-            openFileDialog.Title = "Open a solution or project";
-            var result = await openFileDialog.ShowAndGetFileAsync(this);
-            if (!File.Exists(result))
+            var files = await TopLevel.GetTopLevel(this)!.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
             {
-                return;
-            }
+                Title = "Open a solution or project",
+                FileTypeFilter = new[] { FilePickerFileTypes.All, FileTypes.MsBuildProj, FileTypes.Sln }
+            });
+            var result = files.FirstOrDefault();
 
-            BuildProject(result);
+            if (result is not null
+                && result.Path is { IsAbsoluteUri: true, Scheme: "file" } filePath)
+            {
+                BuildProject(filePath.LocalPath);
+            }
         }
 
         private void RebuildProjectOrSolution()
@@ -476,17 +486,24 @@ namespace StructuredLogViewer.Avalonia
         {
             if (currentBuild != null)
             {
-                var saveFileDialog = new SaveFileDialog();
-                saveFileDialog.Filters.Add(new FileDialogFilter { Name = "Binary (compact) Structured Build Log (*.buildlog)", Extensions = { "buildlog" } });
-                saveFileDialog.Filters.Add(new FileDialogFilter { Name = "Readable (large) XML Log (*.xml)", Extensions = { "xml" } });
-                saveFileDialog.Title = "Save log file as";
-                var result = await saveFileDialog.ShowAsync(this);
+                var result = await TopLevel.GetTopLevel(this)!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions()
+                {
+                    Title = "Save log file as",
+                    FileTypeChoices = new[] { FileTypes.Binlog, FileTypes.Xml },
+                    DefaultExtension = FileTypes.BinlogDefaultExtension,
+                });
+
                 if (result == null)
                 {
                     return;
                 }
 
-                logFilePath = result;
+                if (result.Path is not { IsAbsoluteUri: true, Scheme: "file" } fileNameUri)
+                {
+                    return;
+                }
+
+                logFilePath = fileNameUri.LocalPath;
                 await System.Threading.Tasks.Task.Run(() =>
                 {
                     Serialization.Write(currentBuild.Build, logFilePath);
@@ -526,7 +543,7 @@ namespace StructuredLogViewer.Avalonia
                 var content = mainContent.Content as BuildProgress;
                 if (content != null)
                 {
-                    await Application.Current.Clipboard.SetTextAsync(content.MSBuildCommandLine);
+                    await Clipboard.SetTextAsync(content.MSBuildCommandLine);
                 }
             }
             else if (e.Key == Key.S && e.KeyModifiers.HasFlag(KeyModifiers.Control))
@@ -579,18 +596,24 @@ namespace StructuredLogViewer.Avalonia
 
         private async Task BrowseForMSBuildExe()
         {
-            var openFileDialog = new OpenFileDialog
+            var files = await TopLevel.GetTopLevel(this)!.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
             {
-                Filters = { new FileDialogFilter { Name = "MSBuild (.dll;.exe)", Extensions = { "dll", "exe" } } },
+                FileTypeFilter = new[] { FilePickerFileTypes.All, FileTypes.Exe },
                 Title = "Select MSBuild file location",
-            };
+            });
 
-            var fileName = await openFileDialog.ShowAndGetFileAsync(this);
-            if (!File.Exists(fileName))
+            var result = files.FirstOrDefault();
+            if (result is null)
             {
                 return;
             }
 
+            if (result.Path is not { IsAbsoluteUri: true, Scheme: "file" } fileNameUri)
+            {
+                return;
+            }
+
+            var fileName = fileNameUri.LocalPath;
             var isMsBuild = fileName.EndsWith("MSBuild.dll", StringComparison.OrdinalIgnoreCase)
                          || fileName.EndsWith("MSBuild.exe", StringComparison.OrdinalIgnoreCase);
             if (!isMsBuild)

@@ -575,7 +575,7 @@ Recent:
                 CompressTree(subFolder);
             }
 
-            filesTree.Items = root.Children;
+            filesTree.ItemsSource = root.Children;
             filesTree.GotFocus += (s, a) => ActiveTreeView = filesTree;
             filesTree.ContextMenu = sharedTreeContextMenu;
         }
@@ -814,7 +814,7 @@ Recent:
                 chain = IntersperseWithSeparators(chain).ToArray();
             }
 
-            breadCrumb.Items = chain;
+            breadCrumb.ItemsSource = chain;
             breadCrumb.SelectedIndex = -1;
         }
 
@@ -1070,9 +1070,9 @@ Recent:
             CopyToClipboard(sb.ToString());
         }
 
-        private static void CopyToClipboard(string text)
+        private void CopyToClipboard(string text)
         {
-            Application.Current.Clipboard.SetTextAsync(text);
+            TopLevel.GetTopLevel(this).Clipboard.SetTextAsync(text);
         }
 
         public void CopyName()

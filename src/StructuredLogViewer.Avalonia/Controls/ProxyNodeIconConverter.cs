@@ -87,7 +87,7 @@ namespace StructuredLogViewer.Avalonia.Controls
 
             if (!resources.TryGetValue(resourceName, out var resource))
             {
-                if (!Application.Current.Resources.TryGetResource(resourceName, out resource))
+                if (!Application.Current.Resources.TryGetResource(resourceName, null, out resource))
                     resource = null;
 
                 resources[resourceName] = resource;
