@@ -1,11 +1,13 @@
-﻿using Avalonia.Controls;
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
+using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Avalonia.Interactivity;
+using Avalonia.VisualTree;
 
 namespace StructuredLogViewer.Avalonia.Controls
 {
@@ -108,7 +110,7 @@ namespace StructuredLogViewer.Avalonia.Controls
             if (e.Handled)
                 return;
 
-            var current = e.Source;
+            var current = e.Source as Visual;
 
             while (current != null)
             {
@@ -118,7 +120,7 @@ namespace StructuredLogViewer.Avalonia.Controls
                     break;
                 }
 
-                current = current.InteractiveParent;
+                current = current.GetVisualParent();
             }
         }
     }

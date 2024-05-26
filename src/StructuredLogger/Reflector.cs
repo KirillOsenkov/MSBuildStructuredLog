@@ -2,11 +2,17 @@
 using System.Linq.Expressions;
 using System.Reflection;
 using Microsoft.Build.Framework;
+#if NET8_0_OR_GREATER
+using System.Diagnostics.CodeAnalysis;
+#endif
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class Reflector
     {
+#if NET8_0_OR_GREATER
+        [DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(LazyFormattedBuildEventArgs))]
+#endif
         static Reflector()
         {
             string fieldName = "argumentsOrFormattedMessage";
