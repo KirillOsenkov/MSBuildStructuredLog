@@ -248,6 +248,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (message == "BuildMessage")
             {
                 var context = args.BuildEventContext;
+                if (context == null)
+                {
+                    return "BuildMessage/Other";
+                }
+
                 if (context.EvaluationId != -1)
                 {
                     return "BuildMessage/Evaluation";
