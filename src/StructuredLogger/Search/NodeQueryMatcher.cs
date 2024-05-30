@@ -533,10 +533,10 @@ namespace StructuredLogViewer
                 }
                 else if (node is Import import)
                 {
-                    if (!string.IsNullOrEmpty(import.ProjectFilePath))
-                    {
-                        searchFields[count++] = import.ProjectFilePath;
-                    }
+                    //if (!string.IsNullOrEmpty(import.ProjectFilePath))
+                    //{
+                    //    searchFields[count++] = import.ProjectFilePath;
+                    //}
 
                     if (!string.IsNullOrEmpty(import.ImportedProjectFilePath))
                     {
