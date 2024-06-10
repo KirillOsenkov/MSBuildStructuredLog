@@ -67,7 +67,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var project = fileCopyInfo.Project;
 
             var filePath = fileData.FilePath;
-            if (fileData.Incoming.Count == 1)
+            if (fileData.Incoming.Count > 0 &&
+                fileData.Incoming
+                    .Select(i => i.FileCopyOperation.Source)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .Count() == 1)
             {
                 filePath = fileCopyInfo.FileCopyOperation.Source;
             }
