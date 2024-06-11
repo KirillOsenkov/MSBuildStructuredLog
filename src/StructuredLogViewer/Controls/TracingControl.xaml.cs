@@ -22,9 +22,24 @@ namespace StructuredLogViewer.Controls
 
             public double FontSize { get; set; }
 
+            protected Rect RenderRect { get; set; } = Rect.Empty;
+
             public void AddChildren(TextField block)
             {
                 blocks.Add(block);
+            }
+
+            public void UpdateRenderArea(Rect renderRect)
+            {
+                if (!this.RenderRect.IsEmpty && RenderRect.Contains(renderRect))
+                {
+                    return;
+                }
+
+                // render a larger size so that scrolling is smoother.
+                renderRect.Inflate(renderRect.Width, 0);
+                RenderRect = renderRect;
+                this.InvalidateVisual();
             }
 
             protected override void OnRender(DrawingContext dc)
@@ -33,19 +48,29 @@ namespace StructuredLogViewer.Controls
                 Point point = PointZero;
                 double minTextWidth = 8;
 
-                foreach (var text in blocks)
+                if (this.RenderRect.IsEmpty)
                 {
-                    rect = text.Position;
+                    return;
+                }
 
-                    var bg = TracingControl.ChooseBackground(text.Block as Block);
-                    dc.DrawRectangle(bg, null, rect);
+                foreach (var block in blocks)
+                {
+                    rect = block.Position;
 
-                    if (rect.Width < minTextWidth)
+                    if (!rect.IntersectsWith(RenderRect))
                     {
                         continue;
                     }
 
-                    var formattedText = new FormattedText(text.Text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Typeface, FontSize, Brushes.Black, 1);
+                    var bg = TracingControl.ChooseBackground(block.Block as Block);
+                    dc.DrawRectangle(bg, null, rect);
+
+                    if (rect.Width < minTextWidth || string.IsNullOrEmpty(block.Text))
+                    {
+                        continue;
+                    }
+
+                    var formattedText = new FormattedText(block.Text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Typeface, FontSize, Brushes.Black, 1);
                     formattedText.MaxTextWidth = rect.Width;
                     formattedText.MaxTextHeight = rect.Height;
                     formattedText.Trimming = TextTrimming.None;
@@ -216,7 +241,7 @@ namespace StructuredLogViewer.Controls
             set
             {
                 _showProjectReferenceSelection = value;
-                DrawHighLight();
+                DrawHighlight();
             }
         }
 
@@ -254,6 +279,7 @@ namespace StructuredLogViewer.Controls
         private double scaleFactor = 1;
         private double horizontalOffset = 0;
         private double verticalOffset = 0;
+        private double viewPort = 0;
         private double textHeight;
 
         private void ScrollViewer_Loaded(object sender, RoutedEventArgs e)
@@ -270,12 +296,35 @@ namespace StructuredLogViewer.Controls
 
         private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
-            if (e.HorizontalChange == 0)
+            if (e.HorizontalChange == 0 && e.ViewportWidthChange <= 0)
             {
                 return;
             }
 
+            horizontalOffset = scrollViewer.HorizontalOffset;
+            verticalOffset = scrollViewer.VerticalOffset;
+            viewPort = scrollViewer.ViewportWidth;
+            UpdateRenderArea();
+
             e.Handled = true;
+        }
+
+        private void UpdateRenderArea()
+        {
+            var newRect = new Rect(horizontalOffset / scaleFactor, 0, viewPort / scaleFactor, double.MaxValue);
+
+            if (lanesPanel != null)
+            {
+                foreach (var panel in lanesPanel?.Children)
+                {
+                    if (panel is FastCanvas fastCanvas)
+                    {
+                        fastCanvas.UpdateRenderArea(newRect);
+                    }
+                }
+            }
+
+            HeatGraph?.UpdateRenderArea(newRect);
         }
 
         private void zoomSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -430,12 +479,11 @@ namespace StructuredLogViewer.Controls
             }
 
             ComputeTimeline();
-            this.lastRenderTimeStamp = 0;
             Draw();
-            DrawHighLight(false);
+            DrawHighlight(false);
         }
 
-        private void DrawHighLight(bool draw = true)
+        private void DrawHighlight(bool draw = true)
         {
             // Remove and Redraw Highlight
             if (activeTextBlock != null)
@@ -542,7 +590,7 @@ namespace StructuredLogViewer.Controls
                         // Left edge
                         graphData[left].Height += (unitDuration - ConvertTimeToPixel(block.Start - GlobalStartTime) % unitDuration) / unitDuration;
 
-                        // Right edge, safeguard right edge is truely to the right.
+                        // Right edge, safeguard right edge is truly to the right.
                         if (left < right && right < graphLength)
                         {
                             graphData[right].Height += ConvertTimeToPixel(block.End - GlobalStartTime) % unitDuration / unitDuration;
@@ -565,8 +613,7 @@ namespace StructuredLogViewer.Controls
         }
 
         private Panel TopRulerNodeDivider;
-        private Panel HeatGraph;
-        private double lastRenderTimeStamp = 0;
+        private FastCanvas HeatGraph;
 
         /// <summary>
         /// Draw Graph 
@@ -588,22 +635,16 @@ namespace StructuredLogViewer.Controls
 
             // Add Top Timeline Ruler
             TopRulerNodeDivider ??= CreatePanelForNodeDivider(true);
-            HeatGraph ??= CreateActivityLineGraph();
+            HeatGraph ??= CreateActivityBarGraph();
 
             lanesPanel.Children.Add(HeatGraph);
             lanesPanel.Children.Add(TopRulerNodeDivider);
-
-            // scrollViewer may not have been initialized, fallback to BuildControl for size.
-            // var offset = Math.Max(scrollViewer.HorizontalOffset + scrollViewer.ViewportWidth, BuildControl.ActualWidth);
-            // var renderWidthTimeStamp = GlobalStartTime + ConvertPixelToTime(offset / scaleTransform.ScaleX);
 
             for (int i = 0; i < blocksCollection.Count; i++)
             {
                 var blocks = blocksCollection[i];
 
                 (double maxHeight, double maxWidth) = CreateTextBlocks(blocks);
-
-                // var culledBlocks = blocks.Where(block => !(lastRenderTimeStamp > block.Start || block.Start >= renderWidthTimeStamp));
 
                 var panel = CreatePanelForLane(blocks, maxHeight, maxWidth);
                 if (panel != null)
@@ -613,27 +654,35 @@ namespace StructuredLogViewer.Controls
                 }
             }
 
-            // set GlobalEndTime to disable culling
-            this.lastRenderTimeStamp = GlobalEndTime;
-
             if (ShowNodes)
             {
                 DrawAddNodeDivider();
             }
 
+            // scrollViewer may not have been initialized, fallback to BuildControl for ViewPort.
+            viewPort = Math.Max(scrollViewer.ViewportWidth, BuildControl.ActualWidth);
+            this.UpdateRenderArea();
+
             this.drawTime = Timestamp - start;
         }
 
-        private Panel CreateActivityLineGraph()
+        private class HeatMapNode : BaseNode
+        {
+            internal static HeatMapNode HeatGraphNodeStub = new();
+        }
+
+        static Block heatMapBlockNormal = new Block() { HasError = false, Node = HeatMapNode.HeatGraphNodeStub };
+        static Block heatMapBlockError = new Block() { HasError = true, Node = HeatMapNode.HeatGraphNodeStub };
+
+        private FastCanvas CreateActivityBarGraph()
         {
             var timelineWidth = ConvertTimeToPixel(GlobalEndTime - GlobalStartTime);
             var graphHeight = textHeight * 4;
 
-            // WPF is really slow to render, so only render fixed number entries
-            var lineWidth = Math.Max(timelineWidth / 4000, 1);
-            var graphData = ComputeHeatGraphData(lineWidth);
+            var barWidth = ConvertTimeToPixel(TimeSpan.FromMilliseconds(100).Ticks);
+            var graphData = ComputeHeatGraphData(barWidth);
 
-            var canvas = new Canvas();
+            var canvas = new FastCanvas();
             canvas.VerticalAlignment = VerticalAlignment.Top;
             canvas.Background = lanesPanel.Background;
             canvas.Height = graphHeight;
@@ -650,17 +699,12 @@ namespace StructuredLogViewer.Controls
                 if (graphData[i].Height > 0)
                 {
                     double normalizedGraphHeight = Math.Min(graphData[i].Height, maxData) * dataGraphHeightRatio;
-                    Line barLine = new Line()
+                    TextField field = new TextField()
                     {
-                        Stroke = graphData[i].HasError ? errorBackground : taskBackground,
-                        StrokeThickness = lineWidth,
-                        X1 = i * lineWidth,
-                        X2 = i * lineWidth,
-                        Y1 = graphHeight,
-                        Y2 = graphHeight - normalizedGraphHeight,
+                        Position = new Rect(i * barWidth, graphHeight - normalizedGraphHeight, barWidth, normalizedGraphHeight),
+                        Block = graphData[i].HasError ? heatMapBlockError : heatMapBlockNormal,
                     };
-
-                    canvas.Children.Add(barLine);
+                    canvas.AddChildren(field);
                 }
             }
 
@@ -684,9 +728,9 @@ namespace StructuredLogViewer.Controls
             // Start from second element to account for the top ruler
             for (int index = 2; index < lanesPanel.Children.Count; index++)
             {
-                if (lanesPanel.Children[index] is Canvas foobar)
+                if (lanesPanel.Children[index] is Canvas dividerCanvas)
                 {
-                    if (foobar.Background == nodeBackground)
+                    if (dividerCanvas.Background == nodeBackground)
                     {
                         lanesPanel.Children.RemoveAt(index);
                     }
@@ -741,7 +785,7 @@ namespace StructuredLogViewer.Controls
                         var textBlock = new TextBlock();
                         textBlock.Text = $"{i}s";
 
-                        // Set these to make TextBlock scale like TrueType.
+                        // Set these to make TextBlock scale with TrueType.
                         textBlock.SnapsToDevicePixels = true;
                         TextOptions.SetTextFormattingMode(textBlock, TextFormattingMode.Ideal);
 
@@ -771,18 +815,18 @@ namespace StructuredLogViewer.Controls
 
         public void GoToTimedNode(TimedNode node)
         {
-            TextField textblock = null;
+            TextField textBlock = null;
             foreach (TimedNode timedNode in node.GetParentChainIncludingThis().OfType<TimedNode>().Reverse())
             {
-                if (TextBlocks.TryGetValue(timedNode, out textblock))
+                if (TextBlocks.TryGetValue(timedNode, out textBlock))
                 {
-                    HighlightTextBlock(textblock, GetTextBlockToOverlayGrid(textblock), scrollToElement: true);
+                    HighlightTextBlock(textBlock, GetTextBlockToOverlayGrid(textBlock), scrollToElement: true);
                     break;
                 }
             }
 
             // Clear highlight when selection failed.
-            if (textblock == null && activeTextBlock != null)
+            if (textBlock == null && activeTextBlock != null)
             {
                 if (highlight.Parent is Panel parent)
                 {
@@ -1218,7 +1262,7 @@ namespace StructuredLogViewer.Controls
                 {
                     canvas.ToolTip ??= new ToolTip()
                     {
-                        // Offset by 1 to allow click through to the bottem element
+                        // Offset by 1 to allow click through to the bottom element
                         HorizontalOffset = 1,
                         VerticalOffset = 1
                     };
@@ -1261,7 +1305,9 @@ namespace StructuredLogViewer.Controls
                 case Target: return targetBackground;
                 case Project: return projectBackground;
                 case ProjectEvaluation: return projectEvaluationBackground;
-                case Message: return messageBackground;
+                // Note: ShowCpp are Message nodes backing it, thus show as task color instead.
+                case Message: return taskBackground;
+                case HeatMapNode: return taskBackground;
             }
 
             return Brushes.Transparent;
