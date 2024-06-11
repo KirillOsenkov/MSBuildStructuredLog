@@ -53,24 +53,24 @@ namespace StructuredLogViewer.Controls
                     return;
                 }
 
-                foreach (var text in blocks)
+                foreach (var block in blocks)
                 {
-                    rect = text.Position;
+                    rect = block.Position;
 
                     if (!rect.IntersectsWith(RenderRect))
                     {
                         continue;
                     }
 
-                    var bg = TracingControl.ChooseBackground(text.Block as Block);
+                    var bg = TracingControl.ChooseBackground(block.Block as Block);
                     dc.DrawRectangle(bg, null, rect);
 
-                    if (rect.Width < minTextWidth)
+                    if (rect.Width < minTextWidth || string.IsNullOrEmpty(block.Text))
                     {
                         continue;
                     }
 
-                    var formattedText = new FormattedText(text.Text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Typeface, FontSize, Brushes.Black, 1);
+                    var formattedText = new FormattedText(block.Text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Typeface, FontSize, Brushes.Black, 1);
                     formattedText.MaxTextWidth = rect.Width;
                     formattedText.MaxTextHeight = rect.Height;
                     formattedText.Trimming = TextTrimming.None;
@@ -313,13 +313,18 @@ namespace StructuredLogViewer.Controls
         {
             var newRect = new Rect(horizontalOffset / scaleFactor, 0, viewPort / scaleFactor, double.MaxValue);
 
-            foreach (var panel in lanesPanel.Children)
+            if (lanesPanel != null)
             {
-                if (panel is FastCanvas fastCanvas)
+                foreach (var panel in lanesPanel?.Children)
                 {
-                    fastCanvas.UpdateRenderArea(newRect);
+                    if (panel is FastCanvas fastCanvas)
+                    {
+                        fastCanvas.UpdateRenderArea(newRect);
+                    }
                 }
             }
+
+            HeatGraph?.UpdateRenderArea(newRect);
         }
 
         private void zoomSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -474,7 +479,6 @@ namespace StructuredLogViewer.Controls
             }
 
             ComputeTimeline();
-            this.lastRenderTimeStamp = 0;
             Draw();
             DrawHighlight(false);
         }
@@ -609,8 +613,7 @@ namespace StructuredLogViewer.Controls
         }
 
         private Panel TopRulerNodeDivider;
-        private Panel HeatGraph;
-        private double lastRenderTimeStamp = 0;
+        private FastCanvas HeatGraph;
 
         /// <summary>
         /// Draw Graph 
@@ -632,7 +635,7 @@ namespace StructuredLogViewer.Controls
 
             // Add Top Timeline Ruler
             TopRulerNodeDivider ??= CreatePanelForNodeDivider(true);
-            HeatGraph ??= CreateActivityLineGraph();
+            HeatGraph ??= CreateActivityBarGraph();
 
             lanesPanel.Children.Add(HeatGraph);
             lanesPanel.Children.Add(TopRulerNodeDivider);
@@ -651,9 +654,6 @@ namespace StructuredLogViewer.Controls
                 }
             }
 
-            // set GlobalEndTime to disable culling
-            this.lastRenderTimeStamp = GlobalEndTime;
-
             if (ShowNodes)
             {
                 DrawAddNodeDivider();
@@ -666,16 +666,23 @@ namespace StructuredLogViewer.Controls
             this.drawTime = Timestamp - start;
         }
 
-        private Panel CreateActivityLineGraph()
+        private class HeatMapNode : BaseNode
+        {
+            internal static HeatMapNode HeatGraphNodeStub = new();
+        }
+
+        static Block heatMapBlockNormal = new Block() { HasError = false, Node = HeatMapNode.HeatGraphNodeStub };
+        static Block heatMapBlockError = new Block() { HasError = true, Node = HeatMapNode.HeatGraphNodeStub };
+
+        private FastCanvas CreateActivityBarGraph()
         {
             var timelineWidth = ConvertTimeToPixel(GlobalEndTime - GlobalStartTime);
             var graphHeight = textHeight * 4;
 
-            // WPF is really slow to render, so only render fixed number entries
-            var lineWidth = Math.Max(timelineWidth / 4000, 1);
-            var graphData = ComputeHeatGraphData(lineWidth);
+            var barWidth = ConvertTimeToPixel(TimeSpan.FromMilliseconds(100).Ticks);
+            var graphData = ComputeHeatGraphData(barWidth);
 
-            var canvas = new Canvas();
+            var canvas = new FastCanvas();
             canvas.VerticalAlignment = VerticalAlignment.Top;
             canvas.Background = lanesPanel.Background;
             canvas.Height = graphHeight;
@@ -692,17 +699,12 @@ namespace StructuredLogViewer.Controls
                 if (graphData[i].Height > 0)
                 {
                     double normalizedGraphHeight = Math.Min(graphData[i].Height, maxData) * dataGraphHeightRatio;
-                    Line barLine = new Line()
+                    TextField field = new TextField()
                     {
-                        Stroke = graphData[i].HasError ? errorBackground : taskBackground,
-                        StrokeThickness = lineWidth,
-                        X1 = i * lineWidth,
-                        X2 = i * lineWidth,
-                        Y1 = graphHeight,
-                        Y2 = graphHeight - normalizedGraphHeight,
+                        Position = new Rect(i * barWidth, graphHeight - normalizedGraphHeight, barWidth, normalizedGraphHeight),
+                        Block = graphData[i].HasError ? heatMapBlockError : heatMapBlockNormal,
                     };
-
-                    canvas.Children.Add(barLine);
+                    canvas.AddChildren(field);
                 }
             }
 
@@ -1303,7 +1305,9 @@ namespace StructuredLogViewer.Controls
                 case Target: return targetBackground;
                 case Project: return projectBackground;
                 case ProjectEvaluation: return projectEvaluationBackground;
-                case Message: return messageBackground;
+                // Note: ShowCpp are Message nodes backing it, thus show as task color instead.
+                case Message: return taskBackground;
+                case HeatMapNode: return taskBackground;
             }
 
             return Brushes.Transparent;
