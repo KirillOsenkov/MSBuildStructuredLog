@@ -9,6 +9,7 @@ namespace StructuredLogger.Tests
         {
             Strings.Initialize("en-US");
             Assert.Equal("en-US", Strings.ResourceSet.Culture);
+            Assert.Equal("en-US", Strings.Culture);
             Assert.NotNull(Strings.OutputItemsMessagePrefix);
         }
 
