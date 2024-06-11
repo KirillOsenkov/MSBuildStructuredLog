@@ -22,9 +22,24 @@ namespace StructuredLogViewer.Controls
 
             public double FontSize { get; set; }
 
+            protected Rect RenderRect { get; set; } = Rect.Empty;
+
             public void AddChildren(TextField block)
             {
                 blocks.Add(block);
+            }
+
+            public void UpdateRenderArea(Rect renderRect)
+            {
+                if (!this.RenderRect.IsEmpty && RenderRect.Contains(renderRect))
+                {
+                    return;
+                }
+
+                // render a larger size so that scrolling is smoother.
+                renderRect.Inflate(renderRect.Width, 0);
+                RenderRect = renderRect;
+                this.InvalidateVisual();
             }
 
             protected override void OnRender(DrawingContext dc)
@@ -33,9 +48,19 @@ namespace StructuredLogViewer.Controls
                 Point point = PointZero;
                 double minTextWidth = 8;
 
+                if (this.RenderRect.IsEmpty)
+                {
+                    return;
+                }
+
                 foreach (var text in blocks)
                 {
                     rect = text.Position;
+
+                    if (!rect.IntersectsWith(RenderRect))
+                    {
+                        continue;
+                    }
 
                     var bg = TracingControl.ChooseBackground(text.Block as Block);
                     dc.DrawRectangle(bg, null, rect);
@@ -216,7 +241,7 @@ namespace StructuredLogViewer.Controls
             set
             {
                 _showProjectReferenceSelection = value;
-                DrawHighLight();
+                DrawHighlight();
             }
         }
 
@@ -254,6 +279,7 @@ namespace StructuredLogViewer.Controls
         private double scaleFactor = 1;
         private double horizontalOffset = 0;
         private double verticalOffset = 0;
+        private double viewPort = 0;
         private double textHeight;
 
         private void ScrollViewer_Loaded(object sender, RoutedEventArgs e)
@@ -270,12 +296,30 @@ namespace StructuredLogViewer.Controls
 
         private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
-            if (e.HorizontalChange == 0)
+            if (e.HorizontalChange == 0 && e.ViewportWidthChange <= 0)
             {
                 return;
             }
 
+            horizontalOffset = scrollViewer.HorizontalOffset;
+            verticalOffset = scrollViewer.VerticalOffset;
+            viewPort = scrollViewer.ViewportWidth;
+            UpdateRenderArea();
+
             e.Handled = true;
+        }
+
+        private void UpdateRenderArea()
+        {
+            var newRect = new Rect(horizontalOffset / scaleFactor, 0, viewPort / scaleFactor, double.MaxValue);
+
+            foreach (var panel in lanesPanel.Children)
+            {
+                if (panel is FastCanvas fastCanvas)
+                {
+                    fastCanvas.UpdateRenderArea(newRect);
+                }
+            }
         }
 
         private void zoomSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -432,10 +476,10 @@ namespace StructuredLogViewer.Controls
             ComputeTimeline();
             this.lastRenderTimeStamp = 0;
             Draw();
-            DrawHighLight(false);
+            DrawHighlight(false);
         }
 
-        private void DrawHighLight(bool draw = true)
+        private void DrawHighlight(bool draw = true)
         {
             // Remove and Redraw Highlight
             if (activeTextBlock != null)
@@ -542,7 +586,7 @@ namespace StructuredLogViewer.Controls
                         // Left edge
                         graphData[left].Height += (unitDuration - ConvertTimeToPixel(block.Start - GlobalStartTime) % unitDuration) / unitDuration;
 
-                        // Right edge, safeguard right edge is truely to the right.
+                        // Right edge, safeguard right edge is truly to the right.
                         if (left < right && right < graphLength)
                         {
                             graphData[right].Height += ConvertTimeToPixel(block.End - GlobalStartTime) % unitDuration / unitDuration;
@@ -593,17 +637,11 @@ namespace StructuredLogViewer.Controls
             lanesPanel.Children.Add(HeatGraph);
             lanesPanel.Children.Add(TopRulerNodeDivider);
 
-            // scrollViewer may not have been initialized, fallback to BuildControl for size.
-            // var offset = Math.Max(scrollViewer.HorizontalOffset + scrollViewer.ViewportWidth, BuildControl.ActualWidth);
-            // var renderWidthTimeStamp = GlobalStartTime + ConvertPixelToTime(offset / scaleTransform.ScaleX);
-
             for (int i = 0; i < blocksCollection.Count; i++)
             {
                 var blocks = blocksCollection[i];
 
                 (double maxHeight, double maxWidth) = CreateTextBlocks(blocks);
-
-                // var culledBlocks = blocks.Where(block => !(lastRenderTimeStamp > block.Start || block.Start >= renderWidthTimeStamp));
 
                 var panel = CreatePanelForLane(blocks, maxHeight, maxWidth);
                 if (panel != null)
@@ -620,6 +658,10 @@ namespace StructuredLogViewer.Controls
             {
                 DrawAddNodeDivider();
             }
+
+            // scrollViewer may not have been initialized, fallback to BuildControl for ViewPort.
+            viewPort = Math.Max(scrollViewer.ViewportWidth, BuildControl.ActualWidth);
+            this.UpdateRenderArea();
 
             this.drawTime = Timestamp - start;
         }
@@ -684,9 +726,9 @@ namespace StructuredLogViewer.Controls
             // Start from second element to account for the top ruler
             for (int index = 2; index < lanesPanel.Children.Count; index++)
             {
-                if (lanesPanel.Children[index] is Canvas foobar)
+                if (lanesPanel.Children[index] is Canvas dividerCanvas)
                 {
-                    if (foobar.Background == nodeBackground)
+                    if (dividerCanvas.Background == nodeBackground)
                     {
                         lanesPanel.Children.RemoveAt(index);
                     }
@@ -741,7 +783,7 @@ namespace StructuredLogViewer.Controls
                         var textBlock = new TextBlock();
                         textBlock.Text = $"{i}s";
 
-                        // Set these to make TextBlock scale like TrueType.
+                        // Set these to make TextBlock scale with TrueType.
                         textBlock.SnapsToDevicePixels = true;
                         TextOptions.SetTextFormattingMode(textBlock, TextFormattingMode.Ideal);
 
@@ -771,18 +813,18 @@ namespace StructuredLogViewer.Controls
 
         public void GoToTimedNode(TimedNode node)
         {
-            TextField textblock = null;
+            TextField textBlock = null;
             foreach (TimedNode timedNode in node.GetParentChainIncludingThis().OfType<TimedNode>().Reverse())
             {
-                if (TextBlocks.TryGetValue(timedNode, out textblock))
+                if (TextBlocks.TryGetValue(timedNode, out textBlock))
                 {
-                    HighlightTextBlock(textblock, GetTextBlockToOverlayGrid(textblock), scrollToElement: true);
+                    HighlightTextBlock(textBlock, GetTextBlockToOverlayGrid(textBlock), scrollToElement: true);
                     break;
                 }
             }
 
             // Clear highlight when selection failed.
-            if (textblock == null && activeTextBlock != null)
+            if (textBlock == null && activeTextBlock != null)
             {
                 if (highlight.Parent is Panel parent)
                 {
@@ -1218,7 +1260,7 @@ namespace StructuredLogViewer.Controls
                 {
                     canvas.ToolTip ??= new ToolTip()
                     {
-                        // Offset by 1 to allow click through to the bottem element
+                        // Offset by 1 to allow click through to the bottom element
                         HorizontalOffset = 1,
                         VerticalOffset = 1
                     };
