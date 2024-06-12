@@ -46,6 +46,8 @@ namespace StructuredLogViewer.Controls
         private MenuItem searchThisNode;
         private MenuItem excludeSubtreeFromSearchItem;
         private MenuItem excludeNodeByNameFromSearch;
+        private MenuItem searchInclusiveWithinThisTimespan;  // Search with Start OR End time overlaps this duration.
+        private MenuItem searchExclusiveWithinThisTimespan;  // Search with Start AND End time overlaps this duration.
         private MenuItem goToTimeLineItem;
         private MenuItem goToTracingItem;
         private MenuItem copyChildrenItem;
@@ -205,6 +207,8 @@ namespace StructuredLogViewer.Controls
             searchInSubtreeItem = new MenuItem() { Header = "Search in subtree" };
             excludeSubtreeFromSearchItem = new MenuItem() { Header = "Exclude subtree from search" };
             excludeNodeByNameFromSearch = new MenuItem() { Header = "Exclude node from search" };
+            searchInclusiveWithinThisTimespan = new MenuItem() { Header = "Search overlapping this duration" };
+            searchExclusiveWithinThisTimespan = new MenuItem() { Header = "Search within this duration" };
             searchInNodeByNameItem = new MenuItem() { Header = "Search in this node." };
             searchThisNode = new MenuItem() { Header = "Search This Node" };
             goToTimeLineItem = new MenuItem() { Header = "Timeline" };
@@ -241,6 +245,8 @@ namespace StructuredLogViewer.Controls
             searchInSubtreeItem.Click += (s, a) => SearchInSubtree();
             excludeSubtreeFromSearchItem.Click += (s, a) => ExcludeSubtreeFromSearch();
             excludeNodeByNameFromSearch.Click += (s, a) => ExcludeNodeByNameFromSearch();
+            searchInclusiveWithinThisTimespan.Click += (s, a) => SearchInclusiveWithinThisTimespan();
+            searchExclusiveWithinThisTimespan.Click += (s, a) => SearchExclusiveWithinThisTimespan();
             searchInNodeByNameItem.Click += (s, a) => SearchInNodeByName();
             searchThisNode.Click += (s, a) => SearchThisNode();
             goToTimeLineItem.Click += (s, a) => GoToTimeLine();
@@ -281,6 +287,8 @@ namespace StructuredLogViewer.Controls
             searchMenuGroup.AddItem(searchThisNode);
             searchMenuGroup.AddItem(excludeSubtreeFromSearchItem);
             searchMenuGroup.AddItem(excludeNodeByNameFromSearch);
+            searchMenuGroup.AddItem(searchInclusiveWithinThisTimespan);
+            searchMenuGroup.AddItem(searchExclusiveWithinThisTimespan);
 
             contextMenu.AddItem(gotoMenuGroup);
             gotoMenuGroup.AddItem(goToTimeLineItem);
@@ -701,7 +709,7 @@ Use syntax like '$property Prop' to narrow results down by item kind. Supported 
 
 Append [[$time]], [[$start]] and/or [[$end]] to show times and/or durations and sort the results by start time or duration descending (for tasks, targets and projects).
 
-Use start<""2023-11-23 14:30:54.579"", start>, end< or end> to filter events that start or end before or after a given timestamp. Timestamp needs to be in quotes.
+Use start<""2023-11-23 14:30:54.579"", start>, end<, or end> to filter events that start or end before or after a given timestamp. Timestamp needs to be in quotes.
 
 Use '$copy path' where path is a file or directory to find file copy operations involving the file or directory. `$copy substring` will search for copied files containing the substring.
 
@@ -941,6 +949,8 @@ Recent (");
                 goToTimeLineItem.Visibility = Visibility.Visible;
                 goToTracingItem.Visibility = Visibility.Visible;
                 excludeNodeByNameFromSearch.Visibility = hasChildren ? Visibility.Visible : Visibility.Collapsed;
+                searchInclusiveWithinThisTimespan.Visibility = Visibility.Visible;
+                searchExclusiveWithinThisTimespan.Visibility = Visibility.Visible;
                 searchInNodeByNameItem.Visibility = hasChildren ? Visibility.Visible : Visibility.Collapsed;
 
                 if (excludeNodeByNameFromSearch.Visibility == Visibility.Visible)
@@ -962,6 +972,8 @@ Recent (");
                 goToTimeLineItem.Visibility = Visibility.Collapsed;
                 goToTracingItem.Visibility = Visibility.Collapsed;
                 excludeNodeByNameFromSearch.Visibility = Visibility.Collapsed;
+                searchInclusiveWithinThisTimespan.Visibility = Visibility.Collapsed;
+                searchExclusiveWithinThisTimespan.Visibility = Visibility.Collapsed;
                 searchInNodeByNameItem.Visibility = Visibility.Collapsed;
                 if (!hasChildren)
                 {
@@ -1985,9 +1997,31 @@ Recent (");
 
         public void ExcludeNodeByNameFromSearch()
         {
-            if (treeView.SelectedItem is TimedNode treeNode)
+            if (treeView.SelectedItem is NamedNode treeNode)
             {
                 searchLogControl.SearchText += $" notunder(${treeNode.TypeName} {treeNode.Name})";
+                SelectSearchTab();
+            }
+        }
+
+        public void SearchInclusiveWithinThisTimespan()
+        {
+            if (treeView.SelectedItem is TimedNode timedNode)
+            {
+                DateTime starTime = timedNode.StartTime;
+                DateTime endTime = timedNode.EndTime; // add half second to round up
+                searchLogControl.SearchText += $" start<\"{TextUtilities.Display(endTime, displayDate: true, fullPrecision: true)}\" end>\"{TextUtilities.Display(starTime, displayDate: true, fullPrecision: true)}\" ";
+                SelectSearchTab();
+            }
+        }
+
+        public void SearchExclusiveWithinThisTimespan()
+        {
+            if (treeView.SelectedItem is TimedNode timedNode)
+            {
+                DateTime starTime = timedNode.StartTime;
+                DateTime endTime = timedNode.EndTime;
+                searchLogControl.SearchText += $" start>\"{TextUtilities.Display(starTime, displayDate: true, fullPrecision: true)}\" end<\"{TextUtilities.Display(endTime, displayDate: true, fullPrecision: true)}\"";
                 SelectSearchTab();
             }
         }
