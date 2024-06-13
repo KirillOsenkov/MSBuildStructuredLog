@@ -796,9 +796,21 @@ namespace StructuredLogViewer
 
         public bool IsTimeIntervalMatch(BaseNode node)
         {
-            if (!HasTimeIntervalConstraints || node is not TimedNode timedNode)
+            if (!HasTimeIntervalConstraints)
             {
                 return true;
+            }
+
+            // Messages and Folders are not timed nodes, using the parent instead.
+            if (node is not TimedNode timedNode)
+            {
+                var parentNode = node.GetNearestParent<TimedNode>();
+                if (parentNode is null)
+                {
+                    return true;
+                }
+
+                timedNode = parentNode;
             }
 
             if (StartBefore != default && timedNode.StartTime > StartBefore)
