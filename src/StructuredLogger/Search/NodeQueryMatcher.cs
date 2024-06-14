@@ -801,7 +801,7 @@ namespace StructuredLogViewer
                 return true;
             }
 
-            // Messages and Folders are not timed nodes, using the parent instead.
+            // Messages and Folders are not timed nodes, use the parent instead.
             if (node is not TimedNode timedNode)
             {
                 var parentNode = node.GetNearestParent<TimedNode>();

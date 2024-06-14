@@ -37,7 +37,7 @@ namespace StructuredLogViewer.Controls
                 }
 
                 // render a larger size so that scrolling is smoother.
-                renderRect.Inflate(renderRect.Width, 0);
+                renderRect.Inflate(renderRect.Width, renderRect.Height);
                 RenderRect = renderRect;
                 this.InvalidateVisual();
             }
@@ -279,7 +279,8 @@ namespace StructuredLogViewer.Controls
         private double scaleFactor = 1;
         private double horizontalOffset = 0;
         private double verticalOffset = 0;
-        private double viewPort = 0;
+        private double viewPortWidth = 0;
+        private double viewPortHeight = 0;
         private double textHeight;
 
         private void ScrollViewer_Loaded(object sender, RoutedEventArgs e)
@@ -296,14 +297,15 @@ namespace StructuredLogViewer.Controls
 
         private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
-            if (e.HorizontalChange == 0 && e.ViewportWidthChange <= 0)
+            if (e.HorizontalChange == 0 && e.VerticalChange == 0 && e.ViewportWidthChange <= 0 && e.ViewportHeightChange <= 0)
             {
                 return;
             }
 
             horizontalOffset = scrollViewer.HorizontalOffset;
             verticalOffset = scrollViewer.VerticalOffset;
-            viewPort = scrollViewer.ViewportWidth;
+            viewPortWidth = scrollViewer.ViewportWidth;
+            viewPortHeight = scrollViewer.ViewportHeight;
             UpdateRenderArea();
 
             e.Handled = true;
@@ -311,20 +313,18 @@ namespace StructuredLogViewer.Controls
 
         private void UpdateRenderArea()
         {
-            var newRect = new Rect(horizontalOffset / scaleFactor, 0, viewPort / scaleFactor, double.MaxValue);
-
             if (lanesPanel != null)
             {
-                foreach (var panel in lanesPanel?.Children)
+                foreach (var panel in lanesPanel.Children)
                 {
                     if (panel is FastCanvas fastCanvas)
                     {
-                        fastCanvas.UpdateRenderArea(newRect);
+                        Point translatedPoint = this.TranslatePoint(PointZero, fastCanvas);
+                        Rect areaRect = new Rect(translatedPoint.X, translatedPoint.Y, viewPortWidth / scaleFactor, viewPortHeight / scaleFactor);
+                        fastCanvas.UpdateRenderArea(areaRect);
                     }
                 }
             }
-
-            HeatGraph?.UpdateRenderArea(newRect);
         }
 
         private void zoomSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -660,7 +660,8 @@ namespace StructuredLogViewer.Controls
             }
 
             // scrollViewer may not have been initialized, fallback to BuildControl for ViewPort.
-            viewPort = Math.Max(scrollViewer.ViewportWidth, BuildControl.ActualWidth);
+            viewPortWidth = Math.Max(scrollViewer.ViewportWidth, BuildControl.ActualWidth);
+            viewPortHeight = Math.Max(scrollViewer.ViewportHeight, BuildControl.ActualHeight);
             this.UpdateRenderArea();
 
             this.drawTime = Timestamp - start;
