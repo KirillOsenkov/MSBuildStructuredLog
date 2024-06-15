@@ -1,5 +1,8 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
 using Microsoft.Build.Logging.StructuredLogger;
 using Xunit;
 
@@ -24,6 +27,7 @@ namespace StructuredLogger.Tests
             array = array
                 .SelectMany(w => w.Split(separators, System.StringSplitOptions.RemoveEmptyEntries))
                 .Distinct()
+                .Where(w => w.Length < 255)
                 .ToArray();
 
             foreach (var word in array)
@@ -80,13 +84,11 @@ namespace StructuredLogger.Tests
             }
 
             var orderedOutliers = outliers
-                .GroupBy(_ => _.word.Length)
-                .Select(g => g
-                    .OrderBy(_ => _.outlier)
-                    .ThenBy(_ => _.weight)
-                    .ToArray())
-                .OrderBy(g => g[0].weight)
+                .OrderBy(g => g.outlier * Math.Pow(g.word.Length, -0.1))
+                .ThenBy(g => g.weight)
                 .ToArray();
+
+            WriteCsv(outliers);
 
             var top = ordered.Take(10).ToArray();
 
@@ -117,6 +119,18 @@ namespace StructuredLogger.Tests
 
                 return 0;
             }
+        }
+
+        private void WriteCsv(List<(string word, float weight, float outlier)> outliers)
+        {
+            var sb = new StringBuilder();
+            foreach (var item in outliers)
+            {
+                sb.AppendLine($"{item.weight},{item.outlier},{item.word.Length}");
+            }
+
+            var text = sb.ToString();
+            File.WriteAllText(@"C:\temp\stats.csv", text);
         }
     }
 }
