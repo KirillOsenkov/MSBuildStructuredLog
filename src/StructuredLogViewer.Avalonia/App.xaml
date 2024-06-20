@@ -3,7 +3,8 @@
              xmlns:l="clr-namespace:Microsoft.Build.Logging.StructuredLogger;assembly=StructuredLogger"
              xmlns:common="clr-namespace:Microsoft.Build.Logging.StructuredLogger;assembly=StructuredLogViewer.Core"
              xmlns:s="clr-namespace:StructuredLogViewer.Avalonia.Controls;assembly=StructuredLogViewer.Avalonia"
-             x:Class="StructuredLogViewer.Avalonia.App">
+             x:Class="StructuredLogViewer.Avalonia.App"
+             RequestedThemeVariant="Light">
 
     <Application.Resources>
         <ResourceDictionary>
@@ -18,9 +19,8 @@
     </Application.Resources>
     
     <Application.Styles>
-        <StyleInclude Source="avares://Avalonia.Themes.Default/DefaultTheme.xaml" />
-        <StyleInclude Source="avares://Avalonia.Themes.Default/Accents/BaseLight.xaml"/>
-        <StyleInclude Source="avares://AvaloniaEdit/AvaloniaEdit.xaml" />
+        <FluentTheme />
+        <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml" />
         <StyleInclude Source="/Styles.xaml" />
         
         <Style Selector="Rectangle.nodeIcon">
@@ -434,7 +434,7 @@
                 <ContentPresenter Content="{Binding Converter={StaticResource ProxyNodeIconConverter}}"
                                   HorizontalAlignment="Center"
                                   VerticalAlignment="Center" />
-                <ItemsControl Items="{Binding Highlights}"
+                <ItemsControl ItemsSource="{Binding Highlights}"
                               Focusable="False">
                     <ItemsControl.DataTemplates>
                         <DataTemplate DataType="{x:Type l:HighlightedText}">
@@ -443,7 +443,7 @@
                                        Background="Yellow"
                                        Text="{Binding Text}" />
                         </DataTemplate>
-                        <DataTemplate>
+                        <DataTemplate DataType="x:Object">
                             <TextBlock Classes="nodeBeforeText"
                                        Text="{Binding .}" />
                         </DataTemplate>
@@ -568,7 +568,7 @@
                             <Expander IsExpanded="True"
                                       Header="Recent projects and solutions"
                                       Margin="10">
-                                <ListBox Items="{Binding RecentProjects}"
+                                <ListBox ItemsSource="{Binding RecentProjects}"
                                          Margin="10"
                                          SelectedItem="{Binding SelectedProject, Mode=OneWayToSource}"
                                          Background="Transparent"
@@ -582,7 +582,7 @@
                             <Expander IsExpanded="True"
                                       Header="Recent logs"
                                       Margin="10">
-                                <ListBox Items="{Binding RecentLogs}"
+                                <ListBox ItemsSource="{Binding RecentLogs}"
                                          Margin="10"
                                          SelectedItem="{Binding SelectedLog, Mode=OneWayToSource}"
                                          Background="Transparent"
@@ -620,7 +620,7 @@
                     <TextBlock Text="Specify custom MSBuild command line arguments:"
                                Margin="4" />
                     <WrapPanel Orientation="Horizontal">
-                        <ComboBox Items="{Binding MSBuildLocations}"
+                        <ComboBox ItemsSource="{Binding MSBuildLocations}"
                                   SelectedItem="{Binding MSBuildLocation}"
                                   ToolTip.Tip="Select MSBuild toolset to use for building"
                                   Height="28"

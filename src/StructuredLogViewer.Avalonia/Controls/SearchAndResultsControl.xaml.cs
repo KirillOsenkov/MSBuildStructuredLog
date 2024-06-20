@@ -133,7 +133,7 @@ namespace StructuredLogViewer.Avalonia.Controls
                 watermarkScrollViewer.IsVisible = false;
             }
 
-            resultsList.Items = content;
+            resultsList.ItemsSource = content;
         }
 
         public object WatermarkContent
