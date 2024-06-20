@@ -73,11 +73,11 @@ namespace StructuredLogger.Tests
         [InlineData("\"a\"", "a")]
         [InlineData("\"a\"\"", "a\"")]
         [InlineData("\"\"a\"", "\"a")]
-        [InlineData("\"\"a\"\"", "a")]
+        [InlineData("\"\"a\"\"", "\"a\"")]
         [InlineData("\"a\" ", "\"a\" ")]
         public void TestTrimQuotes(string original, string expected)
         {
-            var actual = Term.TrimQuotes(original);
+            var actual = original.TrimQuotes();
             Assert.Equal(expected, actual);
         }
 

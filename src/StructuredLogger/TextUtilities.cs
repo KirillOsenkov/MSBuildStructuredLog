@@ -256,7 +256,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static string TrimQuotes(this string word)
         {
-            if (word != null && word.Length > 2 && word[0] == '"' && word[word.Length - 1] == '"')
+            if (word != null && word.Length >= 2 && word[0] == '"' && word[word.Length - 1] == '"')
             {
                 word = word.Substring(1, word.Length - 2);
             }

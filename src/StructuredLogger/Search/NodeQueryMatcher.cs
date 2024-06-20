@@ -20,7 +20,7 @@ namespace StructuredLogViewer
 
         public static Term Get(string input)
         {
-            var trimmed = TrimQuotes(input);
+            var trimmed = input.TrimQuotes();
             if (trimmed == input)
             {
                 return new Term(input);
@@ -40,32 +40,6 @@ namespace StructuredLogViewer
             }
 
             return default;
-        }
-
-        /// <summary>
-        /// Trim equal number of quotes from head and tail.
-        /// </summary>
-        public static string TrimQuotes(string input)
-        {
-            if (string.IsNullOrWhiteSpace(input))
-            {
-                return input;
-            }
-
-            int offset = 0;
-
-            while (input.Length - (offset * 2) > 0
-                && input[offset] == '\"' && input[input.Length - offset - 1] == '\"')
-            {
-                offset++;
-            }
-
-            if (offset > 0)
-            {
-                return input.Substring(offset, input.Length - 2 * offset);
-            }
-
-            return input;
         }
 
         public bool IsMatch(string field, HashSet<string> superstrings)
