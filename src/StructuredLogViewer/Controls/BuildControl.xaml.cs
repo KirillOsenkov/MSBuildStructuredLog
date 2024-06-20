@@ -703,9 +703,14 @@ Search for multiple words separated by space (space means AND). Enclose multiple
 
 Use syntax like '$property Prop' to narrow results down by item kind. Supported kinds: ";
 
-            string watermarkText2 = @"Use the under(FILTER) clause to only include results where any of the nodes in the parent chain matches the FILTER. Use project(...) to filter by parent project. Examples:
+            string watermarkText2 = @" • Use under(FILTER) clause to only include results where any of the nodes in the parent chain matches the FILTER.
+ • Use notunder(...) as the opposite of under(...).
+ • Use project(...) to filter by parent project.
+ • Use not(...) to exclude subqueries.
+
+Examples:
  • $csc under($project Core)
- • Copying file project(ProjectA)
+ • Copying file project(ProjectA.csproj)
 
 Append [[$time]], [[$start]] and/or [[$end]] to show times and/or durations and sort the results by start time or duration descending (for tasks, targets and projects).
 

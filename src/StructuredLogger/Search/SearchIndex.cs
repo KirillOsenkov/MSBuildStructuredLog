@@ -619,6 +619,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
+            foreach (NodeQueryMatcher notMatcher in matcher.NotMatchers)
+            {
+                if (notMatcher.IsMatch(result.Node) != null)
+                {
+                    return null;
+                }
+            }
+
             return result;
         }
     }

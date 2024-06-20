@@ -138,6 +138,7 @@ namespace StructuredLogViewer
 
         public IList<NodeQueryMatcher> IncludeMatchers { get; } = new List<NodeQueryMatcher>();
         public IList<NodeQueryMatcher> ExcludeMatchers { get; } = new List<NodeQueryMatcher>();
+        public IList<NodeQueryMatcher> NotMatchers { get; } = new List<NodeQueryMatcher>();
         public IList<NodeQueryMatcher> ProjectMatchers { get; } = new List<NodeQueryMatcher>();
 
         // avoid allocating this for every node
@@ -242,6 +243,14 @@ namespace StructuredLogViewer
                     var underMatcher = new NodeQueryMatcher(word);
                     ExcludeMatchers.Add(underMatcher);
                     continue;
+                }
+
+                if (word.StartsWith("not(", StringComparison.OrdinalIgnoreCase) && word.EndsWith(")"))
+                {
+                    word = word.Substring(4, word.Length - 5);
+                    Terms.RemoveAt(termIndex);
+                    var notMatcher = new NodeQueryMatcher(word);
+                    NotMatchers.Add(notMatcher);
                 }
 
                 if (word.StartsWith("project(", StringComparison.OrdinalIgnoreCase) && word.EndsWith(")"))
@@ -732,6 +741,15 @@ namespace StructuredLogViewer
             foreach (NodeQueryMatcher matcher in ExcludeMatchers)
             {
                 if (IsUnder(matcher, result.Node))
+                {
+                    return null;
+                }
+            }
+
+            foreach (NodeQueryMatcher matcher in NotMatchers)
+            {
+                var notMatch = matcher.IsMatch(node);
+                if (notMatch != null)
                 {
                     return null;
                 }
