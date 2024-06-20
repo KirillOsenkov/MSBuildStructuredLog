@@ -522,6 +522,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 bool anyFieldMatched = false;
                 Term term = terms[termIndex];
                 string word = term.Word;
+                bool quotes = term.Quotes;
 
                 for (int fieldIndex = 0; fieldIndex < NodeQueryMatcher.MaxArraySize; fieldIndex++)
                 {
@@ -533,6 +534,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     byte bits = bitVector[field];
                     if ((bits & (1 << termIndex)) == 0)
+                    {
+                        continue;
+                    }
+
+                    string fullText = strings[field];
+                    if (quotes && !string.Equals(word, fullText, StringComparison.OrdinalIgnoreCase))
                     {
                         continue;
                     }
@@ -549,7 +556,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                     else
                     {
-                        string fullText = strings[field];
                         var nameValueNode = node as NameValueNode;
 
                         // NameValueNode is a special case: have to check in which field to search
