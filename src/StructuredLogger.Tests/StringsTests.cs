@@ -10,7 +10,7 @@ namespace StructuredLogger.Tests
 {
     public class StringsTests
     {
-        [Fact]
+        //[Fact]
         public void TestStrings()
         {
             //var strings = Serialization.ReadStringsFromFile(@"C:\temp\strings.bin");
@@ -88,7 +88,7 @@ namespace StructuredLogger.Tests
                 .ThenBy(g => g.weight)
                 .ToArray();
 
-            WriteCsv(outliers);
+            //WriteCsv(outliers);
 
             var top = ordered.Take(10).ToArray();
 
