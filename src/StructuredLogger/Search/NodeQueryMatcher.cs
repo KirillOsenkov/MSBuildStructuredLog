@@ -42,9 +42,16 @@ namespace StructuredLogViewer
             return default;
         }
 
-        // Trim equal number of quotes from head and tail.
+        /// <summary>
+        /// Trim equal number of quotes from head and tail.
+        /// </summary>
         public static string TrimQuotes(string input)
         {
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                return input;
+            }
+
             int offset = 0;
 
             while (input.Length - (offset * 2) > 0
@@ -55,7 +62,7 @@ namespace StructuredLogViewer
 
             if (offset > 0)
             {
-                return input.Substring(offset, input.Length - offset);
+                return input.Substring(offset, input.Length - 2 * offset);
             }
 
             return input;

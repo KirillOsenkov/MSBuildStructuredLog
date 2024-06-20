@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Build.Logging.StructuredLogger;
+using StructuredLogViewer;
 using Xunit;
 
 namespace StructuredLogger.Tests
@@ -63,6 +64,21 @@ namespace StructuredLogger.Tests
         {
             Assert.Equal(3, new Span(1, 10).Skip(2).Start);
             Assert.Equal(8, new Span(1, 10).Skip(2).Length);
+        }
+
+        [Theory]
+        [InlineData(null, null)]
+        [InlineData("", "")]
+        [InlineData("\"\"", "")]
+        [InlineData("\"a\"", "a")]
+        [InlineData("\"a\"\"", "a\"")]
+        [InlineData("\"\"a\"", "\"a")]
+        [InlineData("\"\"a\"\"", "a")]
+        [InlineData("\"a\" ", "\"a\" ")]
+        public void TestTrimQuotes(string original, string expected)
+        {
+            var actual = Term.TrimQuotes(original);
+            Assert.Equal(expected, actual);
         }
 
         [Fact]
