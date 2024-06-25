@@ -101,7 +101,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         /// <param name="sourceFilePath"></param>
         /// <returns>BinaryReader of the given binlog file.</returns>
-        public static BinaryReader OpenReader(string sourceFilePath)
+        public static BufferedBinaryReader OpenReader(string sourceFilePath)
         {
             Stream? stream = null;
             try
@@ -123,15 +123,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         /// <param name="sourceFileStream">Stream over the binlog file</param>
         /// <returns>BinaryReader of the given binlog file.</returns>
-        public static BinaryReader OpenReader(Stream sourceFileStream)
+        public static BufferedBinaryReader OpenReader(Stream sourceFileStream)
         {
             var gzipStream = new GZipStream(sourceFileStream, CompressionMode.Decompress, leaveOpen: false);
-
-            // wrapping the GZipStream in a buffered stream significantly improves performance
-            // and the max throughput is reached with a 32K buffer. See details here:
-            // https://github.com/dotnet/runtime/issues/39233#issuecomment-745598847
-            var bufferedStream = new BufferedStream(gzipStream, 32768);
-            return new BinaryReader(bufferedStream);
+            return new BufferedBinaryReader(gzipStream);
         }
 
         /// <summary>
@@ -143,7 +138,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <param name="allowForwardCompatibility">Unknown build events or unknown parts of known build events will be ignored if this is set to true.</param>
         /// <returns>BuildEventArgsReader over the given binlog file binary reader.</returns>
         public static BuildEventArgsReader OpenBuildEventsReader(
-            BinaryReader binaryReader,
+            BufferedBinaryReader binaryReader,
             bool closeInput,
             bool allowForwardCompatibility = true)
         {
@@ -195,7 +190,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         /// <param name="binaryReader">The binary log content binary reader - caller is responsible for disposing.</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> indicating the replay should stop as soon as possible.</param>
-        public void Replay(BinaryReader binaryReader, CancellationToken cancellationToken)
+        public void Replay(BufferedBinaryReader binaryReader, CancellationToken cancellationToken)
             => Replay(binaryReader, false, cancellationToken);
 
         /// <summary>
@@ -204,7 +199,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <param name="binaryReader">The binary log content binary reader - caller is responsible for disposing, unless <paramref name="closeInput"/> is set to true.</param>
         /// <param name="closeInput">Indicates whether the passed BinaryReader should be closed on disposing.</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> indicating the replay should stop as soon as possible.</param>
-        public void Replay(BinaryReader binaryReader, bool closeInput, CancellationToken cancellationToken)
+        public void Replay(BufferedBinaryReader binaryReader, bool closeInput, CancellationToken cancellationToken)
         {
             using var reader = OpenBuildEventsReader(binaryReader, closeInput, AllowForwardCompatibility);
             Replay(reader, cancellationToken);

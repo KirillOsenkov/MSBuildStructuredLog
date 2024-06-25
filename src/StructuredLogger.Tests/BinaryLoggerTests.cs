@@ -230,9 +230,9 @@ namespace Microsoft.Build.UnitTests
             int positionAfterFirstEvent = (int)memoryStream.Position;
             memoryStream.Position = 0;
             // event type
-            Serialization.Read7BitEncodedInt(binaryReader);
+            binaryReader.Read7BitEncodedInt();
             int eventSizePos = (int)memoryStream.Position;
-            int eventSize = Serialization.Read7BitEncodedInt(binaryReader);
+            int eventSize = binaryReader.Read7BitEncodedInt();
             int positionAfterFirstEventSize = (int)memoryStream.Position;
             memoryStream.Position = eventSizePos;
             // the extra 4 bytes
@@ -247,7 +247,7 @@ namespace Microsoft.Build.UnitTests
             // Now move back to the beginning of the stream and start reading.
             memoryStream.Position = 0;
 
-            using var buildEventArgsReader = new Logging.StructuredLogger.BuildEventArgsReader(binaryReader, BinaryLogger.FileFormatVersion)
+            using var buildEventArgsReader = new Logging.StructuredLogger.BuildEventArgsReader(new BufferedBinaryReader(memoryStream), BinaryLogger.FileFormatVersion)
             {
                 SkipUnknownEventParts = true
             };
@@ -290,7 +290,7 @@ namespace Microsoft.Build.UnitTests
             int positionAfterFirstEvent = (int)memoryStream.Position;
             memoryStream.Position = 0;
             // event type
-            Serialization.Read7BitEncodedInt(binaryReader);
+            binaryReader.Read7BitEncodedInt();
             int eventSizePos = (int)memoryStream.Position;
             memoryStream.Position = 0;
 
@@ -308,7 +308,7 @@ namespace Microsoft.Build.UnitTests
             memoryStream.Position = 0;
 
             List<BinaryLogReaderErrorEventArgs> readerErrors = new();
-            using var buildEventArgsReader = new Logging.StructuredLogger.BuildEventArgsReader(binaryReader, BinaryLogger.FileFormatVersion)
+            using var buildEventArgsReader = new Logging.StructuredLogger.BuildEventArgsReader(new BufferedBinaryReader(memoryStream), BinaryLogger.FileFormatVersion)
             {
                 SkipUnknownEvents = true
             };
@@ -344,8 +344,8 @@ namespace Microsoft.Build.UnitTests
             int positionAfterFirstEvent = (int)memoryStream.Position;
             memoryStream.Position = 0;
             // event type
-            Serialization.Read7BitEncodedInt(binaryReader);
-            int eventSize = Serialization.Read7BitEncodedInt(binaryReader);
+            binaryReader.Read7BitEncodedInt();
+            int eventSize = binaryReader.Read7BitEncodedInt();
             // overwrite the entire event with garbage
             binaryWriter.Write(Enumerable.Repeat(byte.MaxValue, eventSize).ToArray());
 
@@ -358,7 +358,7 @@ namespace Microsoft.Build.UnitTests
             // Now move back to the beginning of the stream and start reading.
             memoryStream.Position = 0;
 
-            using var buildEventArgsReader = new Logging.StructuredLogger.BuildEventArgsReader(binaryReader, BinaryLogger.FileFormatVersion)
+            using var buildEventArgsReader = new Logging.StructuredLogger.BuildEventArgsReader(new BufferedBinaryReader(memoryStream), BinaryLogger.FileFormatVersion)
             {
                 SkipUnknownEvents = true
             };
@@ -396,9 +396,9 @@ namespace Microsoft.Build.UnitTests
             int positionAfterFirstEvent = (int)memoryStream.Position;
             memoryStream.Position = 0;
             // event type
-            Serialization.Read7BitEncodedInt(binaryReader);
+            binaryReader.Read7BitEncodedInt();
             int eventSizePos = (int)memoryStream.Position;
-            int eventSize = Serialization.Read7BitEncodedInt(binaryReader);
+            int eventSize = binaryReader.Read7BitEncodedInt();
             int positionAfterFirstEventSize = (int)memoryStream.Position;
             memoryStream.Position = eventSizePos;
             // simulate there are 4 bytes less in the future version of the event - while our reader expects those
@@ -414,7 +414,7 @@ namespace Microsoft.Build.UnitTests
             // Now move back to the beginning of the stream and start reading.
             memoryStream.Position = 0;
 
-            using var buildEventArgsReader = new Logging.StructuredLogger.BuildEventArgsReader(binaryReader, BinaryLogger.FileFormatVersion)
+            using var buildEventArgsReader = new Logging.StructuredLogger.BuildEventArgsReader(new BufferedBinaryReader(memoryStream), BinaryLogger.FileFormatVersion)
             {
                 SkipUnknownEvents = true
             };

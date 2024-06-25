@@ -64,8 +64,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public void Replay(Stream stream, Progress progress)
         {
             var gzipStream = new GZipStream(stream, CompressionMode.Decompress, leaveOpen: true);
-            var bufferedStream = new BufferedStream(gzipStream, 32768);
-            var binaryReader = new BinaryReader(bufferedStream);
+            // var bufferedStream = new BufferedStream(gzipStream, 32768);
+            var binaryReader = new BufferedBinaryReader(gzipStream, bufferCapacity: 32768);
 
             using var reader = OpenReader(binaryReader);
 
@@ -187,7 +187,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private BuildEventArgsReader OpenReader(BinaryReader binaryReader)
+        private BuildEventArgsReader OpenReader(BufferedBinaryReader binaryReader)
         {
             int fileFormatVersion = binaryReader.ReadInt32();
             // Is this the new log format that contains the minimum reader version?
@@ -308,7 +308,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private IEnumerable<RecordInfo> ChunkBinlogFromDecompressedStream(Stream decompressedStream)
         {
-            var binaryReader = new BinaryReader(decompressedStream);
+            var binaryReader = new BufferedBinaryReader(decompressedStream);
             using BuildEventArgsReader reader = OpenReader(binaryReader);
             var hasOffsets = reader.FileFormatVersion >= BinaryLogger.ForwardCompatibilityMinimalVersion;
 
@@ -372,7 +372,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public IEnumerable<Record> ReadRecordsFromDecompressedStream(Stream decompressedStream,
             bool includeAuxiliaryRecords)
         {
-            var binaryReader = new BinaryReader(decompressedStream);
+            var binaryReader = new BufferedBinaryReader(decompressedStream);
             using var reader = OpenReader(binaryReader);
             return ReadRecordsFromDecompressedStream(reader, includeAuxiliaryRecords);
         }
