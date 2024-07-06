@@ -37,14 +37,40 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         private static BaseNode selectedNode = null;
 
+        private static BaseNode SelectedNode
+        {
+            get => selectedNode;
+            set
+            {
+                if (selectedNode == value)
+                {
+                    return;
+                }
+
+                BaseNode oldSelection = selectedNode;
+
+                selectedNode = value;
+
+                if (oldSelection != null)
+                {
+                    oldSelection.InvalidateRelevance();
+                }
+            }
+        }
+
+        private void InvalidateRelevance()
+        {
+            RaisePropertyChanged(nameof(IHasRelevance.IsLowRelevance));
+        }
+
         public static void ClearSelectedNode()
         {
-            selectedNode = null;
+            SelectedNode = null;
         }
 
         public bool IsSelected
         {
-            get => selectedNode == this;
+            get => SelectedNode == this;
             set
             {
                 if (IsSelected == value)
@@ -53,7 +79,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     return;
                 }
 
-                selectedNode = value && IsSelectable ? this : null;
+                SelectedNode = value && IsSelectable ? this : null;
 
                 RaisePropertyChanged();
                 RaisePropertyChanged("IsLowRelevance");
