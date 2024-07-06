@@ -633,6 +633,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
+            if (matcher.Skipped != null && node is Target target)
+            {
+                if (target.Skipped != matcher.Skipped)
+                {
+                    return null;
+                }
+            }
+
             return result;
         }
     }

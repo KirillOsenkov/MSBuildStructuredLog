@@ -14,6 +14,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public string ParentTarget { get; set; }
         public TargetBuiltReason TargetBuiltReason { get; set; }
         public TimedNode OriginalNode { get; set; }
+        public bool Skipped { get; set; }
 
         public override string TypeName => nameof(Target);
 

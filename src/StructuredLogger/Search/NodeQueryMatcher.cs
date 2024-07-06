@@ -110,6 +110,7 @@ namespace StructuredLogViewer
 
         public int NameTermIndex { get; set; } = -1;
         public int ValueTermIndex { get; set; } = -1;
+        public bool? Skipped { get; set; }
 
         public DateTime StartBefore { get; set; }
         public DateTime StartAfter { get; set; }
@@ -331,6 +332,22 @@ namespace StructuredLogViewer
 
                     continue;
                 }
+
+                if (word.StartsWith("skipped=", StringComparison.OrdinalIgnoreCase) && word.Length > 8)
+                {
+                    word = word.Substring(8, word.Length - 8);
+                    Terms.RemoveAt(termIndex);
+                    if (string.Equals("true", word, StringComparison.OrdinalIgnoreCase))
+                    {
+                        Skipped = true;
+                    }
+                    else if (string.Equals("false", word, StringComparison.OrdinalIgnoreCase))
+                    {
+                        Skipped = false;
+                    }
+
+                    continue;
+                }
             }
         }
 
@@ -358,6 +375,9 @@ namespace StructuredLogViewer
             query = query.Replace("end > ", "end>");
             query = query.Replace("end >", "end>");
             query = query.Replace("end> ", "end>");
+            query = query.Replace("name =", "name=");
+            query = query.Replace("value =", "value=");
+            query = query.Replace("skipped =", "skipped=");
 
             return query;
         }
@@ -731,6 +751,14 @@ namespace StructuredLogViewer
             {
                 var notMatch = matcher.IsMatch(node);
                 if (notMatch != null)
+                {
+                    return null;
+                }
+            }
+
+            if (Skipped != null && node is Target target)
+            {
+                if (target.Skipped != Skipped)
                 {
                     return null;
                 }

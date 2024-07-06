@@ -712,6 +712,8 @@ Examples:
  • $csc under($project Core)
  • Copying file project(ProjectA.csproj)
 
+Use '$target skipped=false' to exclude skipped targets (use true to only include skipped).
+
 Append [[$time]], [[$start]] and/or [[$end]] to show times and/or durations and sort the results by start time or duration descending (for tasks, targets and projects).
 
 Use start<""2023-11-23 14:30:54.579"", start>, end<, or end> to filter events that start or end before or after a given timestamp. Timestamp needs to be in quotes.

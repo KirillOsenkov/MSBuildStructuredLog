@@ -416,6 +416,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 var messageNode = new Message { Text = messageText };
                 target.AddChild(messageNode);
             }
+
+            target.Skipped = true;
         }
 
         public void TaskStarted(object sender, TaskStartedEventArgs args)
