@@ -692,7 +692,7 @@
 
   <HierarchicalDataTemplate DataType="{x:Type l:ProxyNode}"
                             ItemsSource="{Binding Children}">
-    <StackPanel Orientation="Horizontal">
+    <StackPanel Orientation="Horizontal" x:Name="stackPanel">
       <Path x:Name="icon"
           Data="F1M0,0L14,0L14,11L0,11Z"
           Width="14"
@@ -710,6 +710,9 @@
       </ItemsControl>
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
+      <DataTrigger Binding="{Binding IsLowRelevance}" Value="True">
+        <Setter TargetName="stackPanel" Property="Opacity" Value="0.25" />
+      </DataTrigger>
       <DataTrigger Binding="{Binding OriginalType}" Value="Folder">
         <Setter TargetName="icon" Property="Stroke" Value="{DynamicResource FolderStroke}" />
         <Setter TargetName="icon" Property="Fill" Value="{DynamicResource ClosedFolderBrush}" />

@@ -6,7 +6,7 @@ using StructuredLogViewer;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class ProxyNode : TextNode
+    public class ProxyNode : TextNode, IHasRelevance
     {
         private BaseNode original;
         public BaseNode Original
@@ -344,6 +344,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         public override string TypeName => nameof(ProxyNode);
+
+        public bool IsLowRelevance
+        {
+            get => HasFlag(NodeFlags.LowRelevance) && !IsSelected;
+            set => SetFlag(NodeFlags.LowRelevance, value);
+        }
 
         public override string ToString()
         {

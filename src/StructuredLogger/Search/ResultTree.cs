@@ -101,6 +101,11 @@ namespace StructuredLogViewer
                     var proxy = new ProxyNode();
                     proxy.Original = resultNode;
                     proxy.SearchResult = result;
+                    if (resultNode is IHasRelevance relevance)
+                    {
+                        proxy.IsLowRelevance = relevance.IsLowRelevance;
+                    }
+
                     proxy.Text = ProxyNode.GetNodeText(resultNode);
                     nodeToProxyMap[resultNode] = proxy;
                 }
