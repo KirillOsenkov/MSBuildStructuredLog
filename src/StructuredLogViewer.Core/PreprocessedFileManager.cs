@@ -165,7 +165,28 @@ namespace StructuredLogViewer
             return () => ShowPreprocessed(sourceFilePath, preprocessEvaluationContext);
         }
 
-        public string GetPreprocessedText(string sourceFilePath, string projectEvaluationContext)
+        private class PreprocessContext
+        {
+            private readonly List<(Span span, ProjectImport import)> spans = new();
+
+            public void AddProjectSpan(Span span, ProjectImport import)
+            {
+                spans.Add((span, import));
+            }
+        }
+
+        public string GetPreprocessedText(
+            string sourceFilePath,
+            string projectEvaluationContext)
+        {
+            var context = new PreprocessContext();
+            return GetPreprocessedText(sourceFilePath, projectEvaluationContext, context);
+        }
+
+        private string GetPreprocessedText(
+            string sourceFilePath,
+            string projectEvaluationContext,
+            PreprocessContext context)
         {
             string preprocessedFileCacheKey = projectEvaluationContext + sourceFilePath;
             if (preprocessedFileCache.TryGetValue(preprocessedFileCacheKey, out var result))
@@ -189,7 +210,7 @@ namespace StructuredLogViewer
                 imports.Count > 0 &&
                 !string.IsNullOrWhiteSpace(sourceText.Text))
             {
-                result = GetPreprocessedTextCore(projectEvaluationContext, sourceText, imports);
+                result = GetPreprocessedTextCore(projectEvaluationContext, sourceText, imports, context);
             }
             else
             {
@@ -204,7 +225,11 @@ namespace StructuredLogViewer
             return result;
         }
 
-        private string GetPreprocessedTextCore(string projectEvaluationContext, SourceText sourceText, Bucket imports)
+        private string GetPreprocessedTextCore(
+            string projectEvaluationContext,
+            SourceText sourceText,
+            Bucket imports,
+            PreprocessContext context)
         {
             string result;
             var sb = new StringBuilder();
@@ -228,7 +253,7 @@ namespace StructuredLogViewer
 
                 line = SkipTag(sourceText, sb, line, line, "<Project", ">");
 
-                InjectImportedProject(projectEvaluationContext, sb, sdkProps);
+                InjectImportedProject(projectEvaluationContext, sb, sdkProps, context);
                 importsList.Remove(sdkProps);
             }
 
@@ -242,7 +267,7 @@ namespace StructuredLogViewer
             {
                 line = SkipTag(sourceText, sb, line, import.Line);
 
-                InjectImportedProject(projectEvaluationContext, sb, import);
+                InjectImportedProject(projectEvaluationContext, sb, import, context);
             }
 
             int count = sourceText.Lines.Count;
@@ -253,7 +278,7 @@ namespace StructuredLogViewer
                 {
                     if (sdkTargets != default)
                     {
-                        InjectImportedProject(projectEvaluationContext, sb, sdkTargets);
+                        InjectImportedProject(projectEvaluationContext, sb, sdkTargets, context);
                         sdkTargets = default;
                     }
                 }
@@ -269,10 +294,17 @@ namespace StructuredLogViewer
             return result;
         }
 
-        private void InjectImportedProject(string projectEvaluationContext, StringBuilder sb, ProjectImport import)
+        private void InjectImportedProject(
+            string projectEvaluationContext,
+            StringBuilder sb,
+            ProjectImport import,
+            PreprocessContext context)
         {
             string projectPath = import.ProjectPath;
-            var importText = GetPreprocessedText(projectPath, projectEvaluationContext);
+
+            int start = sb.Length;
+
+            var importText = GetPreprocessedText(projectPath, projectEvaluationContext, context);
             sb.AppendLine($"<!-- ======== {projectPath} ======= -->");
             sb.Append(importText);
             if (!importText.EndsWith("\n"))
@@ -281,6 +313,10 @@ namespace StructuredLogViewer
             }
 
             sb.AppendLine($"<!-- ======== END OF {projectPath} ======= -->");
+
+            int end = sb.Length;
+
+            context.AddProjectSpan(new Span(start, end - start), import);
         }
 
         private int SkipTag(SourceText sourceText, StringBuilder sb, int line, int lineNumber, string startText = "<Import", string endText = "/>")
