@@ -696,7 +696,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             foreach (var span in sorted)
             {
-                if (current.Contains(span.Start))
+                if (current.ContainsEndInclusive(span.Start))
                 {
                     if (span.End > current.End)
                     {
