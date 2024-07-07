@@ -22,7 +22,7 @@
   <ItemGroup>
     <PackageReference Include="AdonisUI" Version="1.16.0" />
     <PackageReference Include="AdonisUI.ClassicTheme" Version="1.16.0" />
-    <PackageReference Include="AvalonEdit" Version="6.0.1" />
+    <PackageReference Include="AvalonEdit" Version="6.3.0.90" />
     <PackageReference Include="Microsoft.Build.Locator" Version="1.4.1" ExcludeAssets="build" />
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MSBuildPackageVersion)" />
     <PackageReference Include="Mono.Cecil" Version="0.9.6.1" />
