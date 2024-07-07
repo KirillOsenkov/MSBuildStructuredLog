@@ -20,10 +20,7 @@ namespace StructuredLogViewer
             {
                 var caretOffset = textEditor.CaretOffset;
                 var projectImport = PreprocessContext.GetImportFromPosition(caretOffset);
-                if (projectImport.Import is Import import)
-                {
-                    ImportSelected?.Invoke(import);
-                }
+                ImportSelected?.Invoke(projectImport);
             };
         }
     }

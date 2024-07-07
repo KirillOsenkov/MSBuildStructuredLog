@@ -2480,9 +2480,19 @@ Recent (");
             {
                 editorExtension = new EditorExtension();
                 editorExtension.PreprocessContext = context;
+
+                evaluation ??= context.Evaluation;
+
                 editorExtension.ImportSelected += import =>
                 {
-                    UpdateBreadcrumb(import);
+                    if (import != null)
+                    {
+                        UpdateBreadcrumb(import);
+                    }
+                    else if (evaluation != null)
+                    {
+                        UpdateBreadcrumb(evaluation);
+                    }
                 };
             }
 

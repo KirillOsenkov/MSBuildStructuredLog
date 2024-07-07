@@ -182,7 +182,20 @@ namespace StructuredLogViewer
                 spans.Add((span, import));
             }
 
-            public ProjectImport GetImportFromPosition(int position)
+            public ProjectEvaluation Evaluation
+            {
+                get
+                {
+                    if (spans.Any())
+                    {
+                        return spans[0].import.Import.GetNearestParent<ProjectEvaluation>();
+                    }
+
+                    return null;
+                }
+            }
+
+            public Import GetImportFromPosition(int position)
             {
                 Span bestSpan = default;
                 ProjectImport bestImport = default;
@@ -201,7 +214,7 @@ namespace StructuredLogViewer
                     }
                 }
 
-                return bestImport;
+                return bestImport.Import;
             }
 
             public int FindFileOffset(string sourceFilePath)
