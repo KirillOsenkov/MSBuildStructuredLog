@@ -20,17 +20,23 @@ namespace StructuredLogViewer.Controls
         public static void Install(TextEditor textEditor, string filePath, NavigationHelper navigationHelper)
         {
             if (navigationHelper == null || string.IsNullOrEmpty(filePath))
+            {
                 return;
+            }
 
             var importsByLocation = new Dictionary<TextLocation, HashSet<string>>();
 
             foreach (var import in navigationHelper.Build.EvaluationFolder.Children.OfType<ProjectEvaluation>().SelectMany(i => i.GetAllImportsTransitive()))
             {
                 if (!string.Equals(import.ProjectFilePath, filePath, StringComparison.OrdinalIgnoreCase))
+                {
                     continue;
+                }
 
                 if (string.IsNullOrEmpty(import.ImportedProjectFilePath))
+                {
                     continue;
+                }
 
                 var location = new TextLocation(import.Line, import.Column);
 
@@ -48,7 +54,9 @@ namespace StructuredLogViewer.Controls
             }
 
             if (importsByLocation.Count == 0)
+            {
                 return;
+            }
 
             textEditor.TextArea.TextView.ElementGenerators.Add(new ImportLinkGenerator(importsByLocation, navigationHelper));
         }
@@ -71,7 +79,9 @@ namespace StructuredLogViewer.Controls
 
                 var index = relevantText.Text.IndexOf("<" + ImportElementName, relevantText.Offset, relevantText.Count, StringComparison.Ordinal);
                 if (index < 0)
+                {
                     return -1;
+                }
 
                 var elementStartOffset = index - relevantText.Offset + startOffset;
                 return elementStartOffset + 1;
@@ -82,12 +92,16 @@ namespace StructuredLogViewer.Controls
                 // The offset should point to the "I" in "<Import"
                 var text = CurrentContext.GetText(offset, ImportElementName.Length);
                 if (text.Text.IndexOf(ImportElementName, text.Offset, text.Count, StringComparison.Ordinal) != text.Offset)
+                {
                     return null;
+                }
 
                 var location = CurrentContext.Document.GetLocation(offset - 1);
 
                 if (!importsByLocation.TryGetValue(location, out var importedPaths))
+                {
                     return null;
+                }
 
                 return new ImportLinkElement(CurrentContext.TextView, CurrentContext.VisualLine, text.Count, importedPaths, navigationHelper);
             }
@@ -210,11 +224,15 @@ namespace StructuredLogViewer.Controls
                     for (var pathIndex = 1; pathIndex < paths.Count; ++pathIndex)
                     {
                         if (paths[pathIndex][charIndex] != currentChar)
+                        {
                             return result;
+                        }
                     }
 
                     if (currentChar is '\\' or '/')
+                    {
                         result = charIndex;
+                    }
                 }
 
                 return result;
