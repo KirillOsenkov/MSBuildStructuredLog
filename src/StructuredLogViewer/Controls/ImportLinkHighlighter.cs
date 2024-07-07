@@ -210,7 +210,9 @@ namespace StructuredLogViewer.Controls
             private int GetCommonPathLength()
             {
                 if (importedPaths.Count < 2)
+                {
                     return 0;
+                }
 
                 var paths = importedPaths.Select(i => i.ToLowerInvariant()).ToList();
                 var charCountToConsider = paths.Min(i => i.Length);
