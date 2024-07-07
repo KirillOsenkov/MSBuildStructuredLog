@@ -98,6 +98,7 @@ namespace StructuredLogViewer.Controls
             int column = 0,
             Action preprocess = null,
             NavigationHelper navigationHelper = null,
+            EditorExtension editorExtension = null,
             bool displayPath = true)
         {
             var existing = Find(sourceFilePath);
@@ -123,6 +124,12 @@ namespace StructuredLogViewer.Controls
 
             var textViewerControl = new TextViewerControl();
             textViewerControl.DisplaySource(sourceFilePath, text, lineNumber, column, preprocess, navigationHelper);
+
+            if (editorExtension != null)
+            {
+                editorExtension.Install(textViewerControl);
+            }
+
             var tab = new SourceFileTab()
             {
                 FilePath = sourceFilePath,

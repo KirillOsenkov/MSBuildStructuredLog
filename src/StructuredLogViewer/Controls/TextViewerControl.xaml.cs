@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using System.Xml;
+using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Folding;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
@@ -29,6 +30,8 @@ namespace StructuredLogViewer.Controls
         public string Text { get; private set; }
         public Action Preprocess { get; private set; }
         public bool IsXml { get; private set; }
+
+        public TextEditor TextEditor => textEditor;
 
         public TextViewerControl()
         {

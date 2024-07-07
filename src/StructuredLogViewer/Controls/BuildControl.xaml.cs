@@ -1432,8 +1432,17 @@ Recent (");
             return projectContext as IProjectOrEvaluation;
         }
 
+        private object currentBreadcrumb;
+
         public void UpdateBreadcrumb(object item)
         {
+            if (currentBreadcrumb == item)
+            {
+                return;
+            }
+
+            currentBreadcrumb = item;
+
             var node = item as BaseNode;
             IEnumerable<object> chain = node?.GetParentChainIncludingThis();
             if (chain == null || !chain.Any())
@@ -2445,7 +2454,26 @@ Recent (");
                 preprocess = preprocessedFileManager.GetPreprocessAction(preprocessableFilePath, PreprocessedFileManager.GetEvaluationKey(evaluation));
             }
 
-            documentWell.DisplaySource(preprocessableFilePath, text.Text, lineNumber, column, preprocess, navigationHelper);
+            EditorExtension editorExtension = null;
+            var context = preprocessedFileManager.TryGetContext(sourceFilePath);
+            if (context != null)
+            {
+                editorExtension = new EditorExtension();
+                editorExtension.PreprocessContext = context;
+                editorExtension.ImportSelected += import =>
+                {
+                    UpdateBreadcrumb(import);
+                };
+            }
+
+            documentWell.DisplaySource(
+                preprocessableFilePath,
+                text.Text,
+                lineNumber,
+                column,
+                preprocess,
+                navigationHelper,
+                editorExtension);
             return true;
         }
 
