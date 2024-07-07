@@ -203,6 +203,19 @@ namespace StructuredLogViewer
 
                 return bestImport;
             }
+
+            public int FindFileOffset(string sourceFilePath)
+            {
+                foreach (var span in spans)
+                {
+                    if (string.Equals(span.import.ProjectPath, sourceFilePath, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return span.span.Start;
+                    }
+                }
+
+                return 0;
+            }
         }
 
         public PreprocessContext TryGetContext(string filePath)

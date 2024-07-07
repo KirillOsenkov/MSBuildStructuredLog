@@ -2388,6 +2388,26 @@ Recent (");
                             }
                         }
 
+                        // if a preprocessed text is selected and we can find the requested file in the preprocessed text,
+                        // navigate to that instead of opening in a separate file
+                        if (hasSourceFile is Import import)
+                        {
+                            string sourceFilePath = import.ImportedProjectFilePath;
+
+                            if (documentWell.tabControl.SelectedItem is TabItem current &&
+                                current.Content is TextViewerControl currentTextViewer &&
+                                currentTextViewer.EditorExtension is { } extension)
+                            {
+                                int offset = extension.PreprocessContext.FindFileOffset(sourceFilePath);
+                                if (offset > 0)
+                                {
+                                    currentTextViewer.TextEditor.CaretOffset = offset;
+                                    currentTextViewer.TextEditor.ScrollToLine(currentTextViewer.TextEditor.TextArea.Caret.Line);
+                                    return true;
+                                }
+                            }
+                        }
+
                         return DisplayFile(hasSourceFile.SourceFilePath, line, evaluation: evaluation);
                     case SourceFileLine sourceFileLine when sourceFileLine.Parent is SourceFile sourceFile && sourceFile.SourceFilePath != null:
                         return DisplayFile(sourceFile.SourceFilePath, sourceFileLine.LineNumber);

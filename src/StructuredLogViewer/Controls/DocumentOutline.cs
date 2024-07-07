@@ -12,6 +12,7 @@ namespace StructuredLogViewer
 
         public void Install(TextViewerControl textViewerControl)
         {
+            textViewerControl.EditorExtension = this;
             var textEditor = textViewerControl.TextEditor;
             var textArea = textEditor.TextArea;
             var caret = textArea.Caret;

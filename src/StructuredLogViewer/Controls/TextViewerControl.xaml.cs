@@ -33,6 +33,8 @@ namespace StructuredLogViewer.Controls
 
         public TextEditor TextEditor => textEditor;
 
+        public EditorExtension EditorExtension { get; set; }
+
         public TextViewerControl()
         {
             InitializeComponent();
