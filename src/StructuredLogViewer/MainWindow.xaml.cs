@@ -572,6 +572,7 @@ namespace StructuredLogViewer
                 }
 
                 currentBuild.UpdateBreadcrumb(text);
+                currentBuild.Build.AddChild(new Message { Text = text });
             }
         }
 
