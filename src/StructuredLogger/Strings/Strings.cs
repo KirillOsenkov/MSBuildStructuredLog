@@ -58,7 +58,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             SkipTargetBecauseOutputsUpToDateRegex = CreateRegex(GetString("SkipTargetBecauseOutputsUpToDate"), 1);
             RemovingProjectProperties = CreateRegex(GetString("General.ProjectUndefineProperties"), 1);
 
-            DuplicateImport = CreateRegex(GetString("SearchPathsForMSBuildExtensionsPath"), 3);
+            DuplicateImport = CreateRegex(GetString("DuplicateImport").Replace("{2}", ""), 3);
 
             SearchPathsForMSBuildExtensionsPath = CreateRegex(GetString("SearchPathsForMSBuildExtensionsPath"), 2);
 
