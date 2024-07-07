@@ -9,7 +9,7 @@ install:
   - choco upgrade chocolatey # Need at least 0.10.8 to avoid packaging error
   - dotnet tool update -g Cake.Tool
   - ps: Invoke-WebRequest -Uri 'https://dot.net/v1/dotnet-install.ps1' -UseBasicParsing -OutFile "$env:temp\dotnet-install.ps1"
-  - ps: '& $env:temp\dotnet-install.ps1 -Version "6.0.303"'
+  - ps: '& $env:temp\dotnet-install.ps1 -Version "8.0.302"'
 build_script: 
 - cmd: >-
     dotnet msbuild /p:Configuration=Release /clp:v=m MSBuildStructuredLog.sln /logger:"C:\Program Files\AppVeyor\BuildAgent\dotnetcore\Appveyor.MSBuildLogger.dll"
