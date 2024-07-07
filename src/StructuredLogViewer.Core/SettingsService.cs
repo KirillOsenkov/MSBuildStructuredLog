@@ -467,10 +467,17 @@ namespace StructuredLogViewer
 
         private static bool cleanedUpTempFiles = false;
 
-        public static string WriteContentToTempFileAndGetPath(string content, string fileExtension)
+        public static string GetPreprocessedFilePath(string content, string fileExtension = ".xml")
         {
             var folder = tempFolder;
             var filePath = Path.Combine(folder, Utilities.GetMD5Hash(content, 16) + fileExtension);
+            return filePath;
+        }
+
+        public static string WriteContentToTempFileAndGetPath(string content, string fileExtension)
+        {
+            var folder = tempFolder;
+            var filePath = GetPreprocessedFilePath(content, fileExtension);
 
             using (SingleGlobalInstance.Acquire(Path.GetFileName(filePath)))
             {

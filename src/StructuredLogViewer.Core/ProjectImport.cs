@@ -1,14 +1,16 @@
 ﻿using System;
+using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogViewer
 {
     public struct ProjectImport : IEquatable<ProjectImport>
     {
-        public ProjectImport(string importedProject, int line, int column)
+        public ProjectImport(string importedProject, int line, int column, Import import)
         {
             ProjectPath = importedProject;
             Line = line;
             Column = column;
+            Import = import;
         }
 
         public string ProjectPath { get; set; }
@@ -18,6 +20,8 @@ namespace StructuredLogViewer
         /// </summary>
         public int Line { get; set; }
         public int Column { get; set; }
+
+        public Import Import { get; set; }
 
         public static bool operator ==(ProjectImport left, ProjectImport right) => left.Equals(right);
         public static bool operator !=(ProjectImport left, ProjectImport right) => !(left == right);
