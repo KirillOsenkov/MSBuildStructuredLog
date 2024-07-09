@@ -169,7 +169,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 TargetSkipReason.ConditionWasFalse =>
                     FormatResourceStringIgnoreCodeAndKeyword(
-                        "Target \"{0}\" skipped, due to false condition; ({1}) was evaluated as ({2}).",
+                        "Target \"{0}\" execution and ordering skipped, due to false condition; ({1}) was evaluated as ({2}).",
                         targetName,
                         condition,
                         evaluatedCondition),
