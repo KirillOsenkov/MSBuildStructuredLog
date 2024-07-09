@@ -12,10 +12,10 @@
     <PackageReference Include="System.Collections.Immutable" Version="6.0.0" />
     <PackageReference Include="System.Memory" Version="4.5.5" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
-    <PackageReference Include="System.Text.Json" Version="6.0.0" />
+    <PackageReference Include="System.Text.Json" Version="8.0.4" />
     <PackageReference Include="System.Threading.Tasks.Dataflow" Version="6.0.0" />
     <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" />
     <PackageReference Include="Microsoft.Build" Version="$(MSBuildPackageVersion)" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.Build.Framework" Version="$(MSBuildPackageVersion)" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MSBuildPackageVersion)" ExcludeAssets="runtime" />
