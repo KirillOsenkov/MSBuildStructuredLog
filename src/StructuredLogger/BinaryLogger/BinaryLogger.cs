@@ -71,6 +71,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         //   - TaskStartedEventArgs: Added TaskAssemblyLocation property
         // version 21:
         //   - TaskParameterEventArgs: Added ParameterName and PropertyName properties
+        // version 22:
+        //    - extend EnvironmentVariableRead with location where environment variable was used.
 
         // This should be never changed.
         // The minimum version of the binary log reader that can read log of above version.
@@ -78,7 +80,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         // The current version of the binary log representation.
         // Changes with each update of the binary log format.
-        internal const int FileFormatVersion = 21;
+        internal const int FileFormatVersion = 22;
         // The minimum version of the binary log reader that can read log of above version.
         // This should be changed only when the binary log format is changed in a way that would prevent it from being
         // read by older readers. (changing of the individual BuildEventArgs or adding new is fine - as reader can

@@ -560,8 +560,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private BinaryLogRecordKind Write(EnvironmentVariableReadEventArgs e)
         {
-            WriteMessageFields(e, writeImportance: true);
+            WriteMessageFields(e, writeImportance: false);
             WriteDeduplicatedString(e.EnvironmentVariableName);
+            Write(e.LineNumber);
+            Write(e.ColumnNumber);
+            WriteDeduplicatedString(e.File);
 
             return BinaryLogRecordKind.EnvironmentVariableRead;
         }
