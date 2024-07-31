@@ -373,7 +373,23 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                 continue;
                             }
 
-                            var item = new Item { Name = file.FilePath };
+                            string kind = null;
+                            bool hasIncoming = file.Incoming.Any();
+                            bool hasOutgoing = file.Outgoing.Any();
+                            if (hasIncoming && hasOutgoing)
+                            {
+                                kind = "SourceAndDestination";
+                            }
+                            else if (hasIncoming)
+                            {
+                                kind = "Destination";
+                            }
+                            else if (hasOutgoing)
+                            {
+                                kind = "Source";
+                            }
+
+                            var item = new FileCopy { Name = file.FilePath, Kind = kind };
                             var result = new SearchResult(item);
                             if (text != null)
                             {

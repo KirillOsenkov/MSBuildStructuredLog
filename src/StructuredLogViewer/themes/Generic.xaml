@@ -468,6 +468,34 @@
     </StackPanel>
   </HierarchicalDataTemplate>
 
+  <HierarchicalDataTemplate DataType="{x:Type l:FileCopy}"
+                            ItemsSource="{Binding Children}">
+    <StackPanel Orientation="Horizontal">
+      <Path x:Name="icon"
+            Data="M5,5 L5,11 L11,11 L11,5 Z M 0,8 L16,8"
+            Stroke="Thistle"
+            VerticalAlignment="Center"
+            StrokeThickness="1"
+            Width="16"
+            Height="16"
+            Margin="1,2,6,2"
+            Fill="Thistle" />
+      <TextBlock Text="{Binding ShortenedName}" />
+    </StackPanel>
+    <HierarchicalDataTemplate.Triggers>
+      <DataTrigger Binding="{Binding Kind}" Value="Source">
+        <Setter TargetName="icon" Property="Data" Value="M0,5 L0,11 L6,11 L6,5 Z M 6,8 L16,8" />
+        <Setter TargetName="icon" Property="Stroke" Value="LightSkyBlue" />
+        <Setter TargetName="icon" Property="Fill" Value="LightSkyBlue" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding Kind}" Value="Destination">
+        <Setter TargetName="icon" Property="Data" Value="M10,5 L10,11 L16,11 L16,5 Z M 0,8 L10,8" />
+        <Setter TargetName="icon" Property="Stroke" Value="DarkSalmon" />
+        <Setter TargetName="icon" Property="Fill" Value="DarkSalmon" />
+      </DataTrigger>
+    </HierarchicalDataTemplate.Triggers>
+  </HierarchicalDataTemplate>
+
   <HierarchicalDataTemplate DataType="{x:Type l:Package}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">

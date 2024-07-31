@@ -18,4 +18,9 @@
             set => Name = value;
         }
     }
+
+    public class FileCopy : Item
+    {
+        public string Kind { get; set; }
+    }
 }
