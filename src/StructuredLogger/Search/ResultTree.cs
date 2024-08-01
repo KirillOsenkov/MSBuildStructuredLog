@@ -111,10 +111,17 @@ namespace StructuredLogViewer
                 }
             }
 
+            // We don't want to reuse nodes created for a result under a particular rootFolderName,
+            // such as Incoming and Outgoing for file copies. We do want to reuse the proxies for
+            // actual results as well as reuse nodes under each rootFolderName.
+            Dictionary<string, Dictionary<BaseNode, BaseNode>> perRootFolderProxyCache = new();
+
             foreach (var result in results)
             {
                 TreeNode parent = root;
                 var resultNode = result.Node;
+
+                var map = nodeToProxyMap;
 
                 if (nest && resultNode != null && resultNode is not Project && resultNode.Parent != null)
                 {
@@ -125,20 +132,27 @@ namespace StructuredLogViewer
                             parent,
                             actualParent: null,
                             name: rootFolderName);
+
+                        // create a dictionary specific for this rootFolderName based on the base dictionary
+                        if (!perRootFolderProxyCache.TryGetValue(rootFolderName, out map))
+                        {
+                            map = new Dictionary<BaseNode, BaseNode>(nodeToProxyMap);
+                            perRootFolderProxyCache[rootFolderName] = map;
+                        }
                     }
 
                     var project = resultNode.GetNearestParent<Project>();
                     if (project != null)
                     {
-                        parent = InsertParent(nodeToProxyMap, parent, project);
+                        parent = InsertParent(map, parent, project);
                     }
                     else
                     {
                         var evaluation = resultNode.GetNearestParent<ProjectEvaluation>();
                         if (evaluation != null)
                         {
-                            parent = InsertParent(nodeToProxyMap, parent, evaluation.Parent as TimedNode);
-                            parent = InsertParent(nodeToProxyMap, parent, evaluation);
+                            parent = InsertParent(map, parent, evaluation.Parent as TimedNode);
+                            parent = InsertParent(map, parent, evaluation);
                         }
                     }
 
@@ -147,21 +161,21 @@ namespace StructuredLogViewer
                     var target = resultNode.GetNearestParent<Target>();
                     if (!isTarget && project != null && target != null && target.Project == project)
                     {
-                        parent = InsertParent(nodeToProxyMap, parent, target);
+                        parent = InsertParent(map, parent, target);
                     }
 
                     // nest under a Task, unless it's an MSBuild task higher up the parent chain
                     var task = resultNode.GetNearestParent<Task>(t => t is not MSBuildTask);
                     if (task != null && !isTarget && project != null && task.GetNearestParent<Project>() == project)
                     {
-                        parent = InsertParent(nodeToProxyMap, parent, task);
+                        parent = InsertParent(map, parent, task);
                     }
 
                     if (resultNode is Item item &&
                         item.Parent is NamedNode itemParent &&
                         (itemParent is Folder || itemParent is AddItem || itemParent is RemoveItem))
                     {
-                        parent = InsertParent(nodeToProxyMap, parent, itemParent);
+                        parent = InsertParent(map, parent, itemParent);
                     }
 
                     if (resultNode is Metadata metadata &&
@@ -169,14 +183,14 @@ namespace StructuredLogViewer
                         parentItem.Parent is NamedNode grandparent &&
                         (grandparent is Folder || grandparent is AddItem || grandparent is RemoveItem))
                     {
-                        parent = InsertParent(nodeToProxyMap, parent, grandparent);
-                        parent = InsertParent(nodeToProxyMap, parent, parentItem);
+                        parent = InsertParent(map, parent, grandparent);
+                        parent = InsertParent(map, parent, parentItem);
                     }
                 }
 
                 if (resultNode == null || resultNode.Parent != null)
                 {
-                    if (nodeToProxyMap.TryGetValue(resultNode, out var existing))
+                    if (map.TryGetValue(resultNode, out var existing))
                     {
                         resultNode = existing;
                     }
