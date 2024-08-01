@@ -271,7 +271,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                     var metadataValue = metadata.Value;
                                     resultSet.Add(new SearchResult(metadata));
 
-                                    var referencedProject = task.FindChild<Project>(p => p.Name == Path.GetFileName(metadataValue));
+                                    var referencedProject = task.FindChild<Project>(p => p.Name.Equals(Path.GetFileName(metadataValue), StringComparison.OrdinalIgnoreCase));
                                     if (referencedProject != null)
                                     {
                                         var getCopyToOutputDirectoryItems = referencedProject.FindTarget("GetCopyToOutputDirectoryItems");
@@ -286,6 +286,33 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                             TryExplainSingleFileCopy(referencedProject, filePath, resultSet);
                                         }
                                     }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            target = project.FindTarget("ResolveAssemblyReferences");
+            if (target != null)
+            {
+                var task = target.FindChild<ResolveAssemblyReferenceTask>();
+                if (task != null)
+                {
+                    var outputItems = task.FindLastChild<Folder>(f => f.Name == "OutputItems");
+                    if (outputItems != null)
+                    {
+                        var addItem = outputItems.FindChild<AddItem>(a => a.Name == "ReferenceCopyLocalPaths");
+                        if (addItem != null)
+                        {
+                            var item = addItem.FindChild<Item>(filePath);
+                            if (item != null)
+                            {
+                                var metadata = item.FindChild<Metadata>(m => m.Name == "MSBuildSourceProjectFile");
+                                if (metadata != null)
+                                {
+                                    var metadataValue = metadata.Value;
+                                    resultSet.Add(new SearchResult(metadata));
                                 }
                             }
                         }
