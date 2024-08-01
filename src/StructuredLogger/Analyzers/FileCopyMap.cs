@@ -320,7 +320,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void TryExplainSingleFileCopy(FileData fileData, IList<SearchResult> resultSet)
         {
-            var fileCopyInfo = fileData.Incoming.FirstOrDefault() ?? fileData.Outgoing.FirstOrDefault();
+            var singleResult = resultSet.Single();
+
+            var fileCopyInfo =
+                singleResult.AssociatedFileCopy ??
+                fileData.Incoming.FirstOrDefault() ??
+                fileData.Outgoing.FirstOrDefault();
+
             var project = fileCopyInfo.Project;
 
             var sourceFilePath = fileData.FilePath;
@@ -473,6 +479,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 var message = incoming.FileCopyOperation.Message;
                 var result = new SearchResult(message);
+                result.AssociatedFileCopy = incoming;
                 result.AddMatch(message.Text, matchText);
                 result.RootFolder = "Incoming";
                 resultSet.Add(result);
@@ -491,6 +498,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 var message = outgoing.FileCopyOperation.Message;
                 var result = new SearchResult(message);
+                result.AssociatedFileCopy = outgoing;
                 result.AddMatch(message.Text, matchText);
                 result.RootFolder = "Outgoing";
                 resultSet.Add(result);

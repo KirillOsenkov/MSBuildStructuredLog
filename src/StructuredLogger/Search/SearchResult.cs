@@ -18,6 +18,8 @@ namespace StructuredLogViewer
 
         public string RootFolder { get; set; }
 
+        public FileCopyInfo AssociatedFileCopy { get; set; }
+
         public static SearchResult EmptyQueryMatch { get; } = new SearchResult();
 
         public SearchResult()
