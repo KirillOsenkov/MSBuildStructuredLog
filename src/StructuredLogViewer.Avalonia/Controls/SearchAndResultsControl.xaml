@@ -33,7 +33,7 @@
         <ContentPresenter Name="watermark"
                    Margin="40"
                    HorizontalAlignment="Center"
-                   Content="{Binding WatermarkText}"
+                   Content="WatermarkText"
                    VerticalAlignment="Center">
           <ContentPresenter.Styles>
             <Style Selector="TextBlock">

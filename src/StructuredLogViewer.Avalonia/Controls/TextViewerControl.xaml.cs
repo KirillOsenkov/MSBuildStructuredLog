@@ -18,6 +18,7 @@ using System.Xml;
 using AvaloniaEdit.Highlighting.Xshd;
 using System.Text;
 using Avalonia.VisualTree;
+using Avalonia.Platform.Storage;
 
 namespace StructuredLogViewer.Avalonia.Controls
 {
@@ -185,7 +186,7 @@ namespace StructuredLogViewer.Avalonia.Controls
 
         private async void save_Click(object sender, RoutedEventArgs e)
         {
-            if (this.FindAncestorOfType<Window>() is not Window window)
+            if (TopLevel.GetTopLevel(this) is not TopLevel topLevel)
             {
                 return;
             }
@@ -199,18 +200,19 @@ namespace StructuredLogViewer.Avalonia.Controls
                 filePath += extension;
             }
 
-            var saveFileDialog = new SaveFileDialog
+            using var result = await topLevel.StorageProvider.SaveFilePickerAsync(new()
             {
                 Title = "Save file as...",
-                DefaultExtension = $"{extension.Substring(1)} files|*{extension}|All Files|*.*",
-                InitialFileName = Path.GetFileName(filePath)
-            };
+                DefaultExtension = extension,
+                SuggestedFileName = Path.GetFileName(filePath),
+                FileTypeChoices = new[] { FilePickerFileTypes.All, FilePickerFileTypes.TextPlain }
+            });
 
-            var result = await saveFileDialog.ShowAsync(window);
-
-            if (!string.IsNullOrWhiteSpace(result))
+            if (result is not null)
             {
-                await File.WriteAllTextAsync(result, Text, Encoding.UTF8, default);
+                await using var stream = await result.OpenWriteAsync();
+                await using var writer = new StreamWriter(stream, Encoding.UTF8);
+                await writer.WriteAsync(Text);
             }
         }
 
@@ -228,7 +230,7 @@ namespace StructuredLogViewer.Avalonia.Controls
 
         private void copyFullPath_Click(object sender, RoutedEventArgs e)
         {
-            Application.Current.Clipboard.SetTextAsync(FilePath);
+            TopLevel.GetTopLevel(this).Clipboard.SetTextAsync(FilePath);
         }
 
         private void preprocess_Click(object sender, RoutedEventArgs e)

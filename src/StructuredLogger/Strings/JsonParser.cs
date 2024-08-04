@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
 
+#if !NET8_0_OR_GREATER
 namespace TinyJson
 {
     // Really simple JSON parser in ~300 lines
@@ -373,3 +374,4 @@ namespace TinyJson
         }
     }
 }
+#endif

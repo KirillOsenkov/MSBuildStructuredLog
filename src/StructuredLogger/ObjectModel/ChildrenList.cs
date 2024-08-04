@@ -38,10 +38,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return default;
         }
 
+#if !NET8_0_OR_GREATER
         public void EnsureCapacity(int capacity)
         {
             this.Capacity = capacity;
         }
+#endif
     }
 
     public class CacheByNameChildrenList : ChildrenList
