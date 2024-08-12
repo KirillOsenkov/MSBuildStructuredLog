@@ -73,6 +73,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         //   - TaskParameterEventArgs: Added ParameterName and PropertyName properties
         // version 22:
         //    - extend EnvironmentVariableRead with location where environment variable was used.
+        // version 23:
+        //    - new record kinds: BuildCheckMessageEvent, BuildCheckWarningEvent, BuildCheckErrorEvent, BuildCheckTracingEven, BuildCheckAcquisitionEvent,
+        //    BuildSubmissionStartedEvent, ProjectIntrinsicTasksExecutionFinishedEvent
 
         // This should be never changed.
         // The minimum version of the binary log reader that can read log of above version.
