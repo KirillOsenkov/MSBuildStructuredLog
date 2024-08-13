@@ -29,8 +29,8 @@ namespace StructuredLogger.BinaryLogger
 
     internal sealed class BuildCheckResultWarning : BuildWarningEventArgs
     {
-        public BuildCheckResultWarning(string message, string code)
-            : base(subcategory: null, code: code, file: null, lineNumber: 0, columnNumber: 0, endLineNumber: 0, endColumnNumber: 0, message: message, helpKeyword: null, senderName: null)
+        public BuildCheckResultWarning(string message)
+            : base(subcategory: null, code: string.Empty, file: null, lineNumber: 0, columnNumber: 0, endLineNumber: 0, endColumnNumber: 0, message: message, helpKeyword: null, senderName: null)
         {
             RawMessage = message;
         }
@@ -38,8 +38,8 @@ namespace StructuredLogger.BinaryLogger
 
     internal sealed class BuildCheckResultError : BuildErrorEventArgs
     {
-        public BuildCheckResultError(string message, string code)
-            : base(subcategory: null, code: code, file: null, lineNumber: 0, columnNumber: 0, endLineNumber: 0, endColumnNumber: 0, message: message, helpKeyword: null, senderName: null)
+        public BuildCheckResultError(string message)
+            : base(subcategory: null, code: string.Empty, file: null, lineNumber: 0, columnNumber: 0, endLineNumber: 0, endColumnNumber: 0, message: message, helpKeyword: null, senderName: null)
         {
             RawMessage = message;
         }

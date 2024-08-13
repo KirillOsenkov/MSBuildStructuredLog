@@ -1248,22 +1248,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return e;
         }
 
-        private BuildEventArgs ReadBuildCheckEventArgs<T>(Func<BuildEventArgsFields, string, T> createEvent)
+        private BuildEventArgs ReadBuildCheckEventArgs<T>(Func<string, T> createEvent)
             where T : BuildEventArgs
         {
-            var fields = ReadBuildEventArgsFields(readImportance: true);
-            var rawMessage = ReadDeduplicatedString() ?? string.Empty;
-            var e = createEvent(fields, rawMessage);
-            SetCommonFields(e, fields);
+            var e = createEvent(fields.Message);
+            SetCommonFields(e, ReadBuildEventArgsFields());
 
             return e;
         }
 
-        private BuildEventArgs ReadBuildCheckMessageEventArgs() => ReadBuildCheckEventArgs((_, rawMessage) => new BuildCheckResultMessage(rawMessage));
+        private BuildEventArgs ReadBuildCheckMessageEventArgs() => ReadBuildCheckEventArgs((message) => new BuildCheckResultMessage(message));
 
-        private BuildEventArgs ReadBuildCheckWarningEventArgs() => ReadBuildCheckEventArgs((fields, rawMessage) => new BuildCheckResultWarning(rawMessage, fields.Code));
+        private BuildEventArgs ReadBuildCheckWarningEventArgs() => ReadBuildCheckEventArgs((message) => new BuildCheckResultWarning(message));
 
-        private BuildEventArgs ReadBuildCheckErrorEventArgs() => ReadBuildCheckEventArgs((fields, rawMessage) => new BuildCheckResultError(rawMessage, fields.Code));
+        private BuildEventArgs ReadBuildCheckErrorEventArgs() => ReadBuildCheckEventArgs((message) => new BuildCheckResultError(message));
 
         private BuildEventArgs ReadBuildCheckTracingEventArgs()
         {
