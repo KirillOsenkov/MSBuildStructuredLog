@@ -75,7 +75,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         //    - extend EnvironmentVariableRead with location where environment variable was used.
         // version 23:
         //    - new record kinds: BuildCheckMessageEvent, BuildCheckWarningEvent, BuildCheckErrorEvent,
-        //    BuildCheckTracingEven, BuildCheckAcquisitionEvent, BuildSubmissionStartedEvent
+        //    BuildCheckTracingEvent, BuildCheckAcquisitionEvent, BuildSubmissionStartedEvent
 
         // This should be never changed.
         // The minimum version of the binary log reader that can read log of above version.
