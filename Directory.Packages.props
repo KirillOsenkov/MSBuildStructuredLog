@@ -1,0 +1,50 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <PropertyGroup>
+    <MSBuildPackageVersion>17.5.0</MSBuildPackageVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="AdonisUI" Version="1.16.0" />
+    <PackageVersion Include="AdonisUI.ClassicTheme" Version="1.16.0" />
+    <PackageVersion Include="AutomaticGraphLayout.Drawing" Version="1.1.11" />
+    <PackageVersion Include="AutomaticGraphLayout.WpfGraphControl" Version="1.1.11" />
+    <PackageVersion Include="AvalonEdit" Version="6.3.0.90" />
+    <PackageVersion Include="Avalonia.AvaloniaEdit" Version="0.10.12.1" />
+    <PackageVersion Include="Avalonia.Desktop" Version="0.10.12" />
+    <PackageVersion Include="Avalonia.Diagnostics" Version="0.10.12" />
+    <PackageVersion Include="DiffPlex" Version="1.7.0" />
+    <PackageVersion Include="DotUtils.MsBuild.BinlogRedactor.SensitiveDataDetector" Version="0.0.8" />
+    <PackageVersion Include="DotUtils.StreamUtils.Sources" Version="0.0.7" />
+    <PackageVersion Include="FluentAssertions" Version="6.11.0" />
+    <PackageVersion Include="GuiLabs.Language.Xml" Version="1.2.46" />
+    <PackageVersion Include="HarfBuzzSharp" Version="2.8.2-preview.187" />
+    <PackageVersion Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" />
+    <PackageVersion Include="Microsoft.Build" Version="$(MSBuildPackageVersion)" />
+    <PackageVersion Include="Microsoft.Build.Framework" Version="$(MSBuildPackageVersion)" />
+    <PackageVersion Include="Microsoft.Build.Locator" Version="1.4.1" />
+    <PackageVersion Include="Microsoft.Build.Tasks.Core" Version="$(MSBuildPackageVersion)" />
+    <PackageVersion Include="Microsoft.Build.Utilities.Core" Version="$(MSBuildPackageVersion)" />
+    <PackageVersion Include="Microsoft.DotNet.ILCompiler" Version="7.0.0" />
+    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="1.0.0" />
+    <PackageVersion Include="Mono.Cecil" Version="0.9.6.1" />
+    <PackageVersion Include="MSBuild.StructuredLogger" Version="2.1.133" />
+    <PackageVersion Include="Nerdbank.GitVersioning" Version="3.6.133" />
+    <PackageVersion Include="Newtonsoft.Json" Version="13.0.1" />
+    <PackageVersion Include="NuGet.ProjectModel" Version="6.8.0" />
+    <PackageVersion Include="Nullable" Version="1.2.1" />
+    <PackageVersion Include="SkiaSharp" Version="2.88.6" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux" Version="2.88.6" />
+    <PackageVersion Include="squirrel.windows" Version="1.4.4" />
+    <PackageVersion Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
+    <PackageVersion Include="System.Collections.Immutable" Version="6.0.0" />
+    <PackageVersion Include="System.Memory" Version="4.5.5" />
+    <PackageVersion Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
+    <PackageVersion Include="System.Text.Json" Version="8.0.4" />
+    <PackageVersion Include="System.Threading.Tasks.Dataflow" Version="6.0.0" />
+    <PackageVersion Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
+    <PackageVersion Include="xunit" Version="2.4.1" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="2.4.1" />
+  </ItemGroup>
+</Project>

@@ -20,16 +20,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AdonisUI" Version="1.16.0" />
-    <PackageReference Include="AdonisUI.ClassicTheme" Version="1.16.0" />
-    <PackageReference Include="AvalonEdit" Version="6.3.0.90" />
-    <PackageReference Include="Microsoft.Build.Locator" Version="1.4.1" ExcludeAssets="build" />
-    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MSBuildPackageVersion)" />
-    <PackageReference Include="Mono.Cecil" Version="0.9.6.1" />
-    <PackageReference Include="Nerdbank.GitVersioning" Version="$(NuGetVersionNerdbankGitVersioning)" PrivateAssets="all" />
-    <PackageReference Include="squirrel.windows" Version="1.4.4" GeneratePathProperty="true" />
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" PrivateAssets="all" />
-    <PackageReference Include="AutomaticGraphLayout.WpfGraphControl" Version="1.1.11" />
+    <PackageReference Include="AdonisUI" />
+    <PackageReference Include="AdonisUI.ClassicTheme" />
+    <PackageReference Include="AvalonEdit" />
+    <PackageReference Include="Microsoft.Build.Locator" ExcludeAssets="build" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" />
+    <PackageReference Include="Mono.Cecil" />
+    <PackageReference Include="Nerdbank.GitVersioning" PrivateAssets="all" />
+    <PackageReference Include="squirrel.windows" GeneratePathProperty="true" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="all" />
+    <PackageReference Include="AutomaticGraphLayout.WpfGraphControl" />
   </ItemGroup>
 
   <ItemGroup>

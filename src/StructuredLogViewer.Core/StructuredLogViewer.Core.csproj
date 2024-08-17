@@ -10,10 +10,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="GuiLabs.Language.Xml" Version="1.2.46" />
-    <PackageReference Include="Nerdbank.GitVersioning" Version="$(NuGetVersionNerdbankGitVersioning)" PrivateAssets="all" />
-    <PackageReference Include="AutomaticGraphLayout.Drawing" Version="1.1.11" />
-    <PackageReference Include="Nullable" Version="1.2.1">
+    <PackageReference Include="GuiLabs.Language.Xml" />
+    <PackageReference Include="Nerdbank.GitVersioning" PrivateAssets="all" />
+    <PackageReference Include="AutomaticGraphLayout.Drawing" />
+    <PackageReference Include="Nullable">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

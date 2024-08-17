@@ -6,15 +6,15 @@
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
   </PropertyGroup>
   <ItemGroup Condition=" '$(OS)' == 'Windows_NT' ">
-    <PackageReference Include="Nerdbank.GitVersioning" Version="$(NuGetVersionNerdbankGitVersioning)" PrivateAssets="all" />
+    <PackageReference Include="Nerdbank.GitVersioning" PrivateAssets="all" />
   </ItemGroup>
   <PropertyGroup>
     <DefineConstants>$(DefineConstants);NETCORE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="all" />
-    <PackageReference Include="DotUtils.MsBuild.BinlogRedactor.SensitiveDataDetector" Version="0.0.8" />
-    <PackageReference Include="NuGet.ProjectModel" Version="6.8.0" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="all" />
+    <PackageReference Include="DotUtils.MsBuild.BinlogRedactor.SensitiveDataDetector" />
+    <PackageReference Include="NuGet.ProjectModel" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\StructuredLogger\StructuredLogger.csproj" />
