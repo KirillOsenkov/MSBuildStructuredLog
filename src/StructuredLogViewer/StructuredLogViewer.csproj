@@ -19,6 +19,10 @@
     <Reference Include="System.Net.Http" />
   </ItemGroup>
 
+  <ItemGroup Condition="$(TargetFramework) != 'net472'">
+    <RuntimeHostConfigurationOption Include="Switch.System.Windows.Media.EnableHardwareAccelerationInRdp" Value="true" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="AdonisUI" />
     <PackageReference Include="AdonisUI.ClassicTheme" />
