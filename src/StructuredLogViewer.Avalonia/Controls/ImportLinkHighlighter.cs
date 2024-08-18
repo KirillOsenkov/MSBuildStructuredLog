@@ -6,10 +6,10 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives.PopupPositioning;
 using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.Media.TextFormatting;
 using AvaloniaEdit;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Rendering;
-using AvaloniaEdit.Text;
 using Microsoft.Build.Logging.StructuredLogger;
 using FontStyle = Avalonia.Media.FontStyle;
 
@@ -130,7 +130,7 @@ namespace StructuredLogViewer.Avalonia.Controls
 
             public override TextRun CreateTextRun(int startVisualColumn, ITextRunConstructionContext context)
             {
-                TextRunProperties.Underline = true;
+                TextRunProperties.SetTextDecorations(TextDecorations.Underline);
                 return base.CreateTextRun(startVisualColumn, context);
             }
 
@@ -216,7 +216,7 @@ namespace StructuredLogViewer.Avalonia.Controls
                 var topLeft = ParentVisualLine.GetVisualPosition(VisualColumn, VisualYPosition.LineTop);
                 var bottomRight = ParentVisualLine.GetVisualPosition(VisualColumn + VisualLength, VisualYPosition.LineBottom);
 
-                menu.PlacementMode = PlacementMode.AnchorAndGravity;
+                menu.Placement = PlacementMode.AnchorAndGravity;
                 menu.PlacementAnchor = PopupAnchor.BottomLeft;
                 menu.PlacementGravity = PopupGravity.BottomRight;
                 menu.PlacementTarget = generator.TextView;

@@ -5,10 +5,13 @@
     <TargetFramework>net8.0</TargetFramework>
     <RuntimeIdentifiers>win-x64;linux-x64;osx-x64;osx-arm64</RuntimeIdentifiers>
     <ApplicationIcon>StructuredLogger.ico</ApplicationIcon>
-    <RestoreAdditionalProjectSources Condition="$(PublishNativeAot) == True">
-      https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7/nuget/v3/index.json;
-      $(RestoreAdditionalProjectSources)
-    </RestoreAdditionalProjectSources>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PublishAot Condition="'$(PublishNativeAot)' == 'true'">true</PublishAot>
+    <XmlResolverIsNetworkingEnabledByDefault>false</XmlResolverIsNetworkingEnabledByDefault>
+    <OptimizationPreference>Size</OptimizationPreference>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,11 +23,7 @@
     </AvaloniaResource>
     <AvaloniaResource Include="StructuredLogger.ico" />
   </ItemGroup>
-
-  <ItemGroup>
-    <RdXmlFile Include="Avalonia.rd.xml" />
-  </ItemGroup>
-
+  
   <ItemGroup Condition="$(NETCoreSdkRuntimeIdentifier.StartsWith('osx'))">
     <Content Include="StructuredLogViewer.icns">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -35,15 +34,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Avalonia.Desktop" />
-    <PackageReference Include="Avalonia.Diagnostics" Condition=" '$(Configuration)' == 'Debug' " />
-    <PackageReference Include="Avalonia.AvaloniaEdit" />
-    <PackageReference Include="System.ComponentModel.TypeConverter" />
-    <!-- Bump transitive references to preview versions that contain osx-arm64 native assets -->
-    <PackageReference Include="SkiaSharp" />
-    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Condition="$(NETCoreSdkPortableRuntimeIdentifier.StartsWith('linux'))" />
-    <PackageReference Include="HarfBuzzSharp" />
-    <PackageReference Include="Microsoft.DotNet.ILCompiler" Condition="$(PublishNativeAot) == True" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.1.1" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.1.1" />
+    <PackageReference Include="Avalonia.Diagnostics" Version="11.1.1" Condition=" '$(Configuration)' == 'Debug' " />
+    <PackageReference Include="Avalonia.AvaloniaEdit" Version="11.0.6" />
   </ItemGroup>
 
   <ItemGroup>

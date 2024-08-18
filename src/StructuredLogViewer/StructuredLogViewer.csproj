@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net472;net7.0-windows</TargetFrameworks>
+    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
     <OutputType>WinExe</OutputType>
     <RootNamespace>StructuredLogViewer</RootNamespace>
     <UseWPF>true</UseWPF>
@@ -49,7 +49,7 @@
 
   <Target Name="CopyTaskRunnerDll" BeforeTargets="GetCopyToOutputDirectoryItems" Condition="$(TargetFramework) == 'net472'">
     <PropertyGroup>
-      <CoreTaskRunnerOutDir>$([System.IO.Path]::GetFullPath(`$(OutDir)\..\..\..\TaskRunner\$(Configuration)\net7.0`))\</CoreTaskRunnerOutDir>
+      <CoreTaskRunnerOutDir>$([System.IO.Path]::GetFullPath(`$(OutDir)\..\..\..\TaskRunner\$(Configuration)\net8.0`))\</CoreTaskRunnerOutDir>
     </PropertyGroup>
     <ItemGroup>
       <TaskRunnerFile Include="$(CoreTaskRunnerOutDir)TaskRunner.dll" />
