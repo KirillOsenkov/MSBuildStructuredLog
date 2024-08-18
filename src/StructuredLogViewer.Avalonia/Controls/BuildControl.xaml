@@ -1,7 +1,9 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:StructuredLogViewer.Avalonia.Controls;assembly=StructuredLogViewer.Avalonia"
-             x:Class="StructuredLogViewer.Avalonia.Controls.BuildControl">
+             xmlns:structuredLogger="clr-namespace:Microsoft.Build.Logging.StructuredLogger;assembly=StructuredLogger"
+             x:Class="StructuredLogViewer.Avalonia.Controls.BuildControl"
+             x:DataType="structuredLogger:Build">
 
   <local:SplitterPanel Orientation="Vertical" FirstChildRelativeSize="*" SecondChildRelativeSize="50">
 
@@ -55,7 +57,7 @@
                             BorderThickness="0"
                             Classes="searchable"
                             AutoScrollToSelectedItem="True"
-                            Items="{Binding Children}"/>
+                            ItemsSource="{Binding Children}"/>
                 </TabItem>
 
                   <!--<TabItem Name="timelineTab"
@@ -90,11 +92,8 @@
                     <Border BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}">
                         <ItemsPresenter Name="PART_ItemsPresenter"
-                                        Items="{TemplateBinding Items}"
                                         ItemsPanel="{TemplateBinding ItemsPanel}"
-                                        ItemTemplate="{TemplateBinding ItemTemplate}"
-                                        Margin="{TemplateBinding Padding}"
-                                        VirtualizationMode="{TemplateBinding VirtualizationMode}" />
+                                        Margin="{TemplateBinding Padding}" />
                     </Border>
                 </ControlTemplate>
               </ListBox.Template>
