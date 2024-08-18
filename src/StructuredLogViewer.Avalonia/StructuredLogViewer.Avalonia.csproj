@@ -34,10 +34,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Avalonia.Desktop" Version="11.1.1" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.1.1" />
-    <PackageReference Include="Avalonia.Diagnostics" Version="11.1.1" Condition=" '$(Configuration)' == 'Debug' " />
-    <PackageReference Include="Avalonia.AvaloniaEdit" Version="11.0.6" />
+    <PackageReference Include="Avalonia.AvaloniaEdit" />
+    <PackageReference Include="Avalonia.Desktop" />
+    <PackageReference Include="Avalonia.Diagnostics" Condition=" '$(Configuration)' == 'Debug' " />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
   </ItemGroup>
 
   <ItemGroup>
