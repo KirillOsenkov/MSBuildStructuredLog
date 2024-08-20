@@ -51,7 +51,15 @@
     <EmbeddedResource Include="Resources\SolutionFile.xshd" />
   </ItemGroup>
 
-  <Target Name="CopyTaskRunnerDll" BeforeTargets="GetCopyToOutputDirectoryItems" Condition="$(TargetFramework) == 'net472'">
+  <Target Name="EnsureTaskRunnerIsBuilt">
+    <MSBuild Projects="..\TaskRunner\TaskRunner.csproj" Targets="Build" />
+  </Target>
+
+  <Target
+      Name="CopyTaskRunnerDll"
+      DependsOnTargets="EnsureTaskRunnerIsBuilt"
+      BeforeTargets="GetCopyToOutputDirectoryItems"
+      Condition="$(TargetFramework) == 'net472'">
     <PropertyGroup>
       <CoreTaskRunnerOutDir>$([System.IO.Path]::GetFullPath(`$(OutDir)\..\..\..\TaskRunner\$(Configuration)\net8.0`))\</CoreTaskRunnerOutDir>
     </PropertyGroup>
