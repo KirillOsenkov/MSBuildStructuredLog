@@ -1277,9 +1277,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private BuildEventArgs ReadBuildCheckAcquisitionEventArgs()
         {
-            var fields = ReadBuildEventArgsFields(readImportance: true);
-            var acquisitionPath = ReadString();
-            var projectPath = ReadString();
+            var fields = ReadBuildEventArgsFields(readImportance: false);
+            var acquisitionPath = ReadDeduplicatedString();
+            var projectPath = ReadDeduplicatedString();
             var e = new BuildCheckAcquisitionEventArgs(acquisitionPath, projectPath);
             SetCommonFields(e, fields);
             return e;
