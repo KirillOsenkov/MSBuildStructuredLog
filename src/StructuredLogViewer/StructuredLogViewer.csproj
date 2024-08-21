@@ -52,7 +52,10 @@
   </ItemGroup>
 
   <Target Name="EnsureTaskRunnerIsBuilt">
-    <MSBuild Projects="..\TaskRunner\TaskRunner.csproj" Targets="Build" />
+    <MSBuild
+        Projects="..\TaskRunner\TaskRunner.csproj"
+        Targets="Build"
+        RemoveProperties="TargetFramework"/>
   </Target>
 
   <Target
