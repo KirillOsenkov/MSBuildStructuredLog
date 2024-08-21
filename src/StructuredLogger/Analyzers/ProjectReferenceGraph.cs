@@ -135,6 +135,42 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
+            if (resultSet.Count == 1)
+            {
+                var singleProject = resultSet[0].Node switch
+                {
+                    Project p => p.ProjectFile,
+                    ProxyNode proxy => (proxy.Original as Project).ProjectFile,
+                    _ => null
+                };
+
+                List<string> referencing = new();
+
+                foreach (var project in references.Keys)
+                {
+                    if (references.TryGetValue(project, out var bucket))
+                    {
+                        if (bucket.Contains(singleProject))
+                        {
+                            referencing.Add(project);
+                        }
+                    }
+                }
+
+                if (referencing.Count > 0)
+                {
+                    var folder = new Folder() { Name = "Referencing projects" };
+
+                    foreach (var referencingProject in referencing.OrderBy(s => s))
+                    {
+                        var node = CreateProject(referencingProject);
+                        folder.AddChild(node);
+                    }
+
+                    resultSet.Add(new SearchResult(folder));
+                }
+            }
+
             return true;
         }
 
