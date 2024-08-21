@@ -25,16 +25,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     continue;
                 }
 
-                var projectReferences = items.FindChild<AddItem>("ProjectReference");
-                if (projectReferences == null)
-                {
-                    continue;
-                }
-
                 if (!references.TryGetValue(projectFile, out var bucket))
                 {
                     bucket = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                     references[projectFile] = bucket;
+                }
+
+                var projectReferences = items.FindChild<AddItem>("ProjectReference");
+                if (projectReferences == null)
+                {
+                    continue;
                 }
 
                 foreach (var projectReference in projectReferences.Children.OfType<Item>())
@@ -130,9 +130,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (projectResult != null)
                 {
                     projectResult.IsExpanded = true;
-                    var result = new SearchResult(projectResult);
-                    resultSet.Add(result);
                 }
+                else
+                {
+                    projectResult = CreateProject(project);
+                }
+
+                var result = new SearchResult(projectResult);
+                resultSet.Add(result);
             }
 
             if (resultSet.Count == 1)
@@ -165,6 +170,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     {
                         var node = CreateProject(referencingProject);
                         folder.AddChild(node);
+                    }
+
+                    if (folder.Children.Count < 10)
+                    {
+                        folder.IsExpanded = true;
                     }
 
                     resultSet.Add(new SearchResult(folder));
