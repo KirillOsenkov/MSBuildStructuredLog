@@ -196,6 +196,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public BuildStatistics Statistics { get; set; } = new BuildStatistics();
 
         public FileCopyMap FileCopyMap { get; set; }
+        public ProjectReferenceGraph ProjectReferenceGraph { get; set; }
 
         public Dictionary<string, HashSet<string>> TaskAssemblies { get; } = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
 

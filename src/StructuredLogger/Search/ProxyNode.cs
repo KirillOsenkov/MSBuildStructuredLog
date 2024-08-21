@@ -118,6 +118,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 typePrefix != Strings.Item &&
                 typePrefix != Strings.Metadata &&
                 typePrefix != Strings.Property &&
+                typePrefix != "Project" &&
                 typePrefix != "Package")
             {
                 highlights.Add(typePrefix);
