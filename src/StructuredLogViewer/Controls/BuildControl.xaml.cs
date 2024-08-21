@@ -722,6 +722,8 @@ Use '$copy path' where path is a file or directory to find file copy operations 
 
 Use '$nuget project(MyProject.csproj) Package.Name' to search for NuGet packages (by name or version), dependencies (direct and transitive) and files coming from NuGet packages.
 
+Use '$projectreference project(MyProject.csproj) RefProj' to search for projects referenced by MyProject.csproj directly or indirectly. For a single matching project all referencing projects will be shown as well.
+
 Examples:
 ";
 
