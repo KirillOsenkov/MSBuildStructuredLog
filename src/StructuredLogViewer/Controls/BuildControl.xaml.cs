@@ -722,6 +722,8 @@ Use '$copy path' where path is a file or directory to find file copy operations 
 
 Use '$nuget project(MyProject.csproj) Package.Name' to search for NuGet packages (by name or version), dependencies (direct and transitive) and files coming from NuGet packages.
 
+Use '$projectreference project(MyProject.csproj) RefProj' to search for projects referenced by MyProject.csproj directly or indirectly. For a single matching project all referencing projects will be shown as well.
+
 Examples:
 ";
 
@@ -2368,6 +2370,13 @@ Recent (");
                         searchLogControl.ResultsList.ItemsSource is IEnumerable<BaseNode> results &&
                         results.Contains(item):
                         return SearchForFullPath(item.Text);
+                    case Project project when
+                        searchLogControl.SearchText.Contains("$projectreference"):
+                        return SearchForProject(Path.GetFileName(project.ProjectFile));
+                    case ProxyNode proxy when
+                        searchLogControl.SearchText.Contains("$projectreference") &&
+                        proxy.Original is Project originalProject:
+                        return SearchForProject(Path.GetFileName(originalProject.ProjectFile));
                     case IHasSourceFile hasSourceFile when hasSourceFile.SourceFilePath != null:
                         int line = 0;
                         var hasLine = hasSourceFile as IHasLineNumber;
@@ -2443,6 +2452,13 @@ Recent (");
             }
 
             return false;
+        }
+
+        private bool SearchForProject(string name)
+        {
+            var text = $"$projectreference project({name})";
+            searchLogControl.SearchText = text;
+            return true;
         }
 
         private bool DisplayEmbeddedFile(Item item)

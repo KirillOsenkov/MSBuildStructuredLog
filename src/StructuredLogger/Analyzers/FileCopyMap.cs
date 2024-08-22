@@ -347,7 +347,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void TryExplainSingleFileCopy(FileData fileData, IList<SearchResult> resultSet)
         {
-            var singleResult = resultSet.Single();
+            var singleResult = resultSet.FirstOrDefault();
 
             var fileCopyInfo =
                 singleResult.AssociatedFileCopy ??

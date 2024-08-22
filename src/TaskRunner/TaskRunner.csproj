@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net472;net7.0</TargetFrameworks>
+    <TargetFrameworks>net472;net8.0</TargetFrameworks>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
@@ -10,7 +10,7 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
 
-  <PropertyGroup Condition="$(TargetFramework) == 'net7.0'">
+  <PropertyGroup Condition="$(TargetFramework) == 'net8.0'">
     <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
     <RollForward>LatestMajor</RollForward>
     <UseAppHost>false</UseAppHost>
@@ -28,9 +28,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build.Locator" Version="1.4.1" ExcludeAssets="build" />
-    <PackageReference Include="Microsoft.Build" Version="$(MSBuildPackageVersion)" />
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.0" />
+    <PackageReference Include="Microsoft.Build.Locator" ExcludeAssets="build" />
+    <PackageReference Include="Microsoft.Build" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" />
   </ItemGroup>
 
 </Project>

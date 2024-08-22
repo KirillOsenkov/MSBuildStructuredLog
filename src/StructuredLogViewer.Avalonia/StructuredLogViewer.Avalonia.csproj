@@ -5,12 +5,15 @@
     <TargetFramework>net8.0</TargetFramework>
     <RuntimeIdentifiers>win-x64;linux-x64;osx-x64;osx-arm64</RuntimeIdentifiers>
     <ApplicationIcon>StructuredLogger.ico</ApplicationIcon>
-    <RestoreAdditionalProjectSources Condition="$(PublishNativeAot) == True">
-      https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7/nuget/v3/index.json;
-      $(RestoreAdditionalProjectSources)
-    </RestoreAdditionalProjectSources>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>
-  
+
+  <PropertyGroup>
+    <PublishAot Condition="'$(PublishNativeAot)' == 'true'">true</PublishAot>
+    <XmlResolverIsNetworkingEnabledByDefault>false</XmlResolverIsNetworkingEnabledByDefault>
+    <OptimizationPreference>Size</OptimizationPreference>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Update="**\*.xaml.cs">
       <DependentUpon>%(Filename)</DependentUpon>
@@ -21,10 +24,6 @@
     <AvaloniaResource Include="StructuredLogger.ico" />
   </ItemGroup>
   
-  <ItemGroup>
-    <RdXmlFile Include="Avalonia.rd.xml" />
-  </ItemGroup>
-
   <ItemGroup Condition="$(NETCoreSdkRuntimeIdentifier.StartsWith('osx'))">
     <Content Include="StructuredLogViewer.icns">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -35,15 +34,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Avalonia.Desktop" Version="0.10.12" />
-    <PackageReference Include="Avalonia.Diagnostics" Version="0.10.12" Condition=" '$(Configuration)' == 'Debug' " />
-    <PackageReference Include="Avalonia.AvaloniaEdit" Version="0.10.12.1" />
-    <PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
-    <!-- Bump transitive references to preview versions that contain osx-arm64 native assets -->
-    <PackageReference Include="SkiaSharp" Version="2.88.6" />
-    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="2.88.6" Condition="$(NETCoreSdkPortableRuntimeIdentifier.StartsWith('linux'))" />
-    <PackageReference Include="HarfBuzzSharp" Version="2.8.2-preview.187" />
-    <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="7.0.0-*" Condition="$(PublishNativeAot) == True" />
+    <PackageReference Include="Avalonia.AvaloniaEdit" />
+    <PackageReference Include="Avalonia.Desktop" />
+    <PackageReference Include="Avalonia.Diagnostics" Condition=" '$(Configuration)' == 'Debug' " />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
   </ItemGroup>
 
   <ItemGroup>

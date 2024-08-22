@@ -1,7 +1,8 @@
-﻿<Styles xmlns="https://github.com/avaloniaui"
+<Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:structuredLogger="clr-namespace:Microsoft.Build.Logging.StructuredLogger;assembly=StructuredLogger"
-        xmlns:converters="clr-namespace:Avalonia.Controls.Converters;assembly=Avalonia.Controls">
+        xmlns:converters="clr-namespace:Avalonia.Controls.Converters;assembly=Avalonia.Controls"
+        x:DataType="structuredLogger:BaseNode">
 
     <Design.DataContext>
         <structuredLogger:BaseNode />
@@ -65,34 +66,40 @@
         <Setter Property="Template">
             <ControlTemplate>
                 <StackPanel>
-                    <Border Name="SelectionBorder"
+                    <Border Name="PART_LayoutRoot"
                             Focusable="True"
                             Background="{TemplateBinding Background}"
                             BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}"
+                            MinHeight="{TemplateBinding MinHeight}"
                             TemplatedControl.IsTemplateFocusTarget="True">
                         <Grid Name="PART_Header"
-                              ColumnDefinitions="16, Auto"
+                              ColumnDefinitions="Auto, *"
                               HorizontalAlignment="Left"
                               Margin="{TemplateBinding Level, Mode=OneWay, Converter={StaticResource LeftMarginConverter}}" >
-                            <ToggleButton Name="expander"
-                                          Focusable="False"
-                                          IsChecked="{TemplateBinding IsExpanded, Mode=TwoWay}"/>
+                            <Panel Name="PART_ExpandCollapseChevronContainer"
+                                   Margin="{StaticResource TreeViewItemExpandCollapseChevronMargin}">
+                                <ToggleButton Name="PART_ExpandCollapseChevron"
+                                              Theme="{StaticResource FluentTreeViewExpandCollapseChevron}"
+                                              Focusable="False"
+                                              IsChecked="{TemplateBinding IsExpanded, Mode=TwoWay}"/>
+                            </Panel>
                             <ContentPresenter Name="PART_HeaderPresenter"
                                               Focusable="False"
                                               Content="{TemplateBinding Header}"
-                                              HorizontalContentAlignment="{TemplateBinding HorizontalAlignment}"
+                                              HorizontalAlignment="{TemplateBinding HorizontalAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalAlignment}"
                                               Padding="{TemplateBinding Padding}"
                                               Grid.Column="1"/>
                             <Ellipse Grid.Column="1"
                                      Width="6" Height="6" Margin="1,1,0,0" StrokeThickness="1"
-                                     HorizontalAlignment="Left" VerticalAlignment="Top"
+                                     HorizontalAlignment="Left" VerticalAlignment="Center"
                                      Fill="{StaticResource ContainsSearchResultBrush}"
                                      Stroke="{StaticResource ContainsSearchResultStroke}"
                                      IsVisible="{Binding ContainsSearchResult}"/>
                             <Ellipse Grid.Column="1"
                                      Width="6" Height="6" Margin="1,1,0,0" StrokeThickness="1"
-                                     HorizontalAlignment="Left" VerticalAlignment="Top"
+                                     HorizontalAlignment="Left" VerticalAlignment="Center"
                                      Fill="{StaticResource SearchResultBrush}"
                                      Stroke="{StaticResource SearchResultStroke}"
                                      IsVisible="{Binding IsSearchResult}"/>
@@ -100,36 +107,9 @@
                     </Border>
                     <ItemsPresenter Name="PART_ItemsPresenter"
                                     IsVisible="{TemplateBinding IsExpanded}"
-                                    Items="{TemplateBinding Items}"
                                     ItemsPanel="{TemplateBinding ItemsPanel}"/>
                 </StackPanel>
             </ControlTemplate>
-        </Setter>
-    </Style>
-
-    <Style Selector="TreeViewItem /template/ ToggleButton#expander">
-        <Setter Property="Template">
-            <ControlTemplate>
-                <Border Background="Transparent"
-                        Width="12"
-                        Height="12"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center">
-                    <Path Fill="{DynamicResource ThemeForegroundBrush}"
-                          HorizontalAlignment="Left"
-                          VerticalAlignment="Top"
-                          Data="M 4 2 L 8 6 L 4 10 Z"/>
-                </Border>
-            </ControlTemplate>
-        </Setter>
-    </Style>
-
-    <Style Selector="TreeViewItem /template/ ToggleButton#expander:checked">
-        <Setter Property="RenderTransform">
-            <TransformGroup>
-                <RotateTransform Angle="45" />
-                <TranslateTransform X="2" Y="2" />
-            </TransformGroup>
         </Setter>
     </Style>
     
