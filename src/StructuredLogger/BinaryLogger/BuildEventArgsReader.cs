@@ -1781,7 +1781,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return list;
         }
 
-
         private IEnumerable ReadTaskItemList()
         {
             int count = ReadInt32();
