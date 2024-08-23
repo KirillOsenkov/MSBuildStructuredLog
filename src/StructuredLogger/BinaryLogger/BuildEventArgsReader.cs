@@ -327,9 +327,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 BinaryLogRecordKind.UninitializedPropertyRead => ReadUninitializedPropertyReadEventArgs(),
                 BinaryLogRecordKind.PropertyInitialValueSet => ReadPropertyInitialValueSetEventArgs(),
                 BinaryLogRecordKind.AssemblyLoad => ReadAssemblyLoadEventArgs(),
-                BinaryLogRecordKind.BuildCheckMessage => ReadBuildCheckMessageEventArgs(),
-                BinaryLogRecordKind.BuildCheckWarning => ReadBuildCheckWarningEventArgs(),
-                BinaryLogRecordKind.BuildCheckError => ReadBuildCheckErrorEventArgs(),
+                BinaryLogRecordKind.BuildCheckMessage => ReadBuildMessageEventArgs(),
+                BinaryLogRecordKind.BuildCheckWarning => ReadBuildWarningEventArgs(),
+                BinaryLogRecordKind.BuildCheckError => ReadBuildErrorEventArgs(),
                 BinaryLogRecordKind.BuildCheckTracing => ReadBuildCheckTracingEventArgs(),
                 BinaryLogRecordKind.BuildCheckAcquisition => ReadBuildCheckAcquisitionEventArgs(),
                 BinaryLogRecordKind.BuildSubmissionStarted => ReadBuildSubmissionStartedEventArgs(),
@@ -1247,21 +1247,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             return e;
         }
-
-        private BuildEventArgs ReadBuildCheckEventArgs<T>(Func<string, T> createEvent)
-            where T : BuildEventArgs
-        {
-            var e = createEvent(fields.Message);
-            SetCommonFields(e, ReadBuildEventArgsFields());
-
-            return e;
-        }
-
-        private BuildEventArgs ReadBuildCheckMessageEventArgs() => ReadBuildCheckEventArgs((message) => new BuildCheckResultMessage(message));
-
-        private BuildEventArgs ReadBuildCheckWarningEventArgs() => ReadBuildCheckEventArgs((message) => new BuildCheckResultWarning(message));
-
-        private BuildEventArgs ReadBuildCheckErrorEventArgs() => ReadBuildCheckEventArgs((message) => new BuildCheckResultError(message));
 
         private BuildEventArgs ReadBuildCheckTracingEventArgs()
         {
