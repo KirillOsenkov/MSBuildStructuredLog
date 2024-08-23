@@ -13,13 +13,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static void Initialize(string culture = "en-US")
         {
-            if (!StringsSet.ResourcesCollection.ContainsKey(culture))
-            {
-                culture = "en-US";
-            }
-
             lock (locker)
             {
+                if (!StringsSet.ResourcesCollection.ContainsKey(culture))
+                {
+                    culture = "en-US";
+                }
+
                 if (ResourceSet == null || ResourceSet.Culture != culture)
                 {
                     ResourceSet = new StringsSet(culture);

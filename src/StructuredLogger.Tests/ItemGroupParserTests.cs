@@ -5,12 +5,20 @@ namespace StructuredLogger.Tests
 {
     public class ItemGroupParserTests
     {
-        public ItemGroupParserTests()
+        public static string OutputItemsMessagePrefix { get; }
+        public static string ItemGroupIncludeMessagePrefix { get; }
+
+        static ItemGroupParserTests()
         {
-            Strings.Initialize("en-US");
-            Assert.Equal("en-US", Strings.ResourceSet.Culture);
-            Assert.Equal("en-US", Strings.Culture);
-            Assert.NotNull(Strings.OutputItemsMessagePrefix);
+            lock (typeof(ItemGroupParserTests))
+            {
+                Strings.Initialize("en-US");
+                Assert.Equal("en-US", Strings.ResourceSet.Culture);
+                Assert.Equal("en-US", Strings.Culture);
+                OutputItemsMessagePrefix = Strings.OutputItemsMessagePrefix;
+                ItemGroupIncludeMessagePrefix = Strings.ItemGroupIncludeMessagePrefix;
+                Assert.NotNull(OutputItemsMessagePrefix);
+            }
         }
 
         [Fact]
@@ -21,7 +29,7 @@ namespace StructuredLogger.Tests
         tmp
                 AcceptableNonZeroExitCodes=
                 AdditionalDependencies=kernel32.lib;user32.lib;
-                ;", Strings.OutputItemsMessagePrefix, new StringCache());
+                ;", OutputItemsMessagePrefix, new StringCache());
         }
 
         /// <summary>
@@ -36,7 +44,7 @@ namespace StructuredLogger.Tests
                 MaxVersion=15.1.0.0
         Microsoft.VisualStudio.Validation, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
                 MaxVersion=15.3.0.0",
-                Strings.OutputItemsMessagePrefix, new StringCache()) as Parameter;
+                OutputItemsMessagePrefix, new StringCache()) as Parameter;
             Assert.True(parameter != null);
             Assert.True(parameter.Children.Count == 2);
 
@@ -140,7 +148,7 @@ References which depend on ""System.IO.Compression, Version=4.1.1.0, Culture=neu
                 AdditionalProperties=
         AutoParameterizationWebConfigConnectionStrings=false;
         _PackageTempDir=Out\Dir;
-        ", Strings.ItemGroupIncludeMessagePrefix, new StringCache()) as Parameter;
+        ", ItemGroupIncludeMessagePrefix, new StringCache()) as Parameter;
 
             //Assert.Equal(3, parameter.Children.Count);
         }
