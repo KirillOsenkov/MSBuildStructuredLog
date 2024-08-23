@@ -11,7 +11,11 @@ using StructuredLogger.Tests;
 using Xunit;
 using Xunit.Abstractions;
 using static StructuredLogger.Tests.TestUtilities;
+using ArchiveFileEventArgs = Microsoft.Build.Logging.StructuredLogger.ArchiveFileEventArgs;
 using BinaryLogger = Microsoft.Build.Logging.StructuredLogger.BinaryLogger;
+using BinaryLogReaderErrorEventArgs = Microsoft.Build.Logging.StructuredLogger.BinaryLogReaderErrorEventArgs;
+using BinaryLogRecordKind = Microsoft.Build.Logging.StructuredLogger.BinaryLogRecordKind;
+using ReaderErrorType = Microsoft.Build.Logging.StructuredLogger.ReaderErrorType;
 
 namespace Microsoft.Build.UnitTests
 {

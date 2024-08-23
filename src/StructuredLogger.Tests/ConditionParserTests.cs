@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Globalization;
+using System.Linq;
 using System.Threading;
 using StructuredLogViewer;
 using Xunit;
@@ -7,6 +8,12 @@ namespace StructuredLogger.Tests
 {
     public class ConditionParserTests
     {
+        public ConditionParserTests()
+        {
+            CultureInfo.DefaultThreadCurrentCulture = new("en-US");
+            CultureInfo.DefaultThreadCurrentUICulture = new("en-US");
+        }
+
         [Fact]
         public void Empty_Test()
         {
