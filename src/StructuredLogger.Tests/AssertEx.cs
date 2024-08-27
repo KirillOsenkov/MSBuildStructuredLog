@@ -46,7 +46,7 @@ namespace StructuredLogger.Tests
                 messageBuilder.AppendLine(line.Text);
             }
 
-            Assert.True(false, messageBuilder.ToString());
+            Assert.Fail(messageBuilder.ToString());
         }
     }
 }
