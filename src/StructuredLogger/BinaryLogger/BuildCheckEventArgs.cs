@@ -26,4 +26,9 @@ namespace StructuredLogger.BinaryLogger
 
         public string ProjectPath { get; private set; } = projectPath;
     }
+
+    internal sealed class BuildCheckResultMessage : BuildMessageEventArgs
+    {
+        public BuildCheckResultMessage(string message) => RawMessage = message;
+    }
 }
