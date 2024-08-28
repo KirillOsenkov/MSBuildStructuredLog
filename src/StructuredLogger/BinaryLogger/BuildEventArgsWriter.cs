@@ -211,6 +211,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 case ProjectFinishedEventArgs projectFinished: return Write(projectFinished);
                 case BuildStartedEventArgs buildStarted: return Write(buildStarted);
                 case BuildFinishedEventArgs buildFinished: return Write(buildFinished);
+                case BuildSubmissionStartedEvent buildSubmissionStarted: return Write(buildSubmissionStarted);
                 case ProjectEvaluationStartedEventArgs projectEvaluationStarted: return Write(projectEvaluationStarted);
                 case ProjectEvaluationFinishedEventArgs projectEvaluationFinished: return Write(projectEvaluationFinished);
                 case BuildCheckTracingEventArgs buildCheckTracing: return Write(buildCheckTracing);
@@ -333,6 +334,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
             WriteDeduplicatedString(e.ProjectPath);
 
             return BinaryLogRecordKind.BuildCheckAcquisition;
+        }
+
+        private BinaryLogRecordKind Write(BuildSubmissionStartedEvent e)
+        {
+            WriteBuildEventArgsFields(e, writeMessage: false);
+            Write(e.GlobalProperties);
+            WriteStringList(e.EntryProjectsFullPath);
+            WriteStringList(e.TargetNames);
+            Write((int)e.Flags);
+            Write(e.SubmissionId);
+
+            return BinaryLogRecordKind.BuildSubmissionStarted;
         }
 
         private BinaryLogRecordKind Write(ProjectEvaluationFinishedEventArgs e)
@@ -1212,6 +1225,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private void Write(byte[] bytes)
         {
             binaryWriter.Write(bytes);
+        }
+        private void WriteStringList(IEnumerable<string> items)
+        {
+            int length = items.Count();
+            Write(length);
+            foreach (string entry in items)
+            {
+                WriteDeduplicatedString(entry);
+            }
         }
 
         private void WriteToOriginalStream(Stream stream)
