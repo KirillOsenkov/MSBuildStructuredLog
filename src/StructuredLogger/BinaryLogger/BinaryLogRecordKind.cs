@@ -29,6 +29,12 @@
         String,
         TaskParameter,
         FileUsed,
-        AssemblyLoad
+        AssemblyLoad,
+        BuildCheckMessage,
+        BuildCheckWarning,
+        BuildCheckError,
+        BuildCheckTracing,
+        BuildCheckAcquisition,
+        BuildSubmissionStarted,
     }
 }

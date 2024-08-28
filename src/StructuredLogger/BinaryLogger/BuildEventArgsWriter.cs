@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -13,6 +12,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Framework.Profiler;
 using Microsoft.Build.Internal;
 using Microsoft.Build.Shared;
+using StructuredLogger.BinaryLogger;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -211,8 +211,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 case ProjectFinishedEventArgs projectFinished: return Write(projectFinished);
                 case BuildStartedEventArgs buildStarted: return Write(buildStarted);
                 case BuildFinishedEventArgs buildFinished: return Write(buildFinished);
+                case BuildSubmissionStartedEvent buildSubmissionStarted: return Write(buildSubmissionStarted);
                 case ProjectEvaluationStartedEventArgs projectEvaluationStarted: return Write(projectEvaluationStarted);
                 case ProjectEvaluationFinishedEventArgs projectEvaluationFinished: return Write(projectEvaluationFinished);
+                case BuildCheckTracingEventArgs buildCheckTracing: return Write(buildCheckTracing);
+                case BuildCheckAcquisitionEventArgs buildCheckAcquisition: return Write(buildCheckAcquisition);
                 default:
                     // convert all unrecognized objects to message
                     // and just preserve the message
@@ -314,6 +317,35 @@ namespace Microsoft.Build.Logging.StructuredLogger
             WriteDeduplicatedString(e.ProjectFile);
 
             return BinaryLogRecordKind.ProjectEvaluationStarted;
+        }
+
+        private BinaryLogRecordKind Write(BuildCheckTracingEventArgs e)
+        {
+            WriteBuildEventArgsFields(e, writeMessage: false);
+            WriteProperties(e.TracingData);
+
+            return BinaryLogRecordKind.BuildCheckTracing;
+        }
+
+        private BinaryLogRecordKind Write(BuildCheckAcquisitionEventArgs e)
+        {
+            WriteBuildEventArgsFields(e, writeMessage: false);
+            WriteDeduplicatedString(e.AcquisitionPath);
+            WriteDeduplicatedString(e.ProjectPath);
+
+            return BinaryLogRecordKind.BuildCheckAcquisition;
+        }
+
+        private BinaryLogRecordKind Write(BuildSubmissionStartedEvent e)
+        {
+            WriteBuildEventArgsFields(e, writeMessage: false);
+            Write(e.GlobalProperties);
+            WriteStringList(e.EntryProjectsFullPath);
+            WriteStringList(e.TargetNames);
+            Write((int)e.Flags);
+            Write(e.SubmissionId);
+
+            return BinaryLogRecordKind.BuildSubmissionStarted;
         }
 
         private BinaryLogRecordKind Write(ProjectEvaluationFinishedEventArgs e)
@@ -477,6 +509,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 case PropertyInitialValueSetEventArgs propertyInitialValueSet: return Write(propertyInitialValueSet);
                 case CriticalBuildMessageEventArgs criticalBuildMessage: return Write(criticalBuildMessage);
                 case AssemblyLoadBuildEventArgs assemblyLoad: return Write(assemblyLoad);
+                case BuildCheckResultMessage buildCheckMessage: return Write(buildCheckMessage);
                 default: // actual BuildMessageEventArgs
                     WriteMessageFields(e, writeImportance: true);
                     return BinaryLogRecordKind.Message;
@@ -1192,6 +1225,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private void Write(byte[] bytes)
         {
             binaryWriter.Write(bytes);
+        }
+        private void WriteStringList(IEnumerable<string> items)
+        {
+            int length = items.Count();
+            Write(length);
+            foreach (string entry in items)
+            {
+                WriteDeduplicatedString(entry);
+            }
         }
 
         private void WriteToOriginalStream(Stream stream)

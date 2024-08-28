@@ -2,22 +2,18 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using DotUtils.StreamUtils;
 using Microsoft.Build.BackEnd;
-using Microsoft.Build.Collections;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Framework.Profiler;
-using Microsoft.Build.Internal;
 using Microsoft.Build.Shared;
 using StructuredLogger.BinaryLogger;
 
@@ -331,7 +327,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 BinaryLogRecordKind.UninitializedPropertyRead => ReadUninitializedPropertyReadEventArgs(),
                 BinaryLogRecordKind.PropertyInitialValueSet => ReadPropertyInitialValueSetEventArgs(),
                 BinaryLogRecordKind.AssemblyLoad => ReadAssemblyLoadEventArgs(),
-                _ => null
+                BinaryLogRecordKind.BuildCheckMessage => ReadBuildCheckMessageEventArgs(),
+                BinaryLogRecordKind.BuildCheckWarning => ReadBuildWarningEventArgs(),
+                BinaryLogRecordKind.BuildCheckError => ReadBuildErrorEventArgs(),
+                BinaryLogRecordKind.BuildCheckTracing => ReadBuildCheckTracingEventArgs(),
+                BinaryLogRecordKind.BuildCheckAcquisition => ReadBuildCheckAcquisitionEventArgs(),
+                BinaryLogRecordKind.BuildSubmissionStarted => ReadBuildSubmissionStartedEventArgs(),
+                _ => null,
+                
             };
 
         private void SkipBytes(int count)
@@ -1063,6 +1066,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return e;
         }
 
+        private BuildEventArgs ReadBuildCheckMessageEventArgs()
+        {
+            var fields = ReadBuildEventArgsFields();
+            var e = new BuildCheckResultMessage(fields.Message);
+            SetCommonFields(e, fields);
+
+            return e;
+        }
+
         private BuildEventArgs ReadBuildMessageEventArgs()
         {
             var fields = ReadBuildEventArgsFields(readImportance: true);
@@ -1240,6 +1252,49 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     fileName ?? string.Empty,
                     line,
                     column);
+            SetCommonFields(e, fields);
+
+            return e;
+        }
+
+        private BuildEventArgs ReadBuildCheckTracingEventArgs()
+        {
+            var fields = ReadBuildEventArgsFields(readImportance: true);
+            var rawTracingData = ReadStringDictionary() ?? new Dictionary<string, string>();
+
+            var e = new BuildCheckTracingEventArgs(rawTracingData.ToDictionary(
+                kvp => kvp.Key,
+                kvp => TimeSpan.FromTicks(long.Parse(kvp.Value))));
+            SetCommonFields(e, fields);
+            return e;
+        }
+
+        private BuildEventArgs ReadBuildCheckAcquisitionEventArgs()
+        {
+            var fields = ReadBuildEventArgsFields(readImportance: false);
+            var acquisitionPath = ReadDeduplicatedString();
+            var projectPath = ReadDeduplicatedString();
+            var e = new BuildCheckAcquisitionEventArgs(acquisitionPath, projectPath);
+            SetCommonFields(e, fields);
+            return e;
+        }
+
+        private BuildEventArgs ReadBuildSubmissionStartedEventArgs()
+        {
+            var fields = ReadBuildEventArgsFields(readImportance: false);
+            var e = new BuildSubmissionStartedEvent();
+
+            var globalProperties = ReadStringDictionary();
+            var entries = ReadStringList();
+            var targetNames = ReadStringList();
+            var flags = (BuildRequestDataFlags)ReadInt32();
+            var submissionId = ReadInt32();
+
+            e.GlobalProperties = globalProperties;
+            e.EntryProjectsFullPath = entries;
+            e.TargetNames = targetNames;
+            e.SubmissionId = submissionId;
+
             SetCommonFields(e, fields);
 
             return e;
@@ -1717,6 +1772,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     list = null;
                 }
+            }
+
+            return list;
+        }
+
+        private IEnumerable<string> ReadStringList()
+        {
+            var count = ReadInt32();
+
+            var list = new string[count];
+            for (int i = 0; i < count; i++)
+            {
+                list[i] = ReadDeduplicatedString();
             }
 
             return list;
