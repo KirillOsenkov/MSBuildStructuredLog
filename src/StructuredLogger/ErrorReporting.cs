@@ -24,7 +24,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     File.Delete(logFilePath);
                 }
 
-                File.AppendAllText(logFilePath, ex.ToString());
+                File.AppendAllText(logFilePath, ex.ToString() + Environment.NewLine);
             }
             catch (Exception)
             {
