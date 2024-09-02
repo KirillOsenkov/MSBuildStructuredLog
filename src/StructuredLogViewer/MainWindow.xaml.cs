@@ -100,6 +100,13 @@ namespace StructuredLogViewer
                     return true;
                 }
             }
+            else if (exception is FileNotFoundException)
+            {
+                if (toString.Contains(".betaId"))
+                {
+                    return true;
+                }
+            }
 
             return false;
         }
