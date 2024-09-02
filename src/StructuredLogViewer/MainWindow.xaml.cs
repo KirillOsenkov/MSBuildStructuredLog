@@ -71,6 +71,7 @@ namespace StructuredLogViewer
                 exception = ExceptionHandler.Unwrap(exception);
                 string message = exception.Message;
                 ExceptionText = message;
+                ErrorReporting.ReportException(exception);
             }
             catch
             {
