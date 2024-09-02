@@ -31,7 +31,7 @@
     <PackageVersion Include="Microsoft.DotNet.ILCompiler" Version="7.0.0" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
     <!-- never update Cecil as this is the version required by Squirrel -->
-    <PackageVersion Include="Mono.Cecil" Version="0.9.6.1" />
+    <PackageVersion Include="Mono.Cecil" Version="0.11.5" />
     <PackageVersion Include="MSBuild.StructuredLogger" Version="2.1.133" />
     <PackageVersion Include="Nerdbank.GitVersioning" Version="3.6.141" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
