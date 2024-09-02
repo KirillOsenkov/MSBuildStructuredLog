@@ -69,6 +69,12 @@ namespace StructuredLogViewer
                 }
 
                 exception = ExceptionHandler.Unwrap(exception);
+
+                if (ShouldIgnore(exception))
+                {
+                    return;
+                }
+
                 string message = exception.Message;
                 ExceptionText = message;
                 ErrorReporting.ReportException(exception);
@@ -80,6 +86,22 @@ namespace StructuredLogViewer
             {
                 exceptionReentrancyGuard = false;
             }
+        }
+
+        private bool ShouldIgnore(Exception exception)
+        {
+            var toString = exception.ToString();
+
+            if (exception is NullReferenceException)
+            {
+                // known first-chance exception in Squirrel
+                if (toString.Contains("at Squirrel.UpdateManager.ApplyReleasesImpl.<unshimOurselves>b__13_0(RegistryView view)"))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void MainWindow_SourceInitialized(object sender, EventArgs e)
