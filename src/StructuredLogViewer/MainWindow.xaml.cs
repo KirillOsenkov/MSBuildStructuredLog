@@ -359,6 +359,11 @@ namespace StructuredLogViewer
                 return false;
             }
 
+            if (PathUtils.HasInvalidVolumeSeparator(filePath))
+            {
+                return false;
+            }
+
             if (!File.Exists(filePath))
             {
                 return false;
