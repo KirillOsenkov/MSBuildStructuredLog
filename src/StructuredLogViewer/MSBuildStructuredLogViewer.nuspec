@@ -34,7 +34,9 @@
     <file src="Microsoft.Build.Locator.dll" target="lib\net472" />
     <file src="Microsoft.Build.Tasks.Core.dll" target="lib\net472" />
     <file src="Microsoft.Build.Utilities.Core.dll" target="lib\net472" />
+    <file src="Microsoft.IO.Redist.dll" target="lib\net472" />
     <file src="Microsoft.Language.Xml.dll" target="lib\net472" />
+    <file src="Microsoft.NET.StringTools.dll" target="lib\net472" />
     <file src="Mono.Cecil.dll" target="lib\net472" />
     <file src="Mono.Cecil.Mdb.dll" target="lib\net472" />
     <file src="Mono.Cecil.Pdb.dll" target="lib\net472" />
@@ -42,10 +44,12 @@
     <file src="Newtonsoft.Json.dll" target="lib\net472" />
     <file src="NuGet.Common.dll" target="lib\net472" />
     <file src="NuGet.Configuration.dll" target="lib\net472" />
+    <file src="NuGet.DependencyResolver.Core.dll" target="lib\net472" />
     <file src="NuGet.Frameworks.dll" target="lib\net472" />
     <file src="NuGet.LibraryModel.dll" target="lib\net472" />
     <file src="NuGet.Packaging.dll" target="lib\net472" />
     <file src="NuGet.ProjectModel.dll" target="lib\net472" />
+    <file src="NuGet.Protocol.dll" target="lib\net472" />
     <file src="NuGet.Squirrel.dll" target="lib\net472" />
     <file src="NuGet.Versioning.dll" target="lib\net472" />
     <file src="Splat.dll" target="lib\net472" />
@@ -55,7 +59,12 @@
     <file src="StructuredLogViewer.Core.dll" target="lib\net472" />
     <file src="StructuredLogViewer.exe" target="lib\net472" />
     <file src="StructuredLogViewer.exe.config" target="lib\net472" />
+    <file src="System.Buffers.dll" target="lib\net472" />
     <file src="System.Collections.Immutable.dll" target="lib\net472" />
+    <file src="System.Memory.dll" target="lib\net472" />
+    <file src="System.Numerics.Vectors.dll" target="lib\net472" />
+    <file src="System.Runtime.CompilerServices.Unsafe.dll" target="lib\net472" />
+    <file src="System.Text.Json.dll" target="lib\net472" />
     <file src="System.ValueTuple.dll" target="lib\net472" />
     <file src="TaskRunner.exe" target="lib\net472" />
     <file src="TaskRunner.exe.config" target="lib\net472" />
