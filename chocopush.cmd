@@ -1,1 +1,1 @@
-choco push bin\StructuredLogViewer\Release\net472\msbuild-structured-log-viewer.*.nupkg --source https://push.chocolatey.org
+choco push --source https://push.chocolatey.org bin\StructuredLogViewer\Release\net472\msbuild-structured-log-viewer.*.nupkg
