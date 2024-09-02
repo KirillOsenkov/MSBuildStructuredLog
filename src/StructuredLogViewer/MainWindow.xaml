@@ -55,11 +55,14 @@
     <TextBlock x:Name="exceptionText"
         Padding="8,2,8,2"
         MouseDown="ExceptionText_MouseDown"
+        VerticalAlignment="Center"
+        Foreground="Black"
         ToolTip="Click to show the exception log"
         >Exception:</TextBlock>
       <Button x:Name="closeExceptionButton"
           Click="CloseException_Click"
           BorderThickness="0"
+          TextBlock.Foreground="Black"
           Background="Transparent"
           MinWidth="16"
           MinHeight="16">⨯</Button>
