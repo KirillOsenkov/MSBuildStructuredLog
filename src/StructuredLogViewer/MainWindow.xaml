@@ -54,6 +54,8 @@
         VerticalAlignment="Top">
     <TextBlock x:Name="exceptionText"
         Padding="8,2,8,2"
+        MouseDown="ExceptionText_MouseDown"
+        ToolTip="Click to show the exception log"
         >Exception:</TextBlock>
       <Button x:Name="closeExceptionButton"
           Click="CloseException_Click"

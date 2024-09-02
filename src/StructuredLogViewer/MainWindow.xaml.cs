@@ -1093,6 +1093,11 @@ Use project(.) or project(.csproj) to search all projects (slow)." };
             ExceptionText = null;
         }
 
+        private void ExceptionText_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            Process.Start(ErrorReporting.LogFilePath);
+        }
+
         private string currentExceptionText;
         public string ExceptionText
         {
