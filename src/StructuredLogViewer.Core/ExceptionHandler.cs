@@ -8,7 +8,6 @@ namespace StructuredLogViewer
     {
         public static void Initialize()
         {
-            AppDomain.CurrentDomain.FirstChanceException += CurrentDomain_FirstChanceException;
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
         }
 
@@ -42,7 +41,7 @@ namespace StructuredLogViewer
                 return Unwrap(ae.Flatten().InnerExceptions[0]);
             }
 
-            if (ex.InnerException != null)
+            if (ex?.InnerException != null)
             {
                 return Unwrap(ex.InnerException);
             }

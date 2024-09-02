@@ -33,6 +33,8 @@ namespace StructuredLogViewer
 
         public MainWindow()
         {
+            AppDomain.CurrentDomain.FirstChanceException += CurrentDomain_FirstChanceException;
+
             InitializeComponent();
 
             var uri = new Uri("StructuredLogViewer;component/themes/Generic.xaml", UriKind.Relative);
@@ -46,6 +48,37 @@ namespace StructuredLogViewer
 
             ThemeManager.UseDarkTheme = SettingsService.UseDarkTheme;
             ThemeManager.UpdateTheme();
+        }
+
+        private bool exceptionReentrancyGuard;
+
+        private void CurrentDomain_FirstChanceException(object sender, System.Runtime.ExceptionServices.FirstChanceExceptionEventArgs e)
+        {
+            if (exceptionReentrancyGuard)
+            {
+                return;
+            }
+
+            try
+            {
+                exceptionReentrancyGuard = true;
+                var exception = e.Exception;
+                if (exception == null)
+                {
+                    return;
+                }
+
+                exception = ExceptionHandler.Unwrap(exception);
+                string message = exception.Message;
+                ExceptionText = message;
+            }
+            catch
+            {
+            }
+            finally
+            {
+                exceptionReentrancyGuard = false;
+            }
         }
 
         private void MainWindow_SourceInitialized(object sender, EventArgs e)
@@ -1030,6 +1063,55 @@ Use project(.) or project(.csproj) to search all projects (slow)." };
         private void StartPage_Click(object sender, RoutedEventArgs e)
         {
             DisplayWelcomeScreen();
+        }
+
+        private void CloseException_Click(object sender, RoutedEventArgs e)
+        {
+            ExceptionText = null;
+        }
+
+        private string currentExceptionText;
+        public string ExceptionText
+        {
+            get => currentExceptionText;
+            set
+            {
+                if (currentExceptionText == value)
+                {
+                    return;
+                }
+
+                currentExceptionText = value;
+                UIInvoke(() => UpdateExceptionVisibility());
+            }
+        }
+
+        private void UIInvoke(Action action)
+        {
+            if (!Dispatcher.CheckAccess())
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    action();
+                });
+            }
+            else
+            {
+                action();
+            }
+        }
+
+        private void UpdateExceptionVisibility()
+        {
+            if (!string.IsNullOrEmpty(currentExceptionText))
+            {
+                exceptionText.Text = currentExceptionText;
+                exceptionPanel.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                exceptionPanel.Visibility = Visibility.Hidden;
+            }
         }
     }
 }

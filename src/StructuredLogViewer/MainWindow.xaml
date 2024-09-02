@@ -15,7 +15,8 @@
     <DockPanel.LayoutTransform>
       <ScaleTransform x:Name="scaleTransform" CenterX="0" CenterY="0" ScaleX="1" ScaleY="1" />
     </DockPanel.LayoutTransform>
-    <Menu x:Name="mainMenu" DockPanel.Dock="Top">
+    <Grid DockPanel.Dock="Top">
+    <Menu x:Name="mainMenu">
       <MenuItem Header="_File">
         <MenuItem Header="Start Page" Click="StartPage_Click" />
         <Separator />
@@ -45,6 +46,23 @@
         <MenuItem Header="About" Click="HelpAbout_Click" />
       </MenuItem>
     </Menu>
+    <StackPanel x:Name="exceptionPanel"
+        Orientation="Horizontal"
+        Visibility="Hidden"
+        Background="Yellow"
+        HorizontalAlignment="Right"
+        VerticalAlignment="Top">
+    <TextBlock x:Name="exceptionText"
+        Padding="8,2,8,2"
+        >Exception:</TextBlock>
+      <Button x:Name="closeExceptionButton"
+          Click="CloseException_Click"
+          BorderThickness="0"
+          Background="Transparent"
+          MinWidth="16"
+          MinHeight="16">⨯</Button>
+    </StackPanel>
+    </Grid>
     <Grid>
       <ContentPresenter x:Name="mainContent" Margin="7"/>
     </Grid>
