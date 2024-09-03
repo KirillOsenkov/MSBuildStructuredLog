@@ -8,14 +8,17 @@ namespace StructuredLogger.Tests
         [Fact]
         public void TestInitialize()
         {
-            var resources = StringsSet.ResourcesCollection;
-            var cultures = resources.Keys;
-
-            foreach (var culture in cultures)
+            lock (typeof(Strings))
             {
-                Strings.Initialize(culture);
-                Assert.Equal(culture, Strings.ResourceSet.Culture);
-                Assert.NotNull(Strings.OutputItemsMessagePrefix);
+                var resources = StringsSet.ResourcesCollection;
+                var cultures = resources.Keys;
+
+                foreach (var culture in cultures)
+                {
+                    Strings.Initialize(culture);
+                    Assert.Equal(culture, Strings.ResourceSet.Culture);
+                    Assert.NotNull(Strings.OutputItemsMessagePrefix);
+                }
             }
         }
     }

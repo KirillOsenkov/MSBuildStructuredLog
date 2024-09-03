@@ -10,7 +10,7 @@ namespace StructuredLogger.Tests
 
         static ItemGroupParserTests()
         {
-            lock (typeof(ItemGroupParserTests))
+            lock (typeof(Strings))
             {
                 Strings.Initialize("en-US");
                 Assert.Equal("en-US", Strings.ResourceSet.Culture);
