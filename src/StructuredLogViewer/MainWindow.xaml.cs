@@ -183,6 +183,11 @@ namespace StructuredLogViewer
 
             text = text.TrimStart('"').TrimEnd('"');
 
+            if (!text.EndsWith(".binlog", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
             // only open a file from clipboard if it's not listed in the recent files
             var recentFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             recentFiles.UnionWith(SettingsService.GetRecentLogFiles());
