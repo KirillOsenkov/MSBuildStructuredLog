@@ -16,6 +16,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Framework.Profiler;
 using Microsoft.Build.Shared;
 using StructuredLogger.BinaryLogger;
+using Microsoft.Build.Framework.Logging;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -24,9 +25,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
     /// </summary>
     internal partial class BuildEventArgsReader : IBuildEventArgsReaderNotifications, IDisposable
     {
-        private readonly BinaryReader _binaryReader;
-        // This is used to verify that events deserialization is not overreading expected size.
-        private readonly TransparentReadStream _readStream;
+        private readonly IBinaryReader _binaryReader;
+        private readonly BinaryReader _binaryReader_disposable;
         private readonly int _fileFormatVersion;
         private long _recordNumber = 0;
         private bool _skipUnknownEvents;
@@ -60,11 +60,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <param name="fileFormatVersion">The file format version of the log file being read.</param>
         public BuildEventArgsReader(BinaryReader binaryReader, int fileFormatVersion)
         {
-            this._readStream = TransparentReadStream.EnsureTransparentReadStream(binaryReader.BaseStream);
+            // this._readStream = TransparentReadStream.EnsureTransparentReadStream(binaryReader.BaseStream);
             // make sure the reader we're going to use wraps the transparent stream wrapper
-            this._binaryReader = binaryReader.BaseStream == _readStream
-                ? binaryReader
-                : new BinaryReader(_readStream);
+            this._binaryReader = new BufferedBinaryReader(binaryReader.BaseStream);
+            this._binaryReader_disposable = binaryReader;
             this._fileFormatVersion = fileFormatVersion;
         }
 
@@ -74,7 +73,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         public bool CloseInput { private get; set; } = false;
 
-        public long Position => _readStream.Position;
+        public long Position => _binaryReader.Position;
 
         /// <summary>
         /// Indicates whether unknown BuildEvents should be silently skipped. Read returns null otherwise.
@@ -130,6 +129,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (CloseInput)
             {
                 _binaryReader.Dispose();
+                _binaryReader_disposable.Dispose();
             }
         }
 
@@ -191,7 +191,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             int serializedEventLength = ReadInt32();
-            Stream stream = _binaryReader.BaseStream.Slice(serializedEventLength);
+            Stream stream = _binaryReader.Slice(serializedEventLength);
 
             _lastSubStream = stream as SubStream;
 
@@ -234,7 +234,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (_fileFormatVersion >= BinaryLogger.ForwardCompatibilityMinimalVersion)
                 {
                     serializedEventLength = ReadInt32(); // record length
-                    _readStream.BytesCountAllowedToRead = serializedEventLength;
+                    _binaryReader.BytesCountAllowedToRead = serializedEventLength;
                 }
 
                 bool hasError = false;
@@ -248,7 +248,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     // Thrown when BinaryReader is unable to deserialize binary data into expected type.
                     e is FormatException ||
                     // Thrown when we attempt to read more bytes than what is in the next event chunk.
-                    (e is EndOfStreamException && _readStream.BytesCountAllowedToReadRemaining <= 0))
+                    (e is EndOfStreamException && _binaryReader.BytesCountAllowedToReadRemaining <= 0))
                 {
                     hasError = true;
 
@@ -272,11 +272,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     HandleError(ErrorFactory, _skipUnknownEvents, ReaderErrorType.UnknownEventType, recordKind);
                 }
 
-                if (_readStream.BytesCountAllowedToReadRemaining > 0)
+                if (_binaryReader.BytesCountAllowedToReadRemaining > 0)
                 {
                     string ErrorFactory() => string.Format(
                         "BuildEvent record number {0} was expected to read exactly {1} bytes from the stream, but read {2} instead.", _recordNumber, serializedEventLength,
-                        serializedEventLength - _readStream.BytesCountAllowedToReadRemaining);
+                        serializedEventLength - _binaryReader.BytesCountAllowedToReadRemaining);
 
                     HandleError(ErrorFactory, _skipUnknownEventParts, ReaderErrorType.UnknownEventData, recordKind);
                 }
@@ -291,7 +291,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (noThrow)
                 {
                     RecoverableReadError?.Invoke(new BinaryLogReaderErrorEventArgs(readerErrorType, recordKind, msgFactory));
-                    SkipBytes(_readStream.BytesCountAllowedToReadRemaining);
+                    SkipBytes(_binaryReader.BytesCountAllowedToReadRemaining);
                 }
                 else
                 {
@@ -339,12 +339,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void SkipBytes(int count)
         {
-            _binaryReader.BaseStream.Seek(count, SeekOrigin.Current);
+            _binaryReader.Seek(count, SeekOrigin.Current);
         }
 
         private BinaryLogRecordKind PreprocessRecordsTillNextEvent(Func<BinaryLogRecordKind, bool> isPreprocessRecord)
         {
-            _readStream.BytesCountAllowedToRead = null;
+            _binaryReader.BytesCountAllowedToRead = null;
 
             BinaryLogRecordKind recordKind = (BinaryLogRecordKind)ReadInt32();
 
@@ -360,7 +360,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 else if (recordKind == BinaryLogRecordKind.NameValueList)
                 {
                     ReadNameValueList();
-                    _readStream.BytesCountAllowedToRead = null;
+                    _binaryReader.BytesCountAllowedToRead = null;
                 }
                 else if (recordKind == BinaryLogRecordKind.ProjectImportArchive)
                 {
@@ -520,13 +520,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
 
                 Stream prefixStream = new MemoryStream(prefixBytes);
-                Stream dataStream = _binaryReader.BaseStream.Slice(length - prefixBytes.Length);
+                Stream dataStream = _binaryReader.Slice(length - prefixBytes.Length);
                 return prefixStream.Concat(dataStream);
             }
             else
             {
                 int length = ReadInt32();
-                return _binaryReader.BaseStream.Slice(length);
+                return _binaryReader.Slice(length);
             }
         }
 
@@ -536,7 +536,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             if (_fileFormatVersion >= BinaryLogger.ForwardCompatibilityMinimalVersion)
             {
-                _readStream.BytesCountAllowedToRead = ReadInt32();
+                _binaryReader.BytesCountAllowedToRead = ReadInt32();
             }
 
             int count = ReadInt32();
@@ -1881,7 +1881,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             // on some platforms (net5) this method was added to BinaryReader
             // but it's not available on others. Call our own extension method
             // explicitly to avoid ambiguity.
-            return BinaryReaderExtensions.Read7BitEncodedInt(_binaryReader);
+            return _binaryReader.Read7BitEncodedInt();
         }
 
         private long ReadInt64()
@@ -1896,7 +1896,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private Guid ReadGuid()
         {
-            return new Guid(_binaryReader.ReadBytes(Marshal.SizeOf(typeof(Guid))));
+            return new Guid(_binaryReader.ReadGuid());
         }
 
         private DateTime ReadDateTime()

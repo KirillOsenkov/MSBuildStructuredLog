@@ -416,5 +416,31 @@ namespace Microsoft.Build.Shared
             var buildEventContext = new BuildEventContext(submissionId, nodeId, evaluationId, projectInstanceId, projectContextId, targetId, taskId);
             return buildEventContext;
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static BuildEventContext? ReadOptionalBuildEventContext(this Framework.Logging.IBinaryReader reader)
+        {
+            if (reader.ReadByte() == 0)
+            {
+                return null;
+            }
+
+            return reader.ReadBuildEventContext();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static BuildEventContext ReadBuildEventContext(this Framework.Logging.IBinaryReader reader)
+        {
+            int nodeId = reader.ReadInt32();
+            int projectContextId = reader.ReadInt32();
+            int targetId = reader.ReadInt32();
+            int taskId = reader.ReadInt32();
+            int submissionId = reader.ReadInt32();
+            int projectInstanceId = reader.ReadInt32();
+            int evaluationId = reader.ReadInt32();
+
+            var buildEventContext = new BuildEventContext(submissionId, nodeId, evaluationId, projectInstanceId, projectContextId, targetId, taskId);
+            return buildEventContext;
+        }
     }
 }
