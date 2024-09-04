@@ -27,8 +27,8 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Build.Framework" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" />
-    <PackageReference Include="DotUtils.StreamUtils.Sources" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="all" />
+    <PackageReference Include="DotUtils.StreamUtils.Sources" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Construction\TargetGraph.cs" />
