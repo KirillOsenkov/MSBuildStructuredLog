@@ -11,6 +11,8 @@
         public virtual bool IsDerivedTask => this.GetType() != typeof(Task);
 
         public int? LineNumber { get; set; }
+
+        public Folder MessagesFolder { get; set; }
     }
 
     public class MSBuildTask : Task

@@ -620,6 +620,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string Imports => "Imports";
         public static string DetailedSummary => "Detailed summary";
         public static string Parameters => "Parameters";
+        public static string Messages => "Messages";
         public static string Results => "Results";
         public static string SearchPaths => "SearchPaths";
         public static string Assemblies => "Assemblies";

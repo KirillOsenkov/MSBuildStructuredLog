@@ -687,6 +687,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     Construction.PopulateWithExtendedData(messageNode, args);
 
                     nodeToAdd = messageNode;
+                    if (parent is Task parentTask)
+                    {
+                        parent = parentTask?.MessagesFolder ?? parentTask.GetOrCreateNodeWithName<Folder>(Strings.Messages);
+                    }
                 }
             }
 
