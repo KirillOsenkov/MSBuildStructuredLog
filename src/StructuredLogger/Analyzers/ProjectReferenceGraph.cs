@@ -56,7 +56,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 CalculateHeight(project);
             }
 
-            maxProjectHeight = projectHeights.Values.Max();
+            if (projectHeights.Any())
+            {
+                maxProjectHeight = projectHeights.Values.Max();
+            }
         }
 
         private int CalculateHeight(string project)
