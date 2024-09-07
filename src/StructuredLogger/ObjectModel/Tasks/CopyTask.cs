@@ -21,7 +21,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             List<FileCopyOperation> list = new List<FileCopyOperation>();
 
             Match match;
-            foreach (var message in this.Children.OfType<Message>())
+            foreach (var message in this.GetMessages())
             {
                 var text = message.Text;
 

@@ -15,7 +15,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Folder currentReport = null;
             Folder parent = null;
 
-            foreach (var message in task.Children.OfType<Message>().ToArray())
+            foreach (var message in task.GetMessages().ToArray())
             {
                 var text = message.Text;
                 if (text.StartsWith(Strings.TotalAnalyzerExecutionTime, StringComparison.Ordinal))

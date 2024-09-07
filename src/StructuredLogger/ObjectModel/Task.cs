@@ -1,4 +1,7 @@
-﻿namespace Microsoft.Build.Logging.StructuredLogger
+﻿using System.Collections.Generic;
+using System.Linq;
+
+namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class Task : TimedNode, IHasSourceFile, IHasLineNumber
     {
@@ -11,6 +14,17 @@
         public virtual bool IsDerivedTask => this.GetType() != typeof(Task);
 
         public int? LineNumber { get; set; }
+
+        public IReadOnlyList<Message> GetMessages()
+        {
+            TreeNode node = this;
+            if (this.FindChild<Folder>(Strings.Messages) is Folder messagesFolder)
+            {
+                node = messagesFolder;
+            }
+
+            return node.Children.OfType<Message>().ToArray();
+        }
     }
 
     public class MSBuildTask : Task
