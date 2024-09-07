@@ -111,6 +111,7 @@ namespace StructuredLogViewer
         public int NameTermIndex { get; set; } = -1;
         public int ValueTermIndex { get; set; } = -1;
         public bool? Skipped { get; set; }
+        public int Height { get; set; } = -1;
 
         public DateTime StartBefore { get; set; }
         public DateTime StartAfter { get; set; }
@@ -347,6 +348,20 @@ namespace StructuredLogViewer
                     }
 
                     continue;
+                }
+
+                if (word.StartsWith("height=", StringComparison.OrdinalIgnoreCase) && word.Length > 7)
+                {
+                    word = word.Substring(7, word.Length - 7);
+                    Terms.RemoveAt(termIndex);
+                    if (string.Equals("max", word, StringComparison.OrdinalIgnoreCase))
+                    {
+                        Height = int.MaxValue;
+                    }
+                    else if (int.TryParse(word, out int height))
+                    {
+                        Height = height;
+                    }
                 }
             }
         }

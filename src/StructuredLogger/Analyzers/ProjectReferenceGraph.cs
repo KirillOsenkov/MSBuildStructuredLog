@@ -10,6 +10,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
     public class ProjectReferenceGraph : ISearchExtension
     {
         private Dictionary<string, ICollection<string>> references = new(StringComparer.OrdinalIgnoreCase);
+        private Dictionary<string, int> projectHeights = new(StringComparer.OrdinalIgnoreCase);
+        private int maxProjectHeight;
 
         public ProjectReferenceGraph(Build build)
         {
@@ -49,12 +51,47 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             foreach (var kvp in references.ToArray())
             {
-                references[kvp.Key] = kvp.Value.OrderBy(s => s).ToArray();
+                var project = kvp.Key;
+                references[project] = kvp.Value.OrderBy(s => s).ToArray();
+                CalculateHeight(project);
             }
+
+            maxProjectHeight = projectHeights.Values.Max();
+        }
+
+        private int CalculateHeight(string project)
+        {
+            if (!projectHeights.TryGetValue(project, out int height))
+            {
+                if (references.TryGetValue(project, out var projectReferences))
+                {
+                    foreach (var reference in projectReferences)
+                    {
+                        int referenceHeight = CalculateHeight(reference) + 1;
+                        if (referenceHeight > height)
+                        {
+                            height = referenceHeight;
+                        }
+                    }
+                }
+
+                projectHeights[project] = height;
+            }
+
+            return height;
         }
 
         public bool TryGetResults(NodeQueryMatcher matcher, IList<SearchResult> resultSet, int maxResults)
         {
+            bool isProjectHeightSearch =
+                matcher.Height != -1 &&
+                string.Equals(matcher.TypeKeyword, "project", StringComparison.OrdinalIgnoreCase);
+            if (isProjectHeightSearch)
+            {
+                GetProjectHeightResults(matcher, resultSet, maxResults);
+                return true;
+            }
+
             if (!string.Equals(matcher.TypeKeyword, "projectreference", StringComparison.OrdinalIgnoreCase))
             {
                 return false;
@@ -182,6 +219,38 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             return true;
+        }
+
+        private void GetProjectHeightResults(NodeQueryMatcher matcher, IList<SearchResult> resultSet, int maxResults)
+        {
+            int height = matcher.Height;
+            if (height == int.MaxValue)
+            {
+                height = maxProjectHeight;
+                resultSet.Add(new SearchResult(new Note { Text = $"Max = {maxProjectHeight}" }));
+            }
+
+            foreach (var p in references.Keys)
+            {
+                if (projectHeights.TryGetValue(p, out int thisProjectHeight))
+                {
+                    if (thisProjectHeight == height)
+                    {
+                        var projectWithHeight = CreateProject(p);
+                        var searchResult = new SearchResult(projectWithHeight);
+                        resultSet.Add(searchResult);
+                        if (resultSet.Count >= maxResults)
+                        {
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        private bool GetProjectsOfHeight(int height)
+        {
+            throw new NotImplementedException();
         }
 
         private Project CreateProject(string project)
