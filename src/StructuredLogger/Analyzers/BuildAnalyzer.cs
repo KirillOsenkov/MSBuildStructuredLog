@@ -371,6 +371,29 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             fileCopyMap.AnalyzeTask(task);
             doubleWritesAnalyzer.AnalyzeTask(task);
+
+            CollapseMessagesToSubfolder(task);
+        }
+
+        private void CollapseMessagesToSubfolder(Task task)
+        {
+            var messages = task.Children.OfType<Message>().ToArray();
+            if (messages.Length > 10)
+            {
+                for (int i = task.Children.Count - 1; i >= 0; i--)
+                {
+                    if (task.Children[i] is Message)
+                    {
+                        task.Children.RemoveAt(i);
+                    }
+                }
+            }
+
+            var subfolder = task.GetOrCreateNodeWithName<Folder>(Strings.Messages);
+            foreach (var message in messages)
+            {
+                subfolder.AddChild(message);
+            }
         }
 
         private void UpdateTaskDurations(Task task)
