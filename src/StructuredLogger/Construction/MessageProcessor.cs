@@ -689,7 +689,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     nodeToAdd = messageNode;
                     if (parent is Task parentTask)
                     {
-                        parent = parentTask?.MessagesFolder ?? parentTask.GetOrCreateNodeWithName<Folder>(Strings.Messages);
+                        parent = parentTask.MessagesFolder ??= parentTask.GetOrCreateNodeWithName<Folder>(Strings.Messages);
                     }
                 }
             }
