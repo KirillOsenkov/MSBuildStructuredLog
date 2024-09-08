@@ -673,7 +673,7 @@ namespace StructuredLogViewer.Controls
         }
 
         static Block heatMapBlockNormal = new() { HasError = false, Node = HeatMapNode.HeatGraphNodeStub };
-        static Block heatMapBlockError = new(hasError: true, node: HeatMapNode.HeatGraphNodeStub);
+        static Block heatMapBlockError = new Block { HasError = true, Node = HeatMapNode.HeatGraphNodeStub };
 
         private FastCanvas CreateActivityBarGraph()
         {
