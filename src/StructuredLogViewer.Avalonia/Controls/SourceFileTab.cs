@@ -1,6 +1,4 @@
-﻿using System;
-using System.IO;
-using Microsoft.Build.Logging.StructuredLogger;
+﻿using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogViewer.Avalonia.Controls
 {
@@ -10,7 +8,7 @@ namespace StructuredLogViewer.Avalonia.Controls
         public string FilePath { get; set; }
 
         public TextViewerControl Content { get; set; }
-        
+
         public Command Close { get; }
         public event Action<SourceFileTab> CloseRequested;
 

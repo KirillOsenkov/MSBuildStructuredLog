@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Microsoft.Build.Logging;
+﻿namespace Microsoft.Build.Logging;
 
 internal class ExtendedDataFields
 {

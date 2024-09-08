@@ -1,7 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.IO;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogViewer
@@ -34,7 +31,7 @@ namespace StructuredLogViewer
 
             var postfixArguments = GetPostfixArguments();
 
-            // the command line we pass to Process.Start doesn't need exec file 
+            // the command line we pass to Process.Start doesn't need exec file
             var commandLine = $"{projectFilePath.QuoteIfNeeded()} {customArguments} {postfixArguments}";
 
             commandLine = isLibraryMsBuild == true ? $"{msBuildFile} {commandLine}" : commandLine;

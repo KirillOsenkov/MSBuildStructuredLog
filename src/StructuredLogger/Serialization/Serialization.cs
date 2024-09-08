@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
+﻿using System.IO.Compression;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Xml.Linq;
-using static Microsoft.Build.Logging.StructuredLogger.BinLogReader;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {

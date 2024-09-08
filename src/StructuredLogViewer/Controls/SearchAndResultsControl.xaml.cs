@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Linq;
-using System.Threading;
+﻿using System.Collections;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -72,7 +69,7 @@ namespace StructuredLogViewer.Controls
                 typingConcurrentOperation.Reset();
 
                 // only clear the contents when we have a search function defined.
-                // if the text input is handled externally, don't mess with the 
+                // if the text input is handled externally, don't mess with the
                 // content
                 if (ExecuteSearch != null)
                 {

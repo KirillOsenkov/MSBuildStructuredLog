@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.Build.Logging.StructuredLogger;
+﻿using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogViewer
 {
@@ -165,7 +161,7 @@ namespace StructuredLogViewer
                     }
 
                     // nest under a Task, unless it's an MSBuild task higher up the parent chain
-                    var task = resultNode.GetNearestParent<Task>(t => t is not MSBuildTask);
+                    var task = resultNode.GetNearestParent<Microsoft.Build.Logging.StructuredLogger.Task>(t => t is not MSBuildTask);
                     if (task != null && !isTarget && project != null && task.GetNearestParent<Project>() == project)
                     {
                         parent = InsertParent(map, parent, task);

@@ -1,6 +1,4 @@
-﻿using System.IO;
-
-namespace StructuredLogViewer
+﻿namespace StructuredLogViewer
 {
     public class LocalSourceFileResolver : ISourceFileResolver
     {

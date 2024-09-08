@@ -1,10 +1,6 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-
 namespace Microsoft.Build.Framework;
 
 /// <summary>
@@ -116,7 +112,7 @@ public sealed class ExtendedCriticalBuildMessageEventArgs : CriticalBuildMessage
         string? senderName,
         DateTime eventTimestamp,
         params object[]? messageArgs)
-        //// Force importance to High. 
+        //// Force importance to High.
         : base(subcategory, code, file, lineNumber, columnNumber, endLineNumber, endColumnNumber, message, helpKeyword, senderName, eventTimestamp, messageArgs) => ExtendedType = type;
 
     /// <summary>

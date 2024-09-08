@@ -1,5 +1,6 @@
 ﻿using Microsoft.Build.Logging.StructuredLogger;
 using Xunit;
+using StringWriter = Microsoft.Build.Logging.StructuredLogger.StringWriter;
 
 namespace StructuredLogger.Tests
 {
@@ -24,7 +25,7 @@ namespace StructuredLogger.Tests
         [Fact]
         public void AddItemWithMultilineMetadata()
         {
-            var result = ItemGroupParser.ParsePropertyOrItemList(@"Added Item(s): 
+            var result = ItemGroupParser.ParsePropertyOrItemList(@"Added Item(s):
     Link=
         tmp
                 AcceptableNonZeroExitCodes=
@@ -38,7 +39,7 @@ namespace StructuredLogger.Tests
         [Fact]
         public void ParseSuggestedBindingRedirectsMetadata()
         {
-            var parameter = ItemGroupParser.ParsePropertyOrItemList(@"Output Item(s): 
+            var parameter = ItemGroupParser.ParsePropertyOrItemList(@"Output Item(s):
     SuggestedBindingRedirects=
         Microsoft.Build, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a
                 MaxVersion=15.1.0.0
@@ -132,18 +133,18 @@ References which depend on ""System.IO.Compression, Version=4.1.1.0, Culture=neu
         [Fact]
         public void ParseMultilineMetadata()
         {
-            var parameter = ItemGroupParser.ParsePropertyOrItemList(@"Added Item(s): 
+            var parameter = ItemGroupParser.ParsePropertyOrItemList(@"Added Item(s):
     _ProjectsFiles=
         Project1
                 AdditionalProperties=
         AutoParameterizationWebConfigConnectionStrings=false;
         _PackageTempDir=Out\Dir;
-        
+
         Project2
                 AdditionalProperties=
         AutoParameterizationWebConfigConnectionStrings=false;
         _PackageTempDir=Out\Dir;
-        
+
         Project3
                 AdditionalProperties=
         AutoParameterizationWebConfigConnectionStrings=false;

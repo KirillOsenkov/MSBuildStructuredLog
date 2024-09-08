@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using static Microsoft.Build.Logging.StructuredLogger.BinLogReader;
+﻿using System.Diagnostics;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {

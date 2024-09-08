@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -616,7 +612,7 @@ namespace StructuredLogViewer.Controls
         private FastCanvas HeatGraph;
 
         /// <summary>
-        /// Draw Graph 
+        /// Draw Graph
         /// </summary>
         private void Draw()
         {

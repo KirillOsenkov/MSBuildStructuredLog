@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using Microsoft.Build.Locator;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Win32;

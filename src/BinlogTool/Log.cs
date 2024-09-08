@@ -1,5 +1,3 @@
-using System;
-
 namespace BinlogTool
 {
     public class Log

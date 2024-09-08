@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
@@ -690,11 +687,11 @@ namespace StructuredLogViewer.Controls
         }
 
         /// <summary>
-        /// AreClose - Returns whether or not two doubles are "close".  That is, whether or 
+        /// AreClose - Returns whether or not two doubles are "close".  That is, whether or
         /// not they are within epsilon of each other.  Note that this epsilon is proportional
         /// to the numbers themselves to that AreClose survives scalar multiplication.
         /// There are plenty of ways for this to return false even for numbers which
-        /// are theoretically identical, so no code calling this should fail to work if this 
+        /// are theoretically identical, so no code calling this should fail to work if this
         /// returns false.  This is important enough to repeat:
         /// NB: NO CODE CALLING THIS FUNCTION SHOULD DEPEND ON ACCURATE RESULTS - this should be
         /// used for optimizations *only*.

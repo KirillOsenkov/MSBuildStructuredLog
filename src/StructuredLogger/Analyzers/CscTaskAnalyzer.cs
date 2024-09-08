@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Globalization;
-using System.Linq;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -47,7 +44,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
                 else if (text.StartsWith("CompilerServer:", StringComparison.Ordinal))
                 {
-                    // The C# / VB compiler server emits diagnostic messages from the main build task. These 
+                    // The C# / VB compiler server emits diagnostic messages from the main build task. These
                     // are not related to the analyzer performance summary and should not be included in this view
                     continue;
                 }

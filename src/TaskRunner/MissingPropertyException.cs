@@ -1,5 +1,3 @@
-using System;
-
 namespace TaskRunner
 {
     public class MissingPropertyException : MissingMemberException

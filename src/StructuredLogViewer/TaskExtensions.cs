@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-namespace StructuredLogViewer
+﻿namespace StructuredLogViewer
 {
     internal static class TaskExtensions
     {

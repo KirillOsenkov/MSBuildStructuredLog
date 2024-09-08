@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Microsoft.Build.Logging
+﻿namespace Microsoft.Build.Logging
 {
     /// <summary>
     /// A bitmask to specify which fields on a BuildEventArgs object are present; used in serialization

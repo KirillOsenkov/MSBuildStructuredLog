@@ -1,6 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.IO;
+﻿using System.Diagnostics;
 using System.Reflection;
 using Avalonia;
 using AvaloniaEdit.Folding;
@@ -17,7 +15,6 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using AvaloniaEdit.Highlighting.Xshd;
 using System.Text;
-using Avalonia.VisualTree;
 using Avalonia.Platform.Storage;
 
 namespace StructuredLogViewer.Avalonia.Controls
@@ -146,7 +143,7 @@ namespace StructuredLogViewer.Avalonia.Controls
                 var highlighting = HighlightingManager.Instance.GetDefinition("XML");
                 highlighting.GetNamedColor("XmlTag").Foreground = new SimpleHighlightingBrush(Color.FromRgb(163, 21, 21));
                 textEditor.SyntaxHighlighting = highlighting;
-                
+
                 var foldingManager = FoldingManager.Install(textEditor.TextArea);
                 var foldingStrategy = new XmlFoldingStrategy();
                 foldingStrategy.UpdateFoldings(foldingManager, textEditor.Document);
@@ -190,7 +187,7 @@ namespace StructuredLogViewer.Avalonia.Controls
             {
                 return;
             }
-            
+
             var filePath = FilePath;
             var extension = Path.GetExtension(filePath);
 

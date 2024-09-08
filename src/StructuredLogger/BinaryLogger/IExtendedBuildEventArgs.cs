@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Microsoft.Build.Framework;
+﻿namespace Microsoft.Build.Framework;
 
 /// <summary>
 /// Interface for Extended EventArgs to allow enriching particular events with extended data.

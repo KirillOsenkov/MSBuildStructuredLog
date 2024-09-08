@@ -1,8 +1,6 @@
-﻿using System;
-using System.Diagnostics;
-using System.IO;
+﻿using System.Diagnostics;
 using Microsoft.Build.Logging.StructuredLogger;
-using StructuredLogViewer;
+using Task = Microsoft.Build.Logging.StructuredLogger.Task;
 
 namespace TaskRunner
 {
@@ -88,7 +86,7 @@ namespace TaskRunner
             var build = Serialization.Read(binlog);
 
             // Need to analyze build here to fully emulate what the viewer does when opening a .binlog.
-            // Since the analyzers will mutate the tree it affects indices of TimedNodes. To properly 
+            // Since the analyzers will mutate the tree it affects indices of TimedNodes. To properly
             // calculate the right index we need to have the same tree as in the viewer.
             BuildAnalyzer.AnalyzeBuild(build);
 
@@ -112,7 +110,7 @@ namespace TaskRunner
                 {
                     Console.Error.WriteLine($"Task {taskName} not found in {binlog}");
                 }
-                
+
                 return;
             }
 

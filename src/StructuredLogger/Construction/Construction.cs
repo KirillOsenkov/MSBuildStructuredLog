@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.IO;
-using System.Linq;
 using Microsoft.Build.Collections;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Framework.Profiler;
@@ -867,7 +863,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 node.AddChild(metadataFolder);
             }
-        }   
+        }
 
         private void HandleException(Exception ex)
         {

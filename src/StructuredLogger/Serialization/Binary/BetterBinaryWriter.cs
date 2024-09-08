@@ -1,6 +1,4 @@
-﻿using System.IO;
-
-namespace Microsoft.Build.Logging.StructuredLogger
+﻿namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class BetterBinaryWriter : BinaryWriter
     {

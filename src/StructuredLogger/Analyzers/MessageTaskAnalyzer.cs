@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-namespace Microsoft.Build.Logging.StructuredLogger
+﻿namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class MessageTaskAnalyzer
     {

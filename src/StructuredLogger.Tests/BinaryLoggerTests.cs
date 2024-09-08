@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Logging;
 using Microsoft.Build.Logging.StructuredLogger;
 using StructuredLogger.Tests;
 using Xunit;
@@ -16,6 +10,7 @@ using BinaryLogger = Microsoft.Build.Logging.StructuredLogger.BinaryLogger;
 using BinaryLogReaderErrorEventArgs = Microsoft.Build.Logging.StructuredLogger.BinaryLogReaderErrorEventArgs;
 using BinaryLogRecordKind = Microsoft.Build.Logging.StructuredLogger.BinaryLogRecordKind;
 using ReaderErrorType = Microsoft.Build.Logging.StructuredLogger.ReaderErrorType;
+using Task = Microsoft.Build.Logging.StructuredLogger.Task;
 
 namespace Microsoft.Build.UnitTests
 {

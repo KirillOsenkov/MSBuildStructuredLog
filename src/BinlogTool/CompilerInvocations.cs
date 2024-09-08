@@ -1,4 +1,3 @@
-using System.Linq;
 using Microsoft.Build.Logging.StructuredLogger;
 
 namespace BinlogTool

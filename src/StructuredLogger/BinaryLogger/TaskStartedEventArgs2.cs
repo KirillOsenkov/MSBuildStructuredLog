@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Microsoft.Build.Framework
+﻿namespace Microsoft.Build.Framework
 {
     public class TaskStartedEventArgs2 : TaskStartedEventArgs
     {

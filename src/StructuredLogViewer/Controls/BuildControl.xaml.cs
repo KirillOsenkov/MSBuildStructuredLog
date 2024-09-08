@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -20,6 +16,7 @@ using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Language.Xml;
 using Mono.Cecil;
 using StructuredLogViewer.Core.ProjectGraph;
+using Task = Microsoft.Build.Logging.StructuredLogger.Task;
 using TPLTask = System.Threading.Tasks.Task;
 
 namespace StructuredLogViewer.Controls
@@ -361,7 +358,7 @@ namespace StructuredLogViewer.Controls
                 var text =
 @"This log contains the full text of projects and imported files used during the build.
 You can use the 'Files' tab in the bottom left to view these files and the 'Find in Files' tab for full-text search.
-For many nodes in the tree (Targets, Tasks, Errors, Projects, etc) pressing SPACE or ENTER or double-clicking 
+For many nodes in the tree (Targets, Tasks, Errors, Projects, etc) pressing SPACE or ENTER or double-clicking
 on the node will navigate to the corresponding source code associated with the node.
 
 More functionality is available from the right-click context menu for each node.

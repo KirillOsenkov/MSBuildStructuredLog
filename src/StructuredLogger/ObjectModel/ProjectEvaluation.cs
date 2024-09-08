@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.IO;
-
-namespace Microsoft.Build.Logging.StructuredLogger
+﻿namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class ProjectEvaluation : TimedNode, IPreprocessable, IHasSourceFile, IHasRelevance, IProjectOrEvaluation
     {

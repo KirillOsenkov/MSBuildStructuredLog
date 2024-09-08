@@ -1,11 +1,5 @@
-﻿using System;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Threading;
+﻿using System.Diagnostics;
 using Microsoft.Build.Logging.StructuredLogger;
-using Xunit;
-using Microsoft.Build.Logging;
 using Xunit.Abstractions;
 
 namespace StructuredLogger.Tests

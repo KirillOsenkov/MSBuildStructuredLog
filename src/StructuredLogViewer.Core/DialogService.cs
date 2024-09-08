@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace StructuredLogViewer
+﻿namespace StructuredLogViewer
 {
     public static class DialogService
     {

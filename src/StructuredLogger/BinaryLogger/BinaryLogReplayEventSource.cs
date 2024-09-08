@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO.Compression;
-using System.IO;
-using System.Text;
-using Microsoft.Build.BackEnd;
+﻿using System.IO.Compression;
 using Microsoft.Build.Shared;
-using System.Threading;
 using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -64,7 +58,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public int FileFormatVersion => _fileFormatVersion ?? throw new InvalidOperationException("Version info not yet initialized. Replay must be called first.");
         public int MinimumReaderVersion => _minimumReaderVersion ?? throw new InvalidOperationException("Version info not yet initialized. Replay must be called first.");
-        
+
 
         /// <summary>
         /// Unknown build events or unknown parts of known build events will be ignored if this is set to true.

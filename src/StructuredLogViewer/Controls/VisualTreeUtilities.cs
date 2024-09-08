@@ -1,4 +1,3 @@
-using System;
 using System.Windows;
 using System.Windows.Media;
 
@@ -120,9 +119,9 @@ namespace StructuredLogViewer.Controls
         /// <returns>The object itself, if it matches in type, else the first ancestor of type T in the parent chain of obj,
         /// or null if no ancestor is found.</returns>
         /// <remarks>
-        /// The type of <paramref name="obj"/> is Visual rather than DependencyObject in order to disambiguate this method 
+        /// The type of <paramref name="obj"/> is Visual rather than DependencyObject in order to disambiguate this method
         /// from Microsoft.VisualStudio.PlatformUI.Shell.ExtensionMethods.FindAncestor(ViewElement element).  If you need
-        /// to find an ancestor of a non-Visual DependencyObject you should call 
+        /// to find an ancestor of a non-Visual DependencyObject you should call
         /// FindAncestor&lt;TAncestorType, DependencyObject&gt;(obj, GetVisualOrLogicalParent) directly.
         /// </remarks>
         public static TAncestorType FindAncestorOrSelf<TAncestorType, TElementType>(this TElementType obj, Func<TElementType, TElementType> parentEvaluator)

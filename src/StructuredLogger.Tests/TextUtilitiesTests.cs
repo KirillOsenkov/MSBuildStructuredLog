@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.Build.Logging.StructuredLogger;
-using StructuredLogViewer;
+﻿using Microsoft.Build.Logging.StructuredLogger;
 using Xunit;
 
 namespace StructuredLogger.Tests

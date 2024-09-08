@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.Build.Logging.StructuredLogger;
+﻿using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogViewer.Avalonia.Controls
 {

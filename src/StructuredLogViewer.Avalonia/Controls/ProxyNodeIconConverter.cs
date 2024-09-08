@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
+﻿using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
 using Microsoft.Build.Logging.StructuredLogger;
+using Task = Microsoft.Build.Logging.StructuredLogger.Task;
 
 namespace StructuredLogViewer.Avalonia.Controls
 {

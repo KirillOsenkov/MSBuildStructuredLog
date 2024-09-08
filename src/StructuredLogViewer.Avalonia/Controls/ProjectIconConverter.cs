@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Globalization;
 using Avalonia;
 using Avalonia.Data.Converters;
@@ -17,16 +15,16 @@ namespace StructuredLogViewer.Avalonia.Controls
             {
                 case ".sln":
                     return GetIcon("SlnIcon");
-                
+
                 case ".csproj":
                     return GetIcon("CSProjIcon");
-                    
+
                 case ".vbproj":
                     return GetIcon("VBProjIcon");
-                    
+
                 case ".fsproj":
                     return GetIcon("FSProjIcon");
-                    
+
                 default:
                     return GetIcon("GenericProjectIcon");
             }
@@ -46,10 +44,10 @@ namespace StructuredLogViewer.Avalonia.Controls
             return icon;
         }
 
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) 
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
             => ProjectExtensionToIcon(value as string);
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) 
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
             => throw new NotSupportedException();
     }
 }

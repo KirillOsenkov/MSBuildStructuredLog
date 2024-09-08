@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Text;
 using Microsoft.Build.Logging.StructuredLogger;
 using Xunit;
 using Xunit.Abstractions;
+using Task = Microsoft.Build.Logging.StructuredLogger.Task;
 
 namespace StructuredLogger.Tests
 {
