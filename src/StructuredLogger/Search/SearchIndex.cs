@@ -556,10 +556,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                     else
                     {
-                        var nameValueNode = node as NameValueNode;
-
                         // NameValueNode is a special case: have to check in which field to search
-                        if (nameValueNode != null && (nameTermIndex != -1 || valueTermIndex != -1))
+                        if (node is NameValueNode nameValueNode && (nameTermIndex != -1 || valueTermIndex != -1))
                         {
                             if (fieldIndex == 1 && termIndex == nameTermIndex)
                             {

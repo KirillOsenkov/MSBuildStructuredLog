@@ -39,24 +39,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             try
             {
-                var metadata = node as Metadata;
-                if (metadata != null)
+                if (node is Metadata metadata)
                 {
                     SetString(nameof(Metadata.Name), metadata.Name);
                     WriteContent(metadata.Value);
                     return;
                 }
 
-                var property = node as Property;
-                if (property != null)
+                if (node is Property property)
                 {
                     SetString(nameof(Property.Name), property.Name);
                     WriteContent(property.Value);
                     return;
                 }
 
-                var message = node as Message;
-                if (message != null)
+                if (node is Message message)
                 {
                     if (message.IsLowRelevance)
                     {
@@ -93,8 +90,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void WriteAttributes(TreeNode node)
         {
-            var folder = node as Folder;
-            if (folder != null)
+            if (node is Folder folder)
             {
                 if (!Serialization.IsValidXmlElementName(folder.Name))
                 {
@@ -109,14 +105,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            var namedNode = node as NamedNode;
-            if (namedNode != null)
+            if (node is NamedNode namedNode)
             {
                 SetString(nameof(NamedNode.Name), namedNode.Name?.Replace("\"", ""));
             }
 
-            var textNode = node as TextNode;
-            if (textNode != null)
+            if (node is TextNode textNode)
             {
                 SetString(nameof(TextNode.Text), textNode.Text);
             }
@@ -127,8 +121,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 SetString(nameof(TimedNode.NodeId), timedNode.NodeId.ToString());
             }
 
-            var task = node as Task;
-            if (task != null)
+            if (node is Task task)
             {
                 SetString(nameof(task.FromAssembly), task.FromAssembly);
                 SetString(nameof(task.CommandLineArguments), task.CommandLineArguments);
@@ -137,8 +130,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            var target = node as Target;
-            if (target != null)
+            if (node is Target target)
             {
                 SetString(nameof(target.DependsOnTargets), target.DependsOnTargets);
                 if (target.IsLowRelevance)
@@ -151,8 +143,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            var diagnostic = node as AbstractDiagnostic;
-            if (diagnostic != null)
+            if (node is AbstractDiagnostic diagnostic)
             {
                 SetString(nameof(diagnostic.Code), diagnostic.Code);
                 SetString(nameof(diagnostic.File), diagnostic.File);
@@ -164,15 +155,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            var project = node as Project;
-            if (project != null)
+            if (node is Project project)
             {
                 SetString(nameof(project.ProjectFile), project.ProjectFile);
                 return;
             }
 
-            var build = node as Build;
-            if (build != null)
+            if (node is Build build)
             {
                 SetString(nameof(build.Succeeded), build.Succeeded.ToString());
                 SetString(nameof(Build.IsAnalyzed), build.IsAnalyzed.ToString());

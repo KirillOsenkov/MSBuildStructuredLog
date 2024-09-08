@@ -277,8 +277,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     var child = children[i];
 
-                    var treeNode = child as TreeNode;
-                    if (treeNode != null)
+                    if (child is TreeNode treeNode)
                     {
                         var found = treeNode.FindFirstInSubtreeIncludingSelf<T>(predicate);
                         if (found != null)
@@ -360,8 +359,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 foreach (var child in Children.Reverse())
                 {
-                    var treeNode = child as TreeNode;
-                    if (treeNode != null)
+                    if (child is TreeNode treeNode)
                     {
                         var found = treeNode.FindLastInSubtreeIncludingSelf(predicate);
                         if (found != null)
@@ -446,8 +444,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 T last = current;
 
-                var treeNode = current as TreeNode;
-                if (treeNode != null)
+                if (current is TreeNode treeNode)
                 {
                     last = treeNode.FindLastInSubtreeIncludingSelf<T>(predicate);
                 }
@@ -489,8 +486,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 T first = current;
 
-                var treeNode = current as TreeNode;
-                if (treeNode != null)
+                if (current is TreeNode treeNode)
                 {
                     first = treeNode.FindFirstInSubtreeIncludingSelf(predicate);
                 }

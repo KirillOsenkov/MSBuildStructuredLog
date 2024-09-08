@@ -84,8 +84,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             var name = reader.ReadString();
             var node = Serialization.CreateNode(name);
-            var folder = node as Folder;
-            if (folder != null)
+            if (node is Folder folder)
             {
                 folder.Name = name;
             }
@@ -95,21 +94,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
             int childrenCount = reader.ReadInt32();
             if (childrenCount > 0)
             {
-                if (!(node is TreeNode))
+                if (node is not TreeNode)
                 {
                     // OK we got ourselves into a situation here.
                     // https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/242
                     // There's a design flaw in the BuildLog format. I took a shortcut
                     // and for Folder nodes I just write the name of the folder instead
                     // of specifying that the element is a Folder in the first place.
-                    // Unfortunately I didn't think about Folders named "Property", 
-                    // "Target", etc. 
+                    // Unfortunately I didn't think about Folders named "Property",
+                    // "Target", etc.
                     // So the deserialization logic when it sees a string called "Property"
                     // it assumes we have a property here, instead of a Folder named
                     // "Property". But properties have children! We're in a pickle now.
                     // Longer term I need to modify the format to not do this optimization
                     // and always write "Folder" for folders and write the name separately.
-                    // For now I don't have time to do this right, so put in the dirty 
+                    // For now I don't have time to do this right, so put in the dirty
                     // hack to recover from this situation. If it says it's a "Property"
                     // but expects children, it means it's actually a folder with name
                     // "Property".
@@ -146,24 +145,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void SetAttributes(BaseNode node)
         {
-            var metadata = node as Metadata;
-            if (metadata != null)
+            if (node is Metadata metadata)
             {
                 metadata.Name = Dequeue();
                 metadata.Value = Dequeue();
                 return;
             }
 
-            var property = node as Property;
-            if (property != null)
+            if (node is Property property)
             {
                 property.Name = Dequeue();
                 property.Value = Dequeue();
                 return;
             }
 
-            var message = node as Message;
-            if (message != null)
+            if (node is Message message)
             {
                 message.IsLowRelevance = Serialization.GetBoolean(Dequeue());
                 message.Timestamp = Serialization.GetDateTime(Dequeue());
@@ -171,27 +167,23 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            var folder = node as Folder;
-            if (folder != null)
+            if (node is Folder folder)
             {
                 folder.IsLowRelevance = Serialization.GetBoolean(Dequeue());
                 return;
             }
 
-            var namedNode = node as NamedNode;
-            if (namedNode != null)
+            if (node is NamedNode namedNode)
             {
                 namedNode.Name = Dequeue();
             }
 
-            var textNode = node as TextNode;
-            if (textNode != null)
+            if (node is TextNode textNode)
             {
                 textNode.Text = Dequeue();
             }
 
-            var timedNode = node as TimedNode;
-            if (timedNode != null)
+            if (node is TimedNode timedNode)
             {
                 timedNode.StartTime = Serialization.GetDateTime(Dequeue());
                 timedNode.EndTime = Serialization.GetDateTime(Dequeue());
@@ -201,8 +193,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
-            var task = node as Task;
-            if (task != null)
+            if (node is Task task)
             {
                 task.FromAssembly = Dequeue();
                 task.CommandLineArguments = Dequeue();
@@ -214,8 +205,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            var target = node as Target;
-            if (target != null)
+            if (node is Target target)
             {
                 target.DependsOnTargets = Dequeue();
                 target.IsLowRelevance = Serialization.GetBoolean(Dequeue());
@@ -227,8 +217,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            var diagnostic = node as AbstractDiagnostic;
-            if (diagnostic != null)
+            if (node is AbstractDiagnostic diagnostic)
             {
                 diagnostic.Code = Dequeue();
                 diagnostic.File = Dequeue();
@@ -240,23 +229,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            var project = node as Project;
-            if (project != null)
+            if (node is Project project)
             {
                 project.ProjectFile = Dequeue();
                 return;
             }
 
-            var build = node as Build;
-            if (build != null)
+            if (node is Build build)
             {
                 build.Succeeded = Serialization.GetBoolean(Dequeue());
                 build.IsAnalyzed = Serialization.GetBoolean(Dequeue());
                 return;
             }
 
-            var import = node as Import;
-            if (import != null)
+            if (node is Import import)
             {
                 import.ProjectFilePath = Dequeue();
                 import.ImportedProjectFilePath = Dequeue();
@@ -266,8 +252,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            var noImport = node as NoImport;
-            if (noImport != null)
+            if (node is NoImport noImport)
             {
                 noImport.ProjectFilePath = Dequeue();
                 noImport.ImportedFileSpec = Dequeue();
