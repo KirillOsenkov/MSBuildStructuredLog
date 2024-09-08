@@ -232,7 +232,7 @@ namespace StructuredLogViewer.Avalonia.Controls
                 var text =
 @"This log contains the full text of projects and imported files used during the build.
 You can use the 'Files' tab in the bottom left to view these files and the 'Find in Files' tab for full-text search.
-For many nodes in the tree (Targets, Tasks, Errors, Projects, etc) pressing SPACE or ENTER or double-clicking 
+For many nodes in the tree (Targets, Tasks, Errors, Projects, etc) pressing SPACE or ENTER or double-clicking
 on the node will navigate to the corresponding source code associated with the node.
 
 More functionality is available from the right-click context menu for each node.
@@ -868,7 +868,7 @@ Recent:
         public void SelectItem(BaseNode item)
         {
             var parentChain = item.GetParentChainExcludingThis();
-            
+
             foreach (var node in parentChain)
             {
                 if (node is TreeNode treeNode)
@@ -1371,36 +1371,6 @@ Recent:
             }
 
             return folder.Children;
-        }
-
-        private void TreeViewItem_RequestBringIntoView(object sender, RequestBringIntoViewEventArgs e)
-        {
-            if (scrollViewer == null)
-            {
-                return;
-            }
-
-            var treeViewItem = (TreeViewItem)sender;
-            var treeView = (TreeView)typeof(TreeViewItem).GetProperty("ParentTreeView", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(treeViewItem);
-
-            //if (PresentationSource.FromDependencyObject(treeViewItem) == null)
-            //{
-            //    // the item might have disconnected by the time we run this
-            //    return;
-            //}
-
-            Point? topLeftInTreeViewCoordinates = treeViewItem.TranslatePoint(new Point(), treeView);
-            var treeViewItemTop = topLeftInTreeViewCoordinates?.Y ?? 0;
-            if (treeViewItemTop < 0
-                || treeViewItemTop + treeViewItem.Bounds.Height > scrollViewer.Viewport.Height
-                || treeViewItem.Bounds.Height > scrollViewer.Viewport.Height)
-            {
-                // if the item is not visible or too "tall", don't do anything; let them scroll it into view
-                return;
-            }
-
-            // if the item is already fully within the viewport vertically, disallow horizontal scrolling
-            e.Handled = true;
         }
 
         private void TreeViewItem_Selected(object sender, RoutedEventArgs e)

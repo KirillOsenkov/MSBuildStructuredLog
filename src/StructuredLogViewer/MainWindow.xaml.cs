@@ -1036,22 +1036,6 @@ Use project(.) or project(.csproj) to search all projects (slow)." };
             RebuildProjectOrSolution();
         }
 
-        private void Copy_Click(object sender, RoutedEventArgs e)
-        {
-            if (currentBuild != null)
-            {
-                currentBuild.CopySubtree();
-            }
-        }
-
-        private void Delete_Click(object sender, RoutedEventArgs e)
-        {
-            if (currentBuild != null)
-            {
-                currentBuild.Delete();
-            }
-        }
-
         private void SetMSBuild_Click(object sender, RoutedEventArgs e)
         {
             MSBuildLocator.BrowseForMSBuildExe();

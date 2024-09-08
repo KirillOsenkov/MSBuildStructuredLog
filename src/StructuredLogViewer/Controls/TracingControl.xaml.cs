@@ -616,7 +616,7 @@ namespace StructuredLogViewer.Controls
         private FastCanvas HeatGraph;
 
         /// <summary>
-        /// Draw Graph 
+        /// Draw Graph
         /// </summary>
         private void Draw()
         {
@@ -1290,7 +1290,6 @@ namespace StructuredLogViewer.Controls
         private static readonly Brush projectEvaluationBackground = new SolidColorBrush(Color.FromArgb(20, 180, 180, 180));
         private static readonly Brush targetBackground = new SolidColorBrush(Color.FromArgb(50, 255, 100, 255));
         private static readonly Brush taskBackground = new SolidColorBrush(Color.FromArgb(60, 100, 255, 255));
-        private static readonly Brush messageBackground = new SolidColorBrush(Color.FromArgb(60, 100, 255, 255));
         private static readonly Brush errorBackground = new SolidColorBrush(Color.FromArgb(60, 255, 86, 86));
 
         private static Brush ChooseBackground(Block block)

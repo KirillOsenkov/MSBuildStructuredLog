@@ -289,7 +289,6 @@ namespace StructuredLogViewer.Controls
 
         // Const values come from sdk\inc\crt\float.h
         internal const double DBL_EPSILON = 2.2204460492503131e-016; /* smallest such that 1.0+DBL_EPSILON != 1.0 */
-        internal const float FLT_MIN = 1.175494351e-38F; /* Number close to zero, where float.MinValue is -float.MaxValue */
 
         private static bool IsZero(double value)
         {
