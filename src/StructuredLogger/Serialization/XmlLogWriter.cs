@@ -194,7 +194,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             SetString(nameof(TimedNode.EndTime), ToString(node.EndTime));
         }
 
-        private string ToString(DateTime time)
+        private static string ToString(DateTime time)
         {
             return time.ToString("o");
         }

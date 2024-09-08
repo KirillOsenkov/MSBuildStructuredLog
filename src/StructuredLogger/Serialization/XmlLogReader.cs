@@ -144,7 +144,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return build;
         }
 
-        private void SetElementValue(BaseNode valueNode, string value)
+        private static void SetElementValue(BaseNode valueNode, string value)
         {
             if (valueNode is NameValueNode nameValueNode)
             {

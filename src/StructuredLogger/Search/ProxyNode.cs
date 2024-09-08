@@ -265,7 +265,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private object GetNodeDifferentiator(BaseNode node)
+        private static object GetNodeDifferentiator(BaseNode node)
         {
             if (node is Project project)
             {

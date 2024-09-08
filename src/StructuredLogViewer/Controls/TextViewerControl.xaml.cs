@@ -89,7 +89,7 @@ namespace StructuredLogViewer.Controls
             }
         }
 
-        private void OnSettingData(object sender, DataObjectSettingDataEventArgs e)
+        private static void OnSettingData(object sender, DataObjectSettingDataEventArgs e)
         {
             // disable copying HTML
             if (e.Format == DataFormats.Html || e.Format == typeof(string).FullName)
@@ -228,7 +228,7 @@ namespace StructuredLogViewer.Controls
             }
         }
 
-        private bool TryParseCondition(string text, out string newText)
+        private static bool TryParseCondition(string text, out string newText)
         {
             Match matches = Strings.TargetSkippedFalseConditionRegex.Match(text);
             if (!matches.Success)

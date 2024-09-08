@@ -105,7 +105,7 @@ namespace StructuredLogViewer.Avalonia.Controls
             Hide();
         }
 
-        private void TabControlOnPointerPressed(object sender, PointerPressedEventArgs e)
+        private static void TabControlOnPointerPressed(object sender, PointerPressedEventArgs e)
         {
             if (e.Handled)
                 return;

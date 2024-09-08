@@ -126,7 +126,7 @@ namespace StructuredLogViewer
             return results;
         }
 
-        private void CollectStrings(BaseNode root, StringCache strings)
+        private static void CollectStrings(BaseNode root, StringCache strings)
         {
             switch (root)
             {

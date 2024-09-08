@@ -44,7 +44,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             string projectFilePath = Path.GetFileName(projectFile);
 
             // Check to see if the there are any specific target names to be built.
-            // If targetNames is null or empty then we will be building with the 
+            // If targetNames is null or empty then we will be building with the
             // default targets.
             if (!string.IsNullOrEmpty(targetNames))
             {
@@ -147,7 +147,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private string GetTargetFinishedMessage(string projectFile, string targetName, bool succeeded)
+        private static string GetTargetFinishedMessage(string projectFile, string targetName, bool succeeded)
         {
             return FormatResourceStringIgnoreCodeAndKeyword(
                 succeeded ?
@@ -183,12 +183,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             };
         }
 
-        private string GetTaskStartedMessage(string taskName)
+        private static string GetTaskStartedMessage(string taskName)
         {
             return FormatResourceStringIgnoreCodeAndKeyword("Task \"{0}\"", taskName);
         }
 
-        private string GetTaskFinishedMessage(bool succeeded, string taskName)
+        private static string GetTaskFinishedMessage(bool succeeded, string taskName)
         {
             return FormatResourceStringIgnoreCodeAndKeyword(succeeded ? "Done executing task \"{0}\"." : "Done executing task \"{0}\" -- FAILED.", taskName);
         }

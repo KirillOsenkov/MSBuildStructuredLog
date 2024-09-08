@@ -94,10 +94,10 @@ namespace StructuredLogViewer.Controls
 
         public BuildControl GetBuildControl()
         {
-            return FindParentElement(this, e => e is BuildControl) as BuildControl;
+            return NodeHyperlinkControl.FindParentElement(this, e => e is BuildControl) as BuildControl;
         }
 
-        public DependencyObject FindParentElement(FrameworkElement element, Func<DependencyObject, bool> predicate)
+        public static DependencyObject FindParentElement(FrameworkElement element, Func<DependencyObject, bool> predicate)
         {
             DependencyObject current = element;
             while (current != null)

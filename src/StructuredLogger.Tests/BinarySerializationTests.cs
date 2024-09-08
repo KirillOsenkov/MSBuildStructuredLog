@@ -102,7 +102,7 @@ namespace StructuredLogger.Tests
                 .ToArray();
         }
 
-        private string GetMessageType(string message)
+        private static string GetMessageType(string message)
         {
             if (message == null || message.Length < 50)
             {

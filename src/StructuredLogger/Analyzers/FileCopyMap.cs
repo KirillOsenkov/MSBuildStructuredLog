@@ -246,7 +246,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return false;
         }
 
-        private void TryExplainSingleFileCopy(Project project, string filePath, IList<SearchResult> resultSet)
+        private static void TryExplainSingleFileCopy(Project project, string filePath, IList<SearchResult> resultSet)
         {
             var fileName = Path.GetFileName(filePath);
 

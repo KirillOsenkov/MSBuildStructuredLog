@@ -18,7 +18,7 @@ namespace StructuredLogger.Tests
             Process(strings);
         }
 
-        private void Process(IReadOnlyList<string> array)
+        private static void Process(IReadOnlyList<string> array)
         {
             var dic = new Dictionary<char, Dictionary<char, int>>();
             int maxWordLength = 0;

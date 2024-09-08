@@ -334,7 +334,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 BinaryLogRecordKind.BuildCheckAcquisition => ReadBuildCheckAcquisitionEventArgs(),
                 BinaryLogRecordKind.BuildSubmissionStarted => ReadBuildSubmissionStartedEventArgs(),
                 _ => null,
-                
+
             };
 
         private void SkipBytes(int count)
@@ -1601,7 +1601,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return result;
         }
 
-        private void SetCommonFields(BuildEventArgs buildEventArgs, BuildEventArgsFields fields)
+        private static void SetCommonFields(BuildEventArgs buildEventArgs, BuildEventArgsFields fields)
         {
             buildEventArgs.BuildEventContext = fields.BuildEventContext;
 

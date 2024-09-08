@@ -232,7 +232,7 @@ namespace StructuredLogViewer.Avalonia.Controls
                 var text =
 @"This log contains the full text of projects and imported files used during the build.
 You can use the 'Files' tab in the bottom left to view these files and the 'Find in Files' tab for full-text search.
-For many nodes in the tree (Targets, Tasks, Errors, Projects, etc) pressing SPACE or ENTER or double-clicking 
+For many nodes in the tree (Targets, Tasks, Errors, Projects, etc) pressing SPACE or ENTER or double-clicking
 on the node will navigate to the corresponding source code associated with the node.
 
 More functionality is available from the right-click context menu for each node.
@@ -580,7 +580,7 @@ Recent:
             filesTree.ContextMenu = sharedTreeContextMenu;
         }
 
-        private void CompressTree(Folder parent)
+        private static void CompressTree(Folder parent)
         {
             if (parent.Children.Count == 1 && parent.Children[0] is Folder subfolder)
             {
@@ -818,7 +818,7 @@ Recent:
             breadCrumb.SelectedIndex = -1;
         }
 
-        private IEnumerable<object> IntersperseWithSeparators(IEnumerable<object> list)
+        private static IEnumerable<object> IntersperseWithSeparators(IEnumerable<object> list)
         {
             bool first = true;
             foreach (var item in list)
@@ -868,7 +868,7 @@ Recent:
         public void SelectItem(BaseNode item)
         {
             var parentChain = item.GetParentChainExcludingThis();
-            
+
             foreach (var node in parentChain)
             {
                 if (node is TreeNode treeNode)
@@ -1093,7 +1093,7 @@ Recent:
             }
         }
 
-        private void MoveSelectionOut(BaseNode node)
+        private static void MoveSelectionOut(BaseNode node)
         {
             var parent = node.Parent;
             if (parent == null)

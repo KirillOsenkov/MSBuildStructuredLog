@@ -361,7 +361,7 @@ namespace StructuredLogViewer.Controls
                 var text =
 @"This log contains the full text of projects and imported files used during the build.
 You can use the 'Files' tab in the bottom left to view these files and the 'Find in Files' tab for full-text search.
-For many nodes in the tree (Targets, Tasks, Errors, Projects, etc) pressing SPACE or ENTER or double-clicking 
+For many nodes in the tree (Targets, Tasks, Errors, Projects, etc) pressing SPACE or ENTER or double-clicking
 on the node will navigate to the corresponding source code associated with the node.
 
 More functionality is available from the right-click context menu for each node.
@@ -519,7 +519,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             }
         }
 
-        private bool UpdateFileVisibility(IEnumerable<NamedNode> items, string text)
+        private static bool UpdateFileVisibility(IEnumerable<NamedNode> items, string text)
         {
             bool visible = false;
 
@@ -764,7 +764,7 @@ Recent (");
             watermark.Inlines.Add(new LineBreak());
             watermark.Inlines.Add(new LineBreak());
 
-            AddTextWithHyperlinks(watermarkText2, watermark.Inlines, searchLogControl);
+            BuildControl.AddTextWithHyperlinks(watermarkText2, watermark.Inlines, searchLogControl);
 
             foreach (var example in searchExamples)
             {
@@ -786,7 +786,7 @@ Recent (");
                 "to a specific node type.";
 
             var watermark = new TextBlock();
-            AddTextWithHyperlinks(watermarkText1, watermark.Inlines, propertiesAndItemsControl);
+            BuildControl.AddTextWithHyperlinks(watermarkText1, watermark.Inlines, propertiesAndItemsControl);
 
             watermark.Inlines.Add(new LineBreak());
             watermark.Inlines.Add(new LineBreak());
@@ -811,7 +811,7 @@ Recent (");
             propertiesAndItemsControl.WatermarkContent = watermark;
         }
 
-        public void AddTextWithHyperlinks(string text, InlineCollection result, SearchAndResultsControl searchControl)
+        public static void AddTextWithHyperlinks(string text, InlineCollection result, SearchAndResultsControl searchControl)
         {
             const string openParen = "[[";
             const string closeParen = "]]";
@@ -871,7 +871,7 @@ Recent (");
             }
         }
 
-        private string GetTaskTargetFramework(Task task)
+        private static string GetTaskTargetFramework(Task task)
         {
             try
             {
@@ -915,7 +915,7 @@ Recent (");
             copyNameItem.Visibility = nameValueVisibility;
             copyValueItem.Visibility = nameValueVisibility;
             viewSourceItem.Visibility = CanView(node) ? Visibility.Visible : Visibility.Collapsed;
-            viewFullTextItem.Visibility = HasFullText(node) ? Visibility.Visible : Visibility.Collapsed;
+            viewFullTextItem.Visibility = BuildControl.HasFullText(node) ? Visibility.Visible : Visibility.Collapsed;
             openFileItem.Visibility = CanOpenFile(node) ? Visibility.Visible : Visibility.Collapsed;
             copyFilePathItem.Visibility = node is Import || (node is IHasSourceFile file && !string.IsNullOrEmpty(file.SourceFilePath))
                 ? Visibility.Visible
@@ -1460,7 +1460,7 @@ Recent (");
             breadCrumb.SelectedIndex = -1;
         }
 
-        private IEnumerable<object> IntersperseWithSeparators(IEnumerable<object> list)
+        private static IEnumerable<object> IntersperseWithSeparators(IEnumerable<object> list)
         {
             bool first = true;
             foreach (var item in list)
@@ -1754,7 +1754,7 @@ Recent (");
             }
         }
 
-        private string GetText(BaseNode node)
+        private static string GetText(BaseNode node)
         {
             return node.Title ?? node.ToString();
         }
@@ -2181,7 +2181,7 @@ Recent (");
             }
         }
 
-        private void MoveSelectionOut(BaseNode node)
+        private static void MoveSelectionOut(BaseNode node)
         {
             var parent = node.Parent;
             if (parent == null)
@@ -2298,7 +2298,7 @@ Recent (");
                 || (node is IHasSourceFile ihsf && ihsf.SourceFilePath != null && sourceFileResolver.HasFile(ihsf.SourceFilePath));
         }
 
-        private bool HasFullText(BaseNode node)
+        public static bool HasFullText(BaseNode node)
         {
             return (node is NameValueNode nvn && nvn.IsValueShortened)
                 || (node is NamedNode nn && nn.IsNameShortened)
@@ -2776,7 +2776,7 @@ Recent (");
             return canvas;
         }
 
-        private void DisplayTreeStats(Folder statsRoot, BuildStatistics treeStats, BinlogStats recordStats)
+        private static void DisplayTreeStats(Folder statsRoot, BuildStatistics treeStats, BinlogStats recordStats)
         {
             var buildMessageNode = statsRoot.FindChild<Folder>(n => n.Name.StartsWith("BuildMessage", StringComparison.Ordinal));
             var taskInputsNode = buildMessageNode.FindChild<Folder>(n => n.Name.StartsWith("Task Input", StringComparison.Ordinal));
@@ -2832,7 +2832,7 @@ Recent (");
             }
         }
 
-        private Folder DisplayRecordStats(BinlogStats.RecordsByType stats, TreeNode parent, string titlePrefix = "")
+        private static Folder DisplayRecordStats(BinlogStats.RecordsByType stats, TreeNode parent, string titlePrefix = "")
         {
             var node = parent.GetOrCreateNodeWithName<Folder>(titlePrefix + stats.ToString());
 

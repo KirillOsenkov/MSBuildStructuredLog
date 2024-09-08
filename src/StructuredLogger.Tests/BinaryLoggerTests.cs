@@ -62,7 +62,7 @@ namespace Microsoft.Build.UnitTests
         {
             this.output = output;
         }
-        private bool BuildProject(string projectFile, string binLog, bool useInMemoryProject)
+        private static bool BuildProject(string projectFile, string binLog, bool useInMemoryProject)
         {
             File.Delete(binLog);
             var binaryLogger = new BinaryLogger { Parameters = binLog };

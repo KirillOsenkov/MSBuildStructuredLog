@@ -164,7 +164,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             cppAnalyzer.AnalyzeEnvironment(folder);
         }
 
-        private void AnalyzeEvaluation(NamedNode folder)
+        private static void AnalyzeEvaluation(NamedNode folder)
         {
             var evaluations = folder.Children.OfType<ProjectEvaluation>().ToArray();
             if (!evaluations.Any())
@@ -375,7 +375,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             CollapseMessagesToSubfolder(task);
         }
 
-        private void CollapseMessagesToSubfolder(Task task)
+        private static void CollapseMessagesToSubfolder(Task task)
         {
             var messages = task.Children.OfType<Message>().ToArray();
             if (messages.Length > 10)
@@ -478,7 +478,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return list;
         }
 
-        private void Visit(Project project, List<Project> list, HashSet<string> visited)
+        private static void Visit(Project project, List<Project> list, HashSet<string> visited)
         {
             if (visited.Add(project.ProjectFile))
             {
