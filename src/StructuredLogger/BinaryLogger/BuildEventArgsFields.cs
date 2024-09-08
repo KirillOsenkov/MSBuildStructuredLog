@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.Build.Framework;
+﻿using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Logging
 {

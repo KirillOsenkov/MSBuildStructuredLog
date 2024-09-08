@@ -1,7 +1,4 @@
-﻿using System.Diagnostics;
-using System.IO;
-
-namespace StructuredLogger.Tests
+﻿namespace StructuredLogger.Tests
 {
     public class Differ
     {

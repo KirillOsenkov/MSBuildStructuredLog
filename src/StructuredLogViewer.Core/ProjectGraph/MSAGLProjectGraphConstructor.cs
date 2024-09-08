@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.IO;
-using System.Linq;
+﻿using System.Collections.Immutable;
 using System.Text;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Msagl.Drawing;

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Microsoft.Build.Logging.StructuredLogger
+﻿namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class TimedNode : NamedNode
     {
@@ -18,7 +16,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public int NodeId { get; set; }
 
         /// <summary>
-        /// Unique index of the node in the build tree, can be used as a 
+        /// Unique index of the node in the build tree, can be used as a
         /// "URL" to node
         /// </summary>
         public int Index { get; set; }

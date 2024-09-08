@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using ResourcesDictionary = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, string>>;
+﻿using ResourcesDictionary = System.Collections.Generic.Dictionary<string, System.Collections.Generic.Dictionary<string, string>>;
 #if NET8_0_OR_GREATER
 using System.Text.Json;
 using System.Text.Json.Serialization;

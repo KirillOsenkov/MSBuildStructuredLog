@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Microsoft.Build.Framework
+﻿namespace Microsoft.Build.Framework
 {
     /// <summary>
     /// Arguments for the response file used event

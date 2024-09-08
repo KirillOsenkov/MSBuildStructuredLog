@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
-
-namespace StructuredLogViewer.Core
+﻿namespace StructuredLogViewer.Core
 {
     public class SingleGlobalInstance : IDisposable
     {
@@ -27,7 +22,7 @@ namespace StructuredLogViewer.Core
                 HasHandle = true;
             }
         }
- 
+
         public void Dispose()
         {
             if (mutex != null)
@@ -36,7 +31,7 @@ namespace StructuredLogViewer.Core
                 {
                     mutex.ReleaseMutex();
                 }
- 
+
                 mutex.Dispose();
                 mutex = null;
             }

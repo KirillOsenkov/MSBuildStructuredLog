@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System.Collections;
 using System.Diagnostics;
-using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Logging.StructuredLogger

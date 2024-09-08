@@ -2,12 +2,9 @@
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
-using System;
 using System.Collections;
-using System.Threading;
 using Avalonia;
 using Avalonia.Controls.Presenters;
-using System.Linq;
 
 namespace StructuredLogViewer.Avalonia.Controls
 {
@@ -73,7 +70,7 @@ namespace StructuredLogViewer.Avalonia.Controls
         {
             typingConcurrentOperation.TriggerSearch(text, maxResults);
         }
-        
+
         private void searchTextBox_TextChanged(object sender, AvaloniaPropertyChangedEventArgs e)
         {
             if (e.Property != TextBox.TextProperty) return;
@@ -86,7 +83,7 @@ namespace StructuredLogViewer.Avalonia.Controls
                 typingConcurrentOperation.Reset();
 
                 // only clear the contents when we have a search function defined.
-                // if the text input is handled externally, don't mess with the 
+                // if the text input is handled externally, don't mess with the
                 // content
                 if (ExecuteSearch != null)
                 {

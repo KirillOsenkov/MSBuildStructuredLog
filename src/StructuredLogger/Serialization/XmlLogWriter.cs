@@ -1,6 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Xml;
+﻿using System.Xml;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {

@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-using System.IO;
-using System.Reflection;
+﻿using System.Reflection;
 
 namespace StructuredLogger.Tests
 {

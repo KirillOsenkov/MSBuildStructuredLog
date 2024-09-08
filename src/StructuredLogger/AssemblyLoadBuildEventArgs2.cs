@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Shared;
+﻿
 
 // TODO: remove whole file once AssemblyLoadBuildEventArgs are imported via Microsoft.Build.Framework package
 

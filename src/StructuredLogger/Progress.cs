@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading;
-
-namespace Microsoft.Build.Logging.StructuredLogger
+﻿namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class Progress : IProgress<ProgressUpdate>
     {
@@ -14,7 +11,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Report(new ProgressUpdate { Ratio = ratio });
         }
 
-        public virtual void Report(ProgressUpdate progressUpdate) 
+        public virtual void Report(ProgressUpdate progressUpdate)
         {
             Updated?.Invoke(progressUpdate);
         }

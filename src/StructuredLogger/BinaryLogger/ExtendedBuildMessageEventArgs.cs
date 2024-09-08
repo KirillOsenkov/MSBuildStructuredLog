@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Microsoft.Build.Framework;
+﻿namespace Microsoft.Build.Framework;
 
 /// <summary>
 /// Generic custom build events including extended data for event enriching.

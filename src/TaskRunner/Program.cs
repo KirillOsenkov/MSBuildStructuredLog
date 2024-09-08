@@ -1,8 +1,5 @@
-﻿using System;
-using System.Diagnostics;
-using System.IO;
+﻿using System.Diagnostics;
 using Microsoft.Build.Logging.StructuredLogger;
-using StructuredLogViewer;
 using Task = Microsoft.Build.Logging.StructuredLogger.Task;
 
 namespace TaskRunner

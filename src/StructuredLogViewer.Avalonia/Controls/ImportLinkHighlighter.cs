@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives.PopupPositioning;
 using Avalonia.Input;
@@ -11,7 +8,6 @@ using AvaloniaEdit;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.Rendering;
 using Microsoft.Build.Logging.StructuredLogger;
-using FontStyle = Avalonia.Media.FontStyle;
 
 namespace StructuredLogViewer.Avalonia.Controls
 {

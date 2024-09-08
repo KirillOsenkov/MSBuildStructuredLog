@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.IO;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Microsoft.Build.Logging.StructuredLogger
+﻿namespace Microsoft.Build.Logging.StructuredLogger
 {
     public readonly struct CompilationWrites
     {

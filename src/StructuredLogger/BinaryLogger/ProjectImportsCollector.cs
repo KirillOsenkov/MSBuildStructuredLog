@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
+﻿using System.Diagnostics;
 using System.IO.Compression;
 using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Build.Logging.StructuredLogger;
 using Task = System.Threading.Tasks.Task;
 

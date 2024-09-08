@@ -1,8 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Threading;
-using Microsoft.Build.Logging;
-using Microsoft.Build.Logging.StructuredLogger;
+﻿using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Build.SensitiveDataDetector;
 
 namespace StructuredLogger.Utils
@@ -95,7 +91,7 @@ namespace StructuredLogger.Utils
                 // we run the fwd compat mode always.
                 AllowForwardCompatibility = true,
             };
-            
+
             Microsoft.Build.Logging.StructuredLogger.BinaryLogger outputBinlog = new()
             {
                 Parameters = $"LogFile={outputFileName};OmitInitialInfo",

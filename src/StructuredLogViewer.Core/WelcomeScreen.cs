@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Windows.Input;
+﻿using System.Windows.Input;
 using StructuredLogViewer;
 
 namespace Microsoft.Build.Logging.StructuredLogger

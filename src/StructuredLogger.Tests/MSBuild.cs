@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.IO;
+﻿using System.Runtime.CompilerServices;
 using System.Xml;
 using Microsoft.Build.Evaluation;
 using Microsoft.Build.Execution;

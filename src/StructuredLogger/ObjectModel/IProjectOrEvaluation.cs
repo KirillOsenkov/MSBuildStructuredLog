@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Microsoft.Build.Logging.StructuredLogger
+﻿namespace Microsoft.Build.Logging.StructuredLogger
 {
     public interface IProjectOrEvaluation
     {

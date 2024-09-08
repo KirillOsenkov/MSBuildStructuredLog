@@ -1,4 +1,3 @@
-using System;
 using System.Globalization;
 using Avalonia.Data.Converters;
 
@@ -8,7 +7,7 @@ namespace StructuredLogViewer.Avalonia.Controls
     {
         private static readonly object boxedLowRelevance = 0.25;
         private static readonly object boxedHighRelevance = 1.0;
-        
+
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             if (value is bool isLowRelevance)
@@ -17,7 +16,7 @@ namespace StructuredLogViewer.Avalonia.Controls
             return boxedHighRelevance;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) 
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
             => throw new NotSupportedException();
     }
 }

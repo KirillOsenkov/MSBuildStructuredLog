@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -51,7 +47,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         const string regexBTPlus = @"^time\(.*(c1\.dll|c1xx\.dll|c2\.dll)\)=(?'msTime'([0-9]*\.[0-9]+|[0-9]+))s \< (?'startTime'[\d]*) - (?'endTime'[\d]*) \>\s*(BB)?\s*\[(?'filename'[^\]]*)\]$";
         readonly Regex BTPlus = new Regex(regexBTPlus, RegexOptions.Multiline);
 
-        // Lib: Final Total time = 0.00804s < 5881693617253 - 5881693697673 > PB: 143409152 [D:\test\ConsoleApplication2\x64\Debug\ConsoleApplication2.lib] 
+        // Lib: Final Total time = 0.00804s < 5881693617253 - 5881693697673 > PB: 143409152 [D:\test\ConsoleApplication2\x64\Debug\ConsoleApplication2.lib]
         // note: there is trailing white space from the tool
         const string regexLibFinalTime = @"^Lib: Final Total time = (?'msTime'([0-9]*\.[0-9]+|[0-9]+))s \< (?'startTime'[\d]*) - (?'endTime'[\d]*) \>\s*PB:\s*[\d]* \[(?'filename'[^\]]*)\]\s*$";
         readonly Regex libFinalTime = new Regex(regexLibFinalTime, RegexOptions.Multiline);

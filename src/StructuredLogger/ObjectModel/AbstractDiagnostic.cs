@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Microsoft.Build.Logging.StructuredLogger
+﻿namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class AbstractDiagnostic : TextNode, IHasSourceFile
     {

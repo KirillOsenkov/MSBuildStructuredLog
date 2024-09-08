@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.Build.Framework;
+﻿using Microsoft.Build.Framework;
 
 namespace StructuredLogger.BinaryLogger
 {

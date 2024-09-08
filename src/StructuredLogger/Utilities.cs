@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Concurrent;
 using TPLTask = System.Threading.Tasks.Task;
 
 namespace Microsoft.Build.Logging.StructuredLogger

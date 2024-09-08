@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.Build.Logging.StructuredLogger;
+﻿using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Language.Xml;
 
 namespace StructuredLogViewer

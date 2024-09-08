@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
+﻿using System.Collections.Immutable;
 using System.Text;
-using System.Threading;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -16,8 +10,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         public string ProjectFile { get; set; }
 
-        public string ProjectFileExtension => ProjectFile != null 
-            ? Path.GetExtension(ProjectFile).ToLowerInvariant() 
+        public string ProjectFileExtension => ProjectFile != null
+            ? Path.GetExtension(ProjectFile).ToLowerInvariant()
             : "";
 
         public string ProjectDirectory => !string.IsNullOrEmpty(ProjectFile)

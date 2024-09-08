@@ -1,6 +1,4 @@
-﻿using System.Windows.Controls;
-
-namespace StructuredLogViewer.Controls
+﻿namespace StructuredLogViewer.Controls
 {
     public class SourceFileTab
     {

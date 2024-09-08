@@ -1,4 +1,3 @@
-using System;
 using Microsoft.Build.Logging.StructuredLogger;
 using StructuredLogViewer.Controls;
 

@@ -1,14 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Build.Logging.StructuredLogger;
-using Microsoft.Build.Logging;
-using StructuredLogger.Utils;
+﻿using Microsoft.Build.Logging.StructuredLogger;
 
 namespace BinlogTool
 {

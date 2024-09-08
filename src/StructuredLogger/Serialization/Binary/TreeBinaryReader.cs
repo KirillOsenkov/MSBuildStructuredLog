@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
+﻿using System.IO.Compression;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -29,7 +26,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         private void Initialize(Stream stream, Version version = null)
-        { 
+        {
             this.fileStream = stream;
             if (fileStream.Length < 8)
             {

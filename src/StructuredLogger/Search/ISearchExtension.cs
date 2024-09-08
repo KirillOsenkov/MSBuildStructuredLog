@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using StructuredLogViewer;
+﻿using StructuredLogViewer;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {

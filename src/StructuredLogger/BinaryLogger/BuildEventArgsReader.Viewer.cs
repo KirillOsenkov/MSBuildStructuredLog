@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Microsoft.Build.Collections;
+﻿using Microsoft.Build.Collections;
 using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -44,7 +40,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             string projectFilePath = Path.GetFileName(projectFile);
 
             // Check to see if the there are any specific target names to be built.
-            // If targetNames is null or empty then we will be building with the 
+            // If targetNames is null or empty then we will be building with the
             // default targets.
             if (!string.IsNullOrEmpty(targetNames))
             {

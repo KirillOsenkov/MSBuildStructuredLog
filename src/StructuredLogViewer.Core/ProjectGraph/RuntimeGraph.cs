@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
 using System.Collections.Immutable;
-using System.Diagnostics;
-using System.Linq;
 using System.Text;
 using Microsoft.Build.Logging.StructuredLogger;
 

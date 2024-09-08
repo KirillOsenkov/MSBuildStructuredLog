@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
@@ -1100,7 +1098,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         /// <summary>
-        /// Handler for a TaskCommandLine log event. Sets the command line arguments on the appropriate task. 
+        /// Handler for a TaskCommandLine log event. Sets the command line arguments on the appropriate task.
         /// </summary>
         /// <param name="args">The <see cref="TaskCommandLineEventArgs"/> instance containing the event data.</param>
         public bool AddCommandLine(TaskCommandLineEventArgs args)
