@@ -102,7 +102,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public void WriteByteArray(byte[] bytes)
         {
-            bytes = bytes ?? Array.Empty<byte>();
+            bytes ??= [];
             treeNodesStreamBinaryWriter.Write(bytes.Length);
             if (bytes.Length > 0)
             {

@@ -49,7 +49,7 @@ namespace StructuredLogViewer
 
         public static IEnumerable<string> GetRecentMSBuildLocations(IEnumerable<string>? extraLocations = null)
         {
-            extraLocations = extraLocations ?? Enumerable.Empty<string>();
+            extraLocations ??= [];
 
             if (cachedRecentMSBuildLocations == null)
             {

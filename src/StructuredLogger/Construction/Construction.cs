@@ -199,7 +199,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     // only parent the project if it's not already in the tree
                     if (project.Parent == null)
                     {
-                        parentNode = parentNode ?? parentProject;
+                        parentNode ??= parentProject;
 
                         if (parentNode != null)
                         {
@@ -867,7 +867,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 node.AddChild(metadataFolder);
             }
-        }   
+        }
 
         private void HandleException(Exception ex)
         {

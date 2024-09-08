@@ -394,7 +394,7 @@ namespace StructuredLogViewer
 
         private void UpdateRecentItemsMenu(WelcomeScreen welcomeScreen = null)
         {
-            welcomeScreen = welcomeScreen ?? new WelcomeScreen();
+            welcomeScreen ??= new WelcomeScreen();
 
             RecentItemsSeparator.Visibility = Visibility.Collapsed;
             RecentProjectsMenu.Items.Clear();
