@@ -6,6 +6,7 @@ using System.Reflection;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Logging;
 using Microsoft.Build.Logging.StructuredLogger;
+using Task = Microsoft.Build.Logging.StructuredLogger.Task;
 
 namespace TaskRunner
 {

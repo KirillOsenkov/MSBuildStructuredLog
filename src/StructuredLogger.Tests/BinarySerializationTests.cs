@@ -7,6 +7,7 @@ using System.Text;
 using Microsoft.Build.Logging.StructuredLogger;
 using Xunit;
 using Xunit.Abstractions;
+using Task = Microsoft.Build.Logging.StructuredLogger.Task;
 
 namespace StructuredLogger.Tests
 {

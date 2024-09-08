@@ -7,6 +7,7 @@ using Avalonia.Controls.Shapes;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
 using Microsoft.Build.Logging.StructuredLogger;
+using Task = Microsoft.Build.Logging.StructuredLogger.Task;
 
 namespace StructuredLogViewer.Avalonia.Controls
 {

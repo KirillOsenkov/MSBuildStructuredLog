@@ -7,6 +7,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
+using Task = Microsoft.Build.Logging.StructuredLogger.Task;
 
 namespace StructuredLogViewer.Controls
 {

@@ -16,6 +16,7 @@ using BinaryLogger = Microsoft.Build.Logging.StructuredLogger.BinaryLogger;
 using BinaryLogReaderErrorEventArgs = Microsoft.Build.Logging.StructuredLogger.BinaryLogReaderErrorEventArgs;
 using BinaryLogRecordKind = Microsoft.Build.Logging.StructuredLogger.BinaryLogRecordKind;
 using ReaderErrorType = Microsoft.Build.Logging.StructuredLogger.ReaderErrorType;
+using Task = Microsoft.Build.Logging.StructuredLogger.Task;
 
 namespace Microsoft.Build.UnitTests
 {

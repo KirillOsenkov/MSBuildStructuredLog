@@ -17,6 +17,7 @@ using Avalonia.Styling;
 using Avalonia.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Language.Xml;
+using Task = Microsoft.Build.Logging.StructuredLogger.Task;
 
 namespace StructuredLogViewer.Avalonia.Controls
 {
@@ -232,7 +233,7 @@ namespace StructuredLogViewer.Avalonia.Controls
                 var text =
 @"This log contains the full text of projects and imported files used during the build.
 You can use the 'Files' tab in the bottom left to view these files and the 'Find in Files' tab for full-text search.
-For many nodes in the tree (Targets, Tasks, Errors, Projects, etc) pressing SPACE or ENTER or double-clicking 
+For many nodes in the tree (Targets, Tasks, Errors, Projects, etc) pressing SPACE or ENTER or double-clicking
 on the node will navigate to the corresponding source code associated with the node.
 
 More functionality is available from the right-click context menu for each node.
@@ -868,7 +869,7 @@ Recent:
         public void SelectItem(BaseNode item)
         {
             var parentChain = item.GetParentChainExcludingThis();
-            
+
             foreach (var node in parentChain)
             {
                 if (node is TreeNode treeNode)
