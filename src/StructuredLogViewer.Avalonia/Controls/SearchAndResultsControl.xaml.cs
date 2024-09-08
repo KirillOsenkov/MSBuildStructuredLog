@@ -13,7 +13,7 @@ namespace StructuredLogViewer.Avalonia.Controls
 {
     public partial class SearchAndResultsControl : UserControl
     {
-        private readonly TypingConcurrentOperation typingConcurrentOperation = new TypingConcurrentOperation();
+        private readonly TypingConcurrentOperation typingConcurrentOperation = new();
         internal TextBox searchTextBox;
         private TreeView resultsList;
         private ContentPresenter watermark;
@@ -73,7 +73,7 @@ namespace StructuredLogViewer.Avalonia.Controls
         {
             typingConcurrentOperation.TriggerSearch(text, maxResults);
         }
-        
+
         private void searchTextBox_TextChanged(object sender, AvaloniaPropertyChangedEventArgs e)
         {
             if (e.Property != TextBox.TextProperty) return;
@@ -86,7 +86,7 @@ namespace StructuredLogViewer.Avalonia.Controls
                 typingConcurrentOperation.Reset();
 
                 // only clear the contents when we have a search function defined.
-                // if the text input is handled externally, don't mess with the 
+                // if the text input is handled externally, don't mess with the
                 // content
                 if (ExecuteSearch != null)
                 {

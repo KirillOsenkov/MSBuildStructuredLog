@@ -6,7 +6,7 @@ namespace StructuredLogViewer.Avalonia.Controls
 {
     public class StringEmptinessToVisibilityConverter : IValueConverter
     {
-        public static StringEmptinessToVisibilityConverter Instance { get; } = new StringEmptinessToVisibilityConverter();
+        public static StringEmptinessToVisibilityConverter Instance { get; } = new();
 
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {

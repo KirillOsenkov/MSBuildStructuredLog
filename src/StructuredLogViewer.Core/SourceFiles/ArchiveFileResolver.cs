@@ -6,7 +6,7 @@ namespace StructuredLogViewer
 {
     public class ArchiveFileResolver : ISourceFileResolver
     {
-        private readonly Dictionary<string, SourceText> fileContents = new Dictionary<string, SourceText>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, SourceText> fileContents = new(StringComparer.OrdinalIgnoreCase);
 
         public Dictionary<string, SourceText> Files => fileContents;
 

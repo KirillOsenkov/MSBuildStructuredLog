@@ -7,7 +7,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class Strings
     {
-        private static readonly object locker = new object();
+        private static readonly object locker = new();
 
         public static StringsSet ResourceSet { get; private set; }
 

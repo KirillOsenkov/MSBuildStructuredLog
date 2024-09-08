@@ -47,7 +47,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
                 else if (text.StartsWith("CompilerServer:", StringComparison.Ordinal))
                 {
-                    // The C# / VB compiler server emits diagnostic messages from the main build task. These 
+                    // The C# / VB compiler server emits diagnostic messages from the main build task. These
                     // are not related to the analyzer performance summary and should not be included in this view
                     continue;
                 }
@@ -106,7 +106,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             public readonly string Name;
             public TimeSpan TotalTime;
-            public readonly Dictionary<string, TimeSpan> AnalyzerTimes = new Dictionary<string, TimeSpan>();
+            public readonly Dictionary<string, TimeSpan> AnalyzerTimes = new();
 
             public AnalyzerAssemblyData(string name, TimeSpan totalTime)
             {

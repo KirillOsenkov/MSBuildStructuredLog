@@ -47,7 +47,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
     public class NuGetSearch : ISearchExtension
     {
-        private Regex projectFilePathRegex = new Regex(@"\""projectPath\""\: \""(?<Path>[^\""]+)\"",", RegexOptions.Compiled);
+        private Regex projectFilePathRegex = new(@"\""projectPath\""\: \""(?<Path>[^\""]+)\"",", RegexOptions.Compiled);
         private List<AssetsFile> assetsFiles;
 
         public Build Build { get; }

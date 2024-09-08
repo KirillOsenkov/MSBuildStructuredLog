@@ -7,8 +7,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
     {
         public int Tasks;
 
-        public Dictionary<string, List<string>> TaskParameterMessagesByTask = new Dictionary<string, List<string>>();
-        public Dictionary<string, List<string>> OutputItemMessagesByTask = new Dictionary<string, List<string>>();
+        public Dictionary<string, List<string>> TaskParameterMessagesByTask = new();
+        public Dictionary<string, List<string>> OutputItemMessagesByTask = new();
 
         public int TimedNodeCount { get; set; }
 

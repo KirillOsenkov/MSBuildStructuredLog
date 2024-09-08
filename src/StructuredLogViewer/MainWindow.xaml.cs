@@ -969,7 +969,7 @@ Use project(.) or project(.csproj) to search all projects (slow)." };
             }
         }
 
-        private object inProgressOperationLock = new object();
+        private object inProgressOperationLock = new();
         public System.Threading.Tasks.Task InProgressTask = System.Threading.Tasks.Task.CompletedTask;
 
         private void Window_KeyDown(object sender, KeyEventArgs e)

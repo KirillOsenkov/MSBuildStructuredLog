@@ -120,8 +120,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         class Work
         {
-            public readonly List<BaseNode> Nodes = new List<BaseNode>(BufferSize);
-            public readonly List<NodeEntry> Entries = new List<NodeEntry>(BufferSize);
+            public readonly List<BaseNode> Nodes = new(BufferSize);
+            public readonly List<NodeEntry> Entries = new(BufferSize);
             public SearchIndex SearchIndex;
 
             private TPLTask task;

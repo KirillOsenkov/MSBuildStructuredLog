@@ -124,7 +124,7 @@ namespace StructuredLogViewer.Controls
 
         private readonly ScaleTransform scaleTransform;
 
-        private readonly Size textBlockSize = new Size(10000, 10000);
+        private readonly Size textBlockSize = new(10000, 10000);
 
         private Typeface typeface;
 
@@ -138,7 +138,7 @@ namespace StructuredLogViewer.Controls
         // Build end time.
         private long GlobalEndTime;
 
-        private List<List<Block>> blocksCollection = new List<List<Block>>();
+        private List<List<Block>> blocksCollection = [];
 
         private bool _showEvaluation = true;
         private bool _showProject = true;
@@ -616,7 +616,7 @@ namespace StructuredLogViewer.Controls
         private FastCanvas HeatGraph;
 
         /// <summary>
-        /// Draw Graph 
+        /// Draw Graph
         /// </summary>
         private void Draw()
         {
@@ -672,8 +672,8 @@ namespace StructuredLogViewer.Controls
             internal static HeatMapNode HeatGraphNodeStub = new();
         }
 
-        static Block heatMapBlockNormal = new Block() { HasError = false, Node = HeatMapNode.HeatGraphNodeStub };
-        static Block heatMapBlockError = new Block() { HasError = true, Node = HeatMapNode.HeatGraphNodeStub };
+        static Block heatMapBlockNormal = new() { HasError = false, Node = HeatMapNode.HeatGraphNodeStub };
+        static Block heatMapBlockError = new(hasError: true, node: HeatMapNode.HeatGraphNodeStub);
 
         private FastCanvas CreateActivityBarGraph()
         {
@@ -1032,7 +1032,7 @@ namespace StructuredLogViewer.Controls
         }
 
         private TextField activeTextBlock = null;
-        private Border highlight = new Border()
+        private Border highlight = new()
         {
             BorderBrush = Brushes.DeepSkyBlue,
             BorderThickness = new Thickness(1)

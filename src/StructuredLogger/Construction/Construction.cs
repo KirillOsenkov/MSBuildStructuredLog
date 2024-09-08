@@ -18,12 +18,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
     {
         public Build Build { get; private set; }
 
-        private readonly ConcurrentDictionary<int, Project> _projectIdToProjectMap = new ConcurrentDictionary<int, Project>();
+        private readonly ConcurrentDictionary<int, Project> _projectIdToProjectMap = new();
 
-        private readonly Dictionary<string, string> _taskToAssemblyMap =
-            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, string> _taskToAssemblyMap = new(StringComparer.OrdinalIgnoreCase);
 
-        private readonly object syncLock = new object();
+        private readonly object syncLock = new();
 
         private readonly MessageProcessor messageProcessor;
         private readonly StringCache stringTable;
@@ -95,7 +94,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private string SoftIntern(string text) => stringTable.SoftIntern(text);
 
-        private readonly HashSet<string> environmentVariablesUsed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> environmentVariablesUsed = new(StringComparer.OrdinalIgnoreCase);
 
         public void AddEnvironmentVariable(string environmentVariableName, string environmentVariableValue)
         {
@@ -867,7 +866,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 node.AddChild(metadataFolder);
             }
-        }   
+        }
 
         private void HandleException(Exception ex)
         {
@@ -1148,7 +1147,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 project as IProjectOrEvaluation);
         }
 
-        private static HashSet<string> ignoreAssemblyForTasks = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        private static HashSet<string> ignoreAssemblyForTasks = new(StringComparer.OrdinalIgnoreCase)
         {
             "AssignTargetPath",
             "CallTarget",

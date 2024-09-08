@@ -56,7 +56,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return list;
         }
 
-        protected static FileCopyOperation ParseCopyingFileFrom(Match match, bool copied = true) => new FileCopyOperation
+        protected static FileCopyOperation ParseCopyingFileFrom(Match match, bool copied = true) => new()
         {
             Source = match.Groups["From"].Value,
             Destination = match.Groups["To"].Value,

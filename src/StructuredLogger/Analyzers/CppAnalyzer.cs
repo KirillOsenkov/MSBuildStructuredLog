@@ -40,21 +40,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
         // Task 'CodeStore.idl' took 2244ms.
         // Cleanup phase took 68ms.
         const string regexStartupPhase = @"^.*\.exe will run on (?'activeFiles'[0-9]*) out of (?'totalFiles'[0-9]*) file\(s\) in [0-9]* batches\.\s*Startup phase took (?'msTime'[0-9]*.[0-9]*)ms.$";
-        readonly Regex startupPhase = new Regex(regexStartupPhase, RegexOptions.Multiline);
+        readonly Regex startupPhase = new(regexStartupPhase, RegexOptions.Multiline);
         const string regexCleanupPhase = @"^Cleanup phase took (?'msTime'[0-9]*.[0-9]*)ms.$";
-        readonly Regex cleanupPhase = new Regex(regexCleanupPhase, RegexOptions.Multiline);
+        readonly Regex cleanupPhase = new(regexCleanupPhase, RegexOptions.Multiline);
         const string regexTaskTime = @"^Task '(?'filename'.*)' took (?'msTime'([0-9]*\.[0-9]+|[0-9]+))ms.$";
-        readonly Regex TaskTime = new Regex(regexTaskTime, RegexOptions.Multiline);
+        readonly Regex TaskTime = new(regexTaskTime, RegexOptions.Multiline);
 
         // time(C:\Program Files (x86)\Microsoft Visual Studio\2019\Preview\VC\Tools\MSVC\14.24.28218\bin\Hostx86\x86\c1xx.dll)=0.83512s < 985096605139 - 985104956295 > BB [C:\Users\yuehuang\AppData\Local\Temp\123\main36.cpp]
         // time(C:\Program Files(x86)\Microsoft Visual Studio\2019\Preview\VC\Tools\MSVC\14.24.28218\bin\Hostx86\x86\c2.dll)=0.01935s < 985104875296 - 985105068765 > BB[C: \Users\yuehuang\AppData\Local\Temp\123\main47.cpp]
         const string regexBTPlus = @"^time\(.*(c1\.dll|c1xx\.dll|c2\.dll)\)=(?'msTime'([0-9]*\.[0-9]+|[0-9]+))s \< (?'startTime'[\d]*) - (?'endTime'[\d]*) \>\s*(BB)?\s*\[(?'filename'[^\]]*)\]$";
-        readonly Regex BTPlus = new Regex(regexBTPlus, RegexOptions.Multiline);
+        readonly Regex BTPlus = new(regexBTPlus, RegexOptions.Multiline);
 
-        // Lib: Final Total time = 0.00804s < 5881693617253 - 5881693697673 > PB: 143409152 [D:\test\ConsoleApplication2\x64\Debug\ConsoleApplication2.lib] 
+        // Lib: Final Total time = 0.00804s < 5881693617253 - 5881693697673 > PB: 143409152 [D:\test\ConsoleApplication2\x64\Debug\ConsoleApplication2.lib]
         // note: there is trailing white space from the tool
         const string regexLibFinalTime = @"^Lib: Final Total time = (?'msTime'([0-9]*\.[0-9]+|[0-9]+))s \< (?'startTime'[\d]*) - (?'endTime'[\d]*) \>\s*PB:\s*[\d]* \[(?'filename'[^\]]*)\]\s*$";
-        readonly Regex libFinalTime = new Regex(regexLibFinalTime, RegexOptions.Multiline);
+        readonly Regex libFinalTime = new(regexLibFinalTime, RegexOptions.Multiline);
 
         //  Pass 1: Interval #1, time = 0.125s
         //    Wait PDB close: Total time = 0.000s
@@ -62,7 +62,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         //  Pass 2: Interval #2, time = 0.016s
         //  Final: Total time = 0.141s
         const string regexLinkTotalTime = @"^Final: Total time = (?'msTime'[0-9]*.[0-9]*)s$";
-        readonly Regex linkTotalTime = new Regex(regexLinkTotalTime, RegexOptions.Multiline);
+        readonly Regex linkTotalTime = new(regexLinkTotalTime, RegexOptions.Multiline);
 
         private const string MultiToolTaskName = "MultiToolTask";
         private const string CLTaskName = "CL";
@@ -83,7 +83,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private bool globalLinkTime = false;
 
         private TimeSpan oneMilliSecond = TimeSpan.FromMilliseconds(1);
-        private List<CppTimedNode> resultTimedNode = new List<CppTimedNode>();
+        private List<CppTimedNode> resultTimedNode = [];
 
         public CppAnalyzer()
         {

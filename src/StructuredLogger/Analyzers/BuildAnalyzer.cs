@@ -25,8 +25,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private readonly ResolveAssemblyReferenceAnalyzer resolveAssemblyReferenceAnalyzer;
         private readonly CppAnalyzer cppAnalyzer;
         private readonly Dictionary<string, TaskStatistic> taskDurations = new();
-        private readonly List<Folder> analyzerReports = new List<Folder>();
-        private readonly List<Folder> generatorReports = new List<Folder>();
+        private readonly List<Folder> analyzerReports = [];
+        private readonly List<Folder> generatorReports = [];
         private int index;
 
         public BuildAnalyzer(Build build)

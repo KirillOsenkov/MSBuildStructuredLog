@@ -57,8 +57,8 @@ namespace BinlogTool
             return null;
         }
 
-        private static HashSet<string> ignoreTasks = new HashSet<string>()
-        {
+        private static HashSet<string> ignoreTasks =
+        [
             "GetRestoreProjectStyleTask",
             "GetRestoreSettingsTask",
             "GetRestoreDotnetCliToolsTask",
@@ -72,7 +72,7 @@ namespace BinlogTool
             "ResolvePackageFileConflicts",
             "Touch",
             "UnpackLibraryResources"
-        };
+        ];
 
         private string GetToolInfo(Task task)
         {

@@ -24,7 +24,7 @@ namespace StructuredLogViewer.Avalonia.Controls
 {
     public partial class TextViewerControl : UserControl
     {
-        private static readonly Regex solutionFileRegex = new Regex(@"^\s*Microsoft Visual Studio Solution File", RegexOptions.Compiled | RegexOptions.Singleline);
+        private static readonly Regex solutionFileRegex = new(@"^\s*Microsoft Visual Studio Solution File", RegexOptions.Compiled | RegexOptions.Singleline);
 
         private TextEditor textEditor;
         private Button preprocess;
@@ -146,7 +146,7 @@ namespace StructuredLogViewer.Avalonia.Controls
                 var highlighting = HighlightingManager.Instance.GetDefinition("XML");
                 highlighting.GetNamedColor("XmlTag").Foreground = new SimpleHighlightingBrush(Color.FromRgb(163, 21, 21));
                 textEditor.SyntaxHighlighting = highlighting;
-                
+
                 var foldingManager = FoldingManager.Install(textEditor.TextArea);
                 var foldingStrategy = new XmlFoldingStrategy();
                 foldingStrategy.UpdateFoldings(foldingManager, textEditor.Document);
@@ -190,7 +190,7 @@ namespace StructuredLogViewer.Avalonia.Controls
             {
                 return;
             }
-            
+
             var filePath = FilePath;
             var extension = Path.GetExtension(filePath);
 

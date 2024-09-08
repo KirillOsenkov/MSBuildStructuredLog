@@ -23,7 +23,7 @@ namespace StructuredLogViewer.Controls
 {
     public partial class TextViewerControl : UserControl
     {
-        private static readonly Regex solutionFileRegex = new Regex(@"^\s*Microsoft Visual Studio Solution File", RegexOptions.Compiled | RegexOptions.Singleline);
+        private static readonly Regex solutionFileRegex = new(@"^\s*Microsoft Visual Studio Solution File", RegexOptions.Compiled | RegexOptions.Singleline);
         private FoldingManager foldingManager;
 
         public string FilePath { get; private set; }

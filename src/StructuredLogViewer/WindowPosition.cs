@@ -150,9 +150,9 @@ namespace StructuredLogViewer
                 Bottom += dy;
             }
 
-            public Point Position => new Point(Left, Top);
+            public Point Position => new(Left, Top);
 
-            public Size Size => new Size(Width, Height);
+            public Size Size => new(Width, Height);
 
             public int Height
             {
@@ -166,9 +166,9 @@ namespace StructuredLogViewer
                 set => Right = Left + value;
             }
 
-            public Int32Rect ToInt32Rect() => new Int32Rect(Left, Top, Width, Height);
+            public Int32Rect ToInt32Rect() => new(Left, Top, Width, Height);
 
-            public Rect ToRect() => new Rect(Left, Top, Width, Height);
+            public Rect ToRect() => new(Left, Top, Width, Height);
 
             public static RECT FromInt32Rect(Int32Rect rect)
             {

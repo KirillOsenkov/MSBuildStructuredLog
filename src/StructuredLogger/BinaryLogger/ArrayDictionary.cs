@@ -244,11 +244,11 @@ namespace Microsoft.Build.Collections
             }
 
             public KeyValuePair<TKey, TValue> Current =>
-                new KeyValuePair<TKey, TValue>(
+                new(
                     _dictionary.keys[_position],
                     _dictionary.values[_position]);
 
-            private DictionaryEntry CurrentDictionaryEntry => new DictionaryEntry(_dictionary.keys[_position], _dictionary.values[_position]);
+            private DictionaryEntry CurrentDictionaryEntry => new(_dictionary.keys[_position], _dictionary.values[_position]);
 
             object IEnumerator.Current => _emitDictionaryEntries ? CurrentDictionaryEntry : Current;
 

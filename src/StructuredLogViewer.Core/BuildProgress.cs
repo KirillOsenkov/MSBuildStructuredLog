@@ -6,7 +6,7 @@
         {
         }
 
-        public Progress Progress { get; } = new Progress();
+        public Progress Progress { get; } = new();
 
         private string progressText;
         public string ProgressText

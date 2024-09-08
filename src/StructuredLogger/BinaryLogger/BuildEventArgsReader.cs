@@ -38,20 +38,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// written out to. This is necessary so we don't keep all the strings in memory when reading large binlogs.
         /// We will OOM otherwise.
         /// </summary>
-        private readonly List<object> stringRecords = new List<object>();
+        private readonly List<object> stringRecords = [];
 
         /// <summary>
         /// A list of dictionaries we've encountered so far. Dictionaries are referred to by their order in this list.
         /// </summary>
         /// <remarks>This is designed to not hold on to strings. We just store the string indices and
         /// hydrate the dictionary on demand before returning.</remarks>
-        private readonly List<NameValueRecord> nameValueListRecords = new List<NameValueRecord>();
+        private readonly List<NameValueRecord> nameValueListRecords = [];
 
         /// <summary>
         /// A "page-file" for storing strings we've read so far. Keeping them in memory would OOM the 32-bit MSBuild
         /// when reading large binlogs. This is a no-op in a 64-bit process.
         /// </summary>
-        private readonly StringStorage stringStorage = new StringStorage();
+        private readonly StringStorage stringStorage = new();
 
         /// <summary>
         /// Initializes a new instance of <see cref="BuildEventArgsReader"/> using a <see cref="BinaryReader"/> instance.
@@ -334,7 +334,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 BinaryLogRecordKind.BuildCheckAcquisition => ReadBuildCheckAcquisitionEventArgs(),
                 BinaryLogRecordKind.BuildSubmissionStarted => ReadBuildSubmissionStartedEventArgs(),
                 _ => null,
-                
+
             };
 
         private void SkipBytes(int count)
@@ -530,7 +530,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private readonly List<(int name, int value)> nameValues = new List<(int name, int value)>(4096);
+        private readonly List<(int name, int value)> nameValues = new(4096);
 
         private void ReadNameValueList()
         {
@@ -1430,7 +1430,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return fields;
         }
 
-        private readonly BuildEventArgsFields fields = new BuildEventArgsFields();
+        private readonly BuildEventArgsFields fields = new();
 
         private BuildEventArgsFields ReadBuildEventArgsFields(bool readImportance = false)
         {
@@ -1809,7 +1809,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return list;
         }
 
-        private readonly StringReadEventArgs stringReadEventArgs = new StringReadEventArgs(string.Empty);
+        private readonly StringReadEventArgs stringReadEventArgs = new(string.Empty);
         private string ReadString()
         {
             string text = _binaryReader.ReadString();

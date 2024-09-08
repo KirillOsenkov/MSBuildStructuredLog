@@ -361,7 +361,7 @@ namespace StructuredLogViewer.Controls
                 var text =
 @"This log contains the full text of projects and imported files used during the build.
 You can use the 'Files' tab in the bottom left to view these files and the 'Find in Files' tab for full-text search.
-For many nodes in the tree (Targets, Tasks, Errors, Projects, etc) pressing SPACE or ENTER or double-clicking 
+For many nodes in the tree (Targets, Tasks, Errors, Projects, etc) pressing SPACE or ENTER or double-clicking
 on the node will navigate to the corresponding source code associated with the node.
 
 More functionality is available from the right-click context menu for each node.
@@ -1661,7 +1661,7 @@ Recent (");
             ApplyFilter(node, searchText);
         }
 
-        private readonly Dictionary<TreeNode, string> nodeFilters = new Dictionary<TreeNode, string>();
+        private readonly Dictionary<TreeNode, string> nodeFilters = new();
 
         private void ApplyFilter(TreeNode node, string text)
         {
@@ -1834,7 +1834,7 @@ Recent (");
             }
         }
 
-        private readonly HashSet<BaseNode> favorites = new HashSet<BaseNode>();
+        private readonly HashSet<BaseNode> favorites = [];
 
         public void AddToFavorites()
         {

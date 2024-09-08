@@ -12,8 +12,8 @@ namespace StructuredLogViewer.Avalonia.Controls
 {
     public class ProxyNodeIconConverter : IValueConverter
     {
-        private readonly Dictionary<string, object> resources = new Dictionary<string, object>();
-        private readonly ProjectIconConverter projectIconConverter = new ProjectIconConverter();
+        private readonly Dictionary<string, object> resources = new();
+        private readonly ProjectIconConverter projectIconConverter = new();
 
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {

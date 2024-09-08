@@ -7,7 +7,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class DoubleWritesAnalyzer
     {
-        private readonly Dictionary<string, HashSet<string>> fileCopySourcesForDestination = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, HashSet<string>> fileCopySourcesForDestination = new(StringComparer.OrdinalIgnoreCase);
 
         public static IEnumerable<KeyValuePair<string, HashSet<string>>> GetDoubleWrites(Build build)
         {

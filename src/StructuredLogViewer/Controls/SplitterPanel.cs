@@ -23,7 +23,7 @@ namespace StructuredLogViewer.Controls
         public static readonly DependencyProperty SecondChildRelativeSizeProperty =
             DependencyProperty.Register("SecondChildRelativeSize", typeof(GridLength), typeof(SplitterPanel), new PropertyMetadata(new GridLength(1, GridUnitType.Star)));
 
-        private readonly GridSplitter gridSplitter = new GridSplitter()
+        private readonly GridSplitter gridSplitter = new()
         {
             ResizeBehavior = GridResizeBehavior.PreviousAndNext
         };
@@ -181,8 +181,8 @@ namespace StructuredLogViewer.Controls
 
         private GridLength oldFirstSize;
         private GridLength oldSecondSize;
-        private static readonly GridLength zero = new GridLength(0);
-        private static readonly GridLength separatorSize = new GridLength(5);
+        private static readonly GridLength zero = new(0);
+        private static readonly GridLength separatorSize = new(5);
 
         private void UpdateSplitterVisibility()
         {

@@ -12,9 +12,9 @@ namespace StructuredLogViewer
     {
         private readonly Build build;
         private readonly SourceFileResolver sourceFileResolver;
-        private readonly Dictionary<string, Dictionary<string, Bucket>> importMapsPerEvaluation = new Dictionary<string, Dictionary<string, Bucket>>(StringComparer.OrdinalIgnoreCase);
-        private readonly Dictionary<string, string> preprocessedFileCache = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        private readonly Dictionary<string, PreprocessContext> preprocessContexts = new Dictionary<string, PreprocessContext>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, Dictionary<string, Bucket>> importMapsPerEvaluation = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, string> preprocessedFileCache = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, PreprocessContext> preprocessContexts = new(StringComparer.OrdinalIgnoreCase);
 
         public PreprocessedFileManager(Build build, SourceFileResolver sourceFileResolver)
         {

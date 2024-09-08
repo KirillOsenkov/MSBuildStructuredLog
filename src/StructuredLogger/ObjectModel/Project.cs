@@ -16,8 +16,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         public string ProjectFile { get; set; }
 
-        public string ProjectFileExtension => ProjectFile != null 
-            ? Path.GetExtension(ProjectFile).ToLowerInvariant() 
+        public string ProjectFileExtension => ProjectFile != null
+            ? Path.GetExtension(ProjectFile).ToLowerInvariant()
             : "";
 
         public string ProjectDirectory => !string.IsNullOrEmpty(ProjectFile)
@@ -27,8 +27,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public string SourceFilePath => ProjectFile;
         string IPreprocessable.RootFilePath => ProjectFile;
 
-        private readonly Dictionary<int, Target> targetsById = new Dictionary<int, Target>();
-        private readonly Dictionary<int, Task> tasksById = new Dictionary<int, Task>();
+        private readonly Dictionary<int, Target> targetsById = new();
+        private readonly Dictionary<int, Task> tasksById = new();
 
         public override string TypeName => nameof(Project);
 

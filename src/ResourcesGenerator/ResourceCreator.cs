@@ -83,7 +83,7 @@ namespace ResourcesGenerator
             "PickedUpSwitchesFromAutoResponse"
         };
 
-        public static Dictionary<string, string> Cultures = new Dictionary<string, string>
+        public static Dictionary<string, string> Cultures = new()
         {
             { "en", "en-US" },
             { "de", "de-DE" },

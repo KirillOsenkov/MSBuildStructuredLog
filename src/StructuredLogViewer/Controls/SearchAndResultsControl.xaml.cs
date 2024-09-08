@@ -9,7 +9,7 @@ namespace StructuredLogViewer.Controls
 {
     public partial class SearchAndResultsControl : UserControl
     {
-        private readonly TypingConcurrentOperation typingConcurrentOperation = new TypingConcurrentOperation();
+        private readonly TypingConcurrentOperation typingConcurrentOperation = new();
 
         public SearchAndResultsControl()
         {
@@ -72,7 +72,7 @@ namespace StructuredLogViewer.Controls
                 typingConcurrentOperation.Reset();
 
                 // only clear the contents when we have a search function defined.
-                // if the text input is handled externally, don't mess with the 
+                // if the text input is handled externally, don't mess with the
                 // content
                 if (ExecuteSearch != null)
                 {

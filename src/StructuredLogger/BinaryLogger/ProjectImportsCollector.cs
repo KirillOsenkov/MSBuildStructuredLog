@@ -27,7 +27,7 @@ namespace Microsoft.Build.Logging
         /// <summary>
         /// Avoid visiting each file more than once.
         /// </summary>
-        private readonly HashSet<string> _processedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> _processedFiles = new(StringComparer.OrdinalIgnoreCase);
 
         // this will form a chain of file write tasks, running sequentially on a background thread
         private Task _currentTask = Task.CompletedTask;

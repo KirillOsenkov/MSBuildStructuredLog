@@ -15,7 +15,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private readonly ImportTreeAnalyzer importTreeAnalyzer;
         private int fileFormatVersion = 0;
 
-        public StringBuilder DetailedSummary { get; } = new StringBuilder();
+        public StringBuilder DetailedSummary { get; } = new();
 
         public MessageProcessor(Construction construction, StringCache stringTable)
         {
@@ -408,7 +408,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             target.AddChild(containerNode);
         }
 
-        private HashSet<string> evaluationMessagesAlreadySeen = new HashSet<string>(StringComparer.Ordinal);
+        private HashSet<string> evaluationMessagesAlreadySeen = new(StringComparer.Ordinal);
 
         private static readonly char[] space = { ' ' };
 
@@ -1100,7 +1100,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         /// <summary>
-        /// Handler for a TaskCommandLine log event. Sets the command line arguments on the appropriate task. 
+        /// Handler for a TaskCommandLine log event. Sets the command line arguments on the appropriate task.
         /// </summary>
         /// <param name="args">The <see cref="TaskCommandLineEventArgs"/> instance containing the event data.</param>
         public bool AddCommandLine(TaskCommandLineEventArgs args)

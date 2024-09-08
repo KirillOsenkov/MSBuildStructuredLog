@@ -7,7 +7,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
     public class BuildLogReader : IDisposable
     {
         private TreeBinaryReader reader;
-        private readonly Queue<string> attributes = new Queue<string>(10);
+        private readonly Queue<string> attributes = new(10);
 
         private readonly bool formatSupportsSourceFiles;
         private readonly bool formatSupportsEmbeddedProjectImportsArchive;
@@ -102,14 +102,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     // There's a design flaw in the BuildLog format. I took a shortcut
                     // and for Folder nodes I just write the name of the folder instead
                     // of specifying that the element is a Folder in the first place.
-                    // Unfortunately I didn't think about Folders named "Property", 
-                    // "Target", etc. 
+                    // Unfortunately I didn't think about Folders named "Property",
+                    // "Target", etc.
                     // So the deserialization logic when it sees a string called "Property"
                     // it assumes we have a property here, instead of a Folder named
                     // "Property". But properties have children! We're in a pickle now.
                     // Longer term I need to modify the format to not do this optimization
                     // and always write "Folder" for folders and write the name separately.
-                    // For now I don't have time to do this right, so put in the dirty 
+                    // For now I don't have time to do this right, so put in the dirty
                     // hack to recover from this situation. If it says it's a "Property"
                     // but expects children, it means it's actually a folder with name
                     // "Property".
