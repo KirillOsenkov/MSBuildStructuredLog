@@ -165,7 +165,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
-            IEnumerable<(string Key, IEnumerable<string> Occurrences)> fieldsWithMatches = null;
+            (string Key, IEnumerable<string> Occurrences)[] fieldsWithMatches = null;
             if (result.FieldsToDisplay != null)
             {
                 fieldsWithMatches = result.FieldsToDisplay.Select(f =>

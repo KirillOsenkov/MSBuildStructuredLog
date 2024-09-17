@@ -252,9 +252,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     hasError = true;
 
+                    int localSerializedEventLength = serializedEventLength;
+                    Exception localException = e;
                     string ErrorFactory() =>
                         string.Format("BuildEvent record number {0} (serialized size: {1}) attempted to perform disallowed reads (details: {2}: {3}).",
-                            _recordNumber, serializedEventLength, e.GetType(), e.Message) + (_skipUnknownEvents
+                            _recordNumber, localSerializedEventLength, localException.GetType(), localException.Message) + (_skipUnknownEvents
                             ? " Skipping the record."
                             : string.Empty);
 
@@ -263,9 +265,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 if (result == null && !hasError)
                 {
+                    int localSerializedEventLength = serializedEventLength;
+                    BinaryLogRecordKind localRecordKind = recordKind;
                     string ErrorFactory() =>
                         string.Format("BuildEvent record number {0} (serialized size: {1}) is of unsupported type: {2}.",
-                            _recordNumber, serializedEventLength, recordKind) + (_skipUnknownEvents
+                            _recordNumber, localSerializedEventLength, localRecordKind) + (_skipUnknownEvents
                             ? " Skipping the record."
                             : string.Empty);
 
@@ -274,9 +278,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 if (_readStream.BytesCountAllowedToReadRemaining > 0)
                 {
+                    int localSerializedEventLength = serializedEventLength;
                     string ErrorFactory() => string.Format(
-                        "BuildEvent record number {0} was expected to read exactly {1} bytes from the stream, but read {2} instead.", _recordNumber, serializedEventLength,
-                        serializedEventLength - _readStream.BytesCountAllowedToReadRemaining);
+                        "BuildEvent record number {0} was expected to read exactly {1} bytes from the stream, but read {2} instead.", _recordNumber, localSerializedEventLength,
+                        localSerializedEventLength - _readStream.BytesCountAllowedToReadRemaining);
 
                     HandleError(ErrorFactory, _skipUnknownEventParts, ReaderErrorType.UnknownEventData, recordKind);
                 }
@@ -1616,7 +1621,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private IEnumerable ReadPropertyList()
+        private IDictionary<string, string> ReadPropertyList()
         {
             var properties = ReadStringDictionary();
             return properties;
@@ -1666,7 +1671,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return record;
         }
 
-        private IDictionary<string, string> ReadLegacyStringDictionary()
+        private Dictionary<string, string> ReadLegacyStringDictionary()
         {
             int count = ReadInt32();
             if (count == 0)
@@ -1695,7 +1700,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return taskItem;
         }
 
-        private IEnumerable ReadProjectItems()
+        private IList<DictionaryEntry> ReadProjectItems()
         {
             IList<DictionaryEntry> list;
 
@@ -1777,7 +1782,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return list;
         }
 
-        private IEnumerable<string> ReadStringList()
+        private string[] ReadStringList()
         {
             var count = ReadInt32();
 
@@ -1790,7 +1795,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return list;
         }
 
-        private IEnumerable ReadTaskItemList()
+        private ITaskItem[] ReadTaskItemList()
         {
             int count = ReadInt32();
             if (count == 0)

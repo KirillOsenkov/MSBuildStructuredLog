@@ -256,7 +256,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 var task = target.FindChild<MSBuildTask>();
                 if (task != null)
                 {
-                    var outputItems = task.FindLastChild<Folder>(f => f.Name == "OutputItems");
+                    var outputItems = task.FindLastChild<Folder>(static f => f.Name == "OutputItems");
                     if (outputItems != null)
                     {
                         var addItem = outputItems.FindChild<AddItem>();
@@ -265,13 +265,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             var item = addItem.FindChild<Item>(filePath);
                             if (item != null)
                             {
-                                var metadata = item.FindChild<Metadata>(m => m.Name == "MSBuildSourceProjectFile");
+                                var metadata = item.FindChild<Metadata>(static m => m.Name == "MSBuildSourceProjectFile");
                                 if (metadata != null)
                                 {
                                     var metadataValue = metadata.Value;
                                     resultSet.Add(new SearchResult(metadata));
 
-                                    var referencedProject = task.FindChild<Project>(p => p.Name.Equals(Path.GetFileName(metadataValue), StringComparison.OrdinalIgnoreCase));
+                                    var referencedProject = task.FindChild<Project, string>(static (p, metadataValue) => p.Name.Equals(Path.GetFileName(metadataValue), StringComparison.OrdinalIgnoreCase), metadataValue);
                                     if (referencedProject != null)
                                     {
                                         var getCopyToOutputDirectoryItems = referencedProject.FindTarget("GetCopyToOutputDirectoryItems");
@@ -299,16 +299,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 var task = target.FindChild<ResolveAssemblyReferenceTask>();
                 if (task != null)
                 {
-                    var outputItems = task.FindLastChild<Folder>(f => f.Name == "OutputItems");
+                    var outputItems = task.FindLastChild<Folder>(static f => f.Name == "OutputItems");
                     if (outputItems != null)
                     {
-                        var addItem = outputItems.FindChild<AddItem>(a => a.Name == "ReferenceCopyLocalPaths");
+                        var addItem = outputItems.FindChild<AddItem>(static a => a.Name == "ReferenceCopyLocalPaths");
                         if (addItem != null)
                         {
                             var item = addItem.FindChild<Item>(filePath);
                             if (item != null)
                             {
-                                var metadata = item.FindChild<Metadata>(m => m.Name == "MSBuildSourceProjectFile");
+                                var metadata = item.FindChild<Metadata>(static m => m.Name == "MSBuildSourceProjectFile");
                                 if (metadata != null)
                                 {
                                     var metadataValue = metadata.Value;

@@ -365,7 +365,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var project = GetProject(args.BuildEventContext.ProjectContextId);
             if (project != null && args.BuildEventContext.TargetId != BuildEventContext.InvalidTargetId)
             {
-                target = project.FindLastChild<Target>(t => t.Id == args.BuildEventContext.TargetId);
+                target = project.FindLastChild<Target, TargetSkippedEventArgs>(static (t, args) => t.Id == args.BuildEventContext.TargetId, args);
             }
 
             if (target == null)
@@ -523,7 +523,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         projectEvaluation.ProjectFile = projectFilePath;
 
                         projectEvaluation.Id = evaluationId;
-                        projectEvaluation.EvaluationText = Intern("id:" + evaluationId);
+                        projectEvaluation.EvaluationText = Intern($"id:{evaluationId}");
                         projectEvaluation.NodeId = e.BuildEventContext.NodeId;
                         projectEvaluation.StartTime = e.Timestamp;
                         projectEvaluation.EndTime = e.Timestamp;
@@ -534,7 +534,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         var projectFilePath = Intern(projectEvaluationFinished.ProjectFile);
                         var projectName = Intern(Path.GetFileName(projectFilePath));
                         var nodeName = Intern(GetEvaluationProjectName(evaluationId, projectName));
-                        var projectEvaluation = EvaluationFolder.FindLastChild<ProjectEvaluation>(e => e.Id == evaluationId);
+                        var projectEvaluation = EvaluationFolder.FindLastChild<ProjectEvaluation, int>(static (e, evaluationId) => e.Id == evaluationId, evaluationId);
                         if (projectEvaluation == null)
                         {
                             // no matching ProjectEvaluationStarted
@@ -728,7 +728,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 result = EvaluationFolder;
 
-                var projectEvaluation = result.FindChild<ProjectEvaluation>(p => p.Id == evaluationId);
+                var projectEvaluation = result.FindChild<ProjectEvaluation, int>(static (p, evaluationId) => p.Id == evaluationId, evaluationId);
                 if (projectEvaluation != null)
                 {
                     result = projectEvaluation;
