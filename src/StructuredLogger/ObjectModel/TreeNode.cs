@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -219,7 +218,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return list.FindNode<T>(name);
             }
 
-            return FindChild<T>(c => string.Equals(c.Title, name, StringComparison.OrdinalIgnoreCase));
+            return FindChild<T, string>(static (c, name) => string.Equals(c.Title, name, StringComparison.OrdinalIgnoreCase), name);
         }
 
         public virtual T FindChild<T>(Predicate<T> predicate = null) where T : BaseNode
@@ -231,6 +230,24 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 for (int i = 0; i < count; i++)
                 {
                     if (children[i] is T child && (predicate == null || predicate(child)))
+                    {
+                        return child;
+                    }
+                }
+            }
+
+            return default;
+        }
+
+        public virtual T FindChild<T, TState>(Func<T, TState, bool> predicate, TState state) where T : BaseNode
+        {
+            if (HasChildren)
+            {
+                var children = Children;
+                int count = children.Count;
+                for (int i = 0; i < count; i++)
+                {
+                    if (children[i] is T child && predicate(child, state))
                     {
                         return child;
                     }
@@ -316,9 +333,27 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             if (HasChildren)
             {
-                for (int i = Children.Count - 1; i >= 0; i--)
+                IList<BaseNode> children = Children;
+                for (int i = children.Count - 1; i >= 0; i--)
                 {
-                    if (Children[i] is T child && (predicate == null || predicate(child)))
+                    if (children[i] is T child && (predicate == null || predicate(child)))
+                    {
+                        return child;
+                    }
+                }
+            }
+
+            return default;
+        }
+
+        public virtual T FindLastChild<T, TState>(Func<T, TState, bool> predicate, TState state) where T : BaseNode
+        {
+            if (HasChildren)
+            {
+                IList<BaseNode> children = Children;
+                for (int i = children.Count - 1; i >= 0; i--)
+                {
+                    if (children[i] is T child && predicate(child, state))
                     {
                         return child;
                     }

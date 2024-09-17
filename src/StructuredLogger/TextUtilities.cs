@@ -143,23 +143,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return text;
             }
 
-            int cr = text.IndexOf('\r');
-            int lf = text.IndexOf('\n');
-            if (cr >= 0)
-            {
-                if (lf >= 0 && lf < cr)
-                {
-                    cr = lf;
-                }
-
-                text = text.Substring(0, cr);
-            }
-            else if (lf >= 0)
-            {
-                text = text.Substring(0, lf);
-            }
-
-            return text;
+            int newline = text.AsSpan().IndexOfAny('\r', '\n');
+            return newline >= 0 ? text.Substring(0, newline) : text;
         }
 
         /// <summary>
@@ -225,6 +210,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static int IndexOf(this string text, Span span, char ch)
         {
+#if NET
+            int i = text.AsSpan(span.Start, span.Length).IndexOf(ch);
+            if (i >= 0)
+            {
+                return i + span.Start;
+            }
+#else
             for (int i = span.Start; i < span.End; i++)
             {
                 if (text[i] == ch)
@@ -232,6 +224,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     return i;
                 }
             }
+#endif
 
             return -1;
         }
@@ -248,8 +241,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return text;
             }
 
-            text = text.Replace("\r\n", "\n");
-            text = text.Replace("\r", "\n");
+            text =
+#if NET
+                text.ReplaceLineEndings("\n");
+#else
+                text.Replace("\r\n", "\n").Replace("\r", "\n");
+#endif
 
             return text;
         }
@@ -271,7 +268,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return text;
             }
 
-            if (text.Contains(" "))
+            if (text.IndexOf(' ') >= 0)
             {
                 text = "\"" + text + "\"";
             }
@@ -324,14 +321,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (text.Length != newLength)
             {
-                var shortText = text.Substring(0, newLength);
-
                 if (newLength <= maxChars && IsWhitespace(text, new Span(newLength, text.Length - newLength)))
                 {
-                    return shortText + '\u21b5';
+                    trimPrompt = "\u21b5";
                 }
 
-                return shortText + trimPrompt;
+#if NET
+                return string.Concat(text.AsSpan(0, newLength), trimPrompt);
+#else
+                return string.Concat(text.Substring(0, newLength), trimPrompt);
+#endif
             }
 
             return text;
@@ -344,16 +343,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return -1;
             }
 
-            for (int i = 0; i < text.Length; i++)
-            {
-                char ch = text[i];
-                if (ch == '\r' || ch == '\n')
-                {
-                    return i;
-                }
-            }
-
-            return -1;
+            return text.AsSpan().IndexOfAny('\r', '\n');
         }
 
         public static KeyValuePair<string, string> ParseNameValue(string largeText, Span span)
@@ -399,22 +389,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return new KeyValuePair<string, string>(name, value);
         }
 
-        public static string GetFirstPart(this string text, char separator)
-        {
-            if (string.IsNullOrEmpty(text))
-            {
-                return text;
-            }
-
-            int index = text.IndexOf(separator);
-            if (index == -1)
-            {
-                return text;
-            }
-
-            return text.Substring(0, index);
-        }
-
         public static (string first, string rest) GetFirstAndRest(this string text, char separator)
         {
             if (string.IsNullOrEmpty(text))
@@ -433,6 +407,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static int GetNumberOfLeadingSpaces(string line)
         {
+#if NET
+            int i = line.AsSpan().IndexOfAnyExcept(' ');
+            return i >= 0 ? i : line.Length;
+#else
             int result = 0;
             while (result < line.Length && line[result] == ' ')
             {
@@ -440,20 +418,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             return result;
+#endif
         }
 
         public static bool IsWhitespace(string text, Span span)
         {
-            if (text == null)
+            if (text != null)
             {
-                return true;
-            }
-
-            for (int i = span.Start; i < span.End; i++)
-            {
-                if (!char.IsWhiteSpace(text[i]))
+                for (int i = span.Start; i < span.End; i++)
                 {
-                    return false;
+                    if (!char.IsWhiteSpace(text[i]))
+                    {
+                        return false;
+                    }
                 }
             }
 
@@ -462,13 +439,24 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static int GetNumberOfLeadingSpaces(string text, Span span)
         {
-            int index = span.Start;
-            while (index < span.End && text[index] == ' ')
+            ReadOnlySpan<char> textSpan = text.AsSpan(span.Start, span.Length);
+#if NET
+            int i = textSpan.IndexOfAnyExcept(' ');
+            if (i >= 0)
             {
-                index++;
+                return i;
             }
+#else
+            for (int i = 0; i < textSpan.Length; i++)
+            {
+                if (textSpan[i] != ' ')
+                {
+                    return i;
+                }
+            }
+#endif
 
-            return index - span.Start;
+            return textSpan.Length;
         }
 
         public static string ParseQuotedSubstring(string text)
@@ -531,7 +519,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return time.ToString(formatString);
         }
 
-        private static char[] invalidFileNameChars = Path.GetInvalidFileNameChars();
+        private static readonly HashSet<char> invalidFileNameChars = new(Path.GetInvalidFileNameChars());
 
         public static string SanitizeFileName(string text)
         {
@@ -542,24 +530,25 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return text;
             }
 
+            ReadOnlySpan<char> textSpan = text.AsSpan();
             if (text.Length > maxLength)
             {
-                text = text.Substring(0, maxLength);
+                textSpan = textSpan.Slice(0, maxLength);
             }
 
-            var sb = new StringBuilder();
-            for (int i = 0; i < text.Length; i++)
+            Span<char> chars = stackalloc char[maxLength];
+            for (int i = 0; i < textSpan.Length; i++)
             {
-                char ch = text[i];
+                char ch = textSpan[i];
                 if (invalidFileNameChars.Contains(ch))
                 {
                     ch = '_';
                 }
 
-                sb.Append(ch);
+                chars[i] = ch;
             }
 
-            return sb.ToString();
+            return chars.Slice(0, textSpan.Length).ToString();
         }
 
         public static string NormalizeFilePath(string text)
@@ -569,8 +558,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return text;
             }
 
+#if NET
+            int slashCount = text.AsSpan().Count('/');
+            int backslashCount = text.AsSpan().Count('\\');
+#else
             int slashCount = text.Count(c => c == '/');
             int backslashCount = text.Count(c => c == '\\');
+#endif
 
             if (slashCount == 0 && backslashCount == 0)
             {

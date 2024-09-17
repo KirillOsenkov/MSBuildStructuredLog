@@ -2665,7 +2665,7 @@ Recent (");
                 return;
             }
 
-            var statsRoot = Build.FindChild<Folder>(f => f.Name.StartsWith(Strings.Statistics));
+            var statsRoot = Build.FindChild<Folder>(static f => f.Name.StartsWith(Strings.Statistics));
             if (statsRoot != null)
             {
                 return;
@@ -2778,9 +2778,9 @@ Recent (");
 
         private void DisplayTreeStats(Folder statsRoot, BuildStatistics treeStats, BinlogStats recordStats)
         {
-            var buildMessageNode = statsRoot.FindChild<Folder>(n => n.Name.StartsWith("BuildMessage", StringComparison.Ordinal));
-            var taskInputsNode = buildMessageNode.FindChild<Folder>(n => n.Name.StartsWith("Task Input", StringComparison.Ordinal));
-            var taskOutputsNode = buildMessageNode.FindChild<Folder>(n => n.Name.StartsWith("Task Output", StringComparison.Ordinal));
+            var buildMessageNode = statsRoot.FindChild<Folder>(static n => n.Name.StartsWith("BuildMessage", StringComparison.Ordinal));
+            var taskInputsNode = buildMessageNode.FindChild<Folder>(static n => n.Name.StartsWith("Task Input", StringComparison.Ordinal));
+            var taskOutputsNode = buildMessageNode.FindChild<Folder>(static n => n.Name.StartsWith("Task Output", StringComparison.Ordinal));
 
             AddTopTasks(treeStats.TaskParameterMessagesByTask, taskInputsNode);
             AddTopTasks(treeStats.OutputItemMessagesByTask, taskOutputsNode);

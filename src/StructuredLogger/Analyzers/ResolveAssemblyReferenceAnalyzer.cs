@@ -23,15 +23,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             currentUsedLocations.Clear();
 
-            var results = rar.FindChild<Folder>(c => c.Name == Strings.Results);
-            var parameters = rar.FindChild<Folder>(c => c.Name == Strings.Parameters);
+            var results = rar.FindChild<Folder>(static c => c.Name == Strings.Results);
+            var parameters = rar.FindChild<Folder>(static c => c.Name == Strings.Parameters);
 
             TotalRARDuration += rar.Duration;
 
             IList<string> searchPaths = null;
             if (parameters != null)
             {
-                var searchPathsNode = parameters.FindChild<NamedNode>(c => c.Name == Strings.SearchPaths);
+                var searchPathsNode = parameters.FindChild<NamedNode>(static c => c.Name == Strings.SearchPaths);
                 if (searchPathsNode != null)
                 {
                     searchPaths = searchPathsNode.Children.Select(c => c.ToString()).ToArray();
@@ -46,7 +46,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     const string ResolvedFilePathIs = "Resolved file path is \"";
                     string resolvedFilePath = null;
-                    var resolvedFilePathNode = reference.FindChild<Item>(i => i.ToString().StartsWith(ResolvedFilePathIs, StringComparison.Ordinal));
+                    var resolvedFilePathNode = reference.FindChild<Item>(static i => i.ToString().StartsWith(ResolvedFilePathIs, StringComparison.Ordinal));
                     if (resolvedFilePathNode != null)
                     {
                         var text = resolvedFilePathNode.ToString();
@@ -54,7 +54,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
 
                     const string ReferenceFoundAt = "Reference found at search path location \"";
-                    var foundAtLocation = reference.FindChild<Item>(i => i.ToString().StartsWith(ReferenceFoundAt, StringComparison.Ordinal));
+                    var foundAtLocation = reference.FindChild<Item>(static i => i.ToString().StartsWith(ReferenceFoundAt, StringComparison.Ordinal));
                     if (foundAtLocation != null)
                     {
                         var text = foundAtLocation.ToString();

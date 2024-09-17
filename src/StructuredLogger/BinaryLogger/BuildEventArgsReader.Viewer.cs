@@ -23,15 +23,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
             public IDictionary<string, string> Dictionary;
         }
 
-        private IDictionary<string, string> CreateDictionary(List<(int keyIndex, int valueIndex)> list)
+        private ArrayDictionary<string, string> CreateDictionary(List<(int keyIndex, int valueIndex)> list)
         {
             var dictionary = new ArrayDictionary<string, string>(list.Count);
             for (int i = 0; i < list.Count; i++)
             {
                 string key = GetStringFromRecord(list[i].keyIndex);
-                string value = GetStringFromRecord(list[i].valueIndex);
                 if (key != null)
                 {
+                    string value = GetStringFromRecord(list[i].valueIndex);
                     dictionary.Add(key, value);
                 }
             }
@@ -191,6 +191,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private string GetTaskFinishedMessage(bool succeeded, string taskName)
         {
             return FormatResourceStringIgnoreCodeAndKeyword(succeeded ? "Done executing task \"{0}\"." : "Done executing task \"{0}\" -- FAILED.", taskName);
+        }
+
+        internal static string FormatResourceStringIgnoreCodeAndKeyword(string resource, string arg0)
+        {
+            return string.Format(resource, arg0);
+        }
+
+        internal static string FormatResourceStringIgnoreCodeAndKeyword(string resource, string arg0, string arg1)
+        {
+            return string.Format(resource, arg0, arg1);
+        }
+
+        internal static string FormatResourceStringIgnoreCodeAndKeyword(string resource, string arg0, string arg1, string arg2)
+        {
+            return string.Format(resource, arg0, arg1, arg2);
         }
 
         internal static string FormatResourceStringIgnoreCodeAndKeyword(string resource, params string[] arguments)

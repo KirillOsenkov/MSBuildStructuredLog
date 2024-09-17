@@ -252,7 +252,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
 
                 // the evaluation we want is likely to be at the end (recently added)
-                projectEvaluation = evaluation.FindLastChild<ProjectEvaluation>(e => e.Id == id);
+                projectEvaluation = evaluation.FindLastChild<ProjectEvaluation, int>(static (e, id) => e.Id == id, id);
                 if (projectEvaluation != null)
                 {
                     evaluationById[id] = projectEvaluation;
