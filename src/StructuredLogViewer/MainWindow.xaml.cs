@@ -203,16 +203,23 @@ namespace StructuredLogViewer
 
         private string GetSingleFileFromClipboard()
         {
-            if (Clipboard.ContainsFileDropList())
+            try
             {
-                var fileDropList = Clipboard.GetFileDropList();
-                if (fileDropList.Count == 1)
+                if (Clipboard.ContainsFileDropList())
                 {
-                    return fileDropList[0];
+                    var fileDropList = Clipboard.GetFileDropList();
+                    if (fileDropList.Count == 1)
+                    {
+                        return fileDropList[0];
+                    }
                 }
-            }
 
-            return Clipboard.GetText();
+                return Clipboard.GetText();
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         private void DisplayWelcomeScreen(string message = "")
