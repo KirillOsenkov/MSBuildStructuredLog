@@ -378,14 +378,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private void CollapseMessagesToSubfolder(Task task)
         {
             var messages = task.Children.OfType<Message>().ToArray();
-            if (messages.Length > 10)
+            if (messages.Length <= 10)
             {
-                for (int i = task.Children.Count - 1; i >= 0; i--)
+                return;
+            }
+
+            for (int i = task.Children.Count - 1; i >= 0; i--)
+            {
+                if (task.Children[i] is Message)
                 {
-                    if (task.Children[i] is Message)
-                    {
-                        task.Children.RemoveAt(i);
-                    }
+                    task.Children.RemoveAt(i);
                 }
             }
 
