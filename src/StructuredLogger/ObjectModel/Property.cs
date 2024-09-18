@@ -4,4 +4,9 @@
     {
         public override string TypeName => nameof(Property);
     }
+
+    public class TaskParameterProperty : Property
+    {
+        public string ParameterName { get; set; }
+    }
 }

@@ -198,11 +198,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 parent = task.GetOrCreateNodeWithName<Folder>(folderName);
                 parent.DisableChildrenCache = true;
 
-                string itemName = isOutput && parameterName is not null
-                    ? $"{propertyName ?? itemType} from parameter {parameterName}"
-                    : propertyName ?? itemType;
+                string itemName = propertyName ?? itemType;
 
-                node = CreateParameterNode(itemName, items, isOutput);
+                node = CreateParameterNode(itemName, items, isOutput, parameterName);
             }
             else if (
                 kind == TaskParameterMessageKind.AddItem ||
@@ -254,26 +252,53 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private BaseNode CreateParameterNode(string itemName, IEnumerable items, bool isOutput = false)
+        private BaseNode CreateParameterNode(string itemName, IEnumerable items, bool isOutput = false, string parameterName = null)
         {
             if (items is IList<ITaskItem> list && list.Count == 1 && list[0] is ITaskItem scalar && scalar.MetadataCount == 0)
             {
-                var property = new Property
+                BaseNode property;
+                if (parameterName != null && parameterName != itemName)
                 {
-                    Name = itemName,
-                    Value = scalar.ItemSpec
-                };
+                    property = new TaskParameterProperty
+                    {
+                        Name = itemName,
+                        Value = scalar.ItemSpec,
+                        ParameterName = parameterName
+                    };
+                }
+                else
+                {
+                    property = new Property
+                    {
+                        Name = itemName,
+                        Value = scalar.ItemSpec
+                    };
+                }
+
                 return property;
             }
 
             TreeNode parent;
             if (isOutput)
             {
-                parent = new AddItem { Name = itemName };
+                if (!string.IsNullOrEmpty(parameterName) && parameterName != itemName)
+                {
+                    parent = new TaskParameterItem { Name = itemName, ParameterName = parameterName };
+                }
+                else
+                {
+                    parent = new AddItem { Name = itemName };
+                }
             }
             else
             {
-                parent = new Parameter { Name = itemName };
+                // no need to display the same string twice
+                if (parameterName == itemName)
+                {
+                    parameterName = null;
+                }
+
+                parent = new Parameter { Name = itemName, ParameterName = parameterName };
                 parent.DisableChildrenCache = true;
             }
 

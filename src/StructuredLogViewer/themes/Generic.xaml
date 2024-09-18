@@ -439,6 +439,28 @@
     </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
 
+  <HierarchicalDataTemplate DataType="{x:Type l:TaskParameterItem}"
+                            ItemsSource="{Binding Children}">
+    <StackPanel Orientation="Horizontal">
+      <Path x:Name="icon"
+          Data="{DynamicResource AddItemGeometry}"
+          VerticalAlignment="Center"
+          Width="14"
+          Height="11"
+          Margin="3,3,6,3"
+          Stroke="{DynamicResource ItemStroke}"
+          Fill="{DynamicResource ItemBrush}" />
+      <TextBlock x:Name="label" Text="Add Item " />
+      <TextBlock Text="{Binding Name}" />
+      <TextBlock x:Name="parameterName" Text="{Binding ParameterName}" Foreground="Gray" Margin="16,0,0,0" />
+    </StackPanel>
+    <HierarchicalDataTemplate.Triggers>
+      <DataTrigger Binding="{Binding IsSelected}" Value="False">
+        <Setter TargetName="label" Property="Foreground" Value="{DynamicResource AddItemStroke}" />
+      </DataTrigger>
+    </HierarchicalDataTemplate.Triggers>
+  </HierarchicalDataTemplate>
+
   <HierarchicalDataTemplate DataType="{x:Type l:RemoveItem}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
@@ -571,11 +593,26 @@
     </DataTemplate.Triggers>
   </DataTemplate>
 
+  <DataTemplate DataType="{x:Type l:TaskParameterProperty}">
+    <StackPanel Orientation="Horizontal">
+      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{DynamicResource PropertyStroke}" Fill="{DynamicResource PropertyBrush}" />
+      <TextBlock x:Name="label" Text="{Binding NameAndEquals, Mode=OneTime}" />
+      <TextBlock Text="{Binding ShortenedValue}" />
+      <TextBlock x:Name="parameterName" Text="{Binding ParameterName}" Foreground="Gray" Margin="16,0,0,0" />
+    </StackPanel>
+    <DataTemplate.Triggers>
+      <DataTrigger Binding="{Binding IsSelected}" Value="False">
+        <Setter TargetName="label" Property="Foreground" Value="{DynamicResource PropertyStroke}" />
+      </DataTrigger>
+    </DataTemplate.Triggers>
+  </DataTemplate>
+
   <HierarchicalDataTemplate DataType="{x:Type l:Parameter}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
       <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{DynamicResource ParameterStroke}" Fill="{DynamicResource ParameterBrush}" />
       <TextBlock x:Name="name" Text="{Binding Name}" />
+      <TextBlock x:Name="parameterName" Text="{Binding ParameterName}" Foreground="Gray" Margin="16,0,0,0" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
       <DataTrigger Binding="{Binding IsSelected}" Value="False">
