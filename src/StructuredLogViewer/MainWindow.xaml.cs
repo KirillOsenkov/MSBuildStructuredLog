@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
@@ -106,6 +107,10 @@ namespace StructuredLogViewer
                 {
                     return true;
                 }
+            }
+            else if (exception is OperationCanceledException or AggregateException or TargetInvocationException)
+            {
+                return true;
             }
 
             return false;
