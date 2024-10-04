@@ -183,6 +183,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     ProjectFinished
                     BuildStarted
                     BuildFinished
+                    BuildCanceled
                     ProjectEvaluationStarted
                     ProjectEvaluationFinished
                 BuildError
@@ -211,7 +212,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 case ProjectFinishedEventArgs projectFinished: return Write(projectFinished);
                 case BuildStartedEventArgs buildStarted: return Write(buildStarted);
                 case BuildFinishedEventArgs buildFinished: return Write(buildFinished);
-                case BuildSubmissionStartedEvent buildSubmissionStarted: return Write(buildSubmissionStarted);
+                case BuildCanceledEventArgs buildCanceled: return Write(buildCanceled);
+                case BuildSubmissionStartedEventArgs buildSubmissionStarted: return Write(buildSubmissionStarted);
                 case ProjectEvaluationStartedEventArgs projectEvaluationStarted: return Write(projectEvaluationStarted);
                 case ProjectEvaluationFinishedEventArgs projectEvaluationFinished: return Write(projectEvaluationFinished);
                 case BuildCheckTracingEventArgs buildCheckTracing: return Write(buildCheckTracing);
@@ -311,6 +313,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return BinaryLogRecordKind.BuildFinished;
         }
 
+        private BinaryLogRecordKind Write(BuildCanceledEventArgs e)
+        {
+            WriteBuildEventArgsFields(e);
+            return BinaryLogRecordKind.BuildCanceled;
+        }
+
         private BinaryLogRecordKind Write(ProjectEvaluationStartedEventArgs e)
         {
             WriteBuildEventArgsFields(e, writeMessage: false);
@@ -336,7 +344,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return BinaryLogRecordKind.BuildCheckAcquisition;
         }
 
-        private BinaryLogRecordKind Write(BuildSubmissionStartedEvent e)
+        private BinaryLogRecordKind Write(BuildSubmissionStartedEventArgs e)
         {
             WriteBuildEventArgsFields(e, writeMessage: false);
             Write(e.GlobalProperties);

@@ -4,7 +4,7 @@ using Microsoft.Build.Framework;
 
 namespace StructuredLogger.BinaryLogger
 {
-    internal class BuildSubmissionStartedEvent()
+    internal class BuildSubmissionStartedEventArgs()
         : BuildStatusEventArgs(message: "", helpKeyword: null, senderName: null, eventTimestamp: DateTime.UtcNow)
     {
         public IDictionary<string, string?> GlobalProperties { get; set; }
