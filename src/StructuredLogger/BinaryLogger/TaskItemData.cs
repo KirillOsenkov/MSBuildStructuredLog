@@ -14,7 +14,7 @@ namespace Microsoft.Build.Framework
     /// </summary>
     internal class TaskItemData : ITaskItem
     {
-        private static readonly Dictionary<string, string> _emptyMetadata = new Dictionary<string, string>();
+        private static readonly Dictionary<string, string> _emptyMetadata = new();
 
         public string ItemSpec { get; set; }
         public IDictionary<string, string> Metadata { get; }

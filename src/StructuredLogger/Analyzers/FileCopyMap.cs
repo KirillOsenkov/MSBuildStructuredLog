@@ -22,8 +22,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public string FilePath { get; set; }
         public DirectoryData Directory { get; set; }
 
-        public List<FileCopyInfo> Incoming { get; } = new List<FileCopyInfo>();
-        public List<FileCopyInfo> Outgoing { get; } = new List<FileCopyInfo>();
+        public List<FileCopyInfo> Incoming { get; } = [];
+        public List<FileCopyInfo> Outgoing { get; } = [];
 
         public int CompareTo(FileData other)
         {
@@ -43,7 +43,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public string Name { get; set; }
         public DirectoryData Parent { get; set; }
 
-        public List<FileData> Files { get; } = new List<FileData>();
+        public List<FileData> Files { get; } = [];
 
         public override string ToString()
         {
@@ -62,7 +62,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private static readonly string DirectorySeparator = Path.DirectorySeparatorChar.ToString();
         private static readonly string AltDirectorySeparator = Path.AltDirectorySeparatorChar.ToString();
 
-        private Dictionary<string, DirectoryData> directories = new Dictionary<string, DirectoryData>(StringComparer.OrdinalIgnoreCase);
+        private Dictionary<string, DirectoryData> directories = new(StringComparer.OrdinalIgnoreCase);
 
         public event Action<FileData, IList<SearchResult>> FoundSingleFileCopy;
 

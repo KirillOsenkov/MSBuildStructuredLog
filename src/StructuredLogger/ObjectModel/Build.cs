@@ -12,7 +12,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
     /// </summary>
     public class Build : TimedNode
     {
-        public StringCache StringTable { get; } = new StringCache();
+        public StringCache StringTable { get; } = new();
 
         public SearchIndex SearchIndex { get; set; }
 
@@ -26,7 +26,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public int FileFormatVersion { get; set; }
         public byte[] SourceFilesArchive { get; set; }
 
-        private readonly List<TPLTask> backgroundTasks = new List<TPLTask>();
+        private readonly List<TPLTask> backgroundTasks = [];
 
         private IReadOnlyList<ArchiveFile> sourceFiles;
         public IReadOnlyList<ArchiveFile> SourceFiles
@@ -193,12 +193,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return result;
         }
 
-        public BuildStatistics Statistics { get; set; } = new BuildStatistics();
+        public BuildStatistics Statistics { get; set; } = new();
 
         public FileCopyMap FileCopyMap { get; set; }
         public ProjectReferenceGraph ProjectReferenceGraph { get; set; }
 
-        public Dictionary<string, HashSet<string>> TaskAssemblies { get; } = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, HashSet<string>> TaskAssemblies { get; } = new(StringComparer.OrdinalIgnoreCase);
 
         public void RegisterTask(Task task)
         {
@@ -239,7 +239,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return found;
         }
 
-        private Dictionary<int, ProjectEvaluation> evaluationById = new Dictionary<int, ProjectEvaluation>();
+        private Dictionary<int, ProjectEvaluation> evaluationById = new();
 
         public ProjectEvaluation FindEvaluation(int id)
         {

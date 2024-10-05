@@ -36,7 +36,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        public ObservableCollection<string> MSBuildLocations { get; } = new ObservableCollection<string>();
+        public ObservableCollection<string> MSBuildLocations { get; } = [];
 
         public string MSBuildLocation => CollectionViewSource.GetDefaultView(MSBuildLocations).CurrentItem as string;
 

@@ -67,7 +67,7 @@ namespace TaskRunner
             throw new NotImplementedException(nameof(Yield));
         }
 
-        private Dictionary<object, object> registeredTaskObjects = new Dictionary<object, object>();
+        private Dictionary<object, object> registeredTaskObjects = new();
 
         public void RegisterTaskObject(object key, object obj, RegisteredTaskObjectLifetime lifetime, bool allowEarlyCollection)
         {

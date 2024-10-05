@@ -55,9 +55,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             NameValueListLargest = Math.Max(NameValueListLargest, size);
         }
 
-        public List<int> StringSizes = new List<int>();
+        public List<int> StringSizes = [];
 
-        public List<string> AllStrings = new List<string>();
+        public List<string> AllStrings = [];
 
         private void OnStringRead(string text, long lengthInBytes)
         {
@@ -99,9 +99,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public class RecordsByType
         {
-            private readonly List<Record> list = new List<Record>();
+            private readonly List<Record> list = [];
 
-            Dictionary<string, RecordsByType> recordsByType = new Dictionary<string, RecordsByType>();
+            Dictionary<string, RecordsByType> recordsByType = new();
             public IReadOnlyList<RecordsByType> CategorizedRecords { get; private set; }
 
             public RecordsByType(string type = null)
@@ -191,8 +191,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return $"{name.PadRight(30, ' ')}\t\t\tTotal size: {total:N0}\t\t\tCount: {count:N0}\t\t\tLargest: {largest:N0}";
         }
 
-        private Dictionary<(int node, int target), string> targetNamesById = new Dictionary<(int node, int target), string>();
-        private Dictionary<(int node, int task), string> taskNamesById = new Dictionary<(int node, int task), string>();
+        private Dictionary<(int node, int target), string> targetNamesById = new();
+        private Dictionary<(int node, int task), string> taskNamesById = new();
 
         private void Process(IEnumerable<Record> records)
         {

@@ -23,8 +23,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// when we start reading the nodes later.
         /// </summary>
         private readonly MemoryStream treeNodesStream;
-        private readonly Dictionary<string, int> stringTable = new Dictionary<string, int>();
-        private readonly List<string> attributes = new List<string>(10);
+        private readonly Dictionary<string, int> stringTable = new();
+        private readonly List<string> attributes = new(10);
 
         public TreeBinaryWriter(string filePath)
         {

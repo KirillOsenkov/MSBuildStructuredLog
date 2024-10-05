@@ -74,7 +74,7 @@ namespace StructuredLogViewer.Controls
             Visibility = Tabs.Any() ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        public ObservableCollection<TabItem> Tabs { get; } = new ObservableCollection<TabItem>();
+        public ObservableCollection<TabItem> Tabs { get; } = [];
 
         public TabItem Find(string filePath)
         {

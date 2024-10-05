@@ -9,7 +9,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
     {
         private StringCache stringTable;
         private XmlReader reader;
-        private readonly List<KeyValuePair<string, string>> attributes = new List<KeyValuePair<string, string>>(10);
+        private readonly List<KeyValuePair<string, string>> attributes = new(10);
 
         public static Build ReadFromXml(string xmlFilePath)
         {

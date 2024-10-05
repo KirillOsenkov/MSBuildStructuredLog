@@ -44,7 +44,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             string projectFilePath = Path.GetFileName(projectFile);
 
             // Check to see if the there are any specific target names to be built.
-            // If targetNames is null or empty then we will be building with the 
+            // If targetNames is null or empty then we will be building with the
             // default targets.
             if (!string.IsNullOrEmpty(targetNames))
             {
@@ -61,8 +61,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return FormatResourceStringIgnoreCodeAndKeyword(succeeded ? "Done building project \"{0}\"." : "Done building project \"{0}\" -- FAILED.", Path.GetFileName(projectFile));
         }
 
-        private readonly Dictionary<(string, string, string, string), string> propertyReassignmentCache =
-            new Dictionary<(string, string, string, string), string>();
+        private readonly Dictionary<(string, string, string, string), string> propertyReassignmentCache = new();
 
         private string GetPropertyReassignmentMessage(string propertyName, string newValue, string previousValue, string location)
         {

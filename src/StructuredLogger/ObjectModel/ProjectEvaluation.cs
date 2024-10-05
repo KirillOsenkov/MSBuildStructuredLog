@@ -29,7 +29,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public override string TypeName => nameof(ProjectEvaluation);
 
-        public HashSet<string> MessageTexts { get; } = new HashSet<string>();
+        public HashSet<string> MessageTexts { get; } = [];
 
         public bool IsLowRelevance
         {
@@ -83,7 +83,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private Dictionary<string, Import> importsMap = new Dictionary<string, Import>();
+        private Dictionary<string, Import> importsMap = new();
 
         public void AddImport(TextNode textNode)
         {

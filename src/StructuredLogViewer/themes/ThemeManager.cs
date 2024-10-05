@@ -72,7 +72,7 @@ namespace StructuredLogViewer
         public static readonly Color ControlText = Color.FromRgb(200, 200, 200);
         public static readonly Brush ControlTextBrush = new SolidColorBrush(ControlText);
 
-        private static readonly BrushConverter brushConverter = new BrushConverter();
+        private static readonly BrushConverter brushConverter = new();
         public static Brush GetBrush(string hex) => (Brush)brushConverter.ConvertFromString(hex);
         public static Color GetColor(string hex) => (Color)ColorConverter.ConvertFromString(hex);
 

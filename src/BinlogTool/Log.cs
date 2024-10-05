@@ -4,7 +4,7 @@ namespace BinlogTool
 {
     public class Log
     {
-        private static readonly object consoleLock = new object();
+        private static readonly object consoleLock = new();
 
         public static bool Quiet { get; internal set; }
 

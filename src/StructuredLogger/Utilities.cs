@@ -117,7 +117,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
     public class Rental<T>
     {
-        private readonly Queue<T> queue = new Queue<T>();
+        private readonly Queue<T> queue = new();
 
         private Func<T> Factory;
 
@@ -152,7 +152,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
     {
         public int ChunkSize { get; }
 
-        private List<List<T>> chunks = new List<List<T>>();
+        private List<List<T>> chunks = [];
 
         public ChunkedList() : this(1048576)
         {

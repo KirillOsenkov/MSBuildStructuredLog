@@ -67,12 +67,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// of writing one giant string table at the end. If a binlog is interrupted
         /// we'll be able to use all the information we've discovered thus far.
         /// </summary>
-        private readonly Dictionary<HashKey, int> stringHashes = new Dictionary<HashKey, int>();
+        private readonly Dictionary<HashKey, int> stringHashes = new();
 
         /// <summary>
         /// Hashtable used for deduplicating name-value lists. Same as strings.
         /// </summary>
-        private readonly Dictionary<HashKey, int> nameValueListHashes = new Dictionary<HashKey, int>();
+        private readonly Dictionary<HashKey, int> nameValueListHashes = new();
 
         /// <summary>
         /// Index 0 is null, Index 1 is the empty string.
@@ -100,13 +100,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// <summary>
         /// A temporary buffer we use when writing a NameValueList record. Avoids allocating a list each time.
         /// </summary>
-        private readonly List<KeyValuePair<string, string>> nameValueListBuffer = new List<KeyValuePair<string, string>>(1024);
+        private readonly List<KeyValuePair<string, string>> nameValueListBuffer = new(1024);
 
         /// <summary>
         /// A temporary buffer we use when hashing a NameValueList record. Stores the indices of hashed strings
         /// instead of the actual names and values.
         /// </summary>
-        private readonly List<KeyValuePair<int, int>> nameValueIndexListBuffer = new List<KeyValuePair<int, int>>(1024);
+        private readonly List<KeyValuePair<int, int>> nameValueIndexListBuffer = new(1024);
 
         /// <summary>
         /// Raised when an item is encountered with a hint to embed a file into the binlog.
@@ -863,8 +863,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         // Both of these are used simultaneously so can't just have a single list
-        private readonly List<object> reusableItemsList = new List<object>();
-        private readonly List<object> reusableProjectItemList = new List<object>();
+        private readonly List<object> reusableItemsList = [];
+        private readonly List<object> reusableProjectItemList = [];
 
         private void WriteTaskItemList(IEnumerable items, bool writeMetadata = true)
         {
@@ -971,7 +971,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     WriteTaskItemList(itemList);
                     CheckForFilesToEmbed(itemType, itemList);
                 });
-            
+
                 // signal the end
                 Write(0);
             }
@@ -984,7 +984,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     WriteTaskItemList(itemList);
                     CheckForFilesToEmbed(itemType, itemList);
                 });
-            
+
                 // signal the end
                 Write(0);
             }

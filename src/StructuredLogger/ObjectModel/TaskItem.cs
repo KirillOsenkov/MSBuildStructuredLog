@@ -8,7 +8,7 @@ namespace Microsoft.Build.Logging
     public class TaskItem : ITaskItem2
     {
         public string ItemSpec { get; set; }
-        public Dictionary<string, string> Metadata { get; } = new Dictionary<string, string>();
+        public Dictionary<string, string> Metadata { get; } = new();
         public string EvaluatedIncludeEscaped { get; set; }
 
         public int MetadataCount => Metadata.Count;

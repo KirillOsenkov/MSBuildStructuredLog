@@ -7,7 +7,7 @@ namespace StructuredLogViewer
 {
     public class StringEmptinessToVisibilityConverter : IValueConverter
     {
-        public static readonly StringEmptinessToVisibilityConverter Instance = new StringEmptinessToVisibilityConverter();
+        public static readonly StringEmptinessToVisibilityConverter Instance = new();
 
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {

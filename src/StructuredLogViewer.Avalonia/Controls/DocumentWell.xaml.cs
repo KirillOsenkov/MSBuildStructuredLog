@@ -39,7 +39,7 @@ namespace StructuredLogViewer.Avalonia.Controls
             IsVisible = Tabs.Any();
         }
 
-        public ObservableCollection<SourceFileTab> Tabs { get; } = new ObservableCollection<SourceFileTab>();
+        public ObservableCollection<SourceFileTab> Tabs { get; } = [];
 
         public SourceFileTab Find(string filePath)
         {

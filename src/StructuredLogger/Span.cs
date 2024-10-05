@@ -8,7 +8,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public int Length;
         public int End => Start + Length;
 
-        public static readonly Span Empty = new Span();
+        public static readonly Span Empty = new();
 
         public Span(int start, int length) : this()
         {

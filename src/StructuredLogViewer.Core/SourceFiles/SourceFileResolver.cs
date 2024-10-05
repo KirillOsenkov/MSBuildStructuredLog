@@ -7,14 +7,11 @@ namespace StructuredLogViewer
 {
     public class SourceFileResolver : ISourceFileResolver
     {
-        private readonly List<ISourceFileResolver> resolvers = new List<ISourceFileResolver>
-        {
-            new LocalSourceFileResolver()
-        };
+        private readonly List<ISourceFileResolver> resolvers = [new LocalSourceFileResolver()];
 
         private const string buildsourceszip = ".buildsources.zip";
 
-        private readonly Dictionary<string, SourceText> fileContentsCache = new Dictionary<string, SourceText>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, SourceText> fileContentsCache = new(StringComparer.OrdinalIgnoreCase);
 
         public ArchiveFileResolver ArchiveFile { get; private set; }
 

@@ -98,7 +98,7 @@ namespace StructuredLogViewer.Controls
 
         public BuildControl BuildControl { get; set; }
 
-        public Dictionary<BaseNode, TextBlock> TextBlocks { get; set; } = new Dictionary<BaseNode, TextBlock>();
+        public Dictionary<BaseNode, TextBlock> TextBlocks { get; set; } = new();
 
         private bool isDoubleClick = false;
 
@@ -316,7 +316,7 @@ namespace StructuredLogViewer.Controls
         }
 
         private TextBlock activeTextBlock = null;
-        private Border highlight = new Border()
+        private Border highlight = new()
         {
             BorderBrush = Brushes.DeepSkyBlue,
             BorderThickness = new Thickness(1)

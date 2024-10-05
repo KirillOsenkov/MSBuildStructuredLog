@@ -13,7 +13,7 @@ namespace StructuredLogViewer.Core.ProjectGraph
     {
         private class GlobalPropertyComparer : IComparer<string>
         {
-            public static readonly GlobalPropertyComparer Instance = new GlobalPropertyComparer();
+            public static readonly GlobalPropertyComparer Instance = new();
 
             // larger number means higher priority
             private static readonly IReadOnlyDictionary<string, int> propertiesWithPriority =
@@ -57,7 +57,7 @@ namespace StructuredLogViewer.Core.ProjectGraph
             }
         }
 
-        private readonly StringCache stringCache = new StringCache();
+        private readonly StringCache stringCache = new();
 
         public Graph FromBuild(Build build)
         {

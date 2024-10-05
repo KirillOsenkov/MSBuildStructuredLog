@@ -4,7 +4,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class StringCache
     {
-        private Dictionary<string, string> deduplicationMap = new Dictionary<string, string>();
+        private Dictionary<string, string> deduplicationMap = new();
 
         public IEnumerable<string> Instances { get; set; }
 

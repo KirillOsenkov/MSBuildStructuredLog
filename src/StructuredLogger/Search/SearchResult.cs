@@ -7,7 +7,7 @@ namespace StructuredLogViewer
     public class SearchResult
     {
         public BaseNode Node { get; }
-        public List<(string field, string match)> WordsInFields = new List<(string, string)>();
+        public List<(string field, string match)> WordsInFields = new();
 
         public IList<string> FieldsToDisplay { get; set; }
 
@@ -20,7 +20,7 @@ namespace StructuredLogViewer
 
         public FileCopyInfo AssociatedFileCopy { get; set; }
 
-        public static SearchResult EmptyQueryMatch { get; } = new SearchResult();
+        public static SearchResult EmptyQueryMatch { get; } = new();
 
         public SearchResult()
         {

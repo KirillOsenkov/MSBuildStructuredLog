@@ -13,9 +13,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public TimeSpan TotalRARDuration = TimeSpan.Zero;
         private StringCache stringTable;
 
-        public HashSet<string> UsedLocations { get; } = new HashSet<string>();
-        public HashSet<string> UnusedLocations { get; } = new HashSet<string>();
-        private readonly HashSet<string> currentUsedLocations = new HashSet<string>();
+        public HashSet<string> UsedLocations { get; } = [];
+        public HashSet<string> UnusedLocations { get; } = [];
+        private readonly HashSet<string> currentUsedLocations = [];
 
         public void AnalyzeResolveAssemblyReference(Task rar)
         {

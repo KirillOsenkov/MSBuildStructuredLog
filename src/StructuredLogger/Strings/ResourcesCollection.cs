@@ -19,7 +19,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             currentSet = ResourcesCollection[culture];
         }
 
-        private static readonly object lockObject = new object();
+        private static readonly object lockObject = new();
 
         private static ResourcesDictionary resourcesCollection;
         public static ResourcesDictionary ResourcesCollection

@@ -37,7 +37,7 @@ namespace StructuredLogViewer.Avalonia.Controls
             MSBuildLocation = MSBuildLocations.FirstOrDefault();
         }
 
-        public ObservableCollection<string> MSBuildLocations { get; } = new ObservableCollection<string>();
+        public ObservableCollection<string> MSBuildLocations { get; } = [];
 
         private string msBuildLocation;
         public string MSBuildLocation

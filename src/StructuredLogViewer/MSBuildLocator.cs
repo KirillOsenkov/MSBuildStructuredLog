@@ -12,7 +12,7 @@ namespace StructuredLogViewer
 {
     public class MSBuildLocator
     {
-        private static readonly VisualStudioInstanceQueryOptions visualStudioQueryOptions = new VisualStudioInstanceQueryOptions
+        private static readonly VisualStudioInstanceQueryOptions visualStudioQueryOptions = new()
         {
             DiscoveryTypes = DiscoveryType.DotNetSdk | DiscoveryType.DeveloperConsole | DiscoveryType.VisualStudioSetup
         };
