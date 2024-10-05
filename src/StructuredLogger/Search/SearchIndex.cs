@@ -157,7 +157,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private void AddNodes(BaseNode node, Action<BaseNode> collector)
+        private static void AddNodes(BaseNode node, Action<BaseNode> collector)
         {
             collector(node);
 

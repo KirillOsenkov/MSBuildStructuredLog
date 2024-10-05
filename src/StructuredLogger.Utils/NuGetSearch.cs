@@ -197,7 +197,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private Project CreateProject(AssetsFile file)
+        private static Project CreateProject(AssetsFile file)
         {
             return new Project
             {
@@ -225,7 +225,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             PopulateLogs(project, lockFile);
         }
 
-        private bool PopulateDependencies(
+        private static bool PopulateDependencies(
             Project project,
             LockFile lockFile,
             NodeQueryMatcher matcher,
@@ -348,7 +348,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return result;
         }
 
-        private bool AddDependencies(
+        private static bool AddDependencies(
             LockFile lockFile,
             string id,
             TreeNode dependencyNode,
@@ -542,7 +542,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return match;
         }
 
-        private SearchResult IsMatch(IList<LockFileItem> list, NodeQueryMatcher matcher)
+        private static SearchResult IsMatch(IList<LockFileItem> list, NodeQueryMatcher matcher)
         {
             if (list == null || list.Count == 0)
             {
@@ -561,7 +561,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return null;
         }
 
-        private SearchResult IsMatch(IList<string> list, NodeQueryMatcher matcher)
+        private static SearchResult IsMatch(IList<string> list, NodeQueryMatcher matcher)
         {
             if (list == null || list.Count == 0)
             {
@@ -580,7 +580,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return null;
         }
 
-        private TreeNode AddPackage(LockFileTargetLibrary package, NodeQueryMatcher matcher, LockFileLibrary lockFileLibrary)
+        private static TreeNode AddPackage(LockFileTargetLibrary package, NodeQueryMatcher matcher, LockFileLibrary lockFileLibrary)
         {
             var packageNode = new Package
             {
@@ -654,7 +654,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return node;
         }
 
-        private bool AddItems(TreeNode node, NodeQueryMatcher matcher, HashSet<string> files, IList<string> items, string itemName)
+        private static bool AddItems(TreeNode node, NodeQueryMatcher matcher, HashSet<string> files, IList<string> items, string itemName)
         {
             if (items == null || items.Count == 0)
             {
@@ -681,7 +681,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return folder.IsExpanded;
         }
 
-        private bool AddItems(TreeNode node, NodeQueryMatcher matcher, HashSet<string> files, IList<LockFileItem> items, string itemName)
+        private static bool AddItems(TreeNode node, NodeQueryMatcher matcher, HashSet<string> files, IList<LockFileItem> items, string itemName)
         {
             if (items == null || items.Count == 0)
             {
@@ -717,7 +717,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return folder.IsExpanded;
         }
 
-        private void PopulateLogs(Project project, LockFile lockFile)
+        private static void PopulateLogs(Project project, LockFile lockFile)
         {
             foreach (var logMessage in lockFile.LogMessages)
             {
@@ -769,7 +769,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private (TreeNode node, SearchResult match) CreateNode(
+        private static (TreeNode node, SearchResult match) CreateNode(
             LockFile lockFile,
             string dependency,
             LockFileTargetLibrary library,
@@ -810,11 +810,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 fields = new[] { name, version, dependency };
             }
 
-            var result = WrapWithProxy(node, matcher, fields);
-            return result;
+            return WrapWithProxy(node, matcher, fields);
         }
 
-        private (TreeNode node, SearchResult match) WrapWithProxy(TreeNode original, NodeQueryMatcher matcher, params string[] fields)
+        private static (TreeNode node, SearchResult match) WrapWithProxy(TreeNode original, NodeQueryMatcher matcher, params string[] fields)
         {
             var match = matcher.IsMatch(fields);
             if (match == null || match == SearchResult.EmptyQueryMatch)
@@ -833,7 +832,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return (proxy, match);
         }
 
-        private (string name, string version) ParsePackageId(string dependency)
+        private static (string name, string version) ParsePackageId(string dependency)
         {
             return dependency.GetFirstAndRest(' ');
         }
@@ -910,7 +909,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private string ShortenFrameworkName(string name)
+        private static string ShortenFrameworkName(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
             {

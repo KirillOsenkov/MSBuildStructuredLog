@@ -59,7 +59,7 @@ namespace BinlogTool
                 new EnumerationOptions() { IgnoreInaccessible = true, RecurseSubdirectories = recurse, });
         }
 
-        private void Search(IEnumerable<string> files, string search)
+        private static void Search(IEnumerable<string> files, string search)
         {
             foreach (var file in files)
             {
@@ -67,11 +67,11 @@ namespace BinlogTool
             }
         }
 
-        private void SearchInFile(string binlogFilePath, string searchText)
+        private static void SearchInFile(string binlogFilePath, string searchText)
         {
-            var build = this.ReadBuild(binlogFilePath);
+            var build = ReadBuild(binlogFilePath);
             BuildAnalyzer.AnalyzeBuild(build);
-            
+
             var search = new Search(
                     new[] { build },
                     build.StringTable.Instances,

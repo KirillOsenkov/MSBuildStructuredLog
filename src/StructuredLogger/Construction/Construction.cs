@@ -594,7 +594,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private static string GetEvaluationProjectName(int evaluationId, string projectName) => projectName;
 
-        private void ConstructProfilerResult(ProjectEvaluation projectEvaluation, ProfilerResult profilerResult)
+        private static void ConstructProfilerResult(ProjectEvaluation projectEvaluation, ProfilerResult profilerResult)
         {
             var nodes = new Dictionary<long, EvaluationProfileEntry>();
 
@@ -867,7 +867,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 node.AddChild(metadataFolder);
             }
-        }   
+        }
 
         private void HandleException(Exception ex)
         {
@@ -1237,7 +1237,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private Folder GetOrCreateGlobalPropertiesFolder(TreeNode project, IEnumerable globalProperties)
+        private static Folder GetOrCreateGlobalPropertiesFolder(TreeNode project, IEnumerable globalProperties)
         {
             if (globalProperties == null)
             {

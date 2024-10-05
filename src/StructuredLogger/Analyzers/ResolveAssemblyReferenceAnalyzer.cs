@@ -160,7 +160,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private string ParseReferenceName(string name)
+        private static string ParseReferenceName(string name)
         {
             var quote = name.IndexOf('"');
             if (quote == -1)

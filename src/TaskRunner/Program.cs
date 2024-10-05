@@ -60,7 +60,7 @@ namespace TaskRunner
 
             try
             {
-                new Program().Run(binlog, index, taskName);
+                Run(binlog, index, taskName);
             }
             catch (Exception exception)
             {
@@ -83,12 +83,12 @@ namespace TaskRunner
             Console.WriteLine("    Specify 'debug' as the third argument to trigger Debugger attach prompt.");
         }
 
-        private void Run(string binlog, int index, string taskName)
+        private static void Run(string binlog, int index, string taskName)
         {
             var build = Serialization.Read(binlog);
 
             // Need to analyze build here to fully emulate what the viewer does when opening a .binlog.
-            // Since the analyzers will mutate the tree it affects indices of TimedNodes. To properly 
+            // Since the analyzers will mutate the tree it affects indices of TimedNodes. To properly
             // calculate the right index we need to have the same tree as in the viewer.
             BuildAnalyzer.AnalyzeBuild(build);
 
@@ -112,7 +112,7 @@ namespace TaskRunner
                 {
                     Console.Error.WriteLine($"Task {taskName} not found in {binlog}");
                 }
-                
+
                 return;
             }
 

@@ -256,7 +256,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             throw new NotImplementedException();
         }
 
-        private Project CreateProject(string project)
+        private static Project CreateProject(string project)
         {
             return new Project()
             {

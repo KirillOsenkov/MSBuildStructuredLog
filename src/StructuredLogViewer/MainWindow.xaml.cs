@@ -89,7 +89,7 @@ namespace StructuredLogViewer
             }
         }
 
-        private bool ShouldIgnore(Exception exception)
+        private static bool ShouldIgnore(Exception exception)
         {
             var toString = exception.ToString();
 
@@ -206,7 +206,7 @@ namespace StructuredLogViewer
             return false;
         }
 
-        private string GetSingleFileFromClipboard()
+        private static string GetSingleFileFromClipboard()
         {
             try
             {
@@ -248,7 +248,7 @@ namespace StructuredLogViewer
             UpdateRecentItemsMenu();
         }
 
-        private void WelcomeScreen_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        private static void WelcomeScreen_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(WelcomeScreen.UseDarkTheme))
             {
@@ -661,7 +661,7 @@ namespace StructuredLogViewer
             }
         }
 
-        private void AddNuGetNode(Build build)
+        private static void AddNuGetNode(Build build)
         {
             var nuget = new Package { Name = "NuGet" };
             var note = new Note { Text = @"This binlog contains project.assets.json files.
@@ -685,7 +685,7 @@ Use project(.) or project(.csproj) to search all projects (slow)." };
             build.AddChild(nuget);
         }
 
-        private async System.Threading.Tasks.Task QueueAnalyzeBuild(Build build)
+        private static async System.Threading.Tasks.Task QueueAnalyzeBuild(Build build)
         {
             await System.Threading.Tasks.Task.Run(() =>
             {

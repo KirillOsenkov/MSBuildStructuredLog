@@ -82,7 +82,7 @@ namespace StructuredLogViewer.Core.ProjectGraph
             return graph;
         }
 
-        private void AddVirtualBuildRequestNodes(Graph graph)
+        private static void AddVirtualBuildRequestNodes(Graph graph)
         {
             var rootNodes = graph.Nodes.Where(n => !n.InEdges.Any()).ToArray();
 

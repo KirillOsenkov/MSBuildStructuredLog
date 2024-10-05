@@ -14,7 +14,7 @@ namespace BinlogTool
 
         public int Run(string binlog, string outputFilePath)
         {
-            Build build = this.ReadBuild(binlog, false);
+            Build build = ReadBuild(binlog, false);
             if (build == null)
             {
                 return -1;
@@ -94,7 +94,7 @@ namespace BinlogTool
             return 0;
         }
 
-        private void Error(string text)
+        private static void Error(string text)
         {
             Console.Error.WriteLine(text);
         }

@@ -366,7 +366,7 @@ namespace StructuredLogViewer
             }
         }
 
-        private string PreprocessQuery(string query)
+        private static string PreprocessQuery(string query)
         {
             if (string.IsNullOrEmpty(query))
             {

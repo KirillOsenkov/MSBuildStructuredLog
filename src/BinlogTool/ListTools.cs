@@ -10,7 +10,7 @@ namespace BinlogTool
     {
         public void Run(string binLogFilePath)
         {
-            var build = this.ReadBuild(binLogFilePath);
+            var build = ReadBuild(binLogFilePath);
             BuildAnalyzer.AnalyzeBuild(build);
             var strings = build.StringTable.Instances.OrderBy(s => s).ToArray();
 
@@ -40,7 +40,7 @@ namespace BinlogTool
             }
         }
 
-        private string GetSourceCommitId(Build build)
+        private static string GetSourceCommitId(Build build)
         {
             var environment = build.FindChild<Folder>("Environment");
             if (environment == null)
@@ -74,7 +74,7 @@ namespace BinlogTool
             "UnpackLibraryResources"
         };
 
-        private string GetToolInfo(Task task)
+        private static string GetToolInfo(Task task)
         {
             if (ignoreTasks.Contains(task.Name))
             {

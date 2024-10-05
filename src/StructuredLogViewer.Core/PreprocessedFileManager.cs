@@ -58,7 +58,7 @@ namespace StructuredLogViewer
             }
         }
 
-        private void VisitImport(Import import, Dictionary<string, Bucket> importMap)
+        private static void VisitImport(Import import, Dictionary<string, Bucket> importMap)
         {
             AddImport(importMap, import);
         }
@@ -110,7 +110,7 @@ namespace StructuredLogViewer
             return null;
         }
 
-        private int CorrectForMultilineTag(SourceText text, int lineNumber, string startText = "<Import", string endText = "/>")
+        private static int CorrectForMultilineTag(SourceText text, int lineNumber, string startText = "<Import", string endText = "/>")
         {
             // can happen for corrupt binlogs where some files have no text
             // see https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/258
@@ -370,7 +370,7 @@ namespace StructuredLogViewer
             return result;
         }
 
-        private void AppendLine(string text, StringBuilder sb, PreprocessContext context)
+        private static void AppendLine(string text, StringBuilder sb, PreprocessContext context)
         {
             int before = sb.Length;
             sb.AppendLine(text);
@@ -412,7 +412,7 @@ namespace StructuredLogViewer
             context.AddProjectSpan(new Span(start, end - start), import);
         }
 
-        private int SkipTag(
+        private static int SkipTag(
             SourceText sourceText,
             StringBuilder sb,
             int line,

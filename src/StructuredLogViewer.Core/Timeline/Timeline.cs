@@ -69,7 +69,7 @@ namespace StructuredLogViewer
             });
         }
 
-        private Block CreateBlock(TimedNode node)
+        private static Block CreateBlock(TimedNode node)
         {
             var block = new Block();
             block.StartTime = node.StartTime;

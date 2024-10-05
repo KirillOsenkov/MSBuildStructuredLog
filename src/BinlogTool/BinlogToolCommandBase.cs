@@ -5,7 +5,7 @@ namespace BinlogTool
 {
     public abstract class BinlogToolCommandBase
     {
-        protected Build ReadBuild(string binLogFilePath, bool throwOnPathNotFound = true)
+        protected static Build ReadBuild(string binLogFilePath, bool throwOnPathNotFound = true)
         {
             if (string.IsNullOrEmpty(binLogFilePath) || !File.Exists(binLogFilePath))
             {

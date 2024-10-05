@@ -18,7 +18,7 @@ namespace BinlogTool
 
         public void Run(string binlog, string outputDirectory, bool reconstruct = false)
         {
-            Build build = this.ReadBuild(binlog, false);
+            Build build = ReadBuild(binlog, false);
             if (build == null)
             {
                 return;
@@ -134,7 +134,7 @@ namespace BinlogTool
             }
         }
 
-        private string[] TryGetReferences(string argument)
+        private static string[] TryGetReferences(string argument)
         {
             if (argument.StartsWith("/r:"))
             {
@@ -212,7 +212,7 @@ namespace BinlogTool
             }
         }
 
-        private string ProcessProjectFileText(string outputDirectory, string virtualPath, string physicalPath, string text)
+        private static string ProcessProjectFileText(string outputDirectory, string virtualPath, string physicalPath, string text)
         {
             if (virtualPath.EndsWith("proj.nuget.g.props", StringComparison.OrdinalIgnoreCase))
             {
@@ -227,7 +227,7 @@ namespace BinlogTool
             return text;
         }
 
-        private string ProcessElementValue(string text, Func<string, string> processor)
+        private static string ProcessElementValue(string text, Func<string, string> processor)
         {
             var document = XDocument.Parse(text, LoadOptions.PreserveWhitespace);
             var root = document.Root;
@@ -242,14 +242,14 @@ namespace BinlogTool
             return document.ToString();
         }
 
-        private void ReplaceElementValue(XElement element, Func<string, string> processor)
+        private static void ReplaceElementValue(XElement element, Func<string, string> processor)
         {
             var value = element.Value;
             value = processor(value);
             element.Value = value;
         }
 
-        private XElement GetElement(XElement parent, string name)
+        private static XElement GetElement(XElement parent, string name)
         {
             return parent.Elements().FirstOrDefault(e => e.Name.LocalName == name);
         }
@@ -264,7 +264,7 @@ namespace BinlogTool
             return pathOnDisk;
         }
 
-        private void WriteFile(string filePath, string text)
+        private static void WriteFile(string filePath, string text)
         {
             try
             {

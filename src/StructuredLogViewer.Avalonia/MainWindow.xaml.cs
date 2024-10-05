@@ -398,7 +398,7 @@ namespace StructuredLogViewer.Avalonia
             DisplayBuild(result);
         }
 
-        private async Task QueueAnalyzeBuild(Build build)
+        private static async Task QueueAnalyzeBuild(Build build)
         {
             await System.Threading.Tasks.Task.Run(() =>
             {
@@ -629,7 +629,7 @@ namespace StructuredLogViewer.Avalonia
             _ = SaveAs();
         }
 
-        private void HelpLink_Click(object sender, RoutedEventArgs e)
+        private static void HelpLink_Click(object sender, RoutedEventArgs e)
         {
             ProcessStartInfo psi = new ProcessStartInfo
             {
@@ -639,7 +639,7 @@ namespace StructuredLogViewer.Avalonia
             Process.Start(psi);
         }
 
-        private void Exit_Click(object sender, RoutedEventArgs e)
+        private static void Exit_Click(object sender, RoutedEventArgs e)
         {
             ((IClassicDesktopStyleApplicationLifetime)Application.Current.ApplicationLifetime).Shutdown();
         }
