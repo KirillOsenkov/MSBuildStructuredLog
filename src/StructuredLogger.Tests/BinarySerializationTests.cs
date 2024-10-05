@@ -26,14 +26,6 @@ namespace StructuredLogger.Tests
             System.Windows.Forms.MessageBox.Show(sw.Elapsed.ToString());
         }
 
-        internal void DumpTimedNodes()
-        {
-            var build = Serialization.Read("1.binlog");
-            var sb = new StringBuilder();
-            build.VisitAllChildren<TimedNode>(t => sb.AppendLine($"{t.Index}: {t}"));
-            System.Windows.Forms.Clipboard.SetText(sb.ToString());
-        }
-
         //[Fact]
         internal void GetBlobSize()
         {

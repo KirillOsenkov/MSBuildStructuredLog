@@ -411,8 +411,7 @@ namespace StructuredLogViewer.Controls
                         int index = container.Items.IndexOf(currentItem);
 
                         var child = VisualTreeHelper.GetChild(itemsPresenter, 0);
-                        var virtualizingPanel = child as VirtualizingStackPanel;
-                        if (virtualizingPanel != null)
+                        if (child is VirtualizingStackPanel virtualizingPanel)
                         {
                             virtualizingPanel.BringIndexIntoViewPublic(index);
                         }
@@ -472,8 +471,7 @@ namespace StructuredLogViewer.Controls
         {
             foreach (object item in treeView.Items)
             {
-                TreeViewItem treeItem = treeView.ItemContainerGenerator.ContainerFromItem(item) as TreeViewItem;
-                if (treeItem != null)
+                if (treeView.ItemContainerGenerator.ContainerFromItem(item) is TreeViewItem treeItem)
                 {
                     treeItem.ExpandAll();
                     treeItem.IsExpanded = true;
@@ -503,17 +501,6 @@ namespace StructuredLogViewer.Controls
         }
 
         /// <summary>
-        /// Clear any selected tree view items within the specified tree view.
-        /// </summary>
-        public static void ClearTreeViewSelection(this TreeView treeView)
-        {
-            if (treeView != null)
-            {
-                ClearTreeViewItemsControlSelection(treeView.Items, treeView.ItemContainerGenerator);
-            }
-        }
-
-        /// <summary>
         /// Recursively walks through the specified tree and de-selects any selected tree view items.
         /// </summary>
         private static void ClearTreeViewItemsControlSelection(this ItemCollection ic, ItemContainerGenerator icg)
@@ -522,44 +509,13 @@ namespace StructuredLogViewer.Controls
             {
                 for (int i = 0; i < ic.Count; i++)
                 {
-                    TreeViewItem tvi = icg.ContainerFromIndex(i) as TreeViewItem;
-
-                    if (tvi != null)
+                    if (icg.ContainerFromIndex(i) is TreeViewItem tvi)
                     {
                         ClearTreeViewItemsControlSelection(tvi.Items, tvi.ItemContainerGenerator);
                         tvi.IsSelected = false;
                     }
                 }
             }
-        }
-
-        public static TreeViewItem GetTreeViewItemFromParentChain(this TreeView treeView, IReadOnlyList<object> itemChain)
-        {
-            ItemsControl current = treeView;
-
-            for (int i = 0; i < itemChain.Count; i++)
-            {
-                var item = itemChain[i];
-                var container = current.ItemContainerGenerator.ContainerFromItem(item);
-                if (container == null)
-                {
-                    return null;
-                }
-
-                if (container is not TreeViewItem treeViewItem)
-                {
-                    return null;
-                }
-
-                if (i == itemChain.Count - 1)
-                {
-                    return treeViewItem;
-                }
-
-                current = treeViewItem;
-            }
-
-            return null;
         }
 
         private static readonly FieldInfo _selectedContainerField =
@@ -690,11 +646,11 @@ namespace StructuredLogViewer.Controls
         }
 
         /// <summary>
-        /// AreClose - Returns whether or not two doubles are "close".  That is, whether or 
+        /// AreClose - Returns whether or not two doubles are "close".  That is, whether or
         /// not they are within epsilon of each other.  Note that this epsilon is proportional
         /// to the numbers themselves to that AreClose survives scalar multiplication.
         /// There are plenty of ways for this to return false even for numbers which
-        /// are theoretically identical, so no code calling this should fail to work if this 
+        /// are theoretically identical, so no code calling this should fail to work if this
         /// returns false.  This is important enough to repeat:
         /// NB: NO CODE CALLING THIS FUNCTION SHOULD DEPEND ON ACCURATE RESULTS - this should be
         /// used for optimizations *only*.
