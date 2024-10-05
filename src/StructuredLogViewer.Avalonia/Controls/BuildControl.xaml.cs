@@ -232,7 +232,7 @@ namespace StructuredLogViewer.Avalonia.Controls
                 var text =
 @"This log contains the full text of projects and imported files used during the build.
 You can use the 'Files' tab in the bottom left to view these files and the 'Find in Files' tab for full-text search.
-For many nodes in the tree (Targets, Tasks, Errors, Projects, etc) pressing SPACE or ENTER or double-clicking 
+For many nodes in the tree (Targets, Tasks, Errors, Projects, etc) pressing SPACE or ENTER or double-clicking
 on the node will navigate to the corresponding source code associated with the node.
 
 More functionality is available from the right-click context menu for each node.
@@ -711,8 +711,7 @@ Recent:
             }
 
             isProcessingBreadcrumbClick = true;
-            var node = breadCrumb.SelectedItem as TreeNode;
-            if (node != null)
+            if (breadCrumb.SelectedItem is TreeNode node)
             {
                 SelectItem(node);
                 treeView.Focus();
@@ -737,11 +736,9 @@ Recent:
 
         private void ResultsList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            var proxy = searchLogControl.ResultsList.SelectedItem as ProxyNode;
-            if (proxy != null)
+            if (searchLogControl.ResultsList.SelectedItem is ProxyNode proxy)
             {
-                var item = proxy.Original as BaseNode;
-                if (item != null)
+                if (proxy.Original is BaseNode item)
                 {
                     SelectItem(item);
                 }
@@ -868,7 +865,7 @@ Recent:
         public void SelectItem(BaseNode item)
         {
             var parentChain = item.GetParentChainExcludingThis();
-            
+
             foreach (var node in parentChain)
             {
                 if (node is TreeNode treeNode)
@@ -1077,8 +1074,7 @@ Recent:
 
         public void CopyName()
         {
-            var nameValueNode = treeView.SelectedItem as NameValueNode;
-            if (nameValueNode != null)
+            if (treeView.SelectedItem is NameValueNode nameValueNode)
             {
                 CopyToClipboard(nameValueNode.Name);
             }
@@ -1086,8 +1082,7 @@ Recent:
 
         public void CopyValue()
         {
-            var nameValueNode = treeView.SelectedItem as NameValueNode;
-            if (nameValueNode != null)
+            if (treeView.SelectedItem is NameValueNode nameValueNode)
             {
                 CopyToClipboard(nameValueNode.Value);
             }
@@ -1124,8 +1119,7 @@ Recent:
 
         private void OnPreviewMouseRightButtonDown(object sender, PointerEventArgs args)
         {
-            var treeViewItem = sender as TreeViewItem;
-            if (treeViewItem != null)
+            if (sender is TreeViewItem treeViewItem)
             {
                 treeViewItem.IsSelected = true;
             }
@@ -1135,19 +1129,18 @@ Recent:
         {
             return node is AbstractDiagnostic
                 || node is Project
-                || (node is Target t && t.SourceFilePath != null && sourceFileResolver.HasFile(t.SourceFilePath))
-                || (node is Task task && task.Parent is Target parentTarget && sourceFileResolver.HasFile(parentTarget.SourceFilePath))
-                || (node is IHasSourceFile ihsf && ihsf.SourceFilePath != null && sourceFileResolver.HasFile(ihsf.SourceFilePath))
-                || (node is NameValueNode nvn && nvn.IsValueShortened)
-                || (node is NamedNode nn && nn.IsNameShortened)
-                || (node is TextNode tn && tn.IsTextShortened);
+                || (node is Target {SourceFilePath: not null} t && sourceFileResolver.HasFile(t.SourceFilePath))
+                || (node is Task {Parent: Target parentTarget} && sourceFileResolver.HasFile(parentTarget.SourceFilePath))
+                || (node is IHasSourceFile {SourceFilePath: not null} ihsf && sourceFileResolver.HasFile(ihsf.SourceFilePath))
+                || node is NameValueNode {IsValueShortened: true} || node is NamedNode {IsNameShortened: true} || node is TextNode {IsTextShortened: true};
         }
 
         private bool HasFullText(BaseNode node)
         {
-            return (node is NameValueNode nvn && nvn.IsValueShortened)
-                || (node is NamedNode nn && nn.IsNameShortened)
-                || (node is TextNode tn && tn.IsTextShortened);
+            return node is
+                NameValueNode {IsValueShortened: true} or
+                NamedNode {IsNameShortened: true} or
+                TextNode {IsTextShortened: true};
         }
 
         private bool Invoke(BaseNode treeNode)
@@ -1187,10 +1180,9 @@ Recent:
                         return DisplayAddRemoveItem(addItem.Parent, addItem.LineNumber ?? 0);
                     case RemoveItem removeItem:
                         return DisplayAddRemoveItem(removeItem.Parent, removeItem.LineNumber ?? 0);
-                    case IHasSourceFile hasSourceFile when hasSourceFile.SourceFilePath != null:
+                    case IHasSourceFile {SourceFilePath: not null} hasSourceFile:
                         int line = 0;
-                        var hasLine = hasSourceFile as IHasLineNumber;
-                        if (hasLine != null)
+                        if (hasSourceFile is IHasLineNumber hasLine)
                         {
                             line = hasLine.LineNumber ?? 0;
                         }

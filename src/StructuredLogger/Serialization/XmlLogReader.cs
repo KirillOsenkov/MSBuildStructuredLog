@@ -96,15 +96,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             case XmlNodeType.Whitespace:
                                 {
                                     var valueNode = stack.Peek();
-                                    var nameValueNode = valueNode as NameValueNode;
-                                    if (nameValueNode != null)
+                                    if (valueNode is NameValueNode nameValueNode)
                                     {
                                         nameValueNode.Value = GetCurrentValue();
                                     }
                                     else
                                     {
-                                        var message = valueNode as Message;
-                                        if (message != null)
+                                        if (valueNode is Message message)
                                         {
                                             message.Text = GetCurrentValue();
                                         }
@@ -189,8 +187,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             var node = Serialization.CreateNode(name);
 
-            var folder = node as Folder;
-            if (folder != null)
+            if (node is Folder folder)
             {
                 folder.Name = GetString(AttributeNames.Name) ?? name;
                 folder.IsLowRelevance = GetBoolean(AttributeNames.IsLowRelevance);
@@ -204,16 +201,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void PopulateAttributes(BaseNode node)
         {
-            var item = node as Item;
-            if (item != null)
+            if (node is Item item)
             {
                 item.Name = GetString(AttributeNames.Name);
                 item.Text = GetString(AttributeNames.Text);
                 return;
             }
 
-            var message = node as Message;
-            if (message != null)
+            if (node is Message message)
             {
                 message.IsLowRelevance = GetBoolean(AttributeNames.IsLowRelevance);
                 message.Timestamp = GetDateTime(AttributeNames.Timestamp);
@@ -221,28 +216,24 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             // then, shared "fall-through" tests that are common to many types of nodes
-            var namedNode = node as NamedNode;
-            if (namedNode != null)
+            if (node is NamedNode namedNode)
             {
                 namedNode.Name = GetString(AttributeNames.Name);
             }
 
-            var textNode = node as TextNode;
-            if (textNode != null)
+            if (node is TextNode textNode)
             {
                 textNode.Text = GetString(AttributeNames.Text);
             }
 
-            var timedNode = node as TimedNode;
-            if (timedNode != null)
+            if (node is TimedNode timedNode)
             {
                 AddStartAndEndTime(timedNode);
                 timedNode.NodeId = GetInteger(AttributeNames.NodeId);
             }
 
             // finally, concrete tests with early exit, sorted by commonality
-            var diagnostic = node as AbstractDiagnostic;
-            if (diagnostic != null)
+            if (node is AbstractDiagnostic diagnostic)
             {
                 diagnostic.Code = GetString(AttributeNames.Code);
                 diagnostic.File = GetString(AttributeNames.File);
@@ -254,8 +245,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            var task = node as Task;
-            if (task != null)
+            if (node is Task task)
             {
                 task.FromAssembly = GetString(AttributeNames.FromAssembly);
                 task.CommandLineArguments = GetString(AttributeNames.CommandLineArguments);
@@ -263,8 +253,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            var target = node as Target;
-            if (target != null)
+            if (node is Target target)
             {
                 target.IsLowRelevance = GetBoolean(AttributeNames.IsLowRelevance);
                 target.DependsOnTargets = GetString(AttributeNames.DependsOnTargets);
@@ -272,15 +261,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            var project = node as Project;
-            if (project != null)
+            if (node is Project project)
             {
                 project.ProjectFile = GetString(AttributeNames.ProjectFile);
                 return;
             }
 
-            var build = node as Build;
-            if (build != null)
+            if (node is Build build)
             {
                 build.Succeeded = GetBoolean(AttributeNames.Succeeded);
                 build.IsAnalyzed = GetBoolean(AttributeNames.IsAnalyzed);

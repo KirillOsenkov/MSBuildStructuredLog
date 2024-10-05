@@ -101,8 +101,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return null;
             }
 
-            var targetStarted = args as TargetStartedEventArgs;
-            if (targetStarted != null && string.Equals(targetStarted.TargetName, "CoreCompile", StringComparison.OrdinalIgnoreCase))
+            if (args is TargetStartedEventArgs targetStarted &&
+                string.Equals(targetStarted.TargetName, "CoreCompile", StringComparison.OrdinalIgnoreCase))
             {
                 var invocation = new CompilerInvocation();
                 taskIdToInvocationMap[(targetId, projectId)] = invocation;

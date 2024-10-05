@@ -149,8 +149,7 @@ namespace StructuredLogViewer.Avalonia
             }
             catch (Exception ex)
             {
-                var welcomeScreen = mainContent.Content as WelcomeScreen;
-                if (welcomeScreen != null)
+                if (mainContent.Content is WelcomeScreen welcomeScreen)
                 {
                     var text = ex.ToString();
                     if (text.Contains("Update.exe not found"))
@@ -540,8 +539,7 @@ namespace StructuredLogViewer.Avalonia
             }
             else if (e.Key == Key.C && e.KeyModifiers.HasFlag(KeyModifiers.Control))
             {
-                var content = mainContent.Content as BuildProgress;
-                if (content != null)
+                if (mainContent.Content is BuildProgress content)
                 {
                     await Clipboard.SetTextAsync(content.MSBuildCommandLine);
                 }
@@ -587,8 +585,7 @@ namespace StructuredLogViewer.Avalonia
         {
             await BrowseForMSBuildExe();
 
-            var buildParametersScreen = mainContent.Content as BuildParametersScreen;
-            if (buildParametersScreen != null)
+            if (mainContent.Content is BuildParametersScreen buildParametersScreen)
             {
                 buildParametersScreen.UpdateMSBuildLocations();
             }

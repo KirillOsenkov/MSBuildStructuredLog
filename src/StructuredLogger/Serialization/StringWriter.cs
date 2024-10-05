@@ -36,8 +36,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             sb.AppendLine(text);
 
-            var treeNode = rootNode as TreeNode;
-            if (treeNode != null && treeNode.HasChildren)
+            if (rootNode is TreeNode {HasChildren: true} treeNode)
             {
                 foreach (var child in treeNode.Children)
                 {

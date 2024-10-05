@@ -40,8 +40,7 @@ namespace StructuredLogViewer.Controls
                 return item;
             }
 
-            var result = item.Template.FindName("PART_Header", item) as FrameworkElement;
-            if (result != null)
+            if (item.Template.FindName("PART_Header", item) is FrameworkElement result)
             {
                 return result;
             }
@@ -58,8 +57,7 @@ namespace StructuredLogViewer.Controls
 
             foreach (object obj in treeViewItem.Items)
             {
-                TreeViewItem childControl = treeViewItem.ItemContainerGenerator.ContainerFromItem(obj) as TreeViewItem;
-                if (childControl != null)
+                if (treeViewItem.ItemContainerGenerator.ContainerFromItem(obj) is TreeViewItem childControl)
                 {
                     ExpandAll(childControl);
                 }

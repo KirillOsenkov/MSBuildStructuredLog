@@ -66,14 +66,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             var node = Serialization.CreateNode(name);
 
-            var folder = node as Folder;
-            if (folder != null)
+            if (node is Folder folder)
             {
                 folder.Name = name;
             }
 
-            var build = node as Build;
-            if (build != null)
+            if (node is Build build)
             {
                 this.stringTable = build.StringTable;
             }
@@ -100,16 +98,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void ReadAttributes(BaseNode node, XElement element)
         {
-            var item = node as Item;
-            if (item != null)
+            if (node is Item item)
             {
                 item.Name = GetString(element, AttributeNames.Name);
                 item.Text = GetString(element, AttributeNames.Text);
                 return;
             }
 
-            var message = node as Message;
-            if (message != null)
+            if (node is Message message)
             {
                 message.IsLowRelevance = GetBoolean(element, AttributeNames.IsLowRelevance);
                 message.Timestamp = GetDateTime(element, AttributeNames.Timestamp);
@@ -117,36 +113,31 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            var folder = node as Folder;
-            if (folder != null)
+            if (node is Folder folder)
             {
                 folder.IsLowRelevance = GetBoolean(element, AttributeNames.IsLowRelevance);
                 return;
             }
 
             // then, shared "fall-through" tests that are common to many types of nodes
-            var namedNode = node as NamedNode;
-            if (namedNode != null)
+            if (node is NamedNode namedNode)
             {
                 namedNode.Name = GetString(element, AttributeNames.Name);
             }
 
-            var textNode = node as TextNode;
-            if (textNode != null)
+            if (node is TextNode textNode)
             {
                 textNode.Text = GetString(element, AttributeNames.Text);
             }
 
-            var timedNode = node as TimedNode;
-            if (timedNode != null)
+            if (node is TimedNode timedNode)
             {
                 AddStartAndEndTime(element, timedNode);
                 timedNode.NodeId = GetInteger(element, AttributeNames.NodeId);
             }
 
             // finally, concrete tests with early exit, sorted by commonality
-            var diagnostic = node as AbstractDiagnostic;
-            if (diagnostic != null)
+            if (node is AbstractDiagnostic diagnostic)
             {
                 diagnostic.Code = GetString(element, AttributeNames.Code);
                 diagnostic.File = GetString(element, AttributeNames.File);
@@ -158,8 +149,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            var task = node as Task;
-            if (task != null)
+            if (node is Task task)
             {
                 task.FromAssembly = GetString(element, AttributeNames.FromAssembly);
                 task.CommandLineArguments = GetString(element, AttributeNames.CommandLineArguments);
@@ -167,8 +157,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            var target = node as Target;
-            if (target != null)
+            if (node is Target target)
             {
                 target.IsLowRelevance = GetBoolean(element, AttributeNames.IsLowRelevance);
                 target.DependsOnTargets = GetString(element, AttributeNames.DependsOnTargets);
@@ -176,15 +165,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            var project = node as Project;
-            if (project != null)
+            if (node is Project project)
             {
                 project.ProjectFile = GetString(element, AttributeNames.ProjectFile);
                 return;
             }
 
-            var build = node as Build;
-            if (build != null)
+            if (node is Build build)
             {
                 build.Succeeded = GetBoolean(element, AttributeNames.Succeeded);
                 build.IsAnalyzed = GetBoolean(element, AttributeNames.IsAnalyzed);

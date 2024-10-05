@@ -361,7 +361,7 @@ namespace StructuredLogViewer.Controls
                 var text =
 @"This log contains the full text of projects and imported files used during the build.
 You can use the 'Files' tab in the bottom left to view these files and the 'Find in Files' tab for full-text search.
-For many nodes in the tree (Targets, Tasks, Errors, Projects, etc) pressing SPACE or ENTER or double-clicking 
+For many nodes in the tree (Targets, Tasks, Errors, Projects, etc) pressing SPACE or ENTER or double-clicking
 on the node will navigate to the corresponding source code associated with the node.
 
 More functionality is available from the right-click context menu for each node.
@@ -512,8 +512,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
         private void FilesTree_SearchTextChanged(string text)
         {
-            var list = filesTree.ResultsList.ItemsSource as IEnumerable<object>;
-            if (list != null)
+            if (filesTree.ResultsList.ItemsSource is IEnumerable<object> list)
             {
                 UpdateFileVisibility(list.OfType<NamedNode>(), text);
             }
@@ -1329,8 +1328,7 @@ Recent (");
             }
 
             isProcessingBreadcrumbClick = true;
-            var node = breadCrumb.SelectedItem as TreeNode;
-            if (node != null)
+            if (breadCrumb.SelectedItem is TreeNode node)
             {
                 if (this.centralTabControl.SelectedIndex == 0)
                 {
@@ -1370,8 +1368,7 @@ Recent (");
 
         private void ResultsList_SelectionChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            var treeView = sender as TreeView;
-            if (treeView != null && treeView.SelectedItem is ProxyNode proxy)
+            if (sender is TreeView {SelectedItem: ProxyNode proxy})
             {
                 var item = proxy.Original;
                 if (item != null)
@@ -1556,8 +1553,7 @@ Recent (");
                 node = node.Parent;
             }
 
-            var treeNode = node as TreeNode;
-            if (treeNode != null && treeNode.HasChildren)
+            if (node is TreeNode {HasChildren: true} treeNode)
             {
                 return treeNode;
             }
@@ -1782,8 +1778,7 @@ Recent (");
 
         public void Delete()
         {
-            var node = treeView.SelectedItem as TreeNode;
-            if (node != null)
+            if (treeView.SelectedItem is TreeNode node)
             {
                 MoveSelectionOut(node);
                 node.IsVisible = false;
@@ -1838,8 +1833,7 @@ Recent (");
 
         public void AddToFavorites()
         {
-            var node = ActiveTreeView?.SelectedItem as BaseNode;
-            if (node != null)
+            if (ActiveTreeView?.SelectedItem is BaseNode node)
             {
                 if (node is ProxyNode proxy)
                 {
@@ -1855,8 +1849,7 @@ Recent (");
 
         public void RemoveFromFavorites()
         {
-            var node = ActiveTreeView?.SelectedItem as BaseNode;
-            if (node != null)
+            if (ActiveTreeView?.SelectedItem is BaseNode node)
             {
                 if (node is ProxyNode proxy)
                 {
@@ -2046,8 +2039,7 @@ Recent (");
 
         public void GoToTimeLine()
         {
-            var treeNode = treeView.SelectedItem as TimedNode;
-            if (treeNode != null)
+            if (treeView.SelectedItem is TimedNode treeNode)
             {
                 centralTabControl.SelectedIndex = 1;
                 this.timeline.GoToTimedNode(treeNode);
@@ -2165,8 +2157,7 @@ Recent (");
 
         public void CopyName()
         {
-            var nameValueNode = treeView.SelectedItem as NameValueNode;
-            if (nameValueNode != null)
+            if (treeView.SelectedItem is NameValueNode nameValueNode)
             {
                 CopyToClipboard(nameValueNode.Name);
             }
@@ -2174,8 +2165,7 @@ Recent (");
 
         public void CopyValue()
         {
-            var nameValueNode = treeView.SelectedItem as NameValueNode;
-            if (nameValueNode != null)
+            if (treeView.SelectedItem is NameValueNode nameValueNode)
             {
                 CopyToClipboard(nameValueNode.Value);
             }
@@ -2377,10 +2367,9 @@ Recent (");
                         searchLogControl.SearchText.Contains("$projectreference") &&
                         proxy.Original is Project originalProject:
                         return SearchForProject(Path.GetFileName(originalProject.ProjectFile));
-                    case IHasSourceFile hasSourceFile when hasSourceFile.SourceFilePath != null:
+                    case IHasSourceFile {SourceFilePath: not null} hasSourceFile:
                         int line = 0;
-                        var hasLine = hasSourceFile as IHasLineNumber;
-                        if (hasLine != null)
+                        if (hasSourceFile is IHasLineNumber hasLine)
                         {
                             line = hasLine.LineNumber ?? 0;
                         }

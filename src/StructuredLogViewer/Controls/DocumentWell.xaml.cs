@@ -106,8 +106,7 @@ namespace StructuredLogViewer.Controls
             {
                 Visibility = Visibility.Visible;
                 tabControl.SelectedItem = existing;
-                var textViewer = existing.Content as TextViewerControl;
-                if (textViewer != null)
+                if (existing.Content is TextViewerControl textViewer)
                 {
                     textViewer.SetPathDisplay(displayPath);
 

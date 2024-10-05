@@ -348,8 +348,7 @@ namespace StructuredLogViewer.Controls
 
             if (activeTextBlock != null)
             {
-                ContentControl content = activeTextBlock.Parent as ContentControl;
-                if (content != null && content.Parent is Panel parent)
+                if (activeTextBlock.Parent is ContentControl {Parent: Panel parent} content)
                 {
                     parent.Children.Add(highlight);
                     Canvas.SetLeft(highlight, Canvas.GetLeft(content));

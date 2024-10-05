@@ -140,8 +140,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                 // must be a continuation of the metadata value from the previous line
                                 if (currentItem.HasChildren)
                                 {
-                                    var metadata = currentItem.Children[currentItem.Children.Count - 1] as Metadata;
-                                    if (metadata != null)
+                                    if (currentItem.Children[currentItem.Children.Count - 1] is Metadata metadata)
                                     {
                                         var currentLine = message.Substring(span16);
                                         if (!string.IsNullOrEmpty(metadata.Value))
@@ -179,10 +178,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         {
                             currentProperty.Value += "\n" + line;
                         }
-                        else if (currentItem != null && currentItem.HasChildren)
+                        else if (currentItem is {HasChildren: true})
                         {
-                            var metadata = currentItem.Children[currentItem.Children.Count - 1] as Metadata;
-                            if (metadata != null)
+                            if (currentItem.Children[currentItem.Children.Count - 1] is Metadata metadata)
                             {
                                 metadata.Value = (metadata.Value ?? "") + line;
                             }

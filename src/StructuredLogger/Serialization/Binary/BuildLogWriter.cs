@@ -36,8 +36,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void WriteChildren(BaseNode node)
         {
-            var treeNode = node as TreeNode;
-            if (treeNode != null && treeNode.HasChildren)
+            if (node is TreeNode {HasChildren: true} treeNode)
             {
                 writer.WriteChildrenCount(treeNode.Children.Count);
                 foreach (var child in treeNode.Children)
@@ -53,24 +52,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void WriteAttributes(BaseNode node)
         {
-            var metadata = node as Metadata;
-            if (metadata != null)
+            if (node is Metadata metadata)
             {
                 SetString(nameof(Metadata.Name), metadata.Name);
                 SetString(nameof(Metadata.Value), metadata.Value);
                 return;
             }
 
-            var property = node as Property;
-            if (property != null)
+            if (node is Property property)
             {
                 SetString(nameof(Property.Name), property.Name);
                 SetString(nameof(Property.Value), property.Value);
                 return;
             }
 
-            var message = node as Message;
-            if (message != null)
+            if (node is Message message)
             {
                 SetString(nameof(Message.IsLowRelevance), message.IsLowRelevance.ToString());
                 SetString(nameof(Message.Timestamp), ToString(message.Timestamp));
@@ -78,21 +74,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            var folder = node as Folder;
-            if (folder != null)
+            if (node is Folder folder)
             {
                 SetString(nameof(Folder.IsLowRelevance), folder.IsLowRelevance.ToString());
                 return;
             }
 
-            var namedNode = node as NamedNode;
-            if (namedNode != null)
+            if (node is NamedNode namedNode)
             {
                 SetString(nameof(NamedNode.Name), namedNode.Name?.Replace("\"", ""));
             }
 
-            var textNode = node as TextNode;
-            if (textNode != null)
+            if (node is TextNode textNode)
             {
                 SetString(nameof(TextNode.Text), textNode.Text);
             }
@@ -103,8 +96,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 SetString(nameof(TimedNode.NodeId), timedNode.NodeId.ToString());
             }
 
-            var task = node as Task;
-            if (task != null)
+            if (node is Task task)
             {
                 SetString(nameof(Task.FromAssembly), task.FromAssembly);
                 SetString(nameof(Task.CommandLineArguments), task.CommandLineArguments);
@@ -112,8 +104,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            var target = node as Target;
-            if (target != null)
+            if (node is Target target)
             {
                 SetString(nameof(Target.DependsOnTargets), target.DependsOnTargets);
                 SetString(nameof(Target.IsLowRelevance), target.IsLowRelevance.ToString());
@@ -121,8 +112,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            var diagnostic = node as AbstractDiagnostic;
-            if (diagnostic != null)
+            if (node is AbstractDiagnostic diagnostic)
             {
                 SetString(nameof(AbstractDiagnostic.Code), diagnostic.Code);
                 SetString(nameof(AbstractDiagnostic.File), diagnostic.File);
@@ -134,23 +124,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            var project = node as Project;
-            if (project != null)
+            if (node is Project project)
             {
                 SetString(nameof(Project.ProjectFile), project.ProjectFile);
                 return;
             }
 
-            var build = node as Build;
-            if (build != null)
+            if (node is Build build)
             {
                 SetString(nameof(Build.Succeeded), build.Succeeded.ToString());
                 SetString(nameof(Build.IsAnalyzed), build.IsAnalyzed.ToString());
                 return;
             }
 
-            var import = node as Import;
-            if (import != null)
+            if (node is Import import)
             {
                 SetString(nameof(Import.ProjectFilePath), import.ProjectFilePath);
                 SetString(nameof(Import.ImportedProjectFilePath), import.ImportedProjectFilePath);
@@ -160,8 +147,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
-            var noImport = node as NoImport;
-            if (noImport != null)
+            if (node is NoImport noImport)
             {
                 SetString(nameof(Import.ProjectFilePath), noImport.ProjectFilePath);
                 SetString(nameof(Import.ImportedProjectFilePath), noImport.ImportedFileSpec);

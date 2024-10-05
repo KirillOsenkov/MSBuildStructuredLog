@@ -158,8 +158,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static string GetNodeName(BaseNode node)
         {
-            var folder = node as Folder;
-            if (folder != null && IsValidXmlElementName(folder.Name))
+            if (node is Folder folder && IsValidXmlElementName(folder.Name))
             {
                 return folder.Name;
             }

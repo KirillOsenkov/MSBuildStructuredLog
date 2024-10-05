@@ -169,8 +169,7 @@ namespace StructuredLogViewer
         {
             if (e.Data.GetDataPresent(ClipboardFileFormat))
             {
-                var data = e.Data.GetData(ClipboardFileFormat) as string[];
-                if (data != null && data.Length == 1)
+                if (e.Data.GetData(ClipboardFileFormat) is string[] {Length: 1} data)
                 {
                     var filePath = data[0];
                     OpenFile(filePath);
@@ -270,8 +269,7 @@ namespace StructuredLogViewer
             }
             catch (Exception ex)
             {
-                var welcomeScreen = mainContent.Content as WelcomeScreen;
-                if (welcomeScreen != null)
+                if (mainContent.Content is WelcomeScreen welcomeScreen)
                 {
                     var text = ex.ToString();
                     if (text.Contains("Update.exe not found"))
@@ -319,8 +317,7 @@ namespace StructuredLogViewer
                     message = $"You're running a version ({currentVersion.ToString()}) which is newer than the latest stable ({result.Version}).";
                 }
 
-                var welcomeScreen = mainContent.Content as WelcomeScreen;
-                if (welcomeScreen != null)
+                if (mainContent.Content is WelcomeScreen welcomeScreen)
                 {
                     welcomeScreen.Version = message;
                 }
@@ -1016,8 +1013,7 @@ Use project(.) or project(.csproj) to search all projects (slow)." };
             }
             else if (e.Key == Key.C && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
             {
-                var content = mainContent.Content as BuildProgress;
-                if (content != null)
+                if (mainContent.Content is BuildProgress content)
                 {
                     Clipboard.SetText(content.MSBuildCommandLine);
                 }
