@@ -8,6 +8,7 @@ using System.Linq;
 using Microsoft.Build.Collections;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Framework.Profiler;
+using StructuredLogger.BinaryLogger;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -512,7 +513,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 lock (syncLock)
                 {
-                    if (e is ProjectEvaluationStartedEventArgs projectEvaluationStarted)
+                    // If the build was canceled we want to show a message in the build log view.
+                    if (e is BuildCanceledEventArgs buildCanceledEventArgs)
+                    {
+                        messageProcessor.Process(new BuildMessageEventArgs(
+                             Intern(buildCanceledEventArgs.Message),
+                        Intern(buildCanceledEventArgs.HelpKeyword),
+                        Intern(buildCanceledEventArgs.SenderName),
+                        MessageImportance.High,
+                        buildCanceledEventArgs.Timestamp));
+                    }
+                    else if (e is ProjectEvaluationStartedEventArgs projectEvaluationStarted)
                     {
                         var evaluationId = projectEvaluationStarted.BuildEventContext.EvaluationId;
                         var projectFilePath = Intern(projectEvaluationStarted.ProjectFile);
