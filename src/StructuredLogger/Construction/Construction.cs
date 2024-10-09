@@ -8,6 +8,7 @@ using System.Linq;
 using Microsoft.Build.Collections;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Framework.Profiler;
+using StructuredLogger.BinaryLogger;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -583,6 +584,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             AddPropertiesSorted(propertiesFolder, projectEvaluation, projectEvaluationFinished.Properties);
                             AddItems(itemsNode, projectEvaluationFinished.Items);
                         }
+                    } 
+                    else if (e is BuildCanceledEventArgs buildCanceledEventArgs)
+                    {
+                        // If the build was canceled we want to show a message in the build log view.
+                        messageProcessor.Process(new BuildMessageEventArgs(
+                            Intern(buildCanceledEventArgs.Message),
+                            Intern(buildCanceledEventArgs.HelpKeyword),
+                            Intern(buildCanceledEventArgs.SenderName),
+                            MessageImportance.High,
+                            buildCanceledEventArgs.Timestamp));
                     }
                 }
             }
