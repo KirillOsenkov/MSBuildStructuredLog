@@ -226,7 +226,7 @@ namespace StructuredLogViewer.Avalonia
 
         private void UpdateRecentItemsMenu(WelcomeScreen welcomeScreen = null)
         {
-            welcomeScreen = welcomeScreen ?? new WelcomeScreen();
+            welcomeScreen ??= new WelcomeScreen();
             if (welcomeScreen.ShowRecentProjects)
             {
                 (RecentProjectsMenu.Items as IList)?.Clear();

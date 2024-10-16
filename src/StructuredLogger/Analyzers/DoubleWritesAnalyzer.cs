@@ -26,7 +26,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Folder doubleWrites = null;
             foreach (var bucket in GetDoubleWrites())
             {
-                doubleWrites = doubleWrites ?? build.GetOrCreateNodeWithName<Folder>("DoubleWrites");
+                doubleWrites ??= build.GetOrCreateNodeWithName<Folder>("DoubleWrites");
                 var item = new Item { Text = bucket.Key };
                 doubleWrites.AddChild(item);
                 foreach (var source in bucket.Value)

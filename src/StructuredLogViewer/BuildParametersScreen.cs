@@ -51,15 +51,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public string PostfixArguments { get; set; }
 
         private ICommand buildCommand;
-        public ICommand BuildCommand => buildCommand ?? (buildCommand = new Command(Build));
+        public ICommand BuildCommand => buildCommand ??= new Command(Build);
         private void Build() => BuildRequested?.Invoke();
 
         private ICommand cancelCommand;
-        public ICommand CancelCommand => cancelCommand ?? (cancelCommand = new Command(Cancel));
+        public ICommand CancelCommand => cancelCommand ??= new Command(Cancel);
         private void Cancel() => CancelRequested?.Invoke();
 
         private ICommand copyCommand;
-        public ICommand CopyCommand => copyCommand ?? (copyCommand = new Command(Copy));
+        public ICommand CopyCommand => copyCommand ??= new Command(Copy);
         private void Copy()
         {
             string commandLine = $@"{MSBuildLocation.QuoteIfNeeded()} {PrefixArguments} {MSBuildArguments} {PostfixArguments}";
@@ -67,7 +67,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         private ICommand browseForMSBuildCommand;
-        public ICommand BrowseForMSBuildCommand => browseForMSBuildCommand ?? (browseForMSBuildCommand = new Command(BrowseForMSBuild));
+        public ICommand BrowseForMSBuildCommand => browseForMSBuildCommand ??= new Command(BrowseForMSBuild);
         private void BrowseForMSBuild()
         {
             MSBuildLocator.BrowseForMSBuildExe();

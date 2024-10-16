@@ -11,10 +11,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
     public class WelcomeScreen : ObservableObject
     {
         private IEnumerable<string> recentLogs;
-        public IEnumerable<string> RecentLogs => recentLogs ?? (recentLogs = SettingsService.GetRecentLogFiles());
+        public IEnumerable<string> RecentLogs => recentLogs ??= SettingsService.GetRecentLogFiles();
 
         private IEnumerable<string> recentProjects;
-        public IEnumerable<string> RecentProjects => recentProjects ?? (recentProjects = SettingsService.GetRecentProjects());
+        public IEnumerable<string> RecentProjects => recentProjects ??= SettingsService.GetRecentProjects();
 
         public bool ShowRecentLogs => RecentLogs.Any();
         public bool ShowRecentProjects => RecentProjects.Any();
@@ -100,11 +100,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         private ICommand openProjectCommand;
-        public ICommand OpenProjectCommand => openProjectCommand ?? (openProjectCommand = new Command(OpenProject));
+        public ICommand OpenProjectCommand => openProjectCommand ??= new Command(OpenProject);
         private void OpenProject() => OpenProjectRequested?.Invoke();
 
         private ICommand openLogFileCommand;
-        public ICommand OpenLogFileCommand => openLogFileCommand ?? (openLogFileCommand = new Command(OpenLogFile));
+        public ICommand OpenLogFileCommand => openLogFileCommand ??= new Command(OpenLogFile);
         private void OpenLogFile() => OpenLogFileRequested?.Invoke();
 
         public bool EnableVirtualization
