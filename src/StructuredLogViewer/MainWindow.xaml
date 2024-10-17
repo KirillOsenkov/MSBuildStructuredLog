@@ -40,7 +40,7 @@
         <MenuItem Header="E_xit" Click="Exit_Click" InputGestureText="Alt+F4" />
       </MenuItem>
       <MenuItem Header="_Help">
-        <MenuItem Header="Search Syntax..." Click="HelpLink3_Click" />
+        <MenuItem Header="Search Syntax" Click="HelpLink3_Click" />
         <MenuItem Header="https://github.com/KirillOsenkov/MSBuildStructuredLog" Click="HelpLink_Click" />
         <MenuItem Header="https://msbuildlog.com" Click="HelpLink2_Click" />
         <Separator />
