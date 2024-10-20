@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
-using Microsoft.Build.Logging;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Build.SensitiveDataDetector;
 
@@ -61,7 +60,7 @@ namespace StructuredLogger.Utils
                 sensitiveDataKind |= SensitiveDataKind.Username;
             }
 
-            ISensitiveDataRedactor sensitiveDataRedactor = SensitiveDataDetectorFactory.GetSecretsDetector(
+            ISensitiveDataRedactor sensitiveDataRedactor = SensitiveDataDetectorFactory.GetSecretsRedactor(
                 sensitiveDataKind,
                 redactorOptions.IdentifyReplacemenets,
                 redactorOptions.TokensToRedact);

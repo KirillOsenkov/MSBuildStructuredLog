@@ -15,8 +15,10 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using System.Xml;
+using DotUtils.MsBuild.SensitiveDataDetector;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Logging.StructuredLogger;
+using Microsoft.Build.SensitiveDataDetector;
 using Microsoft.Language.Xml;
 using Mono.Cecil;
 using StructuredLogViewer.Core.ProjectGraph;
@@ -79,6 +81,8 @@ namespace StructuredLogViewer.Controls
 
         private PropertiesAndItemsSearch propertiesAndItemsSearch;
 
+        private SecretsSearch secretsSearch;
+
         public BuildControl(Build build, string logFilePath)
         {
             InitializeComponent();
@@ -137,6 +141,7 @@ namespace StructuredLogViewer.Controls
             propertiesAndItemsControl.WatermarkDisplayed += UpdatePropertiesAndItemsWatermark;
             propertiesAndItemsControl.RecentItemsCategory = "PropertiesAndItems";
 
+            secretsSearch = new SecretsSearch(build);
             SetProjectContext(null);
 
             VirtualizingPanel.SetIsVirtualizing(treeView, SettingsService.EnableTreeViewVirtualization);
@@ -662,7 +667,8 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             "$csc",
             "$rar",
             "$import",
-            "$noimport"
+            "$noimport",
+            "$secret"
         };
 
         private static Inline MakeLink(string query, SearchAndResultsControl searchControl, string before = " \u2022 ", string after = "\r\n")
@@ -1024,11 +1030,22 @@ Recent (");
                     return null;
                 }
 
-                var haystack = file.Value;
-                var resultsInFile = haystack.Find(searchText);
-                if (resultsInFile.Count > 0)
+                if (searchText == "$secret")
                 {
-                    results.Add((file.Key, resultsInFile.Select(lineNumber => (lineNumber, haystack.GetLineText(lineNumber)))));
+                    List<SecretDescriptor> searchResults = secretsSearch.GetSecrets(file.Value.Text);
+                    if (searchResults.Count > 0)
+                    {
+                        results.Add((file.Key, searchResults.Select(sr => (sr.Line - 1, sr.Secret))));
+                    }
+                }
+                else
+                {
+                    var haystack = file.Value;
+                    var resultsInFile = haystack.Find(searchText);
+                    if (resultsInFile.Count > 0)
+                    {
+                        results.Add((file.Key, resultsInFile.Select(lineNumber => (lineNumber, haystack.GetLineText(lineNumber)))));
+                    }
                 }
             }
 

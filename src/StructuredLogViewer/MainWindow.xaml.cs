@@ -692,6 +692,7 @@ Use project(.) or project(.csproj) to search all projects (slow)." };
                 try
                 {
                     BuildAnalyzer.AnalyzeBuild(build);
+                    build.SearchExtensions.Add(new SecretsSearch(build));
                     build.SearchExtensions.Add(new NuGetSearch(build));
                 }
                 catch (Exception ex)
