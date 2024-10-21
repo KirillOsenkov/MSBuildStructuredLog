@@ -15,7 +15,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private readonly Search _search;
         private readonly Build _build;
         private const string SecretKeyword = "secret";
-        private readonly ConcurrentDictionary<string, List<SecretDescriptor>> _cache = new ConcurrentDictionary<string, List<SecretDescriptor>>();
+        private readonly ConcurrentDictionary<string, List<SecretDescriptor>> _secretDescriptorCache = new ConcurrentDictionary<string, List<SecretDescriptor>>();
+        private readonly ConcurrentDictionary<string, List<SearchResult>> _searchResultCache = new ConcurrentDictionary<string, List<SearchResult>>();
 
         private readonly List<ISensitiveDataDetector> SecretsDetectors = new List<ISensitiveDataDetector>
         {
@@ -44,10 +45,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             foreach (var stringInstance in _build.StringTable.Instances)
             {
-                if (_cache.TryGetValue(stringInstance, out List<SecretDescriptor> cachedSensitiveData) && cachedSensitiveData.Count > 0)
+                if (_secretDescriptorCache.TryGetValue(stringInstance, out List<SecretDescriptor> cachedSensitiveData) && cachedSensitiveData.Count > 0)
                 {
-                    IEnumerable<SearchResult> nodes = _search.FindNodes(stringInstance, CancellationToken.None);
-                    resultCollector.AddRange(nodes.Take(maxResults).Select(n => CreateSearchResult(n, cachedSensitiveData.First().Secret)));
+                    if (_searchResultCache.TryGetValue(stringInstance, out List<SearchResult> cachedSearchResults) && cachedSearchResults.Count > 0)
+                    {
+                        resultCollector.AddRange(cachedSearchResults.Take(maxResults).Select(n => CreateSearchResult(n, cachedSensitiveData.First().Secret)));
+                    }
                 }
                 else
                 {
@@ -60,7 +63,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public List<SecretDescriptor> GetSecrets(string stringInstance)
         {
-            if (_cache.TryGetValue(stringInstance, out var cachedSensitiveData) && cachedSensitiveData.Count > 0)
+            if (_secretDescriptorCache.TryGetValue(stringInstance, out var cachedSensitiveData) && cachedSensitiveData.Count > 0)
             {
                 return cachedSensitiveData;
             }
@@ -75,7 +78,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
-            _cache.TryAdd(stringInstance, sensitiveData);
+            _secretDescriptorCache.TryAdd(stringInstance, sensitiveData);
 
             return sensitiveData;
         }
@@ -89,7 +92,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 IEnumerable<SearchResult> nodes = _search.FindNodes(stringInstance, CancellationToken.None);
                 results.AddRange(nodes.Select(n => CreateSearchResult(n, sensitiveData.First().Secret)));
-            }
+                _searchResultCache.TryAdd(stringInstance, nodes.ToList());
+            }           
 
             return results;
         }

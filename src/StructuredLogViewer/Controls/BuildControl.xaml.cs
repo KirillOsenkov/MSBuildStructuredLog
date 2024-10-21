@@ -18,7 +18,6 @@ using System.Xml;
 using DotUtils.MsBuild.SensitiveDataDetector;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Logging.StructuredLogger;
-using Microsoft.Build.SensitiveDataDetector;
 using Microsoft.Language.Xml;
 using Mono.Cecil;
 using StructuredLogViewer.Core.ProjectGraph;
