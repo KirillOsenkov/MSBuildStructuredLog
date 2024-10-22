@@ -17,7 +17,7 @@
     <PackageVersion Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="DiffPlex" Version="1.7.2" />
-    <PackageVersion Include="DotUtils.MsBuild.BinlogRedactor.SensitiveDataDetector" Version="0.0.8" />
+    <PackageVersion Include="DotUtils.MsBuild.BinlogRedactor.SensitiveDataDetector" Version="0.0.9" />
     <PackageVersion Include="DotUtils.StreamUtils.Sources" Version="0.0.8" />
     <PackageVersion Include="FluentAssertions" Version="6.12.0" />
     <PackageVersion Include="GuiLabs.Language.Xml" Version="1.2.93" />
