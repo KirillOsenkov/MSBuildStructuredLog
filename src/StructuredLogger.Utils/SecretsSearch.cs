@@ -22,7 +22,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             SensitiveDataDetectorFactory.GetSecretsDetector(SensitiveDataKind.CommonSecrets, false),
             SensitiveDataDetectorFactory.GetSecretsDetector(SensitiveDataKind.ExplicitSecrets, false),
-            SensitiveDataDetectorFactory.GetSecretsDetector(SensitiveDataKind.Username, false)
+            //SensitiveDataDetectorFactory.GetSecretsDetector(SensitiveDataKind.Username, false)
         };
 
         public SecretsSearch(Build build)
