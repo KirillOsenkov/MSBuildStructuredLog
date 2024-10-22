@@ -36,5 +36,6 @@
         BuildCheckTracing,
         BuildCheckAcquisition,
         BuildSubmissionStarted,
+        BuildCanceled,
     }
 }

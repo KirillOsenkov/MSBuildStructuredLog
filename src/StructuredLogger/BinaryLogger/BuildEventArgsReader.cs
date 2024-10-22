@@ -338,6 +338,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 BinaryLogRecordKind.BuildCheckTracing => ReadBuildCheckTracingEventArgs(),
                 BinaryLogRecordKind.BuildCheckAcquisition => ReadBuildCheckAcquisitionEventArgs(),
                 BinaryLogRecordKind.BuildSubmissionStarted => ReadBuildSubmissionStartedEventArgs(),
+                BinaryLogRecordKind.BuildCanceled => ReadBuildCanceledEventArgs(),
                 _ => null,
                 
             };
@@ -707,6 +708,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 fields.Message,
                 fields.HelpKeyword,
                 succeeded,
+                fields.Timestamp);
+            SetCommonFields(e, fields);
+            return e;
+        }
+        private BuildEventArgs ReadBuildCanceledEventArgs()
+        {
+            var fields = ReadBuildEventArgsFields();
+            var e = new BuildCanceledEventArgs(
+                fields.Message,
                 fields.Timestamp);
             SetCommonFields(e, fields);
             return e;
@@ -1287,7 +1297,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private BuildEventArgs ReadBuildSubmissionStartedEventArgs()
         {
             var fields = ReadBuildEventArgsFields(readImportance: false);
-            var e = new BuildSubmissionStartedEvent();
+            var e = new BuildSubmissionStartedEventArgs();
 
             var globalProperties = ReadStringDictionary();
             var entries = ReadStringList();

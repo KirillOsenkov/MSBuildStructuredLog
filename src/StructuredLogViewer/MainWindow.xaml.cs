@@ -1103,6 +1103,11 @@ Use project(.) or project(.csproj) to search all projects (slow)." };
             Process.Start(new ProcessStartInfo("https://msbuildlog.com") { UseShellExecute = true });
         }
 
+        private void HelpLink3_Click(object sender, RoutedEventArgs e)
+        {
+            Process.Start(new ProcessStartInfo("https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/Search-Syntax") { UseShellExecute = true });
+        }
+
         private void HelpAbout_Click(object sender, RoutedEventArgs e)
         {
             MessageBox.Show(VersionMessage);

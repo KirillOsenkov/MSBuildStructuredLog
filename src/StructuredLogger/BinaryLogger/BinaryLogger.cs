@@ -76,6 +76,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         // version 23:
         //    - new record kinds: BuildCheckMessageEvent, BuildCheckWarningEvent, BuildCheckErrorEvent,
         //    BuildCheckTracingEvent, BuildCheckAcquisitionEvent, BuildSubmissionStartedEvent
+        // version 24:
+        //    - new record kind: BuildCanceledEvent
 
         // This should be never changed.
         // The minimum version of the binary log reader that can read log of above version.
@@ -83,7 +85,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         // The current version of the binary log representation.
         // Changes with each update of the binary log format.
-        internal const int FileFormatVersion = 23;
+        internal const int FileFormatVersion = 24;
         // The minimum version of the binary log reader that can read log of above version.
         // This should be changed only when the binary log format is changed in a way that would prevent it from being
         // read by older readers. (changing of the individual BuildEventArgs or adding new is fine - as reader can
