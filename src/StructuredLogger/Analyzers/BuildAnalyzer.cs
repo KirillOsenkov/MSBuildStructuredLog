@@ -430,6 +430,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             MarkAsLowRelevanceIfNeeded(target);
             AddDependsOnTargets(target);
+
+            if (target.Name == "_CopyOutOfDateSourceItemsToOutputDirectory" && target.Skipped)
+            {
+                fileCopyMap.AnalyzeTarget(target);
+            }
         }
 
         private static void AddDependsOnTargets(Target target)
