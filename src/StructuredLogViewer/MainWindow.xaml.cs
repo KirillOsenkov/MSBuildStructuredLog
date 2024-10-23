@@ -1152,7 +1152,7 @@ Use project(.) or project(.csproj) to search all projects (slow)." };
         {
             if (!Dispatcher.CheckAccess())
             {
-                Dispatcher.Invoke(() =>
+                Dispatcher.BeginInvoke(() =>
                 {
                     action();
                 });
