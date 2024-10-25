@@ -26,7 +26,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (match.Success && match.Groups.Count > 2)
                 {
                     var operation = ParseCopyingFileFrom(match);
-                    operation.Message = message;
+                    operation.Node = message;
                     list.Add(operation);
                     continue;
                 }
@@ -35,7 +35,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (match.Success && match.Groups.Count > 2)
                 {
                     var operation = ParseCopyingFileFrom(match, copied: false);
-                    operation.Message = message;
+                    operation.Node = message;
                     list.Add(operation);
                     continue;
                 }
@@ -44,7 +44,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (match.Success && match.Groups.Count > 2)
                 {
                     var operation = ParseCopyingFileFrom(match, copied: false);
-                    operation.Message = message;
+                    operation.Node = message;
                     list.Add(operation);
                     continue;
                 }
@@ -53,7 +53,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (match.Success && match.Groups.Count > 2)
                 {
                     var operation = ParseCopyingFileFrom(match, copied: false);
-                    operation.Message = message;
+                    operation.Node = message;
                     list.Add(operation);
                     continue;
                 }

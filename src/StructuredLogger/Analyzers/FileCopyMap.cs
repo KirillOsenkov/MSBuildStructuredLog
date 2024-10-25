@@ -506,10 +506,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     continue;
                 }
 
-                var message = incoming.FileCopyOperation.Message;
-                var result = new SearchResult(message);
+                var node = incoming.FileCopyOperation.Node;
+                var result = new SearchResult(node);
                 result.AssociatedFileCopy = incoming;
-                result.AddMatch(message.Text, matchText);
+                result.AddMatch(node.Title, matchText);
                 result.RootFolder = "Incoming";
                 resultSet.Add(result);
                 if (resultSet.Count >= maxResults)
@@ -525,10 +525,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     continue;
                 }
 
-                var message = outgoing.FileCopyOperation.Message;
-                var result = new SearchResult(message);
+                var node = outgoing.FileCopyOperation.Node;
+                var result = new SearchResult(node);
                 result.AssociatedFileCopy = outgoing;
-                result.AddMatch(message.Text, matchText);
+                result.AddMatch(node.Title, matchText);
                 result.RootFolder = "Outgoing";
                 resultSet.Add(result);
                 if (resultSet.Count >= maxResults)
@@ -647,6 +647,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void ReportCopy(Target target, string input, string output)
         {
+            TreeNode node = target;
+
+            var inputs = target.FindChild<Folder>(Strings.Inputs);
+            if (inputs != null)
+            {
+                var item = inputs.FindChild<Item>(i => i.Text == input);
+                if (item != null)
+                {
+                    node = item;
+                }
+            }
+
             if (input != null && output != null)
             {
                 var operation = new FileCopyOperation
@@ -654,6 +666,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     Source = input,
                     Destination = output,
                     Copied = false,
+                    Node = node
                 };
                 AnalyzeCopyOperation(operation, target: target);
             }
