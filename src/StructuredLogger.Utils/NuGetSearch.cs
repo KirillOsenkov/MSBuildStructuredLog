@@ -63,7 +63,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void FileCopyMap_FoundSingleFileCopy(FileData fileData, IList<SearchResult> resultCollector)
         {
-            var fileCopyInfo = fileData.Incoming.FirstOrDefault() ?? fileData.Outgoing.FirstOrDefault();
+            var fileCopyInfo =
+                resultCollector.FirstOrDefault()?.AssociatedFileCopy ??
+                fileData.Incoming.FirstOrDefault() ??
+                fileData.Outgoing.FirstOrDefault();
+
             var project = fileCopyInfo.Project;
 
             var filePath = fileData.FilePath;
