@@ -856,14 +856,14 @@ Recent (");
                 var targetFramework = GetTaskTargetFramework(task);
                 if (targetFramework == null || targetFramework.StartsWith(".NETFramework"))
                 {
-                    var taskRunnerExe = Path.Combine(directory, "TaskRunner.exe");
+                    var taskRunnerExe = Path.Combine(directory, "TaskRunner.x86", "TaskRunner.exe");
                     // for easier debugging
                     Environment.SetEnvironmentVariable("COMPLUS_ZapDisable", "1");
                     Process.Start(taskRunnerExe.QuoteIfNeeded(), arguments);
                 }
                 else
                 {
-                    var taskRunnerDll = Path.Combine(directory, "TaskRunner.dll");
+                    var taskRunnerDll = Path.Combine(directory, "TaskRunner.x86", "TaskRunner.dll");
                     Environment.SetEnvironmentVariable("DOTNET_ReadyToRun", "0");
                     Environment.SetEnvironmentVariable("DOTNET_TieredCompilation", "0");
                     Environment.SetEnvironmentVariable("DOTNET_TieredPGO", "0");

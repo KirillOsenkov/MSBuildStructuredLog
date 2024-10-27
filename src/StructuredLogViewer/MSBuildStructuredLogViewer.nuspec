@@ -32,6 +32,7 @@
     <file src="Microsoft.Build.dll" target="lib\net472" />
     <file src="Microsoft.Build.Framework.dll" target="lib\net472" />
     <file src="Microsoft.Build.Locator.dll" target="lib\net472" />
+    <file src="Microsoft.Build.Locator.dll" target="lib\net472\TaskRunner.x86" />
     <file src="Microsoft.Build.Tasks.Core.dll" target="lib\net472" />
     <file src="Microsoft.Build.Utilities.Core.dll" target="lib\net472" />
     <file src="Microsoft.IO.Redist.dll" target="lib\net472" />
@@ -55,6 +56,7 @@
     <file src="Splat.dll" target="lib\net472" />
     <file src="Squirrel.dll" target="lib\net472" />
     <file src="StructuredLogger.dll" target="lib\net472" />
+    <file src="StructuredLogger.dll" target="lib\net472\TaskRunner.x86" />
     <file src="StructuredLogger.Utils.dll" target="lib\net472" />
     <file src="StructuredLogViewer.Core.dll" target="lib\net472" />
     <file src="StructuredLogViewer.exe" target="lib\net472" />
@@ -66,10 +68,10 @@
     <file src="System.Runtime.CompilerServices.Unsafe.dll" target="lib\net472" />
     <file src="System.Text.Json.dll" target="lib\net472" />
     <file src="System.ValueTuple.dll" target="lib\net472" />
-    <file src="TaskRunner.exe" target="lib\net472" />
-    <file src="TaskRunner.exe.config" target="lib\net472" />
-    <file src="TaskRunner.dll" target="lib\net472" />
-    <file src="TaskRunner.runtimeconfig.json" target="lib\net472" />
+    <file src="TaskRunner.exe" target="lib\net472\TaskRunner.x86" />
+    <file src="TaskRunner.exe.config" target="lib\net472\TaskRunner.x86" />
+    <file src="TaskRunner.dll" target="lib\net472\TaskRunner.x86" />
+    <file src="TaskRunner.runtimeconfig.json" target="lib\net472\TaskRunner.x86" />
     <file src="Microsoft.Msagl.WpfGraphControl.dll" target="lib\net472" />
     <file src="..\..\..\..\docs\StructuredLogger.png" target="StructuredLogger.png" />
   </files>
