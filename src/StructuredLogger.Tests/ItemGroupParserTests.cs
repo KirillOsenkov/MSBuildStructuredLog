@@ -118,7 +118,7 @@ References which depend on ""System.IO.Compression, Version=4.1.1.0, Culture=neu
             var parameter = new Parameter();
             ItemGroupParser.ParseThereWasAConflict(parameter, message, stringCache);
             var text = StringWriter.GetString(parameter).NormalizeLineBreaks();
-            var expected = @"
+            var expected = @"Parameter
     References which depend on ""System.IO.Compression.FileSystem, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"" [C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\3.1.0\ref\netcoreapp3.1\System.IO.Compression.FileSystem.dll].
         C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\3.1.0\ref\netcoreapp3.1\System.IO.Compression.FileSystem.dll
             Project file item includes which caused reference ""C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\3.1.0\ref\netcoreapp3.1\System.IO.Compression.FileSystem.dll"".
