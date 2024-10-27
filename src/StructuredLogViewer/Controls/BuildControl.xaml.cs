@@ -1792,11 +1792,9 @@ Recent (");
 
         public void Copy()
         {
-            var tree = ActiveTreeView;
-            var treeNode = tree?.SelectedItem;
-            if (treeNode != null)
+            if (ActiveTreeView?.SelectedItem is BaseNode node)
             {
-                var text = treeNode.ToString();
+                var text = node.GetFullText();
                 CopyToClipboard(text);
             }
         }
@@ -2074,8 +2072,7 @@ Recent (");
         {
             if (treeView.SelectedItem is TreeNode node && node.HasChildren)
             {
-                // the texts have \n for line breaks, expand to \r\n
-                var children = node.Children.Select(c => c.ToString().Replace("\n", "\r\n"));
+                var children = node.Children.Select(c => c.GetFullText());
                 var text = string.Join(Environment.NewLine, children);
                 CopyToClipboard(text);
             }

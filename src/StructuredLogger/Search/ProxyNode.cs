@@ -30,6 +30,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        public override string GetFullText()
+        {
+            if (Original is { } original)
+            {
+                return original.GetFullText();
+            }
+
+            return base.GetFullText();
+        }
+
         public SearchResult SearchResult { get; set; }
 
         private List<object> highlights;
@@ -73,10 +83,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
 
                 return text;
-            }
-            else if (node is TextNode textNode)
-            {
-                return textNode.Text;
             }
             else if (node is NameValueNode nameValue)
             {

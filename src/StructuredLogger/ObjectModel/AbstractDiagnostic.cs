@@ -18,6 +18,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public override string TypeName => nameof(AbstractDiagnostic);
 
+        public override string Title => ToString();
+
         public override string ToString()
         {
             File ??= "";

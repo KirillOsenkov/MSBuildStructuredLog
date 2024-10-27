@@ -29,6 +29,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public virtual string Title => ToString();
 
+        public virtual string GetFullText()
+        {
+            string result = Title ?? ToString() ?? TypeName ?? GetType().Name;
+
+            // when we ingest strings we normalize on \n to save space.
+            // when the strings leave our app via clipboard, bring \r\n back so that notepad works
+            result = result.Replace("\n", Environment.NewLine);
+
+            return result;
+        }
+
         /// <summary>
         /// Since there can only be 1 selected node at a time, don't waste an instance field
         /// just to store a bit. Store the currently selected node here and this way we save
