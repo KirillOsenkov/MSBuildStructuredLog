@@ -96,7 +96,7 @@ namespace BinlogTool
         public static void PrintTree(BaseNode node, int indent = 0)
         {
             string indentText = new string(' ', indent * IndentSize);
-            Log.WriteLine(indentText + node.ToString());
+            Log.WriteLine(indentText + node.GetFullText());
             if (node is TreeNode treeNode)
             {
                 foreach (var child in treeNode.Children)
