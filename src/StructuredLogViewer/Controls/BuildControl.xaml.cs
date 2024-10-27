@@ -857,11 +857,19 @@ Recent (");
                 if (targetFramework == null || targetFramework.StartsWith(".NETFramework"))
                 {
                     var taskRunnerExe = Path.Combine(directory, "TaskRunner.exe");
+                    // for easier debugging
+                    Environment.SetEnvironmentVariable("COMPLUS_ZapDisable", "1");
                     Process.Start(taskRunnerExe.QuoteIfNeeded(), arguments);
                 }
                 else
                 {
                     var taskRunnerDll = Path.Combine(directory, "TaskRunner.dll");
+                    Environment.SetEnvironmentVariable("DOTNET_ReadyToRun", "0");
+                    Environment.SetEnvironmentVariable("DOTNET_TieredCompilation", "0");
+                    Environment.SetEnvironmentVariable("DOTNET_TieredPGO", "0");
+                    Environment.SetEnvironmentVariable("COMPlus_ReadyToRun", "0");
+                    Environment.SetEnvironmentVariable("COMPlus_TieredCompilation", "0");
+
                     Process.Start("dotnet", $"{taskRunnerDll.QuoteIfNeeded()} {arguments}");
                 }
             }
