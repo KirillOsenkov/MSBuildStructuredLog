@@ -20,7 +20,13 @@ namespace TaskRunner
             }
 
             Assembly assembly = null;
-            if (File.Exists(assemblyFilePath))
+
+            if (Path.GetFileNameWithoutExtension(assemblyFilePath)
+                .Equals("Microsoft.Build.Tasks.Core", StringComparison.OrdinalIgnoreCase))
+            {
+                assembly = Assembly.Load("Microsoft.Build.Tasks.Core, Version=15.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a");
+            }
+            else if (File.Exists(assemblyFilePath))
             {
                 assembly = Assembly.LoadFrom(assemblyFilePath);
             }
