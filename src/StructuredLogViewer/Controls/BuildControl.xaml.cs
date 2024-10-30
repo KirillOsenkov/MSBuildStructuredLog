@@ -16,6 +16,7 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using System.Xml;
 using DotUtils.MsBuild.SensitiveDataDetector;
+using Microsoft.Build.Experimental.ProjectCache;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Language.Xml;
@@ -1029,9 +1030,17 @@ Recent (");
                     return null;
                 }
 
-                if (searchText == "$secret")
+                if (!string.IsNullOrEmpty(searchText) && searchText.StartsWith("$secret"))
                 {
-                    List<SecretDescriptor> searchResults = secretsSearch.GetSecrets(file.Value.Text);
+                    var word = searchText.Replace("$secret", string.Empty).Trim();
+                    NodeQueryMatcher notMatcher = null;
+                    if (word.StartsWith("not(", StringComparison.OrdinalIgnoreCase) && word.EndsWith(")"))
+                    {
+                        word = word.Substring(4, word.Length - 5);
+                        notMatcher = new NodeQueryMatcher(word);
+                    }
+
+                    var searchResults = secretsSearch.SearchSecrets(file.Value.Text, notMatcher, maxResults);
                     if (searchResults.Count > 0)
                     {
                         results.Add((file.Key, searchResults.Select(sr => (sr.Line - 1, sr.Secret))));

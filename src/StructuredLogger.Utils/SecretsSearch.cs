@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -15,25 +14,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private readonly Search _search;
         private readonly Build _build;
         private const string SecretKeyword = "secret";
-        private readonly ConcurrentDictionary<string, List<SecretDescriptor>> _secretDescriptorCache = new ConcurrentDictionary<string, List<SecretDescriptor>>();
-        private readonly ConcurrentDictionary<string, List<SearchResult>> _searchResultCache = new ConcurrentDictionary<string, List<SearchResult>>();
+        private readonly Dictionary<string, Dictionary<SensitiveDataKind, List<SecretDescriptor>>> _secretDescriptorCache = new();
+        private readonly Dictionary<string, IEnumerable<SearchResult>> _searchResultCache = new();
 
-        private readonly List<ISensitiveDataDetector> SecretsDetectors = new List<ISensitiveDataDetector>
+        private readonly Dictionary<SensitiveDataKind, ISensitiveDataDetector> _secretDetectors = new()
         {
-            SensitiveDataDetectorFactory.GetSecretsDetector(SensitiveDataKind.CommonSecrets, false),
-            SensitiveDataDetectorFactory.GetSecretsDetector(SensitiveDataKind.ExplicitSecrets, false),
-            //SensitiveDataDetectorFactory.GetSecretsDetector(SensitiveDataKind.Username, false)
+            { SensitiveDataKind.CommonSecrets, SensitiveDataDetectorFactory.GetSecretsDetector(SensitiveDataKind.CommonSecrets, false) },
+            { SensitiveDataKind.ExplicitSecrets, SensitiveDataDetectorFactory.GetSecretsDetector(SensitiveDataKind.ExplicitSecrets, false) },
+            { SensitiveDataKind.Username, SensitiveDataDetectorFactory.GetSecretsDetector(SensitiveDataKind.Username, false) }
         };
 
         public SecretsSearch(Build build)
         {
             _build = build ?? throw new ArgumentNullException(nameof(build));
-
-            _search = new Search(
-                new[] { build },
-                build.StringTable.Instances,
-                5000,
-                markResultsInTree: false);
+            _search = new Search([build], build.StringTable.Instances, 5000, markResultsInTree: false);
         }
 
         public bool TryGetResults(NodeQueryMatcher nodeQueryMatcher, IList<SearchResult> resultCollector, int maxResults)
@@ -43,70 +37,102 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return false;
             }
 
+            var activeDetectors = GetActiveDetectors(nodeQueryMatcher.NotMatchers);
+            var allResults = new List<SearchResult>();
             foreach (var stringInstance in _build.StringTable.Instances)
             {
-                if (_secretDescriptorCache.TryGetValue(stringInstance, out List<SecretDescriptor> cachedSensitiveData) && cachedSensitiveData.Count > 0)
+                if (_searchResultCache.TryGetValue(stringInstance, out IEnumerable<SearchResult> cachedSearchResults))
                 {
-                    if (_searchResultCache.TryGetValue(stringInstance, out List<SearchResult> cachedSearchResults) && cachedSearchResults.Count > 0)
-                    {
-                        resultCollector.AddRange(cachedSearchResults.Take(maxResults).Select(n => CreateSearchResult(n, cachedSensitiveData.First().Secret)));
-                    }
+                    allResults.AddRange(cachedSearchResults);
                 }
                 else
                 {
-                    resultCollector.AddRange(GetSearchResult(stringInstance).Take(maxResults)); 
+                    allResults.AddRange(GetSearchResult(stringInstance, activeDetectors));
                 }
+            }
+
+            if (allResults.Any())
+            {
+                resultCollector.AddRange(allResults.Take(maxResults));
             }
 
             return true;
         }
 
-        public List<SecretDescriptor> GetSecrets(string stringInstance)
+        public List<SecretDescriptor> SearchSecrets(string stringInstance, NodeQueryMatcher? nodeQueryMatcher, int maxResults)
+        {
+            var detectors = GetActiveDetectors(nodeQueryMatcher == null ? [] : [nodeQueryMatcher]);
+
+            if (_secretDescriptorCache.TryGetValue(stringInstance, out var cachedSecrets))
+            {
+                return cachedSecrets.Where(cS => detectors.Keys.Contains(cS.Key)).SelectMany(cr => cr.Value).Take(maxResults).ToList();
+            }
+
+            return GetSecrets(stringInstance, detectors);
+        }
+
+        private List<SecretDescriptor> GetSecrets(string stringInstance, Dictionary<SensitiveDataKind, ISensitiveDataDetector> activeDetectors)
         {
             if (_secretDescriptorCache.TryGetValue(stringInstance, out var cachedSensitiveData) && cachedSensitiveData.Count > 0)
             {
-                return cachedSensitiveData;
+                return cachedSensitiveData.SelectMany(csd => csd.Value).ToList();
             }
 
-            var sensitiveData = new List<SecretDescriptor>();
-            foreach (ISensitiveDataDetector detector in SecretsDetectors)
+            var sensitiveData = new Dictionary<SensitiveDataKind, List<SecretDescriptor>>();
+            foreach (var detector in activeDetectors)
             {
-                Dictionary<SensitiveDataKind, List<SecretDescriptor>> detectedData = detector.Detect(stringInstance);
-                if (detectedData.Count > 0 && detectedData.First().Value.Count > 0)
+                Dictionary<SensitiveDataKind, List<SecretDescriptor>> detectedData = detector.Value.Detect(stringInstance);
+                foreach (var kvp in detectedData)
                 {
-                    sensitiveData.AddRange(detectedData.First().Value);
+                    if (kvp.Value.Count > 0)
+                    {
+                        sensitiveData[kvp.Key] = kvp.Value;
+                    }
                 }
             }
 
-            _secretDescriptorCache.TryAdd(stringInstance, sensitiveData);
-
-            return sensitiveData;
-        }
-
-        private List<SearchResult> GetSearchResult(string stringInstance)
-        {
-            List<SearchResult> results = new List<SearchResult>();
-            List<SecretDescriptor> sensitiveData = GetSecrets(stringInstance);
-
             if (sensitiveData.Count > 0)
             {
-                IEnumerable<SearchResult> nodes = _search.FindNodes(stringInstance, CancellationToken.None);
-                results.AddRange(nodes.Select(n => CreateSearchResult(n, sensitiveData.First().Secret)));
-                _searchResultCache.TryAdd(stringInstance, nodes.ToList());
-            }           
+                _secretDescriptorCache.Add(stringInstance, sensitiveData);
+            }
+
+            return sensitiveData.SelectMany(csd => csd.Value).ToList();
+        }
+
+        private IEnumerable<SearchResult> GetSearchResult(string stringInstance, Dictionary<SensitiveDataKind, ISensitiveDataDetector> activeDetectors)
+        {
+            List<SearchResult> results = new();
+
+            if (GetSecrets(stringInstance, activeDetectors).Count > 0)
+            {
+                var nodes = _search.FindNodes(stringInstance, CancellationToken.None);
+                if (nodes.Any())
+                {
+                    results.AddRange(nodes);
+                    _searchResultCache.Add(stringInstance, nodes);
+                }
+            }
 
             return results;
         }
 
-        private SearchResult CreateSearchResult(SearchResult nodeMatch, string secretText)
+        private Dictionary<SensitiveDataKind, ISensitiveDataDetector> GetActiveDetectors(IList<NodeQueryMatcher> notMatchers)
         {
-            var proxy = new ProxyNode
+            if (!notMatchers.Any())
             {
-                Original = nodeMatch.Node,
-                SearchResult = nodeMatch,
-                Text = secretText
-            };
-            return new SearchResult(proxy);
+                return _secretDetectors;
+            }
+
+            var detectors = new Dictionary<SensitiveDataKind, ISensitiveDataDetector>(_secretDetectors);
+            foreach (var notMatcher in notMatchers)
+            {
+                if (Enum.TryParse(notMatcher.Query, ignoreCase: true, out SensitiveDataKind excludedDetector))
+                {
+                    detectors.Remove(excludedDetector);
+                }
+            }
+
+            return detectors;
         }
     }
 }
