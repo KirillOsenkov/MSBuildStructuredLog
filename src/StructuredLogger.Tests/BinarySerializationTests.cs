@@ -227,7 +227,6 @@ namespace StructuredLogger.Tests
         public void SimpleBuild()
         {
             var build = new Build();
-            build.Succeeded = true;
             build.AddChild(new Message() { Text = "MessageText" });
             build.AddChild(new Property() { Name = "PropertyName", Value = "PropertyValue" });
             var xmlFile1 = @"1.xml";

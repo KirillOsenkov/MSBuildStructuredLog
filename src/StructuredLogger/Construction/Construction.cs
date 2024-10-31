@@ -115,6 +115,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     Build.StartTime = args.Timestamp;
 
+                    // Since we saw BuildStarted we now need to see BuildFinished,
+                    // otherwise the build was cancelled or interrupted
+                    Build.Succeeded = false;
+
                     if (args.BuildEnvironment?.Count > 0)
                     {
                         AddProperties(EnvironmentFolder, args.BuildEnvironment);
