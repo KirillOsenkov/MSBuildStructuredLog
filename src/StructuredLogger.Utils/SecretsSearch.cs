@@ -11,14 +11,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
     public class SecretsSearch : ISearchExtension
     {
         private readonly Build _build;
-        private readonly Search _search;
         private readonly Dictionary<SensitiveDataKind, ISensitiveDataDetector> _detectors;
         private readonly Dictionary<string, Dictionary<SensitiveDataKind, List<SecretDescriptor>>> _secretCache = new();
 
         public SecretsSearch(Build build)
         {
             _build = build ?? throw new ArgumentNullException(nameof(build));
-            _search = new Search([build], build.StringTable.Instances, 5000, markResultsInTree: false);
 
             _detectors = new()
             {
