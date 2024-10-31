@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using DotUtils.MsBuild.SensitiveDataDetector;
 using Microsoft.Build.SensitiveDataDetector;
 using StructuredLogViewer;
@@ -13,7 +14,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private readonly Search _search;
         private readonly Dictionary<SensitiveDataKind, ISensitiveDataDetector> _detectors;
         private readonly Dictionary<string, Dictionary<SensitiveDataKind, List<SecretDescriptor>>> _secretCache = new();
-        private readonly Dictionary<string, List<SearchResult>> _resultCache = new();
 
         public SecretsSearch(Build build)
         {
@@ -30,16 +30,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public bool TryGetResults(NodeQueryMatcher matcher, IList<SearchResult> results, int maxResults)
         {
-            if (!string.Equals(matcher.TypeKeyword, "secret", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(matcher.TypeKeyword, "secret", StringComparison.OrdinalIgnoreCase))
             {
-                return false;
-            }
+                var activeDetectors = GetActiveDetectors(matcher.NotMatchers);
+                var foundResults = ScanForSecrets(_build.StringTable.Instances, activeDetectors, maxResults);
 
-            var activeDetectors = GetActiveDetectors(matcher.NotMatchers);
-            var foundResults = ScanForSecrets(_build.StringTable.Instances, activeDetectors, maxResults);
-
-            if (foundResults.Any())
-            {
                 foreach (var result in foundResults)
                 {
                     results.Add(result);
@@ -55,59 +50,51 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             var activeDetectors = GetActiveDetectors(matcher == null ? [] : [matcher]);
 
-            if (_secretCache.TryGetValue(text, out var cachedSecrets))
-            {
-                return cachedSecrets.Where(s => activeDetectors.ContainsKey(s.Key)).SelectMany(s => s.Value).Take(maxResults).ToList();
-            }
-
             var secrets = DetectSecrets(text, activeDetectors);
-            if (secrets.Any())
-            {
-                _secretCache[text] = secrets;
-            }
 
-            return secrets.Values.SelectMany(v => v).Take(maxResults).ToList();
+            return secrets.Take(maxResults).ToList();
         }
 
-        private IEnumerable<SearchResult> ScanForSecrets(IEnumerable<string> stringsPool, IReadOnlyDictionary<SensitiveDataKind, ISensitiveDataDetector> detectors, int maxResults)
+        private IEnumerable<SearchResult> ScanForSecrets(IEnumerable<string> stringsPool, Dictionary<SensitiveDataKind, ISensitiveDataDetector> detectors, int maxResults)
         {
-            var results = new List<SearchResult>();
-
+            var secretsSet = new HashSet<string>();
             foreach (var text in stringsPool)
             {
-                if (_resultCache.TryGetValue(text, out List<SearchResult> cachedResults))
+                var secretResults = DetectSecrets(text, detectors);
+                foreach (SecretDescriptor secretDescriptor in secretResults)
                 {
-                    results.AddRange(cachedResults);
-                    if (results.Count >= maxResults)
-                    {
-                        break;
-                    }
-
-                    continue;
+                    secretsSet.Add(secretDescriptor.Secret);
                 }
+            }
 
-                var secrets = DetectSecrets(text, detectors);
-
-                if (secrets.Any())
+            var results = new List<SearchResult>();
+            if (_build.SearchIndex is { } index)
+            {
+                foreach (var text in secretsSet)
                 {
-                    var nodes = _search.FindNodes(text, default);
-                    if (nodes.Any())
+                    index.MaxResults = maxResults;
+                    index.MarkResultsInTree = false;
+                    IEnumerable<SearchResult> indexResults = index.FindNodes(text, CancellationToken.None);
+                    if (indexResults.Any())
                     {
-                        _resultCache[text] = nodes.ToList();
-                        results.AddRange(nodes);
-                        if (results.Count >= maxResults)
-                        {
-                            break;
-                        }
+                        results.AddRange(indexResults);
                     }
                 }
             }
 
-            return results.Take(maxResults);
+            return results;
         }
 
-        private Dictionary<SensitiveDataKind, List<SecretDescriptor>> DetectSecrets(string text, IReadOnlyDictionary<SensitiveDataKind, ISensitiveDataDetector> detectors)
+        private List<SecretDescriptor> DetectSecrets(string text, Dictionary<SensitiveDataKind, ISensitiveDataDetector> detectors)
         {
+            if (_secretCache.TryGetValue(text, out var cachedSecrets))
+            {
+                return cachedSecrets
+                    .Where(kv => detectors.Any(d => d.Key == kv.Key))
+                    .SelectMany(kv => kv.Value)
+                    .ToList();
+            }
+
             var results = new Dictionary<SensitiveDataKind, List<SecretDescriptor>>();
 
             foreach (var detector in detectors)
@@ -122,7 +109,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
-            return results;
+            if (results.Any())
+            {
+                _secretCache[text] = results;
+            }
+
+            return results.Values.SelectMany(v => v).ToList();
         }
 
         private Dictionary<SensitiveDataKind, ISensitiveDataDetector> GetActiveDetectors(IList<NodeQueryMatcher> notMatchers)
