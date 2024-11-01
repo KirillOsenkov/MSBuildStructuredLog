@@ -79,6 +79,8 @@ namespace StructuredLogViewer.Controls
 
         private PropertiesAndItemsSearch propertiesAndItemsSearch;
 
+        private SecretsSearch secretsSearch;
+
         public BuildControl(Build build, string logFilePath)
         {
             InitializeComponent();
@@ -137,6 +139,7 @@ namespace StructuredLogViewer.Controls
             propertiesAndItemsControl.WatermarkDisplayed += UpdatePropertiesAndItemsWatermark;
             propertiesAndItemsControl.RecentItemsCategory = "PropertiesAndItems";
 
+            secretsSearch = (SecretsSearch)build.SearchExtensions.FirstOrDefault(se => se is SecretsSearch);
             SetProjectContext(null);
 
             VirtualizingPanel.SetIsVirtualizing(treeView, SettingsService.EnableTreeViewVirtualization);
@@ -643,6 +646,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             "$task $time",
             "$message CompilerServer failed",
             "will be compiled because",
+            "$secret"
         };
 
         private static string[] nodeKinds = new[]
@@ -662,7 +666,8 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             "$csc",
             "$rar",
             "$import",
-            "$noimport"
+            "$noimport",
+            "$secret"
         };
 
         private static Inline MakeLink(string query, SearchAndResultsControl searchControl, string before = " \u2022 ", string after = "\r\n")
@@ -1025,6 +1030,9 @@ Recent (");
         {
             var results = new List<(string, IEnumerable<(int, string)>)>();
 
+            NodeQueryMatcher notQueryMatcher = new NodeQueryMatcher(searchText);
+            bool isSecretsSearch = !string.IsNullOrEmpty(searchText) && searchText.StartsWith("$secret");
+
             foreach (var file in archiveFile.Files)
             {
                 if (cancellationToken.IsCancellationRequested)
@@ -1032,11 +1040,22 @@ Recent (");
                     return null;
                 }
 
-                var haystack = file.Value;
-                var resultsInFile = haystack.Find(searchText);
-                if (resultsInFile.Count > 0)
+                if (isSecretsSearch)
                 {
-                    results.Add((file.Key, resultsInFile.Select(lineNumber => (lineNumber, haystack.GetLineText(lineNumber)))));
+                    var searchResults = secretsSearch.SearchSecrets(file.Value.Text, notQueryMatcher.NotMatchers, maxResults);
+                    if (searchResults.Count > 0)
+                    {
+                        results.Add((file.Key, searchResults.Select(sr => (sr.Line - 1, sr.Secret))));
+                    }
+                }
+                else
+                {
+                    var haystack = file.Value;
+                    var resultsInFile = haystack.Find(searchText);
+                    if (resultsInFile.Count > 0)
+                    {
+                        results.Add((file.Key, resultsInFile.Select(lineNumber => (lineNumber, haystack.GetLineText(lineNumber)))));
+                    }
                 }
             }
 
