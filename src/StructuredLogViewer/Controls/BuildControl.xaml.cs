@@ -15,8 +15,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using System.Xml;
-using DotUtils.MsBuild.SensitiveDataDetector;
-using Microsoft.Build.Experimental.ProjectCache;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Language.Xml;
@@ -141,7 +139,7 @@ namespace StructuredLogViewer.Controls
             propertiesAndItemsControl.WatermarkDisplayed += UpdatePropertiesAndItemsWatermark;
             propertiesAndItemsControl.RecentItemsCategory = "PropertiesAndItems";
 
-            secretsSearch = new SecretsSearch(build);
+            secretsSearch = (SecretsSearch)build.SearchExtensions.FirstOrDefault(se => se is SecretsSearch);
             SetProjectContext(null);
 
             VirtualizingPanel.SetIsVirtualizing(treeView, SettingsService.EnableTreeViewVirtualization);
@@ -648,6 +646,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             "$task $time",
             "$message CompilerServer failed",
             "will be compiled because",
+            "$secret"
         };
 
         private static string[] nodeKinds = new[]
@@ -1023,6 +1022,9 @@ Recent (");
         {
             var results = new List<(string, IEnumerable<(int, string)>)>();
 
+            NodeQueryMatcher notQueryMatcher = new NodeQueryMatcher(searchText);
+            bool isSecretsSearch = !string.IsNullOrEmpty(searchText) && searchText.StartsWith("$secret");
+
             foreach (var file in archiveFile.Files)
             {
                 if (cancellationToken.IsCancellationRequested)
@@ -1030,17 +1032,9 @@ Recent (");
                     return null;
                 }
 
-                if (!string.IsNullOrEmpty(searchText) && searchText.StartsWith("$secret"))
+                if (isSecretsSearch)
                 {
-                    var word = searchText.Replace("$secret", string.Empty).Trim();
-                    NodeQueryMatcher notMatcher = null;
-                    if (word.StartsWith("not(", StringComparison.OrdinalIgnoreCase) && word.EndsWith(")"))
-                    {
-                        word = word.Substring(4, word.Length - 5);
-                        notMatcher = new NodeQueryMatcher(word);
-                    }
-
-                    var searchResults = secretsSearch.SearchSecrets(file.Value.Text, notMatcher, maxResults);
+                    var searchResults = secretsSearch.SearchSecrets(file.Value.Text, notQueryMatcher.NotMatchers, maxResults);
                     if (searchResults.Count > 0)
                     {
                         results.Add((file.Key, searchResults.Select(sr => (sr.Line - 1, sr.Secret))));

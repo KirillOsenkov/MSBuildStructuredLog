@@ -33,9 +33,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 var activeDetectors = GetActiveDetectors(matcher.NotMatchers);
                 var foundResults = ScanForSecrets(_build.StringTable.Instances, activeDetectors, maxResults);
 
-                foreach (var result in foundResults)
+                if (foundResults.Any())
                 {
-                    results.Add(result);
+                    foreach (var result in foundResults)
+                    {
+                        results.Add(result);
+                    }
+                }
+                else
+                {
+                    results.Add(new SearchResult(new Message { Text = "No secret(s) were detected in the tree." }));
                 }
 
                 return true;
@@ -44,9 +51,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return false;
         }
 
-        public List<SecretDescriptor> SearchSecrets(string text, NodeQueryMatcher? matcher, int maxResults)
+        public List<SecretDescriptor> SearchSecrets(string text, IList<NodeQueryMatcher> matcher, int maxResults)
         {
-            var activeDetectors = GetActiveDetectors(matcher == null ? [] : [matcher]);
+            var activeDetectors = GetActiveDetectors(matcher);
 
             var secrets = DetectSecrets(text, activeDetectors);
 
