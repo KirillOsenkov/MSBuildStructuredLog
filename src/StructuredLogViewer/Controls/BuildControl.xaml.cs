@@ -1030,7 +1030,7 @@ Recent (");
         {
             var results = new List<(string, IEnumerable<(int, string)>)>();
 
-            NodeQueryMatcher notQueryMatcher = new NodeQueryMatcher(searchText);
+            NodeQueryMatcher nodeQueryMatcher = new NodeQueryMatcher(searchText);
             bool isSecretsSearch = !string.IsNullOrEmpty(searchText) && searchText.StartsWith("$secret");
 
             foreach (var file in archiveFile.Files)
@@ -1042,7 +1042,7 @@ Recent (");
 
                 if (isSecretsSearch)
                 {
-                    var searchResults = secretsSearch.SearchSecrets(file.Value.Text, notQueryMatcher.NotMatchers, maxResults);
+                    var searchResults = secretsSearch.SearchSecrets(file.Value.Text, nodeQueryMatcher.NotMatchers, maxResults);
                     if (searchResults.Count > 0)
                     {
                         results.Add((file.Key, searchResults.Select(sr => (sr.Line - 1, sr.Secret))));
