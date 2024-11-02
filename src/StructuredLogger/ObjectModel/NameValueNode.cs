@@ -12,6 +12,7 @@
         public override string Title => Name;
 
         public override string ToString() => Name + " = " + Value;
+        public override string GetFullText() => ToString();
         public bool IsVisible { get => true; set { } }
         public bool IsExpanded { get => true; set { } }
     }
