@@ -646,7 +646,8 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             "$task $time",
             "$message CompilerServer failed",
             "will be compiled because",
-            "$secret"
+            "$secret",
+            "$secret not(username)"
         };
 
         private static string[] nodeKinds = new[]
