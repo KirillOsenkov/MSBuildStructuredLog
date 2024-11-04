@@ -11,6 +11,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
     {
         private Dictionary<string, ICollection<string>> references = new(StringComparer.OrdinalIgnoreCase);
         private Dictionary<string, int> projectHeights = new(StringComparer.OrdinalIgnoreCase);
+        private List<IReadOnlyList<string>> circularities = new();
         private int maxProjectHeight;
 
         public ProjectReferenceGraph(Build build)
@@ -53,28 +54,54 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 var project = kvp.Key;
                 references[project] = kvp.Value.OrderBy(s => s).ToArray();
-                CalculateHeight(project);
+                CalculateHeight(project, new List<string>());
             }
 
             if (projectHeights.Any())
             {
                 maxProjectHeight = projectHeights.Values.Max();
             }
+
+            if (circularities.Any())
+            {
+                var folder = build.GetOrCreateNodeWithName<Folder>("Circular Project References");
+                foreach (var loop in circularities)
+                {
+                    var loopFolder = folder.GetOrCreateNodeWithName<Folder>(loop[0]);
+                    foreach (var item in loop)
+                    {
+                        var node = new Item { Text = item };
+                        loopFolder.AddChild(node);
+                    }
+                }
+            }
         }
 
-        private int CalculateHeight(string project)
+        private int CalculateHeight(string project, List<string> chain)
         {
             if (!projectHeights.TryGetValue(project, out int height))
             {
                 if (references.TryGetValue(project, out var projectReferences))
                 {
-                    foreach (var reference in projectReferences)
+                    int index = chain.IndexOf(project);
+                    if (index == -1)
                     {
-                        int referenceHeight = CalculateHeight(reference) + 1;
-                        if (referenceHeight > height)
+                        chain.Add(project);
+                        foreach (var reference in projectReferences)
                         {
-                            height = referenceHeight;
+                            int referenceHeight = CalculateHeight(reference, chain) + 1;
+                            if (referenceHeight > height)
+                            {
+                                height = referenceHeight;
+                            }
                         }
+
+                        chain.Remove(project);
+                    }
+                    else
+                    {
+                        var loop = chain.Skip(index).ToArray();
+                        circularities.Add(loop);
                     }
                 }
 

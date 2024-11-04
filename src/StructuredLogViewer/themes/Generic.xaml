@@ -235,6 +235,10 @@
         <Setter TargetName="nameText" Property="Foreground" Value="Red" />
         <Setter TargetName="icon" Property="Fill" Value="{DynamicResource ErrorBrush}" />
       </DataTrigger>
+      <DataTrigger Binding="{Binding Name}" Value="Circular Project References">
+        <Setter TargetName="nameText" Property="Foreground" Value="Red" />
+        <Setter TargetName="icon" Property="Fill" Value="{DynamicResource ErrorBrush}" />
+      </DataTrigger>
       <DataTrigger Binding="{Binding Name}" Value="DoubleBuild">
         <Setter TargetName="nameText" Property="Foreground" Value="Red" />
         <Setter TargetName="icon" Property="Fill" Value="{DynamicResource ErrorBrush}" />
