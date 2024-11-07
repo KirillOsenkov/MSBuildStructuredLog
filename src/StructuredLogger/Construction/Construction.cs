@@ -1139,8 +1139,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return;
             }
 
+            if (properties is IEnumerable<DictionaryEntry> entries)
+            {
+                properties = entries
+                    .Select(e => new KeyValuePair<string, string>(Convert.ToString(e.Key), Convert.ToString(e.Value)))
+                    .ToArray();
+            }
+
             var list = (ICollection<KeyValuePair<string, string>>)properties;
             int count = list.Count;
+            if (count == 0)
+            {
+                return;
+            }
+
             IEnumerable<KeyValuePair<string, string>> sorted = list;
 
             if (list is ArrayDictionary<string, string> arrayDictionary)
