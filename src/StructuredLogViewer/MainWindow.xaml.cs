@@ -112,6 +112,15 @@ namespace StructuredLogViewer
             {
                 return true;
             }
+            else if (exception is ArgumentException argumentException)
+            {
+                // MS.Win32.Penimc.IPimcManager2.GetTablet(UInt32 tablet, IPimcTablet2& IPimcTablet)
+                // benign bug in WPF
+                if (argumentException.ToString().Contains("Penimc"))
+                {
+                    return true;
+                }
+            }
 
             return false;
         }
