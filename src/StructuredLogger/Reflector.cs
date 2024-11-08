@@ -2,7 +2,7 @@
 using System.Linq.Expressions;
 using System.Reflection;
 using Microsoft.Build.Framework;
-#if NET8_0_OR_GREATER
+#if NET8_0_OR_GREATER && Issue834IsFixed
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 #endif
@@ -11,7 +11,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class Reflector
     {
-#if NET8_0_OR_GREATER
+#if NET8_0_OR_GREATER && Issue834IsFixed
         [DynamicDependency(DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.PublicMethods, typeof(LazyFormattedBuildEventArgs))]
         static Reflector()
         {
