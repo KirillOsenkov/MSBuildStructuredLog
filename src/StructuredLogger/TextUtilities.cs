@@ -506,7 +506,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return span.Milliseconds + " ms";
         }
 
-        public static string Display(DateTime time, bool displayDate = false, bool fullPrecision = false)
+        public static string Display(this DateTime time, bool displayDate = false, bool fullPrecision = false)
         {
             string fullPrecisionString = fullPrecision ? "ffff" : "";
 

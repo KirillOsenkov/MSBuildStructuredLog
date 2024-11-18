@@ -10,6 +10,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         public override DateTime Timestamp { get; set; }
 
+        public string TimestampText => Timestamp.Display(fullPrecision: true);
+
         public override string TypeName => nameof(Message);
     }
 

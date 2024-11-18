@@ -638,6 +638,20 @@
     </DataTemplate.Triggers>
   </HierarchicalDataTemplate>
 
+  <HierarchicalDataTemplate DataType="{x:Type l:TimedMessage}"
+                            ItemsSource="{Binding Children}">
+    <StackPanel Orientation="Horizontal">
+      <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{DynamicResource MessageStroke}" Fill="{DynamicResource MessageBrush}" />
+      <TextBlock x:Name="timeStamp" Text="{Binding TimestampText}" Opacity="0.4" Margin="0,0,8,0" />
+      <TextBlock x:Name="messageText" Text="{Binding ShortenedText}" />
+    </StackPanel>
+    <DataTemplate.Triggers>
+      <DataTrigger Binding="{Binding IsLowRelevance}" Value="True">
+        <Setter TargetName="messageText" Property="Opacity" Value="0.25" />
+      </DataTrigger>
+    </DataTemplate.Triggers>
+  </HierarchicalDataTemplate>
+
   <HierarchicalDataTemplate DataType="{x:Type l:Import}"
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal" x:Name="importPanel">

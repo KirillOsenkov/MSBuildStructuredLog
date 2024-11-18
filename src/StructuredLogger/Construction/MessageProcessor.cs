@@ -344,7 +344,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private Task lastTask;
 
         private Task GetTask(BuildEventContext buildEventContext)
-        {
+         {
             if (buildEventContext.EqualTo(lastTaskBuildEventContext))
             {
                 return lastTask;
@@ -446,6 +446,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             TreeNode parent = null;
             BaseNode nodeToAdd = null;
             bool lowRelevance = false;
+            bool preserveTimestamp = false;
 
             var buildEventContext = args.BuildEventContext;
 
@@ -454,6 +455,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 parent = GetTask(args);
                 if (parent is Task task)
                 {
+                    string taskName = task.Name;
                     if (args is AssemblyLoadBuildEventArgs)
                     {
                         nodeToAdd = new Message() { Text = Intern(message), IsLowRelevance = lowRelevance };
@@ -465,14 +467,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             return;
                         }
                     }
-                    else if (string.Equals(task.Name, "MSBuild", StringComparison.OrdinalIgnoreCase))
+                    else if (string.Equals(taskName, "MSBuild", StringComparison.OrdinalIgnoreCase))
                     {
                         if (ProcessMSBuildTask(task, ref parent, ref nodeToAdd, message))
                         {
                             return;
                         }
                     }
-                    else if (string.Equals(task.Name, "RestoreTask", StringComparison.OrdinalIgnoreCase) ||
+                    else if (string.Equals(taskName, "RestoreTask", StringComparison.OrdinalIgnoreCase) ||
                         string.Equals(task.Name, "RestoreTaskEx", StringComparison.OrdinalIgnoreCase))
                     {
                         if (ProcessRestoreTask(task, ref parent, message))
@@ -480,12 +482,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             return;
                         }
                     }
-                    else if (string.Equals(task.Name, "Mmp", StringComparison.OrdinalIgnoreCase))
+                    else if (string.Equals(taskName, "Mmp", StringComparison.OrdinalIgnoreCase))
                     {
                         if (ProcessMmp(task, ref parent, message))
                         {
                             return;
                         }
+                    }
+                    else if (!string.Equals(taskName, "Message", StringComparison.OrdinalIgnoreCase))
+                    {
+                        preserveTimestamp = true;
                     }
                 }
             }
@@ -669,15 +675,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     nodeToAdd = critical;
                 }
-                else if (parent is Task task && task is CppAnalyzer.CppTask)
-                {
-                    nodeToAdd = new TimedMessage
-                    {
-                        Text = message,
-                        Timestamp = args.Timestamp,
-                        IsLowRelevance = lowRelevance
-                    };
-                }
                 else
                 {
                     Message messageNode = null;
@@ -699,6 +696,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                 Line = buildMessageEventArgs.LineNumber
                             };
                         }
+                    }
+
+                    if (messageNode == null && preserveTimestamp)
+                    {
+                        messageNode = new TimedMessage
+                        {
+                            Timestamp = args.Timestamp
+                        };
                     }
 
                     if (messageNode == null)
