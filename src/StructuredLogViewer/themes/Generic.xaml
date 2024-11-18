@@ -642,7 +642,7 @@
                             ItemsSource="{Binding Children}">
     <StackPanel Orientation="Horizontal">
       <Rectangle x:Name="icon" Style="{StaticResource NodeIcon}" Stroke="{DynamicResource MessageStroke}" Fill="{DynamicResource MessageBrush}" />
-      <TextBlock x:Name="timeStamp" Text="{Binding TimestampText}" Opacity="0.4" Margin="0,0,8,0" />
+      <TextBlock x:Name="timeStamp" Text="{Binding TimestampText}" Opacity="0.3" Margin="0,0,8,0" />
       <TextBlock x:Name="messageText" Text="{Binding ShortenedText}" />
     </StackPanel>
     <DataTemplate.Triggers>

@@ -85,6 +85,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Intern(nameof(Target));
             Intern(nameof(Task));
             Intern(nameof(TimedNode));
+            Intern(nameof(TimedMessage));
             Intern(nameof(Warning));
         }
 
