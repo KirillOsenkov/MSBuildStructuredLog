@@ -36,7 +36,7 @@ namespace BinlogTool
             foreach (var property in propertyValues.OrderBy(kvp => kvp.Key))
             {
                 var values = property.Value;
-                foreach (var value in values)
+                foreach (var value in values.OrderBy(s => s))
                 {
                     Console.WriteLine($"{property.Key}={value}");
                 }
