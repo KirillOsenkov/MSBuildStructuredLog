@@ -52,13 +52,13 @@ namespace BinlogTool
 
             foreach (var kvp in properties)
             {
-                if (kvp is DictionaryEntry entry)
-                {
-                    VisitProperty(record, Convert.ToString(entry.Key), Convert.ToString(entry.Value));
-                }
-                else if (kvp is KeyValuePair<string, string> keyValuePair)
+                if (kvp is KeyValuePair<string, string> keyValuePair)
                 {
                     VisitProperty(record, keyValuePair.Key, keyValuePair.Value);
+                }
+                else if (kvp is DictionaryEntry entry)
+                {
+                    VisitProperty(record, Convert.ToString(entry.Key), Convert.ToString(entry.Value));
                 }
             }
         }
