@@ -18,6 +18,7 @@ namespace BinlogTool
     binlogtool listtools input.binlog
     binlogtool savefiles input.binlog output_path
     binlogtool listnuget input.binlog output_path
+    binlogtool listproperties input.binlog
     binlogtool reconstruct input.binlog output_path
     binlogtool savestrings input.binlog output.txt
     binlogtool search *.binlog search string
