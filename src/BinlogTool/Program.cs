@@ -74,6 +74,13 @@ namespace BinlogTool
                 return 0;
             }
 
+            if (args.Length == 2 && string.Equals(firstArg, "listProperties", StringComparison.OrdinalIgnoreCase))
+            {
+                var binlog = args[1];
+                new ListProperties().Run(binlog);
+                return 0;
+            }
+
             if (string.Equals(firstArg, "compilerinvocations", StringComparison.OrdinalIgnoreCase))
             {
                 string binlog = null;
