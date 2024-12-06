@@ -1401,10 +1401,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
             string propertyValue = ReadDeduplicatedString();
             string propertySource = ReadDeduplicatedString();
 
-            var e = new PropertyInitialValueSetEventArgs(
+            var e = new ExtendedPropertyInitialValueSetEventArgs(
                 propertyName,
                 propertyValue,
                 propertySource,
+                fields.File,
+                fields.LineNumber,
+                fields.ColumnNumber,
                 fields.Message,
                 fields.HelpKeyword,
                 fields.SenderName,
