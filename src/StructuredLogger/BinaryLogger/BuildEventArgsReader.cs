@@ -1357,7 +1357,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             string newValue = ReadDeduplicatedString();
             string location = ReadDeduplicatedString();
 
-            string message = null;
+            string message = fields.Message;
             if (_fileFormatVersion >= 13 && _fileFormatVersion < 25)
             {
                 message = GetPropertyReassignmentMessage(propertyName, newValue, previousValue, location);
