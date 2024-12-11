@@ -1362,7 +1362,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 message = GetPropertyReassignmentMessage(propertyName, newValue, previousValue, location);
             }
-            else if (_fileFormatVersion >= 25)
+            else if (_fileFormatVersion >= 25 && !string.IsNullOrEmpty(fields.Message))
             {
                 message = string.Format(fields.Message, propertyName, newValue, previousValue, $"{fields.File} ({fields.LineNumber},{fields.ColumnNumber})");
                 var extendedEvent = new ExtendedPropertyReassignmentEventArgs(
