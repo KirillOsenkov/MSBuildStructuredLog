@@ -59,14 +59,25 @@ var netCoreProject = new {
         var outputDir = artifactsDir.Combine(runtime);
 
         Information("Publishing: {0}, runtime: {1}", netCoreProject.Name, runtime);
-        DotNetPublish(netCoreProject.Path, new DotNetPublishSettings {
+        var settings = new DotNetPublishSettings
+        {
             //Framework = netCoreProject.Framework,
             Configuration = configuration,
             Runtime = runtime,
             SelfContained = true,
             PublishSingleFile = true,
             OutputDirectory = outputDir.FullPath
-        });
+        };
+        if (configuration == "Release")
+        {
+            settings.ArgumentCustomization = args => args
+                .Append("/p:DebugType=None")
+                .Append("/p:DebugSymbols=false")
+                .Append("/p:IncludeSymbolsInSingleFile=false")
+                .Append("/p:CopyOutputSymbolsToPublishDirectory=false");
+        }
+
+        DotNetPublish(netCoreProject.Path, settings);
     }
  });
 
