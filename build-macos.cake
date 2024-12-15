@@ -70,7 +70,7 @@ var netCoreProject = new {
  });
 
 
- Task("Package-Mac")
+ Task("Create-Bundle")
      .IsDependentOn("Publish-NetCore")
      .Does(() =>
  {
@@ -83,7 +83,7 @@ var netCoreProject = new {
         Information("Copying Info.plist");
         EnsureDirectoryExists(tempDir.Combine("Contents"));
         CopyFileToDirectory($"{netCoreAppsRoot}/{netCoreApp}/Info.plist", tempDir.Combine("Contents"));
-        
+
         // Update versions in Info.plist
         var plistFile = tempDir.Combine("Contents").CombineWithFilePath("Info.plist");
         dynamic plist = DeserializePlist(plistFile);
@@ -102,10 +102,99 @@ var netCoreProject = new {
         EnsureDirectoryExists(workingDir);
         MoveDirectory(tempDir, workingDir.Combine($"{macAppName}.app"));
 
-        var architecture = runtime[(runtime.IndexOf("-")+1)..];
-        Zip(workingDir.FullPath, workingDir.CombineWithFilePath($"../{macAppName}-{architecture}.zip"));
+        //var architecture = runtime[(runtime.IndexOf("-")+1)..];
+        //Zip(workingDir.FullPath, workingDir.CombineWithFilePath($"../{macAppName}-{architecture}.zip"));
     }
  });
+
+ Task("Sign-Bundle")
+    .IsDependentOn("Create-Bundle")
+    .Does(() =>
+    {
+        var runtimeIdentifiers = netCoreProject.Runtimes.Where(r => r.StartsWith("osx"));
+        var entitlementsFilePath = $"{netCoreAppsRoot}/{netCoreApp}/Entitlements.plist";
+
+        foreach(var runtime in runtimeIdentifiers)
+        {
+            Information($"Starting {runtime} macOS app signing");
+
+            var appBundlePath = artifactsDir.Combine(runtime).Combine($"{macAppName}.app");
+            var signingIdentity = "Developer ID Application";
+
+            foreach (var dylib in GetFiles($"{appBundlePath}/**/*.dylib"))
+            {
+                Information($"Signing {dylib} library");
+
+                // Sign the library:
+                var args = new ProcessArgumentBuilder();
+                args.Append("--force");
+                args.Append("--sign");
+                args.AppendQuoted(signingIdentity);
+                args.AppendQuoted(dylib.ToString());
+
+                StartProcess("codesign", new ProcessSettings
+                {
+                    Arguments = args.RenderSafe(),
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                });
+            }
+
+            // Sign the bundle:
+            {
+                Information($"Signing {appBundlePath} bundle");
+
+                var args = new ProcessArgumentBuilder();
+                args.Append("--force");
+                args.Append("--timestamp");
+                args.Append("--options=runtime");
+                args.Append("--entitlements " + entitlementsFilePath);
+                args.Append("--sign");
+                args.AppendQuoted(signingIdentity);
+                args.AppendQuoted(appBundlePath.ToString());
+
+                StartProcess("codesign", new ProcessSettings
+                {
+                    Arguments = args.RenderSafe(),
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                });
+            }
+        }
+    });
+
+Task("Compress-Bundle")
+    .IsDependentOn("Sign-Bundle")
+    .Does(() =>
+    {
+        var runtimeIdentifiers = netCoreProject.Runtimes.Where(r => r.StartsWith("osx"));
+        foreach(var runtime in runtimeIdentifiers)
+        {
+            Information($"Compressing {runtime} macOS bundle");
+            var appBundlePath = artifactsDir.Combine(runtime).Combine($"{macAppName}.app");
+            var zippedPath = artifactsDir.Combine(runtime).CombineWithFilePath($"../{macAppName}.zip");
+
+            var args = new ProcessArgumentBuilder();
+            args.Append("-c");
+            args.Append("-k");
+            args.Append("--keepParent");
+            args.AppendQuoted(appBundlePath.ToString());
+            args.AppendQuoted(zippedPath.ToString());
+
+            // "Ditto" is absolutely necessary instead of "zip" command.
+            StartProcess("ditto", new ProcessSettings
+            {
+                Arguments = args.RenderSafe(),
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
+            });
+        }
+    });
+
+Task("Package-Mac")
+    .IsDependentOn("Create-Bundle")
+    .IsDependentOn("Sign-Bundle")
+    .IsDependentOn("Compress-Bundle");
 
  Task("Default")
      .IsDependentOn("Restore-NetCore")
