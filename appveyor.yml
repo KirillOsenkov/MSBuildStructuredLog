@@ -65,9 +65,9 @@ for:
         - job_name: macOS build
     init:
       - curl -sSL https://dot.net/v1/dotnet-install.sh | /bin/bash -s -- --channel 8.0
-      - dotnet tool update -g Cake.Tool
     build_script:
-      - dotnet cake ./build-macos.cake --settings_skippackageversioncheck=true
+      - dotnet tool install Cake.Tool --create-manifest-if-needed
+      - dotnet tool run dotnet-cake ./build-macos.cake --settings_skippackageversioncheck=true
     artifacts:
       - path: 'artifacts\StructuredLogViewer-*.zip'
         name: 'Structured Log Viewer macOS app'
