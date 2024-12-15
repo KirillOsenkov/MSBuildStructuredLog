@@ -70,11 +70,11 @@ var netCoreProject = new {
         };
         if (configuration == "Release")
         {
-            settings.ArgumentCustomization = args => args
-                .Append("/p:DebugType=None")
-                .Append("/p:DebugSymbols=false")
-                .Append("/p:IncludeSymbolsInSingleFile=false")
-                .Append("/p:CopyOutputSymbolsToPublishDirectory=false");
+            settings.MSBuildSettings = new DotNetMSBuildSettings()
+                .WithProperty("DebugType", "None")
+                .WithProperty("DebugSymbols", "false")
+                .WithProperty("IncludeSymbolsInSingleFile", "false")
+                .WithProperty("CopyOutputSymbolsToPublishDirectory", "false");
         }
 
         DotNetPublish(netCoreProject.Path, settings);
@@ -84,7 +84,7 @@ var netCoreProject = new {
 Task("Install-Certificate")
     .Does(() =>
 {
-    var p12Base64 = EnvironmentVariable("P12_BASE64").Replace("\r", "").Replace("\n", "");
+    var p12Base64 = EnvironmentVariable("P12_BASE64")?.Replace("\r", "").Replace("\n", "");
     var p12Password = EnvironmentVariable("P12_PASSWORD");
 
     if (string.IsNullOrEmpty(p12Base64))
@@ -154,7 +154,9 @@ Task("Install-Certificate")
         Information("Copying App Icons");
         EnsureDirectoryExists(tempDir.Combine("Contents/Resources"));
         CopyFileToDirectory($"{netCoreAppsRoot}/{netCoreApp}/StructuredLogViewer.icns", tempDir.Combine("Contents/Resources"));
-        
+
+        EnsureDirectoryExists(tempDir.Combine("Contents/Frameworks"));
+
         Information("Copying executables");
         MoveDirectory(workingDir, tempDir.Combine("Contents/MacOS"));
 
