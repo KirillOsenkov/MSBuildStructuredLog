@@ -7,13 +7,14 @@ branches:
 environment:
   matrix:
     - job_name: Windows build
+      job_group: Build
       appveyor_build_worker_image: Visual Studio 2022
     - job_name: macOS build
+      job_group: Build
       appveyor_build_worker_image: macOS
     - job_name: Deploy Webhook
       appveyor_build_worker_image: Visual Studio 2022
-      job_depends_on: Windows build
-      job_depends_on: macOS build
+      job_depends_on: Build
 
 matrix:
   fast_finish: true
