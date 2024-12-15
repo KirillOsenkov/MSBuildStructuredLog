@@ -4,10 +4,25 @@ branches:
   only:
     - main
 
+environment:
+  matrix:
+    - job_name: Windows build
+      appveyor_build_worker_image: Visual Studio 2022
+    - job_name: macOS build
+      appveyor_build_worker_image: macOS
+    - job_name: Deploy Webhook
+      appveyor_build_worker_image: Visual Studio 2022
+      job_depends_on: Windows build
+      job_depends_on: macOS build
 
-jobs:
-  - name: windows-build
-    image: Visual Studio 2022
+matrix:
+  fast_finish: true
+
+for:
+  - 
+    matrix:
+      only:
+        - job_name: Windows build
     init:
       - choco upgrade chocolatey
       - dotnet tool update -g checkbinarycompat
@@ -42,8 +57,10 @@ jobs:
     on_failure:
       - appveyor PushArtifact msbuild.binlog
 
-  - name: macos-build
-    image: macOS
+  - 
+    matrix:
+      only:
+        - job_name: macOS build
     init:
       - curl -o dotnet-install.sh https://dot.net/v1/dotnet-install.sh
       - chmod +x dotnet-install.sh
@@ -57,8 +74,12 @@ jobs:
     on_failure:
       - appveyor PushArtifact msbuild.binlog
 
-deploy:
-  - provider: Webhook
-    url: https://app.signpath.io/API/v1/74f63071-f2aa-46ce-bd8f-1e7cd8774019/Integrations/AppVeyor?ProjectKey=MSBuildStructuredLog&SigningPolicyKey=release-signing
-    authorization:
-      secure: WALjHGjvNllt916kBDQ5tSYXGvaKDqymo/jQJoIKwITueSp4LF3jS+9nllR46G8pp2AH+Z6RL1f089XGDOYlfg==
+  - 
+    matrix:
+      only:
+        - job_name: Deploy Webhook
+    deploy:
+      - provider: Webhook
+        url: https://app.signpath.io/API/v1/74f63071-f2aa-46ce-bd8f-1e7cd8774019/Integrations/AppVeyor?ProjectKey=MSBuildStructuredLog&SigningPolicyKey=release-signing
+        authorization:
+        secure: WALjHGjvNllt916kBDQ5tSYXGvaKDqymo/jQJoIKwITueSp4LF3jS+9nllR46G8pp2AH+Z6RL1f089XGDOYlfg==
