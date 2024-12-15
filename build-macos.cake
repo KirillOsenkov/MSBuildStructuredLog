@@ -69,6 +69,54 @@ var netCoreProject = new {
     }
  });
 
+Task("Install-Certificate")
+    .Does(() =>
+{
+    var p12Base64 = EnvironmentVariable("P12_BASE64");
+    var p12Password = EnvironmentVariable("P12_PASSWORD");
+
+    if (string.IsNullOrEmpty(p12Base64))
+    {
+        Error("P12_BASE64 environment variable is not set.");
+        return;
+    }
+
+    if (string.IsNullOrEmpty(p12Password))
+    {
+        Error("P12_PASSWORD environment variable is not set.");
+        return;
+    }
+
+    Information("Decoding the P12 certificate from base64...");
+
+    var p12Bytes = Convert.FromBase64String(p12Base64);
+
+    var tempP12File = "./certificate.p12";
+    System.IO.File.WriteAllBytes(tempP12File, p12Bytes);
+
+    Information("Importing P12 certificate into the keychain...");
+
+    var importArguments = new ProcessArgumentBuilder()
+        .Append("import")
+        .AppendQuoted(tempP12File)
+        .Append("-k")
+        .AppendQuoted("/Library/Keychains/System.keychain")
+        .Append("-P")
+        .AppendQuoted(p12Password);
+
+    StartProcess("security", new ProcessSettings
+    {
+        Arguments = importArguments.RenderSafe(),
+        RedirectStandardOutput = true,
+        RedirectStandardError = true
+    });
+
+    Information("Successfully imported the certificate.");
+
+    System.IO.File.Delete(tempP12File);
+
+    Information("Temporary P12 certificate file deleted.");
+});
 
  Task("Create-Bundle")
      .IsDependentOn("Publish-NetCore")
@@ -105,6 +153,7 @@ var netCoreProject = new {
  });
 
  Task("Sign-Bundle")
+    .IsDependentOn("Install-Certificate")
     .IsDependentOn("Create-Bundle")
     .Does(() =>
 {

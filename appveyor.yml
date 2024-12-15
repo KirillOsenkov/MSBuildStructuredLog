@@ -5,6 +5,10 @@ branches:
     - main
 
 environment:
+  APPLE_ID_EMAIL: $APPLE_ID_EMAIL
+  APPLE_ID_PASSWORD: $APPLE_ID_PASSWORD
+  P12_BASE64: $P12_BASE64
+  P12_PASSWORD: $P12_PASSWORD
   matrix:
     - job_name: Windows build
       job_group: Build
