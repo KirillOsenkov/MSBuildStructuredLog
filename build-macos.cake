@@ -73,7 +73,7 @@ var netCoreProject = new {
 Task("Install-Certificate")
     .Does(() =>
 {
-    var p12Base64 = EnvironmentVariable("P12_BASE64");
+    var p12Base64 = EnvironmentVariable("P12_BASE64").Replace("\r", "").Replace("\n", "");
     var p12Password = EnvironmentVariable("P12_PASSWORD");
 
     if (string.IsNullOrEmpty(p12Base64))
