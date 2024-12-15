@@ -8,9 +8,11 @@ environment:
   matrix:
     - job_name: Windows build
       job_group: Build
+      jobs_per_group: 2
       appveyor_build_worker_image: Visual Studio 2022
     - job_name: macOS build
       job_group: Build
+      jobs_per_group: 2
       appveyor_build_worker_image: macOS
     - job_name: Deploy Webhook
       appveyor_build_worker_image: Visual Studio 2022
@@ -62,9 +64,7 @@ for:
       only:
         - job_name: macOS build
     init:
-      - curl -o dotnet-install.sh https://dot.net/v1/dotnet-install.sh
-      - chmod +x dotnet-install.sh
-      - ./dotnet-install.sh --channel 8.0
+      - curl -sSL https://dot.net/v1/dotnet-install.sh | /bin/bash -s -- --channel 8.0
       - dotnet tool update -g Cake.Tool
     build_script:
       - dotnet cake ./build-macos.cake --settings_skippackageversioncheck=true
