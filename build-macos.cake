@@ -64,6 +64,7 @@ var netCoreProject = new {
             Configuration = configuration,
             Runtime = runtime,
             SelfContained = true,
+            PublishSingleFile = true,
             OutputDirectory = outputDir.FullPath
         });
     }
