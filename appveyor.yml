@@ -1,51 +1,61 @@
 version: 1.1.{build}
-image: Visual Studio 2022
 
 branches:
   only:
     - main
 
-install:
-  - choco upgrade chocolatey # Need at least 0.10.8 to avoid packaging error
-  - dotnet tool update -g Cake.Tool
-  - dotnet tool update -g checkbinarycompat
-  - ps: Invoke-WebRequest -Uri 'https://dot.net/v1/dotnet-install.ps1' -UseBasicParsing -OutFile "$env:temp\dotnet-install.ps1"
-  - ps: '& $env:temp\dotnet-install.ps1 -Version "8.0.302"'
-build_script: 
-- cmd: >-
-    dotnet msbuild /p:Configuration=Release /clp:v=m MSBuildStructuredLog.sln /logger:"C:\Program Files\AppVeyor\BuildAgent\dotnetcore\Appveyor.MSBuildLogger.dll"
 
-    dotnet cake ./build-macos.cake --settings_skippackageversioncheck=true
+jobs:
+  - name: windows-build
+    image: Visual Studio 2022
+    init:
+      - choco upgrade chocolatey
+      - dotnet tool update -g checkbinarycompat
+      - ps: Invoke-WebRequest -Uri 'https://dot.net/v1/dotnet-install.ps1' -UseBasicParsing -OutFile "$env:temp\dotnet-install.ps1"
+      - ps: '& $env:temp\dotnet-install.ps1 -Version "8.0.302"'
+    build_script:
+      - cmd: >-
+          dotnet msbuild /p:Configuration=Release /clp:v=m MSBuildStructuredLog.sln /logger:"C:\Program Files\AppVeyor\BuildAgent\dotnetcore\Appveyor.MSBuildLogger.dll"
+          checkbinarycompat bin\StructuredLogViewer\Release\net472
+    after_build:
+      - ps: >-
+          Compress-Archive `
+          "bin\StructuredLogViewer\Release\net472\Releases\MSBuildStructuredLogSetup.exe", `
+          "bin\StructuredLogViewer\Release\net472\Releases\MSBuildStructuredLogViewer*.nupkg", `
+          "bin\StructuredLogger\Release\netstandard2.0\StructuredLogger.dll" `
+          -DestinationPath "MSBuildStructuredLog-${Env:APPVEYOR_BUILD_VERSION}.zip"
+    artifacts:
+      - path: msbuild.binlog
+        name: MSBuild Log
+      - path: 'bin\StructuredLogViewer\Release\net472\msbuild-structured-log-viewer*.nupkg'
+        name: Chocolatey Package
+      - path: 'bin\StructuredLogViewer\Release\net472\Releases\MSBuildStructuredLogSetup.exe'
+        name: MSBuildStructuredLogSetup.exe
+      - path: 'bin\StructuredLogViewer\Release\net472\Releases\MSBuildStructuredLogViewer*.nupkg'
+        name: Installer nupkg
+      - path: 'bin\StructuredLogViewer\Release\net472\Releases\RELEASES'
+        name: RELEASES
+      - path: 'bin\StructuredLogger\Release\netstandard2.0\StructuredLogger.dll'
+        name: StructuredLogger.dll
+      - path: 'MSBuildStructuredLog-*.zip'
+        name: Bundle
+    on_failure:
+      - appveyor PushArtifact msbuild.binlog
 
-    checkbinarycompat bin\StructuredLogViewer\Release\net472 
-
-after_build:
-- ps: >-
-    Compress-Archive `
-    "bin\StructuredLogViewer\Release\net472\Releases\MSBuildStructuredLogSetup.exe", `
-    "bin\StructuredLogViewer\Release\net472\Releases\MSBuildStructuredLogViewer*.nupkg", `
-    "bin\StructuredLogger\Release\netstandard2.0\StructuredLogger.dll" `
-    -DestinationPath "MSBuildStructuredLog-${Env:APPVEYOR_BUILD_VERSION}.zip"
-
-artifacts:
-- path: msbuild.binlog
-  name: MSBuild Log
-- path: 'bin\StructuredLogViewer\Release\net472\msbuild-structured-log-viewer*.nupkg'
-  name: Chocolatey Package
-- path: 'bin\StructuredLogViewer\Release\net472\Releases\MSBuildStructuredLogSetup.exe'
-  name: MSBuildStructuredLogSetup.exe
-- path: 'bin\StructuredLogViewer\Release\net472\Releases\MSBuildStructuredLogViewer*.nupkg'
-  name: Installer nupkg
-- path: 'bin\StructuredLogViewer\Release\net472\Releases\RELEASES'
-  name: RELEASES
-- path: 'bin\StructuredLogger\Release\netstandard2.0\StructuredLogger.dll'
-  name: StructuredLogger.dll
-- path: 'MSBuildStructuredLog-*.zip'
-  name: Bundle
-- path: 'artifacts\StructuredLogViewer-*.zip'
-  name: 'Structured Log Viewer macOS app'
-on_failure:
-- appveyor PushArtifact msbuild.binlog
+  - name: macos-build
+    image: macOS
+    init:
+      - curl -o dotnet-install.sh https://dot.net/v1/dotnet-install.sh
+      - chmod +x dotnet-install.sh
+      - ./dotnet-install.sh --channel 8.0
+      - dotnet tool update -g Cake.Tool
+    build_script:
+      - dotnet cake ./build-macos.cake --settings_skippackageversioncheck=true
+    artifacts:
+      - path: 'artifacts\StructuredLogViewer-*.zip'
+        name: 'Structured Log Viewer macOS app'
+    on_failure:
+      - appveyor PushArtifact msbuild.binlog
 
 deploy:
   - provider: Webhook
