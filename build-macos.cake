@@ -82,6 +82,7 @@ var netCoreProject = new {
  });
 
 Task("Install-Certificate")
+    .WithCriteria(HasEnvironmentVariable("P12_BASE64"))
     .Does(() =>
 {
     var p12Base64 = EnvironmentVariable("P12_BASE64")?.Replace("\r", "").Replace("\n", "");
@@ -167,6 +168,7 @@ Task("Install-Certificate")
  });
 
  Task("Sign-Bundle")
+    .WithCriteria(HasEnvironmentVariable("APPLE_CERT_NAME"))
     .IsDependentOn("Install-Certificate")
     .IsDependentOn("Create-Bundle")
     .Does(() =>
@@ -179,7 +181,7 @@ Task("Install-Certificate")
         Information($"Starting {runtime} macOS app signing");
 
         var appBundlePath = artifactsDir.Combine(runtime).Combine($"{macAppName}.app");
-        var signingIdentity = "Developer ID Application";
+        var signingIdentity = EnvironmentVariable("APPLE_CERT_NAME");
 
         foreach (var dylib in GetFiles($"{appBundlePath}/**/*.dylib"))
         {
@@ -192,7 +194,7 @@ Task("Install-Certificate")
             args.AppendQuoted(signingIdentity);
             args.AppendQuoted(dylib.ToString());
 
-            StartProcess("codesign", new ProcessSettings
+            RunCodeSign(new ProcessSettings
             {
                 Arguments = args.RenderSafe(),
                 RedirectStandardOutput = true,
@@ -214,12 +216,21 @@ Task("Install-Certificate")
             args.AppendQuoted(signingIdentity);
             args.AppendQuoted(appBundlePath.ToString());
 
-            StartProcess("codesign", new ProcessSettings
+            RunCodeSign(new ProcessSettings
             {
                 Arguments = args.RenderSafe(),
                 RedirectStandardOutput = true,
                 RedirectStandardError = true
             });
+        }
+
+        void RunCodeSign(ProcessSettings settings)
+        {
+            var exitCode = StartProcess("codesign", settings);
+            if (exitCode != 0)
+            {
+                throw new Exception($"The tool exited with code {exitCode}");
+            }
         }
     }
 });
@@ -243,7 +254,8 @@ Task("Compress-Bundle")
         args.AppendQuoted(appBundlePath.ToString());
         args.AppendQuoted(zippedPath.ToString());
 
-        // "Ditto" is absolutely necessary instead of "zip" command. Otherwise no symlinks are
+        // "Ditto" is absolutely necessary instead of "zip" command.
+        // Otherwise no symlinks are saved, and notarize process would fail.
         StartProcess("ditto", new ProcessSettings
         {
             Arguments = args.RenderSafe(),
