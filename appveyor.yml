@@ -19,22 +19,15 @@ environment:
     secure: QWdxOY0xIK4XR50AYb77TKCmMd2k00iEBfrYYxzhwM+pDyvSjQXO6Oqg1epfe0KRpZNc+a9cGwCJ8qMyCEQxsA==
   matrix:
     - job_name: Windows build
-      job_group: Build
-      jobs_per_group: 2
       appveyor_build_worker_image: Visual Studio 2022
     - job_name: macOS build
-      job_group: Build
-      jobs_per_group: 2
       appveyor_build_worker_image: macOS
-    - job_name: Deploy Webhook
-      appveyor_build_worker_image: Visual Studio 2022
-      job_depends_on: Build
 
 matrix:
   fast_finish: true
 
 for:
-  - 
+  -
     matrix:
       only:
         - job_name: Windows build
@@ -70,8 +63,13 @@ for:
         name: Bundle
     on_failure:
       - appveyor PushArtifact msbuild.binlog
+    deploy:
+      - provider: Webhook
+        url: https://app.signpath.io/API/v1/74f63071-f2aa-46ce-bd8f-1e7cd8774019/Integrations/AppVeyor?ProjectKey=MSBuildStructuredLog&SigningPolicyKey=release-signing
+        authorization:
+        secure: WALjHGjvNllt916kBDQ5tSYXGvaKDqymo/jQJoIKwITueSp4LF3jS+9nllR46G8pp2AH+Z6RL1f089XGDOYlfg==
 
-  - 
+  -
     matrix:
       only:
         - job_name: macOS build
@@ -85,13 +83,3 @@ for:
         name: 'Structured Log Viewer macOS app'
     on_failure:
       - appveyor PushArtifact msbuild.binlog
-
-  - 
-    matrix:
-      only:
-        - job_name: Deploy Webhook
-    deploy:
-      - provider: Webhook
-        url: https://app.signpath.io/API/v1/74f63071-f2aa-46ce-bd8f-1e7cd8774019/Integrations/AppVeyor?ProjectKey=MSBuildStructuredLog&SigningPolicyKey=release-signing
-        authorization:
-        secure: WALjHGjvNllt916kBDQ5tSYXGvaKDqymo/jQJoIKwITueSp4LF3jS+9nllR46G8pp2AH+Z6RL1f089XGDOYlfg==
