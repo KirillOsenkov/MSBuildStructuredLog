@@ -143,6 +143,10 @@ Task("Install-Certificate")
                 .AppendQuoted(keychainPath)
         });
 
+        DownloadAndInstallAppleCert("https://www.apple.com/certificateauthority/DeveloperIDG2CA.cer");
+        DownloadAndInstallAppleCert("https://www.apple.com/certificateauthority/AppleRootCA-G2.cer");
+        DownloadAndInstallAppleCert("https://www.apple.com/certificateauthority/AppleWWDRCAG2.cer");
+
         Information("Importing certificate to keychain...");
         RunToolWithOutput("security", new ProcessSettings
         {
@@ -199,6 +203,30 @@ Task("Install-Certificate")
         System.IO.File.Delete(tempP12File);
 
         Information("Temporary P12 certificate file deleted.");
+    }
+
+    void DownloadAndInstallAppleCert(string cert)
+    {
+        var fileName = System.IO.Path.GetFileName(cert);
+        RunToolWithOutput("curl", new ProcessSettings
+        {
+            Arguments = new ProcessArgumentBuilder()
+                .Append("-o")
+                .AppendQuoted(fileName)
+                .AppendQuoted(cert)
+        });
+        RunToolWithOutput("security", new ProcessSettings
+        {
+            Arguments = new ProcessArgumentBuilder()
+                .Append("import")
+                .AppendQuoted(fileName)
+                .Append("-T")
+                .Append("/usr/bin/codesign")
+                .Append("-T")
+                .Append("/usr/bin/security")
+                .Append("-k")
+                .AppendQuoted(keychainPath)
+        });
     }
 });
 
