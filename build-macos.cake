@@ -350,6 +350,7 @@ Task("Compress-Bundle")
 });
 
 Task("Cleanup-After-Sign")
+    .WithCriteria(certIsSet)
     .IsDependentOn("Sign-Bundle")
     .Does(() =>
 {
