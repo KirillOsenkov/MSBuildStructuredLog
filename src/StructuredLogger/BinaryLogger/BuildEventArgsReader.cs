@@ -1358,22 +1358,35 @@ namespace Microsoft.Build.Logging.StructuredLogger
             string location = ReadDeduplicatedString();
 
             string message = fields.Message;
-            if (_fileFormatVersion >= 13)
+            if (_fileFormatVersion >= 13 && _fileFormatVersion < 25)
             {
                 message = GetPropertyReassignmentMessage(propertyName, newValue, previousValue, location);
             }
+            else if (_fileFormatVersion >= 25 && !string.IsNullOrEmpty(fields.Message))
+            {
+                message = string.Format(fields.Message, propertyName, newValue, previousValue, $"{fields.File} ({fields.LineNumber},{fields.ColumnNumber})");
+                var extendedEvent = new ExtendedPropertyReassignmentEventArgs(
+                    propertyName,
+                    previousValue,
+                    newValue,
+                    fields.File,
+                    fields.LineNumber,
+                    fields.ColumnNumber,
+                    message);
+                SetCommonFields(extendedEvent, fields);
+                return extendedEvent;
+            }
 
             var e = new PropertyReassignmentEventArgs(
-                propertyName,
-                previousValue,
-                newValue,
-                location,
-                message,
-                fields.HelpKeyword,
-                fields.SenderName,
-                fields.Importance);
+                   propertyName,
+                   previousValue,
+                   newValue,
+                   location,
+                   message,
+                   fields.HelpKeyword,
+                   fields.SenderName,
+                   fields.Importance);
             SetCommonFields(e, fields);
-
             return e;
         }
 
@@ -1401,11 +1414,23 @@ namespace Microsoft.Build.Logging.StructuredLogger
             string propertyValue = ReadDeduplicatedString();
             string propertySource = ReadDeduplicatedString();
 
-            var e = new PropertyInitialValueSetEventArgs(
+            string message = fields.Message;
+            if (_fileFormatVersion >= 25)
+            {
+                string formattedSource = string.IsNullOrEmpty(fields.File)
+                    ? propertySource
+                    : $"{fields.File} ({fields.LineNumber},{fields.ColumnNumber})";
+                message = string.Format(fields.Message, propertyName, propertyValue, formattedSource);
+            }
+
+            var e = new ExtendedPropertyInitialValueSetEventArgs(
                 propertyName,
                 propertyValue,
                 propertySource,
-                fields.Message,
+                fields.File,
+                fields.LineNumber,
+                fields.ColumnNumber,
+                message,
                 fields.HelpKeyword,
                 fields.SenderName,
                 fields.Importance);
