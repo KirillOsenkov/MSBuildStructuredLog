@@ -23,14 +23,11 @@
     </AvaloniaResource>
     <AvaloniaResource Include="StructuredLogger.ico" />
   </ItemGroup>
-  
-  <ItemGroup Condition="$(NETCoreSdkRuntimeIdentifier.StartsWith('osx'))">
-    <Content Include="StructuredLogViewer.icns">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Info.plist">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+
+  <ItemGroup>
+    <!-- These files are not part of Content group, instead they are copied in the build-macos Cake script -->
+    <None Include="StructuredLogViewer.icns" />
+    <None Include="Info.plist" />
   </ItemGroup>
 
   <ItemGroup>

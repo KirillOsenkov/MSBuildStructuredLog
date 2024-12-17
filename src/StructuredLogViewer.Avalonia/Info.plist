@@ -2,23 +2,32 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>CFBundlePackageType</key>
-	<string>APPL</string>
-	<key>CFBundleInfoDictionaryVersion</key>
-	<string>6.0</string>
+	<!-- App specific properties -->
 	<key>CFBundleIconFile</key>
-	<string>StructuredLogViewer</string>
+	<string>StructuredLogViewer.icns</string>
 	<key>CFBundleName</key>
 	<string>StructuredLogViewer</string>
 	<key>CFBundleExecutable</key>
 	<string>StructuredLogViewer.Avalonia</string>
+	<key>CFBundleDisplayName</key>
+	<string>MSBuild Structured Log Viewer</string>
 	<key>CFBundleIdentifier</key>
-	<string>structuredlogviewer</string>
+	<string>com.msbuildlog.viewer</string>
+	<!-- Version numbers are replaced in build-macos.cake script -->
 	<key>CFBundleVersion</key>
 	<string>0.0.1</string>
 	<key>CFBundleShortVersionString</key>
 	<string>0.0.1</string>
+	<!-- Common properties -->
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
 	<key>NSHighResolutionCapable</key>
 	<string>True</string>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
 </dict>
 </plist>
