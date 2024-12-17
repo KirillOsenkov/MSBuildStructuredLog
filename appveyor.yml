@@ -55,7 +55,7 @@ for:
       - provider: Webhook
         url: https://app.signpath.io/API/v1/74f63071-f2aa-46ce-bd8f-1e7cd8774019/Integrations/AppVeyor?ProjectKey=MSBuildStructuredLog&SigningPolicyKey=release-signing
         authorization:
-        secure: WALjHGjvNllt916kBDQ5tSYXGvaKDqymo/jQJoIKwITueSp4LF3jS+9nllR46G8pp2AH+Z6RL1f089XGDOYlfg==
+          secure: WALjHGjvNllt916kBDQ5tSYXGvaKDqymo/jQJoIKwITueSp4LF3jS+9nllR46G8pp2AH+Z6RL1f089XGDOYlfg==
 
   -
     matrix:
