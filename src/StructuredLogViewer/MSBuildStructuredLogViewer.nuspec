@@ -63,9 +63,12 @@
     <file src="StructuredLogViewer.exe.config" target="lib\net472" />
     <file src="System.Buffers.dll" target="lib\net472" />
     <file src="System.Collections.Immutable.dll" target="lib\net472" />
+    <file src="System.Collections.Immutable.dll" target="lib\net472\TaskRunner.x86" />
     <file src="System.Memory.dll" target="lib\net472" />
+    <file src="System.Memory.dll" target="lib\net472\TaskRunner.x86" />
     <file src="System.Numerics.Vectors.dll" target="lib\net472" />
     <file src="System.Runtime.CompilerServices.Unsafe.dll" target="lib\net472" />
+    <file src="System.Runtime.CompilerServices.Unsafe.dll" target="lib\net472\TaskRunner.x86" />
     <file src="System.Text.Json.dll" target="lib\net472" />
     <file src="System.ValueTuple.dll" target="lib\net472" />
     <file src="TaskRunner.exe" target="lib\net472\TaskRunner.x86" />
