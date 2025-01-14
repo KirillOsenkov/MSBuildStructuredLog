@@ -19,6 +19,7 @@ namespace BinlogTool
     binlogtool savefiles input.binlog output_path
     binlogtool listnuget input.binlog output_path
     binlogtool listproperties input.binlog
+    binlogtool doublewrites input.binlog output_path
     binlogtool reconstruct input.binlog output_path
     binlogtool savestrings input.binlog output.txt
     binlogtool search *.binlog search string
@@ -98,6 +99,27 @@ namespace BinlogTool
                 if (File.Exists(binlog))
                 {
                     new CompilerInvocations().Run(binlog, outputFile);
+                }
+
+                return 0;
+            }
+
+            if (string.Equals(firstArg, "doublewrites", StringComparison.OrdinalIgnoreCase))
+            {
+                string binlog = null;
+                string outputFile = null;
+                if (args.Length >= 2)
+                {
+                    binlog = args[1];
+                }
+                else if (args.Length == 3)
+                {
+                    outputFile = args[2];
+                }
+
+                if (File.Exists(binlog))
+                {
+                    new DoubleWrites().Run(binlog, outputFile);
                 }
 
                 return 0;
