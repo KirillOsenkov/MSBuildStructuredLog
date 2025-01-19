@@ -81,7 +81,7 @@ for:
       - dotnet tool install Cake.Tool --create-manifest-if-needed
       - dotnet tool run dotnet-cake ./build-macos.cake --settings_skippackageversioncheck=true
     artifacts:
-      - path: 'artifacts\StructuredLogViewer-*.zip'
+      - path: 'artifacts\StructuredLogViewer-*.dmg'
         name: 'Structured Log Viewer macOS app'
     on_failure:
       - appveyor PushArtifact msbuild.binlog
