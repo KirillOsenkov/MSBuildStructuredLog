@@ -368,10 +368,29 @@ Task("Create-Dmg")
 });
 
 Task("Sign-Dmg")
+    .WithCriteria(certNameIsSet)
     .IsDependentOn("Create-Dmg")
     .Does(() =>
 {
-    
+    var runtimeIdentifiers = netCoreProject.Runtimes.Where(r => r.StartsWith("osx"));
+    foreach(var runtime in runtimeIdentifiers)
+    {
+        Information($"Signing {runtime} macOS dmg");
+        var architecture = runtime[(runtime.IndexOf("-")+1)..];
+        var dmgPath = artifactsDir.Combine(runtime).CombineWithFilePath($"../{macAppName}-{architecture}.dmg");
+        var signingIdentity = EnvironmentVariable("APPLE_CERT_NAME");
+
+        var args = new ProcessArgumentBuilder();
+        args.Append("--options runtime");
+        args.Append("--sign");
+        args.AppendQuoted(signingIdentity);
+        args.AppendQuoted(dmgPath.ToString());
+
+        RunToolWithOutput("codesign", new ProcessSettings
+        {
+            Arguments = args.RenderSafe()
+        });
+    }
 });
 
 Task("Notarize-And-Staple-Dmg")
