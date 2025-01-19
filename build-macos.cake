@@ -321,32 +321,64 @@ Task("Install-Certificate")
     }
 });
 
-Task("Compress-Bundle")
+Task("Create-Dmg")
     .IsDependentOn("Sign-Bundle")
     .Does(() =>
 {
     var runtimeIdentifiers = netCoreProject.Runtimes.Where(r => r.StartsWith("osx"));
     foreach(var runtime in runtimeIdentifiers)
     {
-        Information($"Compressing {runtime} macOS bundle");
-        var appBundlePath = artifactsDir.Combine(runtime).Combine($"{macAppName}.app");
+        Information($"Creating {runtime} macOS dmg");
         var architecture = runtime[(runtime.IndexOf("-")+1)..];
-        var zippedPath = artifactsDir.Combine(runtime).CombineWithFilePath($"../{macAppName}-{architecture}.zip");
+        var sourceDirectory = artifactsDir.Combine(runtime);
+        var appBundleFileName = $"{macAppName}.app";
+        var volumeName = $"{macAppName}.{architecture}";
+
+        var dmgPath = artifactsDir.Combine(runtime).CombineWithFilePath($"../{macAppName}-{architecture}.dmg");
 
         var args = new ProcessArgumentBuilder();
-        args.Append("-c");
-        args.Append("-k");
-        args.Append("--keepParent");
-        args.AppendQuoted(appBundlePath.ToString());
-        args.AppendQuoted(zippedPath.ToString());
+        args.Append("--volname");
+        args.AppendQuoted(volumeName);
+        args.Append("--window-pos 200 120");
+        args.Append("--window-size 800 400");
+        args.Append("--icon-size 100");
 
-        // "Ditto" is absolutely necessary instead of "zip" command.
-        // Otherwise no symlinks are saved, and notarize process would fail.
-        RunToolWithOutput("ditto", new ProcessSettings
+        // AppBundle icon
+        args.Append("--icon");
+        args.AppendQuoted(appBundleFileName);
+        args.Append("200 190");
+
+        // `/Applications` folder icon
+        args.Append("--icon");
+        args.AppendQuoted("Applications");
+        args.Append("200 190");
+
+        args.Append("--hide-extension");
+        args.AppendQuoted(appBundleFileName);
+        args.Append("--app-drop-link 600 185");
+
+        args.AppendQuoted(dmgPath.ToString());
+        args.AppendQuoted(sourceDirectory.ToString());
+
+        RunToolWithOutput("create-dmg", new ProcessSettings
         {
             Arguments = args.RenderSafe()
         });
     }
+});
+
+Task("Sign-Dmg")
+    .IsDependentOn("Create-Dmg")
+    .Does(() =>
+{
+    
+});
+
+Task("Notarize-And-Staple-Dmg")
+    .IsDependentOn("Sign-Dmg")
+    .Does(() =>
+{
+    
 });
 
 Task("Cleanup-After-Sign")
@@ -366,7 +398,7 @@ Task("Package-Mac")
     .IsDependentOn("Create-Bundle")
     .IsDependentOn("Sign-Bundle")
     .IsDependentOn("Cleanup-After-Sign")
-    .IsDependentOn("Compress-Bundle");
+    .IsDependentOn("Notarize-And-Staple-Dmg");
 
  Task("Default")
      .IsDependentOn("Restore-NetCore")
