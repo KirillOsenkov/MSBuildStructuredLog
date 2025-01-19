@@ -385,7 +385,7 @@ Task("Sign-Dmg")
         var signingIdentity = EnvironmentVariable("APPLE_CERT_NAME");
 
         var args = new ProcessArgumentBuilder();
-        args.Append("--options runtime");
+        args.Append("--options=runtime");
         args.Append("--sign");
         args.AppendQuoted(signingIdentity);
         args.AppendQuoted(dmgPath.ToString());
