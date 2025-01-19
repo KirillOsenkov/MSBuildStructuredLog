@@ -340,6 +340,9 @@ Task("Create-Dmg")
         var args = new ProcessArgumentBuilder();
         args.Append("--volname");
         args.AppendQuoted(volumeName);
+        // Necessary to disable AppleScript and other GUI dependent operations.
+        // On the CI we don't have it as an option.
+        args.Append("--skip-jenkins");
         args.Append("--window-pos 200 120");
         args.Append("--window-size 800 400");
         args.Append("--icon-size 100");
