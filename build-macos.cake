@@ -27,6 +27,7 @@ var netCoreProject = new {
 
 var certIsSet = !string.IsNullOrEmpty(EnvironmentVariable("P12_BASE64"));
 var certNameIsSet = !string.IsNullOrEmpty(EnvironmentVariable("APPLE_CERT_NAME"));
+var appleIdSet = !string.IsNullOrEmpty(EnvironmentVariable("APPLE_ID_EMAIL"));
 
 var keychainPath = "app-signing.keychain";
 var keychainPassword = Guid.NewGuid().ToString("N");
@@ -394,10 +395,62 @@ Task("Sign-Dmg")
 });
 
 Task("Notarize-And-Staple-Dmg")
+    .WithCriteria(appleIdSet)
     .IsDependentOn("Sign-Dmg")
     .Does(() =>
 {
-    
+    var runtimeIdentifiers = netCoreProject.Runtimes.Where(r => r.StartsWith("osx"));
+    foreach(var runtime in runtimeIdentifiers)
+    {
+        var architecture = runtime[(runtime.IndexOf("-")+1)..];
+        var dmgPath = artifactsDir.Combine(runtime).CombineWithFilePath($"../{macAppName}-{architecture}.dmg");
+        var appBundlePath = artifactsDir.Combine(runtime).Combine($"{macAppName}.app");
+
+        Information($"Notarizing {runtime} macOS dmg");
+        {
+            var appleIdEmail = EnvironmentVariable("APPLE_ID_EMAIL");
+            var appleIdPass = EnvironmentVariable("APPLE_ID_PASSWORD");
+            var appleTeamId = EnvironmentVariable("APPLE_TEAM_ID");
+
+            var args = new ProcessArgumentBuilder();
+            args.Append("submit");
+            args.AppendQuoted(dmgPath.ToString());
+            args.Append("--apple-id");
+            args.AppendQuoted(appleIdEmail);
+            args.Append("--password");
+            args.AppendQuoted(appleIdPass);
+            args.Append("--team-id");
+            args.AppendQuoted(appleTeamId);
+            args.Append("--wait");
+            RunToolWithOutput("notarytool", new ProcessSettings
+            {
+                Arguments = args.RenderSafe()
+            });
+        }
+
+        Information($"Stapling {runtime} macOS dmg");
+        {
+            var args = new ProcessArgumentBuilder();
+            args.Append("staple");
+            args.AppendQuoted(dmgPath.ToString());
+            RunToolWithOutput("stapler", new ProcessSettings
+            {
+                Arguments = args.RenderSafe()
+            });
+        }
+
+        // It's not necessary to staple .app alone, unless we will distribute it zipped for auto-update. But it also doesn't harm.
+        Information($"Stapling {runtime} macOS app");
+        {
+            var args = new ProcessArgumentBuilder();
+            args.Append("staple");
+            args.AppendQuoted(appBundlePath.ToString());
+            RunToolWithOutput("stapler", new ProcessSettings
+            {
+                Arguments = args.RenderSafe()
+            });
+        }
+    }
 });
 
 Task("Cleanup-After-Sign")
