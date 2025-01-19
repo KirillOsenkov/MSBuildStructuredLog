@@ -27,6 +27,7 @@ var netCoreProject = new {
 
 var certIsSet = !string.IsNullOrEmpty(EnvironmentVariable("P12_BASE64"));
 var certNameIsSet = !string.IsNullOrEmpty(EnvironmentVariable("APPLE_CERT_NAME"));
+var appleIdSet = !string.IsNullOrEmpty(EnvironmentVariable("APPLE_ID_EMAIL"));
 
 var keychainPath = "app-signing.keychain";
 var keychainPassword = Guid.NewGuid().ToString("N");
@@ -321,31 +322,137 @@ Task("Install-Certificate")
     }
 });
 
-Task("Compress-Bundle")
+Task("Create-Dmg")
     .IsDependentOn("Sign-Bundle")
     .Does(() =>
 {
     var runtimeIdentifiers = netCoreProject.Runtimes.Where(r => r.StartsWith("osx"));
     foreach(var runtime in runtimeIdentifiers)
     {
-        Information($"Compressing {runtime} macOS bundle");
-        var appBundlePath = artifactsDir.Combine(runtime).Combine($"{macAppName}.app");
+        Information($"Creating {runtime} macOS dmg");
         var architecture = runtime[(runtime.IndexOf("-")+1)..];
-        var zippedPath = artifactsDir.Combine(runtime).CombineWithFilePath($"../{macAppName}-{architecture}.zip");
+        var sourceDirectory = artifactsDir.Combine(runtime);
+        var appBundleFileName = $"{macAppName}.app";
+        var volumeName = $"{macAppName}.{architecture}";
+
+        var dmgPath = artifactsDir.Combine(runtime).CombineWithFilePath($"../{macAppName}-{architecture}.dmg");
 
         var args = new ProcessArgumentBuilder();
-        args.Append("-c");
-        args.Append("-k");
-        args.Append("--keepParent");
-        args.AppendQuoted(appBundlePath.ToString());
-        args.AppendQuoted(zippedPath.ToString());
+        args.Append("--volname");
+        args.AppendQuoted(volumeName);
+        // Necessary to disable AppleScript and other GUI dependent operations.
+        // On the CI we don't have it as an option.
+        args.Append("--skip-jenkins");
+        args.Append("--window-pos 200 120");
+        args.Append("--window-size 800 400");
+        args.Append("--icon-size 100");
 
-        // "Ditto" is absolutely necessary instead of "zip" command.
-        // Otherwise no symlinks are saved, and notarize process would fail.
-        RunToolWithOutput("ditto", new ProcessSettings
+        // AppBundle icon
+        args.Append("--icon");
+        args.AppendQuoted(appBundleFileName);
+        args.Append("200 190");
+
+        // `/Applications` folder icon
+        args.Append("--icon");
+        args.AppendQuoted("Applications");
+        args.Append("200 190");
+
+        args.Append("--hide-extension");
+        args.AppendQuoted(appBundleFileName);
+        args.Append("--app-drop-link 600 185");
+
+        args.AppendQuoted(dmgPath.ToString());
+        args.AppendQuoted(sourceDirectory.ToString());
+
+        RunToolWithOutput("create-dmg", new ProcessSettings
         {
             Arguments = args.RenderSafe()
         });
+    }
+});
+
+Task("Sign-Dmg")
+    .WithCriteria(certNameIsSet)
+    .IsDependentOn("Create-Dmg")
+    .Does(() =>
+{
+    var runtimeIdentifiers = netCoreProject.Runtimes.Where(r => r.StartsWith("osx"));
+    foreach(var runtime in runtimeIdentifiers)
+    {
+        Information($"Signing {runtime} macOS dmg");
+        var architecture = runtime[(runtime.IndexOf("-")+1)..];
+        var dmgPath = artifactsDir.Combine(runtime).CombineWithFilePath($"../{macAppName}-{architecture}.dmg");
+        var signingIdentity = EnvironmentVariable("APPLE_CERT_NAME");
+
+        var args = new ProcessArgumentBuilder();
+        args.Append("--options runtime");
+        args.Append("--sign");
+        args.AppendQuoted(signingIdentity);
+        args.AppendQuoted(dmgPath.ToString());
+
+        RunToolWithOutput("codesign", new ProcessSettings
+        {
+            Arguments = args.RenderSafe()
+        });
+    }
+});
+
+Task("Notarize-And-Staple-Dmg")
+    .WithCriteria(appleIdSet)
+    .IsDependentOn("Sign-Dmg")
+    .Does(() =>
+{
+    var runtimeIdentifiers = netCoreProject.Runtimes.Where(r => r.StartsWith("osx"));
+    foreach(var runtime in runtimeIdentifiers)
+    {
+        var architecture = runtime[(runtime.IndexOf("-")+1)..];
+        var dmgPath = artifactsDir.Combine(runtime).CombineWithFilePath($"../{macAppName}-{architecture}.dmg");
+        var appBundlePath = artifactsDir.Combine(runtime).Combine($"{macAppName}.app");
+
+        Information($"Notarizing {runtime} macOS dmg");
+        {
+            var appleIdEmail = EnvironmentVariable("APPLE_ID_EMAIL");
+            var appleIdPass = EnvironmentVariable("APPLE_ID_PASSWORD");
+            var appleTeamId = EnvironmentVariable("APPLE_TEAM_ID");
+
+            var args = new ProcessArgumentBuilder();
+            args.Append("submit");
+            args.AppendQuoted(dmgPath.ToString());
+            args.Append("--apple-id");
+            args.AppendQuoted(appleIdEmail);
+            args.Append("--password");
+            args.AppendQuoted(appleIdPass);
+            args.Append("--team-id");
+            args.AppendQuoted(appleTeamId);
+            args.Append("--wait");
+            RunToolWithOutput("notarytool", new ProcessSettings
+            {
+                Arguments = args.RenderSafe()
+            });
+        }
+
+        Information($"Stapling {runtime} macOS dmg");
+        {
+            var args = new ProcessArgumentBuilder();
+            args.Append("staple");
+            args.AppendQuoted(dmgPath.ToString());
+            RunToolWithOutput("stapler", new ProcessSettings
+            {
+                Arguments = args.RenderSafe()
+            });
+        }
+
+        // It's not necessary to staple .app alone, unless we will distribute it zipped for auto-update. But it also doesn't harm.
+        Information($"Stapling {runtime} macOS app");
+        {
+            var args = new ProcessArgumentBuilder();
+            args.Append("staple");
+            args.AppendQuoted(appBundlePath.ToString());
+            RunToolWithOutput("stapler", new ProcessSettings
+            {
+                Arguments = args.RenderSafe()
+            });
+        }
     }
 });
 
@@ -366,7 +473,7 @@ Task("Package-Mac")
     .IsDependentOn("Create-Bundle")
     .IsDependentOn("Sign-Bundle")
     .IsDependentOn("Cleanup-After-Sign")
-    .IsDependentOn("Compress-Bundle");
+    .IsDependentOn("Notarize-And-Staple-Dmg");
 
  Task("Default")
      .IsDependentOn("Restore-NetCore")
