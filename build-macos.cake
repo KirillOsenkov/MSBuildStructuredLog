@@ -462,6 +462,7 @@ Task("Notarize-And-Staple-Dmg")
 Task("Cleanup-After-Sign")
     .WithCriteria(certIsSet)
     .IsDependentOn("Sign-Bundle")
+    .IsDependentOn("Sign-Dmg")
     .Does(() =>
 {
     RunToolWithOutput("security", new ProcessSettings
@@ -475,8 +476,8 @@ Task("Cleanup-After-Sign")
 Task("Package-Mac")
     .IsDependentOn("Create-Bundle")
     .IsDependentOn("Sign-Bundle")
-    .IsDependentOn("Cleanup-After-Sign")
-    .IsDependentOn("Notarize-And-Staple-Dmg");
+    .IsDependentOn("Notarize-And-Staple-Dmg")
+    .IsDependentOn("Cleanup-After-Sign");
 
  Task("Default")
      .IsDependentOn("Restore-NetCore")
