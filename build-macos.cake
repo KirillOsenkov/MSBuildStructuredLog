@@ -416,6 +416,7 @@ Task("Notarize-And-Staple-Dmg")
             var appleTeamId = EnvironmentVariable("APPLE_TEAM_ID");
 
             var args = new ProcessArgumentBuilder();
+            args.Append("notarytool");
             args.Append("submit");
             args.AppendQuoted(dmgPath.ToString());
             args.Append("--apple-id");
@@ -425,7 +426,7 @@ Task("Notarize-And-Staple-Dmg")
             args.Append("--team-id");
             args.AppendQuoted(appleTeamId);
             args.Append("--wait");
-            RunToolWithOutput("notarytool", new ProcessSettings
+            RunToolWithOutput("xcrun", new ProcessSettings
             {
                 Arguments = args.RenderSafe()
             });
@@ -434,9 +435,10 @@ Task("Notarize-And-Staple-Dmg")
         Information($"Stapling {runtime} macOS dmg");
         {
             var args = new ProcessArgumentBuilder();
+            args.Append("stapler");
             args.Append("staple");
             args.AppendQuoted(dmgPath.ToString());
-            RunToolWithOutput("stapler", new ProcessSettings
+            RunToolWithOutput("xcrun", new ProcessSettings
             {
                 Arguments = args.RenderSafe()
             });
@@ -446,9 +448,10 @@ Task("Notarize-And-Staple-Dmg")
         Information($"Stapling {runtime} macOS app");
         {
             var args = new ProcessArgumentBuilder();
+            args.Append("stapler");
             args.Append("staple");
             args.AppendQuoted(appBundlePath.ToString());
-            RunToolWithOutput("stapler", new ProcessSettings
+            RunToolWithOutput("xcrun", new ProcessSettings
             {
                 Arguments = args.RenderSafe()
             });
