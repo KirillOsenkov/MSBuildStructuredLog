@@ -1358,23 +1358,27 @@ namespace Microsoft.Build.Logging.StructuredLogger
             string location = ReadDeduplicatedString();
 
             string message = fields.Message;
-            if (_fileFormatVersion >= 13 && _fileFormatVersion < 25)
+            if (_fileFormatVersion >= 13)
             {
-                message = GetPropertyReassignmentMessage(propertyName, newValue, previousValue, location);
-            }
-            else if (_fileFormatVersion >= 25 && !string.IsNullOrEmpty(fields.Message))
-            {
-                message = string.Format(fields.Message, propertyName, newValue, previousValue, $"{fields.File} ({fields.LineNumber},{fields.ColumnNumber})");
-                var extendedEvent = new ExtendedPropertyReassignmentEventArgs(
-                    propertyName,
-                    previousValue,
-                    newValue,
-                    fields.File,
-                    fields.LineNumber,
-                    fields.ColumnNumber,
-                    message);
-                SetCommonFields(extendedEvent, fields);
-                return extendedEvent;
+                if (_fileFormatVersion >= 25)
+                {
+                    var extendedEvent = new ExtendedPropertyReassignmentEventArgs(
+                        propertyName,
+                        previousValue,
+                        newValue,
+                        fields.File,
+                        fields.LineNumber,
+                        fields.ColumnNumber,
+                        GetPropertyReassignmentMessage(propertyName, newValue, previousValue, $"{fields.File} ({fields.LineNumber},{fields.ColumnNumber})"));
+
+                    SetCommonFields(extendedEvent, fields);
+
+                    return extendedEvent;
+                }
+                else
+                {
+                    message = GetPropertyReassignmentMessage(propertyName, newValue, previousValue, location);
+                }
             }
 
             var e = new PropertyReassignmentEventArgs(
@@ -1420,7 +1424,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 string formattedSource = string.IsNullOrEmpty(fields.File)
                     ? propertySource
                     : $"{fields.File} ({fields.LineNumber},{fields.ColumnNumber})";
-                message = string.Format(fields.Message, propertyName, propertyValue, formattedSource);
+
+                message = FormatResourceStringIgnoreCodeAndKeyword(Strings.PropertyAssignment, propertyName, propertyValue, formattedSource);
             }
 
             var e = new ExtendedPropertyInitialValueSetEventArgs(

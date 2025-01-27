@@ -51,6 +51,7 @@ namespace ResourcesGenerator
             "TaskFoundFromFactory",
             "TaskFound",
             "PropertyReassignment",
+            "PropertyAssignment",
             "ProjectImported",
             "ProjectImportSkippedMissingFile",
             "ProjectImportSkippedInvalidFile",
