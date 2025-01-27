@@ -1382,14 +1382,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             var e = new PropertyReassignmentEventArgs(
-                   propertyName,
-                   previousValue,
-                   newValue,
-                   location,
-                   message,
-                   fields.HelpKeyword,
-                   fields.SenderName,
-                   fields.Importance);
+                propertyName,
+                previousValue,
+                newValue,
+                location,
+                message,
+                fields.HelpKeyword,
+                fields.SenderName,
+                fields.Importance);
             SetCommonFields(e, fields);
             return e;
         }
