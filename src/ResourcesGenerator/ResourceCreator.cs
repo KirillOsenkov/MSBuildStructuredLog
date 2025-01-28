@@ -1,4 +1,5 @@
-using System.Collections;
+﻿using System.Collections;
+
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -52,6 +53,7 @@ namespace ResourcesGenerator
             "TaskFound",
             "PropertyReassignment",
             "PropertyAssignment",
+            "UninitializedPropertyRead",
             "ProjectImported",
             "ProjectImportSkippedMissingFile",
             "ProjectImportSkippedInvalidFile",

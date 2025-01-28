@@ -146,6 +146,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             PropertyAssignment = GetString("PropertyAssignment");
 
+            UninitializedPropertyRead = GetString("UninitializedPropertyRead");
+
             // MSBuild 17.6 shipped with this hardcoded to English (the first part of the regex), but it was switched to a different
             // localized message in https://github.com/dotnet/msbuild/pull/8665. Support both here.
             string deferredResponseFile = ("^(?:Included response file: {0}|" + GetString("PickedUpSwitchesFromAutoResponse") + ")$")
@@ -447,6 +449,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string ProjectImportSkippedExpressionEvaluatedToEmpty { get; set; }
         public static string PropertyAssignment { get; set; }
         public static string PropertyReassignment { get; set; }
+        public static string UninitializedPropertyRead { get; set; }
         public static string ProjectImportSkippedNoMatches { get; set; }
         public static string ProjectImportSkippedMissingFile { get; set; }
         public static string ProjectImportSkippedInvalidFile { get; set; }

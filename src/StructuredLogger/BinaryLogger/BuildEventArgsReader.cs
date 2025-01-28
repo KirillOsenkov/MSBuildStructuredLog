@@ -1398,10 +1398,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             var fields = ReadBuildEventArgsFields(readImportance: true);
             string propertyName = ReadDeduplicatedString();
+            string? message = fields.Message ?? string.Empty;
+
+            if (_fileFormatVersion >= 25)
+            {
+                message = FormatResourceStringIgnoreCodeAndKeyword(Strings.UninitializedPropertyRead, propertyName);
+            }
 
             var e = new UninitializedPropertyReadEventArgs(
                 propertyName,
-                fields.Message,
+                message,
                 fields.HelpKeyword,
                 fields.SenderName,
                 fields.Importance);
