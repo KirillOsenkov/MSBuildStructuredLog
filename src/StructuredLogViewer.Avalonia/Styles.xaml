@@ -49,6 +49,7 @@
     
     <Style Selector="TreeViewItem">
         <Setter Property="Padding" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
     </Style>
     
     <Style Selector="TreeView.searchable TreeViewItem">
