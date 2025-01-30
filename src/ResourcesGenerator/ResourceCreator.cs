@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -51,6 +52,8 @@ namespace ResourcesGenerator
             "TaskFoundFromFactory",
             "TaskFound",
             "PropertyReassignment",
+            "PropertyAssignment",
+            "UninitializedPropertyRead",
             "ProjectImported",
             "ProjectImportSkippedMissingFile",
             "ProjectImportSkippedInvalidFile",
@@ -66,16 +69,7 @@ namespace ResourcesGenerator
             "SearchPathsForMSBuildExtensionsPath",
             "OverridingTarget",
             "TryingExtensionsPath",
-            "ProjectImported",
             "DuplicateImport",
-            "ProjectImportSkippedEmptyFile",
-            "ProjectImportSkippedFalseCondition",
-            "ProjectImportSkippedNoMatches",
-            "ProjectImportSkippedMissingFile",
-            "ProjectImportSkippedInvalidFile",
-            "PropertyReassignment",
-            "EvaluationStarted",
-            "EvaluationFinished",
             "CouldNotResolveSdk",
             "ProjectImportSkippedExpressionEvaluatedToEmpty",
             "SkipTargetBecauseOutputsUpToDate",
