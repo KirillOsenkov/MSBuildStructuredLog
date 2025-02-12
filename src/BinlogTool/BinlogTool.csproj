@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <Version>1.0.23</Version>
+    <Version>1.0.24</Version>
     <TargetFramework>net8.0</TargetFramework>
     <RollForward>major</RollForward>
     <LangVersion>latest</LangVersion>
