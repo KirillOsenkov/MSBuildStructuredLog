@@ -38,7 +38,7 @@
       <NuspecPath>$(MSBuildProjectDirectory)\binlogtoolexe.nuspec</NuspecPath>
       <NupkgPath>$(OutDir)binlogtoolexe.nupkg</NupkgPath>
     </PropertyGroup>
-    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="Restore;Publish" Properties="PublishNativeAot=true;RuntimeIdentifier=win-x64;Configuration=Release" />
+    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="Restore;Publish" Properties="RuntimeIdentifier=win-x64;Configuration=Release;PublishSingleFile=true;SelfContained=false;PackAsTool=false;PublishTrimmed=true;TargetFramework=$(TargetFramework)" />
     <PackTask
         PackItem="$(NuspecPath)"
         NuspecFile="$(NuspecPath)"
