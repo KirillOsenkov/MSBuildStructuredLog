@@ -32,4 +32,23 @@
     <None Include="$(IconFilePath)" Pack="true" PackagePath="" />
   </ItemGroup>
 
+  <Target Name="PublishBinlogToolExe">
+    <PropertyGroup>
+      <RootDir>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'MSBuildStructuredLog.sln'))</RootDir>
+      <NuspecPath>$(MSBuildProjectDirectory)\binlogtoolexe.nuspec</NuspecPath>
+      <NupkgPath>$(OutDir)binlogtoolexe.nupkg</NupkgPath>
+    </PropertyGroup>
+    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="Restore;Publish" Properties="PublishNativeAot=true;RuntimeIdentifier=win-x64;Configuration=Release" />
+    <PackTask
+        PackItem="$(NuspecPath)"
+        NuspecFile="$(NuspecPath)"
+        NuspecBasePath="$(RootDir)"
+        NuspecProperties="currentVersion=$(Version)"
+        NuspecOutputPath="$(NuspecOutputPath)"
+        PackageOutputPath="$(OutDir)"
+        RestoreOutputPath="$(RestoreOutputPath)"
+        SymbolPackageFormat="snupkg"
+        />
+  </Target>
+
 </Project>

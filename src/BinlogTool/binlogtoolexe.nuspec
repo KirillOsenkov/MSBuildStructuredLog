@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>binlogtoolexe</id>
+    <version>1.0.24</version>
+    <authors>Kirill Osenkov</authors>
+    <license type="expression">MIT</license>
+    <licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
+    <icon>msbuild-structured-log-viewer.png</icon>
+    <readme>readme.md</readme>
+    <projectUrl>https://github.com/KirillOsenkov/MSBuildStructuredLog</projectUrl>
+    <description>A tool to read, process and analyze MSBuild .binlog files. Read more at https://msbuildlog.com.</description>
+    <tags>MSBuild Log Logger Structure Structured Binlog BinlogTool</tags>
+  </metadata>
+  <files>
+    <file src="bin\BinlogTool\Release\net8.0\win-x64\publish\BinlogTool.exe" target="BinlogTool.exe" />
+    <file src="src\StructuredLogViewer\icons\msbuild-structured-log-viewer.png" target="msbuild-structured-log-viewer.png" />
+    <file src="readme.md" target="readme.md" />
+  </files>
+</package>
