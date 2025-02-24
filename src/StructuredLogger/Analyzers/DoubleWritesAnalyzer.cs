@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,7 +12,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static IEnumerable<KeyValuePair<string, HashSet<string>>> GetDoubleWrites(Build build)
         {
             var analyzer = new DoubleWritesAnalyzer();
-            build.VisitAllChildren<Task>(task => analyzer.AnalyzeTask(task));
+            build.VisitAllChildren<Task>(analyzer.AnalyzeTask);
             return analyzer.GetDoubleWrites();
         }
 
@@ -93,26 +93,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 fileCopySourcesForDestination.Add(destination, bucket);
             }
 
-            bucket.Add(source);
+            bucket.Add(GetFullPath(source));
         }
 
-        private static bool IsDoubleWrite(KeyValuePair<string, HashSet<string>> bucket)
-        {
-            if (bucket.Value.Count < 2)
-            {
-                return false;
-            }
-
-            if (bucket.Value
-                .Select(f => GetFullPath(f))
-                .Distinct()
-                .Count() == 1)
-            {
-                return false;
-            }
-
-            return true;
-        }
+        private static bool IsDoubleWrite(KeyValuePair<string, HashSet<string>> bucket) => bucket.Value.Count > 1;
 
         private static string GetFullPath(string filePath)
         {
