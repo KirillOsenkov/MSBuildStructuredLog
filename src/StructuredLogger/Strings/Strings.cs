@@ -216,6 +216,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             RemovingPropertiesPrefix = GetString("General.UndefineProperties");
             EvaluationStarted = GetString("EvaluationStarted");
             EvaluationFinished = GetString("EvaluationFinished");
+
+            TotalAnalyzerExecutionTimeRegex = CreateRegex(GetString("AnalyzerTotalExecutionTime"), 1);
+            TotalGeneratorExecutionTimeRegex = CreateRegex(GetString("GeneratorTotalExecutionTime"), 1);
         }
 
         private static string GetEmptyConditionText()
@@ -440,6 +443,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static Regex TaskFoundRegex { get; set; }
         public static Regex CouldNotResolveSdkRegex { get; set; }
 
+        public static Regex TotalAnalyzerExecutionTimeRegex { get; set; }
+        public static Regex TotalGeneratorExecutionTimeRegex { get; set; }
+
         public static string TargetSkippedFalseCondition { get; set; }
         public static string TargetAlreadyCompleteSuccess { get; set; }
         public static string TargetAlreadyCompleteFailure { get; set; }
@@ -604,9 +610,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static string To => "\" to \"";
         public static string ToFile => "\" to file \"";
-
-        public static string TotalAnalyzerExecutionTime => "Total analyzer execution time:";
-        public static string TotalGeneratorExecutionTime => "Total generator execution time:";
 
         /// <summary>
         /// https://github.com/NuGet/Home/issues/10383

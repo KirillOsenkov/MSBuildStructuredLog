@@ -13,12 +13,13 @@ namespace ResourcesGenerator
 {
     public class ResourceCreator
     {
-        private static string[] msBuildDlls = new string[]
+        private static string[] dlls = new string[]
         {
             "MSBuild.exe",
             "Microsoft.Build.dll",
             "Microsoft.Build.Tasks.Core.dll",
-            "Microsoft.Build.Utilities.Core.dll"
+            "Microsoft.Build.Utilities.Core.dll",
+            "Roslyn\\Microsoft.CodeAnalysis.dll"
         };
 
         public static string[] ResourceNames = new[]
@@ -74,7 +75,12 @@ namespace ResourcesGenerator
             "ProjectImportSkippedExpressionEvaluatedToEmpty",
             "SkipTargetBecauseOutputsUpToDate",
             "MetaprojectGenerated",
-            "PickedUpSwitchesFromAutoResponse"
+            "PickedUpSwitchesFromAutoResponse",
+            "EvaluationStarted",
+            "EvaluationFinished",
+            "UninitializedPropertyRead",
+            "AnalyzerTotalExecutionTime",
+            "GeneratorTotalExecutionTime"
         };
 
         public static Dictionary<string, string> Cultures = new Dictionary<string, string>
@@ -105,7 +111,7 @@ namespace ResourcesGenerator
                 Dictionary<string, string> resourcesByCulture = new Dictionary<string, string>();
                 cultureResources.Add(culture.Value, resourcesByCulture);
 
-                foreach (string dll in msBuildDlls)
+                foreach (string dll in dlls)
                 {
                     var assembly = Assembly.LoadFrom(Path.Combine(msbuildPath, dll));
                     string[] manifestResourceNames = assembly.GetManifestResourceNames();

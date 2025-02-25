@@ -18,6 +18,7 @@
     "DuplicateImport": "MSB4011: \"{0}\" cannot be imported again. It was already imported at \"{1}\". This is most likely a build authoring error. This subsequent import will be ignored. {2}",
     "TargetAlreadyCompleteFailure": "Target \"{0}\" skipped. Previously built unsuccessfully.",
     "General.OverridingProperties": "Overriding Global Properties for project \"{0}\" with:",
+    "UninitializedPropertyRead": "Read uninitialized property \"{0}\"",
     "ItemGroupRemoveLogMessage": "Removed Item(s): ",
     "EvaluationFinished": "Evaluation finished (\"{0}\")",
     "ProjectImported": "Importing project \"{0}\" into project \"{1}\" at ({2},{3}).",
@@ -35,8 +36,7 @@
     "TargetAlreadyCompleteSuccess": "Target \"{0}\" skipped. Previously built successfully.",
     "TryingExtensionsPath": "Trying to import {0} using extensions path {1}",
     "PropertyReassignment": "Property reassignment: $({0})=\"{1}\" (previous value: \"{2}\") at {3}",
-    "PropertyAssignment": "Property initial value: $({0})=\"{1}\". Source: {2}",
-    "UninitializedPropertyRead": "Read uninitialized property \"{0}\"",
+    "PropertyAssignment": "Property initial value: $({0})=\"{1}\" Source: {2}",
     "ProjectImportSkippedExpressionEvaluatedToEmpty": "Project \"{0}\" was not imported by \"{1}\" at ({2},{3}), due to the expression evaluating to an empty string.",
     "General.GlobalProperties": "Global Properties:",
     "General.UndefineProperties": "Removing Properties:",
@@ -53,7 +53,9 @@
     "ResolveAssemblyReference.UnifiedDependency": "Unified Dependency \"{0}\".",
     "GetSDKReferenceFiles.ConflictReferenceSameSDK": "There was a conflict between two references with the same file name resolved within the \"{0}\" SDK. Choosing \"{1}\" over \"{2}\" because it was resolved first.",
     "GetSDKReferenceFiles.ConflictRedistDifferentSDK": "There was a conflict between two files from the redist folder files going to the same target path \"{0}\" between the \"{1}\" and \"{2}\" SDKs. Choosing \"{3}\" over \"{4}\" because it was resolved first.",
-    "Copy.FileComment": "Copying file from \"{0}\" to \"{1}\"."
+    "Copy.FileComment": "Copying file from \"{0}\" to \"{1}\".",
+    "AnalyzerTotalExecutionTime": "Total analyzer execution time: {0} seconds.",
+    "GeneratorTotalExecutionTime": "Total generator execution time: {0} seconds."
   },
   "de-DE": {
     "PickedUpSwitchesFromAutoResponse": "Einige Befehlszeilenschalter wurden aus der automatischen Antwortdatei \"{0}\" gelesen. Verwenden Sie den Schalter \"-noAutoResponse\", um diese Datei zu deaktivieren.",
@@ -74,6 +76,7 @@
     "DuplicateImport": "MSB4011: \"{0}\" kann nicht erneut importiert werden. Es wurde bereits bei \"{1}\" importiert. Es handelt sich aller Wahrscheinlichkeit nach um einen Buildautorisierungsfehler. Der darauf folgende Import wird ignoriert. {2}",
     "TargetAlreadyCompleteFailure": "Das Ziel \"{0}\" wurde übersprungen. Die vorherige Erstellung war nicht erfolgreich.",
     "General.OverridingProperties": "Die globalen Eigenschaften für das Projekt \"{0}\" werden außer Kraft gesetzt durch:",
+    "UninitializedPropertyRead": "Nicht initialisierte Eigenschaft \"{0}\" lesen",
     "ItemGroupRemoveLogMessage": "Entfernte Elemente: ",
     "EvaluationFinished": "Evaluierung abgeschlossen (\"{0}\")",
     "ProjectImported": "Das Projekt \"{0}\" wird in das Projekt \"{1}\" bei ({2},{3}) importiert.",
@@ -91,8 +94,7 @@
     "TargetAlreadyCompleteSuccess": "Das Ziel \"{0}\" wurde übersprungen. Die vorherige Erstellung war erfolgreich.",
     "TryingExtensionsPath": "Versucht {0} mithilfe des Erweiterungspfad {1} zu importieren.",
     "PropertyReassignment": "Neuzuweisung der Eigenschaft: $({0})=\"{1}\" (vorheriger Wert: \"{2}\") unter {3}",
-    "PropertyAssignment": "Anfangswert der Eigenschaft: $({0})=\"{1}\". Quelle: {2}",
-    "UninitializedPropertyRead": "Nicht initialisierte Eigenschaft \"{0}\" gelesen",
+    "PropertyAssignment": "Anfangswert der Eigenschaft: $({0})=\"{1}\", Quelle: {2}",
     "ProjectImportSkippedExpressionEvaluatedToEmpty": "Das Projekt \"{0}\" wurde nicht von \"{1}\" bei ({2},{3}) importiert, weil der Ausdruck in eine leere Zeichenfolge ausgewertet wurde.",
     "General.GlobalProperties": "Globale Eigenschaften:",
     "General.UndefineProperties": "Eigenschaften werden entfernt:",
@@ -109,7 +111,9 @@
     "ResolveAssemblyReference.UnifiedDependency": "Vereinheitlichte Abhängigkeit \"{0}\".",
     "GetSDKReferenceFiles.ConflictReferenceSameSDK": "Konflikt zwischen zwei Verweisen im SDK \"{0}\", die mit demselben Dateinamen aufgelöst wurden. \"{1}\" wird \"{2}\" gegenüber bevorzugt, da es zuerst aufgelöst wurde.",
     "GetSDKReferenceFiles.ConflictRedistDifferentSDK": "Konflikt zwischen zwei Dateien aus redist-Ordner für denselben Zielpfad \"{0}\" zwischen den SDKs \"{1}\" und \"{2}\". \"{3}\" wird \"{4}\" gegenüber bevorzugt, da es zuerst aufgelöst wurde.",
-    "Copy.FileComment": "Die Datei wird von \"{0}\" in \"{1}\" kopiert."
+    "Copy.FileComment": "Die Datei wird von \"{0}\" in \"{1}\" kopiert.",
+    "AnalyzerTotalExecutionTime": "Gesamtausführungszeit des Analysetools: {0} Sekunden.",
+    "GeneratorTotalExecutionTime": "Gesamtausführungszeit des Generators: {0} Sekunden."
   },
   "it-IT": {
     "PickedUpSwitchesFromAutoResponse": "Alcune opzioni della riga di comando sono state lette dal file di risposta automatica \"{0}\". Per disabilitare questo file, usare l'opzione \"-noAutoResponse\".",
@@ -130,6 +134,7 @@
     "DuplicateImport": "MSB4011: non è possibile importare di nuovo \"{0}\". L'importazione è già stata eseguita in \"{1}\". Si tratta probabilmente di un errore di creazione della compilazione. Questa importazione successiva verrà ignorata. {2}",
     "TargetAlreadyCompleteFailure": "La destinazione \"{0}\" è stata ignorata. La compilazione non era riuscita in precedenza.",
     "General.OverridingProperties": "Override delle proprietà globali per il progetto \"{0}\" con:",
+    "UninitializedPropertyRead": "Legge la proprietà non inizializzata \"{0}\"",
     "ItemGroupRemoveLogMessage": "Elementi rimossi: ",
     "EvaluationFinished": "Valutazione terminata (\"{0}\")",
     "ProjectImported": "Importazione del progetto \"{0}\" nel progetto \"{1}\" a ({2},{3}).",
@@ -148,7 +153,6 @@
     "TryingExtensionsPath": "Si sta provando a importare {0} usando il percorso delle estensioni {1}",
     "PropertyReassignment": "Riassegnazione della proprietà: $({0})=\"{1}\" (valore precedente: \"{2}\") in {3}",
     "PropertyAssignment": "Valore iniziale della proprietà: $({0})=\"{1}\". Origine: {2}",
-    "UninitializedPropertyRead": "Lettura della proprietà non inizializzata \"{0}\"",
     "ProjectImportSkippedExpressionEvaluatedToEmpty": "Il progetto \"{0}\" non è stato importato da \"{1}\" alla posizione ({2},{3}) perché l'espressione restituisce una stringa vuota.",
     "General.GlobalProperties": "Proprietà globali:",
     "General.UndefineProperties": "Rimozione proprietà:",
@@ -165,7 +169,9 @@
     "ResolveAssemblyReference.UnifiedDependency": "Dipendenza unificata \"{0}\".",
     "GetSDKReferenceFiles.ConflictReferenceSameSDK": "Conflitto tra due riferimenti con lo stesso nome file risolti nell'SDK \"{0}\". Viene scelto \"{1}\" invece di \"{2}\" perché è stato risolto per primo.",
     "GetSDKReferenceFiles.ConflictRedistDifferentSDK": "Conflitto tra due file della cartella dei pacchetti ridistribuibili che hanno lo stesso percorso di destinazione \"{0}\" tra gli SDK \"{1}\" e \"{2}\". Verrà scelto \"{3}\" invece di \"{4}\" perché è stato risolto per primo.",
-    "Copy.FileComment": "Copia del file da \"{0}\" a \"{1}\"."
+    "Copy.FileComment": "Copia del file da \"{0}\" a \"{1}\".",
+    "AnalyzerTotalExecutionTime": "Tempo totale di esecuzione dell'analizzatore: {0} secondi.",
+    "GeneratorTotalExecutionTime": "Tempo totale di esecuzione del generatore: {0} secondi."
   },
   "es-ES": {
     "PickedUpSwitchesFromAutoResponse": "Algunos modificadores de la línea de comandos se leyeron del archivo de respuesta automática \"{0}\". Para deshabilitar este archivo, use el modificador \"-noAutoResponse\".",
@@ -186,6 +192,7 @@
     "DuplicateImport": "MSB4011: \"{0}\" no se puede volver a importar. Ya se importó en \"{1}\". Lo más probable es que se trate de un error al crear la compilación. Se omitirá esta importación. {2}",
     "TargetAlreadyCompleteFailure": "Se omitió el destino \"{0}\". Compilado previamente de forma incorrecta.",
     "General.OverridingProperties": "Las propiedades globales del proyecto \"{0}\" se reemplazarán con:",
+    "UninitializedPropertyRead": "Leer la propiedad no inicializada \"{0}\"",
     "ItemGroupRemoveLogMessage": "Elementos quitados: ",
     "EvaluationFinished": "Terminó la evaluación (\"{0}\")",
     "ProjectImported": "Importando el proyecto \"{0}\" en el proyecto \"{1}\" en ({2},{3}).",
@@ -203,8 +210,7 @@
     "TargetAlreadyCompleteSuccess": "Se omitió el destino \"{0}\". Compilado previamente de forma correcta.",
     "TryingExtensionsPath": "Intentando importar {0} con la ruta de acceso de extensiones {1}",
     "PropertyReassignment": "Reasignación de propiedad: $({0})=\"{1}\" (valor anterior: \"{2}\") en {3}",
-    "PropertyAssignment": "Valor inicial de la propiedad: $({0})=\"{1}\". Origen: {2}",
-    "UninitializedPropertyRead": "Se leyó la propiedad no inicializada \"{0}\"",
+    "PropertyAssignment": "Valor inicial de la propiedad: $({0})=\"{1}\" Origen: {2}",
     "ProjectImportSkippedExpressionEvaluatedToEmpty": "\"{1}\" no importó el proyecto \"{0}\" en ({2},{3}) porque la expresión se evalúa en una cadena vacía.",
     "General.GlobalProperties": "Propiedades globales:",
     "General.UndefineProperties": "Quitando propiedades:",
@@ -221,7 +227,9 @@
     "ResolveAssemblyReference.UnifiedDependency": "Dependencia unificada \"{0}\".",
     "GetSDKReferenceFiles.ConflictReferenceSameSDK": "Hubo un conflicto entre dos referencias con el mismo nombre de archivo resuelto dentro del SDK \"{0}\". Se elegirá \"{1}\" en lugar de \"{2}\" porque se resolvió primero.",
     "GetSDKReferenceFiles.ConflictRedistDifferentSDK": "Conflicto entre dos archivos de la carpeta redist que van a la misma ruta de acceso de destino \"{0}\" entre los SDK \"{1}\" y \"{2}\". Se elegirá \"{3}\" sobre \"{4}\" porque se resolvió primero.",
-    "Copy.FileComment": "Copiando el archivo de \"{0}\" en \"{1}\"."
+    "Copy.FileComment": "Copiando el archivo de \"{0}\" en \"{1}\".",
+    "AnalyzerTotalExecutionTime": "Tiempo total de ejecución del analizador: {0} segundos.",
+    "GeneratorTotalExecutionTime": "Tiempo total de ejecución del generador: {0} segundos."
   },
   "fr-FR": {
     "PickedUpSwitchesFromAutoResponse": "Certains commutateurs de ligne de commande sont issus du fichier réponse automatique \"{0}\". Ajoutez le commutateur \"-noAutoResponse\" pour le désactiver.",
@@ -242,6 +250,7 @@
     "DuplicateImport": "MSB4011: \"{0}\" ne peut pas être réimporté car il a déjà été importé à \"{1}\". Il s'agit probablement d'une erreur de création de build. Cette importation est ignorée. {2}",
     "TargetAlreadyCompleteFailure": "Cible \"{0}\" ignorée. Elle n'a pas pu être générée.",
     "General.OverridingProperties": "Substitution des propriétés globales du projet \"{0}\" par :",
+    "UninitializedPropertyRead": "Lire la propriété non initialisée \"{0}\"",
     "ItemGroupRemoveLogMessage": "Élément(s) supprimé(s) : ",
     "EvaluationFinished": "Évaluation terminée (\"{0}\")",
     "ProjectImported": "Importation du projet \"{0}\" dans le projet \"{1}\" sur ({2},{3}).",
@@ -259,8 +268,7 @@
     "TargetAlreadyCompleteSuccess": "Cible \"{0}\" ignorée. Elle a été générée.",
     "TryingExtensionsPath": "Tentative d'importation de {0} en utilisant le chemin d'extensions {1}",
     "PropertyReassignment": "Réassignation de propriété : $({0})=\"{1}\" (valeur précédente : \"{2}\") à {3}",
-    "PropertyAssignment": "Valeur initiale de la propriété: $({0})=\"{1}\". Source: {2}",
-    "UninitializedPropertyRead": "Lecture de la propriété non initialisée \"{0}\"",
+    "PropertyAssignment": "Valeur initiale de la propriété : $({0})=\"{1}\" Source : {2}",
     "ProjectImportSkippedExpressionEvaluatedToEmpty": "Le projet \"{0}\" n'a pas été importé par \"{1}\" sur ({2},{3}), car l'expression a la valeur d'une chaîne vide.",
     "General.GlobalProperties": "Propriétés globales :",
     "General.UndefineProperties": "Suppression des propriétés :",
@@ -277,7 +285,9 @@
     "ResolveAssemblyReference.UnifiedDependency": "Dépendance unifiée \"{0}\".",
     "GetSDKReferenceFiles.ConflictReferenceSameSDK": "Un conflit s'est produit entre deux références portant le même nom de fichier résolues dans le SDK \"{0}\". \"{1}\" est choisi plutôt que \"{2}\", car il a été résolu en premier.",
     "GetSDKReferenceFiles.ConflictRedistDifferentSDK": "Un conflit s'est produit entre deux fichiers du dossier du package redistribuable pointant vers le même chemin cible \"{0}\" entre les SDK \"{1}\" et \"{2}\". \"{3}\" est choisi plutôt que \"{4}\", car il a été résolu en premier.",
-    "Copy.FileComment": "Copie du fichier de \"{0}\" vers \"{1}\"."
+    "Copy.FileComment": "Copie du fichier de \"{0}\" vers \"{1}\".",
+    "AnalyzerTotalExecutionTime": "Temps d'exécution total de l'analyseur : {0} secondes.",
+    "GeneratorTotalExecutionTime": "Durée totale d’exécution du générateur : {0} secondes."
   },
   "cs-CZ": {
     "PickedUpSwitchesFromAutoResponse": "Některé přepínače příkazového řádku byly načteny ze souboru automatických odpovědí {0}. Pokud chcete tento soubor zakázat, použijte přepínač -noAutoResponse.",
@@ -298,6 +308,7 @@
     "DuplicateImport": "MSB4011: Soubor {0} nelze znovu importovat. Již byl importován (čas: {1}). Nejpravděpodobněji se jedná o chybu při vytváření sestavení. Následný import bude ignorován. {2}",
     "TargetAlreadyCompleteFailure": "Cíl {0} byl vynechán. Předchozí sestavení se nezdařilo.",
     "General.OverridingProperties": "Globální vlastnosti projektu {0} budou přepsány následujícími hodnotami:",
+    "UninitializedPropertyRead": "Číst neinicializovanou vlastnost {0}",
     "ItemGroupRemoveLogMessage": "Odebrané položky: ",
     "EvaluationFinished": "Hodnocení dokončeno ({0})",
     "ProjectImported": "Importuje se projekt {0} do projektu {1} v ({2},{3}).",
@@ -315,8 +326,7 @@
     "TargetAlreadyCompleteSuccess": "Cíl {0} byl vynechán. Předchozí sestavení bylo úspěšné.",
     "TryingExtensionsPath": "Zkouší se import {0} pomocí cesty rozšíření {1}.",
     "PropertyReassignment": "Opětovné přiřazení vlastnosti: $({0})={1} (předchozí hodnota: {2}) v {3}",
-    "PropertyAssignment": "Počáteční hodnota vlastnosti: $({0})=\"{1}\". Zdroj: {2}",
-    "UninitializedPropertyRead": "Čtení neinicializované vlastnosti \"{0}\"",
+    "PropertyAssignment": "Počáteční hodnota vlastnosti: $({0})={1} Zdroj: {2}",
     "ProjectImportSkippedExpressionEvaluatedToEmpty": "{1} neimportoval projekt {0} v ({2},{3}), protože se výraz vyhodnocuje na prázdný řetězec.",
     "General.GlobalProperties": "Globální vlastnosti:",
     "General.UndefineProperties": "Odstraňování vlastností:",
@@ -333,7 +343,9 @@
     "ResolveAssemblyReference.UnifiedDependency": "Sjednocená závislost {0}",
     "GetSDKReferenceFiles.ConflictReferenceSameSDK": "Došlo ke konfliktu mezi dvěma odkazy se stejným názvem souboru, které byly vyřešeny v rámci sady SDK {0}. Bude upřednostněn odkaz {1} před odkazem {2}, protože byl vyřešen jako první.",
     "GetSDKReferenceFiles.ConflictRedistDifferentSDK": "Došlo ke konfliktu mezi dvěma soubory ze složky redistribučního balíčku, které oba směřují do stejné cílové cesty {0}. K tomuto konfliktu došlo mezi sadami SDK {1} a {2}. Bude upřednostněn soubor {3} před souborem {4}, protože byl vyřešen jako první.",
-    "Copy.FileComment": "Probíhá kopírování souboru z umístění {0} do umístění {1}."
+    "Copy.FileComment": "Probíhá kopírování souboru z umístění {0} do umístění {1}.",
+    "AnalyzerTotalExecutionTime": "Celková doba spuštění analyzátoru: {0} sekund",
+    "GeneratorTotalExecutionTime": "Celková doba spuštění generátoru: {0} sekund."
   },
   "ja-JP": {
     "PickedUpSwitchesFromAutoResponse": "コマンド ラインの一部のスイッチは自動応答ファイル \"{0}\" から読み取られたものです。このファイルを無効にするには、\"-noAutoResponse\" スイッチをご使用ください。",
@@ -354,6 +366,7 @@
     "DuplicateImport": "MSB4011: \"{0}\" は 2 度インポートできません。このファイルは既に \"{1}\" でインポートされています。ビルド作成エラーである可能性があります。この再インポートは無視されます。{2}",
     "TargetAlreadyCompleteFailure": "ターゲット \"{0}\" を省略しました。以前に正しくビルドされていませんでした。",
     "General.OverridingProperties": "プロジェクト \"{0}\" のグローバル プロパティを次の値でオーバーライド:",
+    "UninitializedPropertyRead": "初期化されていないプロパティ \"{0}\" の読み取り",
     "ItemGroupRemoveLogMessage": "削除された項目: ",
     "EvaluationFinished": "評価を完了しました (\"{0}\")",
     "ProjectImported": "プロジェクト \"{0}\" を ({2},{3}) でプロジェクト \"{1}\" にインポートしています。",
@@ -371,8 +384,7 @@
     "TargetAlreadyCompleteSuccess": "ターゲット \"{0}\" を省略しました。以前に正しくビルドされていました。",
     "TryingExtensionsPath": "拡張パス {1} を使用して {0} をインポートしようとしています",
     "PropertyReassignment": "プロパティの再代入: $({0})=\"{1}\" (以前の値: \"{2}\") {3}",
-    "PropertyAssignment": "プロパティの初期値: $({0})=\"{1}\". ソース: {2}",
-    "UninitializedPropertyRead": "初期化されていないプロパティ \"{0}\" を読み取りました",
+    "PropertyAssignment": "プロパティの初期値: $({0})=\"{1}\" ソース: {2}",
     "ProjectImportSkippedExpressionEvaluatedToEmpty": "式の評価結果が空の文字列になったため、プロジェクト \"{0}\" は \"{1}\" によって ({2},{3}) でインポートされませんでした。",
     "General.GlobalProperties": "グローバル プロパティ:",
     "General.UndefineProperties": "プロパティの削除:",
@@ -389,7 +401,9 @@
     "ResolveAssemblyReference.UnifiedDependency": "統合された依存関係 \"{0}\" です。",
     "GetSDKReferenceFiles.ConflictReferenceSameSDK": "2 つの参照の間で競合が見つかりました。\"{0}\" SDK 内でどちらも同じファイル名に解決されます。先に解決された \"{1}\" が \"{2}\" よりも優先されます。",
     "GetSDKReferenceFiles.ConflictRedistDifferentSDK": "\"{1}\" SDK と \"{2}\" SDK の間で同じターゲット パス \"{0}\" に移動する再頒布可能パッケージ フォルダーの 2 つのファイル間に競合がありました。先に解決された \"{3}\" が \"{4}\" よりも優先されます。",
-    "Copy.FileComment": "\"{0}\" から \"{1}\" へファイルをコピーしています。"
+    "Copy.FileComment": "\"{0}\" から \"{1}\" へファイルをコピーしています。",
+    "AnalyzerTotalExecutionTime": "アナライザー実行の合計時間: {0} 秒。",
+    "GeneratorTotalExecutionTime": "ジェネレーターの合計実行時間: {0} 秒。"
   },
   "ko-KR": {
     "PickedUpSwitchesFromAutoResponse": "자동 지시 파일 \"{0}\"에서 일부 명령줄 스위치를 읽어왔습니다. 이 파일을 사용하지 않도록 설정하려면 \"-noAutoResponse\" 스위치를 사용하세요.",
@@ -410,6 +424,7 @@
     "DuplicateImport": "MSB4011: \"{0}\"을(를) 다시 가져올 수 없습니다. \"{1}\"에서 이미 가져왔습니다. 이는 빌드 작성 오류일 가능성이 높으며 이 후속 가져오기는 무시됩니다. {2}",
     "TargetAlreadyCompleteFailure": "\"{0}\" 대상을 건너뜁니다. 이전에 제대로 빌드되지 않았습니다.",
     "General.OverridingProperties": "\"{0}\" 프로젝트의 전역 속성을 다음으로 재정의:",
+    "UninitializedPropertyRead": "초기화되지 않은 속성 \"{0}\" 읽기",
     "ItemGroupRemoveLogMessage": "삭제된 항목: ",
     "EvaluationFinished": "평가가 종료됨(\"{0}\")",
     "ProjectImported": "\"{0}\" 프로젝트를 ({2},{3})의 \"{1}\" 프로젝트로 가져오는 중입니다.",
@@ -427,8 +442,7 @@
     "TargetAlreadyCompleteSuccess": "\"{0}\" 대상을 건너뜁니다. 이전에 빌드되었습니다.",
     "TryingExtensionsPath": "확장 경로 {1}을(를) 사용하여 {0}을(를) 가져옵니다.",
     "PropertyReassignment": "속성 재할당: $({0})={3}의 \"{1}\"(이전 값: \"{2}\")",
-    "PropertyAssignment": "속성 초기값: $({0})=\"{1}\" 소스: {2}",
-    "UninitializedPropertyRead": "초기화되지 않은 속성 \"{0}\" 읽음",
+    "PropertyAssignment": "속성 초기 값: $({0})=\"{1}\" 소스: {2}",
     "ProjectImportSkippedExpressionEvaluatedToEmpty": "빈 문자열로 평가되는 식 때문에 ({2},{3})의 \"{1}\"이(가) 프로젝트 \"{0}\"을(를) 가져오지 않았습니다.",
     "General.GlobalProperties": "전역 속성:",
     "General.UndefineProperties": "속성 제거:",
@@ -445,7 +459,9 @@
     "ResolveAssemblyReference.UnifiedDependency": "통합된 종속성 \"{0}\"입니다.",
     "GetSDKReferenceFiles.ConflictReferenceSameSDK": "\"{0}\" SDK 내에서 확인된 동일한 파일 이름을 사용하는 두 참조 간에 충돌이 발생했습니다. \"{2}\" 대신 먼저 확인된 \"{1}\"을(를) 선택합니다.",
     "GetSDKReferenceFiles.ConflictRedistDifferentSDK": "\"{1}\" 및 \"{2}\" SDK 사이의 동일한 대상 경로 \"{0}\"(으)로 이동하는 재배포 가능 패키지 폴더 파일의 두 파일 간에 충돌이 발생했습니다. \"{4}\" 대신 먼저 확인된 \"{3}\"을(를) 선택합니다.",
-    "Copy.FileComment": "\"{0}\"에서 \"{1}\"(으)로 파일을 복사하고 있습니다."
+    "Copy.FileComment": "\"{0}\"에서 \"{1}\"(으)로 파일을 복사하고 있습니다.",
+    "AnalyzerTotalExecutionTime": "총 분석기 실행 시간: {0}초.",
+    "GeneratorTotalExecutionTime": "총 생성기 실행 시간: {0} 초"
   },
   "ru-RU": {
     "PickedUpSwitchesFromAutoResponse": "Некоторые параметры командной строки были считаны из файла автоматического ответа \"{0}\". Чтобы отключить этот файл, используйте параметр \"-noAutoResponse\".",
@@ -466,6 +482,7 @@
     "DuplicateImport": "MSB4011: невозможно повторно импортировать \"{0}\". Он уже был импортирован в \"{1}\". Скорее всего это связано с ошибкой при написании кода сборки. Повторный импорт будет пропущен. {2}",
     "TargetAlreadyCompleteFailure": "Целевой объект \"{0}\" пропущен. Предыдущая сборка неуспешна.",
     "General.OverridingProperties": "Переопределение глобальных свойств для проекта \"{0}\" с:",
+    "UninitializedPropertyRead": "Чтение неинициализированного свойства \"{0}\"",
     "ItemGroupRemoveLogMessage": "Удалено элементов: ",
     "EvaluationFinished": "Оценка завершена (\"{0}\")",
     "ProjectImported": "Импортируется проект \"{0}\" в проект \"{1}\" в ({2},{3}).",
@@ -483,8 +500,7 @@
     "TargetAlreadyCompleteSuccess": "Целевой объект \"{0}\" пропущен. Предыдущая сборка успешна.",
     "TryingExtensionsPath": "Попытка импортировать \"{0}\" с помощью пути расширений {1}",
     "PropertyReassignment": "Повторное назначение свойства: $({0})=\"{1}\" (предыдущее значение: \"{2}\") для {3}",
-    "PropertyAssignment": "Начальное значение свойства: $({0})=\"{1}\". Источник: {2}",
-    "UninitializedPropertyRead": "Чтение неинициализированного свойства \"{0}\"",
+    "PropertyAssignment": "Начальное значение свойства: $({0})=\"{1}\" Источник: {2}",
     "ProjectImportSkippedExpressionEvaluatedToEmpty": "Проект \"{0}\" не был импортирован \"{1}\" в ({2},{3}), так как результатом вычисления выражения была пустая строка.",
     "General.GlobalProperties": "Глобальные свойства:",
     "General.UndefineProperties": "Удаление свойств:",
@@ -501,7 +517,9 @@
     "ResolveAssemblyReference.UnifiedDependency": "Объединенная зависимость \"{0}\".",
     "GetSDKReferenceFiles.ConflictReferenceSameSDK": "Конфликт между двумя ссылками с одинаковым именем файла, разрешаемыми в пакете SDK \"{0}\". Выбирается \"{1}\", а не \"{2}\", поскольку она была разрешена первой.",
     "GetSDKReferenceFiles.ConflictRedistDifferentSDK": "Конфликт между двумя файлами из папки распространяемого пакета, которые разрешаются в один целевой путь \"{0}\" для пакетов SDK \"{1}\" и \"{2}\". Выбирается \"{3}\", а не \"{4}\", поскольку он был разрешен первым.",
-    "Copy.FileComment": "Копирование файла из \"{0}\" в \"{1}\"."
+    "Copy.FileComment": "Копирование файла из \"{0}\" в \"{1}\".",
+    "AnalyzerTotalExecutionTime": "Общее время выполнения анализатора: {0} с.",
+    "GeneratorTotalExecutionTime": "Общее время выполнения генератора: {0} с."
   },
   "pl-PL": {
     "PickedUpSwitchesFromAutoResponse": "Odczytano pewne przełączniki wiersza polecenia z pliku autoodpowiedzi „{0}”. Aby wyłączyć ten plik, użyj przełącznika „-noAutoResponse”.",
@@ -522,6 +540,7 @@
     "DuplicateImport": "MSB4011: Nie można ponownie zaimportować pliku „{0}”. Został on już zaimportowany w „{1}”. Najprawdopodobniej jest to błąd kompilacji. Ten kolejny import zostanie zignorowany. {2}",
     "TargetAlreadyCompleteFailure": "Pominięto element docelowy „{0}”. Wcześniejsza kompilacja nie powiodła się.",
     "General.OverridingProperties": "Przesłanianie globalnych właściwości projektu „{0}” przy użyciu następujących wartości:",
+    "UninitializedPropertyRead": "Odczytaj niezainicjowaną właściwość „{0}”",
     "ItemGroupRemoveLogMessage": "Usunięte elementy: ",
     "EvaluationFinished": "Szacowanie zostało zakończone („{0}”)",
     "ProjectImported": "Importowanie projektu „{0}” do projektu „{1}” o ({2},{3}).",
@@ -539,8 +558,7 @@
     "TargetAlreadyCompleteSuccess": "Pominięto element docelowy „{0}”. Wcześniejsza kompilacja powiodła się.",
     "TryingExtensionsPath": "Próba zaimportowania elementu {0} przy użyciu ścieżki rozszerzeń {1}",
     "PropertyReassignment": "Ponowne przypisanie właściwości: $({0})=„{1}” (poprzednia wartość: „{2}”) w {3}",
-    "PropertyAssignment": "Wartość początkowa właściwości: $({0})=\"{1}\". Źródło: {2}",
-    "UninitializedPropertyRead": "Odczytano niezainicjowaną właściwość \"{0}\"",
+    "PropertyAssignment": "Wartość początkowa właściwości: $({0})=„{1}” Źródło: {2}",
     "ProjectImportSkippedExpressionEvaluatedToEmpty": "Projekt „{0}” nie został zaimportowany przez projekt „{1}” o ({2},{3}) z powodu wyrażenia ocenianego jako pusty ciąg.",
     "General.GlobalProperties": "Właściwości globalne:",
     "General.UndefineProperties": "Usuwanie właściwości:",
@@ -557,7 +575,9 @@
     "ResolveAssemblyReference.UnifiedDependency": "Zunifikowana zależność „{0}”.",
     "GetSDKReferenceFiles.ConflictReferenceSameSDK": "Wystąpił konflikt dwóch odwołań, które dotyczą tej samej nazwy pliku rozpoznanej w zestawie SDK „{0}”. Wybrano plik „{1}” zamiast pliku „{2}”, ponieważ został on rozpoznany jako pierwszy.",
     "GetSDKReferenceFiles.ConflictRedistDifferentSDK": "Wystąpił konflikt dwóch plików z folderu redystrybucyjnego, które mają taką samą ścieżkę docelową „{0}” w zestawach SDK „{1}” i „{2}”. Wybrano plik „{3}” zamiast pliku „{4}”, ponieważ został on rozpoznany jako pierwszy.",
-    "Copy.FileComment": "Kopiowanie pliku z „{0}” do „{1}”."
+    "Copy.FileComment": "Kopiowanie pliku z „{0}” do „{1}”.",
+    "AnalyzerTotalExecutionTime": "Łączny czas wykonywania analizatora: {0} sek.",
+    "GeneratorTotalExecutionTime": "Całkowity czas wykonywania generatora: {0} sekund."
   },
   "pt-BR": {
     "PickedUpSwitchesFromAutoResponse": "Algumas opções de linha de comando foram lidas do arquivo de resposta automática \"{0}\". Para desabilitar esse arquivo, use a opção \"-noAutoResponse\".",
@@ -578,6 +598,7 @@
     "DuplicateImport": "MSB4011: não é possível importar \"{0}\" novamente. Esse item já foi importado em \"{1}\". É provável que esse seja um erro de criação do build. Essa importação subsequente será ignorada. {2}",
     "TargetAlreadyCompleteFailure": "Destino \"{0}\" ignorado. Compilado anteriormente sem êxito.",
     "General.OverridingProperties": "Substituindo as Propriedades Globais do projeto \"{0}\" por:",
+    "UninitializedPropertyRead": "Ler a propriedade não inicializada \"{0}\"",
     "ItemGroupRemoveLogMessage": "Itens Removidos: ",
     "EvaluationFinished": "Avaliação encerrada (\"{0}\")",
     "ProjectImported": "Importando o projeto \"{0}\" no projeto \"{1}\" em ({2},{3}).",
@@ -595,8 +616,7 @@
     "TargetAlreadyCompleteSuccess": "Destino \"{0}\" ignorado. Compilado anteriormente com êxito.",
     "TryingExtensionsPath": "Tentando importar {0} usando o caminho das extensões {1}",
     "PropertyReassignment": "Reatribuição de propriedade: $({0})=\"{1}\" (valor anterior: \"{2}\") em {3}",
-    "PropertyAssignment": "Valor inicial da propriedade: $({0})=\"{1}\". Origem: {2}",
-    "UninitializedPropertyRead":"Leitura de propriedade não inicializada \"{0}\"",
+    "PropertyAssignment": "Valor inicial da propriedade: $({0})=\"{1}\" Origem: {2}",
     "ProjectImportSkippedExpressionEvaluatedToEmpty": "O projeto \"{0}\" não foi importado por \"{1}\" em ({2},{3}), porque a expressão foi avaliada como uma cadeia de caracteres vazia.",
     "General.GlobalProperties": "Propriedades globais:",
     "General.UndefineProperties": "Removendo Propriedades:",
@@ -613,7 +633,9 @@
     "ResolveAssemblyReference.UnifiedDependency": "Dependência Unificada \"{0}\".",
     "GetSDKReferenceFiles.ConflictReferenceSameSDK": "Houve um conflito entre duas referências com o mesmo nome de arquivo resolvido no SDK \"{0}\". Escolhendo \"{1}\" em vez de \"{2}\" porque foi resolvido primeiro.",
     "GetSDKReferenceFiles.ConflictRedistDifferentSDK": "Houve um conflito entre dois arquivos da pasta do pacote redistribuível com o mesmo caminho de destino \"{0}\" entre os SDKs \"{1}\" e \"{2}\". Escolhendo \"{3}\" em vez de \"{4}\" porque foi resolvido primeiro.",
-    "Copy.FileComment": "Copiando o arquivo de \"{0}\" para \"{1}\"."
+    "Copy.FileComment": "Copiando o arquivo de \"{0}\" para \"{1}\".",
+    "AnalyzerTotalExecutionTime": "Tempo de execução total do analisador: {0} segundos.",
+    "GeneratorTotalExecutionTime": "Tempo total de execução do gerador: {0} segundos."
   },
   "tr-TR": {
     "PickedUpSwitchesFromAutoResponse": "Bazı komut satırı anahtarları \"{0}\" otomatik yanıt dosyasından okundu. Bu dosyayı devre dışı bırakmak için \"-noAutoResponse\" anahtarını kullanın.",
@@ -634,6 +656,7 @@
     "DuplicateImport": "MSB4011: \"{0}\" yeniden içeri aktarılamaz. \"{1}\" konumunda zaten içeri aktarıldı. Bunun nedeni bir derleme yazma hatası olabilir. Bu sonraki içeri aktarma yoksayılacak. {2}",
     "TargetAlreadyCompleteFailure": "\"{0}\" hedefi atlandı. Önceden başarısız bir şekilde derlenmişti.",
     "General.OverridingProperties": "\"{0}\" projesi için Genel Özellikler şununla geçersiz kılınıyor:",
+    "UninitializedPropertyRead": "\"{0}\" başlatılmamış özelliğini oku",
     "ItemGroupRemoveLogMessage": "Kaldırılan Öğeler: ",
     "EvaluationFinished": "Değerlendirme tamamlandı (\"{0}\")",
     "ProjectImported": "\"{0}\" adlı proje ({2},{3}) konumundaki \"{1}\" projesine aktarılıyor.",
@@ -651,8 +674,7 @@
     "TargetAlreadyCompleteSuccess": "\"{0}\" hedefi atlandı. Önceden başarılı bir şekilde derlenmişti.",
     "TryingExtensionsPath": "{1} uzantı yolları kullanılarak {0} içeri aktarılmaya çalışılıyor",
     "PropertyReassignment": "Özellik yeniden ataması: $({0})=\"{1}\" (önceki değer: \"{2}\") konum: {3}",
-    "PropertyAssignment": "Özellik başlangıç değeri: $({0})=\"{1}\". Kaynak: {2}",
-    "UninitializedPropertyRead": "Başlatılmamış özellik \"{0}\" okundu",
+    "PropertyAssignment": "Özellik başlangıç değeri: $({0})=\"{1}\" Kaynak: {2}",
     "ProjectImportSkippedExpressionEvaluatedToEmpty": "\"{0}\" adlı proje, ifadenin boş dize olarak değerlendirilmesi nedeniyle ({2},{3}) konumundaki \"{1}\" tarafından içeri aktarılmadı.",
     "General.GlobalProperties": "Genel Özellikler:",
     "General.UndefineProperties": "Özellikler kaldırılıyor:",
@@ -669,7 +691,9 @@
     "ResolveAssemblyReference.UnifiedDependency": "\"{0}\" Birleştirilmiş Bağımlılığı.",
     "GetSDKReferenceFiles.ConflictReferenceSameSDK": "\"{0}\" SDK’sı içinde çözümlenen aynı dosya adına sahip iki başvuru arasında bir çakışma vardı. Daha önce çözümlendiğinden \"{2}\" yerine \"{1}\" seçiliyor.",
     "GetSDKReferenceFiles.ConflictRedistDifferentSDK": "\"{1}\" ve \"{2}\" SDK’ları arasındaki aynı \"{0}\" hedef yoluna giden yeniden dağıtım klasörü dosyalarındaki iki dosya arasında bir çakışma vardı. Daha önce çözümlendiğinden \"{4}\" yerine \"{3}\" seçiliyor.",
-    "Copy.FileComment": "Dosya \"{0}\" konumundan \"{1}\" konumuna kopyalanıyor."
+    "Copy.FileComment": "Dosya \"{0}\" konumundan \"{1}\" konumuna kopyalanıyor.",
+    "AnalyzerTotalExecutionTime": "Çözümleyicinin toplam yürütme süresi: {0} saniye.",
+    "GeneratorTotalExecutionTime": "Toplam oluşturucu yürütme süresi: {0} saniye."
   },
   "zh-Hans": {
     "PickedUpSwitchesFromAutoResponse": "将从自动响应文件“{0}”中读取某些命令行开关。若要禁用此文件，请使用“-noAutoResponse”开关。",
@@ -690,6 +714,7 @@
     "DuplicateImport": "MSB4011: 无法再次导入“{0}”。可能已在“{1}”处导入过它。这很可能是生成创作错误。将忽略此后续导入。{2}",
     "TargetAlreadyCompleteFailure": "已跳过目标“{0}”。以前的生成不成功。",
     "General.OverridingProperties": "将项目“{0}”的全局属性重写为:",
+    "UninitializedPropertyRead": "读取未初始化的属性“{0}”",
     "ItemGroupRemoveLogMessage": "删除的项: ",
     "EvaluationFinished": "评估完毕(“{0}”)",
     "ProjectImported": "正在将项目“{0}”导入 ({2}、{3}) 处的项目“{1}”。",
@@ -707,8 +732,7 @@
     "TargetAlreadyCompleteSuccess": "已跳过目标“{0}”。以前的生成已成功。",
     "TryingExtensionsPath": "尝试使用扩展路径 {1} 导入 {0}",
     "PropertyReassignment": "在 {3} 处重新分配属性: $({0})=“{1}”(先前值:“{2}”)",
-    "PropertyAssignment": "属性初始值: $({0})=\"{1}\"来源: {2}",
-    "UninitializedPropertyRead": "读取未初始化的属性 \"{0}\"",
+    "PropertyAssignment": "属性初始值: $({0})=“{1}”，源: {2}",
     "ProjectImportSkippedExpressionEvaluatedToEmpty": "由于表达式评估为空字符串，因此项目“{0}”不由 ({2}、{3}) 处的“{1}”导入。",
     "General.GlobalProperties": "全局属性:",
     "General.UndefineProperties": "移除属性:",
@@ -725,6 +749,8 @@
     "ResolveAssemblyReference.UnifiedDependency": "统一依赖项“{0}”。",
     "GetSDKReferenceFiles.ConflictReferenceSameSDK": "两个引用之间存在冲突，它们在“{0}”SDK 内解析的文件名相同。将优先于“{2}”选择“{1}”，因为后者是先解析的。",
     "GetSDKReferenceFiles.ConflictRedistDifferentSDK": "可再发行程序包文件夹中的两个文件之间存在冲突，它们在“{1}”和“{2}”SDK 之间进入同一目标路径“{0}”。将优先于“{4}”选择“{3}”，因为后者是先解析的。",
-    "Copy.FileComment": "正在将文件从“{0}”复制到“{1}”。"
+    "Copy.FileComment": "正在将文件从“{0}”复制到“{1}”。",
+    "AnalyzerTotalExecutionTime": "分析器总执行时间: {0} 秒。",
+    "GeneratorTotalExecutionTime": "生成器执行总时间: {0} 秒。"
   }
 }
