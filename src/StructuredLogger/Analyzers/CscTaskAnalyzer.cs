@@ -18,7 +18,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             foreach (var message in task.GetMessages().ToArray())
             {
                 var text = message.Text;
-                if (text.StartsWith(Strings.TotalAnalyzerExecutionTime, StringComparison.Ordinal))
+                if (Strings.TotalAnalyzerExecutionTimeRegex.IsMatch(text))
                 {
                     analyzerReport = new Folder();
                     analyzerReport.Name = Strings.AnalyzerReport;
@@ -26,7 +26,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     parent = analyzerReport;
                     currentReport = analyzerReport;
                 }
-                else if (text.StartsWith(Strings.TotalGeneratorExecutionTime, StringComparison.Ordinal))
+                if (Strings.TotalGeneratorExecutionTimeRegex.IsMatch(text))
                 {
                     generatorReport = new Folder();
                     generatorReport.Name = Strings.GeneratorReport;
