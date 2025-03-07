@@ -78,6 +78,23 @@ namespace StructuredLogViewer
 
         public static void UpdateTheme()
         {
+            var scrollBarStaticBackground = "#F0F0F0";
+            var scrollBarStaticBorder = "#F0F0F0";
+            var scrollBarStaticGlyph = "#606060";
+            var scrollBarStaticThumb = "#CDCDCD";
+            var scrollBarMouseOverBackground = "#DADADA";
+            var scrollBarMouseOverBorder = "#DADADA";
+            var scrollBarMouseOverGlyph = "#000000";
+            var scrollBarMouseOverThumb = "#A6A6A6";
+            var scrollBarPressedBackground = "#606060";
+            var scrollBarPressedBorder = "#606060";
+            var scrollBarPressedThumb = "#606060";
+            var scrollBarPressedGlyph = "#FFFFFF";
+            var scrollBarDisabledBackground = "#F0F0F0";
+            var scrollBarDisabledBorder = "#F0F0F0";
+            var scrollBarDisabledGlyph = "#BFBFBF";
+            var scrollBarDisabledThumb = "#F0F0F0";
+
             var tabItemStaticBackground = "Transparent";
             var tabItemStaticBorder = "#ACACAC";
             var tabItemSelectedBackground = "#FFFFFF";
@@ -103,18 +120,21 @@ namespace StructuredLogViewer
             }
             else if (UseDarkTheme)
             {
+                var color500 = "#9E9E9E";
                 var color600 = "#757575";
                 var color700 = "#616161";
                 var color800 = "#424242";
                 var color850 = "#303030";
                 var color900 = "#212121";
+                var foregroundColor = "#e5ffffff";
+                var foregroundDisabledColor = "#50ffffff";
 
                 SetResource("Theme_Background", LighterBackgroundBrush);
                 SetResource("Theme_WhiteBackground", BackgroundBrush);
                 SetResource("Theme_ToolWindowBackground", LighterBackgroundBrush);
                 SetResource("Theme_InfoBarBackground", GetBrush("#202040"));
 
-                UseAdonisDarkTheme = true;
+                UseAdonisDarkTheme = false;
 
                 SetResource(SystemColors.ControlBrushKey, LighterBackgroundBrush);
                 SetResource(SystemColors.ControlTextBrushKey, ControlTextBrush);
@@ -136,6 +156,23 @@ namespace StructuredLogViewer
                 SetResource("AddItemStroke", GetBrush("#40B0B0"));
                 SetResource("NuGet", Brushes.DeepSkyBlue);
                 SetResource("\u01D6", GetBrush("#C0C0C0"));
+
+                scrollBarStaticBackground = color800;
+                scrollBarStaticBorder = color800;
+                scrollBarStaticGlyph = foregroundColor;
+                scrollBarStaticThumb = color700;
+                scrollBarMouseOverBackground = color700;
+                scrollBarMouseOverBorder = color700;
+                scrollBarMouseOverGlyph = foregroundColor;
+                scrollBarMouseOverThumb = color600;
+                scrollBarPressedBackground = color600;
+                scrollBarPressedBorder = color600;
+                scrollBarPressedThumb = color500;
+                scrollBarPressedGlyph = foregroundColor;
+                scrollBarDisabledBackground = color800;
+                scrollBarDisabledBorder = color800;
+                scrollBarDisabledGlyph = foregroundDisabledColor;
+                scrollBarDisabledThumb = color700;
 
                 tabItemStaticBackground = color850;
                 tabItemStaticBorder = color700;
@@ -163,6 +200,23 @@ namespace StructuredLogViewer
 
                 SetDefaultSystemColors();
             }
+
+            SetResource("ScrollBar.Static.Background", GetBrush(scrollBarStaticBackground));
+            SetResource("ScrollBar.Static.Border", GetBrush(scrollBarStaticBorder));
+            SetResource("ScrollBar.Static.Glyph", GetBrush(scrollBarStaticGlyph));
+            SetResource("ScrollBar.Static.Thumb", GetBrush(scrollBarStaticThumb));
+            SetResource("ScrollBar.MouseOver.Background", GetBrush(scrollBarMouseOverBackground));
+            SetResource("ScrollBar.MouseOver.Border", GetBrush(scrollBarMouseOverBorder));
+            SetResource("ScrollBar.MouseOver.Glyph", GetBrush(scrollBarMouseOverGlyph));
+            SetResource("ScrollBar.MouseOver.Thumb", GetBrush(scrollBarMouseOverThumb));
+            SetResource("ScrollBar.Pressed.Background", GetBrush(scrollBarPressedBackground));
+            SetResource("ScrollBar.Pressed.Border", GetBrush(scrollBarPressedBorder));
+            SetResource("ScrollBar.Pressed.Thumb", GetBrush(scrollBarPressedThumb));
+            SetResource("ScrollBar.Pressed.Glyph", GetBrush(scrollBarPressedGlyph));
+            SetResource("ScrollBar.Disabled.Background", GetBrush(scrollBarDisabledBackground));
+            SetResource("ScrollBar.Disabled.Border", GetBrush(scrollBarDisabledBorder));
+            SetResource("ScrollBar.Disabled.Glyph", GetBrush(scrollBarDisabledGlyph));
+            SetResource("ScrollBar.Disabled.Thumb", GetBrush(scrollBarDisabledThumb));
 
             SetResource("TabItem.Static.Background", GetBrush(tabItemStaticBackground));
             SetResource("TabItem.Static.Border", GetBrush(tabItemStaticBorder));
