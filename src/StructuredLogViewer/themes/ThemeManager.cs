@@ -78,6 +78,18 @@ namespace StructuredLogViewer
 
         public static void UpdateTheme()
         {
+            var buttonStaticBackground = "#FFDDDDDD";
+            var buttonStaticBorder = "#FF707070";
+            var buttonMouseOverBackground = "#FFBEE6FD";
+            var buttonMouseOverBorder = "#FF3C7FB1";
+            var buttonPressedBackground = "#FFC4E5F6";
+            var buttonPressedBorder = "#FF2C628B";
+            var buttonCheckedBackground = "#FFBCDDEE";
+            var buttonCheckedBorder = "#FF245A83";
+            var buttonDisabledBackground = "#FFF4F4F4";
+            var buttonDisabledBorder = "#FFADB2B5";
+            var buttonDisabledForeground = "#FF838383";
+
             var optionMarkStaticBackground = "#FFFFFFFF";
             var optionMarkStaticBorder = "#FF707070";
             var optionMarkStaticGlyph = "#FF212121";
@@ -193,6 +205,18 @@ namespace StructuredLogViewer
                 SetResource("NuGet", Brushes.DeepSkyBlue);
                 SetResource("\u01D6", GetBrush("#C0C0C0"));
 
+                buttonStaticBackground = color800;
+                buttonStaticBorder = color700;
+                buttonMouseOverBackground = color700;
+                buttonMouseOverBorder = color600;
+                buttonPressedBackground = color600;
+                buttonPressedBorder = color500;
+                buttonCheckedBackground = selectionColor1;
+                buttonCheckedBorder = selectionColor2;
+                buttonDisabledBackground = color850;
+                buttonDisabledBorder = color800;
+                buttonDisabledForeground = foregroundDisabledColor;
+
                 optionMarkStaticBackground = color800;
                 optionMarkStaticBorder = color700;
                 optionMarkStaticGlyph = foregroundColor;
@@ -267,6 +291,18 @@ namespace StructuredLogViewer
 
                 SetDefaultSystemColors();
             }
+
+            SetResource("Button.Static.Background", GetBrush(buttonStaticBackground));
+            SetResource("Button.Static.Border", GetBrush(buttonStaticBorder));
+            SetResource("Button.MouseOver.Background", GetBrush(buttonMouseOverBackground));
+            SetResource("Button.MouseOver.Border", GetBrush(buttonMouseOverBorder));
+            SetResource("Button.Pressed.Background", GetBrush(buttonPressedBackground));
+            SetResource("Button.Pressed.Border", GetBrush(buttonPressedBorder));
+            SetResource("Button.Checked.Background", GetBrush(buttonCheckedBackground));
+            SetResource("Button.Checked.Border", GetBrush(buttonCheckedBorder));
+            SetResource("Button.Disabled.Background", GetBrush(buttonDisabledBackground));
+            SetResource("Button.Disabled.Border", GetBrush(buttonDisabledBorder));
+            SetResource("Button.Disabled.Foreground", GetBrush(buttonDisabledForeground));
 
             SetResource("OptionMark.Static.Background", GetBrush(optionMarkStaticBackground));
             SetResource("OptionMark.Static.Border", GetBrush(optionMarkStaticBorder));

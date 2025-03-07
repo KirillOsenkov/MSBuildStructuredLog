@@ -7,6 +7,7 @@
                     xmlns:s="clr-namespace:StructuredLogViewer">
 
   <ResourceDictionary.MergedDictionaries>
+    <ResourceDictionary Source="/StructuredLogViewer;component/themes/Button.xaml" />
     <ResourceDictionary Source="/StructuredLogViewer;component/themes/CheckBox.xaml" />
     <ResourceDictionary Source="/StructuredLogViewer;component/themes/GroupBox.xaml" />
     <ResourceDictionary Source="/StructuredLogViewer;component/themes/MenuItem.xaml" />
@@ -26,10 +27,6 @@
 
   <Style x:Key="{x:Type TextBlock}" TargetType="{x:Type TextBlock}">
     <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
-  </Style>
-
-  <Style x:Key="{x:Type Button}" TargetType="{x:Type Button}">
-    <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" />
   </Style>
 
   <Style x:Key="{x:Type ToolTip}" TargetType="{x:Type ToolTip}">
