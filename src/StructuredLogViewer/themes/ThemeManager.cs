@@ -78,6 +78,10 @@ namespace StructuredLogViewer
 
         public static void UpdateTheme()
         {
+            var groupBoxOuterBorder = "White";
+            var groupBoxMiddleBorder = "#D5DFD5";
+            var groupBoxInnerBorder = "White";
+
             var menuStaticBackground = "#FFF0F0F0";
             var menuStaticBorder = "#FF999999";
             var menuStaticForeground = "#FF212121";
@@ -176,6 +180,10 @@ namespace StructuredLogViewer
                 SetResource("NuGet", Brushes.DeepSkyBlue);
                 SetResource("\u01D6", GetBrush("#C0C0C0"));
 
+                groupBoxOuterBorder = color850;
+                groupBoxMiddleBorder = color700;
+                groupBoxInnerBorder = color850;
+
                 menuStaticBackground = color800;
                 menuStaticBorder = color700;
                 menuStaticForeground = foregroundColor;
@@ -233,6 +241,10 @@ namespace StructuredLogViewer
 
                 SetDefaultSystemColors();
             }
+
+            SetResource("GroupBox.Static.OuterBorder", GetBrush(groupBoxOuterBorder));
+            SetResource("GroupBox.Static.MiddleBorder", GetBrush(groupBoxMiddleBorder));
+            SetResource("GroupBox.Static.InnerBorder", GetBrush(groupBoxInnerBorder));
 
             SetResource("Menu.Static.Background", GetBrush(menuStaticBackground));
             SetResource("Menu.Static.Border", GetBrush(menuStaticBorder));
