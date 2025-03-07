@@ -45,7 +45,7 @@
   </Style>
 
   <Style x:Key="{x:Type MenuItem}" TargetType="{x:Type MenuItem}">
-    <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}"/>
+    <Setter Property="Background" Value="Transparent"/>
     <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
   </Style>
 
