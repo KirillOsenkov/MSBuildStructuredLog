@@ -30,7 +30,12 @@
   </Style>
 
   <Style x:Key="{x:Type TabControl}" TargetType="{x:Type TabControl}">
+    <Setter Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" />
     <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.WindowBrushKey}}" />
+  </Style>
+
+  <Style x:Key="{x:Type TreeView}" TargetType="{x:Type TreeView}">
+    <Setter Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" />
   </Style>
 
   <Style x:Key="{x:Type ToolTip}" TargetType="{x:Type ToolTip}">

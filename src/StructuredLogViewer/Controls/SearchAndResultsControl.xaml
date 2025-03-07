@@ -39,7 +39,6 @@
                 VirtualizingPanel.IsVirtualizing="True"
                 VirtualizingPanel.VirtualizationMode="Recycling"
                 BorderThickness="0"
-                Background="{DynamicResource Theme_ToolWindowBackground}"
                 local:ScrollViewerHelper.ShiftWheelScrollsHorizontally="True" />
       <ScrollViewer x:Name="watermarkScrollViewer"
           HorizontalScrollBarVisibility="Disabled" 

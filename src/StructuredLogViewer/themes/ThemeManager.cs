@@ -55,8 +55,8 @@ namespace StructuredLogViewer
 
                     appResources[AdonisUI.Colors.Layer0BackgroundColor] = GetColor("#2A2B2F");
                     appResources[AdonisUI.Colors.Layer0BorderColor] = GetColor("#2A2B2F");
-                    appResources[AdonisUI.Colors.Layer1BackgroundColor] = GetColor("#3D3D3D");
-                    appResources[AdonisUI.Colors.Layer2HighlightColor] = GetColor("#3D3D3D");
+                    appResources[AdonisUI.Colors.Layer1BackgroundColor] = GetColor(BackgroundColor);
+                    appResources[AdonisUI.Colors.Layer2HighlightColor] = GetColor(BackgroundColor);
                 }
                 else
                 {
@@ -65,7 +65,8 @@ namespace StructuredLogViewer
             }
         }
 
-        public static readonly Color Background = GetColor("#3D3D3D");
+        public static readonly string BackgroundColor = "#303030";
+        public static readonly Color Background = GetColor(BackgroundColor);
         public static readonly Brush BackgroundBrush = new SolidColorBrush(Background);
         public static readonly Color LighterBackground = GetColor("#454545");
         public static readonly Brush LighterBackgroundBrush = new SolidColorBrush(LighterBackground);
@@ -182,6 +183,7 @@ namespace StructuredLogViewer
 
                 UseAdonisDarkTheme = false;
 
+                SetResource(SystemColors.ActiveBorderBrushKey, GetBrush(color700));
                 SetResource(SystemColors.ControlBrushKey, LighterBackgroundBrush);
                 SetResource(SystemColors.ControlTextBrushKey, ControlTextBrush);
                 SetResource(SystemColors.HighlightBrushKey, Brushes.SlateBlue);
@@ -265,9 +267,9 @@ namespace StructuredLogViewer
                 scrollBarDisabledGlyph = foregroundDisabledColor;
                 scrollBarDisabledThumb = color700;
 
-                tabItemStaticBackground = color850;
+                tabItemStaticBackground = color800;
                 tabItemStaticBorder = color700;
-                tabItemSelectedBackground = color900;
+                tabItemSelectedBackground = color850;
                 tabItemSelectedBorder = color800;
                 tabItemMouseOverBackground = color700;
                 tabItemMouseOverBorder = color600;
@@ -364,6 +366,7 @@ namespace StructuredLogViewer
 
         private static void SetDefaultSystemColors()
         {
+            SetResource(SystemColors.ActiveBorderBrushKey, SystemColors.ActiveBorderBrush);
             SetResource(SystemColors.ControlBrushKey, SystemColors.ControlBrush);
             SetResource(SystemColors.ControlTextBrushKey, SystemColors.ControlTextBrush);
             SetResource(SystemColors.WindowBrushKey, SystemColors.WindowBrush);

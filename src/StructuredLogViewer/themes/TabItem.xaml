@@ -22,7 +22,7 @@
                             <Border x:Name="innerBorder" 
                                 BorderThickness="1,1,1,0" 
                                 Background="{DynamicResource TabItem.Selected.Background}"
-                                BorderBrush="{DynamicResource TabItem.Selected.Border}"
+                                BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}"
                                 Margin="-1"
                                 Opacity="0" />
                         </Border>
