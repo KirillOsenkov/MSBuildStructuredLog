@@ -29,6 +29,10 @@
     <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
   </Style>
 
+  <Style x:Key="{x:Type TabControl}" TargetType="{x:Type TabControl}">
+    <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.WindowBrushKey}}" />
+  </Style>
+
   <Style x:Key="{x:Type ToolTip}" TargetType="{x:Type ToolTip}">
     <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"/>
     <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
