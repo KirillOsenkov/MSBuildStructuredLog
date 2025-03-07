@@ -78,6 +78,15 @@ namespace StructuredLogViewer
 
         public static void UpdateTheme()
         {
+            var tabItemStaticBackground = "Transparent";
+            var tabItemStaticBorder = "#ACACAC";
+            var tabItemSelectedBackground = "#FFFFFF";
+            var tabItemSelectedBorder = "#ACACAC";
+            var tabItemMouseOverBackground = "#ECF4FC";
+            var tabItemMouseOverBorder = "#7EB4EA";
+            var tabItemDisabledBackground = "#F0F0F0";
+            var tabItemDisabledBorder = "#D9D9D9";
+
             if (SystemParameters.HighContrast)
             {
                 UseAdonisDarkTheme = false;
@@ -89,9 +98,17 @@ namespace StructuredLogViewer
                 SetResource("NoImportFill", Brushes.BlanchedAlmond);
                 SetResource("NuGet", Brushes.DeepSkyBlue);
                 SetResource(SystemColors.MenuBarBrushKey, SystemColors.MenuBarBrush);
+
+                SetDefaultSystemColors();
             }
             else if (UseDarkTheme)
             {
+                var color600 = "#757575";
+                var color700 = "#616161";
+                var color800 = "#424242";
+                var color850 = "#303030";
+                var color900 = "#212121";
+
                 SetResource("Theme_Background", LighterBackgroundBrush);
                 SetResource("Theme_WhiteBackground", BackgroundBrush);
                 SetResource("Theme_ToolWindowBackground", LighterBackgroundBrush);
@@ -119,7 +136,15 @@ namespace StructuredLogViewer
                 SetResource("AddItemStroke", GetBrush("#40B0B0"));
                 SetResource("NuGet", Brushes.DeepSkyBlue);
                 SetResource("\u01D6", GetBrush("#C0C0C0"));
-                return;
+
+                tabItemStaticBackground = color850;
+                tabItemStaticBorder = color700;
+                tabItemSelectedBackground = color900;
+                tabItemSelectedBorder = color800;
+                tabItemMouseOverBackground = color700;
+                tabItemMouseOverBorder = color600;
+                tabItemDisabledBackground = color850;
+                tabItemDisabledBorder = color800;
             }
             else
             {
@@ -135,8 +160,22 @@ namespace StructuredLogViewer
                 SetResource("NuGet", GetBrush("#004880"));
                 SetResource("\u01D6", GetBrush("#595959"));
                 SetResource(SystemColors.MenuBarBrushKey, "#F5F5F5");
+
+                SetDefaultSystemColors();
             }
 
+            SetResource("TabItem.Static.Background", GetBrush(tabItemStaticBackground));
+            SetResource("TabItem.Static.Border", GetBrush(tabItemStaticBorder));
+            SetResource("TabItem.Selected.Background", GetBrush(tabItemSelectedBackground));
+            SetResource("TabItem.Selected.Border", GetBrush(tabItemSelectedBorder));
+            SetResource("TabItem.MouseOver.Background", GetBrush(tabItemMouseOverBackground));
+            SetResource("TabItem.MouseOver.Border", GetBrush(tabItemMouseOverBorder));
+            SetResource("TabItem.MouseOver.Background", GetBrush(tabItemMouseOverBackground));
+            SetResource("TabItem.MouseOver.Border", GetBrush(tabItemMouseOverBorder));
+        }
+
+        private static void SetDefaultSystemColors()
+        {
             SetResource(SystemColors.ControlBrushKey, SystemColors.ControlBrush);
             SetResource(SystemColors.ControlTextBrushKey, SystemColors.ControlTextBrush);
             SetResource(SystemColors.WindowBrushKey, SystemColors.WindowBrush);
