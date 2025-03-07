@@ -7,6 +7,7 @@
                     xmlns:s="clr-namespace:StructuredLogViewer">
 
   <ResourceDictionary.MergedDictionaries>
+    <ResourceDictionary Source="/StructuredLogViewer;component/themes/MenuItem.xaml" />
     <ResourceDictionary Source="/StructuredLogViewer;component/themes/ScrollBar.xaml" />
     <ResourceDictionary Source="/StructuredLogViewer;component/themes/TabItem.xaml" />
     <ResourceDictionary Source="/StructuredLogViewer;component/themes/TreeViewItem.xaml" />

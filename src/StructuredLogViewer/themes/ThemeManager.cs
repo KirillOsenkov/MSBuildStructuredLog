@@ -78,6 +78,20 @@ namespace StructuredLogViewer
 
         public static void UpdateTheme()
         {
+            var menuStaticBackground = "#FFF0F0F0";
+            var menuStaticBorder = "#FF999999";
+            var menuStaticForeground = "#FF212121";
+            var menuStaticSeparator = "#FFD7D7D7";
+            var menuDisabledBackground = "#3DDADADA";
+            var menuDisabledBorder = "#FFDADADA";
+            var menuDisabledForeground = "#FF707070";
+            var menuItemSelectedBackground = "#3D26A0DA";
+            var menuItemSelectedBorder = "#FF26A0DA";
+            var menuItemHighlightBackground = "#3D26A0DA";
+            var menuItemHighlightBorder = "#FF26A0DA";
+            var menuItemHighlightDisabledBackground = "#0A000000";
+            var menuItemHighlightDisabledBorder = "#21000000";
+
             var scrollBarStaticBackground = "#F0F0F0";
             var scrollBarStaticBorder = "#F0F0F0";
             var scrollBarStaticGlyph = "#606060";
@@ -128,6 +142,9 @@ namespace StructuredLogViewer
                 var color900 = "#212121";
                 var foregroundColor = "#e5ffffff";
                 var foregroundDisabledColor = "#50ffffff";
+                var selectionColor1 = "#3b5464";
+                var selectionColor1Opacity05 = "#803b5464";
+                var selectionColor2 = "#36A2DB";
 
                 SetResource("Theme_Background", LighterBackgroundBrush);
                 SetResource("Theme_WhiteBackground", BackgroundBrush);
@@ -141,6 +158,7 @@ namespace StructuredLogViewer
                 SetResource(SystemColors.HighlightBrushKey, Brushes.SlateBlue);
                 SetResource(SystemColors.InactiveSelectionHighlightBrushKey, Brushes.DimGray);
                 SetResource(SystemColors.WindowBrushKey, BackgroundBrush);
+
                 SetResource(SystemColors.MenuBarBrushKey, LighterBackgroundBrush);
                 SetResource(SystemColors.MenuHighlightBrushKey, LighterBackgroundBrush);
                 SetResource(SystemColors.MenuTextBrushKey, ControlTextBrush);
@@ -149,6 +167,7 @@ namespace StructuredLogViewer
                 SetResource(SystemColors.MenuHighlightColorKey, LighterBackground);
                 SetResource(SystemColors.MenuTextColorKey, ControlText);
                 SetResource(SystemColors.MenuColorKey, Background);
+
                 SetResource("ImportStroke", GetBrush("#F08244"));
                 SetResource("NoImportStroke", GetBrush("#FFCCCC"));
                 SetResource("NoImportFill", GetBrush("#474138"));
@@ -156,6 +175,20 @@ namespace StructuredLogViewer
                 SetResource("AddItemStroke", GetBrush("#40B0B0"));
                 SetResource("NuGet", Brushes.DeepSkyBlue);
                 SetResource("\u01D6", GetBrush("#C0C0C0"));
+
+                menuStaticBackground = color800;
+                menuStaticBorder = color700;
+                menuStaticForeground = foregroundColor;
+                menuStaticSeparator = color500;
+                menuDisabledBackground = color850;
+                menuDisabledBorder = color800;
+                menuDisabledForeground = foregroundDisabledColor;
+                menuItemSelectedBackground = selectionColor1;
+                menuItemSelectedBorder = selectionColor2;
+                menuItemHighlightBackground = selectionColor1Opacity05;
+                menuItemHighlightBorder = selectionColor2;
+                menuItemHighlightDisabledBackground = color850;
+                menuItemHighlightDisabledBorder = color800;
 
                 scrollBarStaticBackground = color800;
                 scrollBarStaticBorder = color800;
@@ -200,6 +233,20 @@ namespace StructuredLogViewer
 
                 SetDefaultSystemColors();
             }
+
+            SetResource("Menu.Static.Background", GetBrush(menuStaticBackground));
+            SetResource("Menu.Static.Border", GetBrush(menuStaticBorder));
+            SetResource("Menu.Static.Foreground", GetBrush(menuStaticForeground));
+            SetResource("Menu.Static.Separator", GetBrush(menuStaticSeparator));
+            SetResource("Menu.Disabled.Background", GetBrush(menuDisabledBackground));
+            SetResource("Menu.Disabled.Border", GetBrush(menuDisabledBorder));
+            SetResource("Menu.Disabled.Foreground", GetBrush(menuDisabledForeground));
+            SetResource("MenuItem.Selected.Background", GetBrush(menuItemSelectedBackground));
+            SetResource("MenuItem.Selected.Border", GetBrush(menuItemSelectedBorder));
+            SetResource("MenuItem.Highlight.Background", GetBrush(menuItemHighlightBackground));
+            SetResource("MenuItem.Highlight.Border", GetBrush(menuItemHighlightBorder));
+            SetResource("MenuItem.Highlight.Disabled.Background", GetBrush(menuItemHighlightDisabledBackground));
+            SetResource("MenuItem.Highlight.Disabled.Border", GetBrush(menuItemHighlightDisabledBorder));
 
             SetResource("ScrollBar.Static.Background", GetBrush(scrollBarStaticBackground));
             SetResource("ScrollBar.Static.Border", GetBrush(scrollBarStaticBorder));
