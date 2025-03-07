@@ -78,6 +78,19 @@ namespace StructuredLogViewer
 
         public static void UpdateTheme()
         {
+            var optionMarkStaticBackground = "#FFFFFFFF";
+            var optionMarkStaticBorder = "#FF707070";
+            var optionMarkStaticGlyph = "#FF212121";
+            var optionMarkMouseOverBackground = "#FFF3F9FF";
+            var optionMarkMouseOverBorder = "#FF5593FF";
+            var optionMarkMouseOverGlyph = "#FF212121";
+            var optionMarkPressedBackground = "#FFD9ECFF";
+            var optionMarkPressedBorder = "#FF3C77DD";
+            var optionMarkPressedGlyph = "#FF212121";
+            var optionMarkDisabledBackground = "#FFE6E6E6";
+            var optionMarkDisabledBorder = "#FFBCBCBC";
+            var optionMarkDisabledGlyph = "#FF707070";
+
             var groupBoxOuterBorder = "White";
             var groupBoxMiddleBorder = "#D5DFD5";
             var groupBoxInnerBorder = "White";
@@ -180,6 +193,19 @@ namespace StructuredLogViewer
                 SetResource("NuGet", Brushes.DeepSkyBlue);
                 SetResource("\u01D6", GetBrush("#C0C0C0"));
 
+                optionMarkStaticBackground = color800;
+                optionMarkStaticBorder = color700;
+                optionMarkStaticGlyph = foregroundColor;
+                optionMarkMouseOverBackground = color700;
+                optionMarkMouseOverBorder = color600;
+                optionMarkMouseOverGlyph = foregroundColor;
+                optionMarkPressedBackground = color600;
+                optionMarkPressedBorder = color500;
+                optionMarkPressedGlyph = foregroundColor;
+                optionMarkDisabledBackground = color850;
+                optionMarkDisabledBorder = color800;
+                optionMarkDisabledGlyph = foregroundDisabledColor;
+
                 groupBoxOuterBorder = color850;
                 groupBoxMiddleBorder = color700;
                 groupBoxInnerBorder = color850;
@@ -241,6 +267,19 @@ namespace StructuredLogViewer
 
                 SetDefaultSystemColors();
             }
+
+            SetResource("OptionMark.Static.Background", GetBrush(optionMarkStaticBackground));
+            SetResource("OptionMark.Static.Border", GetBrush(optionMarkStaticBorder));
+            SetResource("OptionMark.Static.Glyph", GetBrush(optionMarkStaticGlyph));
+            SetResource("OptionMark.MouseOver.Background", GetBrush(optionMarkMouseOverBackground));
+            SetResource("OptionMark.MouseOver.Border", GetBrush(optionMarkMouseOverBorder));
+            SetResource("OptionMark.MouseOver.Glyph", GetBrush(optionMarkMouseOverGlyph));
+            SetResource("OptionMark.Pressed.Background", GetBrush(optionMarkPressedBackground));
+            SetResource("OptionMark.Pressed.Border", GetBrush(optionMarkPressedBorder));
+            SetResource("OptionMark.Pressed.Glyph", GetBrush(optionMarkPressedGlyph));
+            SetResource("OptionMark.Disabled.Background", GetBrush(optionMarkDisabledBackground));
+            SetResource("OptionMark.Disabled.Border", GetBrush(optionMarkDisabledBorder));
+            SetResource("OptionMark.Disabled.Glyph", GetBrush(optionMarkDisabledGlyph));
 
             SetResource("GroupBox.Static.OuterBorder", GetBrush(groupBoxOuterBorder));
             SetResource("GroupBox.Static.MiddleBorder", GetBrush(groupBoxMiddleBorder));

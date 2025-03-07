@@ -7,6 +7,7 @@
                     xmlns:s="clr-namespace:StructuredLogViewer">
 
   <ResourceDictionary.MergedDictionaries>
+    <ResourceDictionary Source="/StructuredLogViewer;component/themes/CheckBox.xaml" />
     <ResourceDictionary Source="/StructuredLogViewer;component/themes/GroupBox.xaml" />
     <ResourceDictionary Source="/StructuredLogViewer;component/themes/MenuItem.xaml" />
     <ResourceDictionary Source="/StructuredLogViewer;component/themes/ScrollBar.xaml" />
@@ -31,10 +32,6 @@
     <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" />
   </Style>
 
-  <Style x:Key="{x:Type CheckBox}" TargetType="{x:Type CheckBox}">
-    <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.WindowBrushKey}}" />
-  </Style>
-
   <Style x:Key="{x:Type ToolTip}" TargetType="{x:Type ToolTip}">
     <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"/>
     <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
@@ -42,11 +39,6 @@
 
   <Style x:Key="{x:Type Menu}" TargetType="{x:Type Menu}">
     <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.MenuBarBrushKey}}"/>
-    <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
-  </Style>
-
-  <Style x:Key="{x:Type MenuItem}" TargetType="{x:Type MenuItem}">
-    <Setter Property="Background" Value="Transparent"/>
     <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.MenuTextBrushKey}}"/>
   </Style>
 
