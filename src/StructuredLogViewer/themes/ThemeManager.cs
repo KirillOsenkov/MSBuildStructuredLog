@@ -91,6 +91,50 @@ namespace StructuredLogViewer
             var buttonDisabledBorder = "#FFADB2B5";
             var buttonDisabledForeground = "#FF838383";
 
+            var comboBoxStaticBackground = Gradient("#FFF0F0F0", "#FFE5E5E5");
+            var comboBoxStaticBorder = "#FFACACAC";
+            var comboBoxStaticGlyph = "#FF606060";
+            var comboBoxStaticEditableBackground = "White";
+            var comboBoxStaticEditableBorder = "#FFABADB3";
+            var comboBoxStaticEditableButtonBackground = "Transparent";
+            var comboBoxStaticEditableButtonBorder = "Transparent";
+
+            var comboBoxMouseOverBackground = Gradient("#FFECF4FC", "#FFDCECFC");
+            var comboBoxMouseOverBorder = "#FF7EB4EA";
+            var comboBoxMouseOverGlyph = "Black";
+            var comboBoxMouseOverEditableBackground = "White";
+            var comboBoxMouseOverEditableBorder = "#FF7EB4EA";
+            var comboBoxMouseOverEditableButtonBackground = Gradient("#FFEBF4FC", "#FFDCECFC");
+            var comboBoxMouseOverEditableButtonBorder = "#FF7EB4EA";
+
+            var comboBoxPressedBackground = Gradient("#FFDAECFC", "#FFC4E0FC");
+            var comboBoxPressedBorder = "#FF569DE5";
+            var comboBoxPressedGlyph = "Black";
+            var comboBoxPressedEditableBackground = "White";
+            var comboBoxPressedEditableBorder = "#FF569DE5";
+            var comboBoxPressedEditableButtonBackground = Gradient("#FFDAEBFC", "#FFC4E0FC");
+            var comboBoxPressedEditableButtonBorder = "#FF569DE5";
+
+            var comboBoxDisabledBackground = "#FFF0F0F0";
+            var comboBoxDisabledBorder = "#FFD9D9D9";
+            var comboBoxDisabledGlyph = "#FFBFBFBF";
+            var comboBoxDisabledEditableBackground = "#FFFFFFFF";
+            var comboBoxDisabledEditableBorder = "#FFBFBFBF";
+            var comboBoxDisabledEditableButtonBackground = "Transparent";
+            var comboBoxDisabledEditableButtonBorder = "Transparent";
+
+            var comboBoxItemItemsviewHoverBackground = "#1F26A0DA";
+            var comboBoxItemItemsviewHoverBorder = "#A826A0DA";
+            var comboBoxItemItemsviewSelectedBackground = "#3D26A0DA";
+            var comboBoxItemItemsviewSelectedBorder = "#FF26A0DA";
+            var comboBoxItemItemsviewSelectedHoverBackground = "#2E0080FF";
+            var comboBoxItemItemsviewSelectedHoverBorder = "#99006CD9";
+            var comboBoxItemItemsviewSelectedNoFocusBackground = "#3DDADADA";
+            var comboBoxItemItemsviewSelectedNoFocusBorder = "#FFDADADA";
+            var comboBoxItemItemsviewFocusBorder = "#FF26A0DA";
+            var comboBoxItemItemsviewHoverFocusBackground = "#5426A0DA";
+            var comboBoxItemItemsviewHoverFocusBorder = "#FF26A0DA";
+
             var contextMenuStaticBackground = "#F5F5F5";
             var contextMenuStaticBorderBrush = "#FF959595";
             var contextMenuHeaderBackground = "#F1F1F1";
@@ -226,6 +270,50 @@ namespace StructuredLogViewer
                 buttonDisabledBorder = color800;
                 buttonDisabledForeground = foregroundDisabledColor;
 
+                comboBoxStaticBackground = GetBrush(color800);
+                comboBoxStaticBorder = color700;
+                comboBoxStaticGlyph = foregroundColor;
+                comboBoxStaticEditableBackground = color800;
+                comboBoxStaticEditableBorder = color700;
+                comboBoxStaticEditableButtonBackground = "Transparent";
+                comboBoxStaticEditableButtonBorder = "Transparent";
+
+                comboBoxMouseOverBackground = GetBrush(color700);
+                comboBoxMouseOverBorder = color600;
+                comboBoxMouseOverGlyph = foregroundColor;
+                comboBoxMouseOverEditableBackground = color700;
+                comboBoxMouseOverEditableBorder = color600;
+                comboBoxMouseOverEditableButtonBackground = GetBrush(color700);
+                comboBoxMouseOverEditableButtonBorder = color600;
+
+                comboBoxPressedBackground = GetBrush(color600);
+                comboBoxPressedBorder = color500;
+                comboBoxPressedGlyph = foregroundColor;
+                comboBoxPressedEditableBackground = color600;
+                comboBoxPressedEditableBorder = color500;
+                comboBoxPressedEditableButtonBackground = GetBrush(color600);
+                comboBoxPressedEditableButtonBorder = color500;
+
+                comboBoxDisabledBackground = color850;
+                comboBoxDisabledBorder = color800;
+                comboBoxDisabledGlyph = foregroundDisabledColor;
+                comboBoxDisabledEditableBackground = "Transparent";
+                comboBoxDisabledEditableBorder = color800;
+                comboBoxDisabledEditableButtonBackground = color850;
+                comboBoxDisabledEditableButtonBorder = color850;
+
+                comboBoxItemItemsviewHoverBackground = selectionColor1;
+                comboBoxItemItemsviewHoverBorder = selectionColor2;
+                comboBoxItemItemsviewSelectedBackground = selectionColor1;
+                comboBoxItemItemsviewSelectedBorder = selectionColor2;
+                comboBoxItemItemsviewSelectedHoverBackground = selectionColor1;
+                comboBoxItemItemsviewSelectedHoverBorder = selectionColor2;
+                comboBoxItemItemsviewSelectedNoFocusBackground = "#3DDADADA";
+                comboBoxItemItemsviewSelectedNoFocusBorder = "#FFDADADA";
+                comboBoxItemItemsviewFocusBorder = selectionColor2;
+                comboBoxItemItemsviewHoverFocusBackground = selectionColor1;
+                comboBoxItemItemsviewHoverFocusBorder = selectionColor2;
+
                 contextMenuStaticBackground = color800;
                 contextMenuStaticBorderBrush = color700;
                 contextMenuHeaderBackground = color800;
@@ -319,6 +407,46 @@ namespace StructuredLogViewer
             SetResource("Button.Disabled.Border", GetBrush(buttonDisabledBorder));
             SetResource("Button.Disabled.Foreground", GetBrush(buttonDisabledForeground));
 
+            SetResource("ComboBox.Static.Background", comboBoxStaticBackground);
+            SetResource("ComboBox.Static.Border", GetBrush(comboBoxStaticBorder));
+            SetResource("ComboBox.Static.Glyph", GetBrush(comboBoxStaticGlyph));
+            SetResource("ComboBox.Static.Editable.Background", GetBrush(comboBoxStaticEditableBackground));
+            SetResource("ComboBox.Static.Editable.Border", GetBrush(comboBoxStaticEditableBorder));
+            SetResource("ComboBox.Static.Editable.Button.Background", GetBrush(comboBoxStaticEditableButtonBackground));
+            SetResource("ComboBox.Static.Editable.Button.Border", GetBrush(comboBoxStaticEditableButtonBorder));
+            SetResource("ComboBox.MouseOver.Background", comboBoxMouseOverBackground);
+            SetResource("ComboBox.MouseOver.Border", GetBrush(comboBoxMouseOverBorder));
+            SetResource("ComboBox.MouseOver.Glyph", GetBrush(comboBoxMouseOverGlyph));
+            SetResource("ComboBox.MouseOver.Editable.Background", GetBrush(comboBoxMouseOverEditableBackground));
+            SetResource("ComboBox.MouseOver.Editable.Border", GetBrush(comboBoxMouseOverEditableBorder));
+            SetResource("ComboBox.MouseOver.Editable.Button.Background", comboBoxMouseOverEditableButtonBackground);
+            SetResource("ComboBox.MouseOver.Editable.Button.Border", GetBrush(comboBoxMouseOverEditableButtonBorder));
+            SetResource("ComboBox.Pressed.Background", comboBoxPressedBackground);
+            SetResource("ComboBox.Pressed.Border", GetBrush(comboBoxPressedBorder));
+            SetResource("ComboBox.Pressed.Glyph", GetBrush(comboBoxPressedGlyph));
+            SetResource("ComboBox.Pressed.Editable.Background", GetBrush(comboBoxPressedEditableBackground));
+            SetResource("ComboBox.Pressed.Editable.Border", GetBrush(comboBoxPressedEditableBorder));
+            SetResource("ComboBox.Pressed.Editable.Button.Background", comboBoxPressedEditableButtonBackground);
+            SetResource("ComboBox.Pressed.Editable.Button.Border", GetBrush(comboBoxPressedEditableButtonBorder));
+            SetResource("ComboBox.Disabled.Background", GetBrush(comboBoxDisabledBackground));
+            SetResource("ComboBox.Disabled.Border", GetBrush(comboBoxDisabledBorder));
+            SetResource("ComboBox.Disabled.Glyph", GetBrush(comboBoxDisabledGlyph));
+            SetResource("ComboBox.Disabled.Editable.Background", GetBrush(comboBoxDisabledEditableBackground));
+            SetResource("ComboBox.Disabled.Editable.Border", GetBrush(comboBoxDisabledEditableBorder));
+            SetResource("ComboBox.Disabled.Editable.Button.Background", GetBrush(comboBoxDisabledEditableButtonBackground));
+            SetResource("ComboBox.Disabled.Editable.Button.Border", GetBrush(comboBoxDisabledEditableButtonBorder));
+            SetResource("ComboBoxItem.ItemsviewHover.Background", GetBrush(comboBoxItemItemsviewHoverBackground));
+            SetResource("ComboBoxItem.ItemsviewHover.Border", GetBrush(comboBoxItemItemsviewHoverBorder));
+            SetResource("ComboBoxItem.ItemsviewSelected.Background", GetBrush(comboBoxItemItemsviewSelectedBackground));
+            SetResource("ComboBoxItem.ItemsviewSelected.Border", GetBrush(comboBoxItemItemsviewSelectedBorder));
+            SetResource("ComboBoxItem.ItemsviewSelectedHover.Background", GetBrush(comboBoxItemItemsviewSelectedHoverBackground));
+            SetResource("ComboBoxItem.ItemsviewSelectedHover.Border", GetBrush(comboBoxItemItemsviewSelectedHoverBorder));
+            SetResource("ComboBoxItem.ItemsviewSelectedNoFocus.Background", GetBrush(comboBoxItemItemsviewSelectedNoFocusBackground));
+            SetResource("ComboBoxItem.ItemsviewSelectedNoFocus.Border", GetBrush(comboBoxItemItemsviewSelectedNoFocusBorder));
+            SetResource("ComboBoxItem.ItemsviewFocus.Border", GetBrush(comboBoxItemItemsviewFocusBorder));
+            SetResource("ComboBoxItem.ItemsviewHoverFocus.Background", GetBrush(comboBoxItemItemsviewHoverFocusBackground));
+            SetResource("ComboBoxItem.ItemsviewHoverFocus.Border", GetBrush(comboBoxItemItemsviewHoverFocusBorder));
+
             SetResource("ContextMenu.Static.Background", GetBrush(contextMenuStaticBackground));
             SetResource("ContextMenu.Static.BorderBrush", GetBrush(contextMenuStaticBorderBrush));
             SetResource("ContextMenu.Header.Background", GetBrush(contextMenuHeaderBackground));
@@ -381,6 +509,21 @@ namespace StructuredLogViewer
             SetResource("TabItem.MouseOver.Border", GetBrush(tabItemMouseOverBorder));
             SetResource("TabItem.MouseOver.Background", GetBrush(tabItemMouseOverBackground));
             SetResource("TabItem.MouseOver.Border", GetBrush(tabItemMouseOverBorder));
+        }
+
+        private static Brush Gradient(string from, string to)
+        {
+            var brush = new LinearGradientBrush
+            {
+                StartPoint = new Point(0, 0),
+                EndPoint = new Point(0, 1),
+                GradientStops =
+                {
+                    new GradientStop { Color = GetColor(from), Offset = 0.0 },
+                    new GradientStop { Color = GetColor(to), Offset = 0.0 },
+                }
+            };
+            return brush;
         }
 
         private static void SetDefaultSystemColors()
