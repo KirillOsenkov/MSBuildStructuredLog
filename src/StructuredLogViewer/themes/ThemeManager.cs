@@ -79,7 +79,7 @@ namespace StructuredLogViewer
 
         public static void UpdateTheme()
         {
-            var buttonStaticBackground = "#FFDDDDDD";
+            var buttonStaticBackground = "#FFF0F0F0";
             var buttonStaticBorder = "#FF707070";
             var buttonMouseOverBackground = "#FFBEE6FD";
             var buttonMouseOverBorder = "#FF3C7FB1";
@@ -178,7 +178,7 @@ namespace StructuredLogViewer
 
                 SetResource("Theme_Background", LighterBackgroundBrush);
                 SetResource("Theme_WhiteBackground", BackgroundBrush);
-                SetResource("Theme_ToolWindowBackground", LighterBackgroundBrush);
+                SetResource("Theme_ToolWindowBackground", BackgroundBrush);
                 SetResource("Theme_InfoBarBackground", GetBrush("#202040"));
 
                 UseAdonisDarkTheme = false;
