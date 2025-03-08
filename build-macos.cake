@@ -20,7 +20,8 @@ var buildDirs =
 var netCoreProject = new {
         Path = $"{netCoreAppsRoot}/{netCoreApp}",
         Name = netCoreApp,
-        Framework = XmlPeek($"{netCoreAppsRoot}/{netCoreApp}/{netCoreApp}.csproj", "//*[local-name()='TargetFramework']/text()")
+        Framework = XmlPeek($"{netCoreAppsRoot}/{netCoreApp}/{netCoreApp}.csproj", "//*[local-name()='TargetFramework']/text()"),
+        Runtimes = new[] { "osx-x64", "osx-arm64" }
     };
 
 
