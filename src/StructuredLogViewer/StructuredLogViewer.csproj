@@ -25,6 +25,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- needed for SystemDropShadowChrome used in ComboBox.xaml -->
+    <Reference Include="PresentationFramework.Aero2" Condition="$(TargetFramework) == 'net472'" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AdonisUI" />
     <PackageReference Include="AdonisUI.ClassicTheme" />
     <PackageReference Include="AvalonEdit" />

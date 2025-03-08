@@ -9,6 +9,7 @@
   <ResourceDictionary.MergedDictionaries>
     <ResourceDictionary Source="/StructuredLogViewer;component/themes/Button.xaml" />
     <ResourceDictionary Source="/StructuredLogViewer;component/themes/CheckBox.xaml" />
+    <ResourceDictionary Source="/StructuredLogViewer;component/themes/ContextMenu.xaml" />
     <ResourceDictionary Source="/StructuredLogViewer;component/themes/GroupBox.xaml" />
     <ResourceDictionary Source="/StructuredLogViewer;component/themes/MenuItem.xaml" />
     <ResourceDictionary Source="/StructuredLogViewer;component/themes/ScrollBar.xaml" />

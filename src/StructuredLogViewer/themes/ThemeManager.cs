@@ -91,6 +91,12 @@ namespace StructuredLogViewer
             var buttonDisabledBorder = "#FFADB2B5";
             var buttonDisabledForeground = "#FF838383";
 
+            var contextMenuStaticBackground = "#F5F5F5";
+            var contextMenuStaticBorderBrush = "#FF959595";
+            var contextMenuHeaderBackground = "#F1F1F1";
+            var contextMenuHeaderLeftBorderBrush = "#E2E3E3";
+            var contextMenuHeaderRightBorderBrush = "White";
+
             var optionMarkStaticBackground = "#FFFFFFFF";
             var optionMarkStaticBorder = "#FF707070";
             var optionMarkStaticGlyph = "#FF212121";
@@ -172,6 +178,7 @@ namespace StructuredLogViewer
                 var color900 = "#212121";
                 var foregroundColor = "#e5ffffff";
                 var foregroundDisabledColor = "#50ffffff";
+                var foregroundSecondaryColor = "#b3ffffff";
                 var selectionColor1 = "#3b5464";
                 var selectionColor1Opacity05 = "#803b5464";
                 var selectionColor2 = "#36A2DB";
@@ -218,6 +225,12 @@ namespace StructuredLogViewer
                 buttonDisabledBackground = color850;
                 buttonDisabledBorder = color800;
                 buttonDisabledForeground = foregroundDisabledColor;
+
+                contextMenuStaticBackground = color800;
+                contextMenuStaticBorderBrush = color700;
+                contextMenuHeaderBackground = color800;
+                contextMenuHeaderLeftBorderBrush = foregroundSecondaryColor;
+                contextMenuHeaderRightBorderBrush = "Transparent";
 
                 optionMarkStaticBackground = color800;
                 optionMarkStaticBorder = color700;
@@ -305,6 +318,12 @@ namespace StructuredLogViewer
             SetResource("Button.Disabled.Background", GetBrush(buttonDisabledBackground));
             SetResource("Button.Disabled.Border", GetBrush(buttonDisabledBorder));
             SetResource("Button.Disabled.Foreground", GetBrush(buttonDisabledForeground));
+
+            SetResource("ContextMenu.Static.Background", GetBrush(contextMenuStaticBackground));
+            SetResource("ContextMenu.Static.BorderBrush", GetBrush(contextMenuStaticBorderBrush));
+            SetResource("ContextMenu.Header.Background", GetBrush(contextMenuHeaderBackground));
+            SetResource("ContextMenu.Header.LeftBorderBrush", GetBrush(contextMenuHeaderLeftBorderBrush));
+            SetResource("ContextMenu.Header.RightBorderBrush", GetBrush(contextMenuHeaderRightBorderBrush));
 
             SetResource("OptionMark.Static.Background", GetBrush(optionMarkStaticBackground));
             SetResource("OptionMark.Static.Border", GetBrush(optionMarkStaticBorder));
