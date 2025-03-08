@@ -219,7 +219,6 @@ namespace StructuredLogViewer
                 var color700 = "#616161";
                 var color800 = "#424242";
                 var color850 = "#303030";
-                var color900 = "#212121";
                 var foregroundColor = "#e5ffffff";
                 var foregroundDisabledColor = "#50ffffff";
                 var foregroundSecondaryColor = "#b3ffffff";
