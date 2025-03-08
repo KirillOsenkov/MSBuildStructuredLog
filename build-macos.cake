@@ -21,7 +21,7 @@ var netCoreProject = new {
         Path = $"{netCoreAppsRoot}/{netCoreApp}",
         Name = netCoreApp,
         Framework = XmlPeek($"{netCoreAppsRoot}/{netCoreApp}/{netCoreApp}.csproj", "//*[local-name()='TargetFramework']/text()"),
-        Runtimes = XmlPeek($"{netCoreAppsRoot}/{netCoreApp}/{netCoreApp}.csproj", "//*[local-name()='RuntimeIdentifiers']/text()").Split(';')
+        Runtimes = new[] { "osx-x64", "osx-arm64" }
     };
 
 
