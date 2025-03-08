@@ -57,7 +57,7 @@ Windows:
  * Visual Studio 2019
 
 Mac:
- * .NET 6 SDK
+ * .NET 8 SDK
 
 ## Usage:
 
