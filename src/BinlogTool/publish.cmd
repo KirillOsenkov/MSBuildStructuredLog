@@ -1,1 +1,2 @@
-dotnet publish -r win-x64 --self-contained=false /p:Configuration=Release /p:PublishSingleFile=true /bl:publish.binlog
+rem dotnet publish -r win-x64 --self-contained=false /p:Configuration=Release /p:PublishSingleFile=true /bl:publish.binlog
+msbuild /p:Configuration=Release /t:PublishBinlogToolExe /p:RuntimeIdentifier=win-x64
