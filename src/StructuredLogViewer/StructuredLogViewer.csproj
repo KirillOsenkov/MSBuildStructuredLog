@@ -38,7 +38,6 @@
     <PackageReference Include="Mono.Cecil" />
     <PackageReference Include="Nerdbank.GitVersioning" PrivateAssets="all" />
     <PackageReference Include="squirrel.windows" GeneratePathProperty="true" />
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="all" />
     <PackageReference Include="AutomaticGraphLayout.WpfGraphControl" />
   </ItemGroup>
 

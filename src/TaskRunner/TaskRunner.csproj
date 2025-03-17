@@ -30,7 +30,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Build.Locator" ExcludeAssets="build" />
     <PackageReference Include="Microsoft.Build" />
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" />
   </ItemGroup>
 
 </Project>
