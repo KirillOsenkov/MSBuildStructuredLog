@@ -31,6 +31,7 @@
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
     <!-- never update Cecil as this is the version required by Squirrel -->
     <PackageVersion Include="Mono.Cecil" Version="0.9.6.1" />
+    <PackageVersion Include="Moq" Version="4.18.1" />
     <PackageVersion Include="MSBuild.StructuredLogger" Version="2.2.386" />
     <PackageVersion Include="Nerdbank.GitVersioning" Version="3.6.141" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />

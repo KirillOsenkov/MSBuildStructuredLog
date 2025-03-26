@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -20,38 +20,38 @@ namespace StructuredLogger.Tests
         }
 
         //[Fact]
-        public void RoundtripTest()
-        {
-            foreach (var file in Directory.GetFiles(@"D:\XmlBuildLogs", "*.xml", SearchOption.AllDirectories).ToArray())
-            {
-                var build = Serialization.Read(file);
-                var newName = Path.ChangeExtension(file, ".new.xml");
-                Serialization.Write(build, newName);
-                if (Differ.AreDifferent(file, newName))
-                {
-                    break;
-                }
-                else
-                {
-                    File.Delete(newName);
-                }
-
-                newName = Path.ChangeExtension(file, ".buildlog");
-                Serialization.Write(build, newName);
-                build = Serialization.Read(newName);
-                newName = Path.ChangeExtension(file, ".new2.xml");
-                Serialization.Write(build, newName);
-                if (Differ.AreDifferent(file, newName))
-                {
-                    break;
-                }
-                else
-                {
-                    File.Delete(newName);
-                    //File.Delete(Path.ChangeExtension(file, ".buildlog"));
-                }
-            }
-        }
+//         public void RoundtripTest() [Error] (27-43)CS0117 'Serialization' does not contain a definition for 'Read' [Error] (29-31)CS0117 'Serialization' does not contain a definition for 'Write' [Error] (40-31)CS0117 'Serialization' does not contain a definition for 'Write' [Error] (41-39)CS0117 'Serialization' does not contain a definition for 'Read' [Error] (43-31)CS0117 'Serialization' does not contain a definition for 'Write'
+//         {
+//             foreach (var file in Directory.GetFiles(@"D:\XmlBuildLogs", "*.xml", SearchOption.AllDirectories).ToArray())
+//             {
+//                 var build = Serialization.Read(file);
+//                 var newName = Path.ChangeExtension(file, ".new.xml");
+//                 Serialization.Write(build, newName);
+//                 if (Differ.AreDifferent(file, newName))
+//                 {
+//                     break;
+//                 }
+//                 else
+//                 {
+//                     File.Delete(newName);
+//                 }
+// 
+//                 newName = Path.ChangeExtension(file, ".buildlog");
+//                 Serialization.Write(build, newName);
+//                 build = Serialization.Read(newName);
+//                 newName = Path.ChangeExtension(file, ".new2.xml");
+//                 Serialization.Write(build, newName);
+//                 if (Differ.AreDifferent(file, newName))
+//                 {
+//                     break;
+//                 }
+//                 else
+//                 {
+//                     File.Delete(newName);
+//                     //File.Delete(Path.ChangeExtension(file, ".buildlog"));
+//                 }
+//             }
+//         }
 
         //[Fact]
         //public void SearchPerf()

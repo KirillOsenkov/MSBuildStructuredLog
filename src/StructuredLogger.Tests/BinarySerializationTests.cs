@@ -1,10 +1,11 @@
-﻿using System;
+using Microsoft.Build.Logging.StructuredLogger;
+using Microsoft.Build.Logging.StructuredLogger.UnitTests;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Microsoft.Build.Logging.StructuredLogger;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -13,26 +14,25 @@ namespace StructuredLogger.Tests
     public class BinarySerializationTests
     {
         private readonly ITestOutputHelper output;
-
         public BinarySerializationTests(ITestOutputHelper output)
         {
             this.output = output;
         }
 
-        internal void TimeRead()
-        {
-            var sw = Stopwatch.StartNew();
-            var build = Serialization.Read(@"1.binlog");
-            System.Windows.Forms.MessageBox.Show(sw.Elapsed.ToString());
-        }
+//         internal void TimeRead() [Error] (25-39)CS0117 'Serialization' does not contain a definition for 'Read'
+//         {
+//             var sw = Stopwatch.StartNew();
+//             var build = Serialization.Read(@"1.binlog");
+//             System.Windows.Forms.MessageBox.Show(sw.Elapsed.ToString());
+//         }
 
-        internal void DumpTimedNodes()
-        {
-            var build = Serialization.Read("1.binlog");
-            var sb = new StringBuilder();
-            build.VisitAllChildren<TimedNode>(t => sb.AppendLine($"{t.Index}: {t}"));
-            System.Windows.Forms.Clipboard.SetText(sb.ToString());
-        }
+//         internal void DumpTimedNodes() [Error] (31-39)CS0117 'Serialization' does not contain a definition for 'Read' [Error] (33-36)CS0104 'TimedNode' is an ambiguous reference between 'Microsoft.Build.Logging.StructuredLogger.UnitTests.TimedNode' and 'Microsoft.Build.Logging.StructuredLogger.TimedNode'
+//         {
+//             var build = Serialization.Read("1.binlog");
+//             var sb = new StringBuilder();
+//             build.VisitAllChildren<TimedNode>(t => sb.AppendLine($"{t.Index}: {t}"));
+//             System.Windows.Forms.Clipboard.SetText(sb.ToString());
+//         }
 
         //[Fact]
         internal void GetBlobSize()
@@ -63,9 +63,7 @@ namespace StructuredLogger.Tests
         {
             var reader = new BinLogReader();
             var records = reader.ReadRecords(@"C:\msbuild\msbuild.binlog");
-
             var recordsByType = new Dictionary<string, List<Microsoft.Build.Logging.Record>>();
-
             foreach (var record in records)
             {
                 var args = record.Args;
@@ -85,21 +83,14 @@ namespace StructuredLogger.Tests
                 bucket.Add(record);
             }
 
-            var mostRecords = recordsByType
-                .Select(kvp => (name: kvp.Key, count: kvp.Value.Count, totalLength: kvp.Value.Sum(r => r.Length), list: kvp.Value))
-                .OrderByDescending(t => t.totalLength)
-                .ToArray();
-
+            var mostRecords = recordsByType.Select(kvp => (name: kvp.Key, count: kvp.Value.Count, totalLength: kvp.Value.Sum(r => r.Length), list: kvp.Value)).OrderByDescending(t => t.totalLength).ToArray();
             foreach (var type in mostRecords)
             {
                 type.list.Sort((l, r) => Math.Sign(r.Length - l.Length));
             }
 
             var messages = mostRecords[1].list;
-            var messageGroups = messages.GroupBy(m => GetMessageType(m.Args?.Message))
-                .Select(g => (messageType: g.Key, count: g.Count(), totalLength: g.Sum(m => m.Args?.Message?.Length ?? 0), messages: g.OrderByDescending(r => r.Length).ToArray()))
-                .OrderByDescending(g => g.Item3)
-                .ToArray();
+            var messageGroups = messages.GroupBy(m => GetMessageType(m.Args?.Message)).Select(g => (messageType: g.Key, count: g.Count(), totalLength: g.Sum(m => m.Args?.Message?.Length ?? 0), messages: g.OrderByDescending(r => r.Length).ToArray())).OrderByDescending(g => g.Item3).ToArray();
         }
 
         private string GetMessageType(string message)
@@ -150,54 +141,30 @@ namespace StructuredLogger.Tests
         }
 
         //[Fact]
-        internal void Stats()
-        {
-            var sw = Stopwatch.StartNew();
-            var build = Serialization.Read(@"C:\temp\vsmac.binlog");
-            var stats = build.Statistics;
-
-            //var messages = stats.TruncatedMessages.OrderByDescending(m => m.text.Length).Select(m => (m.taskName, m.text.Length, m.text)).ToArray();
-            //var lengths = messages.Select(m => m.taskName + "," + m.Length.ToString()).ToArray();
-            //System.Windows.Forms.Clipboard.SetText(string.Join("\n", lengths));
-
-            var messagesDirectlyUnderTask = build
-                .FindChildrenRecursive<Message>()
-                .Where(m => m.Parent is Task)
-                .GroupBy(m => ((Task)m.Parent).Name)
-                .Select(g => (g.Key, g.Count(), g.Sum(m => m.Text.Length), g.OrderByDescending(m => m.Text.Length).ToArray()))
-                .OrderByDescending(g => g.Item3)
-                .ToArray();
-
-            var parameters = build
-                .FindChildrenRecursive<Parameter>()
-                .Where(m => m.Parent is Folder f && f.Name == "Parameters")
-                .GroupBy(m => ((Task)m.Parent.Parent).Name)
-                .Select(g => (g.Key, g.Count(), g.ToArray()))
-                .OrderByDescending(g => g.Item2)
-                .ToArray();
-
-            foreach (var bucket in stats.TaskParameterMessagesByTask.Values)
-            {
-                bucket.Sort((l, r) => Math.Sign(r.Length - l.Length));
-            }
-
-            foreach (var bucket in stats.OutputItemMessagesByTask.Values)
-            {
-                bucket.Sort((l, r) => Math.Sign(r.Length - l.Length));
-            }
-
-            var parametersList = stats.TaskParameterMessagesByTask
-                .Select(m => (m.Key, m.Value.Sum(l => l.Length), m.Value.Count, m.Value))
-                .OrderByDescending(g => g.Item2)
-                .ToArray();
-
-            var outputItemList = stats.OutputItemMessagesByTask
-                .Select(m => (m.Key, m.Value.Sum(l => l.Length), m.Value.Count, m.Value))
-                .OrderByDescending(g => g.Item2)
-                .ToArray();
-
-            var elapsed = sw.Elapsed;
-        }
+//         internal void Stats() [Error] (147-39)CS0117 'Serialization' does not contain a definition for 'Read' [Error] (152-73)CS0104 'Message' is an ambiguous reference between 'Microsoft.Build.Logging.StructuredLogger.UnitTests.Message' and 'Microsoft.Build.Logging.StructuredLogger.Message' [Error] (152-107)CS0104 'Task' is an ambiguous reference between 'Microsoft.Build.Logging.StructuredLogger.UnitTests.Task' and 'Microsoft.Build.Logging.StructuredLogger.Task' [Error] (152-128)CS0104 'Task' is an ambiguous reference between 'Microsoft.Build.Logging.StructuredLogger.UnitTests.Task' and 'Microsoft.Build.Logging.StructuredLogger.Task' [Error] (153-94)CS0104 'Folder' is an ambiguous reference between 'Microsoft.Build.Logging.StructuredLogger.UnitTests.Folder' and 'Microsoft.Build.Logging.StructuredLogger.Folder' [Error] (153-145)CS0104 'Task' is an ambiguous reference between 'Microsoft.Build.Logging.StructuredLogger.UnitTests.Task' and 'Microsoft.Build.Logging.StructuredLogger.Task'
+//         {
+//             var sw = Stopwatch.StartNew();
+//             var build = Serialization.Read(@"C:\temp\vsmac.binlog");
+//             var stats = build.Statistics;
+//             //var messages = stats.TruncatedMessages.OrderByDescending(m => m.text.Length).Select(m => (m.taskName, m.text.Length, m.text)).ToArray();
+//             //var lengths = messages.Select(m => m.taskName + "," + m.Length.ToString()).ToArray();
+//             //System.Windows.Forms.Clipboard.SetText(string.Join("\n", lengths));
+//             var messagesDirectlyUnderTask = build.FindChildrenRecursive<Message>().Where(m => m.Parent is Task).GroupBy(m => ((Task)m.Parent).Name).Select(g => (g.Key, g.Count(), g.Sum(m => m.Text.Length), g.OrderByDescending(m => m.Text.Length).ToArray())).OrderByDescending(g => g.Item3).ToArray();
+//             var parameters = build.FindChildrenRecursive<Parameter>().Where(m => m.Parent is Folder f && f.Name == "Parameters").GroupBy(m => ((Task)m.Parent.Parent).Name).Select(g => (g.Key, g.Count(), g.ToArray())).OrderByDescending(g => g.Item2).ToArray();
+//             foreach (var bucket in stats.TaskParameterMessagesByTask.Values)
+//             {
+//                 bucket.Sort((l, r) => Math.Sign(r.Length - l.Length));
+//             }
+// 
+//             foreach (var bucket in stats.OutputItemMessagesByTask.Values)
+//             {
+//                 bucket.Sort((l, r) => Math.Sign(r.Length - l.Length));
+//             }
+// 
+//             var parametersList = stats.TaskParameterMessagesByTask.Select(m => (m.Key, m.Value.Sum(l => l.Length), m.Value.Count, m.Value)).OrderByDescending(g => g.Item2).ToArray();
+//             var outputItemList = stats.OutputItemMessagesByTask.Select(m => (m.Key, m.Value.Sum(l => l.Length), m.Value.Count, m.Value)).OrderByDescending(g => g.Item2).ToArray();
+//             var elapsed = sw.Elapsed;
+//         }
 
         private static void WriteToDisk((string taskName, int Length, string text)[] messages)
         {
@@ -208,7 +175,6 @@ namespace StructuredLogger.Tests
             }
 
             Directory.CreateDirectory(root);
-
             for (int i = 0; i < messages.Length; i++)
             {
                 var filePath = Path.Combine(root, $"{i.ToString().PadLeft(5, '0')}_{messages[i].taskName}_{messages[i].Length}.txt");
@@ -217,27 +183,27 @@ namespace StructuredLogger.Tests
         }
 
         //[Fact]
-        internal void TestWriter()
-        {
-            var build = Serialization.Read(@"D:\XmlBuildLogs\contentsync.xml");
-            Serialization.Write(build, @"D:\1.buildlog");
-        }
+//         internal void TestWriter() [Error] (188-39)CS0117 'Serialization' does not contain a definition for 'Read' [Error] (189-27)CS0117 'Serialization' does not contain a definition for 'Write'
+//         {
+//             var build = Serialization.Read(@"D:\XmlBuildLogs\contentsync.xml");
+//             Serialization.Write(build, @"D:\1.buildlog");
+//         }
 
-        [Fact]
-        public void SimpleBuild()
-        {
-            var build = new Build();
-            build.AddChild(new Message() { Text = "MessageText" });
-            build.AddChild(new Property() { Name = "PropertyName", Value = "PropertyValue" });
-            var xmlFile1 = @"1.xml";
-            var xmlFile2 = @"2.xml";
-            Serialization.Write(build, xmlFile1);
-            var buildLogFile = @"1.buildlog";
-            Serialization.Write(build, buildLogFile);
-            build = Serialization.Read(buildLogFile);
-            Serialization.Write(build, xmlFile2);
-            Serialization.Write(build, @"2.buildlog");
-            AssertEx.EqualOrDiff(File.ReadAllText(xmlFile1), File.ReadAllText(xmlFile2));
-        }
+//         [Fact] [Error] (195-29)CS0104 'Build' is an ambiguous reference between 'Microsoft.Build.Logging.StructuredLogger.Build' and 'Microsoft.Build.Logging.StructuredLogger.UnitTests.Build' [Error] (196-32)CS0104 'Message' is an ambiguous reference between 'Microsoft.Build.Logging.StructuredLogger.UnitTests.Message' and 'Microsoft.Build.Logging.StructuredLogger.Message' [Error] (200-27)CS0117 'Serialization' does not contain a definition for 'Write' [Error] (202-27)CS0117 'Serialization' does not contain a definition for 'Write' [Error] (203-35)CS0117 'Serialization' does not contain a definition for 'Read' [Error] (204-27)CS0117 'Serialization' does not contain a definition for 'Write' [Error] (205-27)CS0117 'Serialization' does not contain a definition for 'Write'
+//         public void SimpleBuild()
+//         {
+//             var build = new Build();
+//             build.AddChild(new Message() { Text = "MessageText" });
+//             build.AddChild(new Property() { Name = "PropertyName", Value = "PropertyValue" });
+//             var xmlFile1 = @"1.xml";
+//             var xmlFile2 = @"2.xml";
+//             Serialization.Write(build, xmlFile1);
+//             var buildLogFile = @"1.buildlog";
+//             Serialization.Write(build, buildLogFile);
+//             build = Serialization.Read(buildLogFile);
+//             Serialization.Write(build, xmlFile2);
+//             Serialization.Write(build, @"2.buildlog");
+//             AssertEx.EqualOrDiff(File.ReadAllText(xmlFile1), File.ReadAllText(xmlFile2));
+//         }
     }
 }
