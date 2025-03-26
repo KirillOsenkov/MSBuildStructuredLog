@@ -109,35 +109,41 @@ namespace StructuredLogger.Utils
 
             outputBinlog.Initialize(originalEventsSource);
 
-            var inputStream = new FileStream(inputFileName, FileMode.Open, FileAccess.Read, FileShare.Read);
-
             CancellationTokenSource cts = null;
-            if (Progress != null)
+            try
             {
-                cts = new CancellationTokenSource();
-                long streamLength = inputStream.Length;
-                System.Threading.Tasks.Task.Run(async () =>
+                using var inputStream = new FileStream(inputFileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+
+                if (Progress != null)
                 {
-                    while (!cts.IsCancellationRequested)
+                    cts = new CancellationTokenSource();
+                    long streamLength = inputStream.Length;
+                    System.Threading.Tasks.Task.Run(async () =>
                     {
-                        await System.Threading.Tasks.Task.Delay(200, cts.Token);
-                        Progress.Report((double)inputStream.Position / streamLength);
-                    }
-                }, cts.Token);
+                        while (!cts.IsCancellationRequested)
+                        {
+                            await System.Threading.Tasks.Task.Delay(200, cts.Token);
+                            Progress.Report((double)inputStream.Position / streamLength);
+                        }
+                    }, cts.Token);
+                }
+
+                originalEventsSource.Replay(inputStream, CancellationToken.None);
             }
-
-            originalEventsSource.Replay(inputStream, CancellationToken.None);
-            outputBinlog.Shutdown();
-
-            // TODO: error handling
-
-            if (Progress != null)
+            finally
             {
-                cts.Cancel();
-                Progress.Report(1.0);
-            }
+                outputBinlog.Shutdown();
 
-            ((IBuildEventArgsReaderNotifications)originalEventsSource).StringReadDone -= HandleStringRead;
+                // TODO: error handling
+
+                if (Progress != null)
+                {
+                    cts?.Cancel();
+                    Progress.Report(1.0);
+                }
+
+                ((IBuildEventArgsReaderNotifications)originalEventsSource).StringReadDone -= HandleStringRead;
+            }
 
             void HandleStringRead(StringReadEventArgs args)
             {

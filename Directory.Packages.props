@@ -28,6 +28,7 @@
     <PackageVersion Include="Microsoft.Build.Tasks.Core" Version="$(MSBuildPackageVersion)" />
     <PackageVersion Include="Microsoft.Build.Utilities.Core" Version="$(MSBuildPackageVersion)" />
     <PackageVersion Include="Microsoft.IO.Redist" Version="6.1.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
     <!-- never update Cecil as this is the version required by Squirrel -->
     <PackageVersion Include="Mono.Cecil" Version="0.9.6.1" />
