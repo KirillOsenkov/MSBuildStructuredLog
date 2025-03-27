@@ -1,4 +1,4 @@
-using Microsoft.Build.Framework;
+﻿using Microsoft.Build.Framework;
 using StructuredLogger.BinaryLogger;
 using System;
 using Xunit;
@@ -19,7 +19,8 @@ namespace StructuredLogger.BinaryLogger.UnitTests
         private readonly string _testMessage = "Test message";
         private readonly string _testHelpKeyword = "HELP001";
         private readonly string _testSenderName = "TestSender";
-        private readonly MessageImportance _testImportance = MessageImportance.High;
+        // Cannot be defined here as vstest runner would fail to load the tests
+        // private readonly MessageImportance _testImportance = MessageImportance.High;
 
         /// <summary>
         /// Tests that constructing the event args with all parameters sets the properties correctly.
@@ -41,7 +42,7 @@ namespace StructuredLogger.BinaryLogger.UnitTests
                 message: _testMessage,
                 helpKeyword: _testHelpKeyword,
                 senderName: _testSenderName,
-                importance: _testImportance);
+                importance: MessageImportance.High);
 
             // Assert
             Assert.Equal(_testPropertyName, eventArgs.PropertyName);
@@ -53,7 +54,7 @@ namespace StructuredLogger.BinaryLogger.UnitTests
             Assert.Equal(_testMessage, eventArgs.Message);
             Assert.Equal(_testHelpKeyword, eventArgs.HelpKeyword);
             Assert.Equal(_testSenderName, eventArgs.SenderName);
-            Assert.Equal(_testImportance, eventArgs.Importance);
+            Assert.Equal(MessageImportance.High, eventArgs.Importance);
         }
 
         /// <summary>
@@ -108,7 +109,7 @@ namespace StructuredLogger.BinaryLogger.UnitTests
                 message: _testMessage,
                 helpKeyword: _testHelpKeyword,
                 senderName: _testSenderName,
-                importance: _testImportance);
+                importance: MessageImportance.High);
 
             var newPropertyName = "NewPropertyName";
             var newPropertyValue = "NewPropertyValue";

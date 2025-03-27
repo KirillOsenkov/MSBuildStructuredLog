@@ -1,4 +1,4 @@
-using Microsoft.Build.Framework;
+﻿using Microsoft.Build.Framework;
 using StructuredLogger.BinaryLogger;
 using Xunit;
 
@@ -18,7 +18,8 @@ namespace StructuredLogger.BinaryLogger.UnitTests
         private readonly string _validMessage;
         private readonly string _validHelpKeyword;
         private readonly string _validSenderName;
-        private readonly MessageImportance _validImportance;
+        // Cannot be defined here as vstest runner would fail to load the tests
+        // private readonly MessageImportance _validImportance;
 
         /// <summary>
         /// Initializes test data used in the tests.
@@ -34,7 +35,7 @@ namespace StructuredLogger.BinaryLogger.UnitTests
             _validMessage = "Test Message";
             _validHelpKeyword = "HelpKeyword123";
             _validSenderName = "UnitTest";
-            _validImportance = MessageImportance.Low;
+            // _validImportance = MessageImportance.Low;
         }
 
         /// <summary>
@@ -55,7 +56,7 @@ namespace StructuredLogger.BinaryLogger.UnitTests
                 _validMessage,
                 _validHelpKeyword,
                 _validSenderName,
-                _validImportance);
+                MessageImportance.Low);
 
             // Assert - check properties defined in ExtendedPropertyReassignmentEventArgs
             Assert.Equal(_validPropertyName, eventArgs.PropertyName);
@@ -69,7 +70,7 @@ namespace StructuredLogger.BinaryLogger.UnitTests
             Assert.Equal(_validMessage, eventArgs.Message);
             Assert.Equal(_validHelpKeyword, eventArgs.HelpKeyword);
             Assert.Equal(_validSenderName, eventArgs.SenderName);
-            Assert.Equal(_validImportance, eventArgs.Importance);
+            Assert.Equal(MessageImportance.Low, eventArgs.Importance);
         }
 
         /// <summary>
@@ -94,7 +95,7 @@ namespace StructuredLogger.BinaryLogger.UnitTests
                 _validMessage,
                 nullHelpKeyword,
                 nullSenderName,
-                _validImportance);
+                MessageImportance.Low);
 
             // Assert
             Assert.Equal(_validPropertyName, eventArgs.PropertyName);
@@ -122,7 +123,7 @@ namespace StructuredLogger.BinaryLogger.UnitTests
                 _validMessage,
                 _validHelpKeyword,
                 _validSenderName,
-                _validImportance);
+                MessageImportance.Low);
 
             string updatedPropertyName = "UpdatedProperty";
             string updatedPreviousValue = "UpdatedOldValue";

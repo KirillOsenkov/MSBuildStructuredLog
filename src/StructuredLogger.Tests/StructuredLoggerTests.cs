@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -20,7 +20,7 @@ namespace Microsoft.Build.Logging.StructuredLogger.UnitTests
         public void Initialize_NullParameters_ThrowsLoggerException()
         {
             // Arrange
-            var logger = new TestableStructuredLogger();
+            var logger = new StructuredLogger();
             logger.Parameters = null;
             var mockEventSource = new Mock<IEventSource>();
 
@@ -36,7 +36,7 @@ namespace Microsoft.Build.Logging.StructuredLogger.UnitTests
         public void Initialize_MultipleParameters_ThrowsLoggerException()
         {
             // Arrange
-            var logger = new TestableStructuredLogger();
+            var logger = new StructuredLogger();
             logger.Parameters = "\"log1.log\";\"log2.log\"";
             var mockEventSource = new Mock<IEventSource>();
 
@@ -52,7 +52,7 @@ namespace Microsoft.Build.Logging.StructuredLogger.UnitTests
         public void Initialize_ValidParameters_EnvironmentVariablesSetAndConstructionInitialized()
         {
             // Arrange
-            var logger = new TestableStructuredLogger();
+            var logger = new StructuredLogger();
             // Using a valid parameter with a single file path wrapped in quotes.
             logger.Parameters = "\"test.log\"";
             // Set SaveLogToDisk to false to bypass file writing in Shutdown.
@@ -94,7 +94,7 @@ namespace Microsoft.Build.Logging.StructuredLogger.UnitTests
         public void Shutdown_SaveLogToDiskFalse_SetsCurrentBuild()
         {
             // Arrange
-            var logger = new TestableStructuredLogger();
+            var logger = new StructuredLogger();
             logger.Parameters = "\"test.log\"";
             StructuredLogger.SaveLogToDisk = false;
             var mockEventSource = new Mock<IEventSource>();
@@ -126,27 +126,27 @@ namespace Microsoft.Build.Logging.StructuredLogger.UnitTests
         }
     }
 
-    /// <summary>
-    /// A testable subclass of StructuredLogger to expose the Parameters property.
-    /// Assumes that the base Logger class has a public or protected property "Parameters".
-    /// </summary>
-    public class TestableStructuredLogger : StructuredLogger
-    {
-        /// <summary>
-        /// Exposes the Parameters property for testing purposes.
-        /// </summary>
-        public new string Parameters { get; set; }
-        
-        /// <summary>
-        /// Overrides Initialize to set the Parameters property in base Logger.
-        /// </summary>
-        /// <param name="eventSource">The event source to initialize with.</param>
-        public override void Initialize(IEventSource eventSource)
-        {
-            // Manually assign the Parameters property in the base Logger.
-            // Depending on the actual implementation of Logger, this might need to be set differently.
-            base.Parameters = this.Parameters;
-            base.Initialize(eventSource);
-        }
-    }
+    ///// <summary>
+    ///// A testable subclass of StructuredLogger to expose the Parameters property.
+    ///// Assumes that the base Logger class has a public or protected property "Parameters".
+    ///// </summary>
+    //public class TestableStructuredLogger : StructuredLogger
+    //{
+    //    /// <summary>
+    //    /// Exposes the Parameters property for testing purposes.
+    //    /// </summary>
+    //    public new string Parameters { get; set; }
+
+    //    /// <summary>
+    //    /// Overrides Initialize to set the Parameters property in base Logger.
+    //    /// </summary>
+    //    /// <param name="eventSource">The event source to initialize with.</param>
+    //    public override void Initialize(IEventSource eventSource)
+    //    {
+    //        // Manually assign the Parameters property in the base Logger.
+    //        // Depending on the actual implementation of Logger, this might need to be set differently.
+    //        base.Parameters = this.Parameters;
+    //        base.Initialize(eventSource);
+    //    }
+    //}
 }
