@@ -49,6 +49,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        public bool ShowParentTargetText => OriginalNode == null && ParentTarget != null;
+
         public string ParentTargetText
         {
             get

@@ -125,6 +125,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public int EvaluationId { get; set; }
 
+        /// <summary>
+        /// Used for checking whether TargetSkipped.OriginalBuildEventContext is valid and
+        /// points to a valid project from this build.
+        /// </summary>
+        public int ProjectInstanceId { get; set; }
+
         public string EvaluationText { get; set; } = "";
 
         public IDictionary<string, string> GlobalProperties { get; set; } = ImmutableDictionary<string, string>.Empty;

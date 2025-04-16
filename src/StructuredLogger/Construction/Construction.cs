@@ -384,43 +384,51 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     args.BuildReason);
             }
 
+            Project originalProject = null;
+
+            // In case where target build results were retrieved from cache, and the original build
+            // happened in another build, the OriginalBuildEventContext will be invalid.
+            // Detect this case and don't create a link to the random unrelated project.
             if (originalBuildEventContext != null && originalBuildEventContext.ProjectContextId != BuildEventContext.InvalidProjectContextId)
             {
-                var originalProject = GetProject(originalBuildEventContext.ProjectContextId);
-                if (originalProject != null)
+                originalProject = GetProject(originalBuildEventContext.ProjectContextId);
+                if (originalProject != null && originalProject.ProjectInstanceId != originalBuildEventContext.ProjectInstanceId)
                 {
-                    target.ParentTarget = messageText;
-                    if (originalBuildEventContext.TargetId != -1 &&
-                        originalProject.GetTargetById(originalBuildEventContext.TargetId) is Target originalTarget)
+                    originalProject = null;
+                    messageText = $"{messageText} Target results likely loaded from cache.";
+                    messageText = Intern(messageText);
+                }
+            }
+
+            target.ParentTarget = messageText;
+
+            if (originalProject != null)
+            {
+                if (originalBuildEventContext.TargetId != -1 &&
+                    originalProject.GetTargetById(originalBuildEventContext.TargetId) is Target originalTarget)
+                {
+                    target.OriginalNode = originalTarget;
+                }
+                else
+                {
+                    // the original target was skipped because of false condition, so its target id == -1
+                    // Need to look it up by name, if unambiguous
+                    var candidates = originalProject
+                        .Children
+                        .OfType<Target>()
+                        .Where(t => t.Name == targetName)
+                        .ToArray();
+                    if (candidates.Length == 1)
                     {
-                        target.OriginalNode = originalTarget;
+                        originalTarget = candidates[0];
                     }
                     else
                     {
-                        // the original target was skipped because of false condition, so its target id == -1
-                        // Need to look it up by name, if unambiguous
-                        var candidates = originalProject
-                            .Children
-                            .OfType<Target>()
-                            .Where(t => t.Name == targetName)
-                            .ToArray();
-                        if (candidates.Length == 1)
-                        {
-                            originalTarget = candidates[0];
-                        }
-                        else
-                        {
-                            originalTarget = null;
-                        }
-
-                        target.OriginalNode = (TimedNode)originalTarget ?? originalProject;
+                        originalTarget = null;
                     }
+
+                    target.OriginalNode = (TimedNode)originalTarget ?? originalProject;
                 }
-            }
-            else
-            {
-                var messageNode = new Message { Text = messageText };
-                target.AddChild(messageNode);
             }
 
             target.Skipped = true;
@@ -589,7 +597,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             AddPropertiesSorted(propertiesFolder, projectEvaluation, projectEvaluationFinished.Properties);
                             AddItems(itemsNode, projectEvaluationFinished.Items);
                         }
-                    } 
+                    }
                     else if (e is BuildCanceledEventArgs buildCanceledEventArgs)
                     {
                         // If the build was canceled we want to show a message in the build log view.
@@ -883,7 +891,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 node.AddChild(metadataFolder);
             }
-        }   
+        }
 
         private void HandleException(Exception ex)
         {
@@ -922,6 +930,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Project result = _projectIdToProjectMap.GetOrAdd(projectId,
                 id => CreateProject(id));
             result.NodeId = args.BuildEventContext.NodeId;
+            result.ProjectInstanceId = args.BuildEventContext.ProjectInstanceId;
 
             UpdateProject(result, args);
 

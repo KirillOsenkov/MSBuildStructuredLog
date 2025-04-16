@@ -379,13 +379,19 @@
       <TextBlock Text="{Binding Name}" />
       <TextBlock x:Name="duration" Text="{Binding DurationText}" Margin="6,0,0,0" ToolTip="{Binding ToolTip}" />
       <controls:NodeHyperlinkControl
+            x:Name="hyperlink"
             Text="{Binding ParentTargetText}"
             Foreground="{DynamicResource TargetStroke}"
             ToolTip="{Binding ParentTargetTooltip}"
             ToolTipService.InitialShowDelay="500"
             ToolTipService.ShowDuration="300000" />
+      <TextBlock x:Name="parentTargetText" Text="{Binding ParentTarget}" Visibility="Collapsed" />
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
+      <DataTrigger Binding="{Binding ShowParentTargetText}" Value="True">
+        <Setter TargetName="hyperlink" Property="Visibility" Value="Collapsed" />
+        <Setter TargetName="parentTargetText" Property="Visibility" Value="Visible" />
+      </DataTrigger>
       <DataTrigger Binding="{Binding IsLowRelevance}" Value="True">
         <Setter TargetName="targetRoot" Property="Opacity" Value="0.25" />
       </DataTrigger>
