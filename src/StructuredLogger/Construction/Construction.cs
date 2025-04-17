@@ -351,20 +351,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             string targetName = Intern(args.TargetName);
             string messageText = args.Message;
-
             var originalBuildEventContext = args.OriginalBuildEventContext;
-            var skipReason = args.SkipReason;
-            if ((skipReason == TargetSkipReason.PreviouslyBuiltSuccessfully ||
-                skipReason == TargetSkipReason.PreviouslyBuiltUnsuccessfully) && originalBuildEventContext != null)
-            {
-                var prefix = "Target \"" + targetName + "\" "; // trim the Target Name text since the node will already display that
-                if (messageText.StartsWith(prefix, StringComparison.Ordinal))
-                {
-                    messageText = messageText.Substring(prefix.Length);
-                }
-            }
 
-            messageText = Intern(messageText);
+            bool addMessageAsAChildNode = true;
+
+            var skipReason = args.SkipReason;
 
             Target target = null;
 
@@ -396,42 +387,68 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     originalProject = null;
                     messageText = $"{messageText} Target results likely loaded from cache.";
-                    messageText = Intern(messageText);
                 }
             }
-
-            target.ParentTarget = messageText;
 
             if (originalProject != null)
             {
-                if (originalBuildEventContext.TargetId != -1 &&
-                    originalProject.GetTargetById(originalBuildEventContext.TargetId) is Target originalTarget)
+                var originalNode = FindOriginalTarget(originalBuildEventContext.TargetId, originalProject, targetName);
+                if (originalNode != null && (originalNode is not Target || originalNode.Name == targetName))
                 {
-                    target.OriginalNode = originalTarget;
-                }
-                else
-                {
-                    // the original target was skipped because of false condition, so its target id == -1
-                    // Need to look it up by name, if unambiguous
-                    var candidates = originalProject
-                        .Children
-                        .OfType<Target>()
-                        .Where(t => t.Name == targetName)
-                        .ToArray();
-                    if (candidates.Length == 1)
+                    var prefix = "Target \"" + targetName + "\" "; // trim the Target Name text since the node will already display that
+                    if (messageText.StartsWith(prefix, StringComparison.Ordinal))
                     {
-                        originalTarget = candidates[0];
-                    }
-                    else
-                    {
-                        originalTarget = null;
+                        messageText = messageText.Substring(prefix.Length);
                     }
 
-                    target.OriginalNode = (TimedNode)originalTarget ?? originalProject;
+                    target.OriginalNode = originalNode;
+                    target.ParentTarget = messageText;
+                    addMessageAsAChildNode = false;
                 }
             }
 
+            messageText = Intern(messageText);
+
+            if (addMessageAsAChildNode)
+            {
+                var messageNode = new Message { Text = messageText };
+                target.AddChild(messageNode);
+            }
+            else
+            {
+                target.ParentTarget = messageText;
+            }
+
             target.Skipped = true;
+        }
+
+        private TimedNode FindOriginalTarget(int targetId, Project originalProject, string targetName)
+        {
+            if (targetId != -1 &&
+                originalProject.GetTargetById(targetId) is Target originalTarget)
+            {
+                return originalTarget;
+            }
+            else
+            {
+                // the original target was skipped because of false condition, so its target id == -1
+                // Need to look it up by name, if unambiguous
+                var candidates = originalProject
+                    .Children
+                    .OfType<Target>()
+                    .Where(t => t.Name == targetName)
+                    .ToArray();
+                if (candidates.Length == 1)
+                {
+                    originalTarget = candidates[0];
+                }
+                else
+                {
+                    originalTarget = null;
+                }
+
+                return (TimedNode)originalTarget ?? originalProject;
+            }
         }
 
         public void TaskStarted(object sender, TaskStartedEventArgs args)

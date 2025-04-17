@@ -24,7 +24,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 if (string.IsNullOrEmpty(ParentTarget))
                 {
-                    return string.Empty;
+                    return null;
                 }
 
                 if (OriginalNode != null)
@@ -48,8 +48,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return cause;
             }
         }
-
-        public bool ShowParentTargetText => OriginalNode == null && ParentTarget != null;
 
         public string ParentTargetText
         {
