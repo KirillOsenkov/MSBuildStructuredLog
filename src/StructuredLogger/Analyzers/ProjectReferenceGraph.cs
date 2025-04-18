@@ -222,7 +222,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     if (references.TryGetValue(project, out var bucket))
                     {
-                        if (bucket.Contains(singleProject))
+                        if (bucket.Contains(singleProject, StringComparer.OrdinalIgnoreCase))
                         {
                             referencing.Add(project);
                         }
