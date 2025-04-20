@@ -186,6 +186,11 @@ namespace StructuredLogViewer
                         parent = InsertParent(map, parent, grandparent);
                         parent = InsertParent(map, parent, parentItem);
                     }
+
+                    if (resultNode is Property property && property.Parent is Folder { Name: "Global" } global)
+                    {
+                        parent = InsertParent(map, parent, global);
+                    }
                 }
 
                 if (resultNode == null || resultNode.Parent != null)
