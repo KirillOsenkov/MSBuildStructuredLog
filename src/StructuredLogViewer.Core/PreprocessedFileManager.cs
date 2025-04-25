@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Logging.StructuredLogger;
 using Bucket = System.Collections.Generic.List<StructuredLogViewer.ProjectImport>;
@@ -168,7 +169,7 @@ namespace StructuredLogViewer
                 return null;
             }
 
-            return () => ShowPreprocessed(sourceFilePath, preprocessEvaluationContext);
+            return () => ShowPreprocessed(null, sourceFilePath, preprocessEvaluationContext);
         }
 
         public class PreprocessContext
@@ -457,10 +458,18 @@ namespace StructuredLogViewer
                 return;
             }
 
-            ShowPreprocessed(preprocessable.RootFilePath, GetNodeEvaluationKey(preprocessable));
+            ShowPreprocessed(preprocessable, preprocessable.RootFilePath, GetNodeEvaluationKey(preprocessable));
         }
 
-        public void ShowPreprocessed(string sourceFilePath, string projectContext)
+        public class TargetNode
+        {
+            public string Name;
+            public List<TargetNode> BeforeTargets = new ();
+            public List<TargetNode> AfterTargets = new();
+            public List<TargetNode> DependsOnTargets = new();
+        }
+
+        public void ShowPreprocessed(IPreprocessable preprocessable, string sourceFilePath, string projectContext)
         {
             if (sourceFilePath == null || projectContext == null)
             {
@@ -473,8 +482,138 @@ namespace StructuredLogViewer
                 return;
             }
 
+            var props = new Dictionary<string, string>();
+
+            var targetNodes = new Dictionary<string, TargetNode>(StringComparer.OrdinalIgnoreCase);
+
+            if (preprocessable is ProjectEvaluation eval)
+            {
+                Folder properties = eval.FindChild<Folder>(Strings.Properties);
+                if (properties != null)
+                {
+                    foreach (var property in properties.Children.OfType<Property>())
+                    {
+                        props[property.Name] = property.Value;
+                    }
+                }
+
+                var xdoc = XDocument.Parse(preprocessedText);
+                var targets = xdoc
+                    .DescendantNodes()
+                    .OfType<XElement>()
+                    .Where(element => element.Name.LocalName == "Target")
+                    .ToArray();
+
+                foreach (var target in targets)
+                {
+                    var name = GetAttribute(target, "Name");
+                    var node = new TargetNode()
+                    {
+                        Name = name
+                    };
+
+                    targetNodes[name] = node;
+                }
+
+                foreach (var target in targets)
+                {
+                    var name = GetAttribute(target, "Name");
+                    var beforeTargetsText = GetAttribute(target, "BeforeTargets");
+                    var afterTargetsText = GetAttribute(target, "AfterTargets");
+                    var dependsOnTargetsText = GetAttribute(target, "DependsOnTargets");
+
+                    var beforeTargets = Expand(beforeTargetsText, props);
+                    var afterTargets = Expand(afterTargetsText, props);
+                    var dependsOnTargets = Expand(dependsOnTargetsText, props);
+
+                    var node = GetTarget(name);
+
+                    foreach (var before in beforeTargets)
+                    {
+                        var dest = GetTarget(before);
+                        dest.BeforeTargets.Insert(0, node);
+                    }
+
+                    foreach (var after in afterTargets)
+                    {
+                        var dest = GetTarget(after);
+                        dest.AfterTargets.Insert(0, node);
+                    }
+
+                    foreach (var dep in dependsOnTargets)
+                    {
+                        var dest = GetTarget(dep);
+                        node.DependsOnTargets.Add(dest);
+                    }
+                }
+
+                var sb = new StringBuilder();
+                sb.AppendLine("digraph d {");
+
+                foreach (var targetNode in targetNodes)
+                {
+                    var node = targetNode.Value;
+                    var name = node.Name;
+                    sb.AppendLine($"\"{name}\"");
+
+                    foreach (var before in node.BeforeTargets)
+                    {
+                        sb.AppendLine($"\"{name}\" -> \"{before.Name}\" [label = before]");
+                    }
+
+                    foreach (var after in node.AfterTargets)
+                    {
+                        sb.AppendLine($"\"{name}\" -> \"{after.Name}\" [label = after]");
+                    }
+
+                    foreach (var depends in node.DependsOnTargets)
+                    {
+                        sb.AppendLine($"\"{name}\" -> \"{depends.Name}\" [label = depends]");
+                    }
+                }
+
+                sb.AppendLine("}");
+
+                preprocessedText = sb.ToString() + "\r\n\r\n\r\n" + preprocessedText;
+            }
+
+            TargetNode GetTarget(string text)
+            {
+                if (!targetNodes.TryGetValue(text, out var node))
+                {
+                    node = new TargetNode { Name = text };
+                    targetNodes.Add(text, node);
+                }
+
+                return node;
+            }
+
             var filePath = SettingsService.WriteContentToTempFileAndGetPath(preprocessedText, ".xml");
             DisplayFile?.Invoke(filePath);
+        }
+
+
+        private string[] Expand(string expression, Dictionary<string, string> props)
+        {
+            if (expression == null)
+            {
+                return Array.Empty<string>();
+            }
+
+            if (expression.Contains("$("))
+            {
+                foreach (var kvp in props)
+                {
+                    expression = expression.Replace("$(" + kvp.Key + ")", kvp.Value);
+                }
+            }
+
+            return expression.Split([';'], StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToArray();
+        }
+
+        private static string GetAttribute(XElement element, string attributeName)
+        {
+            return element.Attribute(XName.Get(attributeName))?.Value;
         }
 
         public bool CanPreprocess(IPreprocessable preprocessable)
