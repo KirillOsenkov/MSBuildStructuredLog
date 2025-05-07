@@ -7,15 +7,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
     {
         string ProjectFile { get; set; }
         string TargetFramework { get; set; }
+        bool IsOuterProject { get; set; }
         string Platform { get; set; }
         string Configuration { get; set; }
     }
 
     public static class ProjectOrEvaluationHelper
     {
-        private static (string, string, string) GetKey(IProjectOrEvaluation p)
+        private static (string, bool, string, string) GetKey(IProjectOrEvaluation p)
         {
-            return (p.TargetFramework, p.Configuration, p.Platform);
+            return (p.TargetFramework, p.IsOuterProject, p.Configuration, p.Platform);
         }
 
         private const string separator = ",";
@@ -25,7 +26,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             AdornmentStringCache.Clear();
         }
 
-        private static Dictionary<(string, string, string), string> AdornmentStringCache = new();
+        private static Dictionary<(string, bool, string, string), string> AdornmentStringCache = new();
 
         public static bool ShowConfigurationAndPlatform;
 
@@ -54,6 +55,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (project.TargetFramework is { Length: > 0 } targetFramework)
             {
+                if (project.IsOuterProject && !targetFramework.Contains(";"))
+                {
+                    targetFramework = "TargetFrameworks: " + targetFramework;
+                }
+
                 strings.Add(targetFramework);
             }
 

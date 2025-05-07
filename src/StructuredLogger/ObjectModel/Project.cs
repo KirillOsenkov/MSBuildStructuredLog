@@ -118,6 +118,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public string AdornmentString => this.GetAdornmentString();
 
         public string TargetFramework { get; set; }
+        public bool IsOuterProject { get; set; }
 
         public string Platform { get; set; }
 

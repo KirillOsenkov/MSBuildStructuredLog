@@ -21,6 +21,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public string TargetFramework { get; set; }
 
+        public bool IsOuterProject { get; set; }
+
         public string Platform { get; set; }
 
         public string Configuration { get; set; }

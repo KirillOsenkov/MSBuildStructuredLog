@@ -1338,16 +1338,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 parent.EnsureChildrenCapacity(collection.Count);
             }
 
-            bool tfvFound = false;
-            bool platformFound = false;
-            bool configFound = false;
+            string targetFramework = null;
+            string targetFrameworks = null;
+            string targetFrameworkVersion = null;
 
             foreach (var kvp in properties)
             {
+                string propertyName = kvp.Key;
+                string propertyValue = kvp.Value;
+
                 var property = new Property
                 {
-                    Name = SoftIntern(kvp.Key),
-                    Value = SoftIntern(kvp.Value)
+                    Name = SoftIntern(propertyName),
+                    Value = SoftIntern(propertyValue)
                 };
 
                 parent.Children.Add(property); // don't use AddChild for performance
@@ -1355,38 +1358,45 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 if (project != null)
                 {
-                    if (!tfvFound && string.Equals(kvp.Key, Strings.TargetFramework, StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals(propertyName, Strings.TargetFramework, StringComparison.OrdinalIgnoreCase))
                     {
-                        project.TargetFramework = kvp.Value;
-                        tfvFound = true;
+                        targetFramework = propertyValue;
                     }
-                    else if (!tfvFound && string.Equals(kvp.Key, Strings.TargetFrameworks, StringComparison.OrdinalIgnoreCase))
+                    else if (string.Equals(propertyName, Strings.TargetFrameworks, StringComparison.OrdinalIgnoreCase))
                     {
-                        // we want TargetFramework to take precedence over TargetFrameworks when both are present
-                        if (string.IsNullOrEmpty(project.TargetFramework) && !string.IsNullOrEmpty(kvp.Value))
-                        {
-                            project.TargetFramework = kvp.Value;
-                            tfvFound = true;
-                        }
+                        targetFrameworks = propertyValue;
                     }
-                    // If neither of the above are there - look for the old project system
-                    else if (!tfvFound && project.TargetFramework is null && string.Equals(kvp.Key, Strings.TargetFrameworkVersion, StringComparison.OrdinalIgnoreCase))
+                    else if (string.Equals(propertyName, Strings.TargetFrameworkVersion, StringComparison.OrdinalIgnoreCase))
                     {
                         // Note this is untranslated, so e.g. "v4.6.2" instead of "net462" - this is intentional as it
                         // renders the badge for all projects, but you can still use this difference to tell what is/isn't an SDK project.
-                        project.TargetFramework = kvp.Value;
-                        tfvFound = true;
+                        targetFrameworkVersion = propertyValue;
                     }
-                    else if (!platformFound && string.Equals(kvp.Key, Strings.Platform, StringComparison.OrdinalIgnoreCase))
+                    else if (string.Equals(propertyName, Strings.Platform, StringComparison.OrdinalIgnoreCase))
                     {
-                        project.Platform = kvp.Value;
-                        platformFound = true;
+                        project.Platform = propertyValue;
                     }
-                    else if (!configFound && string.Equals(kvp.Key, Strings.Configuration, StringComparison.OrdinalIgnoreCase))
+                    else if (string.Equals(propertyName, Strings.Configuration, StringComparison.OrdinalIgnoreCase))
                     {
-                        project.Configuration = kvp.Value;
-                        configFound = true;
+                        project.Configuration = propertyValue;
                     }
+                }
+            }
+
+            if (project != null)
+            {
+                if (targetFramework != null)
+                {
+                    project.TargetFramework = targetFramework;
+                }
+                else if (targetFrameworks != null)
+                {
+                    project.IsOuterProject = true;
+                    project.TargetFramework = targetFrameworks;
+                }
+                else if (targetFrameworkVersion != null)
+                {
+                    project.TargetFramework = targetFrameworkVersion;
                 }
             }
         }

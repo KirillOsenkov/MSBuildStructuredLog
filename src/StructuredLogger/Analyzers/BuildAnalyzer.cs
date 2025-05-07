@@ -315,6 +315,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (evaluation != null)
                 {
                     project.TargetFramework = evaluation.TargetFramework;
+                    project.IsOuterProject = evaluation.IsOuterProject;
                     project.Platform = evaluation.Platform;
                     project.Configuration = evaluation.Configuration;
 
