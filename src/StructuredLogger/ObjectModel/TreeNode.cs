@@ -98,6 +98,29 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private static int CompareByToString(BaseNode o1, BaseNode o2)
             => string.Compare(o1.ToString(), o2.ToString(), StringComparison.OrdinalIgnoreCase);
 
+        public static int CompareByDuration(BaseNode o1, BaseNode o2)
+        {
+            TimedNode timedNode1 = o1 as TimedNode;
+            TimedNode timedNode2 = o2 as TimedNode;
+
+            if (timedNode1 != null && timedNode2 != null)
+            {
+                return timedNode2.Duration.CompareTo(timedNode1.Duration);
+            }
+            else if (timedNode1 != null)
+            {
+                return -1;
+            }
+            else if (timedNode2 != null)
+            {
+                return 1;
+            }
+            else
+            {
+                return CompareByToString(o1, o2);
+            }
+        }
+
         public void SortChildren(Comparison<BaseNode> comparison = null)
         {
             if (children == null || children.Count < 2)

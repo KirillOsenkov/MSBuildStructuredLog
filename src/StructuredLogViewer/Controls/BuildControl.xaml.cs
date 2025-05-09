@@ -52,6 +52,7 @@ namespace StructuredLogViewer.Controls
         private MenuItem goToTracingItem;
         private MenuItem copyChildrenItem;
         private MenuItem sortChildrenItem;
+        private MenuItem sortChildrenByDurationItem;
         private MenuItem filterChildrenItem;
         private MenuItem copyNameItem;
         private MenuItem copyValueItem;
@@ -218,6 +219,7 @@ namespace StructuredLogViewer.Controls
             goToTracingItem = new MenuItem() { Header = "Tracing" };
             copyChildrenItem = new MenuItem() { Header = "Copy children" };
             sortChildrenItem = new MenuItem() { Header = "Sort children" };
+            sortChildrenByDurationItem = new MenuItem() { Header = "Sort children by duration" };
             filterChildrenItem = new MenuItem() { Header = "Filter children (Ctrl+F)" };
             copyNameItem = new MenuItem() { Header = "Copy name" };
             copyValueItem = new MenuItem() { Header = "Copy value" };
@@ -256,6 +258,7 @@ namespace StructuredLogViewer.Controls
             goToTracingItem.Click += (s, a) => GoToTracing();
             copyChildrenItem.Click += (s, a) => CopyChildren();
             sortChildrenItem.Click += (s, a) => SortChildren();
+            sortChildrenByDurationItem.Click += (s, a) => SortChildrenByDuration();
             filterChildrenItem.Click += (s, a) => FilterChildren();
             copyNameItem.Click += (s, a) => CopyName();
             copyValueItem.Click += (s, a) => CopyValue();
@@ -314,6 +317,7 @@ namespace StructuredLogViewer.Controls
             contextMenu.AddItem(separator1);
 
             contextMenu.AddItem(sortChildrenItem);
+            contextMenu.AddItem(sortChildrenByDurationItem);
             contextMenu.AddItem(filterChildrenItem);
             contextMenu.AddItem(hideItem);
 
@@ -461,6 +465,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             goToTracingItem = null;
             copyChildrenItem = null;
             sortChildrenItem = null;
+            sortChildrenByDurationItem = null;
             filterChildrenItem = null;
             copyNameItem = null;
             copyValueItem = null;
@@ -940,6 +945,7 @@ Recent (");
             viewSubtreeTextItem.Visibility = hasChildrenVisibility;
             copyChildrenItem.Visibility = hasChildrenVisibility;
             sortChildrenItem.Visibility = hasChildrenVisibility;
+            sortChildrenByDurationItem.Visibility = hasChildrenVisibility;
             filterChildrenItem.Visibility = hasChildrenVisibility;
             preprocessItem.Visibility = node is IPreprocessable p && preprocessedFileManager.CanPreprocess(p) ? Visibility.Visible : Visibility.Collapsed;
             searchNuGetItem.Visibility = node is IProjectOrEvaluation ? Visibility.Visible : Visibility.Collapsed;
@@ -2112,6 +2118,15 @@ Recent (");
             if (selectedItem is TreeNode treeNode)
             {
                 treeNode.SortChildren();
+            }
+        }
+
+        public void SortChildrenByDuration()
+        {
+            var selectedItem = treeView.SelectedItem;
+            if (selectedItem is TreeNode treeNode)
+            {
+                treeNode.SortChildren(TreeNode.CompareByDuration);
             }
         }
 
