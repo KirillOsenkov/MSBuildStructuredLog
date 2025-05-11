@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogViewer.Controls
@@ -41,7 +42,29 @@ namespace StructuredLogViewer.Controls
                     if (project != null)
                     {
                         var parentTarget = project.FindFirstDescendant<Target>(t => t.Name == parentTargetName && t.Project == project);
-                        return parentTarget;
+                        if (parentTarget != null)
+                        {
+                            return parentTarget;
+                        }
+
+                        var buildControl = GetBuildControl();
+                        if (buildControl != null)
+                        {
+                            string text = buildControl.TryFindDanglingTarget(project, parentTargetName);
+                            if (text != null)
+                            {
+                                var reason = target.TargetBuiltReason switch
+                                {
+                                    TargetBuiltReason.BeforeTargets => "[Before] ",
+                                    TargetBuiltReason.DependsOn => "[DependsOn] ",
+                                    TargetBuiltReason.AfterTargets => "[After] ",
+                                    _ => ""
+                                };
+                                text = $" {text} → {reason}{target.Name}";
+                                DestinationNodeGetter = null;
+                                Text = text;
+                            }
+                        }
                     }
                 }
             }
@@ -133,6 +156,12 @@ namespace StructuredLogViewer.Controls
         private void Control_MouseLeave(object sender, MouseEventArgs e)
         {
             this.TextDecorations = null;
+
+            if (DestinationNodeGetter == null)
+            {
+                return;
+            }
+
             Foreground = defaultForeground ?? Brushes.LightBlue;
         }
     }

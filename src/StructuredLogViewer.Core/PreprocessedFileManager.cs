@@ -262,12 +262,9 @@ namespace StructuredLogViewer
             }
 
             var importMap = GetImportMap(projectEvaluationContext);
-            if (importMap == null)
-            {
-                return string.Empty;
-            }
 
-            if (importMap.TryGetValue(sourceFilePath, out var imports) &&
+            if (importMap != null &&
+                importMap.TryGetValue(sourceFilePath, out var imports) &&
                 imports.Count > 0 &&
                 !string.IsNullOrWhiteSpace(sourceText.Text))
             {
@@ -294,7 +291,10 @@ namespace StructuredLogViewer
                     result = result.Substring(sourceText.Lines[0].Length);
                 }
 
-                context.Position += result.Length;
+                if (context != null)
+                {
+                    context.Position += result.Length;
+                }
             }
 
             preprocessedFileCache[preprocessedFileCacheKey] = result;

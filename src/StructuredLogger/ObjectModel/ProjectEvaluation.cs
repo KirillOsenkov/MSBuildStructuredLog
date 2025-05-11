@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -108,5 +109,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public IEnumerable<Import> GetAllImportsTransitive()
             => importsMap.Values;
+
+        public Dictionary<string, string> GetProperties()
+        {
+            var properties = new Dictionary<string, string>();
+
+            Folder propertiesFolder = FindChild<Folder>(Strings.Properties);
+            if (propertiesFolder != null)
+            {
+                foreach (var property in propertiesFolder.Children.OfType<Property>())
+                {
+                    properties[property.Name] = property.Value;
+                }
+            }
+
+            return properties;
+        }
     }
 }

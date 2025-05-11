@@ -1343,6 +1343,46 @@ Recent (");
             }
         }
 
+        public string TryFindDanglingTarget(Project project, string targetName)
+        {
+            if (project.GetEvaluation(Build) is ProjectEvaluation evaluation)
+            {
+                var graph = GetTargetGraph(evaluation);
+
+                var roots = project.EntryTargets != null && project.EntryTargets.Any()
+                    ? project.EntryTargets
+                    : graph.RootTargets;
+
+                var path = graph.FindPathFromEntryTargets(targetName, roots);
+                var result = string.Join(" → ", path.Reverse().Select(t => $"[{t.relationship}] {t.targetName}"));
+                return result;
+            }
+
+            return null;
+        }
+
+        public TargetGraph GetTargetGraph(ProjectEvaluation evaluation)
+        {
+            if (Build.TargetGraphManager.GetTargetGraph(evaluation) is TargetGraph graph)
+            {
+                return graph;
+            }
+
+            var preprocessedText = this.preprocessedFileManager.GetPreprocessedText(
+                evaluation.SourceFilePath,
+                PreprocessedFileManager.GetEvaluationKey(evaluation));
+            if (preprocessedText == null)
+            {
+                return null;
+            }
+
+            var properties = evaluation.GetProperties();
+
+            graph = TargetGraph.ParseXml(preprocessedText, properties);
+            Build.TargetGraphManager.AddTargetGraph(evaluation, graph);
+            return graph;
+        }
+
         /// <summary>
         /// This is needed as a workaround for a weird bug. When the breadcrumb spans multiple lines
         /// and we click on an item on the first line, it truncates the breadcrumb up to that item.

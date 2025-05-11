@@ -14,6 +14,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
     public static class ProjectOrEvaluationHelper
     {
+        public static ProjectEvaluation GetEvaluation(this IProjectOrEvaluation projectOrEvaluation, Build build)
+        {
+            if (projectOrEvaluation is ProjectEvaluation evaluation)
+            {
+                return evaluation;
+            }
+
+            if (projectOrEvaluation is Project project && (evaluation = build.FindEvaluation(project.EvaluationId)) != null)
+            {
+                return evaluation;
+            }
+
+            return null;
+        }
+
         private static (string, bool, string, string) GetKey(IProjectOrEvaluation p)
         {
             return (p.TargetFramework, p.IsOuterProject, p.Configuration, p.Platform);
