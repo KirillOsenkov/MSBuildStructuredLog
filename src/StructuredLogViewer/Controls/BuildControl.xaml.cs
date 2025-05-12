@@ -2529,10 +2529,10 @@ Recent (");
             string project = "";
             if (matcher.ProjectMatchers.Count == 1)
             {
-                project = matcher.ProjectMatchers[0].Query;
+                project = $" project({matcher.ProjectMatchers[0].Query})";
             }
 
-            text = $"$target \"{name}\" project({project})";
+            text = $"$target \"{name}\"{project}";
             searchLogControl.SearchText = text;
             return true;
         }
