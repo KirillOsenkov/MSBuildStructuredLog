@@ -14,6 +14,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private readonly Dictionary<SensitiveDataKind, ISensitiveDataDetector> _detectors;
         private readonly Dictionary<string, Dictionary<SensitiveDataKind, List<SecretDescriptor>>> _secretCache = new();
 
+        public bool AugmentOtherResults => false;
+
         public SecretsSearch(Build build)
         {
             _build = build ?? throw new ArgumentNullException(nameof(build));

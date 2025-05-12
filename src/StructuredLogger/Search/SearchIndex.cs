@@ -279,6 +279,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             foreach (var searchExtension in build.SearchExtensions)
             {
+                if (searchExtension.AugmentOtherResults)
+                {
+                    continue;
+                }
+
                 if (searchExtension.TryGetResults(matcher, results, MaxResults))
                 {
                     return results;
@@ -372,6 +377,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
 
                     searching = SearchChunk(results, matcher, terms, searching, chunk);
+                }
+            }
+
+            foreach (var searchExtension in build.SearchExtensions)
+            {
+                if (searchExtension.AugmentOtherResults)
+                {
+                    searchExtension.TryGetResults(matcher, results, MaxResults);
                 }
             }
 

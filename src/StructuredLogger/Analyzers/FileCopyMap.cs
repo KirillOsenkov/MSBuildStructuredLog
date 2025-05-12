@@ -63,6 +63,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private static readonly string AltDirectorySeparator = Path.AltDirectorySeparatorChar.ToString();
 
         private Dictionary<string, DirectoryData> directories = new Dictionary<string, DirectoryData>(StringComparer.OrdinalIgnoreCase);
+        public bool AugmentOtherResults => false;
 
         public event Action<FileData, IList<SearchResult>> FoundSingleFileCopy;
 

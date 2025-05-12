@@ -52,6 +52,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public Build Build { get; }
 
+        public bool AugmentOtherResults => false;
+
         public NuGetSearch(Build build)
         {
             Build = build;

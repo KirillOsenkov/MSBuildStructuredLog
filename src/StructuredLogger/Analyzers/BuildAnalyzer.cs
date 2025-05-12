@@ -40,6 +40,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             build.FileCopyMap = fileCopyMap;
             build.ProjectReferenceGraph = projectReferenceGraph;
             build.TargetGraphManager = new TargetGraphManager(build);
+            build.SearchExtensions.Add(build.TargetGraphManager);
             build.SearchExtensions.Add(fileCopyMap);
 
             if (build.EvaluationFolder != null)

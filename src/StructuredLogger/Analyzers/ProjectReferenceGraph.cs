@@ -14,6 +14,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private List<IReadOnlyList<string>> circularities = new();
         private int maxProjectHeight;
 
+        public bool AugmentOtherResults => false;
+
         public ProjectReferenceGraph(Build build)
         {
             var evaluations = build.EvaluationFolder.Children.OfType<ProjectEvaluation>();

@@ -3,13 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
+using StructuredLogViewer;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class TargetGraphManager
+    public class TargetGraphManager : ISearchExtension
     {
         public Build Build { get; }
         public Func<ProjectEvaluation, string> TextProvider { get; set; }
+
+        public bool AugmentOtherResults => true;
 
         public TargetGraphManager(Build build)
         {
@@ -48,6 +51,81 @@ namespace Microsoft.Build.Logging.StructuredLogger
             AddTargetGraph(evaluation, graph);
             return graph;
         }
+
+        bool ISearchExtension.TryGetResults(NodeQueryMatcher matcher, IList<SearchResult> resultCollector, int maxResults)
+        {
+            if (!string.Equals(matcher.TypeKeyword, "target", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            if (resultCollector.Count != 1 || resultCollector[0].Node is not Target target)
+            {
+                return false;
+            }
+
+            if (target.Project == null || target.Project.GetEvaluation(this.Build) is not ProjectEvaluation evaluation)
+            {
+                return false;
+            }
+
+            var graph = GetTargetGraph(evaluation);
+            if (graph == null)
+            {
+                return false;
+            }
+
+            var node = graph.GetTarget(target.Name);
+            if (node == null)
+            {
+                return false;
+            }
+
+            var before = graph.AllTargets.Where(t => t.BeforeTargets.Contains(node)).ToArray();
+            var depends = graph.AllTargets.Where(t => t.DependsOnTargets.Contains(node)).ToArray();
+            var after = graph.AllTargets.Where(t => t.AfterTargets.Contains(node)).ToArray();
+
+            if (before.Length == 0 && depends.Length == 0 && after.Length == 0)
+            {
+                return false;
+            }
+
+            var graphFolder = new Folder { Name = "Target Graph" };
+
+            if (before.Length > 0)
+            {
+                var beforeFolder = new Folder { Name = "BeforeTargets" };
+                Add(beforeFolder, before);
+                graphFolder.AddChild(beforeFolder);
+            }
+
+            if (depends.Length > 0)
+            {
+                var dependsFolder = new Folder { Name = $"Targets that depend on {target.Name}" };
+                Add(dependsFolder, depends);
+                graphFolder.AddChild(dependsFolder);
+            }
+
+            if (after.Length > 0)
+            {
+                var afterFolder = new Folder { Name = "AfterTargets" };
+                Add(afterFolder, after);
+                graphFolder.AddChild(afterFolder);
+            }
+
+            resultCollector.Add(new SearchResult(graphFolder));
+
+            void Add(Folder folder, IEnumerable<TargetNode> targets)
+            {
+                foreach (var target in targets)
+                {
+                    var child = new Target { Name = target.Name };
+                    folder.AddChild(child);
+                }
+            }
+
+            return true;
+        }
     }
 
     public class TargetNode
@@ -67,6 +145,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private List<string> rootTargets = new List<string>();
 
         public IReadOnlyList<string> RootTargets => rootTargets;
+
+        public IEnumerable<TargetNode> AllTargets => targetNodes.Values;
 
         public static TargetGraph ParseXml(string text, Dictionary<string, string> props)
         {
