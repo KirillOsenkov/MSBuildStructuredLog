@@ -89,9 +89,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 graph = GetTargetGraph(evaluation);
                 targetName = graph.GetTarget(matcher.Terms[0].Word).Name;
             }
-            else if (resultCollector.Count == 1 && resultCollector[0].Node is Target target)
+            else if (resultCollector.All(t => t.Node is Target) && resultCollector.Select(t => ((Target)t.Node).Name).Distinct().Count() == 1)
             {
-                if (target.Project == null)
+                var target = resultCollector.Select(n => n.Node as Target).FirstOrDefault();
+                if (target == null || target.Project == null)
                 {
                     return false;
                 }
@@ -131,14 +132,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (before.Length > 0)
             {
                 var folder = new Folder { Name = $"BeforeTargets" };
-                Add(folder, before);
+                Add(folder, before.Reverse());
                 graphFolder.AddChild(folder);
             }
 
             if (after.Length > 0)
             {
                 var folder = new Folder { Name = $"AfterTargets" };
-                Add(folder, after);
+                Add(folder, after.Reverse());
                 graphFolder.AddChild(folder);
             }
 
@@ -152,21 +153,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (node.BeforeTargets.Count > 0)
             {
                 var folder = new Folder { Name = $"Targets that run before {targetName}" };
-                Add(folder, node.BeforeTargets);
+                Add(folder, node.BeforeTargets.OrderBy(s => s.Name));
                 graphFolder.AddChild(folder);
             }
 
             if (node.AfterTargets.Count > 0)
             {
                 var folder = new Folder { Name = $"Targets that run after {targetName}" };
-                Add(folder, node.AfterTargets);
+                Add(folder, node.AfterTargets.OrderBy(s => s.Name));
                 graphFolder.AddChild(folder);
             }
 
             if (depends.Length > 0)
             {
                 var folder = new Folder { Name = $"Targets that depend on {targetName}" };
-                Add(folder, depends);
+                Add(folder, depends.OrderBy(s => s.Name));
                 graphFolder.AddChild(folder);
             }
 
