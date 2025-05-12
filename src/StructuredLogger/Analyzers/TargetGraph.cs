@@ -70,6 +70,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (resultCollector.Count == 0)
             {
+                if (matcher.Terms.Count != 1)
+                {
+                    return false;
+                }
+
                 var projectMatcher = matcher.ProjectMatchers.FirstOrDefault();
                 if (projectMatcher == null)
                 {
@@ -87,7 +92,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 evaluation = matchingProjects.LastOrDefault();
                 graph = GetTargetGraph(evaluation);
-                targetName = graph.GetTarget(matcher.Terms[0].Word).Name;
+                targetName = graph.GetTarget(matcher.Terms[0].Word)?.Name;
             }
             else if (resultCollector.All(t => t.Node is Target) && resultCollector.Select(t => ((Target)t.Node).Name).Distinct().Count() == 1)
             {
