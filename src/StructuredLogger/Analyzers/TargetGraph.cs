@@ -9,6 +9,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
     public class TargetGraphManager
     {
         public Build Build { get; }
+        public Func<ProjectEvaluation, string> TextProvider { get; set; }
 
         public TargetGraphManager(Build build)
         {
@@ -17,14 +18,34 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private Dictionary<ProjectEvaluation, TargetGraph> graphs = new();
 
-        public void AddTargetGraph(ProjectEvaluation evaluation, TargetGraph graph)
+        private void AddTargetGraph(ProjectEvaluation evaluation, TargetGraph graph)
         {
             graphs[evaluation] = graph;
         }
 
-        public TargetGraph GetTargetGraph(ProjectEvaluation evaluation)
+        private TargetGraph TryGetTargetGraph(ProjectEvaluation evaluation)
         {
             graphs.TryGetValue(evaluation, out var graph);
+            return graph;
+        }
+
+        public TargetGraph GetTargetGraph(ProjectEvaluation evaluation)
+        {
+            if (TryGetTargetGraph(evaluation) is TargetGraph graph)
+            {
+                return graph;
+            }
+
+            var preprocessedText = this.TextProvider?.Invoke(evaluation);
+            if (preprocessedText == null)
+            {
+                return null;
+            }
+
+            var properties = evaluation.GetProperties();
+
+            graph = TargetGraph.ParseXml(preprocessedText, properties);
+            AddTargetGraph(evaluation, graph);
             return graph;
         }
     }

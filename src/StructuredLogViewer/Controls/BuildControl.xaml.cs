@@ -394,6 +394,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
             preprocessedFileManager = new PreprocessedFileManager(this.Build, sourceFileResolver);
             preprocessedFileManager.DisplayFile += filePath => DisplayFile(filePath);
+            Build.TargetGraphManager.TextProvider = evaluation => preprocessedFileManager.GetPreprocessedText(evaluation);
 
             navigationHelper = new NavigationHelper(Build, sourceFileResolver);
             navigationHelper.OpenFileRequested += filePath => DisplayFile(filePath);
@@ -1347,7 +1348,7 @@ Recent (");
         {
             if (project.GetEvaluation(Build) is ProjectEvaluation evaluation)
             {
-                var graph = GetTargetGraph(evaluation);
+                var graph = Build.TargetGraphManager.GetTargetGraph(evaluation);
 
                 var roots = project.EntryTargets != null && project.EntryTargets.Any()
                     ? project.EntryTargets
@@ -1359,28 +1360,6 @@ Recent (");
             }
 
             return null;
-        }
-
-        public TargetGraph GetTargetGraph(ProjectEvaluation evaluation)
-        {
-            if (Build.TargetGraphManager.GetTargetGraph(evaluation) is TargetGraph graph)
-            {
-                return graph;
-            }
-
-            var preprocessedText = this.preprocessedFileManager.GetPreprocessedText(
-                evaluation.SourceFilePath,
-                PreprocessedFileManager.GetEvaluationKey(evaluation));
-            if (preprocessedText == null)
-            {
-                return null;
-            }
-
-            var properties = evaluation.GetProperties();
-
-            graph = TargetGraph.ParseXml(preprocessedText, properties);
-            Build.TargetGraphManager.AddTargetGraph(evaluation, graph);
-            return graph;
         }
 
         /// <summary>

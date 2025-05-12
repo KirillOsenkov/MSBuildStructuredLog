@@ -244,6 +244,11 @@ namespace StructuredLogViewer
             return GetPreprocessedText(sourceFilePath, projectEvaluationContext, context: null);
         }
 
+        public string GetPreprocessedText(ProjectEvaluation evaluation)
+        {
+            return GetPreprocessedText(evaluation.SourceFilePath, GetEvaluationKey(evaluation));
+        }
+
         private string GetPreprocessedText(
             string sourceFilePath,
             string projectEvaluationContext,
