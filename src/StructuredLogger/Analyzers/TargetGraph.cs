@@ -215,7 +215,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             var result = new TargetGraph();
 
-            var xdoc = XDocument.Parse(text);
+            XDocument xdoc = null;
+            try
+            {
+                xdoc = XDocument.Parse(text);
+            }
+            catch
+            {
+                return result;
+            }
+
             var targets = xdoc
                 .DescendantNodes()
                 .OfType<XElement>()
