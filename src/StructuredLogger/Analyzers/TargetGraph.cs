@@ -311,7 +311,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             return
-                expression.Split([';'], StringSplitOptions.RemoveEmptyEntries)
+                TextUtilities.SplitSemicolonDelimitedList(expression)
                 .Select(s => s.Trim('\r', '\n', ' ', '\t'))
                 .Where(s => !string.IsNullOrWhiteSpace(s))
                 .ToArray();
