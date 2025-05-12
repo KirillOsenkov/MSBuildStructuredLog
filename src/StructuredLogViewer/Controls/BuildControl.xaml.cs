@@ -2413,6 +2413,8 @@ Recent (");
                         }
 
                         break;
+                    case Target target when target.Parent is Folder:
+                        return SearchForTarget(target.Name);
                     case Target target:
                         return DisplayTarget(target.SourceFilePath, target.Name);
                     case Task task:
@@ -2516,6 +2518,21 @@ Recent (");
         private bool SearchForProject(string name)
         {
             var text = $"$projectreference project({name})";
+            searchLogControl.SearchText = text;
+            return true;
+        }
+
+        private bool SearchForTarget(string name)
+        {
+            string text = searchLogControl.SearchText;
+            var matcher = new NodeQueryMatcher(text);
+            string project = "";
+            if (matcher.ProjectMatchers.Count == 1)
+            {
+                project = matcher.ProjectMatchers[0].Query;
+            }
+
+            text = $"$target \"{name}\" project({project})";
             searchLogControl.SearchText = text;
             return true;
         }

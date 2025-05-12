@@ -34,6 +34,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public TargetGraph GetTargetGraph(ProjectEvaluation evaluation)
         {
+            if (evaluation == null)
+            {
+                return null;
+            }
+
             if (TryGetTargetGraph(evaluation) is TargetGraph graph)
             {
                 return graph;
@@ -59,23 +64,49 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return false;
             }
 
-            if (resultCollector.Count != 1 || resultCollector[0].Node is not Target target)
+            string targetName = null;
+            ProjectEvaluation evaluation = null;
+            TargetGraph graph = null;
+
+            if (resultCollector.Count == 0)
+            {
+                var projectMatcher = matcher.ProjectMatchers.FirstOrDefault();
+                if (projectMatcher == null)
+                {
+                    return false;
+                }
+
+                var allEvaluations = Build.EvaluationFolder?.Children.OfType<ProjectEvaluation>();
+                var matchingProjects = allEvaluations
+                    .Where(e => projectMatcher.IsMatch(e.Name) is { } match && match != SearchResult.EmptyQueryMatch)
+                    .ToArray();
+                if (matchingProjects.Select(e => e.SourceFilePath).Distinct(StringComparer.OrdinalIgnoreCase).Count() != 1)
+                {
+                    return false;
+                }
+
+                evaluation = matchingProjects.LastOrDefault();
+                graph = GetTargetGraph(evaluation);
+                targetName = graph.GetTarget(matcher.Terms[0].Word).Name;
+            }
+            else if (resultCollector.Count == 1 && resultCollector[0].Node is Target target)
+            {
+                if (target.Project == null)
+                {
+                    return false;
+                }
+
+                evaluation = target.Project.GetEvaluation(Build);
+                graph = GetTargetGraph(evaluation);
+                targetName = target.Name;
+            }
+
+            if (targetName == null || evaluation == null || graph == null)
             {
                 return false;
             }
 
-            if (target.Project == null || target.Project.GetEvaluation(this.Build) is not ProjectEvaluation evaluation)
-            {
-                return false;
-            }
-
-            var graph = GetTargetGraph(evaluation);
-            if (graph == null)
-            {
-                return false;
-            }
-
-            var node = graph.GetTarget(target.Name);
+            var node = graph.GetTarget(targetName);
             if (node == null)
             {
                 return false;
@@ -85,32 +116,58 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var depends = graph.AllTargets.Where(t => t.DependsOnTargets.Contains(node)).ToArray();
             var after = graph.AllTargets.Where(t => t.AfterTargets.Contains(node)).ToArray();
 
-            if (before.Length == 0 && depends.Length == 0 && after.Length == 0)
+            if (before.Length == 0 &&
+                depends.Length == 0 &&
+                after.Length == 0 &&
+                node.BeforeTargets.Count == 0 &&
+                node.DependsOnTargets.Count == 0 &&
+                node.AfterTargets.Count == 0)
             {
                 return false;
             }
 
-            var graphFolder = new Folder { Name = "Target Graph" };
+            var graphFolder = new Folder { Name = "Target Graph", IsExpanded = true };
 
             if (before.Length > 0)
             {
-                var beforeFolder = new Folder { Name = "BeforeTargets" };
-                Add(beforeFolder, before);
-                graphFolder.AddChild(beforeFolder);
-            }
-
-            if (depends.Length > 0)
-            {
-                var dependsFolder = new Folder { Name = $"Targets that depend on {target.Name}" };
-                Add(dependsFolder, depends);
-                graphFolder.AddChild(dependsFolder);
+                var folder = new Folder { Name = $"BeforeTargets" };
+                Add(folder, before);
+                graphFolder.AddChild(folder);
             }
 
             if (after.Length > 0)
             {
-                var afterFolder = new Folder { Name = "AfterTargets" };
-                Add(afterFolder, after);
-                graphFolder.AddChild(afterFolder);
+                var folder = new Folder { Name = $"AfterTargets" };
+                Add(folder, after);
+                graphFolder.AddChild(folder);
+            }
+
+            if (node.DependsOnTargets.Count > 0)
+            {
+                var folder = new Folder { Name = "DependsOnTargets" };
+                Add(folder, node.DependsOnTargets);
+                graphFolder.AddChild(folder);
+            }
+
+            if (node.BeforeTargets.Count > 0)
+            {
+                var folder = new Folder { Name = $"Targets that run before {targetName}" };
+                Add(folder, node.BeforeTargets);
+                graphFolder.AddChild(folder);
+            }
+
+            if (node.AfterTargets.Count > 0)
+            {
+                var folder = new Folder { Name = $"Targets that run after {targetName}" };
+                Add(folder, node.AfterTargets);
+                graphFolder.AddChild(folder);
+            }
+
+            if (depends.Length > 0)
+            {
+                var folder = new Folder { Name = $"Targets that depend on {targetName}" };
+                Add(folder, depends);
+                graphFolder.AddChild(folder);
             }
 
             resultCollector.Add(new SearchResult(graphFolder));
@@ -196,23 +253,23 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 var afterTargets = Expand(afterTargetsText, props);
                 var dependsOnTargets = Expand(dependsOnTargetsText, props);
 
-                var node = result.GetTarget(name);
+                var node = result.GetOrCreateTarget(name);
 
                 foreach (var before in beforeTargets)
                 {
-                    var dest = result.GetTarget(before);
+                    var dest = result.GetOrCreateTarget(before);
                     dest.BeforeTargets.Insert(0, node);
                 }
 
                 foreach (var after in afterTargets)
                 {
-                    var dest = result.GetTarget(after);
+                    var dest = result.GetOrCreateTarget(after);
                     dest.AfterTargets.Insert(0, node);
                 }
 
                 foreach (var dep in dependsOnTargets)
                 {
-                    var dest = result.GetTarget(dep);
+                    var dest = result.GetOrCreateTarget(dep);
                     node.DependsOnTargets.Add(dest);
                 }
             }
@@ -220,12 +277,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return result;
         }
 
-        public TargetNode GetTarget(string text)
+        public TargetNode GetTarget(string name)
         {
-            if (!targetNodes.TryGetValue(text, out var node))
+            targetNodes.TryGetValue(name, out var result);
+            return result;
+        }
+
+        public TargetNode GetOrCreateTarget(string name)
+        {
+            if (!targetNodes.TryGetValue(name, out var node))
             {
-                node = new TargetNode { Name = text };
-                targetNodes.Add(text, node);
+                node = new TargetNode { Name = name };
+                targetNodes.Add(name, node);
             }
 
             return node;
@@ -246,7 +309,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
-            return expression.Split([';'], StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToArray();
+            return
+                expression.Split([';'], StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => s.Trim('\r', '\n', ' ', '\t'))
+                .Where(s => !string.IsNullOrWhiteSpace(s))
+                .ToArray();
         }
 
         private static string GetAttribute(XElement element, string attributeName)
@@ -261,7 +328,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var visited = new HashSet<TargetNode>();
             var stack = new Stack<(string targetName, string relationship)>();
 
-            VisitTargets(entryTargets.Select(GetTarget), stack, visited, target =>
+            VisitTargets(entryTargets.Select(GetOrCreateTarget), stack, visited, target =>
             {
                 if (string.Equals(target.Name, targetToFind, StringComparison.OrdinalIgnoreCase))
                 {
