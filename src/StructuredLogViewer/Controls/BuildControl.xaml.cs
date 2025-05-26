@@ -2867,7 +2867,9 @@ Recent (");
                 {
                     Text = BinlogStats.GetString("Strings", recordStats.StringTotalSize, recordStats.StringCount, recordStats.StringLargest)
                 };
-                var allStringText = string.Join("\n", recordStats.AllStrings);
+                var allStringText = recordStats.AllStrings.Count > 0
+                    ? string.Join("\n", recordStats.AllStrings)
+                    : "Strings are not tracked for large binlogs";
                 var allStrings = new Message { Text = allStringText };
 
                 statsRoot.AddChild(strings);
