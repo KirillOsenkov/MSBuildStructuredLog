@@ -227,7 +227,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 string argsType = args.GetType().Name;
                 if (argsType.EndsWith("EventArgs"))
                 {
-                    argsType = argsType.Substring(0, argsType.Length - 9);
+                    argsType = argsType.Substring(0, argsType.Length - "EventArgs".Length);
+                }
+                else if (argsType.EndsWith("EventArgs2"))
+                {
+                    argsType = argsType.Substring(0, argsType.Length - "EventArgs2".Length);
                 }
 
                 recordsByType.Add(record, argsType, this);
@@ -282,14 +286,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
             else if (message == "TaskParameter")
             {
-                if (args.BuildEventContext.TaskId != BuildEventContext.InvalidTaskId)
-                {
-                    return "TaskParameter/Task";
-                }
-                else
-                {
-                    return "TaskParameter/Target";
-                }
+                var kind = ((TaskParameterEventArgs)args).Kind;
+                return $"TaskParameter/{kind}";
             }
             else if (message == "TaskParameter/Task" || message == "TaskParameter/Target")
             {
@@ -304,6 +302,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 message == "BuildMessage/Other")
             {
                 return GetMessageSubType(message, args);
+            }
+            else if (message == "ProjectImported")
+            {
+                var text = args.Message;
+                if (text.StartsWith("Project"))
+                {
+                    return "NoImport";
+                }
+                else if (text.StartsWith("Importing"))
+                {
+                    return "Import";
+                }
+
+                return "Other";
             }
 
             return null;
