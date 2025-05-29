@@ -31,6 +31,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     continue;
                 }
 
+                match = Strings.RobocopyCreatedCopyOnWriteLinkRegex.Match(text);
+                if (match.Success && match.Groups.Count > 2)
+                {
+                    var operation = ParseCopyingFileFrom(match);
+                    operation.Node = message;
+                    list.Add(operation);
+                    continue;
+                }
+
                 match = Strings.RobocopyFileSkippedRegex.Match(text);
                 if (match.Success && match.Groups.Count > 2)
                 {
