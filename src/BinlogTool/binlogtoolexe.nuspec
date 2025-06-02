@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
     <id>binlogtoolexe</id>
-    <version>1.0.24</version>
+    <version>1.0.27</version>
     <authors>Kirill Osenkov</authors>
     <license type="expression">MIT</license>
     <licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
