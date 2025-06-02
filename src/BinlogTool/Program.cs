@@ -83,15 +83,11 @@ namespace BinlogTool
                 return 0;
             }
 
-            if (string.Equals(firstArg, "compilerinvocations", StringComparison.OrdinalIgnoreCase))
+            if (args.Length >= 2 && string.Equals(firstArg, "compilerinvocations", StringComparison.OrdinalIgnoreCase))
             {
-                string binlog = null;
+                string binlog = binlog = args[1];
                 string outputFile = null;
-                if (args.Length >= 2)
-                {
-                    binlog = args[1];
-                }
-                else if (args.Length == 3)
+                if (args.Length == 3)
                 {
                     outputFile = args[2];
                 }
@@ -104,15 +100,11 @@ namespace BinlogTool
                 return 0;
             }
 
-            if (string.Equals(firstArg, "doublewrites", StringComparison.OrdinalIgnoreCase))
+            if (args.Length >= 2 && string.Equals(firstArg, "doublewrites", StringComparison.OrdinalIgnoreCase))
             {
-                string binlog = null;
+                string binlog = binlog = args[1];
                 string outputFile = null;
-                if (args.Length >= 2)
-                {
-                    binlog = args[1];
-                }
-                else if (args.Length == 3)
+                if (args.Length == 3)
                 {
                     outputFile = args[2];
                 }
