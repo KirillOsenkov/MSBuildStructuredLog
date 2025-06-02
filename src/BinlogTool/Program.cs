@@ -85,7 +85,7 @@ namespace BinlogTool
 
             if (args.Length >= 2 && string.Equals(firstArg, "compilerinvocations", StringComparison.OrdinalIgnoreCase))
             {
-                string binlog = binlog = args[1];
+                string binlog = args[1];
                 string outputFile = null;
                 if (args.Length == 3)
                 {
@@ -102,7 +102,7 @@ namespace BinlogTool
 
             if (args.Length >= 2 && string.Equals(firstArg, "doublewrites", StringComparison.OrdinalIgnoreCase))
             {
-                string binlog = binlog = args[1];
+                string binlog = args[1];
                 string outputFile = null;
                 if (args.Length == 3)
                 {
