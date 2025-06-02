@@ -32,13 +32,16 @@
     <None Include="$(IconFilePath)" Pack="true" PackagePath="" />
   </ItemGroup>
 
-  <Target Name="PublishBinlogToolExe" AfterTargets="AfterBuild" Condition="$(Configuration) == 'Release' AND $(PublishSingleFile) != 'true' AND $([MSBuild]::IsOSPlatform(`Windows`))">
+  <Target Name="PublishBinlogToolExe"
+          AfterTargets="AfterBuild"
+          Condition="$(Configuration) == 'Release' AND $(PublishSingleFile) != 'true' AND $([MSBuild]::IsOSPlatform(`Windows`))">
     <PropertyGroup>
       <RootDir>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'MSBuildStructuredLog.sln'))</RootDir>
       <NuspecPath>$(MSBuildProjectDirectory)\binlogtoolexe.nuspec</NuspecPath>
       <NupkgPath>$(OutDir)binlogtoolexe.nupkg</NupkgPath>
     </PropertyGroup>
-    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="Restore;Publish" Properties="RuntimeIdentifier=win-x64;Configuration=Release;PublishSingleFile=true;SelfContained=false;PackAsTool=false;PublishTrimmed=true;TargetFramework=$(TargetFramework);GeneratePackageOnBuild=false" />
+    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="Restore" Properties="DummyProperty=unset;RuntimeIdentifier=win-x64;Configuration=Release;TargetFramework=$(TargetFramework)" />
+    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="Publish" Properties="RuntimeIdentifier=win-x64;Configuration=Release;PublishSingleFile=true;SelfContained=false;PackAsTool=false;PublishTrimmed=true;TargetFramework=$(TargetFramework);GeneratePackageOnBuild=false" />
     <PackTask
         PackItem="$(NuspecPath)"
         NuspecFile="$(NuspecPath)"
