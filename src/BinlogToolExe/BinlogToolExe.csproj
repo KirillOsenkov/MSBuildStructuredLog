@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <Version>$(BinlogToolVersion)</Version>
+    <TargetFramework>net8.0</TargetFramework>
+    <RollForward>major</RollForward>
+    <LangVersion>latest</LangVersion>
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PublishSingleFile>True</PublishSingleFile>
+    <SelfContained>false</SelfContained>
+    <PublishTrimmed>true</PublishTrimmed>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\BinlogTool\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\StructuredLogger.Utils\StructuredLogger.Utils.csproj" />
+    <ProjectReference Include="..\StructuredLogger\StructuredLogger.csproj" />
+  </ItemGroup>
+
+  <Target Name="PublishBinlogToolExe"
+          AfterTargets="AfterBuild"
+          DependsOnTargets="Publish"
+          Condition="$(Configuration) == 'Release' AND $([MSBuild]::IsOSPlatform(`Windows`))">
+    <PropertyGroup>
+      <RootDir>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'MSBuildStructuredLog.sln'))</RootDir>
+      <NuspecPath>$(MSBuildProjectDirectory)\binlogtoolexe.nuspec</NuspecPath>
+      <NupkgPath>$(OutDir)binlogtoolexe.nupkg</NupkgPath>
+    </PropertyGroup>
+    <PackTask
+        PackItem="$(NuspecPath)"
+        NuspecFile="$(NuspecPath)"
+        NuspecBasePath="$(RootDir)"
+        NuspecProperties="version=$(Version)"
+        NuspecOutputPath="$(NuspecOutputPath)"
+        PackageOutputPath="$(OutDir)"
+        RestoreOutputPath="$(RestoreOutputPath)"
+        SymbolPackageFormat="snupkg"
+        />
+  </Target>
+
+</Project>
