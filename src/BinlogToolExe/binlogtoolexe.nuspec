@@ -13,7 +13,7 @@
     <tags>MSBuild Log Logger Structure Structured Binlog BinlogTool</tags>
   </metadata>
   <files>
-    <file src="bin\BinlogTool\Release\net8.0\win-x64\publish\BinlogTool.exe" target="BinlogTool.exe" />
+    <file src="bin\BinlogToolExe\Release\net8.0\win-x64\BinlogTool.exe" target="BinlogTool.exe" />
     <file src="src\StructuredLogViewer\icons\msbuild-structured-log-viewer.png" target="msbuild-structured-log-viewer.png" />
     <file src="readme.md" target="readme.md" />
   </files>
