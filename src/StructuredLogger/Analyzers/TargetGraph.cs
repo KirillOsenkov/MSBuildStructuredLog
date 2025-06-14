@@ -260,6 +260,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             foreach (var target in targets)
             {
                 var name = GetAttribute(target, "Name");
+                if (string.IsNullOrWhiteSpace(name))
+                {
+                    continue;
+                }
+
                 var beforeTargetsText = GetAttribute(target, "BeforeTargets");
                 var afterTargetsText = GetAttribute(target, "AfterTargets");
                 var dependsOnTargetsText = GetAttribute(target, "DependsOnTargets");
