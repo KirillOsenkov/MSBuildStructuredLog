@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using StructuredLogViewer;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -10,11 +9,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
     public class ProjectReferenceGraph : ISearchExtension
     {
         private Dictionary<string, ICollection<string>> references = new(StringComparer.OrdinalIgnoreCase);
+        private Dictionary<string, Node> nodes = new(StringComparer.OrdinalIgnoreCase);
         private Dictionary<string, int> projectHeights = new(StringComparer.OrdinalIgnoreCase);
         private List<IReadOnlyList<string>> circularities = new();
         private int maxProjectHeight;
 
         public bool AugmentOtherResults => false;
+
+        public class Node
+        {
+            public string Value;
+            public string Key;
+            public List<Node> Children;
+            public bool IsReferenced;
+        }
 
         public ProjectReferenceGraph(Build build)
         {
@@ -52,11 +60,47 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
+            foreach (var kvp in references)
+            {
+                var node = GetNode(kvp.Key);
+                node.Children = new List<Node>();
+                foreach (var reference in kvp.Value)
+                {
+                    var childNode = GetNode(reference);
+                    node.Children.Add(childNode);
+                    childNode.IsReferenced = true;
+                }
+            }
+
+            Node GetNode(string project)
+            {
+                if (!nodes.TryGetValue(project, out var node))
+                {
+                    node = new Node { Value = project };
+                    node.Key = GetKey(project);
+                    nodes[project] = node;
+                }
+
+                return node;
+            }
+
+            var unreferenced = nodes.Values.Where(n => !n.IsReferenced).ToArray();
+
+            var nodeList = new List<Node>();
+            foreach (var key in unreferenced)
+            {
+                RemoveTransitiveEdges(key, nodeList);
+            }
+
+            var list = new List<string>();
+            foreach (var kvp in unreferenced)
+            {
+                CalculateHeight(kvp.Value, list);
+            }
+
             foreach (var kvp in references.ToArray())
             {
-                var project = kvp.Key;
-                references[project] = kvp.Value.OrderBy(s => s).ToArray();
-                CalculateHeight(project, new List<string>());
+                references[kvp.Key] = kvp.Value.OrderBy(s => s).ToArray();
             }
 
             if (projectHeights.Any())
@@ -77,6 +121,32 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                 }
             }
+        }
+
+        private void RemoveTransitiveEdges(Node project, List<Node> chain)
+        {
+            if (chain.Contains(project))
+            {
+                return;
+            }
+
+            for (int i = 0; i < chain.Count - 1; i++)
+            {
+                var parent = chain[i];
+                if (parent.Children.Contains(project))
+                {
+                    parent.Children.Remove(project);
+                }
+            }
+
+            chain.Add(project);
+
+            foreach (var reference in project.Children.ToArray())
+            {
+                RemoveTransitiveEdges(reference, chain);
+            }
+
+            chain.RemoveAt(chain.Count - 1);
         }
 
         private int CalculateHeight(string project, List<string> chain)
@@ -305,11 +375,30 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 filePath = filePath.Replace("/", "\\");
                 var parts = filePath.Split('\\');
                 key = parts[parts.Length - 1];
-                for (int i = parts.Length - 2; i >= 0 && keys.ContainsKey(key); i--)
+                for (int i = parts.Length - 2; i >= 0; i--)
                 {
+                    var candidate = CleanupKey(key);
+                    if (!keys.ContainsKey(candidate))
+                    {
+                        key = candidate;
+                        break;
+                    }
+
                     key = parts[i] + "\\" + key;
+                    if (i == 0)
+                    {
+                        key = CleanupKey(key);
+                    }
                 }
 
+                keys[filePath] = key;
+                keys[key] = key;
+            }
+
+            return key;
+
+            string CleanupKey(string key)
+            {
                 if (key.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase))
                 {
                     key = key.Substring(0, key.Length - ".csproj".Length);
@@ -320,30 +409,26 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     key = "\"" + key + "\"";
                 }
 
-                keys[filePath] = key;
-                keys[key] = key;
+                return key;
             }
-
-            return key;
         }
 
         public void WriteGraph(TextWriter writer)
         {
             WriteLine("digraph {");
 
-            foreach (var project in references.OrderBy(r => r.Key, StringComparer.OrdinalIgnoreCase))
+            foreach (var project in nodes.Values.OrderBy(r => r.Value, StringComparer.OrdinalIgnoreCase))
             {
-                if (project.Key.EndsWith("_wpftmp.csproj", StringComparison.OrdinalIgnoreCase) ||
-                    project.Key.EndsWith(".sln.metaproj", StringComparison.OrdinalIgnoreCase))
+                if (project.Value.EndsWith("_wpftmp.csproj", StringComparison.OrdinalIgnoreCase) ||
+                    project.Value.EndsWith(".sln.metaproj", StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
                 }
 
-                var projectKey = GetKey(project.Key);
-
-                foreach (var reference in project.Value.OrderBy(r => r, StringComparer.OrdinalIgnoreCase))
+                var projectKey = project.Key;
+                foreach (var reference in project.Children.OrderBy(r => r.Value, StringComparer.OrdinalIgnoreCase))
                 {
-                    WriteLine($"  {projectKey} -> {GetKey(reference)}");
+                    WriteLine($"  {projectKey} -> {reference.Key}");
                 }
             }
 
