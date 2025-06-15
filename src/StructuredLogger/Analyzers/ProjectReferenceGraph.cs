@@ -9,22 +9,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
     public class ProjectReferenceGraph : ISearchExtension
     {
         private Dictionary<string, ICollection<string>> references = new(StringComparer.OrdinalIgnoreCase);
-        private Dictionary<string, Node> nodes = new(StringComparer.OrdinalIgnoreCase);
+        private Dictionary<string, Vertex> nodes = new(StringComparer.OrdinalIgnoreCase);
         private Dictionary<string, int> projectHeights = new(StringComparer.OrdinalIgnoreCase);
         private List<IReadOnlyList<string>> circularities = new();
         private int maxProjectHeight;
 
         public bool AugmentOtherResults => false;
-
-        public class Node
-        {
-            public string Value;
-            public string Key;
-            public HashSet<Node> Children;
-            public bool IsReferenced;
-            public bool WasProcessed;
-            public bool IsProcessing;
-        }
 
         public ProjectReferenceGraph(Build build)
         {
@@ -80,11 +70,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
-            Node GetNode(string project)
+            Vertex GetNode(string project)
             {
                 if (!nodes.TryGetValue(project, out var node))
                 {
-                    node = new Node { Value = project };
+                    node = new Vertex { Value = project };
                     node.Key = GetKey(project);
                     nodes[project] = node;
                 }
@@ -94,10 +84,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             var unreferenced = nodes.Values.Where(n => !n.IsReferenced).ToArray();
 
-            var nodeList = new List<Node>();
+            var nodeList = new List<Vertex>();
             foreach (var key in unreferenced)
             {
-                RemoveTransitiveEdges(key, nodeList);
+                //RemoveTransitiveEdges(key, nodeList);
             }
 
             var list = new List<string>();
@@ -131,7 +121,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private void RemoveTransitiveEdges(Node project, List<Node> chain)
+        private void RemoveTransitiveEdges(Vertex project, List<Vertex> chain)
         {
             if (project.IsProcessing)
             {
