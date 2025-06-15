@@ -118,6 +118,14 @@
                     <local:ProjectGraphControl x:Name="projectGraphControl" Visibility="Hidden"/>
                   </Grid>
                 </TabItem>
+
+                <TabItem x:Name="projectReferenceGraphTab" Header="Project References">
+                  <Grid>
+                    <TextBlock x:Name="projectReferenceGraphWatermark" HorizontalAlignment="Center"
+                               VerticalAlignment="Center">Project reference graph</TextBlock>
+                  </Grid>
+                </TabItem>
+
               </TabControl>
             </local:SplitterPanel.FirstChild>
 

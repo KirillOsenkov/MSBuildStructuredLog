@@ -517,6 +517,10 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             {
                 PopulateTrace();
             }
+            else if (selectedItem.Name == nameof(projectReferenceGraphTab))
+            {
+                DisplayText(Build.ProjectReferenceGraph.GetText(), "Project References");
+            }
         }
 
         private void FilesTree_SearchTextChanged(string text)

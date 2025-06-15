@@ -280,11 +280,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private bool GetProjectsOfHeight(int height)
-        {
-            throw new NotImplementedException();
-        }
-
         private Project CreateProject(string project)
         {
             return new Project()
@@ -292,6 +287,72 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 ProjectFile = project,
                 Name = Path.GetFileNameWithoutExtension(project)
             };
+        }
+
+        public string GetText()
+        {
+            var writer = new System.IO.StringWriter();
+            WriteGraph(writer);
+            return writer.ToString();
+        }
+
+        private Dictionary<string, string> keys = new(StringComparer.OrdinalIgnoreCase);
+
+        private string GetKey(string filePath)
+        {
+            if (!keys.TryGetValue(filePath, out var key))
+            {
+                filePath = filePath.Replace("/", "\\");
+                var parts = filePath.Split('\\');
+                key = parts[parts.Length - 1];
+                for (int i = parts.Length - 2; i >= 0 && keys.ContainsKey(key); i--)
+                {
+                    key = parts[i] + "\\" + key;
+                }
+
+                if (key.EndsWith(".csproj", StringComparison.OrdinalIgnoreCase))
+                {
+                    key = key.Substring(0, key.Length - ".csproj".Length);
+                }
+
+                if (key.Contains(".") || key.Contains("\\"))
+                {
+                    key = "\"" + key + "\"";
+                }
+
+                keys[filePath] = key;
+                keys[key] = key;
+            }
+
+            return key;
+        }
+
+        public void WriteGraph(TextWriter writer)
+        {
+            WriteLine("digraph {");
+
+            foreach (var project in references.OrderBy(r => r.Key, StringComparer.OrdinalIgnoreCase))
+            {
+                if (project.Key.EndsWith("_wpftmp.csproj", StringComparison.OrdinalIgnoreCase) ||
+                    project.Key.EndsWith(".sln.metaproj", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                var projectKey = GetKey(project.Key);
+
+                foreach (var reference in project.Value.OrderBy(r => r, StringComparer.OrdinalIgnoreCase))
+                {
+                    WriteLine($  "{projectKey} -> {GetKey(reference)}");
+                }
+            }
+
+            WriteLine("}");
+
+            void WriteLine(string text)
+            {
+                writer.WriteLine(text);
+            }
         }
     }
 }
