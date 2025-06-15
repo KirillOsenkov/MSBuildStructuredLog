@@ -20,8 +20,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             public string Value;
             public string Key;
-            public List<Node> Children;
+            public HashSet<Node> Children;
             public bool IsReferenced;
+            public bool WasProcessed;
+            public bool IsProcessing;
         }
 
         public ProjectReferenceGraph(Build build)
@@ -30,6 +32,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             foreach (var evaluation in evaluations)
             {
                 string projectFile = evaluation.ProjectFile;
+                if (projectFile.EndsWith("_wpftmp.csproj", StringComparison.OrdinalIgnoreCase) ||
+                    projectFile.EndsWith(".sln.metaproj", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
                 string projectDirectory = Path.GetDirectoryName(projectFile);
 
                 var items = evaluation.FindChild<Folder>(Strings.Items);
@@ -63,7 +71,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             foreach (var kvp in references)
             {
                 var node = GetNode(kvp.Key);
-                node.Children = new List<Node>();
+                node.Children = new();
                 foreach (var reference in kvp.Value)
                 {
                     var childNode = GetNode(reference);
@@ -125,28 +133,38 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void RemoveTransitiveEdges(Node project, List<Node> chain)
         {
-            if (chain.Contains(project))
+            if (project.IsProcessing)
             {
                 return;
             }
 
+            project.IsProcessing = true;
+
             for (int i = 0; i < chain.Count - 1; i++)
             {
                 var parent = chain[i];
-                if (parent.Children.Contains(project))
+                if (parent.WasProcessed)
                 {
-                    parent.Children.Remove(project);
+                    break;
                 }
+
+                parent.Children.Remove(project);
             }
 
-            chain.Add(project);
-
-            foreach (var reference in project.Children.ToArray())
+            if (project.Children != null && project.Children.Count > 0)
             {
-                RemoveTransitiveEdges(reference, chain);
+                chain.Add(project);
+
+                foreach (var reference in project.Children.ToArray())
+                {
+                    RemoveTransitiveEdges(reference, chain);
+                }
+
+                chain.RemoveAt(chain.Count - 1);
             }
 
-            chain.RemoveAt(chain.Count - 1);
+            project.IsProcessing = false;
+            project.WasProcessed = true;
         }
 
         private int CalculateHeight(string project, List<string> chain)
@@ -419,8 +437,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             foreach (var project in nodes.Values.OrderBy(r => r.Value, StringComparer.OrdinalIgnoreCase))
             {
-                if (project.Value.EndsWith("_wpftmp.csproj", StringComparison.OrdinalIgnoreCase) ||
-                    project.Value.EndsWith(".sln.metaproj", StringComparison.OrdinalIgnoreCase))
+                if (project.Children == null || project.Children.Count == 0)
                 {
                     continue;
                 }
