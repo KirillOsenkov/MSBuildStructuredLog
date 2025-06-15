@@ -343,7 +343,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 foreach (var reference in project.Value.OrderBy(r => r, StringComparer.OrdinalIgnoreCase))
                 {
-                    WriteLine($  "{projectKey} -> {GetKey(reference)}");
+                    WriteLine($"  {projectKey} -> {GetKey(reference)}");
                 }
             }
 
