@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -72,20 +72,9 @@ public class Digraph
 
     private void RemoveTransitiveEdges(Vertex project, List<Vertex> chain)
     {
-        if (project.IsProcessing)
-        {
-            return;
-        }
-
-        project.IsProcessing = true;
-
         for (int i = 0; i < chain.Count - 1; i++)
         {
             var parent = chain[i];
-            if (parent.WasProcessed)
-            {
-            }
-
             parent.Children.Remove(project);
         }
 
@@ -100,9 +89,6 @@ public class Digraph
 
             chain.RemoveAt(chain.Count - 1);
         }
-
-        project.IsProcessing = false;
-        project.WasProcessed = true;
     }
 
     public string GetDotText()
@@ -228,5 +214,62 @@ public class Digraph
 
             yield return (left, right);
         }
+    }
+
+    public void TransitiveReduction()
+    {
+        var all = vertices.Values;
+        var originalEdges = all.ToDictionary(v => v, v => new HashSet<Vertex>(v.Children ?? Enumerable.Empty<Vertex>()));
+
+        var visited = new HashSet<Vertex>();
+        var stack = new Stack<Vertex>();
+
+        foreach (var source in all)
+        {
+            foreach (var destination in originalEdges[source].ToList())
+            {
+                source.Children.Remove(destination);
+
+                if (!CanReach(source, destination, visited, stack))
+                {
+                    source.Children.Add(destination);
+                }
+
+                visited.Clear();
+                stack.Clear();
+            }
+        }
+    }
+
+    private static bool CanReach(Vertex start, Vertex target, HashSet<Vertex> visited, Stack<Vertex> stack)
+    {
+        stack.Push(start);
+
+        while (stack.Count > 0)
+        {
+            var current = stack.Pop();
+            if (current == target)
+            {
+                return true;
+            }
+
+            if (!visited.Add(current))
+            {
+                continue;
+            }
+
+            if (current.Children != null)
+            {
+                foreach (var child in current.Children)
+                {
+                    if (!visited.Contains(child))
+                    {
+                        stack.Push(child);
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 }
