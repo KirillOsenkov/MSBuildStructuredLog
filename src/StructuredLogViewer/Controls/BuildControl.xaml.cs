@@ -519,8 +519,103 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             }
             else if (selectedItem.Name == nameof(projectReferenceGraphTab))
             {
-                DisplayText(Build.ProjectReferenceGraph.GetText(), "Project References");
+                PopulateProjectReferenceGraph();
+                DisplayText(Build.ProjectReferenceGraph.Graph.GetDotText(), "Project References");
             }
+        }
+
+        private void PopulateProjectReferenceGraph()
+        {
+            var vertexByControl = new Dictionary<Vertex, FrameworkElement>();
+
+            // var graph = Digraph.Load(@"C:\temp\graph\trimmed.dot");
+            // graph.CalculateHeight();
+            // graph.CalculateDepth();
+
+            var graph = Build.ProjectReferenceGraph.Graph;
+
+            var maxOutDegree = graph.Vertices.Max(g => g.OutDegree);
+            var maxInDegree = graph.Vertices.Max(g => g.InDegree);
+
+            var grid = new Grid();
+            var control = new StackPanel() { Orientation = Orientation.Horizontal };
+            grid.Children.Add(control);
+
+            var canvas = new Canvas();
+            grid.Children.Add(canvas);
+
+            foreach (var vertexGroup in graph.Vertices.GroupBy(v => v.OutDegree).OrderBy(g => g.Key))
+            {
+                var stack = new StackPanel();
+
+                foreach (var vertex in vertexGroup.OrderByDescending(s => s.InDegree).ThenBy(s => s.Key))
+                {
+                    var indegree = vertex.InDegree;
+
+                    var ratio = (byte)Math.Max(200, 255 - indegree * 2);
+
+                    var projectControl = new TextBlock()
+                    {
+                        Text = vertex.Key.TrimQuotes(),
+                        Margin = new Thickness(4, 2, 4, 2),
+                        Padding = new Thickness(2, 1, 2, 1),
+                        Background = new SolidColorBrush(Color.FromRgb(ratio, ratio, 255)),
+                        Tag = vertex
+                    };
+                    vertexByControl[vertex] = projectControl;
+                    projectControl.MouseDown += (s, e) =>
+                    {
+                        canvas.Children.Clear();
+
+                        var node = projectControl.Tag as Vertex;
+                        if (node.Outgoing != null)
+                        {
+                            foreach (var outgoing in node.Outgoing)
+                            {
+                                if (vertexByControl.TryGetValue(outgoing, out var outControl))
+                                {
+                                    var sourcePoint = outControl.TranslatePoint(
+                                        new Point(outControl.ActualWidth, outControl.ActualHeight / 2),
+                                        canvas);
+                                    var destinationPoint = projectControl.TranslatePoint(
+                                        new Point(0, projectControl.ActualHeight / 2),
+                                        canvas);
+                                    var line = new System.Windows.Shapes.Line
+                                    {
+                                        X1 = sourcePoint.X,
+                                        Y1 = sourcePoint.Y,
+                                        X2 = destinationPoint.X,
+                                        Y2 = destinationPoint.Y,
+                                        Stroke = Brushes.Red,
+                                    };
+                                    canvas.Children.Add(line);
+
+                                    var border = new System.Windows.Shapes.Rectangle
+                                    {
+                                        Width = outControl.ActualWidth,
+                                        Height = outControl.ActualHeight,
+                                        Stroke = Brushes.Red
+                                    };
+                                    Canvas.SetLeft(border, sourcePoint.X - outControl.ActualWidth);
+                                    Canvas.SetTop(border, sourcePoint.Y - outControl.ActualHeight / 2);
+                                    canvas.Children.Add(border);
+                                }
+                            }
+                        }
+                    };
+                    stack.Children.Add(projectControl);
+                }
+
+                control.Children.Add(stack);
+            }
+
+            var scrollViewer = new ScrollViewer()
+            {
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+                VerticalScrollBarVisibility = ScrollBarVisibility.Auto
+            };
+            scrollViewer.Content = grid;
+            projectReferenceGraphTab.Content = scrollViewer;
         }
 
         private void FilesTree_SearchTextChanged(string text)
