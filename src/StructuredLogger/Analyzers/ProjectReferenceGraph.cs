@@ -9,12 +9,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
     public class ProjectReferenceGraph : ISearchExtension
     {
         private Dictionary<string, ICollection<string>> references = new(StringComparer.OrdinalIgnoreCase);
-        private Dictionary<string, Vertex> nodes = new(StringComparer.OrdinalIgnoreCase);
         private Dictionary<string, int> projectHeights = new(StringComparer.OrdinalIgnoreCase);
         private List<IReadOnlyList<string>> circularities = new();
         private int maxProjectHeight;
 
         public bool AugmentOtherResults => false;
+
+        public Digraph Graph = new Digraph();
+
+        public IEnumerable<Vertex> Vertices => Graph.Vertices;
 
         public ProjectReferenceGraph(Build build)
         {
@@ -58,31 +61,31 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
             }
 
+            Graph = new Digraph();
+
             foreach (var kvp in references)
             {
                 var node = GetNode(kvp.Key);
-                node.Children = new();
                 foreach (var reference in kvp.Value)
                 {
                     var childNode = GetNode(reference);
-                    node.Children.Add(childNode);
-                    childNode.IsReferenced = true;
+                    node.AddChild(childNode);
                 }
             }
 
             Vertex GetNode(string project)
             {
-                if (!nodes.TryGetValue(project, out var node))
+                if (Graph.TryFindVertex(project) is not { } node)
                 {
                     node = new Vertex { Value = project };
                     node.Key = GetKey(project);
-                    nodes[project] = node;
+                    Graph.Add(node);
                 }
 
                 return node;
             }
 
-            var unreferenced = nodes.Values.Where(n => !n.IsReferenced).ToArray();
+            var unreferenced = Graph.Sources.ToArray();
 
             var nodeList = new List<Vertex>();
             foreach (var key in unreferenced)
@@ -90,10 +93,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 //RemoveTransitiveEdges(key, nodeList);
             }
 
+            Graph.CalculateHeight();
+            Graph.CalculateDepth();
+
             var list = new List<string>();
             foreach (var kvp in unreferenced)
             {
-                CalculateHeight(kvp.Value, list);
+                CalculateHeight(kvp, list);
             }
 
             foreach (var kvp in references.ToArray())
@@ -138,14 +144,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     break;
                 }
 
-                parent.Children.Remove(project);
+                parent.Outgoing.Remove(project);
             }
 
-            if (project.Children != null && project.Children.Count > 0)
+            if (project.Outgoing != null && project.Outgoing.Count > 0)
             {
                 chain.Add(project);
 
-                foreach (var reference in project.Children.ToArray())
+                foreach (var reference in project.Outgoing.ToArray())
                 {
                     RemoveTransitiveEdges(reference, chain);
                 }
@@ -157,17 +163,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
             project.WasProcessed = true;
         }
 
-        private int CalculateHeight(string project, List<string> chain)
+        private int CalculateHeight(Vertex vertex, List<string> chain)
         {
+            string project = vertex.Value;
             if (!projectHeights.TryGetValue(project, out int height))
             {
-                if (references.TryGetValue(project, out var projectReferences))
+                if (vertex.Outgoing != null)
                 {
                     int index = chain.IndexOf(project);
                     if (index == -1)
                     {
                         chain.Add(project);
-                        foreach (var reference in projectReferences)
+                        foreach (var reference in vertex.Outgoing)
                         {
                             int referenceHeight = CalculateHeight(reference, chain) + 1;
                             if (referenceHeight > height)
@@ -186,6 +193,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
 
                 projectHeights[project] = height;
+                vertex.OutDegree = height;
             }
 
             return height;
@@ -367,13 +375,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             };
         }
 
-        public string GetText()
-        {
-            var writer = new System.IO.StringWriter();
-            WriteGraph(writer);
-            return writer.ToString();
-        }
-
         private Dictionary<string, string> keys = new(StringComparer.OrdinalIgnoreCase);
 
         private string GetKey(string filePath)
@@ -418,32 +419,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
 
                 return key;
-            }
-        }
-
-        public void WriteGraph(TextWriter writer)
-        {
-            WriteLine("digraph {");
-
-            foreach (var project in nodes.Values.OrderBy(r => r.Value, StringComparer.OrdinalIgnoreCase))
-            {
-                if (project.Children == null || project.Children.Count == 0)
-                {
-                    continue;
-                }
-
-                var projectKey = project.Key;
-                foreach (var reference in project.Children.OrderBy(r => r.Value, StringComparer.OrdinalIgnoreCase))
-                {
-                    WriteLine($"  {projectKey} -> {reference.Key}");
-                }
-            }
-
-            WriteLine("}");
-
-            void WriteLine(string text)
-            {
-                writer.WriteLine(text);
             }
         }
     }

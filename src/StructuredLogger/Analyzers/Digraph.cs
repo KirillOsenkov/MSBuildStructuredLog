@@ -9,15 +9,23 @@ public class Vertex
 {
     public string Value;
     public string Key;
-    public HashSet<Vertex> Children;
+    public HashSet<Vertex> Outgoing;
+    public HashSet<Vertex> Incoming;
     public bool IsReferenced;
     public bool WasProcessed;
     public bool IsProcessing;
 
+    public int OutDegree { get; set; } = -1;
+    public int InDegree { get; set; } = -1;
+
     public void AddChild(Vertex destination)
     {
-        Children ??= new();
-        Children.Add(destination);
+        Outgoing ??= new();
+        Outgoing.Add(destination);
+        destination.IsReferenced = true;
+
+        destination.Incoming ??= new();
+        destination.Incoming.Add(this);
     }
 }
 
@@ -25,9 +33,29 @@ public class Digraph
 {
     private Dictionary<string, Vertex> vertices;
 
+    public IEnumerable<Vertex> Vertices => vertices.Values;
+
+    public IEnumerable<Vertex> Sources => vertices.Values.Where(v => !v.IsReferenced).ToArray();
+
     private Digraph(Dictionary<string, Vertex> vertices)
     {
         this.vertices = vertices;
+    }
+
+    public Digraph()
+    {
+        vertices = new();
+    }
+
+    public void Add(Vertex vertex)
+    {
+        vertices[vertex.Value] = vertex;
+    }
+
+    public Vertex TryFindVertex(string value)
+    {
+        vertices.TryGetValue(value, out var result);
+        return result;
     }
 
     public static Digraph Load(string filePath)
@@ -40,8 +68,6 @@ public class Digraph
         {
             var source = GetVertex(edge.source);
             var destination = GetVertex(edge.destination);
-            destination.IsReferenced = true;
-
             source.AddChild(destination);
         }
 
@@ -75,20 +101,86 @@ public class Digraph
         for (int i = 0; i < chain.Count - 1; i++)
         {
             var parent = chain[i];
-            parent.Children.Remove(project);
+            parent.Outgoing.Remove(project);
         }
 
-        if (project.Children != null && project.Children.Count > 0)
+        if (project.Outgoing != null && project.Outgoing.Count > 0)
         {
             chain.Add(project);
 
-            foreach (var reference in project.Children.ToArray())
+            foreach (var reference in project.Outgoing.ToArray())
             {
                 RemoveTransitiveEdges(reference, chain);
             }
 
             chain.RemoveAt(chain.Count - 1);
         }
+    }
+
+    public void CalculateHeight()
+    {
+        foreach (var vertex in vertices.Values)
+        {
+            CalculateHeight(vertex);
+        }
+    }
+
+    public void CalculateDepth()
+    {
+        foreach (var vertex in vertices.Values)
+        {
+            CalculateDepth(vertex);
+        }
+    }
+
+    private void CalculateHeight(Vertex vertex)
+    {
+        if (vertex.OutDegree > -1)
+        {
+            return;
+        }
+
+        int outdegree = 0;
+
+        if (vertex.Outgoing != null && vertex.Outgoing.Count > 0)
+        {
+            foreach (var outgoing in vertex.Outgoing)
+            {
+                CalculateHeight(outgoing);
+                int outgoingHeight = outgoing.OutDegree + 1;
+                if (outgoingHeight > outdegree)
+                {
+                    outdegree = outgoingHeight;
+                }
+            }
+        }
+
+        vertex.OutDegree = outdegree;
+    }
+
+    private void CalculateDepth(Vertex vertex)
+    {
+        if (vertex.InDegree > -1)
+        {
+            return;
+        }
+
+        int indegree = 0;
+
+        if (vertex.Incoming != null && vertex.Incoming.Count > 0)
+        {
+            foreach (var incoming in vertex.Incoming)
+            {
+                CalculateDepth(incoming);
+                int incomingHeight = incoming.InDegree + 1;
+                if (incomingHeight > indegree)
+                {
+                    indegree = incomingHeight;
+                }
+            }
+        }
+
+        vertex.InDegree = indegree;
     }
 
     public string GetDotText()
@@ -125,15 +217,44 @@ public class Digraph
 
         foreach (var vertex in nodes)
         {
-            if (vertex.Children != null && vertex.Children.Count > 0)
+            if (vertex.Outgoing != null && vertex.Outgoing.Count > 0)
             {
-                foreach (var child in vertex.Children)
+                foreach (var child in vertex.Outgoing)
                 {
                     writer.WriteLine($"{dic[vertex]} {dic[child]}");
                 }
             }
         }
-        
+
+        return writer.ToString();
+    }
+
+    public string GetElkText()
+    {
+        var writer = new System.IO.StringWriter();
+
+        var dic = new Dictionary<Vertex, int>();
+
+        var nodes = vertices.Values.ToArray();
+        for (int i = 0; i < nodes.Length; i++)
+        {
+            dic[nodes[i]] = i;
+            writer.WriteLine($"node {nodes[i].Key}");
+        }
+
+        writer.WriteLine("#");
+
+        foreach (var vertex in nodes)
+        {
+            if (vertex.Outgoing != null && vertex.Outgoing.Count > 0)
+            {
+                foreach (var child in vertex.Outgoing)
+                {
+                    writer.WriteLine($"edge {vertex.Key} {child.Key}");
+                }
+            }
+        }
+
         return writer.ToString();
     }
 
@@ -145,7 +266,7 @@ public class Digraph
     {
         foreach (var project in vertices.Values.OrderBy(r => r.Value, StringComparer.OrdinalIgnoreCase))
         {
-            if (project.Children == null || project.Children.Count == 0)
+            if (project.Outgoing == null || project.Outgoing.Count == 0)
             {
                 continue;
             }
@@ -156,7 +277,7 @@ public class Digraph
                 projectKey = projectKey.TrimQuotes();
             }
 
-            foreach (var reference in project.Children.OrderBy(r => r.Value, StringComparer.OrdinalIgnoreCase))
+            foreach (var reference in project.Outgoing.OrderBy(r => r.Value, StringComparer.OrdinalIgnoreCase))
             {
                 var referenceKey = reference.Key;
                 if (!quotes)
@@ -219,7 +340,7 @@ public class Digraph
     public void TransitiveReduction()
     {
         var all = vertices.Values;
-        var originalEdges = all.ToDictionary(v => v, v => new HashSet<Vertex>(v.Children ?? Enumerable.Empty<Vertex>()));
+        var originalEdges = all.ToDictionary(v => v, v => new HashSet<Vertex>(v.Outgoing ?? Enumerable.Empty<Vertex>()));
 
         var visited = new HashSet<Vertex>();
         var stack = new Stack<Vertex>();
@@ -228,11 +349,11 @@ public class Digraph
         {
             foreach (var destination in originalEdges[source].ToList())
             {
-                source.Children.Remove(destination);
+                source.Outgoing.Remove(destination);
 
                 if (!CanReach(source, destination, visited, stack))
                 {
-                    source.Children.Add(destination);
+                    source.Outgoing.Add(destination);
                 }
 
                 visited.Clear();
@@ -258,9 +379,9 @@ public class Digraph
                 continue;
             }
 
-            if (current.Children != null)
+            if (current.Outgoing != null)
             {
-                foreach (var child in current.Children)
+                foreach (var child in current.Outgoing)
                 {
                     if (!visited.Contains(child))
                     {
@@ -268,6 +389,46 @@ public class Digraph
                     }
                 }
             }
+        }
+
+        return false;
+    }
+
+    public void Cleanup()
+    {
+        foreach (var vertex in vertices.ToArray())
+        {
+            if (ShouldDelete(vertex.Key))
+            {
+                vertices.Remove(vertex.Key);
+            }
+
+            if (vertex.Value.Outgoing != null)
+            {
+                foreach (var child in vertex.Value.Outgoing.ToArray())
+                {
+                    if (ShouldDelete(child.Key))
+                    {
+                        vertex.Value.Outgoing.Remove(child);
+                    }
+                }
+            }
+        }
+    }
+
+    public bool ShouldDelete(string key)
+    {
+        if (key == "dirs.proj" ||
+            key == "\"dirs.proj\"" ||
+            key.EndsWith("\\dirs.proj\"") ||
+            key.EndsWith("\\dirs.proj"))
+        {
+            return true;
+        }
+
+        if (key == "restore.proj" || key == "\"restore.proj\"")
+        {
+            return true;
         }
 
         return false;
