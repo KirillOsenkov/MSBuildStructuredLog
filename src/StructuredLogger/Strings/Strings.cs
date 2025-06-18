@@ -327,32 +327,32 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 case "cs-CZ":
                     text = text
-                        .Replace(@"$({0})={1} (", @"\$\((?<Name>\w+)\)="".*"" \(")
-                        .Replace(@"{2})", @".*\)")
+                        .Replace(@"$({0})={1} (", @"\$\((?<Name>\w+)\)=""(?<NewValue>.*)"" \(")
+                        .Replace(@"{2})", @"(?<OrgValue>.*)\)")
                         .Replace("{3}", @"(?<File>.*) \((?<Line>\d+),(?<Column>\d+)\)");
                     break;
                 case "ko-KR":
                     text = text
                         .Replace(@"$({0})={3}", @"\$\((?<Name>\w+)\)=(?<File>.*) \((?<Line>\d+),(?<Column>\d+)\)")
-                        .Replace("{1}", ".*")
-                        .Replace("{2}", ".*");
+                        .Replace("{1}", "(?<NewValue>.*)")
+                        .Replace("{2}", "(?<OrgValue>.*)");
                     break;
                 case "pl-PL":
                     text = text
-                        .Replace(@"$({0})=„{1}” (", @"\$\((?<Name>\w+)\)=„.*” \(")
-                        .Replace(@"„{2}”)", @"„.*”\)")
+                        .Replace(@"$({0})=„{1}” (", @"\$\((?<Name>\w+)\)=„(?<NewValue>.*)” \(")
+                        .Replace(@"„{2}”)", @"„(?<OrgValue>.*)”\)")
                         .Replace("{3}", @"(?<File>.*) \((?<Line>\d+),(?<Column>\d+)\)");
                     break;
                 case "zh-Hans":
                     text = text
-                        .Replace(@"$({0})=“{1}”(", @"\$\((?<Name>\w+)\)=“.*”\(")
-                        .Replace(@"{2}”)", @".*”\)")
+                        .Replace(@"$({0})=“{1}”(", @"\$\((?<Name>\w+)\)=“(?<NewValue>.*)”\(")
+                        .Replace(@"{2}”)", @"(?<OrgValue>.*)”\)")
                         .Replace("{3}", @"(?<File>.*) \((?<Line>\d+),(?<Column>\d+)\)");
                     break;
                 default:
                     text = text
-                        .Replace(@"$({0})=""{1}"" (", @"\$\((?<Name>\w+)\)="".*"" \(")
-                        .Replace(@"{2}"")", @".*""\)")
+                        .Replace(@"$({0})=""{1}"" (", @"\$\((?<Name>\w+)\)=""(?<NewValue>.*)"" \(")
+                        .Replace(@"{2}"")", @"(?<OrgValue>.*)""\)")
                         .Replace("{3}", @"(?<File>.*) \((?<Line>\d+),(?<Column>\d+)\)");
                     break;
             }
