@@ -56,7 +56,7 @@ namespace StructuredLogViewer
 
             if (type == "<PropertyGroup>")
             {
-                var propertyGroup = this.PreprocessContext.Evaluation.Children.FirstOrDefault(p => p.Title == "Properties");
+                var propertyGroup = this.PreprocessContext.Evaluation.Children.FirstOrDefault(p => p.Title == Strings.Properties);
                 if (propertyGroup is Folder propertyFolder)
                 {
                     var propertyEntry = propertyFolder.Children.FirstOrDefault(p => p.Title == title);
@@ -67,7 +67,8 @@ namespace StructuredLogViewer
                 }
 
                 // Search the "Property reassignment" folder.
-                var prFolder = this.PreprocessContext.Evaluation.Children.FirstOrDefault(p => p.Title == "Property reassignment");
+                ;
+                var prFolder = this.PreprocessContext.Evaluation.Children.FirstOrDefault(p => p.Title == Strings.PropertyReassignmentFolder);
                 if (prFolder is TimedNode folder)
                 {
                     var entryFolder = folder.Children.FirstOrDefault(p => p.Title == title);
@@ -89,7 +90,7 @@ namespace StructuredLogViewer
                                 // Print the original value on first pass.
                                 if (count == 1)
                                 {
-                                    value = match.Groups["OrgValue"].Value;
+                                    value = match.Groups["OldValue"].Value;
                                     value = value.NormalizePropertyValue();
                                     content.Append($"\n{count}: " + value);
                                     count++;
@@ -122,8 +123,8 @@ namespace StructuredLogViewer
 
             void CloseToolTip()
             {
-                tooltip.Content = string.Empty;
                 tooltip.IsOpen = false;
+                tooltip.Content = string.Empty;
             }
         }
 
