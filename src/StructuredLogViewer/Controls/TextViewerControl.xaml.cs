@@ -24,9 +24,9 @@ namespace StructuredLogViewer.Controls
     public partial class TextViewerControl : UserControl
     {
         private static readonly Regex solutionFileRegex = new Regex(@"^\s*Microsoft Visual Studio Solution File", RegexOptions.Compiled | RegexOptions.Singleline);
-        private FoldingManager foldingManager;
 
         public string FilePath { get; private set; }
+        public FoldingManager FoldingManager { get; private set; }
         public string Text { get; private set; }
         public Action Preprocess { get; private set; }
         public bool IsXml { get; private set; }
@@ -43,7 +43,7 @@ namespace StructuredLogViewer.Controls
 
             SearchPanel.Install(textArea);
 
-            foldingManager = FoldingManager.Install(textEditor.TextArea);
+            this.FoldingManager = FoldingManager.Install(textEditor.TextArea);
 
             textArea.MouseRightButtonDown += TextAreaMouseRightButtonDown;
             DataObject.AddSettingDataHandler(textArea, OnSettingData);
@@ -216,7 +216,7 @@ namespace StructuredLogViewer.Controls
                 textEditor.SyntaxHighlighting = highlighting;
 
                 var foldingStrategy = new XmlFoldingStrategy();
-                foldingStrategy.UpdateFoldings(foldingManager, textEditor.Document);
+                foldingStrategy.UpdateFoldings(this.FoldingManager, textEditor.Document);
 
                 gotoProjectMenu.Visibility = Visibility.Visible;
             }
@@ -399,7 +399,7 @@ async
                 selectionStart--;
             }
 
-            var projFolding = foldingManager.GetFoldingsContaining(selectionStart)?.LastOrDefault(f => f.Title == "<Project>");
+            var projFolding = this.FoldingManager.GetFoldingsContaining(selectionStart)?.LastOrDefault(f => f.Title == "<Project>");
             if (projFolding != null)
             {
                 textEditor.Select(projFolding.StartOffset, projFolding.Title.Length);

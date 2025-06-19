@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -247,6 +248,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
 #else
                 text.Replace("\r\n", "\n").Replace("\r", "\n");
 #endif
+
+            return text;
+        }
+
+        /// <summary>
+        /// Normalize MSBuild property value for user reading.
+        /// </summary>
+        /// <returns>Returns a string without new lines, tabs, or excessive spaces.</returns>
+        public static string NormalizePropertyValue(this string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return text;
+            }
+
+            text = Regex.Replace(text, @"(\s+)", " ");
 
             return text;
         }
@@ -728,7 +745,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             int previous = 0;
-            for (int i = 0; i > -1 && i < text.Length; )
+            for (int i = 0; i > -1 && i < text.Length;)
             {
                 i = text.IndexOf(openParen, i);
                 if (i == -1)
