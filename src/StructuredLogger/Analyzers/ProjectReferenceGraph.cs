@@ -193,7 +193,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
 
                 projectHeights[project] = height;
-                vertex.OutDegree = height;
+                vertex.Height = height;
             }
 
             return height;

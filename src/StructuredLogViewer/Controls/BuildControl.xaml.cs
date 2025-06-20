@@ -400,6 +400,8 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             navigationHelper.OpenFileRequested += filePath => DisplayFile(filePath);
 
             centralTabControl.SelectionChanged += CentralTabControl_SelectionChanged;
+
+            centralTabControl.SelectedIndex = 4;
         }
 
         public void Dispose()
@@ -520,7 +522,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             else if (selectedItem.Name == nameof(projectReferenceGraphTab))
             {
                 PopulateProjectReferenceGraph();
-                DisplayText(Build.ProjectReferenceGraph.Graph.GetDotText(), "Project References");
+                //DisplayText(Build.ProjectReferenceGraph.Graph.GetDotText(), "Project References");
             }
         }
 
@@ -528,85 +530,127 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
         {
             var vertexByControl = new Dictionary<Vertex, FrameworkElement>();
 
-            // var graph = Digraph.Load(@"C:\temp\graph\trimmed.dot");
+            // var graph = Digraph.Load(@"C:\temp\graph\graph.dot");
             // graph.CalculateHeight();
             // graph.CalculateDepth();
 
             var graph = Build.ProjectReferenceGraph.Graph;
 
-            var maxOutDegree = graph.Vertices.Max(g => g.OutDegree);
-            var maxInDegree = graph.Vertices.Max(g => g.InDegree);
+            var maxHeight = graph.Vertices.Max(g => g.Height);
+            var maxDepth = graph.Vertices.Max(g => g.Depth);
 
             var grid = new Grid();
-            var control = new StackPanel() { Orientation = Orientation.Horizontal };
+            var control = new StackPanel() { Orientation = Orientation.Vertical };
+            var canvas = new Canvas();
+
+            grid.Children.Add(canvas);
             grid.Children.Add(control);
 
-            var canvas = new Canvas();
-            grid.Children.Add(canvas);
-
-            foreach (var vertexGroup in graph.Vertices.GroupBy(v => v.OutDegree).OrderBy(g => g.Key))
+            foreach (var vertexGroup in graph.Vertices.GroupBy(v => v.Height).OrderBy(g => g.Key))
             {
-                var stack = new StackPanel();
+                var stack = new StackPanel() { Orientation = Orientation.Horizontal };
 
                 foreach (var vertex in vertexGroup.OrderByDescending(s => s.InDegree).ThenBy(s => s.Key))
                 {
-                    var indegree = vertex.InDegree;
+                    var depth = vertex.Depth;
 
-                    var ratio = (byte)Math.Max(200, 255 - indegree * 2);
-
+                    var ratio = (byte)Math.Max(200, 255 - depth * 2);
+                    var halfratio = (byte)Math.Max(224, 255 - depth);
+                    var height = Math.Pow(vertex.InDegree, 0.6);
+                    var opacity = vertex.InDegree > 1 ? 0.9 : 0.5;
                     var projectControl = new TextBlock()
                     {
                         Text = vertex.Key.TrimQuotes(),
                         Margin = new Thickness(4, 2, 4, 2),
-                        Padding = new Thickness(2, 1, 2, 1),
-                        Background = new SolidColorBrush(Color.FromRgb(ratio, ratio, 255)),
+                        Padding = new Thickness(2, height, 2, height),
+                        Background = new SolidColorBrush(Color.FromRgb(ratio, halfratio, 255)),
+                        VerticalAlignment = VerticalAlignment.Center,
+                        Opacity = opacity,
                         Tag = vertex
                     };
                     vertexByControl[vertex] = projectControl;
+
+                    var outgoingBrush = new LinearGradientBrush(Colors.Red, Colors.DarkCyan, 90.0);
+                    var incomingBrush = new LinearGradientBrush(Colors.DarkCyan, Colors.DarkGreen, 90.0);
+
                     projectControl.MouseDown += (s, e) =>
                     {
                         canvas.Children.Clear();
 
                         var node = projectControl.Tag as Vertex;
+
+                        var sourceRect = GetRectOnCanvas(projectControl);
+
                         if (node.Outgoing != null)
                         {
                             foreach (var outgoing in node.Outgoing)
                             {
-                                if (vertexByControl.TryGetValue(outgoing, out var outControl))
+                                if (vertexByControl.TryGetValue(outgoing, out var destinationControl))
                                 {
-                                    var sourcePoint = outControl.TranslatePoint(
-                                        new Point(outControl.ActualWidth, outControl.ActualHeight / 2),
-                                        canvas);
-                                    var destinationPoint = projectControl.TranslatePoint(
-                                        new Point(0, projectControl.ActualHeight / 2),
-                                        canvas);
-                                    var line = new System.Windows.Shapes.Line
-                                    {
-                                        X1 = sourcePoint.X,
-                                        Y1 = sourcePoint.Y,
-                                        X2 = destinationPoint.X,
-                                        Y2 = destinationPoint.Y,
-                                        Stroke = Brushes.Red,
-                                    };
-                                    canvas.Children.Add(line);
-
-                                    var border = new System.Windows.Shapes.Rectangle
-                                    {
-                                        Width = outControl.ActualWidth,
-                                        Height = outControl.ActualHeight,
-                                        Stroke = Brushes.Red
-                                    };
-                                    Canvas.SetLeft(border, sourcePoint.X - outControl.ActualWidth);
-                                    Canvas.SetTop(border, sourcePoint.Y - outControl.ActualHeight / 2);
-                                    canvas.Children.Add(border);
+                                    var destinationRect = GetRectOnCanvas(destinationControl);
+                                    var sourcePoint = new Point(sourceRect.Left + sourceRect.Width / 2, sourceRect.Top);
+                                    var destinationPoint = new Point(destinationRect.Left + destinationRect.Width / 2, destinationRect.Bottom);
+                                    AddLine(sourcePoint, destinationPoint, outgoingBrush);
+                                    AddRectangle(destinationRect, Brushes.Red);
                                 }
                             }
                         }
+
+                        if (node.Incoming != null)
+                        {
+                            foreach (var incoming in node.Incoming)
+                            {
+                                if (vertexByControl.TryGetValue(incoming, out var sourceControl))
+                                {
+                                    var destinationRect = GetRectOnCanvas(sourceControl);
+                                    var sourcePoint = new Point(sourceRect.Left + sourceRect.Width / 2, sourceRect.Bottom);
+                                    var destinationPoint = new Point(destinationRect.Left + destinationRect.Width / 2, destinationRect.Top);
+                                    AddLine(sourcePoint, destinationPoint, incomingBrush);
+                                    AddRectangle(destinationRect, Brushes.DarkGreen);
+                                }
+                            }
+                        }
+
+                        AddRectangle(sourceRect, Brushes.DarkCyan);
                     };
                     stack.Children.Add(projectControl);
                 }
 
                 control.Children.Add(stack);
+            }
+
+            Rect GetRectOnCanvas(FrameworkElement control)
+            {
+                return new Rect(
+                    control.TranslatePoint(new Point(0, 0), canvas),
+                    control.TranslatePoint(new Point(control.ActualWidth, control.ActualHeight), canvas)
+                );
+            }
+
+            void AddLine(Point sourcePoint, Point destinationPoint, Brush stroke)
+            {
+                var line = new System.Windows.Shapes.Line
+                {
+                    X1 = sourcePoint.X,
+                    Y1 = sourcePoint.Y,
+                    X2 = destinationPoint.X,
+                    Y2 = destinationPoint.Y,
+                    Stroke = stroke,
+                };
+                canvas.Children.Add(line);
+            }
+
+            void AddRectangle(Rect rect, Brush stroke)
+            {
+                var rectangleShape = new System.Windows.Shapes.Rectangle
+                {
+                    Width = rect.Width + 2,
+                    Height = rect.Height + 2,
+                    Stroke = stroke
+                };
+                Canvas.SetLeft(rectangleShape, rect.Left - 1);
+                Canvas.SetTop(rectangleShape, rect.Top - 1);
+                canvas.Children.Add(rectangleShape);
             }
 
             var scrollViewer = new ScrollViewer()

@@ -15,8 +15,11 @@ public class Vertex
     public bool WasProcessed;
     public bool IsProcessing;
 
-    public int OutDegree { get; set; } = -1;
-    public int InDegree { get; set; } = -1;
+    public int Height { get; set; } = -1;
+    public int Depth { get; set; } = -1;
+
+    public int InDegree => Incoming?.Count ?? 0;
+    public int OutDegree => Outgoing?.Count ?? 0;
 
     public void AddChild(Vertex destination)
     {
@@ -135,7 +138,7 @@ public class Digraph
 
     private void CalculateHeight(Vertex vertex)
     {
-        if (vertex.OutDegree > -1)
+        if (vertex.Height > -1)
         {
             return;
         }
@@ -147,7 +150,7 @@ public class Digraph
             foreach (var outgoing in vertex.Outgoing)
             {
                 CalculateHeight(outgoing);
-                int outgoingHeight = outgoing.OutDegree + 1;
+                int outgoingHeight = outgoing.Height + 1;
                 if (outgoingHeight > outdegree)
                 {
                     outdegree = outgoingHeight;
@@ -155,12 +158,12 @@ public class Digraph
             }
         }
 
-        vertex.OutDegree = outdegree;
+        vertex.Height = outdegree;
     }
 
     private void CalculateDepth(Vertex vertex)
     {
-        if (vertex.InDegree > -1)
+        if (vertex.Depth > -1)
         {
             return;
         }
@@ -172,7 +175,7 @@ public class Digraph
             foreach (var incoming in vertex.Incoming)
             {
                 CalculateDepth(incoming);
-                int incomingHeight = incoming.InDegree + 1;
+                int incomingHeight = incoming.Depth + 1;
                 if (incomingHeight > indegree)
                 {
                     indegree = incomingHeight;
@@ -180,7 +183,7 @@ public class Digraph
             }
         }
 
-        vertex.InDegree = indegree;
+        vertex.Depth = indegree;
     }
 
     public string GetDotText()
