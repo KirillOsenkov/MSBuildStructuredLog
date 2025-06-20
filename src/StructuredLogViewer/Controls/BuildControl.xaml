@@ -111,13 +111,13 @@
                   </Grid>
                 </TabItem>
 
-                <TabItem x:Name="projectGraphTab" Header="Project Graph">
+                <!--<TabItem x:Name="projectGraphTab" Header="Project Graph">
                   <Grid>
                     <TextBlock x:Name="projectGraphWatermark" HorizontalAlignment="Center"
                                VerticalAlignment="Center">Rendering graph...</TextBlock>
                     <local:ProjectGraphControl x:Name="projectGraphControl" Visibility="Hidden"/>
                   </Grid>
-                </TabItem>
+                </TabItem>-->
 
                 <TabItem x:Name="projectReferenceGraphTab" Header="Project References">
                   <Grid>

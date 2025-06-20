@@ -55,6 +55,18 @@ public class Digraph
         vertices[vertex.Value] = vertex;
     }
 
+    public Vertex GetOrCreate(string value, Func<string, string> keyGetter)
+    {
+        if (TryFindVertex(value) is not { } node)
+        {
+            node = new Vertex { Value = value };
+            node.Key = keyGetter(value);
+            Add(node);
+        }
+
+        return node;
+    }
+
     public Vertex TryFindVertex(string value)
     {
         vertices.TryGetValue(value, out var result);
@@ -119,6 +131,8 @@ public class Digraph
             chain.RemoveAt(chain.Count - 1);
         }
     }
+
+    public int MaxHeight => Vertices.Max(v => v.Height);
 
     public void CalculateHeight()
     {

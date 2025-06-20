@@ -159,11 +159,6 @@ namespace StructuredLogViewer.Controls
                 sourceFileResolver = new SourceFileResolver(logFilePath);
             }
 
-            if (Build.Statistics.TimedNodeCount > 1000)
-            {
-                projectGraphTab.Visibility = Visibility.Collapsed;
-            }
-
             // Search Log | Properties and Items | Find in Files
             sharedTreeContextMenu = new ContextMenu();
             sharedTreeContextMenu.Opened += SharedTreeContextMenu_Opened;
@@ -400,8 +395,6 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             navigationHelper.OpenFileRequested += filePath => DisplayFile(filePath);
 
             centralTabControl.SelectionChanged += CentralTabControl_SelectionChanged;
-
-            centralTabControl.SelectedIndex = 4;
         }
 
         public void Dispose()
@@ -511,10 +504,6 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             {
                 PopulateTimeline();
             }
-            else if (selectedItem.Name == nameof(projectGraphTab))
-            {
-                PopulateProjectGraph();
-            }
             else if (selectedItem.Name == nameof(tracingTab))
             {
                 PopulateTrace();
@@ -522,7 +511,6 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             else if (selectedItem.Name == nameof(projectReferenceGraphTab))
             {
                 PopulateProjectReferenceGraph();
-                //DisplayText(Build.ProjectReferenceGraph.Graph.GetDotText(), "Project References");
             }
         }
 

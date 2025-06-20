@@ -8,8 +8,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class ProjectReferenceGraph : ISearchExtension
     {
-        private Dictionary<string, ICollection<string>> references = new(StringComparer.OrdinalIgnoreCase);
-        private Dictionary<string, int> projectHeights = new(StringComparer.OrdinalIgnoreCase);
         private List<IReadOnlyList<string>> circularities = new();
         private int maxProjectHeight;
 
@@ -17,21 +15,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public Digraph Graph = new Digraph();
 
-        public IEnumerable<Vertex> Vertices => Graph.Vertices;
-
         public ProjectReferenceGraph(Build build)
         {
+            Graph = new Digraph();
+
             var evaluations = build.EvaluationFolder.Children.OfType<ProjectEvaluation>();
             foreach (var evaluation in evaluations)
             {
                 string projectFile = evaluation.ProjectFile;
                 if (projectFile.EndsWith("_wpftmp.csproj", StringComparison.OrdinalIgnoreCase) ||
-                    projectFile.EndsWith(".sln.metaproj", StringComparison.OrdinalIgnoreCase))
+                    projectFile.EndsWith(".sln.metaproj", StringComparison.OrdinalIgnoreCase) ||
+                    projectFile.EndsWith("\\dirs.proj", StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
                 }
-
-                string projectDirectory = Path.GetDirectoryName(projectFile);
 
                 var items = evaluation.FindChild<Folder>(Strings.Items);
                 if (items == null)
@@ -39,11 +36,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     continue;
                 }
 
-                if (!references.TryGetValue(projectFile, out var bucket))
-                {
-                    bucket = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                    references[projectFile] = bucket;
-                }
+                var node = GetNode(projectFile);
 
                 var projectReferences = items.FindChild<AddItem>("ProjectReference");
                 if (projectReferences == null)
@@ -51,66 +44,28 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     continue;
                 }
 
+                string projectDirectory = Path.GetDirectoryName(projectFile);
                 foreach (var projectReference in projectReferences.Children.OfType<Item>())
                 {
                     var path = projectReference.Text;
                     var referencePath = Path.Combine(projectDirectory, path);
                     referencePath = TextUtilities.NormalizeFilePath(referencePath);
 
-                    bucket.Add(referencePath);
-                }
-            }
+                    var child = GetNode(referencePath);
 
-            Graph = new Digraph();
-
-            foreach (var kvp in references)
-            {
-                var node = GetNode(kvp.Key);
-                foreach (var reference in kvp.Value)
-                {
-                    var childNode = GetNode(reference);
-                    node.AddChild(childNode);
+                    node.AddChild(child);
                 }
             }
 
             Vertex GetNode(string project)
             {
-                if (Graph.TryFindVertex(project) is not { } node)
-                {
-                    node = new Vertex { Value = project };
-                    node.Key = GetKey(project);
-                    Graph.Add(node);
-                }
-
-                return node;
-            }
-
-            var unreferenced = Graph.Sources.ToArray();
-
-            var nodeList = new List<Vertex>();
-            foreach (var key in unreferenced)
-            {
-                //RemoveTransitiveEdges(key, nodeList);
+                return Graph.GetOrCreate(project, GetKey);
             }
 
             Graph.CalculateHeight();
             Graph.CalculateDepth();
 
-            var list = new List<string>();
-            foreach (var kvp in unreferenced)
-            {
-                CalculateHeight(kvp, list);
-            }
-
-            foreach (var kvp in references.ToArray())
-            {
-                references[kvp.Key] = kvp.Value.OrderBy(s => s).ToArray();
-            }
-
-            if (projectHeights.Any())
-            {
-                maxProjectHeight = projectHeights.Values.Max();
-            }
+            maxProjectHeight = Graph.MaxHeight;
 
             if (circularities.Any())
             {
@@ -163,42 +118,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             project.WasProcessed = true;
         }
 
-        private int CalculateHeight(Vertex vertex, List<string> chain)
-        {
-            string project = vertex.Value;
-            if (!projectHeights.TryGetValue(project, out int height))
-            {
-                if (vertex.Outgoing != null)
-                {
-                    int index = chain.IndexOf(project);
-                    if (index == -1)
-                    {
-                        chain.Add(project);
-                        foreach (var reference in vertex.Outgoing)
-                        {
-                            int referenceHeight = CalculateHeight(reference, chain) + 1;
-                            if (referenceHeight > height)
-                            {
-                                height = referenceHeight;
-                            }
-                        }
-
-                        chain.Remove(project);
-                    }
-                    else
-                    {
-                        var loop = chain.Skip(index).ToArray();
-                        circularities.Add(loop);
-                    }
-                }
-
-                projectHeights[project] = height;
-                vertex.Height = height;
-            }
-
-            return height;
-        }
-
         public bool TryGetResults(NodeQueryMatcher matcher, IList<SearchResult> resultSet, int maxResults)
         {
             bool isProjectHeightSearch =
@@ -249,17 +168,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                 }
 
-                if (visitedProjects.Add(path) && references.TryGetValue(path, out var bucket))
+                if (visitedProjects.Add(path) && Graph.TryFindVertex(path) is Vertex vertex)
                 {
-                    foreach (var referencedProjectPath in bucket)
+                    if (vertex.Outgoing != null)
                     {
-                        var referencedProject = PopulateReferences(referencedProjectPath);
-                        if (referencedProject != null)
+                        foreach (var referencedProjectPath in vertex.Outgoing)
                         {
-                            node.AddChild(referencedProject);
-                            if (referencedProject.IsExpanded || referencedProject is ProxyNode)
+                            var referencedProject = PopulateReferences(referencedProjectPath.Value);
+                            if (referencedProject != null)
                             {
-                                node.IsExpanded = true;
+                                node.AddChild(referencedProject);
+                                if (referencedProject.IsExpanded || referencedProject is ProxyNode)
+                                {
+                                    node.IsExpanded = true;
+                                }
                             }
                         }
                     }
@@ -273,8 +195,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return node;
             }
 
-            foreach (var project in references.Keys)
+            foreach (var vertex in Graph.Vertices)
             {
+                var project = vertex.Value;
                 var match = projectMatcher.IsMatch(project);
                 if (match == null || match == SearchResult.EmptyQueryMatch)
                 {
@@ -306,14 +229,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 List<string> referencing = new();
 
-                foreach (var project in references.Keys)
+                var vertex = Graph.TryFindVertex(singleProject);
+                if (vertex != null && vertex.Incoming != null)
                 {
-                    if (references.TryGetValue(project, out var bucket))
+                    foreach (var incoming in vertex.Incoming)
                     {
-                        if (bucket.Contains(singleProject, StringComparer.OrdinalIgnoreCase))
-                        {
-                            referencing.Add(project);
-                        }
+                        referencing.Add(incoming.Value);
                     }
                 }
 
@@ -348,19 +269,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 resultSet.Add(new SearchResult(new Note { Text = $"Max = {maxProjectHeight}" }));
             }
 
-            foreach (var p in references.Keys)
+            foreach (var p in Graph.Vertices)
             {
-                if (projectHeights.TryGetValue(p, out int thisProjectHeight))
+                if (p.Height == height)
                 {
-                    if (thisProjectHeight == height)
+                    var projectWithHeight = CreateProject(p.Value);
+                    var searchResult = new SearchResult(projectWithHeight);
+                    resultSet.Add(searchResult);
+                    if (resultSet.Count >= maxResults)
                     {
-                        var projectWithHeight = CreateProject(p);
-                        var searchResult = new SearchResult(projectWithHeight);
-                        resultSet.Add(searchResult);
-                        if (resultSet.Count >= maxResults)
-                        {
-                            return;
-                        }
+                        return;
                     }
                 }
             }
