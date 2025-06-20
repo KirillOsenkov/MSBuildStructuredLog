@@ -570,7 +570,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                     };
                     vertexByControl[vertex] = projectControl;
 
-                    var outgoingBrush = new LinearGradientBrush(Colors.Red, Colors.DarkCyan, 90.0);
+                    var outgoingBrush = new LinearGradientBrush(Colors.MediumOrchid, Colors.DarkCyan, 90.0);
                     var incomingBrush = new LinearGradientBrush(Colors.DarkCyan, Colors.DarkGreen, 90.0);
 
                     projectControl.MouseDown += (s, e) =>
@@ -591,7 +591,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                                     var sourcePoint = new Point(sourceRect.Left + sourceRect.Width / 2, sourceRect.Top);
                                     var destinationPoint = new Point(destinationRect.Left + destinationRect.Width / 2, destinationRect.Bottom);
                                     AddLine(sourcePoint, destinationPoint, outgoingBrush);
-                                    AddRectangle(destinationRect, Brushes.Red);
+                                    AddRectangle(destinationRect, Brushes.MediumOrchid);
                                 }
                             }
                         }
@@ -611,7 +611,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                             }
                         }
 
-                        AddRectangle(sourceRect, Brushes.DarkCyan);
+                        AddRectangle(sourceRect, Brushes.DarkCyan, Brushes.PaleGreen);
                     };
                     stack.Children.Add(projectControl);
                 }
@@ -640,13 +640,14 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                 canvas.Children.Add(line);
             }
 
-            void AddRectangle(Rect rect, Brush stroke)
+            void AddRectangle(Rect rect, Brush stroke, Brush fill = null)
             {
                 var rectangleShape = new System.Windows.Shapes.Rectangle
                 {
                     Width = rect.Width + 2,
                     Height = rect.Height + 2,
-                    Stroke = stroke
+                    Stroke = stroke,
+                    Fill = fill
                 };
                 Canvas.SetLeft(rectangleShape, rect.Left - 1);
                 Canvas.SetTop(rectangleShape, rect.Top - 1);
