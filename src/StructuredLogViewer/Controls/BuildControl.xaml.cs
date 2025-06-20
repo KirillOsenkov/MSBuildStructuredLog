@@ -526,15 +526,19 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             }
         }
 
+        private HashSet<FrameworkElement> selectedControls = new();
+
         private void PopulateProjectReferenceGraph()
         {
             var vertexByControl = new Dictionary<Vertex, FrameworkElement>();
 
-            // var graph = Digraph.Load(@"C:\temp\graph\graph.dot");
-            // graph.CalculateHeight();
-            // graph.CalculateDepth();
-
+#if false
+            var graph = Digraph.Load(@"C:\temp\graph\graph.dot");
+            graph.CalculateHeight();
+            graph.CalculateDepth();
+#else
             var graph = Build.ProjectReferenceGraph.Graph;
+#endif
 
             var maxHeight = graph.Vertices.Max(g => g.Height);
             var maxDepth = graph.Vertices.Max(g => g.Depth);
@@ -546,6 +550,24 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             grid.Children.Add(canvas);
             grid.Children.Add(control);
 
+            bool isDarkTheme = SettingsService.UseDarkTheme;
+
+            byte ratio, halfratio;
+            Color background, outgoingColor, incomingColor, border;
+
+            if (isDarkTheme)
+            {
+                outgoingColor = Colors.MediumOrchid;
+                border = Colors.DeepSkyBlue;
+                incomingColor = Colors.PaleGreen;
+            }
+            else
+            {
+                outgoingColor = Colors.MediumOrchid;
+                border = Colors.DarkCyan;
+                incomingColor = Colors.Green;
+            }
+
             foreach (var vertexGroup in graph.Vertices.GroupBy(v => v.Height).OrderBy(g => g.Key))
             {
                 var stack = new StackPanel() { Orientation = Orientation.Horizontal };
@@ -554,8 +576,19 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                 {
                     var depth = vertex.Depth;
 
-                    var ratio = (byte)Math.Max(200, 255 - depth * 2);
-                    var halfratio = (byte)Math.Max(224, 255 - depth);
+                    if (isDarkTheme)
+                    {
+                        ratio = (byte)Math.Min(150, depth * 6);
+                        halfratio = (byte)Math.Min(100, depth * 4);
+                        background = Color.FromRgb(40, halfratio, ratio);
+                    }
+                    else
+                    {
+                        ratio = (byte)Math.Max(200, 255 - depth * 2);
+                        halfratio = (byte)Math.Max(224, 255 - depth);
+                        background = Color.FromRgb(ratio, halfratio, 255);
+                    }
+
                     var height = Math.Pow(vertex.InDegree, 0.6);
                     var opacity = vertex.InDegree > 1 ? 0.9 : 0.5;
                     var projectControl = new TextBlock()
@@ -563,22 +596,30 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                         Text = vertex.Key.TrimQuotes(),
                         Margin = new Thickness(4, 2, 4, 2),
                         Padding = new Thickness(2, height, 2, height),
-                        Background = new SolidColorBrush(Color.FromRgb(ratio, halfratio, 255)),
+                        Background = new SolidColorBrush(background),
                         VerticalAlignment = VerticalAlignment.Center,
                         Opacity = opacity,
                         Tag = vertex
                     };
                     vertexByControl[vertex] = projectControl;
 
-                    var outgoingBrush = new LinearGradientBrush(Colors.MediumOrchid, Colors.DarkCyan, 90.0);
-                    var incomingBrush = new LinearGradientBrush(Colors.DarkCyan, Colors.DarkGreen, 90.0);
+                    var outgoingBrush = new LinearGradientBrush(outgoingColor, border, 90.0);
+                    var incomingBrush = new LinearGradientBrush(border, incomingColor, 90.0);
 
                     projectControl.MouseDown += (s, e) =>
                     {
                         canvas.Children.Clear();
 
-                        var node = projectControl.Tag as Vertex;
+                        if (selectedControls.Contains(projectControl))
+                        {
+                            selectedControls.Remove(projectControl);
+                            return;
+                        }
 
+                        selectedControls.Clear();
+                        selectedControls.Add(projectControl);
+
+                        var node = projectControl.Tag as Vertex;
                         var sourceRect = GetRectOnCanvas(projectControl);
 
                         if (node.Outgoing != null)
@@ -591,7 +632,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                                     var sourcePoint = new Point(sourceRect.Left + sourceRect.Width / 2, sourceRect.Top);
                                     var destinationPoint = new Point(destinationRect.Left + destinationRect.Width / 2, destinationRect.Bottom);
                                     AddLine(sourcePoint, destinationPoint, outgoingBrush);
-                                    AddRectangle(destinationRect, Brushes.MediumOrchid);
+                                    AddRectangle(destinationRect, new SolidColorBrush(outgoingColor));
                                 }
                             }
                         }
@@ -606,12 +647,12 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                                     var sourcePoint = new Point(sourceRect.Left + sourceRect.Width / 2, sourceRect.Bottom);
                                     var destinationPoint = new Point(destinationRect.Left + destinationRect.Width / 2, destinationRect.Top);
                                     AddLine(sourcePoint, destinationPoint, incomingBrush);
-                                    AddRectangle(destinationRect, Brushes.DarkGreen);
+                                    AddRectangle(destinationRect, new SolidColorBrush(incomingColor));
                                 }
                             }
                         }
 
-                        AddRectangle(sourceRect, Brushes.DarkCyan, Brushes.PaleGreen);
+                        AddRectangle(sourceRect, new SolidColorBrush(border), Brushes.PaleGreen);
                     };
                     stack.Children.Add(projectControl);
                 }
