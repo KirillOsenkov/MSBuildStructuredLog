@@ -442,12 +442,6 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                 this.timeline.Dispose();
             }
 
-            if (this.graph != null)
-            {
-                graph = null;
-                projectGraphControl.Dispose();
-            }
-
             // member variables
             copyItem = null;
             copySubtreeItem = null;
@@ -786,30 +780,6 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                 this.tracingWatermark.Visibility = Visibility.Hidden;
                 this.tracing.Visibility = Visibility.Visible;
             }
-        }
-
-        private Microsoft.Msagl.Drawing.Graph graph;
-
-        private void PopulateProjectGraph()
-        {
-            if (graph != null)
-            {
-                return;
-            }
-
-            graph = new MsaglProjectGraphConstructor().FromBuild(Build);
-            projectGraphControl.BuildControl = this;
-
-            if (graph.NodeCount > 1000 || graph.EdgeCount > 10000)
-            {
-                centralTabControl.SelectedIndex = 0;
-                projectGraphTab.Visibility = Visibility.Collapsed;
-                return;
-            }
-
-            projectGraphControl.SetGraph(graph);
-            projectGraphControl.Visibility = Visibility.Visible;
-            projectGraphWatermark.Visibility = Visibility.Collapsed;
         }
 
         private static string[] searchExamples = new[]
