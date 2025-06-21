@@ -550,6 +550,9 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                 incomingColor = Colors.Green;
             }
 
+            var outgoingBrush = new LinearGradientBrush(outgoingColor, border, 90.0);
+            var incomingBrush = new LinearGradientBrush(border, incomingColor, 90.0);
+
             foreach (var vertexGroup in graph.Vertices.GroupBy(v => v.Height).OrderBy(g => g.Key))
             {
                 var stack = new StackPanel() { Orientation = Orientation.Horizontal };
@@ -571,22 +574,19 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                         background = Color.FromRgb(ratio, halfratio, 255);
                     }
 
-                    var height = Math.Pow(vertex.InDegree, 0.6);
+                    var paddingHeight = Math.Pow(vertex.InDegree, 0.6);
                     var opacity = vertex.InDegree > 1 ? 0.9 : 0.5;
                     var projectControl = new TextBlock()
                     {
                         Text = vertex.Title.TrimQuotes(),
                         Margin = new Thickness(4, 2, 4, 2),
-                        Padding = new Thickness(2, height, 2, height),
+                        Padding = new Thickness(2, paddingHeight, 2, paddingHeight),
                         Background = new SolidColorBrush(background),
                         VerticalAlignment = VerticalAlignment.Center,
                         Opacity = opacity,
                         Tag = vertex
                     };
                     vertexByControl[vertex] = projectControl;
-
-                    var outgoingBrush = new LinearGradientBrush(outgoingColor, border, 90.0);
-                    var incomingBrush = new LinearGradientBrush(border, incomingColor, 90.0);
 
                     projectControl.MouseDown += (s, e) =>
                     {
@@ -610,11 +610,11 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                             {
                                 if (vertexByControl.TryGetValue(outgoing, out var destinationControl))
                                 {
-                                    var destinationRect = GetRectOnCanvas(destinationControl);
+                                    var canvasRect = GetRectOnCanvas(destinationControl);
                                     var sourcePoint = new Point(sourceRect.Left + sourceRect.Width / 2, sourceRect.Top);
-                                    var destinationPoint = new Point(destinationRect.Left + destinationRect.Width / 2, destinationRect.Bottom);
+                                    var destinationPoint = new Point(canvasRect.Left + canvasRect.Width / 2, canvasRect.Bottom);
                                     AddLine(sourcePoint, destinationPoint, outgoingBrush);
-                                    AddRectangle(destinationRect, new SolidColorBrush(outgoingColor));
+                                    AddRectangle(canvasRect, new SolidColorBrush(outgoingColor));
                                 }
                             }
                         }
@@ -625,11 +625,11 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                             {
                                 if (vertexByControl.TryGetValue(incoming, out var sourceControl))
                                 {
-                                    var destinationRect = GetRectOnCanvas(sourceControl);
+                                    var canvasRect = GetRectOnCanvas(sourceControl);
                                     var sourcePoint = new Point(sourceRect.Left + sourceRect.Width / 2, sourceRect.Bottom);
-                                    var destinationPoint = new Point(destinationRect.Left + destinationRect.Width / 2, destinationRect.Top);
+                                    var destinationPoint = new Point(canvasRect.Left + canvasRect.Width / 2, canvasRect.Top);
                                     AddLine(sourcePoint, destinationPoint, incomingBrush);
-                                    AddRectangle(destinationRect, new SolidColorBrush(incomingColor));
+                                    AddRectangle(canvasRect, new SolidColorBrush(incomingColor));
                                 }
                             }
                         }
