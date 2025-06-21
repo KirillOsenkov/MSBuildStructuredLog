@@ -512,6 +512,24 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
         private void PopulateProjectReferenceGraph()
         {
+            var dockPanel = new DockPanel();
+            var toolbar = new StackPanel()
+            {
+                Orientation = Orientation.Horizontal,
+                MinHeight = 20
+            };
+            toolbar.SetResourceReference(Panel.BackgroundProperty, SystemColors.ControlBrushKey);
+            dockPanel.Children.Add(toolbar);
+            DockPanel.SetDock(toolbar, Dock.Top);
+
+            var projectNameTextBlock = new TextBox()
+            {
+                Margin = new Thickness(0, 0, 8, 0),
+                VerticalAlignment = VerticalAlignment.Center,
+                IsReadOnly = true,
+                IsReadOnlyCaretVisible = true
+            };
+
             var vertexByControl = new Dictionary<Vertex, FrameworkElement>();
 
 #if false
@@ -521,6 +539,22 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 #else
             var graph = Build.ProjectReferenceGraph.Graph;
 #endif
+
+            var showTextButton = new Button
+            {
+                Content = "Show text",
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 8, 0),
+                BorderThickness = new Thickness()
+            };
+            showTextButton.Click += (s, e) =>
+            {
+                var text = graph.GetDotText();
+                DisplayText(text, "Project Reference Graph");
+            };
+
+            toolbar.Children.Add(showTextButton);
+            toolbar.Children.Add(projectNameTextBlock);
 
             var maxHeight = graph.Vertices.Max(g => g.Height);
             var maxDepth = graph.Vertices.Max(g => g.Depth);
@@ -590,19 +624,23 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
                     projectControl.MouseDown += (s, e) =>
                     {
+                        var node = projectControl.Tag as Vertex;
+
                         canvas.Children.Clear();
 
                         if (selectedControls.Contains(projectControl))
                         {
                             selectedControls.Remove(projectControl);
+                            projectNameTextBlock.Text = "";
                             return;
                         }
 
                         selectedControls.Clear();
                         selectedControls.Add(projectControl);
 
-                        var node = projectControl.Tag as Vertex;
                         var sourceRect = GetRectOnCanvas(projectControl);
+
+                        projectNameTextBlock.Text = node?.Value;
 
                         if (node.Outgoing != null)
                         {
@@ -683,7 +721,10 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto
             };
             scrollViewer.Content = grid;
-            projectReferenceGraphTab.Content = scrollViewer;
+
+            dockPanel.Children.Add(scrollViewer);
+
+            projectReferenceGraphTab.Content = dockPanel;
         }
 
         private void FilesTree_SearchTextChanged(string text)
