@@ -51,12 +51,12 @@ public class Digraph
         vertices[vertex.Value] = vertex;
     }
 
-    public Vertex GetOrCreate(string value, Func<string, string> keyGetter)
+    public Vertex GetOrCreate(string value, Func<string, string> titleGetter)
     {
         if (TryFindVertex(value) is not { } node)
         {
             node = new Vertex { Value = value };
-            node.Title = keyGetter(value);
+            node.Title = titleGetter(value);
             Add(node);
         }
 
@@ -121,7 +121,7 @@ public class Digraph
             return;
         }
 
-        int outdegree = 0;
+        int height = 0;
 
         if (vertex.Outgoing != null && vertex.Outgoing.Count > 0)
         {
@@ -129,14 +129,14 @@ public class Digraph
             {
                 CalculateHeight(outgoing);
                 int outgoingHeight = outgoing.Height + 1;
-                if (outgoingHeight > outdegree)
+                if (outgoingHeight > height)
                 {
-                    outdegree = outgoingHeight;
+                    height = outgoingHeight;
                 }
             }
         }
 
-        vertex.Height = outdegree;
+        vertex.Height = height;
     }
 
     private void CalculateDepth(Vertex vertex)
@@ -146,22 +146,126 @@ public class Digraph
             return;
         }
 
-        int indegree = 0;
+        int depth = 0;
 
         if (vertex.Incoming != null && vertex.Incoming.Count > 0)
         {
             foreach (var incoming in vertex.Incoming)
             {
                 CalculateDepth(incoming);
-                int incomingHeight = incoming.Depth + 1;
-                if (incomingHeight > indegree)
+                int incomingDepth = incoming.Depth + 1;
+                if (incomingDepth > depth)
                 {
-                    indegree = incomingHeight;
+                    depth = incomingDepth;
                 }
             }
         }
 
-        vertex.Depth = indegree;
+        vertex.Depth = depth;
+    }
+
+    public void TransitiveReduction()
+    {
+        var all = vertices.Values;
+        var originalEdges = all.ToDictionary(v => v, v => new HashSet<Vertex>(v.Outgoing ?? Enumerable.Empty<Vertex>()));
+
+        var visited = new HashSet<Vertex>();
+        var stack = new Stack<Vertex>();
+
+        foreach (var source in all)
+        {
+            foreach (var destination in originalEdges[source].ToList())
+            {
+                source.Outgoing.Remove(destination);
+
+                if (!CanReach(source, destination, visited, stack))
+                {
+                    source.Outgoing.Add(destination);
+                }
+                else
+                {
+                    destination.Incoming.Remove(source);
+                }
+
+                visited.Clear();
+                stack.Clear();
+            }
+        }
+    }
+
+    private static bool CanReach(Vertex start, Vertex target, HashSet<Vertex> visited, Stack<Vertex> stack)
+    {
+        stack.Push(start);
+
+        while (stack.Count > 0)
+        {
+            var current = stack.Pop();
+            if (current == target)
+            {
+                return true;
+            }
+
+            if (!visited.Add(current))
+            {
+                continue;
+            }
+
+            if (current.Outgoing != null)
+            {
+                foreach (var child in current.Outgoing)
+                {
+                    if (!visited.Contains(child))
+                    {
+                        stack.Push(child);
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public IEnumerable<IEnumerable<Vertex>> RemoveCycles()
+    {
+        var stack = new List<Vertex>();
+        var stackSet = new HashSet<Vertex>();
+        var visited = new HashSet<Vertex>();
+
+        var cycles = new List<IEnumerable<Vertex>>();
+
+        foreach (var vertex in vertices.Values)
+        {
+            Visit(vertex);
+        }
+
+        return cycles;
+
+        void Visit(Vertex vertex)
+        {
+            if (vertex.Outgoing == null || !visited.Add(vertex))
+            {
+                return;
+            }
+
+            stack.Add(vertex);
+            stackSet.Add(vertex);
+
+            foreach (var outgoing in vertex.Outgoing.ToArray())
+            {
+                if (stackSet.Contains(outgoing))
+                {
+                    vertex.Outgoing.Remove(outgoing);
+                    outgoing.Incoming.Remove(vertex);
+                    cycles.Add(stack.ToArray());
+                    continue;
+                }
+
+                Visit(outgoing);
+            }
+
+            stack.RemoveAt(stack.Count - 1);
+            stackSet.Remove(vertex);
+        }
     }
 
     public string GetDotText()
@@ -315,146 +419,6 @@ public class Digraph
             var right = line.Substring(arrow + arrowLength).Trim();
 
             yield return (left, right);
-        }
-    }
-
-    public void TransitiveReduction()
-    {
-        var all = vertices.Values;
-        var originalEdges = all.ToDictionary(v => v, v => new HashSet<Vertex>(v.Outgoing ?? Enumerable.Empty<Vertex>()));
-
-        var visited = new HashSet<Vertex>();
-        var stack = new Stack<Vertex>();
-
-        foreach (var source in all)
-        {
-            foreach (var destination in originalEdges[source].ToList())
-            {
-                source.Outgoing.Remove(destination);
-
-                if (!CanReach(source, destination, visited, stack))
-                {
-                    source.Outgoing.Add(destination);
-                }
-
-                visited.Clear();
-                stack.Clear();
-            }
-        }
-    }
-
-    private static bool CanReach(Vertex start, Vertex target, HashSet<Vertex> visited, Stack<Vertex> stack)
-    {
-        stack.Push(start);
-
-        while (stack.Count > 0)
-        {
-            var current = stack.Pop();
-            if (current == target)
-            {
-                return true;
-            }
-
-            if (!visited.Add(current))
-            {
-                continue;
-            }
-
-            if (current.Outgoing != null)
-            {
-                foreach (var child in current.Outgoing)
-                {
-                    if (!visited.Contains(child))
-                    {
-                        stack.Push(child);
-                    }
-                }
-            }
-        }
-
-        return false;
-    }
-
-    public void Cleanup()
-    {
-        foreach (var vertex in vertices.ToArray())
-        {
-            if (ShouldDelete(vertex.Key))
-            {
-                vertices.Remove(vertex.Key);
-            }
-
-            if (vertex.Value.Outgoing != null)
-            {
-                foreach (var child in vertex.Value.Outgoing.ToArray())
-                {
-                    if (ShouldDelete(child.Title))
-                    {
-                        vertex.Value.Outgoing.Remove(child);
-                    }
-                }
-            }
-        }
-    }
-
-    public bool ShouldDelete(string key)
-    {
-        if (key == "dirs.proj" ||
-            key == "\"dirs.proj\"" ||
-            key.EndsWith("\\dirs.proj\"") ||
-            key.EndsWith("\\dirs.proj"))
-        {
-            return true;
-        }
-
-        if (key == "restore.proj" || key == "\"restore.proj\"")
-        {
-            return true;
-        }
-
-        return false;
-    }
-
-    public IEnumerable<IEnumerable<Vertex>> RemoveCycles()
-    {
-        var stack = new List<Vertex>();
-        var stackSet = new HashSet<Vertex>();
-        var visited = new HashSet<Vertex>();
-
-        var cycles = new List<IEnumerable<Vertex>>();
-
-        foreach (var vertex in vertices.Values)
-        {
-            Visit(vertex);
-        }
-
-        return cycles;
-
-        void Visit(Vertex vertex)
-        {
-            if (vertex.Outgoing == null || !visited.Add(vertex))
-            {
-                return;
-            }
-
-            stack.Add(vertex);
-            stackSet.Add(vertex);
-
-            foreach (var outgoing in vertex.Outgoing.ToArray())
-            {
-                if (stackSet.Contains(outgoing))
-                {
-                    vertex.Outgoing.Remove(outgoing);
-                    outgoing.Incoming.Remove(vertex);
-                    cycles.Add(stack.ToArray());
-                    continue;
-                }
-
-                Visit(outgoing);
-            }
-
-            stack.RemoveAt(stack.Count - 1);
-            stackSet.Remove(vertex);
         }
     }
 }

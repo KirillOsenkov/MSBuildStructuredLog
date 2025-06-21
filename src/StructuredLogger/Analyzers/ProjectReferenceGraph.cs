@@ -58,7 +58,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             Vertex GetNode(string project)
             {
-                return Graph.GetOrCreate(project, GetKey);
+                return Graph.GetOrCreate(project, GetTitle);
             }
 
             var cycles = Graph.RemoveCycles();
@@ -257,11 +257,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             };
         }
 
-        private Dictionary<string, string> keys = new(StringComparer.OrdinalIgnoreCase);
+        private Dictionary<string, string> titles = new(StringComparer.OrdinalIgnoreCase);
 
-        private string GetKey(string filePath)
+        private string GetTitle(string filePath)
         {
-            if (!keys.TryGetValue(filePath, out var key))
+            if (!titles.TryGetValue(filePath, out var key))
             {
                 filePath = filePath.Replace("/", "\\");
                 var parts = filePath.Split('\\');
@@ -269,7 +269,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 for (int i = parts.Length - 2; i >= 0; i--)
                 {
                     var candidate = CleanupKey(key);
-                    if (!keys.ContainsKey(candidate))
+                    if (!titles.ContainsKey(candidate))
                     {
                         key = candidate;
                         break;
@@ -282,8 +282,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     }
                 }
 
-                keys[filePath] = key;
-                keys[key] = key;
+                titles[filePath] = key;
+                titles[key] = key;
             }
 
             return key;
