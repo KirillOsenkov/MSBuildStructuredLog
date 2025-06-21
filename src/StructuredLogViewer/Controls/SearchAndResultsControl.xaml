@@ -52,7 +52,7 @@
           <ContentPresenter.Resources>
             <Style TargetType="{x:Type TextBlock}">
               <Setter Property="TextWrapping" Value="Wrap" />
-              <Setter Property="Foreground" Value="Gray" />
+              <Setter Property="Foreground" Value="{DynamicResource GrayText}" />
             </Style>
           </ContentPresenter.Resources>
         </ContentPresenter>

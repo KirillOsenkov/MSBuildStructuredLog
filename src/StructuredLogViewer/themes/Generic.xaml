@@ -587,7 +587,7 @@
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
       <DataTrigger Binding="{Binding IsSelected}" Value="False">
-        <Setter TargetName="label" Property="Foreground" Value="Black" />
+        <Setter TargetName="label" Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
         <Setter TargetName="hits" Property="Foreground" Value="Blue" />
         <Setter TargetName="code" Property="Foreground" Value="Gray" />
       </DataTrigger>

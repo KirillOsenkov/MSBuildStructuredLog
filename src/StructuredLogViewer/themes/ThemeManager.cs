@@ -70,7 +70,7 @@ namespace StructuredLogViewer
         public static readonly Brush BackgroundBrush = new SolidColorBrush(Background);
         public static readonly Color LighterBackground = GetColor("#454545");
         public static readonly Brush LighterBackgroundBrush = new SolidColorBrush(LighterBackground);
-        public static readonly Color ControlText = Color.FromRgb(200, 200, 200);
+        public static readonly Color ControlText = GetColor("#E0E0E0");
         public static readonly Brush ControlTextBrush = new SolidColorBrush(ControlText);
 
         private static readonly BrushConverter brushConverter = new BrushConverter();
@@ -208,6 +208,7 @@ namespace StructuredLogViewer
                 SetResource("NoImportStroke", GetBrush("#FF0000"));
                 SetResource("NoImportFill", Brushes.BlanchedAlmond);
                 SetResource("NuGet", Brushes.DeepSkyBlue);
+                SetResource("GrayText", Brushes.Gray);
                 SetResource(SystemColors.MenuBarBrushKey, SystemColors.MenuBarBrush);
 
                 SetDefaultSystemColors();
@@ -255,6 +256,7 @@ namespace StructuredLogViewer
                 SetResource("TargetStroke", GetBrush("#C0A0F0"));
                 SetResource("AddItemStroke", GetBrush("#40B0B0"));
                 SetResource("NuGet", Brushes.DeepSkyBlue);
+                SetResource("GrayText", Brushes.LightGray);
                 SetResource("\u01D6", GetBrush("#C0C0C0"));
 
                 buttonStaticBackground = color800;
@@ -390,6 +392,7 @@ namespace StructuredLogViewer
                 SetResource("NuGet", GetBrush("#004880"));
                 SetResource("\u01D6", GetBrush("#595959"));
                 SetResource(SystemColors.MenuBarBrushKey, "#F5F5F5");
+                SetResource("GrayText", Brushes.Gray);
 
                 SetDefaultSystemColors();
             }

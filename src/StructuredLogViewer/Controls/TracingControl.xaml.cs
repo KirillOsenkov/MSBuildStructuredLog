@@ -45,7 +45,6 @@ namespace StructuredLogViewer.Controls
             protected override void OnRender(DrawingContext dc)
             {
                 Rect rect;
-                Point point = PointZero;
                 double minTextWidth = 8;
 
                 if (this.RenderRect.IsEmpty)
@@ -70,13 +69,18 @@ namespace StructuredLogViewer.Controls
                         continue;
                     }
 
-                    var formattedText = new FormattedText(block.Text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight, Typeface, FontSize, Brushes.Black, 1);
+                    var formattedText = new FormattedText(
+                        block.Text,
+                        CultureInfo.CurrentCulture,
+                        FlowDirection.LeftToRight,
+                        Typeface,
+                        FontSize,
+                        SettingsService.UseDarkTheme ? Brushes.White : Brushes.Black,
+                        1);
                     formattedText.MaxTextWidth = rect.Width;
                     formattedText.MaxTextHeight = rect.Height;
                     formattedText.Trimming = TextTrimming.None;
                     formattedText.MaxLineCount = 1;
-                    point.X = rect.X;
-                    point.Y = rect.Y;
                     dc.DrawText(formattedText, rect.TopLeft);
                 }
             }
