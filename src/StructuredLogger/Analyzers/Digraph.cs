@@ -414,4 +414,47 @@ public class Digraph
 
         return false;
     }
+
+    public IEnumerable<IEnumerable<Vertex>> RemoveCycles()
+    {
+        var stack = new List<Vertex>();
+        var stackSet = new HashSet<Vertex>();
+        var visited = new HashSet<Vertex>();
+
+        var cycles = new List<IEnumerable<Vertex>>();
+
+        foreach (var vertex in vertices.Values)
+        {
+            Visit(vertex);
+        }
+
+        return cycles;
+
+        void Visit(Vertex vertex)
+        {
+            if (vertex.Outgoing == null || !visited.Add(vertex))
+            {
+                return;
+            }
+
+            stack.Add(vertex);
+            stackSet.Add(vertex);
+
+            foreach (var outgoing in vertex.Outgoing.ToArray())
+            {
+                if (stackSet.Contains(outgoing))
+                {
+                    vertex.Outgoing.Remove(outgoing);
+                    outgoing.Incoming.Remove(vertex);
+                    cycles.Add(stack.ToArray());
+                    continue;
+                }
+
+                Visit(outgoing);
+            }
+
+            stack.RemoveAt(stack.Count - 1);
+            stackSet.Remove(vertex);
+        }
+    }
 }

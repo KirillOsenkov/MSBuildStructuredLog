@@ -8,7 +8,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class ProjectReferenceGraph : ISearchExtension
     {
-        private List<IReadOnlyList<string>> circularities = new();
         private int maxProjectHeight;
 
         public bool AugmentOtherResults => false;
@@ -62,20 +61,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return Graph.GetOrCreate(project, GetKey);
             }
 
+            var cycles = Graph.RemoveCycles();
             Graph.CalculateHeight();
             Graph.CalculateDepth();
 
             maxProjectHeight = Graph.MaxHeight;
 
-            if (circularities.Any())
+            if (cycles.Any())
             {
                 var folder = build.GetOrCreateNodeWithName<Folder>("Circular Project References");
-                foreach (var loop in circularities)
+                foreach (var loop in cycles)
                 {
-                    var loopFolder = folder.GetOrCreateNodeWithName<Folder>(loop[0]);
+                    var loopFolder = folder.GetOrCreateNodeWithName<Folder>(loop.First().Title);
                     foreach (var item in loop)
                     {
-                        var node = new Item { Text = item };
+                        var node = new Item { Text = item.Value };
                         loopFolder.AddChild(node);
                     }
                 }
