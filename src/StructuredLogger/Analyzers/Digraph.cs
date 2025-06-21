@@ -96,7 +96,7 @@ public class Digraph
         return new Digraph(vertices);
     }
 
-    public int MaxHeight => Vertices.Max(v => v.Height);
+    public int MaxHeight => vertices.Count == 0 ? 0 : Vertices.Max(v => v.Height);
 
     public void CalculateHeight()
     {
