@@ -7,25 +7,21 @@ namespace Microsoft.Build.Logging.StructuredLogger;
 
 public class Vertex
 {
-    public string Value;
-    public string Key;
-    public HashSet<Vertex> Outgoing;
-    public HashSet<Vertex> Incoming;
-    public bool IsReferenced;
-    public bool WasProcessed;
-    public bool IsProcessing;
+    public string Value { get; set; }
+    public string Title { get; set; }
+
+    public HashSet<Vertex> Outgoing { get; set; }
+    public HashSet<Vertex> Incoming { get; set; }
+    public int InDegree => Incoming?.Count ?? 0;
+    public int OutDegree => Outgoing?.Count ?? 0;
 
     public int Height { get; set; } = -1;
     public int Depth { get; set; } = -1;
-
-    public int InDegree => Incoming?.Count ?? 0;
-    public int OutDegree => Outgoing?.Count ?? 0;
 
     public void AddChild(Vertex destination)
     {
         Outgoing ??= new();
         Outgoing.Add(destination);
-        destination.IsReferenced = true;
 
         destination.Incoming ??= new();
         destination.Incoming.Add(this);
@@ -37,8 +33,8 @@ public class Digraph
     private Dictionary<string, Vertex> vertices;
 
     public IEnumerable<Vertex> Vertices => vertices.Values;
-
-    public IEnumerable<Vertex> Sources => vertices.Values.Where(v => !v.IsReferenced).ToArray();
+    public IEnumerable<Vertex> Sources => vertices.Values.Where(v => v.InDegree == 0).ToArray();
+    public IEnumerable<Vertex> Sinks => vertices.Values.Where(v => v.OutDegree == 0).ToArray();
 
     private Digraph(Dictionary<string, Vertex> vertices)
     {
@@ -60,7 +56,7 @@ public class Digraph
         if (TryFindVertex(value) is not { } node)
         {
             node = new Vertex { Value = value };
-            node.Key = keyGetter(value);
+            node.Title = keyGetter(value);
             Add(node);
         }
 
@@ -90,7 +86,7 @@ public class Digraph
         {
             if (!vertices.TryGetValue(s, out var vertex))
             {
-                vertex = new Vertex() { Value = s, Key = s };
+                vertex = new Vertex() { Value = s, Title = s };
                 vertices[s] = vertex;
             }
 
@@ -98,38 +94,6 @@ public class Digraph
         }
 
         return new Digraph(vertices);
-    }
-
-    public void RemoveTransitiveEdges()
-    {
-        var unreferenced = vertices.Values.Where(n => !n.IsReferenced).ToArray();
-
-        var nodeList = new List<Vertex>();
-        foreach (var key in unreferenced)
-        {
-            RemoveTransitiveEdges(key, nodeList);
-        }
-    }
-
-    private void RemoveTransitiveEdges(Vertex project, List<Vertex> chain)
-    {
-        for (int i = 0; i < chain.Count - 1; i++)
-        {
-            var parent = chain[i];
-            parent.Outgoing.Remove(project);
-        }
-
-        if (project.Outgoing != null && project.Outgoing.Count > 0)
-        {
-            chain.Add(project);
-
-            foreach (var reference in project.Outgoing.ToArray())
-            {
-                RemoveTransitiveEdges(reference, chain);
-            }
-
-            chain.RemoveAt(chain.Count - 1);
-        }
     }
 
     public int MaxHeight => Vertices.Max(v => v.Height);
@@ -227,7 +191,7 @@ public class Digraph
         for (int i = 0; i < nodes.Length; i++)
         {
             dic[nodes[i]] = i;
-            writer.WriteLine($"{i} {nodes[i].Key}");
+            writer.WriteLine($"{i} {nodes[i].Title}");
         }
 
         writer.WriteLine("#");
@@ -256,7 +220,7 @@ public class Digraph
         for (int i = 0; i < nodes.Length; i++)
         {
             dic[nodes[i]] = i;
-            writer.WriteLine($"node {nodes[i].Key}");
+            writer.WriteLine($"node {nodes[i].Title}");
         }
 
         writer.WriteLine("#");
@@ -267,7 +231,7 @@ public class Digraph
             {
                 foreach (var child in vertex.Outgoing)
                 {
-                    writer.WriteLine($"edge {vertex.Key} {child.Key}");
+                    writer.WriteLine($"edge {vertex.Title} {child.Title}");
                 }
             }
         }
@@ -288,7 +252,7 @@ public class Digraph
                 continue;
             }
 
-            var projectKey = project.Key;
+            var projectKey = project.Title;
             if (!quotes)
             {
                 projectKey = projectKey.TrimQuotes();
@@ -296,7 +260,7 @@ public class Digraph
 
             foreach (var reference in project.Outgoing.OrderBy(r => r.Value, StringComparer.OrdinalIgnoreCase))
             {
-                var referenceKey = reference.Key;
+                var referenceKey = reference.Title;
                 if (!quotes)
                 {
                     referenceKey = referenceKey.TrimQuotes();
@@ -424,7 +388,7 @@ public class Digraph
             {
                 foreach (var child in vertex.Value.Outgoing.ToArray())
                 {
-                    if (ShouldDelete(child.Key))
+                    if (ShouldDelete(child.Title))
                     {
                         vertex.Value.Outgoing.Remove(child);
                     }

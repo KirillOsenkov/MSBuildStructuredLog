@@ -82,42 +82,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private void RemoveTransitiveEdges(Vertex project, List<Vertex> chain)
-        {
-            if (project.IsProcessing)
-            {
-                return;
-            }
-
-            project.IsProcessing = true;
-
-            for (int i = 0; i < chain.Count - 1; i++)
-            {
-                var parent = chain[i];
-                if (parent.WasProcessed)
-                {
-                    break;
-                }
-
-                parent.Outgoing.Remove(project);
-            }
-
-            if (project.Outgoing != null && project.Outgoing.Count > 0)
-            {
-                chain.Add(project);
-
-                foreach (var reference in project.Outgoing.ToArray())
-                {
-                    RemoveTransitiveEdges(reference, chain);
-                }
-
-                chain.RemoveAt(chain.Count - 1);
-            }
-
-            project.IsProcessing = false;
-            project.WasProcessed = true;
-        }
-
         public bool TryGetResults(NodeQueryMatcher matcher, IList<SearchResult> resultSet, int maxResults)
         {
             bool isProjectHeightSearch =

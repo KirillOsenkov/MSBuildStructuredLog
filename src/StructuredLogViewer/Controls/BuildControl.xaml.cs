@@ -554,7 +554,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             {
                 var stack = new StackPanel() { Orientation = Orientation.Horizontal };
 
-                foreach (var vertex in vertexGroup.OrderByDescending(s => s.InDegree).ThenBy(s => s.Key))
+                foreach (var vertex in vertexGroup.OrderByDescending(s => s.InDegree).ThenBy(s => s.Title))
                 {
                     var depth = vertex.Depth;
 
@@ -575,7 +575,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                     var opacity = vertex.InDegree > 1 ? 0.9 : 0.5;
                     var projectControl = new TextBlock()
                     {
-                        Text = vertex.Key.TrimQuotes(),
+                        Text = vertex.Title.TrimQuotes(),
                         Margin = new Thickness(4, 2, 4, 2),
                         Padding = new Thickness(2, height, 2, height),
                         Background = new SolidColorBrush(background),
