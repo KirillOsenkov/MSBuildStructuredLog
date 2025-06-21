@@ -516,7 +516,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             var toolbar = new StackPanel()
             {
                 Orientation = Orientation.Horizontal,
-                MinHeight = 20
+                MinHeight = 26
             };
             toolbar.SetResourceReference(Panel.BackgroundProperty, SystemColors.ControlBrushKey);
             dockPanel.Children.Add(toolbar);
@@ -527,7 +527,24 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                 Margin = new Thickness(0, 0, 8, 0),
                 VerticalAlignment = VerticalAlignment.Center,
                 IsReadOnly = true,
-                IsReadOnlyCaretVisible = true
+                IsReadOnlyCaretVisible = true,
+                Visibility = Visibility.Hidden
+            };
+
+            var searchButton = new Button
+            {
+                Content = "Search",
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 8, 0),
+                BorderThickness = new Thickness(),
+                Visibility = Visibility.Hidden
+            };
+            searchButton.Click += (s, e) =>
+            {
+                if (selectedControls.FirstOrDefault() is { } selected && selected.Tag is Vertex vertex)
+                {
+                    SelectSearchTab($"$projectreference project({vertex.Value})");
+                }
             };
 
             var vertexByControl = new Dictionary<Vertex, FrameworkElement>();
@@ -555,6 +572,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
             toolbar.Children.Add(showTextButton);
             toolbar.Children.Add(projectNameTextBlock);
+            toolbar.Children.Add(searchButton);
 
             var maxHeight = graph.Vertices.Max(g => g.Height);
             var maxDepth = graph.Vertices.Max(g => g.Depth);
@@ -632,6 +650,8 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                         {
                             selectedControls.Remove(projectControl);
                             projectNameTextBlock.Text = "";
+                            projectNameTextBlock.Visibility = Visibility.Hidden;
+                            searchButton.Visibility = Visibility.Hidden;
                             return;
                         }
 
@@ -641,6 +661,8 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                         var sourceRect = GetRectOnCanvas(projectControl);
 
                         projectNameTextBlock.Text = node?.Value;
+                        projectNameTextBlock.Visibility = Visibility.Visible;
+                        searchButton.Visibility = Visibility.Visible;
 
                         if (node.Outgoing != null)
                         {
@@ -1029,8 +1051,7 @@ Recent (");
         private void SearchNuGet(IProjectOrEvaluation node)
         {
             string projectName = Path.GetFileName(node.ProjectFile);
-            searchLogControl.SearchText = $"$nuget project({projectName})";
-            SelectSearchTab();
+            SelectSearchTab($"$nuget project({projectName})");
         }
 
         private void Preprocess(IPreprocessable project) => preprocessedFileManager.ShowPreprocessed(project);
@@ -2012,8 +2033,13 @@ Recent (");
             }
         }
 
-        public void SelectSearchTab()
+        public void SelectSearchTab(string newText = null)
         {
+            if (newText != null)
+            {
+                searchLogControl.SearchText = newText;
+            }
+
             leftPaneTabControl.SelectedItem = searchLogTab;
         }
 
