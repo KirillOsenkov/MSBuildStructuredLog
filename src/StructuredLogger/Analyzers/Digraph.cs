@@ -291,7 +291,7 @@ public class Digraph
 
         var dic = new Dictionary<Vertex, int>();
 
-        var nodes = vertices.Values.ToArray();
+        var nodes = vertices.Values.OrderBy(s => s.Title).ToArray();
         for (int i = 0; i < nodes.Length; i++)
         {
             dic[nodes[i]] = i;
@@ -320,7 +320,7 @@ public class Digraph
 
         var dic = new Dictionary<Vertex, int>();
 
-        var nodes = vertices.Values.ToArray();
+        var nodes = vertices.Values.OrderBy(s => s.Title).ToArray();
         for (int i = 0; i < nodes.Length; i++)
         {
             dic[nodes[i]] = i;
@@ -349,7 +349,7 @@ public class Digraph
         string indent = "  ",
         bool quotes = true)
     {
-        foreach (var project in vertices.Values.OrderBy(r => r.Value, StringComparer.OrdinalIgnoreCase))
+        foreach (var project in vertices.Values.OrderBy(r => r.Title, StringComparer.OrdinalIgnoreCase))
         {
             if (project.Outgoing == null || project.Outgoing.Count == 0)
             {
@@ -362,7 +362,7 @@ public class Digraph
                 projectKey = projectKey.TrimQuotes();
             }
 
-            foreach (var reference in project.Outgoing.OrderBy(r => r.Value, StringComparer.OrdinalIgnoreCase))
+            foreach (var reference in project.Outgoing.OrderBy(r => r.Title, StringComparer.OrdinalIgnoreCase))
             {
                 var referenceKey = reference.Title;
                 if (!quotes)
