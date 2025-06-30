@@ -459,7 +459,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     Bytes = null, // probably can reconstruct this from the Args if necessary
                     Args = instance,
                     Start = start,
-                    Length = reader.Position - start
+                    Length = reader.Position - start,
+                    Kind = reader.LastRecordKind
                 };
 
                 yield return record;
