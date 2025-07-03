@@ -7,6 +7,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using Microsoft.Build.Framework;
+using StructuredLogger.BinaryLogger;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -319,7 +320,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             else
             {
                 return ReadRecordsFromDecompressedStream(reader, true)
-                    .Select(r => new RecordInfo(r.Args != null ? ToBinaryLogRecordKind(r.Args) : r.Kind, r.Start, r.Length));
+                    .Select(r => new RecordInfo(r.Kind, r.Start, r.Length));
             }
         }
 
@@ -363,6 +364,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 PropertyInitialValueSetEventArgs _ => BinaryLogRecordKind.PropertyInitialValueSet,
                 AssemblyLoadBuildEventArgs _ => BinaryLogRecordKind.AssemblyLoad,
                 BuildMessageEventArgs _ => BinaryLogRecordKind.Message,
+                BuildSubmissionStartedEventArgs _ => BinaryLogRecordKind.BuildSubmissionStarted,
+                BuildCanceledEventArgs _ => BinaryLogRecordKind.BuildCanceled,
+                BuildCheckTracingEventArgs _ => BinaryLogRecordKind.BuildCheckTracing,
+                BuildCheckAcquisitionEventArgs _ => BinaryLogRecordKind.BuildCheckAcquisition,
+                BuildCheckEventArgs _ => BinaryLogRecordKind.BuildCheckMessage,
+
                 _ => throw new NotImplementedException(),
             };
 
@@ -460,7 +467,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     Args = instance,
                     Start = start,
                     Length = reader.Position - start,
-                    Kind = reader.LastRecordKind
+                    Kind = ToBinaryLogRecordKind(instance)
                 };
 
                 yield return record;

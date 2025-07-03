@@ -210,8 +210,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        internal BinaryLogRecordKind LastRecordKind;
-
         /// <summary>
         /// Reads the next log record from the <see cref="BinaryReader"/>.
         /// </summary>
@@ -226,7 +224,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             while (result == null)
             {
                 BinaryLogRecordKind recordKind = PreprocessRecordsTillNextEvent(IsAuxiliaryRecord);
-                LastRecordKind = recordKind;
 
                 if (recordKind == BinaryLogRecordKind.EndOfFile)
                 {
