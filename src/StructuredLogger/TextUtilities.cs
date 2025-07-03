@@ -209,6 +209,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return IndexOf(text, span, ch) != -1;
         }
 
+        public static bool ContainsIgnoreCase(this string text, string substring)
+        {
+            if (text == null || substring == null)
+            {
+                return false;
+            }
+
+            return text.IndexOf(substring, StringComparison.OrdinalIgnoreCase) != -1;
+        }
+
         public static int IndexOf(this string text, Span span, char ch)
         {
 #if NET
