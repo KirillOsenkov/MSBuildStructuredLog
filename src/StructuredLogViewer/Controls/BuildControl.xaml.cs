@@ -533,7 +533,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
             var searchButton = new Button
             {
-                Content = "Search",
+                Content = "Search for $projectreference",
                 VerticalAlignment = VerticalAlignment.Center,
                 Margin = new Thickness(0, 0, 8, 0),
                 BorderThickness = new Thickness(),
@@ -559,10 +559,11 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
             var showTextButton = new Button
             {
-                Content = "Show text",
+                Content = "Show graph text",
                 VerticalAlignment = VerticalAlignment.Center,
+                Padding = new Thickness(0, 0, 8, 0),
                 Margin = new Thickness(0, 0, 8, 0),
-                BorderThickness = new Thickness()
+                BorderThickness = new Thickness(0, 0, 1, 0)
             };
             showTextButton.Click += (s, e) =>
             {
@@ -570,7 +571,23 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                 DisplayText(text, "Project Reference Graph");
             };
 
+            var searchTextBox = new TextBox
+            {
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 8, 0),
+                MinWidth = 200
+            };
+            var locateButton = new Button
+            {
+                Content = "Locate on canvas",
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 8, 0),
+                BorderThickness = new Thickness()
+            };
+
             toolbar.Children.Add(showTextButton);
+            toolbar.Children.Add(searchTextBox);
+            toolbar.Children.Add(locateButton);
             toolbar.Children.Add(projectNameTextBlock);
             toolbar.Children.Add(searchButton);
 
@@ -578,11 +595,11 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             var maxDepth = graph.Vertices.Max(g => g.Depth);
 
             var grid = new Grid();
-            var control = new StackPanel() { Orientation = Orientation.Vertical };
+            var layersControl = new StackPanel() { Orientation = Orientation.Vertical };
             var canvas = new Canvas();
 
             grid.Children.Add(canvas);
-            grid.Children.Add(control);
+            grid.Children.Add(layersControl);
 
             bool isDarkTheme = SettingsService.UseDarkTheme;
 
@@ -607,7 +624,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
             foreach (var vertexGroup in graph.Vertices.GroupBy(v => v.Height).OrderBy(g => g.Key))
             {
-                var stack = new StackPanel() { Orientation = Orientation.Horizontal };
+                var layerPanel = new StackPanel { Orientation = Orientation.Horizontal };
 
                 foreach (var vertex in vertexGroup.OrderByDescending(s => s.InDegree).ThenBy(s => s.Title))
                 {
@@ -642,64 +659,12 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
                     projectControl.MouseDown += (s, e) =>
                     {
-                        var node = projectControl.Tag as Vertex;
-
-                        canvas.Children.Clear();
-
-                        if (selectedControls.Contains(projectControl))
-                        {
-                            selectedControls.Remove(projectControl);
-                            projectNameTextBlock.Text = "";
-                            projectNameTextBlock.Visibility = Visibility.Hidden;
-                            searchButton.Visibility = Visibility.Hidden;
-                            return;
-                        }
-
-                        selectedControls.Clear();
-                        selectedControls.Add(projectControl);
-
-                        var sourceRect = GetRectOnCanvas(projectControl);
-
-                        projectNameTextBlock.Text = node?.Value;
-                        projectNameTextBlock.Visibility = Visibility.Visible;
-                        searchButton.Visibility = Visibility.Visible;
-
-                        if (node.Outgoing != null)
-                        {
-                            foreach (var outgoing in node.Outgoing)
-                            {
-                                if (vertexByControl.TryGetValue(outgoing, out var destinationControl))
-                                {
-                                    var canvasRect = GetRectOnCanvas(destinationControl);
-                                    var sourcePoint = new Point(sourceRect.Left + sourceRect.Width / 2, sourceRect.Top);
-                                    var destinationPoint = new Point(canvasRect.Left + canvasRect.Width / 2, canvasRect.Bottom);
-                                    AddLine(sourcePoint, destinationPoint, outgoingBrush);
-                                    AddRectangle(canvasRect, new SolidColorBrush(outgoingColor));
-                                }
-                            }
-                        }
-
-                        if (node.Incoming != null)
-                        {
-                            foreach (var incoming in node.Incoming)
-                            {
-                                if (vertexByControl.TryGetValue(incoming, out var sourceControl))
-                                {
-                                    var canvasRect = GetRectOnCanvas(sourceControl);
-                                    var sourcePoint = new Point(sourceRect.Left + sourceRect.Width / 2, sourceRect.Bottom);
-                                    var destinationPoint = new Point(canvasRect.Left + canvasRect.Width / 2, canvasRect.Top);
-                                    AddLine(sourcePoint, destinationPoint, incomingBrush);
-                                    AddRectangle(canvasRect, new SolidColorBrush(incomingColor));
-                                }
-                            }
-                        }
-
-                        AddRectangle(sourceRect, new SolidColorBrush(border), Brushes.PaleGreen);
+                        SelectControl(projectControl);
                     };
-                    stack.Children.Add(projectControl);
+                    layerPanel.Children.Add(projectControl);
                 }
 
-                control.Children.Add(stack);
+                layersControl.Children.Add(layerPanel);
             }
 
             Rect GetRectOnCanvas(FrameworkElement control)
@@ -737,12 +702,112 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                 canvas.Children.Add(rectangleShape);
             }
 
+            IEnumerable<TextBlock> AllTextBlocks()
+            {
+                foreach (var layer in layersControl.Children.OfType<Panel>())
+                {
+                    foreach (var textBlock in layer.Children.OfType<TextBlock>())
+                    {
+                        yield return textBlock;
+                    }
+                }
+            }
+
+            void SelectControl(TextBlock projectControl)
+            {
+                var node = projectControl.Tag as Vertex;
+
+                canvas.Children.Clear();
+
+                if (selectedControls.Contains(projectControl))
+                {
+                    selectedControls.Remove(projectControl);
+                    projectNameTextBlock.Text = "";
+                    projectNameTextBlock.Visibility = Visibility.Hidden;
+                    searchButton.Visibility = Visibility.Hidden;
+                    return;
+                }
+
+                selectedControls.Clear();
+                selectedControls.Add(projectControl);
+
+                var sourceRect = GetRectOnCanvas(projectControl);
+
+                projectNameTextBlock.Text = node?.Value;
+                projectNameTextBlock.Visibility = Visibility.Visible;
+                searchButton.Visibility = Visibility.Visible;
+
+                if (node.Outgoing != null)
+                {
+                    foreach (var outgoing in node.Outgoing)
+                    {
+                        if (vertexByControl.TryGetValue(outgoing, out var destinationControl))
+                        {
+                            var canvasRect = GetRectOnCanvas(destinationControl);
+                            var sourcePoint = new Point(sourceRect.Left + sourceRect.Width / 2, sourceRect.Top);
+                            var destinationPoint = new Point(canvasRect.Left + canvasRect.Width / 2, canvasRect.Bottom);
+                            AddLine(sourcePoint, destinationPoint, outgoingBrush);
+                            AddRectangle(canvasRect, new SolidColorBrush(outgoingColor));
+                        }
+                    }
+                }
+
+                if (node.Incoming != null)
+                {
+                    foreach (var incoming in node.Incoming)
+                    {
+                        if (vertexByControl.TryGetValue(incoming, out var sourceControl))
+                        {
+                            var canvasRect = GetRectOnCanvas(sourceControl);
+                            var sourcePoint = new Point(sourceRect.Left + sourceRect.Width / 2, sourceRect.Bottom);
+                            var destinationPoint = new Point(canvasRect.Left + canvasRect.Width / 2, canvasRect.Top);
+                            AddLine(sourcePoint, destinationPoint, incomingBrush);
+                            AddRectangle(canvasRect, new SolidColorBrush(incomingColor));
+                        }
+                    }
+                }
+
+                AddRectangle(sourceRect, new SolidColorBrush(border), Brushes.PaleGreen);
+            }
+
             var scrollViewer = new ScrollViewer()
             {
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto
             };
             scrollViewer.Content = grid;
+
+            locateButton.Click += (s, e) =>
+            {
+                e.Handled = true;
+                Locate();
+            };
+
+            searchTextBox.KeyDown += (s, e) =>
+            {
+                if (e.KeyboardDevice.Modifiers == ModifierKeys.None && e.Key == Key.Return)
+                {
+                    e.Handled = true;
+                    Locate();
+                }
+            };
+
+            void Locate()
+            {
+                var text = searchTextBox.Text;
+                if (!string.IsNullOrWhiteSpace(text))
+                {
+                    var found = AllTextBlocks()
+                        .OrderBy(t => t.Text.Length)
+                        .ThenBy(t => t.Text)
+                        .FirstOrDefault(t => t.Text.ContainsIgnoreCase(text) && !selectedControls.Contains(t));
+                    if (found != null)
+                    {
+                        found.BringIntoView();
+                        SelectControl(found);
+                    }
+                }
+            }
 
             dockPanel.Children.Add(scrollViewer);
 
