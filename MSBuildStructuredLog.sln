@@ -32,6 +32,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StructuredLogger.Utils", "s
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StructuredLogViewer", "src\StructuredLogViewer\StructuredLogViewer.csproj", "{C2E67DD4-F4F7-4CDE-A51A-6D46049A0CCA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StructuredLogger.Utils.UnitTests", "src\StructuredLogger.Utils.UnitTests\StructuredLogger.Utils.UnitTests.csproj", "{73CAE4BE-967F-1C5C-A8A3-756108565B53}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -74,6 +76,10 @@ Global
 		{C2E67DD4-F4F7-4CDE-A51A-6D46049A0CCA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C2E67DD4-F4F7-4CDE-A51A-6D46049A0CCA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C2E67DD4-F4F7-4CDE-A51A-6D46049A0CCA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73CAE4BE-967F-1C5C-A8A3-756108565B53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73CAE4BE-967F-1C5C-A8A3-756108565B53}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73CAE4BE-967F-1C5C-A8A3-756108565B53}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73CAE4BE-967F-1C5C-A8A3-756108565B53}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
