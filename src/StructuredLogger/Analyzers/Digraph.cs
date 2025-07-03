@@ -43,7 +43,7 @@ public class Digraph
 
     public Digraph()
     {
-        vertices = new();
+        vertices = new(StringComparer.OrdinalIgnoreCase);
     }
 
     public void Add(Vertex vertex)
