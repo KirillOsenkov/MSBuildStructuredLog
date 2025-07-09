@@ -124,7 +124,14 @@ namespace BinlogTool
                 new ListTools().Run(binlog);
                 return 0;
             }
-
+            
+            if (args.Length == 2 && string.Equals(firstArg, "target_framework", StringComparison.OrdinalIgnoreCase))
+            {
+                var binlog = args[1];
+                new TargetFrameworkEvaluation().Run(binlog);
+                return 0;
+            }
+            
             if (firstArg == "search")
             {
                 if (args.Length < 3)
