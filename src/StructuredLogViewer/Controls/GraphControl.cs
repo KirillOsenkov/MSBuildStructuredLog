@@ -198,6 +198,15 @@ public class GraphControl
         canvas.Children.Add(line);
     }
 
+    void AddLine(FrameworkElement fromControl, FrameworkElement toControl, Brush stroke)
+    {
+        var sourceRect = GetRectOnCanvas(fromControl);
+        var destinationRect = GetRectOnCanvas(toControl);
+        var sourcePoint = new Point(sourceRect.Left + sourceRect.Width / 2, sourceRect.Top);
+        var destinationPoint = new Point(destinationRect.Left + destinationRect.Width / 2, destinationRect.Bottom);
+        AddLine(sourcePoint, destinationPoint, stroke);
+    }
+
     void AddRectangle(Rect rect, Brush stroke, Brush fill = null)
     {
         var rectangleShape = new System.Windows.Shapes.Rectangle
@@ -251,7 +260,10 @@ public class GraphControl
         }
 
         var highlighted = new HashSet<FrameworkElement>();
+        highlighted.Add(fromControl);
         highlighted.Add(toControl);
+
+        var edges = new HashSet<(FrameworkElement start, FrameworkElement end)>();
 
         Digraph.FindAllPaths(from, to, path =>
         {
@@ -260,6 +272,12 @@ public class GraphControl
                 if (controlFromVertex.TryGetValue(path[i], out var control))
                 {
                     highlighted.Add(control);
+
+                    var target = i < path.Count - 1 ? path[i + 1] : to;
+                    if (controlFromVertex.TryGetValue(target, out var targetControl))
+                    {
+                        edges.Add((control, targetControl));
+                    }
                 }
             }
         });
@@ -268,6 +286,11 @@ public class GraphControl
         {
             var rect = GetRectOnCanvas(highlight);
             AddRectangle(rect, new SolidColorBrush(Colors.Red), Brushes.Pink);
+        }
+
+        foreach (var edge in edges)
+        {
+            AddLine(edge.start, edge.end, outgoingBrush);
         }
     }
 
@@ -284,24 +307,24 @@ public class GraphControl
         AddRectangle(sourceRect, new SolidColorBrush(border), Brushes.PaleGreen);
     }
 
-    private void AddIncomingEdges(Rect sourceRect, Vertex node)
+    private void AddIncomingEdges(Rect destinationRect, Vertex destinationVertex)
     {
-        foreach (var incoming in node.Incoming)
+        foreach (var incoming in destinationVertex.Incoming)
         {
             if (HideTransitiveEdges &&
                 incoming.TransitiveOutgoing != null &&
-                incoming.TransitiveOutgoing.Contains(node))
+                incoming.TransitiveOutgoing.Contains(destinationVertex))
             {
                 continue;
             }
 
             if (controlFromVertex.TryGetValue(incoming, out var sourceControl))
             {
-                var canvasRect = GetRectOnCanvas(sourceControl);
-                var sourcePoint = new Point(sourceRect.Left + sourceRect.Width / 2, sourceRect.Bottom);
-                var destinationPoint = new Point(canvasRect.Left + canvasRect.Width / 2, canvasRect.Top);
+                var sourceRect = GetRectOnCanvas(sourceControl);
+                var sourcePoint = new Point(sourceRect.Left + sourceRect.Width / 2, sourceRect.Top);
+                var destinationPoint = new Point(destinationRect.Left + destinationRect.Width / 2, destinationRect.Bottom);
                 AddLine(sourcePoint, destinationPoint, incomingBrush);
-                AddRectangle(canvasRect, new SolidColorBrush(incomingColor));
+                AddRectangle(sourceRect, new SolidColorBrush(incomingColor));
             }
         }
     }
@@ -314,11 +337,11 @@ public class GraphControl
         {
             if (controlFromVertex.TryGetValue(outgoing, out var destinationControl))
             {
-                var canvasRect = GetRectOnCanvas(destinationControl);
+                var destinationRect = GetRectOnCanvas(destinationControl);
                 var sourcePoint = new Point(sourceRect.Left + sourceRect.Width / 2, sourceRect.Top);
-                var destinationPoint = new Point(canvasRect.Left + canvasRect.Width / 2, canvasRect.Bottom);
+                var destinationPoint = new Point(destinationRect.Left + destinationRect.Width / 2, destinationRect.Bottom);
                 AddLine(sourcePoint, destinationPoint, outgoingBrush);
-                AddRectangle(canvasRect, new SolidColorBrush(outgoingColor));
+                AddRectangle(destinationRect, new SolidColorBrush(outgoingColor));
             }
         }
     }

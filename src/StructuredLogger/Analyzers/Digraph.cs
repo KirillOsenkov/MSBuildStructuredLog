@@ -284,7 +284,7 @@ public class Digraph
     {
         if (start == target)
         {
-            callback(spine.ToArray());
+            callback(spine.Reverse().ToArray());
             return;
         }
 
