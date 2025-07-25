@@ -574,11 +574,19 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                 BorderThickness = new Thickness()
             };
 
+            var transitiveReduceCheck = new CheckBox
+            {
+                Content = "Hide transitive references",
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 8, 0)
+            };
+
             toolbar.Children.Add(showTextButton);
             toolbar.Children.Add(searchTextBox);
             toolbar.Children.Add(locateButton);
             toolbar.Children.Add(projectNameTextBlock);
             toolbar.Children.Add(searchButton);
+            toolbar.Children.Add(transitiveReduceCheck);
 
             var graphControl = new GraphControl();
             graphControl.Digraph = graph;
@@ -622,6 +630,9 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                     Locate();
                 }
             };
+
+            transitiveReduceCheck.Checked += (s, e) => graphControl.HideTransitiveEdges = true;
+            transitiveReduceCheck.Unchecked += (s, e) => graphControl.HideTransitiveEdges = false;
 
             void Locate()
             {

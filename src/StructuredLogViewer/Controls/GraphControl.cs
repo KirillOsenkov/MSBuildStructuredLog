@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using Microsoft.Build.Logging.StructuredLogger;
 
@@ -89,6 +90,17 @@ public class GraphControl
         }
     }
 
+    private bool hideTransitiveEdges;
+    public bool HideTransitiveEdges
+    {
+        get => hideTransitiveEdges;
+        set
+        {
+            hideTransitiveEdges = value;
+            SelectControls(selectedControls.ToArray());
+        }
+    }
+
     private void Populate()
     {
         var maxHeight = graph.Vertices.Max(g => g.Height);
@@ -118,9 +130,23 @@ public class GraphControl
                 };
                 controlFromVertex[vertex] = vertexControl;
 
-                vertexControl.MouseDown += (s, e) =>
+                vertexControl.MouseDown += (s, args) =>
                 {
-                    SelectControl(vertexControl);
+                    if (selectedControls.Contains(vertexControl))
+                    {
+                        SelectControls(selectedControls.Where(c => c != vertexControl));
+                    }
+                    else
+                    {
+                        if (Keyboard.Modifiers is ModifierKeys.Shift or ModifierKeys.Control)
+                        {
+                            SelectControls(selectedControls.Take(1).Append(vertexControl));
+                        }
+                        else
+                        {
+                            SelectControls([vertexControl]);
+                        }
+                    }
                 };
                 layerPanel.Children.Add(vertexControl);
             }
@@ -191,55 +217,77 @@ public class GraphControl
         SelectionChanged?.Invoke();
     }
 
-    void SelectControl(TextBlock vertexControl)
+    void SelectControls(IEnumerable<FrameworkElement> controls)
     {
-        var node = vertexControl.Tag as Vertex;
-
         canvas.Children.Clear();
+        selectedControls.Clear();
 
-        if (selectedControls.Contains(vertexControl))
+        if (controls != null)
         {
-            selectedControls.Remove(vertexControl);
-            RaiseSelectionChanged();
-            return;
+            var toSelect = controls.Take(2).ToArray();
+            selectedControls.UnionWith(controls);
+            if (toSelect.Length == 1)
+            {
+                SelectControl(toSelect[0]);
+            }
+            else if (toSelect.Length == 2)
+            {
+            }
         }
 
-        selectedControls.Clear();
-        selectedControls.Add(vertexControl);
+        RaiseSelectionChanged();
+    }
 
+    void SelectControl(FrameworkElement vertexControl)
+    {
         var sourceRect = GetRectOnCanvas(vertexControl);
 
-        if (node.Outgoing != null)
-        {
-            foreach (var outgoing in node.Outgoing)
-            {
-                if (controlFromVertex.TryGetValue(outgoing, out var destinationControl))
-                {
-                    var canvasRect = GetRectOnCanvas(destinationControl);
-                    var sourcePoint = new Point(sourceRect.Left + sourceRect.Width / 2, sourceRect.Top);
-                    var destinationPoint = new Point(canvasRect.Left + canvasRect.Width / 2, canvasRect.Bottom);
-                    AddLine(sourcePoint, destinationPoint, outgoingBrush);
-                    AddRectangle(canvasRect, new SolidColorBrush(outgoingColor));
-                }
-            }
-        }
+        var node = vertexControl.Tag as Vertex;
 
-        if (node.Incoming != null)
-        {
-            foreach (var incoming in node.Incoming)
-            {
-                if (controlFromVertex.TryGetValue(incoming, out var sourceControl))
-                {
-                    var canvasRect = GetRectOnCanvas(sourceControl);
-                    var sourcePoint = new Point(sourceRect.Left + sourceRect.Width / 2, sourceRect.Bottom);
-                    var destinationPoint = new Point(canvasRect.Left + canvasRect.Width / 2, canvasRect.Top);
-                    AddLine(sourcePoint, destinationPoint, incomingBrush);
-                    AddRectangle(canvasRect, new SolidColorBrush(incomingColor));
-                }
-            }
-        }
+        AddOutgoingEdges(sourceRect, node);
+
+        AddIncomingEdges(sourceRect, node);
 
         AddRectangle(sourceRect, new SolidColorBrush(border), Brushes.PaleGreen);
+    }
+
+    private void AddIncomingEdges(Rect sourceRect, Vertex node)
+    {
+        foreach (var incoming in node.Incoming)
+        {
+            if (HideTransitiveEdges &&
+                incoming.TransitiveOutgoing != null &&
+                incoming.TransitiveOutgoing.Contains(node))
+            {
+                continue;
+            }
+
+            if (controlFromVertex.TryGetValue(incoming, out var sourceControl))
+            {
+                var canvasRect = GetRectOnCanvas(sourceControl);
+                var sourcePoint = new Point(sourceRect.Left + sourceRect.Width / 2, sourceRect.Bottom);
+                var destinationPoint = new Point(canvasRect.Left + canvasRect.Width / 2, canvasRect.Top);
+                AddLine(sourcePoint, destinationPoint, incomingBrush);
+                AddRectangle(canvasRect, new SolidColorBrush(incomingColor));
+            }
+        }
+    }
+
+    private void AddOutgoingEdges(Rect sourceRect, Vertex node)
+    {
+        IEnumerable<Vertex> list = HideTransitiveEdges ? node.NonRedundantOutgoing : node.Outgoing;
+
+        foreach (var outgoing in list)
+        {
+            if (controlFromVertex.TryGetValue(outgoing, out var destinationControl))
+            {
+                var canvasRect = GetRectOnCanvas(destinationControl);
+                var sourcePoint = new Point(sourceRect.Left + sourceRect.Width / 2, sourceRect.Top);
+                var destinationPoint = new Point(canvasRect.Left + canvasRect.Width / 2, canvasRect.Bottom);
+                AddLine(sourcePoint, destinationPoint, outgoingBrush);
+                AddRectangle(canvasRect, new SolidColorBrush(outgoingColor));
+            }
+        }
     }
 
     IEnumerable<TextBlock> AllTextBlocks()
@@ -263,15 +311,36 @@ public class GraphControl
 
     public void Locate(string text)
     {
-        var found = AllTextBlocks()
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            SelectControls(null);
+            return;
+        }
+
+        var parts = text.Split([';'], StringSplitOptions.RemoveEmptyEntries);
+        var found = parts.Select(p => FindControlByText(p)).Where(c => c != null).Take(2).ToArray();
+        foreach (var foundControl in found)
+        {
+            foundControl.BringIntoView();
+        }
+
+        SelectControls(found);
+    }
+
+    private FrameworkElement FindControlByText(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return null;
+        }
+
+        text = text.Trim();
+
+        return AllTextBlocks()
+            .OrderBy(t => selectedControls.Contains(t))
             .OrderBy(t => t.Text.Length)
             .ThenBy(t => t.Text)
-            .FirstOrDefault(t => t.Text.ContainsIgnoreCase(text) && !selectedControls.Contains(t));
-        if (found != null)
-        {
-            found.BringIntoView();
-            SelectControl(found);
-        }
+            .FirstOrDefault(t => t.Text.ContainsIgnoreCase(text));
     }
 
     public Vertex SelectedVertex => SelectedVertices.FirstOrDefault();

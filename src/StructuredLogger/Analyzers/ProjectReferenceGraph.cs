@@ -64,6 +64,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var cycles = Graph.RemoveCycles();
             Graph.CalculateHeight();
             Graph.CalculateDepth();
+            Graph.ComputeTransitiveReduction();
 
             maxProjectHeight = Graph.MaxHeight;
 
@@ -134,18 +135,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 if (visitedProjects.Add(path) && Graph.TryFindVertex(path) is Vertex vertex)
                 {
-                    if (vertex.Outgoing != null)
+                    foreach (var referencedProjectPath in vertex.Outgoing)
                     {
-                        foreach (var referencedProjectPath in vertex.Outgoing)
+                        var referencedProject = PopulateReferences(referencedProjectPath.Value);
+                        if (referencedProject != null)
                         {
-                            var referencedProject = PopulateReferences(referencedProjectPath.Value);
-                            if (referencedProject != null)
+                            node.AddChild(referencedProject);
+                            if (referencedProject.IsExpanded || referencedProject is ProxyNode)
                             {
-                                node.AddChild(referencedProject);
-                                if (referencedProject.IsExpanded || referencedProject is ProxyNode)
-                                {
-                                    node.IsExpanded = true;
-                                }
+                                node.IsExpanded = true;
                             }
                         }
                     }
@@ -194,7 +192,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 List<string> referencing = new();
 
                 var vertex = Graph.TryFindVertex(singleProject);
-                if (vertex != null && vertex.Incoming != null)
+                if (vertex.InDegree > 0)
                 {
                     foreach (var incoming in vertex.Incoming)
                     {

@@ -10,21 +10,79 @@ public class Vertex
     public string Value { get; set; }
     public string Title { get; set; }
 
-    public HashSet<Vertex> Outgoing { get; set; }
-    public HashSet<Vertex> Incoming { get; set; }
-    public int InDegree => Incoming?.Count ?? 0;
-    public int OutDegree => Outgoing?.Count ?? 0;
+    internal HashSet<Vertex> outgoing;
+    public IReadOnlyCollection<Vertex> Outgoing
+    {
+        get
+        {
+            if (outgoing == null)
+            {
+                return Array.Empty<Vertex>();
+            }
+
+            return outgoing;
+        }
+    }
+
+    internal HashSet<Vertex> incoming;
+    public IReadOnlyCollection<Vertex> Incoming
+    {
+        get
+        {
+            if (incoming == null)
+            {
+                return Array.Empty<Vertex>();
+            }
+
+            return incoming;
+        }
+    }
+
+    internal HashSet<Vertex> transitiveOutgoing;
+    public IReadOnlyCollection<Vertex> TransitiveOutgoing
+    {
+        get
+        {
+            if (transitiveOutgoing == null)
+            {
+                return Array.Empty<Vertex>();
+            }
+
+            return transitiveOutgoing;
+        }
+    }
+
+    public IEnumerable<Vertex> NonRedundantOutgoing
+    {
+        get
+        {
+            if (outgoing == null)
+            {
+                return Array.Empty<Vertex>();
+            }
+
+            if (transitiveOutgoing == null)
+            {
+                return Outgoing;
+            }
+
+            return Outgoing.Except(TransitiveOutgoing).ToArray();
+        }
+    }
+
+    public int InDegree => incoming?.Count ?? 0;
+    public int OutDegree => outgoing?.Count ?? 0;
 
     public int Height { get; set; } = -1;
     public int Depth { get; set; } = -1;
 
     public void AddChild(Vertex destination)
     {
-        Outgoing ??= new();
-        Outgoing.Add(destination);
+        outgoing ??= new();
+        outgoing.Add(destination);
 
-        destination.Incoming ??= new();
-        destination.Incoming.Add(this);
+        destination.incoming ??= new();
+        destination.incoming.Add(this);
     }
 }
 
@@ -123,16 +181,13 @@ public class Digraph
 
         int height = 0;
 
-        if (vertex.Outgoing != null && vertex.Outgoing.Count > 0)
+        foreach (var outgoing in vertex.Outgoing)
         {
-            foreach (var outgoing in vertex.Outgoing)
+            CalculateHeight(outgoing);
+            int outgoingHeight = outgoing.Height + 1;
+            if (outgoingHeight > height)
             {
-                CalculateHeight(outgoing);
-                int outgoingHeight = outgoing.Height + 1;
-                if (outgoingHeight > height)
-                {
-                    height = outgoingHeight;
-                }
+                height = outgoingHeight;
             }
         }
 
@@ -148,7 +203,7 @@ public class Digraph
 
         int depth = 0;
 
-        if (vertex.Incoming != null && vertex.Incoming.Count > 0)
+        if (vertex.InDegree > 0)
         {
             foreach (var incoming in vertex.Incoming)
             {
@@ -164,10 +219,10 @@ public class Digraph
         vertex.Depth = depth;
     }
 
-    public void TransitiveReduction()
+    public void ComputeTransitiveReduction()
     {
         var all = vertices.Values;
-        var originalEdges = all.ToDictionary(v => v, v => new HashSet<Vertex>(v.Outgoing ?? Enumerable.Empty<Vertex>()));
+        var originalEdges = all.ToDictionary(v => v, v => new HashSet<Vertex>(v.Outgoing));
 
         var visited = new HashSet<Vertex>();
         var stack = new Stack<Vertex>();
@@ -176,16 +231,15 @@ public class Digraph
         {
             foreach (var destination in originalEdges[source].ToList())
             {
-                source.Outgoing.Remove(destination);
+                source.outgoing.Remove(destination);
 
-                if (!CanReach(source, destination, visited, stack))
+                if (CanReach(source, destination, visited, stack))
                 {
-                    source.Outgoing.Add(destination);
+                    source.transitiveOutgoing ??= new();
+                    source.transitiveOutgoing.Add(destination);
                 }
-                else
-                {
-                    destination.Incoming.Remove(source);
-                }
+
+                source.outgoing.Add(destination);
 
                 visited.Clear();
                 stack.Clear();
@@ -210,14 +264,11 @@ public class Digraph
                 continue;
             }
 
-            if (current.Outgoing != null)
+            foreach (var child in current.Outgoing)
             {
-                foreach (var child in current.Outgoing)
+                if (!visited.Contains(child))
                 {
-                    if (!visited.Contains(child))
-                    {
-                        stack.Push(child);
-                    }
+                    stack.Push(child);
                 }
             }
         }
@@ -242,7 +293,7 @@ public class Digraph
 
         void Visit(Vertex vertex)
         {
-            if (vertex.Outgoing == null || !visited.Add(vertex))
+            if (vertex.OutDegree == 0 || !visited.Add(vertex))
             {
                 return;
             }
@@ -254,8 +305,8 @@ public class Digraph
             {
                 if (stackSet.Contains(outgoing))
                 {
-                    vertex.Outgoing.Remove(outgoing);
-                    outgoing.Incoming.Remove(vertex);
+                    vertex.outgoing.Remove(outgoing);
+                    outgoing.incoming.Remove(vertex);
                     cycles.Add(stack.ToArray());
                     continue;
                 }
@@ -302,7 +353,7 @@ public class Digraph
 
         foreach (var vertex in nodes)
         {
-            if (vertex.Outgoing != null && vertex.Outgoing.Count > 0)
+            if (vertex.OutDegree > 0)
             {
                 foreach (var child in vertex.Outgoing)
                 {
@@ -331,7 +382,7 @@ public class Digraph
 
         foreach (var vertex in nodes)
         {
-            if (vertex.Outgoing != null && vertex.Outgoing.Count > 0)
+            if (vertex.OutDegree > 0)
             {
                 foreach (var child in vertex.Outgoing)
                 {
@@ -351,7 +402,7 @@ public class Digraph
     {
         foreach (var project in vertices.Values.OrderBy(r => r.Title, StringComparer.OrdinalIgnoreCase))
         {
-            if (project.Outgoing == null || project.Outgoing.Count == 0)
+            if (project.OutDegree == 0)
             {
                 continue;
             }
