@@ -247,6 +247,62 @@ public class Digraph
         }
     }
 
+    public bool CanReach(Vertex start, Vertex end)
+    {
+        if (start.Height <= end.Height)
+        {
+            return false;
+        }
+
+        var visited = new HashSet<Vertex>();
+        var stack = new Stack<Vertex>();
+
+        bool result = CanReach(start, end, visited, stack);
+
+        return result;
+    }
+
+    public void FindAllPaths(Vertex start, Vertex end, Action<IReadOnlyList<Vertex>> callback)
+    {
+        if (start.Height <= end.Height)
+        {
+            return;
+        }
+
+        var visited = new HashSet<Vertex>();
+        var spine = new Stack<Vertex>();
+
+        FindPaths(start, end, visited, spine, callback);
+    }
+
+    private static void FindPaths(
+        Vertex start,
+        Vertex target,
+        HashSet<Vertex> visited,
+        Stack<Vertex> spine,
+        Action<IReadOnlyList<Vertex>> callback)
+    {
+        if (start == target)
+        {
+            callback(spine.ToArray());
+            return;
+        }
+
+        if (!visited.Add(start))
+        {
+            return;
+        }
+
+        spine.Push(start);
+
+        foreach (var child in start.Outgoing)
+        {
+            FindPaths(child, target, visited, spine, callback);
+        }
+
+        spine.Pop();
+    }
+
     private static bool CanReach(Vertex start, Vertex target, HashSet<Vertex> visited, Stack<Vertex> stack)
     {
         stack.Push(start);

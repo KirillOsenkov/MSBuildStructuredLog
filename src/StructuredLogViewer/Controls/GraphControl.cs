@@ -134,13 +134,13 @@ public class GraphControl
                 {
                     if (selectedControls.Contains(vertexControl))
                     {
-                        SelectControls(selectedControls.Where(c => c != vertexControl));
+                        SelectControls(selectedControls.Where(c => c != vertexControl).ToArray());
                     }
                     else
                     {
                         if (Keyboard.Modifiers is ModifierKeys.Shift or ModifierKeys.Control)
                         {
-                            SelectControls(selectedControls.Take(1).Append(vertexControl));
+                            SelectControls(selectedControls.Take(1).Append(vertexControl).ToArray());
                         }
                         else
                         {
@@ -232,10 +232,43 @@ public class GraphControl
             }
             else if (toSelect.Length == 2)
             {
+                SelectControls(toSelect[0], toSelect[1]);
             }
         }
 
         RaiseSelectionChanged();
+    }
+
+    private void SelectControls(FrameworkElement fromControl, FrameworkElement toControl)
+    {
+        Vertex from = (Vertex)fromControl.Tag;
+        Vertex to = (Vertex)toControl.Tag;
+
+        if (from.Height < to.Height)
+        {
+            (from, to) = (to, from);
+            (fromControl, toControl) = (toControl, fromControl);
+        }
+
+        var highlighted = new HashSet<FrameworkElement>();
+        highlighted.Add(toControl);
+
+        Digraph.FindAllPaths(from, to, path =>
+        {
+            for (int i = 0; i < path.Count; i++)
+            {
+                if (controlFromVertex.TryGetValue(path[i], out var control))
+                {
+                    highlighted.Add(control);
+                }
+            }
+        });
+
+        foreach (var highlight in highlighted)
+        {
+            var rect = GetRectOnCanvas(highlight);
+            AddRectangle(rect, new SolidColorBrush(Colors.Red), Brushes.Pink);
+        }
     }
 
     void SelectControl(FrameworkElement vertexControl)
