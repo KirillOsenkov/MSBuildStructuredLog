@@ -508,8 +508,6 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             }
         }
 
-        private HashSet<FrameworkElement> selectedControls = new();
-
         private void PopulateProjectReferenceGraph()
         {
             var dockPanel = new DockPanel();
@@ -539,15 +537,6 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                 BorderThickness = new Thickness(),
                 Visibility = Visibility.Hidden
             };
-            searchButton.Click += (s, e) =>
-            {
-                if (selectedControls.FirstOrDefault() is { } selected && selected.Tag is Vertex vertex)
-                {
-                    SelectSearchTab($"$projectreference project({vertex.Value})");
-                }
-            };
-
-            var vertexByControl = new Dictionary<Vertex, FrameworkElement>();
 
 #if false
             var graph = Digraph.Load(@"C:\temp\graph\graph.dot");
@@ -591,196 +580,38 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             toolbar.Children.Add(projectNameTextBlock);
             toolbar.Children.Add(searchButton);
 
-            var maxHeight = graph.Vertices.Max(g => g.Height);
-            var maxDepth = graph.Vertices.Max(g => g.Depth);
+            var graphControl = new GraphControl();
+            graphControl.Digraph = graph;
 
-            var grid = new Grid();
-            var layersControl = new StackPanel() { Orientation = Orientation.Vertical };
-            var canvas = new Canvas();
-
-            grid.Children.Add(canvas);
-            grid.Children.Add(layersControl);
-
-            bool isDarkTheme = SettingsService.UseDarkTheme;
-
-            byte ratio, halfratio;
-            Color background, outgoingColor, incomingColor, border;
-
-            if (isDarkTheme)
+            graphControl.SelectionChanged += () =>
             {
-                outgoingColor = Colors.MediumOrchid;
-                border = Colors.DeepSkyBlue;
-                incomingColor = Colors.PaleGreen;
-            }
-            else
-            {
-                outgoingColor = Colors.MediumOrchid;
-                border = Colors.DarkCyan;
-                incomingColor = Colors.Green;
-            }
-
-            var outgoingBrush = new LinearGradientBrush(outgoingColor, border, 90.0);
-            var incomingBrush = new LinearGradientBrush(border, incomingColor, 90.0);
-
-            foreach (var vertexGroup in graph.Vertices.GroupBy(v => v.Height).OrderBy(g => g.Key))
-            {
-                var layerPanel = new StackPanel { Orientation = Orientation.Horizontal };
-
-                foreach (var vertex in vertexGroup.OrderByDescending(s => s.InDegree).ThenBy(s => s.Title))
+                var selectedVertex = graphControl.SelectedVertex;
+                if (selectedVertex != null)
                 {
-                    var depth = vertex.Depth;
-
-                    if (isDarkTheme)
-                    {
-                        ratio = (byte)Math.Min(150, depth * 6);
-                        halfratio = (byte)Math.Min(100, depth * 4);
-                        background = Color.FromRgb(40, halfratio, ratio);
-                    }
-                    else
-                    {
-                        ratio = (byte)Math.Max(200, 255 - depth * 2);
-                        halfratio = (byte)Math.Max(224, 255 - depth);
-                        background = Color.FromRgb(ratio, halfratio, 255);
-                    }
-
-                    var paddingHeight = Math.Pow(vertex.InDegree, 0.6);
-                    var opacity = vertex.InDegree > 1 ? 0.9 : 0.5;
-                    var projectControl = new TextBlock()
-                    {
-                        Text = vertex.Title.TrimQuotes(),
-                        Margin = new Thickness(4, 2, 4, 2),
-                        Padding = new Thickness(2, paddingHeight, 2, paddingHeight),
-                        Background = new SolidColorBrush(background),
-                        VerticalAlignment = VerticalAlignment.Center,
-                        Opacity = opacity,
-                        Tag = vertex
-                    };
-                    vertexByControl[vertex] = projectControl;
-
-                    projectControl.MouseDown += (s, e) =>
-                    {
-                        SelectControl(projectControl);
-                    };
-                    layerPanel.Children.Add(projectControl);
+                    projectNameTextBlock.Text = selectedVertex.Value;
+                    projectNameTextBlock.Visibility = Visibility.Visible;
+                    searchButton.Visibility = Visibility.Visible;
                 }
-
-                layersControl.Children.Add(layerPanel);
-            }
-
-            Rect GetRectOnCanvas(FrameworkElement control)
-            {
-                return new Rect(
-                    control.TranslatePoint(new Point(0, 0), canvas),
-                    control.TranslatePoint(new Point(control.ActualWidth, control.ActualHeight), canvas)
-                );
-            }
-
-            void AddLine(Point sourcePoint, Point destinationPoint, Brush stroke)
-            {
-                var line = new System.Windows.Shapes.Line
+                else
                 {
-                    X1 = sourcePoint.X,
-                    Y1 = sourcePoint.Y,
-                    X2 = destinationPoint.X,
-                    Y2 = destinationPoint.Y,
-                    Stroke = stroke,
-                };
-                canvas.Children.Add(line);
-            }
-
-            void AddRectangle(Rect rect, Brush stroke, Brush fill = null)
-            {
-                var rectangleShape = new System.Windows.Shapes.Rectangle
-                {
-                    Width = rect.Width + 2,
-                    Height = rect.Height + 2,
-                    Stroke = stroke,
-                    Fill = fill
-                };
-                Canvas.SetLeft(rectangleShape, rect.Left - 1);
-                Canvas.SetTop(rectangleShape, rect.Top - 1);
-                canvas.Children.Add(rectangleShape);
-            }
-
-            IEnumerable<TextBlock> AllTextBlocks()
-            {
-                foreach (var layer in layersControl.Children.OfType<Panel>())
-                {
-                    foreach (var textBlock in layer.Children.OfType<TextBlock>())
-                    {
-                        yield return textBlock;
-                    }
-                }
-            }
-
-            void SelectControl(TextBlock projectControl)
-            {
-                var node = projectControl.Tag as Vertex;
-
-                canvas.Children.Clear();
-
-                if (selectedControls.Contains(projectControl))
-                {
-                    selectedControls.Remove(projectControl);
                     projectNameTextBlock.Text = "";
                     projectNameTextBlock.Visibility = Visibility.Hidden;
                     searchButton.Visibility = Visibility.Hidden;
-                    return;
                 }
-
-                selectedControls.Clear();
-                selectedControls.Add(projectControl);
-
-                var sourceRect = GetRectOnCanvas(projectControl);
-
-                projectNameTextBlock.Text = node?.Value;
-                projectNameTextBlock.Visibility = Visibility.Visible;
-                searchButton.Visibility = Visibility.Visible;
-
-                if (node.Outgoing != null)
-                {
-                    foreach (var outgoing in node.Outgoing)
-                    {
-                        if (vertexByControl.TryGetValue(outgoing, out var destinationControl))
-                        {
-                            var canvasRect = GetRectOnCanvas(destinationControl);
-                            var sourcePoint = new Point(sourceRect.Left + sourceRect.Width / 2, sourceRect.Top);
-                            var destinationPoint = new Point(canvasRect.Left + canvasRect.Width / 2, canvasRect.Bottom);
-                            AddLine(sourcePoint, destinationPoint, outgoingBrush);
-                            AddRectangle(canvasRect, new SolidColorBrush(outgoingColor));
-                        }
-                    }
-                }
-
-                if (node.Incoming != null)
-                {
-                    foreach (var incoming in node.Incoming)
-                    {
-                        if (vertexByControl.TryGetValue(incoming, out var sourceControl))
-                        {
-                            var canvasRect = GetRectOnCanvas(sourceControl);
-                            var sourcePoint = new Point(sourceRect.Left + sourceRect.Width / 2, sourceRect.Bottom);
-                            var destinationPoint = new Point(canvasRect.Left + canvasRect.Width / 2, canvasRect.Top);
-                            AddLine(sourcePoint, destinationPoint, incomingBrush);
-                            AddRectangle(canvasRect, new SolidColorBrush(incomingColor));
-                        }
-                    }
-                }
-
-                AddRectangle(sourceRect, new SolidColorBrush(border), Brushes.PaleGreen);
-            }
-
-            var scrollViewer = new ScrollViewer()
-            {
-                HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
-                VerticalScrollBarVisibility = ScrollBarVisibility.Auto
             };
-            scrollViewer.Content = grid;
 
             locateButton.Click += (s, e) =>
             {
                 e.Handled = true;
                 Locate();
+            };
+
+            searchButton.Click += (s, e) =>
+            {
+                if (graphControl.SelectedVertex is Vertex vertex)
+                {
+                    SelectSearchTab($"$projectreference project({vertex.Value})");
+                }
             };
 
             searchTextBox.KeyDown += (s, e) =>
@@ -797,19 +628,11 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                 var text = searchTextBox.Text;
                 if (!string.IsNullOrWhiteSpace(text))
                 {
-                    var found = AllTextBlocks()
-                        .OrderBy(t => t.Text.Length)
-                        .ThenBy(t => t.Text)
-                        .FirstOrDefault(t => t.Text.ContainsIgnoreCase(text) && !selectedControls.Contains(t));
-                    if (found != null)
-                    {
-                        found.BringIntoView();
-                        SelectControl(found);
-                    }
+                    graphControl.Locate(text);
                 }
             }
 
-            dockPanel.Children.Add(scrollViewer);
+            dockPanel.Children.Add(graphControl.Content);
 
             projectReferenceGraphTab.Content = dockPanel;
         }
