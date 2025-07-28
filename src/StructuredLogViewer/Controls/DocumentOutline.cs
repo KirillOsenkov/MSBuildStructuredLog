@@ -114,7 +114,7 @@ namespace StructuredLogViewer
 
             tooltip.HorizontalOffset = mousePosition.X;
             tooltip.VerticalOffset = mousePosition.Y;
-            tooltip.Content = $"{content}";
+            tooltip.Content = content;
 
             if (!tooltip.IsOpen)
             {
@@ -123,8 +123,10 @@ namespace StructuredLogViewer
 
             void CloseToolTip()
             {
-                tooltip.IsOpen = false;
-                tooltip.Content = string.Empty;
+                if (tooltip.IsOpen)
+                {
+                    tooltip.IsOpen = false;
+                }
             }
         }
 

@@ -20,6 +20,7 @@ using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Language.Xml;
 using Mono.Cecil;
 using StructuredLogViewer.Core.ProjectGraph;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 using TPLTask = System.Threading.Tasks.Task;
 
 namespace StructuredLogViewer.Controls
@@ -2047,7 +2048,7 @@ Recent (");
 
             var items = selectedItem.EnumerateSiblingsCycle();
 
-        search:
+search:
             foreach (var item in items)
             {
                 var text = GetText(item);
@@ -2654,8 +2655,24 @@ Recent (");
             switch (treeNode)
             {
                 case NameValueNode nameValueNode when nameValueNode.IsValueShortened:
+                    if (nameValueNode.Name == Strings.CommandLineArguments)
+                    {
+                        return DisplayCommandLine(nameValueNode.Value, nameValueNode.Name);
+                    }
+
                     return DisplayText(nameValueNode.Value, nameValueNode.Name);
                 case TextNode textNode when textNode.IsTextShortened:
+                    if (textNode.Text.StartsWith(Strings.CommandLineArguments))
+                    {
+                        // Search panel stores the Command Line as ProxyNode/TextNode.
+                        if (textNode is ProxyNode proxyNode &&
+                            proxyNode.OriginalType == Strings.Property &&
+                            proxyNode.Original is Property property)
+                        {
+                            return DisplayCommandLine(property.Value, Strings.CommandLineArguments);
+                        }
+                    }
+
                     return DisplayText(textNode.Text, textNode.ShortenedText ?? textNode.TypeName);
                 case NamedNode namedNode when namedNode.IsNameShortened:
                     return DisplayText(namedNode.Name, namedNode.ShortenedName ?? namedNode.TypeName);
@@ -2868,6 +2885,8 @@ Recent (");
                 text.Text,
                 lineNumber,
                 column,
+                null,
+                null,
                 preprocess,
                 navigationHelper,
                 editorExtension);
@@ -2878,6 +2897,20 @@ Recent (");
         {
             caption = TextUtilities.SanitizeFileName(caption);
             documentWell.DisplaySource(caption ?? "Text", text, displayPath: false);
+            return true;
+        }
+
+        public bool DisplayCommandLine(string commandLine, string title)
+        {
+            title = TextUtilities.SanitizeFileName(title);
+            int hash = TextUtilities.GetHashCode(title, commandLine);
+            documentWell.DisplaySource(title,
+                commandLine,
+                actionName: "Compare",
+                actionToolTip: "Open command line comparison tool",
+                action: () => { documentWell.DisplayCommandLineDiffer("Command Line Diff Tool", commandLine); },
+                displayPath: false,
+                tabHash: hash);
             return true;
         }
 
