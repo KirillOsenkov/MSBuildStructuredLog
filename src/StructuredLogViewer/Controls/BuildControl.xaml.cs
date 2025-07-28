@@ -19,8 +19,6 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Language.Xml;
 using Mono.Cecil;
-using StructuredLogViewer.Core.ProjectGraph;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 using TPLTask = System.Threading.Tasks.Task;
 
 namespace StructuredLogViewer.Controls

@@ -2,12 +2,10 @@
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 using System.Windows.Media;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Search;
 using StructuredLogger;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 
 namespace StructuredLogViewer.Controls
 {
