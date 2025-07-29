@@ -24,7 +24,7 @@
     <PackageVersion Include="GuiLabs.Language.Xml" Version="1.2.93" />
     <PackageVersion Include="Microsoft.Build" Version="$(MSBuildPackageVersion)" />
     <PackageVersion Include="Microsoft.Build.Framework" Version="$(MSBuildPackageVersion)" />
-    <PackageVersion Include="Microsoft.Build.Locator" Version="1.7.8" />
+    <PackageVersion Include="Microsoft.Build.Locator" Version="1.9.1" />
     <PackageVersion Include="Microsoft.Build.Tasks.Core" Version="$(MSBuildPackageVersion)" />
     <PackageVersion Include="Microsoft.Build.Utilities.Core" Version="$(MSBuildPackageVersion)" />
     <PackageVersion Include="Microsoft.IO.Redist" Version="6.1.0" />
