@@ -403,6 +403,12 @@ namespace StructuredLogViewer
                 return true;
             }
 
+            if (filePath.EndsWith(".dot", StringComparison.OrdinalIgnoreCase))
+            {
+                OpenGraphFile(filePath);
+                return true;
+            }
+
             if (filePath.EndsWith(".sln", StringComparison.OrdinalIgnoreCase) ||
                 filePath.EndsWith("proj", StringComparison.OrdinalIgnoreCase))
             {
@@ -670,6 +676,27 @@ namespace StructuredLogViewer
             }
         }
 
+        private void OpenGraphFile(string filePath)
+        {
+            DisplayBuild(null);
+
+            try
+            {
+                var graph = Digraph.Load(filePath);
+                graph.CalculateHeight();
+                graph.CalculateDepth();
+                graph.ComputeTransitiveReduction();
+
+                var graphHostControl = new GraphHostControl();
+                graphHostControl.Graph = graph;
+
+                SetContent(graphHostControl);
+            }
+            catch
+            {
+            }
+        }
+
         private void AddNuGetNode(Build build)
         {
             var nuget = new Package { Name = "NuGet" };
@@ -773,6 +800,11 @@ Use project(.) or project(.csproj) to search all projects (slow)." };
             OpenLogFile();
         }
 
+        private void OpenGraph_Click(object sender, RoutedEventArgs e)
+        {
+            OpenGraphFile();
+        }
+
         private void Build_Click(object sender, RoutedEventArgs e)
         {
             OpenProjectOrSolution();
@@ -845,6 +877,21 @@ Use project(.) or project(.csproj) to search all projects (slow)." };
         private void Reload()
         {
             OpenLogFile(logFilePath);
+        }
+
+        private void OpenGraphFile()
+        {
+            var openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = Serialization.OpenFileGraphFilter;
+            openFileDialog.Title = "Open a graph file";
+            openFileDialog.CheckFileExists = true;
+            var result = openFileDialog.ShowDialog(this);
+            if (result != true)
+            {
+                return;
+            }
+
+            OpenGraphFile(openFileDialog.FileName);
         }
 
         private async System.Threading.Tasks.Task RedactSecrets()

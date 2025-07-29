@@ -18,6 +18,8 @@ public class GraphHostControl : DockPanel
 
     private Digraph graph;
     private GraphControl graphControl;
+    private Button searchButton;
+    private Button showTextButton;
 
     public Digraph Graph
     {
@@ -39,7 +41,17 @@ public class GraphHostControl : DockPanel
             {
                 graphControl.Digraph = graph;
             }
+
+            UpdateVisibility();
         }
+    }
+
+    private void UpdateVisibility()
+    {
+        var textVisibility = DisplayText != null ? Visibility.Visible : Visibility.Collapsed;
+        var searchVisibility = GoToSearch != null ? Visibility.Visible : Visibility.Collapsed;
+        showTextButton.Visibility = textVisibility;
+        searchButton.Visibility = searchVisibility;
     }
 
     private void Initialize()
@@ -73,7 +85,7 @@ public class GraphHostControl : DockPanel
             Visibility = Visibility.Hidden
         };
 
-        var searchButton = new Button
+        searchButton = new Button
         {
             Content = "Go to search",
             VerticalAlignment = VerticalAlignment.Center,
@@ -82,7 +94,7 @@ public class GraphHostControl : DockPanel
             Visibility = Visibility.Hidden
         };
 
-        var showTextButton = new Button
+        showTextButton = new Button
         {
             Content = "Show graph text",
             VerticalAlignment = VerticalAlignment.Center,
@@ -135,7 +147,7 @@ public class GraphHostControl : DockPanel
             {
                 projectNameTextBlock.Text = selectedVertex.Value;
                 projectNameTextBlock.Visibility = Visibility.Visible;
-                searchButton.Visibility = Visibility.Visible;
+                searchButton.Visibility = GoToSearch != null ? Visibility.Visible : Visibility.Collapsed;
             }
             else
             {

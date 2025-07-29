@@ -24,6 +24,7 @@
         <MenuItem Header="Rebuild Solution/Project" Click="Rebuild_Click" InputGestureText="Shift+F6" />
         <Separator />
         <MenuItem Header="_Open Log..." Click="Open_Click" InputGestureText="Ctrl+O" />
+        <MenuItem Header="_Open Graph..." Click="OpenGraph_Click" />
         <MenuItem x:Name="ReloadMenu" Header="_Reload" Click="Reload_Click" InputGestureText="F5" />
         <MenuItem x:Name="SaveAsMenu" Header="_Save Log As..." Click="SaveAs_Click" InputGestureText="Ctrl+S" />
         <MenuItem x:Name="RedactSecretsMenu" Header="_Redact Secrets" Click="RedactSecrets_Click" InputGestureText="Ctrl+R" />

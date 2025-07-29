@@ -389,7 +389,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
             preprocessedFileManager = new PreprocessedFileManager(this.Build, sourceFileResolver);
             preprocessedFileManager.DisplayFile += filePath => DisplayFile(filePath);
-            Build.TargetGraphManager.TextProvider = evaluation => preprocessedFileManager.GetPreprocessedText(evaluation);
+            Build.TextProvider = evaluation => preprocessedFileManager.GetPreprocessedText(evaluation);
 
             navigationHelper = new NavigationHelper(Build, sourceFileResolver);
             navigationHelper.OpenFileRequested += filePath => DisplayFile(filePath);
@@ -510,19 +510,12 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
         private void PopulateProjectReferenceGraph()
         {
-#if false
-            var graph = Digraph.Load(@"C:\temp\graph\graph.dot");
-            graph.CalculateHeight();
-            graph.CalculateDepth();
-            graph.ComputeTransitiveReduction();
-#else
             var graph = Build.ProjectReferenceGraph.Graph;
-#endif
 
             var graphHostControl = new GraphHostControl();
-            graphHostControl.Graph = graph;
             graphHostControl.DisplayText += text => DisplayText(text, "Graph");
             graphHostControl.GoToSearch += text => SelectSearchTab(text);
+            graphHostControl.Graph = graph;
 
             projectReferenceGraphTab.Content = graphHostControl;
         }

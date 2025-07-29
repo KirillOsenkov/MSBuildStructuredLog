@@ -31,6 +31,7 @@ public class GraphControl
         layersControl = new StackPanel { Orientation = Orientation.Vertical };
 
         canvas = new Canvas();
+        canvas.SetResourceReference(Panel.BackgroundProperty, "Theme_WhiteBackground");
 
         grid = new Grid();
         grid.Children.Add(canvas);
@@ -207,6 +208,12 @@ public class GraphControl
         AddLine(sourcePoint, destinationPoint, stroke);
     }
 
+    void AddRectangle(FrameworkElement element, Brush stroke, Brush fill = null)
+    {
+        var rect = GetRectOnCanvas(element);
+        AddRectangle(rect, stroke, fill);
+    }
+
     void AddRectangle(Rect rect, Brush stroke, Brush fill = null)
     {
         var rectangleShape = new System.Windows.Shapes.Rectangle
@@ -260,8 +267,6 @@ public class GraphControl
         }
 
         var highlighted = new HashSet<FrameworkElement>();
-        highlighted.Add(fromControl);
-        highlighted.Add(toControl);
 
         var edges = new HashSet<(FrameworkElement start, FrameworkElement end)>();
 
@@ -282,11 +287,16 @@ public class GraphControl
             }
         });
 
+        highlighted.Remove(fromControl);
+        highlighted.Remove(toControl);
+
         foreach (var highlight in highlighted)
         {
-            var rect = GetRectOnCanvas(highlight);
-            AddRectangle(rect, new SolidColorBrush(Colors.Red), Brushes.Pink);
+            AddRectangle(highlight, new SolidColorBrush(Colors.Blue), Brushes.Azure);
         }
+
+        AddRectangle(fromControl, Brushes.Red, Brushes.Pink);
+        AddRectangle(toControl, Brushes.Red, Brushes.Pink);
 
         foreach (var edge in edges)
         {

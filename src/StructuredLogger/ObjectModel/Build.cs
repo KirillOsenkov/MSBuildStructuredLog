@@ -18,6 +18,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public IList<ISearchExtension> SearchExtensions { get; } = new List<ISearchExtension>();
 
+        public Func<ProjectEvaluation, string> TextProvider { get; set; }
+
         public bool IsAnalyzed { get; set; }
         public bool Succeeded { get; set; } = true;
         public Error FirstError { get; set; }

@@ -10,7 +10,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
     public class TargetGraphManager : ISearchExtension
     {
         public Build Build { get; }
-        public Func<ProjectEvaluation, string> TextProvider { get; set; }
 
         public bool AugmentOtherResults => true;
 
@@ -44,7 +43,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return graph;
             }
 
-            var preprocessedText = this.TextProvider?.Invoke(evaluation);
+            var preprocessedText = Build.TextProvider?.Invoke(evaluation);
             if (preprocessedText == null)
             {
                 return null;
