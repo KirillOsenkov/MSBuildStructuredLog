@@ -510,142 +510,21 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
         private void PopulateProjectReferenceGraph()
         {
-            var dockPanel = new DockPanel();
-            var toolbar = new StackPanel()
-            {
-                Orientation = Orientation.Horizontal,
-                MinHeight = 26
-            };
-            toolbar.SetResourceReference(Panel.BackgroundProperty, SystemColors.ControlBrushKey);
-            dockPanel.Children.Add(toolbar);
-            DockPanel.SetDock(toolbar, Dock.Top);
-
-            var projectNameTextBlock = new TextBox()
-            {
-                Margin = new Thickness(0, 0, 8, 0),
-                VerticalAlignment = VerticalAlignment.Center,
-                IsReadOnly = true,
-                IsReadOnlyCaretVisible = true,
-                Visibility = Visibility.Hidden
-            };
-
-            var searchButton = new Button
-            {
-                Content = "Search for $projectreference",
-                VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(0, 0, 8, 0),
-                BorderThickness = new Thickness(),
-                Visibility = Visibility.Hidden
-            };
-
 #if false
             var graph = Digraph.Load(@"C:\temp\graph\graph.dot");
             graph.CalculateHeight();
             graph.CalculateDepth();
+            graph.ComputeTransitiveReduction();
 #else
             var graph = Build.ProjectReferenceGraph.Graph;
 #endif
 
-            var showTextButton = new Button
-            {
-                Content = "Show graph text",
-                VerticalAlignment = VerticalAlignment.Center,
-                Padding = new Thickness(0, 0, 8, 0),
-                Margin = new Thickness(0, 0, 8, 0),
-                BorderThickness = new Thickness(0, 0, 1, 0)
-            };
-            showTextButton.Click += (s, e) =>
-            {
-                var text = graph.GetDotText();
-                DisplayText(text, "Project Reference Graph");
-            };
+            var graphHostControl = new GraphHostControl();
+            graphHostControl.Graph = graph;
+            graphHostControl.DisplayText += text => DisplayText(text, "Graph");
+            graphHostControl.GoToSearch += text => SelectSearchTab(text);
 
-            var searchTextBox = new TextBox
-            {
-                VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(0, 0, 8, 0),
-                MinWidth = 200
-            };
-            var locateButton = new Button
-            {
-                Content = "Locate on canvas",
-                VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(0, 0, 8, 0),
-                BorderThickness = new Thickness()
-            };
-
-            var transitiveReduceCheck = new CheckBox
-            {
-                Content = "Hide transitive references",
-                VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(0, 0, 8, 0)
-            };
-
-            toolbar.Children.Add(showTextButton);
-            toolbar.Children.Add(searchTextBox);
-            toolbar.Children.Add(locateButton);
-            toolbar.Children.Add(projectNameTextBlock);
-            toolbar.Children.Add(searchButton);
-            toolbar.Children.Add(transitiveReduceCheck);
-
-            var graphControl = new GraphControl();
-            graphControl.Digraph = graph;
-
-            graphControl.SelectionChanged += () =>
-            {
-                var selectedVertex = graphControl.SelectedVertex;
-                if (selectedVertex != null)
-                {
-                    projectNameTextBlock.Text = selectedVertex.Value;
-                    projectNameTextBlock.Visibility = Visibility.Visible;
-                    searchButton.Visibility = Visibility.Visible;
-                }
-                else
-                {
-                    projectNameTextBlock.Text = "";
-                    projectNameTextBlock.Visibility = Visibility.Hidden;
-                    searchButton.Visibility = Visibility.Hidden;
-                }
-            };
-
-            locateButton.Click += (s, e) =>
-            {
-                e.Handled = true;
-                Locate();
-            };
-
-            searchButton.Click += (s, e) =>
-            {
-                if (graphControl.SelectedVertex is Vertex vertex)
-                {
-                    SelectSearchTab($"$projectreference project({vertex.Value})");
-                }
-            };
-
-            searchTextBox.KeyDown += (s, e) =>
-            {
-                if (e.KeyboardDevice.Modifiers == ModifierKeys.None && e.Key == Key.Return)
-                {
-                    e.Handled = true;
-                    Locate();
-                }
-            };
-
-            transitiveReduceCheck.Checked += (s, e) => graphControl.HideTransitiveEdges = true;
-            transitiveReduceCheck.Unchecked += (s, e) => graphControl.HideTransitiveEdges = false;
-
-            void Locate()
-            {
-                var text = searchTextBox.Text;
-                if (!string.IsNullOrWhiteSpace(text))
-                {
-                    graphControl.Locate(text);
-                }
-            }
-
-            dockPanel.Children.Add(graphControl.Content);
-
-            projectReferenceGraphTab.Content = dockPanel;
+            projectReferenceGraphTab.Content = graphHostControl;
         }
 
         private void FilesTree_SearchTextChanged(string text)

@@ -375,11 +375,11 @@ public class Digraph
         }
     }
 
-    public string GetDotText()
+    public string GetDotText(bool transitiveReduce = false)
     {
         var writer = new System.IO.StringWriter();
         writer.WriteLine("digraph {");
-        WriteVertices(writer);
+        WriteVertices(writer, transitiveReduction: transitiveReduce);
         writer.WriteLine("}");
         return writer.ToString();
     }
@@ -454,22 +454,29 @@ public class Digraph
         TextWriter writer,
         string arrow = "->",
         string indent = "  ",
-        bool quotes = true)
+        bool quotes = true,
+        bool transitiveReduction = false)
     {
-        foreach (var project in vertices.Values.OrderBy(r => r.Title, StringComparer.OrdinalIgnoreCase))
+        foreach (var vertex in vertices.Values.OrderBy(r => r.Title, StringComparer.OrdinalIgnoreCase))
         {
-            if (project.OutDegree == 0)
+            if (vertex.OutDegree == 0)
             {
                 continue;
             }
 
-            var projectKey = project.Title;
+            var key = vertex.Title;
             if (!quotes)
             {
-                projectKey = projectKey.TrimQuotes();
+                key = key.TrimQuotes();
             }
 
-            foreach (var reference in project.Outgoing.OrderBy(r => r.Title, StringComparer.OrdinalIgnoreCase))
+            IEnumerable<Vertex> outgoing = vertex.Outgoing;
+            if (transitiveReduction)
+            {
+                outgoing = vertex.NonRedundantOutgoing;
+            }
+
+            foreach (var reference in outgoing.OrderBy(r => r.Title, StringComparer.OrdinalIgnoreCase))
             {
                 var referenceKey = reference.Title;
                 if (!quotes)
@@ -477,7 +484,7 @@ public class Digraph
                     referenceKey = referenceKey.TrimQuotes();
                 }
 
-                writer.WriteLine($"{indent}{projectKey} {arrow} {referenceKey}");
+                writer.WriteLine($"{indent}{key} {arrow} {referenceKey}");
             }
         }
     }
