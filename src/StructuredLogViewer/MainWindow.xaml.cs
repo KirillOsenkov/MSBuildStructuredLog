@@ -718,7 +718,13 @@ Search for a file coming from a NuGet package:
 Search for a specific version or version range:
     $nuget project(.csproj) 13.0.3
 
-Use project(.) or project(.csproj) to search all projects (slow)." };
+Use project(.) or project(.csproj) to search all projects (slow).
+
+Right-click the NuGet node above and click NuGet Graph to view the NuGet dependency graph
+for the entire build.
+
+Right-click a project or evaluation and click NuGet Graph to view the NuGet graph for
+that project." };
             nuget.AddChild(note);
             build.AddChild(nuget);
         }
