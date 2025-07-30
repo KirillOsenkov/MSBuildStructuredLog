@@ -304,6 +304,7 @@ public class GraphControl
     }
 
     private Point Center(Rect rect) => new Point(rect.Left + rect.Width / 2, rect.Top + rect.Height / 2);
+
     private Point GetPointOnBoundary(Rect rect, Point outsidePoint)
     {
         var center = Center(rect);
@@ -504,11 +505,6 @@ public class GraphControl
                 AddRectangle(destinationRect, new SolidColorBrush(outgoingColor));
             }
         }
-    }
-
-    IEnumerable<Vertex> AllVertices()
-    {
-        return AllTextBlocks().Select(GetVertex);
     }
 
     IEnumerable<TextBlock> AllTextBlocks()
