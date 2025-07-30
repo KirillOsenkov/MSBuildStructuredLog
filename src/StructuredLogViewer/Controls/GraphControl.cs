@@ -18,6 +18,7 @@ public class GraphControl
 
     private Dictionary<Vertex, FrameworkElement> controlFromVertex = new();
     private HashSet<FrameworkElement> selectedControls = new();
+    private HashSet<Vertex> selectedVertices = new();
 
     private Color outgoingColor, incomingColor, border;
     private Brush outgoingBrush, incomingBrush;
@@ -93,7 +94,7 @@ public class GraphControl
 
     public void Redraw()
     {
-        Clear();
+        Clear(clearSelection: false);
         Populate();
     }
 
@@ -109,7 +110,7 @@ public class GraphControl
             }
 
             hideTransitiveEdges = value;
-            SelectControls(selectedControls.ToArray());
+            SelectVertices(selectedVertices.ToArray());
         }
     }
 
@@ -217,19 +218,20 @@ public class GraphControl
 
                 vertexControl.MouseDown += (s, args) =>
                 {
-                    if (selectedControls.Contains(vertexControl))
+                    var vertex = GetVertex(vertexControl);
+                    if (selectedVertices.Contains(vertex))
                     {
-                        SelectControls(selectedControls.Where(c => c != vertexControl).ToArray());
+                        SelectVertices(selectedVertices.Where(c => c != vertex).ToArray());
                     }
                     else
                     {
                         if (Keyboard.Modifiers is ModifierKeys.Shift or ModifierKeys.Control)
                         {
-                            SelectControls(selectedControls.Take(1).Append(vertexControl).ToArray());
+                            SelectVertices(selectedVertices.Take(1).Append(vertex).ToArray());
                         }
                         else
                         {
-                            SelectControls([vertexControl]);
+                            SelectVertices([vertex]);
                         }
                     }
                 };
@@ -238,6 +240,8 @@ public class GraphControl
 
             layersControl.Children.Add(layerPanel);
         }
+
+        SelectVertices(selectedVertices.ToArray());
     }
 
     private Color ComputeBackground(int depth)
@@ -283,13 +287,50 @@ public class GraphControl
         canvas.Children.Add(line);
     }
 
+    void AddLine(Rect sourceRect, Rect destinationRect, Brush stroke)
+    {
+        var sourceCenter = Center(sourceRect);
+        var destinationCenter = Center(destinationRect);
+        var sourcePoint = GetPointOnBoundary(sourceRect, destinationCenter);
+        var destinationPoint = GetPointOnBoundary(destinationRect, sourceCenter);
+        AddLine(sourcePoint, destinationPoint, stroke);
+    }
+
     void AddLine(FrameworkElement fromControl, FrameworkElement toControl, Brush stroke)
     {
         var sourceRect = GetRectOnCanvas(fromControl);
         var destinationRect = GetRectOnCanvas(toControl);
-        var sourcePoint = new Point(sourceRect.Left + sourceRect.Width / 2, sourceRect.Top);
-        var destinationPoint = new Point(destinationRect.Left + destinationRect.Width / 2, destinationRect.Bottom);
-        AddLine(sourcePoint, destinationPoint, stroke);
+        AddLine(sourceRect, destinationRect, stroke);
+    }
+
+    private Point Center(Rect rect) => new Point(rect.Left + rect.Width / 2, rect.Top + rect.Height / 2);
+    private Point GetPointOnBoundary(Rect rect, Point outsidePoint)
+    {
+        var center = Center(rect);
+        var horizontalRatio = Math.Abs((outsidePoint.X - center.X) / (rect.Width / 2));
+        var verticalRatio = Math.Abs((outsidePoint.Y - center.Y) / (rect.Height / 2));
+        var horizontal = center.X + (outsidePoint.X - center.X) / verticalRatio;
+        if (Math.Abs(horizontal - center.X) <= rect.Width / 2)
+        {
+            if (outsidePoint.Y > center.Y)
+            {
+                return new Point(horizontal, rect.Bottom);
+            }
+            else
+            {
+                return new Point(horizontal, rect.Top);
+            }
+        }
+
+        var vertical = center.Y + (outsidePoint.Y - center.Y) / horizontalRatio;
+        if (outsidePoint.X > center.X)
+        {
+            return new Point(rect.Right, vertical);
+        }
+        else
+        {
+            return new Point(rect.Left, vertical);
+        }
     }
 
     void AddRectangle(FrameworkElement element, Brush stroke, Brush fill = null)
@@ -317,6 +358,22 @@ public class GraphControl
         SelectionChanged?.Invoke();
     }
 
+    void SelectVertices(IEnumerable<Vertex> vertices)
+    {
+        selectedVertices.Clear();
+
+        if (vertices == null)
+        {
+            SelectControls(null);
+            return;
+        }
+
+        selectedVertices.UnionWith(vertices);
+
+        var controls = vertices.Select(GetControl).ToArray();
+        SelectControls(controls);
+    }
+
     void SelectControls(IEnumerable<FrameworkElement> controls)
     {
         canvas.Children.Clear();
@@ -326,6 +383,11 @@ public class GraphControl
         {
             var toSelect = controls.Take(2).ToArray();
             selectedControls.UnionWith(controls);
+            foreach (var control in toSelect)
+            {
+                control.UpdateLayout();
+            }
+
             if (toSelect.Length == 1)
             {
                 SelectControl(toSelect[0]);
@@ -339,10 +401,21 @@ public class GraphControl
         RaiseSelectionChanged();
     }
 
+    private FrameworkElement GetControl(Vertex vertex)
+    {
+        controlFromVertex.TryGetValue(vertex, out var result);
+        return result;
+    }
+
+    private Vertex GetVertex(FrameworkElement control)
+    {
+        return (Vertex)control.Tag;
+    }
+
     private void SelectControls(FrameworkElement fromControl, FrameworkElement toControl)
     {
-        Vertex from = (Vertex)fromControl.Tag;
-        Vertex to = (Vertex)toControl.Tag;
+        Vertex from = GetVertex(fromControl);
+        Vertex to = GetVertex(toControl);
 
         if (from.Height < to.Height)
         {
@@ -358,12 +431,13 @@ public class GraphControl
         {
             for (int i = 0; i < path.Count; i++)
             {
-                if (controlFromVertex.TryGetValue(path[i], out var control))
+                var control = GetControl(path[i]);
+                if (control != null)
                 {
                     highlighted.Add(control);
 
                     var target = i < path.Count - 1 ? path[i + 1] : to;
-                    if (controlFromVertex.TryGetValue(target, out var targetControl))
+                    if (GetControl(target) is { } targetControl)
                     {
                         edges.Add((control, targetControl));
                     }
@@ -391,13 +465,9 @@ public class GraphControl
     void SelectControl(FrameworkElement vertexControl)
     {
         var sourceRect = GetRectOnCanvas(vertexControl);
-
-        var node = vertexControl.Tag as Vertex;
-
-        AddOutgoingEdges(sourceRect, node);
-
-        AddIncomingEdges(sourceRect, node);
-
+        var vertex = GetVertex(vertexControl);
+        AddOutgoingEdges(sourceRect, vertex);
+        AddIncomingEdges(sourceRect, vertex);
         AddRectangle(sourceRect, new SolidColorBrush(border), Brushes.PaleGreen);
     }
 
@@ -412,12 +482,10 @@ public class GraphControl
                 continue;
             }
 
-            if (controlFromVertex.TryGetValue(incoming, out var sourceControl))
+            if (GetControl(incoming) is { } sourceControl)
             {
                 var sourceRect = GetRectOnCanvas(sourceControl);
-                var sourcePoint = new Point(sourceRect.Left + sourceRect.Width / 2, sourceRect.Top);
-                var destinationPoint = new Point(destinationRect.Left + destinationRect.Width / 2, destinationRect.Bottom);
-                AddLine(sourcePoint, destinationPoint, incomingBrush);
+                AddLine(sourceRect, destinationRect, incomingBrush);
                 AddRectangle(sourceRect, new SolidColorBrush(incomingColor));
             }
         }
@@ -429,15 +497,18 @@ public class GraphControl
 
         foreach (var outgoing in list)
         {
-            if (controlFromVertex.TryGetValue(outgoing, out var destinationControl))
+            if (GetControl(outgoing) is { } destinationControl)
             {
                 var destinationRect = GetRectOnCanvas(destinationControl);
-                var sourcePoint = new Point(sourceRect.Left + sourceRect.Width / 2, sourceRect.Top);
-                var destinationPoint = new Point(destinationRect.Left + destinationRect.Width / 2, destinationRect.Bottom);
-                AddLine(sourcePoint, destinationPoint, outgoingBrush);
+                AddLine(sourceRect, destinationRect, outgoingBrush);
                 AddRectangle(destinationRect, new SolidColorBrush(outgoingColor));
             }
         }
+    }
+
+    IEnumerable<Vertex> AllVertices()
+    {
+        return AllTextBlocks().Select(GetVertex);
     }
 
     IEnumerable<TextBlock> AllTextBlocks()
@@ -451,10 +522,15 @@ public class GraphControl
         }
     }
 
-    private void Clear()
+    private void Clear(bool clearSelection = true)
     {
-        controlFromVertex.Clear();
+        if (clearSelection)
+        {
+            selectedVertices.Clear();
+        }
+
         selectedControls.Clear();
+        controlFromVertex.Clear();
         canvas.Children.Clear();
         layersControl.Children.Clear();
     }
@@ -463,7 +539,7 @@ public class GraphControl
     {
         if (string.IsNullOrWhiteSpace(text))
         {
-            SelectControls(null);
+            SelectVertices(null);
             return;
         }
 
@@ -474,7 +550,7 @@ public class GraphControl
             foundControl.BringIntoView();
         }
 
-        SelectControls(found);
+        SelectVertices(found.Select(GetVertex).ToArray());
     }
 
     private FrameworkElement FindControlByText(string text)
@@ -495,8 +571,7 @@ public class GraphControl
 
     public Vertex SelectedVertex => SelectedVertices.FirstOrDefault();
 
-    public IReadOnlyList<Vertex> SelectedVertices =>
-        selectedControls.Select(c => c.Tag).OfType<Vertex>().Where(v => v != null).ToArray();
+    public IReadOnlyList<Vertex> SelectedVertices => selectedVertices.ToArray();
 
     public UIElement Content => scrollViewer;
 }
