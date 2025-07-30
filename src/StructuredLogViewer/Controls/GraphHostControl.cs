@@ -138,6 +138,27 @@ public class GraphHostControl : DockPanel
             BorderThickness = new Thickness()
         };
 
+        var depthCheckbox = new CheckBox
+        {
+            Content = "Layer by depth",
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, 8, 0)
+        };
+
+        var horizontalCheckbox = new CheckBox
+        {
+            Content = "Horizontal",
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, 8, 0)
+        };
+
+        var invertedCheckbox = new CheckBox
+        {
+            Content = "Invert",
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, 8, 0)
+        };
+
         helpButton.Click += (s, e) =>
         {
             Process.Start(new ProcessStartInfo("https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/Graph") { UseShellExecute = true });
@@ -149,8 +170,38 @@ public class GraphHostControl : DockPanel
             DisplayText?.Invoke(text);
         };
 
+        depthCheckbox.Checked += (s, e) =>
+        {
+            graphControl.LayerByDepth = true;
+        };
+        depthCheckbox.Unchecked += (s, e) =>
+        {
+            graphControl.LayerByDepth = false;
+        };
+
+        horizontalCheckbox.Checked += (s, e) =>
+        {
+            graphControl.Horizontal = true;
+        };
+        horizontalCheckbox.Unchecked += (s, e) =>
+        {
+            graphControl.Horizontal = false;
+        };
+
+        invertedCheckbox.Checked += (s, e) =>
+        {
+            graphControl.Inverted = true;
+        };
+        invertedCheckbox.Unchecked += (s, e) =>
+        {
+            graphControl.Inverted = false;
+        };
+
         toolbar.Children.Add(showTextButton);
         toolbar.Children.Add(transitiveReduceCheck);
+        toolbar.Children.Add(depthCheckbox);
+        toolbar.Children.Add(horizontalCheckbox);
+        toolbar.Children.Add(invertedCheckbox);
         toolbar.Children.Add(searchTextBox);
         toolbar.Children.Add(locateButton);
         toolbar.Children.Add(helpButton);

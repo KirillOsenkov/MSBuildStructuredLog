@@ -91,14 +91,73 @@ public class GraphControl
         }
     }
 
+    public void Redraw()
+    {
+        Clear();
+        Populate();
+    }
+
     private bool hideTransitiveEdges;
     public bool HideTransitiveEdges
     {
         get => hideTransitiveEdges;
         set
         {
+            if (hideTransitiveEdges == value)
+            {
+                return;
+            }
+
             hideTransitiveEdges = value;
             SelectControls(selectedControls.ToArray());
+        }
+    }
+
+    private bool layerByDepth;
+    public bool LayerByDepth
+    {
+        get => layerByDepth;
+        set
+        {
+            if (layerByDepth == value)
+            {
+                return;
+            }
+
+            layerByDepth = value;
+            Redraw();
+        }
+    }
+
+    private bool horizontal;
+    public bool Horizontal
+    {
+        get => horizontal;
+        set
+        {
+            if (horizontal == value)
+            {
+                return;
+            }
+
+            horizontal = value;
+            Redraw();
+        }
+    }
+
+    private bool inverted;
+    public bool Inverted
+    {
+        get => inverted;
+        set
+        {
+            if (inverted == value)
+            {
+                return;
+            }
+
+            inverted = value;
+            Redraw();
         }
     }
 
@@ -106,16 +165,41 @@ public class GraphControl
     {
         var maxHeight = graph.Vertices.Max(g => g.Height);
         var maxDepth = graph.Vertices.Max(g => g.Depth);
-
-        foreach (var vertexGroup in graph.Vertices.GroupBy(v => v.Height).OrderBy(g => g.Key))
+        var primaryOrientation = Orientation.Vertical;
+        var secondaryOrientation = Orientation.Horizontal;
+        if (Horizontal)
         {
-            var layerPanel = new StackPanel { Orientation = Orientation.Horizontal };
+            primaryOrientation = Orientation.Horizontal;
+            secondaryOrientation = Orientation.Vertical;
+        }
+
+        layersControl.Orientation = primaryOrientation;
+
+        Func<Vertex, int> groupBy = v => v.Height;
+        if (LayerByDepth)
+        {
+            groupBy = v => maxDepth - v.Depth;
+        }
+
+        var groups = graph.Vertices.GroupBy(groupBy).OrderBy(g => g.Key).ToArray();
+        if (Inverted)
+        {
+            groups = groups.Reverse().ToArray();
+        }
+
+        foreach (var vertexGroup in groups)
+        {
+            var layerPanel = new StackPanel { Orientation = secondaryOrientation };
 
             foreach (var vertex in vertexGroup.OrderByDescending(s => s.InDegree).ThenBy(s => s.Title))
             {
-                var depth = vertex.Depth;
+                var depthOrHeight = vertex.Depth;
+                if (LayerByDepth)
+                {
+                    depthOrHeight = maxHeight - vertex.Height;
+                }
 
-                var background = ComputeBackground(depth);
+                var background = ComputeBackground(depthOrHeight);
 
                 var paddingHeight = Math.Pow(vertex.InDegree, 0.6);
                 var opacity = vertex.InDegree > 1 ? 0.9 : 0.5;
