@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -49,7 +50,12 @@ public class GraphHostControl : DockPanel
     private void UpdateVisibility()
     {
         var textVisibility = DisplayText != null ? Visibility.Visible : Visibility.Collapsed;
-        var searchVisibility = GoToSearch != null ? Visibility.Visible : Visibility.Collapsed;
+        var searchVisibility =
+            GoToSearch != null &&
+            graphControl != null &&
+            graphControl.SelectedVertex != null
+                ? Visibility.Visible
+                : Visibility.Collapsed;
         showTextButton.Visibility = textVisibility;
         searchButton.Visibility = searchVisibility;
     }
@@ -124,6 +130,19 @@ public class GraphHostControl : DockPanel
             Margin = new Thickness(0, 0, 8, 0)
         };
 
+        var helpButton = new Button
+        {
+            Content = "Help",
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, 8, 0),
+            BorderThickness = new Thickness()
+        };
+
+        helpButton.Click += (s, e) =>
+        {
+            Process.Start(new ProcessStartInfo("https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/Graph") { UseShellExecute = true });
+        };
+
         showTextButton.Click += (s, e) =>
         {
             var text = graph.GetDotText(transitiveReduceCheck.IsChecked == true);
@@ -134,6 +153,7 @@ public class GraphHostControl : DockPanel
         toolbar.Children.Add(transitiveReduceCheck);
         toolbar.Children.Add(searchTextBox);
         toolbar.Children.Add(locateButton);
+        toolbar.Children.Add(helpButton);
 
         topToolbar.Children.Add(searchButton);
         topToolbar.Children.Add(projectNameTextBlock);
