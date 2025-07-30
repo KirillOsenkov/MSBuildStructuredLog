@@ -683,6 +683,7 @@ namespace StructuredLogViewer
             try
             {
                 var graph = Digraph.Load(filePath);
+                graph.RemoveCycles();
                 graph.CalculateHeight();
                 graph.CalculateDepth();
                 graph.ComputeTransitiveReduction();

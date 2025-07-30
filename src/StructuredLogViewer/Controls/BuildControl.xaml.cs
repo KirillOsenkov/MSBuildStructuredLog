@@ -19,7 +19,6 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Language.Xml;
 using Mono.Cecil;
-using StructuredLogViewer.Core.ProjectGraph;
 using TPLTask = System.Threading.Tasks.Task;
 
 namespace StructuredLogViewer.Controls
@@ -61,6 +60,7 @@ namespace StructuredLogViewer.Controls
         private MenuItem openFileItem;
         private MenuItem copyFilePathItem;
         private MenuItem preprocessItem;
+        private MenuItem targetGraphItem;
         private MenuItem searchNuGetItem;
         private MenuItem runItem;
         private MenuItem debugItem;
@@ -226,6 +226,7 @@ namespace StructuredLogViewer.Controls
             openFileItem = new MenuItem() { Header = "Open File" };
             copyFilePathItem = new MenuItem() { Header = "Copy file path" };
             preprocessItem = new MenuItem() { Header = "Preprocess" };
+            targetGraphItem = new MenuItem { Header = "Target Graph" };
             var nugetImage = new System.Windows.Shapes.Path
             {
                 Data = (Geometry)Application.Current.FindResource("NuGetGeometry"),
@@ -265,6 +266,7 @@ namespace StructuredLogViewer.Controls
             openFileItem.Click += (s, a) => OpenFile();
             copyFilePathItem.Click += (s, a) => CopyFilePath();
             preprocessItem.Click += (s, a) => Preprocess(treeView.SelectedItem as IPreprocessable);
+            targetGraphItem.Click += (s, a) => ViewTargetGraph(treeView.SelectedItem as ProjectEvaluation);
             searchNuGetItem.Click += (s, a) => SearchNuGet(treeView.SelectedItem as IProjectOrEvaluation);
             runItem.Click += (s, a) => Run(treeView.SelectedItem as Task, debug: false);
             debugItem.Click += (s, a) => Run(treeView.SelectedItem as Task, debug: true);
@@ -280,6 +282,7 @@ namespace StructuredLogViewer.Controls
             contextMenu.AddItem(viewFullTextItem);
             contextMenu.AddItem(openFileItem);
             contextMenu.AddItem(preprocessItem);
+            contextMenu.AddItem(targetGraphItem);
 
             contextMenu.AddItem(searchMenuGroup);
             searchMenuGroup.AddItem(searchNuGetItem);
@@ -464,6 +467,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             openFileItem = null;
             copyFilePathItem = null;
             preprocessItem = null;
+            targetGraphItem = null;
             searchNuGetItem = null;
             runItem = null;
             debugItem = null;
@@ -514,7 +518,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
             var graphHostControl = new GraphHostControl();
             graphHostControl.DisplayText += text => DisplayText(text, "Graph");
-            graphHostControl.GoToSearch += text => SelectSearchTab(text);
+            graphHostControl.GoToSearch += text => SelectSearchTab($"$projectreference project({text})");
             graphHostControl.Graph = graph;
 
             projectReferenceGraphTab.Content = graphHostControl;
@@ -827,6 +831,24 @@ Recent (");
 
         private void Preprocess(IPreprocessable project) => preprocessedFileManager.ShowPreprocessed(project);
 
+        private void ViewTargetGraph(ProjectEvaluation evaluation)
+        {
+            var targetGraph = Build.TargetGraphManager.GetTargetGraph(evaluation);
+            if (targetGraph == null)
+            {
+                return;
+            }
+
+            var graph = targetGraph.GetDigraph();
+            var host = new GraphHostControl();
+            host.DisplayText += text => DisplayText(text, "Graph");
+            host.GoToSearch += text => SelectSearchTab($"$target {text} project({Path.GetFileName(evaluation.ProjectFile)})");
+            host.Graph = graph;
+            targetGraphTab.Content = host;
+            targetGraphTab.Visibility = Visibility.Visible;
+            centralTabControl.SelectedItem = targetGraphTab;
+        }
+
         private void Run(Task task, bool debug = false)
         {
             var logFilePath = Build.LogFilePath;
@@ -925,6 +947,7 @@ Recent (");
             sortChildrenByDurationItem.Visibility = hasChildrenVisibility;
             filterChildrenItem.Visibility = hasChildrenVisibility;
             preprocessItem.Visibility = node is IPreprocessable p && preprocessedFileManager.CanPreprocess(p) ? Visibility.Visible : Visibility.Collapsed;
+            targetGraphItem.Visibility = node is ProjectEvaluation ? Visibility.Visible : Visibility.Collapsed;
             searchNuGetItem.Visibility = node is IProjectOrEvaluation ? Visibility.Visible : Visibility.Collapsed;
             Visibility canRun = Build?.LogFilePath != null && node is Task ? Visibility.Visible : Visibility.Collapsed;
             runItem.Visibility = canRun;

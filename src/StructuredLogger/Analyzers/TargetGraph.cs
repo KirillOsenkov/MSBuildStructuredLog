@@ -416,36 +416,49 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return true;
         }
 
-        public string ToEdotorString()
+        public Digraph GetDigraph()
         {
-            var sb = new StringBuilder();
-            sb.AppendLine("digraph d {");
+            var graph = new Digraph();
 
             foreach (var targetNode in targetNodes)
             {
                 var node = targetNode.Value;
                 var name = node.Name;
-                sb.AppendLine($"{name}");
+
+                var vertex = graph.GetOrCreate(name, t => t);
 
                 foreach (var before in node.BeforeTargets)
                 {
-                    sb.AppendLine($"{name} -> {before.Name} [label = before]");
+                    var destination = graph.GetOrCreate(before.Name, t => t);
+                    vertex.AddChild(destination);
                 }
 
                 foreach (var after in node.AfterTargets)
                 {
-                    sb.AppendLine($"{name} -> {after.Name} [label = after]");
+                    var destination = graph.GetOrCreate(after.Name, t => t);
+                    vertex.AddChild(destination);
                 }
 
                 foreach (var depends in node.DependsOnTargets)
                 {
-                    sb.AppendLine($"{name} -> {depends.Name} [label = depends]");
+                    var destination = graph.GetOrCreate(depends.Name, t => t);
+                    vertex.AddChild(destination);
                 }
             }
 
-            sb.AppendLine("}");
+            graph.RemoveCycles();
+            graph.CalculateHeight();
+            graph.CalculateDepth();
+            graph.ComputeTransitiveReduction();
 
-            return sb.ToString();
+            return graph;
+        }
+
+        public string GetDotText()
+        {
+            var graph = GetDigraph();
+            var text = graph.GetDotText();
+            return text;
         }
     }
 }

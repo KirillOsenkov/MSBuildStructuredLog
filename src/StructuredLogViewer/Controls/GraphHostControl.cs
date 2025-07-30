@@ -238,7 +238,7 @@ public class GraphHostControl : DockPanel
         {
             if (graphControl.SelectedVertex is Vertex vertex)
             {
-                GoToSearch?.Invoke($"$projectreference project({vertex.Value})");
+                GoToSearch?.Invoke(vertex.Value);
             }
         };
 

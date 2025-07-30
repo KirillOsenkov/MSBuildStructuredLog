@@ -118,6 +118,13 @@
                   </Grid>
                 </TabItem>
 
+                <TabItem x:Name="targetGraphTab" Header="Targets" Visibility="Collapsed">
+                  <Grid>
+                    <TextBlock x:Name="targetGraphWatermark" HorizontalAlignment="Center"
+                               VerticalAlignment="Center">Target graph</TextBlock>
+                  </Grid>
+                </TabItem>
+
               </TabControl>
             </local:SplitterPanel.FirstChild>
 
