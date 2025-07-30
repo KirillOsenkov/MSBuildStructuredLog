@@ -403,7 +403,8 @@ namespace StructuredLogViewer
                 return true;
             }
 
-            if (filePath.EndsWith(".dot", StringComparison.OrdinalIgnoreCase))
+            if (filePath.EndsWith(".dot", StringComparison.OrdinalIgnoreCase) ||
+                filePath.EndsWith(".txt", StringComparison.OrdinalIgnoreCase))
             {
                 OpenGraphFile(filePath);
                 return true;

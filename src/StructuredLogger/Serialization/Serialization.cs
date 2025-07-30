@@ -14,7 +14,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static readonly string FileDialogFilter = "Structured Log (*.buildlog)|*.buildlog|Readable (large) XML Log (*.xml)|*.xml";
         public static readonly string BinlogFileDialogFilter = "Binary Log (*.binlog)|*.binlog|Structured Log (*.buildlog)|*.buildlog|Readable (large) XML Log (*.xml)|*.xml";
         public static readonly string OpenFileDialogFilter = "Build Log (*.binlog;*.buildlog;*.xml)|*.binlog;*.buildlog;*.xml";
-        public static readonly string OpenFileGraphFilter = "Graph (*.dot)|*.dot";
+        public static readonly string OpenFileGraphFilter = "Graph (*.dot;*.txt)|*.dot;*.txt";
 
         public static readonly XName[] AttributeNameList = typeof(AttributeNames)
             .GetFields(BindingFlags.Public | BindingFlags.Static)
