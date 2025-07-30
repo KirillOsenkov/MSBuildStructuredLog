@@ -109,8 +109,10 @@ public class Digraph
         vertices[vertex.Value] = vertex;
     }
 
-    public Vertex GetOrCreate(string value, Func<string, string> titleGetter)
+    public Vertex GetOrCreate(string value, Func<string, string> titleGetter = null)
     {
+        titleGetter ??= t => t;
+
         if (TryFindVertex(value) is not { } node)
         {
             node = new Vertex { Value = value };

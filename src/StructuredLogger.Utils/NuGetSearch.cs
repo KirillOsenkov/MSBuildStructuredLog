@@ -951,5 +951,48 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return name;
             }
         }
+
+        public Digraph GetDigraph(string projectFile)
+        {
+            var assetsFile = FindAssetsFile(projectFile);
+            if (assetsFile == null)
+            {
+                return null;
+            }
+
+            var graph = new Digraph();
+
+            var lockFile = assetsFile.LockFile;
+            var libraryMap = assetsFile.LibraryMap;
+
+            foreach (var framework in lockFile.ProjectFileDependencyGroups.Take(1))
+            {
+                var target = lockFile.Targets.FirstOrDefault(t => string.Equals(t.Name, framework.FrameworkName, StringComparison.OrdinalIgnoreCase));
+                if (target == null)
+                {
+                    continue;
+                }
+
+                var libraries = target.Libraries.ToDictionary(l => l.Name, StringComparer.OrdinalIgnoreCase);
+
+                foreach (var library in libraries)
+                {
+                    var source = graph.GetOrCreate(library.Key);
+
+                    var lockFileTargetLibrary = library.Value;
+                    foreach (var dependency in lockFileTargetLibrary.Dependencies)
+                    {
+                        var destination = graph.GetOrCreate(dependency.Id);
+                        source.AddChild(destination);
+                    }
+                }
+            }
+
+            graph.CalculateHeight();
+            graph.CalculateDepth();
+            graph.ComputeTransitiveReduction();
+
+            return graph;
+        }
     }
 }

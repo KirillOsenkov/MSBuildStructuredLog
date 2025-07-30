@@ -125,6 +125,13 @@
                   </Grid>
                 </TabItem>
 
+                <TabItem x:Name="nugetGraphTab" Header="NuGet" Visibility="Collapsed">
+                  <Grid>
+                    <TextBlock x:Name="nugetGraphWatermark" HorizontalAlignment="Center"
+                               VerticalAlignment="Center">NuGet graph</TextBlock>
+                  </Grid>
+                </TabItem>
+
               </TabControl>
             </local:SplitterPanel.FirstChild>
 
