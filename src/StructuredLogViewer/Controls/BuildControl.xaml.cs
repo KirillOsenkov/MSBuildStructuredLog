@@ -854,7 +854,7 @@ Recent (");
             centralTabControl.SelectedItem = targetGraphTab;
         }
 
-        private void ViewNuGetGraph(IProjectOrEvaluation project)
+        private void ViewNuGetGraph(IProjectOrEvaluation project = null)
         {
             var nugetGraph = Build.SearchExtensions.OfType<NuGetSearch>().FirstOrDefault();
             if (nugetGraph == null)
@@ -862,7 +862,7 @@ Recent (");
                 return;
             }
 
-            var graph = nugetGraph.GetDigraph(project.ProjectFile);
+            var graph = nugetGraph.GetDigraph(project?.ProjectFile);
             if (graph == null)
             {
                 return;
@@ -870,7 +870,8 @@ Recent (");
 
             var host = new GraphHostControl();
             host.DisplayText += text => DisplayText(text, "Graph");
-            host.GoToSearch += text => SelectSearchTab($"$nuget {text} project({Path.GetFileName(project.ProjectFile)})");
+            string projectText = project != null ? $" project({Path.GetFileName(project.ProjectFile)})" : " project(.)";
+            host.GoToSearch += text => SelectSearchTab($"$nuget {text}{projectText}");
             host.Graph = graph;
             nugetGraphTab.Content = host;
             nugetGraphTab.Visibility = Visibility.Visible;
@@ -976,7 +977,7 @@ Recent (");
             filterChildrenItem.Visibility = hasChildrenVisibility;
             preprocessItem.Visibility = node is IPreprocessable p && preprocessedFileManager.CanPreprocess(p) ? Visibility.Visible : Visibility.Collapsed;
             targetGraphItem.Visibility = node is IProjectOrEvaluation ? Visibility.Visible : Visibility.Collapsed;
-            nugetGraphItem.Visibility = node is IProjectOrEvaluation ? Visibility.Visible : Visibility.Collapsed;
+            nugetGraphItem.Visibility = node is IProjectOrEvaluation or Package ? Visibility.Visible : Visibility.Collapsed;
             searchNuGetItem.Visibility = node is IProjectOrEvaluation ? Visibility.Visible : Visibility.Collapsed;
             Visibility canRun = Build?.LogFilePath != null && node is Task ? Visibility.Visible : Visibility.Collapsed;
             runItem.Visibility = canRun;

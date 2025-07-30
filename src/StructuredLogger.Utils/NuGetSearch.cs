@@ -165,13 +165,24 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        public IEnumerable<AssetsFile> AssetsFiles
+        {
+            get
+            {
+                if (assetsFiles == null)
+                {
+                    PopulateAssetsFiles();
+                }
+
+                return assetsFiles;
+            }
+        }
+
         public PackageReport ListAllPackages()
         {
             var list = new HashSet<PackageInfo>();
 
-            PopulateAssetsFiles();
-
-            foreach (var file in assetsFiles)
+            foreach (var file in AssetsFiles)
             {
                 foreach (var library in file.LockFile.Libraries)
                 {
@@ -846,15 +857,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private AssetsFile FindAssetsFile(string projectFilePath)
         {
-            PopulateAssetsFiles();
-
-            return assetsFiles.FirstOrDefault(f => f.ProjectFilePath.Equals(projectFilePath, StringComparison.OrdinalIgnoreCase));
+            return AssetsFiles.FirstOrDefault(f => f.ProjectFilePath.Equals(projectFilePath, StringComparison.OrdinalIgnoreCase));
         }
 
         private IReadOnlyList<AssetsFile> FindAssetsFiles(NodeQueryMatcher underProjectMatcher)
         {
             var files = new List<AssetsFile>();
-            foreach (var assetFile in assetsFiles)
+            foreach (var assetFile in AssetsFiles)
             {
                 foreach (var term in underProjectMatcher.Terms)
                 {
@@ -952,20 +961,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        public Digraph GetDigraph(string projectFile)
+        private IEnumerable<(string key, string value)> GetNuGetDependencies(AssetsFile assetsFile)
         {
-            var assetsFile = FindAssetsFile(projectFile);
-            if (assetsFile == null)
-            {
-                return null;
-            }
-
-            var graph = new Digraph();
+            var result = new List<(string key, string value)>();
 
             var lockFile = assetsFile.LockFile;
             var libraryMap = assetsFile.LibraryMap;
 
-            foreach (var framework in lockFile.ProjectFileDependencyGroups.Take(1))
+            foreach (var framework in lockFile.ProjectFileDependencyGroups)
             {
                 var target = lockFile.Targets.FirstOrDefault(t => string.Equals(t.Name, framework.FrameworkName, StringComparison.OrdinalIgnoreCase));
                 if (target == null)
@@ -977,22 +980,48 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 foreach (var library in libraries)
                 {
-                    var source = graph.GetOrCreate(library.Key);
+                    var source = library.Key;
 
                     var lockFileTargetLibrary = library.Value;
                     foreach (var dependency in lockFileTargetLibrary.Dependencies)
                     {
-                        var destination = graph.GetOrCreate(dependency.Id);
-                        source.AddChild(destination);
+                        var destination = dependency.Id;
+                        result.Add((source, destination));
                     }
                 }
             }
 
-            graph.CalculateHeight();
-            graph.CalculateDepth();
-            graph.ComputeTransitiveReduction();
+            return result;
+        }
 
-            return graph;
+        public Digraph GetDigraph(string projectFile)
+        {
+            if (projectFile == null)
+            {
+                return GetDigraph();
+            }
+
+            var assetsFile = FindAssetsFile(projectFile);
+            var dependencies = GetNuGetDependencies(assetsFile);
+            return GetDigraph(dependencies);
+        }
+
+        public Digraph GetDigraph()
+        {
+            var dependencies = new HashSet<(string key, string value)>();
+
+            foreach (var assetsFile in AssetsFiles)
+            {
+                var fileDependencies = GetNuGetDependencies(assetsFile);
+                dependencies.UnionWith(fileDependencies);
+            }
+
+            return GetDigraph(dependencies);
+        }
+
+        public Digraph GetDigraph(IEnumerable<(string key, string value)> dependencies)
+        {
+            return Digraph.Create(dependencies);
         }
     }
 }

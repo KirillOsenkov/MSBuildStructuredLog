@@ -109,6 +109,24 @@ public class Digraph
         vertices[vertex.Value] = vertex;
     }
 
+    public static Digraph Create(IEnumerable<(string key, string value)> edges)
+    {
+        var graph = new Digraph();
+
+        foreach (var library in edges)
+        {
+            var source = graph.GetOrCreate(library.key);
+            var destination = graph.GetOrCreate(library.value);
+            source.AddChild(destination);
+        }
+
+        graph.CalculateHeight();
+        graph.CalculateDepth();
+        graph.ComputeTransitiveReduction();
+
+        return graph;
+    }
+
     public Vertex GetOrCreate(string value, Func<string, string> titleGetter = null)
     {
         titleGetter ??= t => t;
