@@ -1,0 +1,106 @@
+<UserControl x:Class="StructuredLogViewer.Controls.CommandLineDiffControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:StructuredLogViewer.Controls"
+             xmlns:a="http://icsharpcode.net/sharpdevelop/avalonedit"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300">
+    <Grid>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" /> <!-- Top Bar-->
+            <RowDefinition /> <!-- Top TextBox -->
+            <RowDefinition Height="5"/> <!-- Splitter -->
+            <RowDefinition />
+            <RowDefinition Height="Auto" /> <!-- Center Menu -->
+            <RowDefinition /> <!-- Result TextBox -->
+        </Grid.RowDefinitions>
+
+        <DockPanel Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"
+                   x:Name="topMenuBar"
+                   Grid.Row="0">
+            <Button x:Name="TopCompareButton"
+               Content="Compare"
+               Padding="6,3,6,3"
+               Click="CompareNow_Click"
+               BorderThickness="0"
+               Background="Transparent"
+               VerticalAlignment="Center"
+               DockPanel.Dock="Left"
+               ToolTip="Compare command lines."/>
+            <CheckBox x:Name="caseSensitiveCheckBox" 
+               Margin="4"
+               VerticalAlignment="Center"
+               DockPanel.Dock="Left"
+               Content="Case Sensitive"/>
+            <CheckBox x:Name="wordWrap" 
+                Margin="4"
+                VerticalAlignment="Center"
+                DockPanel.Dock="Left"
+                Content="Word Wrap"
+                Checked="wordWrap_Checked"
+                Unchecked="wordWrap_Unchecked"/>
+        </DockPanel>
+
+        <a:TextEditor x:Name="textEditorLeft"
+                 FontFamily="Consolas"
+                 Grid.Row="1"
+                 ShowLineNumbers="True"
+                 LineNumbersForeground="Teal"
+                 FontSize="14"
+                 TextChanged="textEditorLeft_TextChanged">
+            <a:TextEditor.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Copy" Click="copyMenu_Click" />
+                </ContextMenu>
+            </a:TextEditor.ContextMenu>
+        </a:TextEditor>
+
+        <GridSplitter Grid.Row="2" Height="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ResizeBehavior="PreviousAndNext" />
+        
+        <a:TextEditor x:Name="textEditorRight"
+                 FontFamily="Consolas"
+                 Grid.Row="3"
+                 ShowLineNumbers="True"
+                 LineNumbersForeground="Teal"
+                 FontSize="14"
+                 TextChanged="textEditorLeft_TextChanged">
+            <a:TextEditor.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Copy" Click="copyMenu_Click" />
+                </ContextMenu>
+            </a:TextEditor.ContextMenu>
+        </a:TextEditor>
+
+        <DockPanel x:Name="middleMenuBar"
+                   Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"
+                   Grid.Row="4">
+            <Button x:Name="CompareButton"
+               Content="Compare"
+               Padding="6,3,6,3"
+               Click="CompareNow_Click"
+               BorderThickness="0"
+               Background="Transparent"
+               VerticalAlignment="Center"
+               DockPanel.Dock="Left"
+               ToolTip="Compare command lines."/>
+        </DockPanel>
+
+        <a:TextEditor x:Name="textEditorResult"
+                 FontFamily="Consolas"
+                 Grid.Row="5"
+                 ShowLineNumbers="True"
+                 LineNumbersForeground="Teal"
+                 FontSize="14"
+                 WordWrap="false"
+                 IsReadOnly="true">
+            <a:TextEditor.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Copy" Click="copyMenu_Click" />
+                </ContextMenu>
+            </a:TextEditor.ContextMenu>
+        </a:TextEditor>
+    </Grid>
+</UserControl>

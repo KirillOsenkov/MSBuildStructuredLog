@@ -783,5 +783,27 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Add(previous, text.Length);
             return list;
         }
+
+        /// <summary>
+        /// Get hash code for combined strings.
+        /// </summary>
+        /// <param name="str1">First string.</param>
+        /// <param name="str2">Second string.</param>
+        /// <returns>Hash code</returns>
+        public static int GetHashCode(params string[] str)
+        {
+            if (str == null || str.Length == 0)
+            {
+                return 0;
+            }
+
+            int hash = str[0].GetHashCode();
+            for (int index = 1; index < str.Length; index++)
+            {
+                hash ^= str[index].GetHashCode();
+            }
+
+            return hash;
+        }
     }
 }
