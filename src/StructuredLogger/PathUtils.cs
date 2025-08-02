@@ -12,6 +12,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private static string GetRootPath()
         {
+            if (Environment.GetEnvironmentVariable("MSBUILDSTRUCTUREDLOG_DATA_DIR") is {} dataDir)
+            {
+                return Path.GetFullPath(dataDir);
+            }
+
 #if NETCORE
             var path = Path.GetTempPath();
 #else
