@@ -59,6 +59,7 @@ namespace StructuredLogViewer.Controls
         private MenuItem viewFullTextItem;
         private MenuItem openFileItem;
         private MenuItem copyFilePathItem;
+        private MenuItem showFileInExplorerItem;
         private MenuItem preprocessItem;
         private MenuItem targetGraphItem;
         private MenuItem nugetGraphItem;
@@ -226,6 +227,7 @@ namespace StructuredLogViewer.Controls
             unfavoriteItem = new MenuItem() { Header = "Remove from Favorites" };
             openFileItem = new MenuItem() { Header = "Open File" };
             copyFilePathItem = new MenuItem() { Header = "Copy file path" };
+            showFileInExplorerItem = new MenuItem() { Header = "Show in Explorer" };
             preprocessItem = new MenuItem() { Header = "Preprocess" };
             targetGraphItem = new MenuItem { Header = "Target Graph" };
             nugetGraphItem = new MenuItem { Header = "NuGet Graph" };
@@ -267,6 +269,7 @@ namespace StructuredLogViewer.Controls
             unfavoriteItem.Click += (s, a) => RemoveFromFavorites();
             openFileItem.Click += (s, a) => OpenFile();
             copyFilePathItem.Click += (s, a) => CopyFilePath();
+            showFileInExplorerItem.Click += (s, a) => ShowFileInExplorer();
             preprocessItem.Click += (s, a) => Preprocess(treeView.SelectedItem as IPreprocessable);
             targetGraphItem.Click += (s, a) => ViewTargetGraph(treeView.SelectedItem as IProjectOrEvaluation);
             nugetGraphItem.Click += (s, a) => ViewNuGetGraph(treeView.SelectedItem as IProjectOrEvaluation);
@@ -310,6 +313,9 @@ namespace StructuredLogViewer.Controls
             contextMenu.AddItem(copyChildrenItem);
             contextMenu.AddItem(copyNameItem);
             contextMenu.AddItem(copyValueItem);
+
+            contextMenu.AddItem(new Separator());
+            contextMenu.AddItem(showFileInExplorerItem);
 
             contextMenu.AddItem(separator2);
 
@@ -967,6 +973,7 @@ Recent (");
             copyFilePathItem.Visibility = node is Import || (node is IHasSourceFile file && !string.IsNullOrEmpty(file.SourceFilePath))
                 ? Visibility.Visible
                 : Visibility.Collapsed;
+            showFileInExplorerItem.Visibility = CanShowInExplorer() ? Visibility.Visible : Visibility.Collapsed;
             var hasChildren = node is TreeNode t && t.HasChildren;
             var hasChildrenVisibility = hasChildren ? Visibility.Visible : Visibility.Collapsed;
             copySubtreeItem.Visibility = hasChildrenVisibility;
@@ -2052,6 +2059,21 @@ Recent (");
             {
                 CopyToClipboard(toCopy);
             }
+        }
+
+        public void ShowFileInExplorer()
+        {
+            string path = FileExplorerHelper.GetFilePathFromNode(treeView.SelectedItem as BaseNode);
+
+            if (path != null)
+            {
+                FileExplorerHelper.ShowInExplorer(path);
+            }
+        }
+
+        private bool CanShowInExplorer()
+        {
+            return FileExplorerHelper.GetFilePathFromNode(treeView.SelectedItem as BaseNode) is not null;
         }
 
         public void SearchInSubtree()
