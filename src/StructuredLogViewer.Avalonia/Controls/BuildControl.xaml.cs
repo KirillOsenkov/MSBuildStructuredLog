@@ -40,6 +40,7 @@ namespace StructuredLogViewer.Avalonia.Controls
         private MenuItem copyNameItem;
         private MenuItem copyValueItem;
         private MenuItem viewSourceItem;
+        private MenuItem showFileInExplorerItem;
         private MenuItem preprocessItem;
         private MenuItem hideItem;
         private ContextMenu sharedTreeContextMenu;
@@ -170,6 +171,7 @@ namespace StructuredLogViewer.Avalonia.Controls
             copyNameItem = new MenuItem() { Header = "Copy name" };
             copyValueItem = new MenuItem() { Header = "Copy value" };
             viewSourceItem = new MenuItem() { Header = "View source" };
+            showFileInExplorerItem = new MenuItem() { Header = "Show in Explorer" };
             preprocessItem = new MenuItem() { Header = "Preprocess" };
             hideItem = new MenuItem() { Header = "Hide" };
             copyItem.Click += (s, a) => Copy();
@@ -179,6 +181,7 @@ namespace StructuredLogViewer.Avalonia.Controls
             copyNameItem.Click += (s, a) => CopyName();
             copyValueItem.Click += (s, a) => CopyValue();
             viewSourceItem.Click += (s, a) => Invoke(treeView.SelectedItem as BaseNode);
+            showFileInExplorerItem.Click += (s, a) => ShowFileInExplorer();
             preprocessItem.Click += (s, a) => Preprocess(treeView.SelectedItem as IPreprocessable);
             hideItem.Click += (s, a) => Delete();
             contextMenu.AddItem(viewSourceItem);
@@ -189,6 +192,8 @@ namespace StructuredLogViewer.Avalonia.Controls
             contextMenu.AddItem(sortChildrenByDurationItem);
             contextMenu.AddItem(copyNameItem);
             contextMenu.AddItem(copyValueItem);
+            contextMenu.AddItem(new Separator());
+            contextMenu.AddItem(showFileInExplorerItem);
             contextMenu.AddItem(hideItem);
 
             Style GetTreeViewItemStyle()
@@ -477,6 +482,7 @@ Recent:
             copyNameItem.IsVisible = visibility;
             copyValueItem.IsVisible = visibility;
             viewSourceItem.IsVisible = CanView(node);
+            showFileInExplorerItem.IsVisible = CanShowInExplorer();
             var hasChildren = node is TreeNode t && t.HasChildren;
             copySubtreeItem.IsVisible = hasChildren;
             sortChildrenByNameItem.IsVisible = hasChildren;
@@ -1105,6 +1111,21 @@ Recent:
             {
                 CopyToClipboard(nameValueNode.Value);
             }
+        }
+
+        public void ShowFileInExplorer()
+        {
+            string path = FileExplorerHelper.GetFilePathFromNode(treeView.SelectedItem as BaseNode);
+
+            if (path != null)
+            {
+                FileExplorerHelper.ShowInExplorer(path);
+            }
+        }
+
+        private bool CanShowInExplorer()
+        {
+            return FileExplorerHelper.GetFilePathFromNode(treeView.SelectedItem as BaseNode) is not null;
         }
 
         private void MoveSelectionOut(BaseNode node)
