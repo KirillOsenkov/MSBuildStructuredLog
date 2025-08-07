@@ -164,6 +164,11 @@ public class GraphControl
 
     private void Populate()
     {
+        if (graph.IsEmpty)
+        {
+            return;
+        }
+
         var maxHeight = graph.Vertices.Max(g => g.Height);
         var maxDepth = graph.Vertices.Max(g => g.Depth);
         var primaryOrientation = Orientation.Vertical;

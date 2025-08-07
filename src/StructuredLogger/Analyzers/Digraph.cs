@@ -104,6 +104,9 @@ public class Digraph
         vertices = new(StringComparer.OrdinalIgnoreCase);
     }
 
+    public int VertexCount => vertices.Count;
+    public bool IsEmpty => VertexCount == 0;
+
     public void Add(Vertex vertex)
     {
         vertices[vertex.Value] = vertex;
