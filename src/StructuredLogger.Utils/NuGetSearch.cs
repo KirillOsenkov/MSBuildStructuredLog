@@ -968,13 +968,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             var lockFile = assetsFile.LockFile;
             var libraryMap = assetsFile.LibraryMap;
+            var projectKey = Path.GetFileNameWithoutExtension(assetsFile.ProjectFilePath);
 
             foreach (var framework in lockFile.ProjectFileDependencyGroups)
             {
                 var frameworkDependencies = framework.Dependencies.Select(d => ParsePackageId(d)).ToArray();
                 foreach (var frameworkDependency in frameworkDependencies)
                 {
-                    result.Add((Path.GetFileNameWithoutExtension(assetsFile.ProjectFilePath), frameworkDependency.name));
+                    result.Add((projectKey, frameworkDependency.name));
                 }
 
                 var target = lockFile.Targets.FirstOrDefault(t => string.Equals(t.Name, framework.FrameworkName, StringComparison.OrdinalIgnoreCase));
