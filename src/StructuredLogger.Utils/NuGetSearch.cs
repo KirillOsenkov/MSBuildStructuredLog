@@ -621,7 +621,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     packageNode = new Package
                     {
-                        Name = item.Id, VersionSpec = item.VersionRange.ToString()
+                        Name = item.Id,
+                        VersionSpec = item.VersionRange.ToString()
                     };
                     TreeNode itemNode = packageNode;
 
@@ -970,6 +971,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             foreach (var framework in lockFile.ProjectFileDependencyGroups)
             {
+                var frameworkDependencies = framework.Dependencies.Select(d => ParsePackageId(d)).ToArray();
+                foreach (var frameworkDependency in frameworkDependencies)
+                {
+                    result.Add((Path.GetFileNameWithoutExtension(assetsFile.ProjectFilePath), frameworkDependency.name));
+                }
+
                 var target = lockFile.Targets.FirstOrDefault(t => string.Equals(t.Name, framework.FrameworkName, StringComparison.OrdinalIgnoreCase));
                 if (target == null)
                 {
