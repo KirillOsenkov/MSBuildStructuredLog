@@ -1,8 +1,11 @@
 using System;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogViewer.Controls;
@@ -13,6 +16,33 @@ public class GraphHostControl : DockPanel
     {
         Initialize();
     }
+
+    public static double DpiX;
+    public static double DpiY;
+
+    static GraphHostControl()
+    {
+        IntPtr dc = GetDC(IntPtr.Zero);
+
+        if (dc != IntPtr.Zero)
+        {
+            const int LOGPIXELSX = 88;
+            const int LOGPIXELSY = 90;
+            DpiX = GetDeviceCaps(dc, LOGPIXELSX) / (double)96;
+            DpiY = GetDeviceCaps(dc, LOGPIXELSY) / (double)96;
+
+            ReleaseDC(IntPtr.Zero, dc);
+        }
+    }
+
+    [DllImport("User32.dll", CallingConvention = CallingConvention.StdCall, ExactSpelling = true)]
+    internal static extern IntPtr GetDC(IntPtr hWnd);
+
+    [DllImport("User32.dll", CallingConvention = CallingConvention.StdCall, ExactSpelling = true)]
+    internal static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
+
+    [DllImport("Gdi32.dll", CallingConvention = CallingConvention.StdCall, ExactSpelling = true)]
+    internal static extern int GetDeviceCaps(IntPtr hdc, int nIndex);
 
     public event Action<string> DisplayText;
     public event Action<string> GoToSearch;
@@ -138,6 +168,14 @@ public class GraphHostControl : DockPanel
             BorderThickness = new Thickness()
         };
 
+        var copyImageButton = new Button
+        {
+            Content = "Copy screenshot",
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, 8, 0),
+            BorderThickness = new Thickness()
+        };
+
         var depthCheckbox = new CheckBox
         {
             Content = "Layer by depth",
@@ -157,6 +195,11 @@ public class GraphHostControl : DockPanel
             Content = "Invert",
             VerticalAlignment = VerticalAlignment.Center,
             Margin = new Thickness(0, 0, 8, 0)
+        };
+
+        copyImageButton.Click += (s, e) =>
+        {
+            CopyImage();
         };
 
         helpButton.Click += (s, e) =>
@@ -204,6 +247,7 @@ public class GraphHostControl : DockPanel
         toolbar.Children.Add(invertedCheckbox);
         toolbar.Children.Add(searchTextBox);
         toolbar.Children.Add(locateButton);
+        toolbar.Children.Add(copyImageButton);
         toolbar.Children.Add(helpButton);
 
         topToolbar.Children.Add(searchButton);
@@ -264,5 +308,21 @@ public class GraphHostControl : DockPanel
         }
 
         Children.Add(graphControl.Content);
+    }
+
+    private void CopyImage()
+    {
+        var visual = graphControl.CanvasElement;
+
+        var renderTarget = new RenderTargetBitmap(
+            (int)(visual.DesiredSize.Width * DpiX),
+            (int)(visual.DesiredSize.Height * DpiY),
+            96 * DpiX,
+            96 * DpiY,
+            PixelFormats.Pbgra32);
+
+        renderTarget.Render(visual);
+
+        Clipboard.SetImage(renderTarget);
     }
 }

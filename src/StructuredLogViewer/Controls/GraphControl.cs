@@ -23,6 +23,8 @@ public class GraphControl
     private Color outgoingColor, incomingColor, border;
     private Brush outgoingBrush, incomingBrush;
 
+    public UIElement CanvasElement => grid;
+
     public event Action SelectionChanged;
 
     public GraphControl()
