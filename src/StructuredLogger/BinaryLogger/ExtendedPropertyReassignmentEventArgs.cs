@@ -2,7 +2,7 @@
 
 namespace StructuredLogger.BinaryLogger
 {
-    internal class ExtendedPropertyReassignmentEventArgs : BuildMessageEventArgs
+    public class ExtendedPropertyReassignmentEventArgs : PropertyReassignmentEventArgs
     {
         /// <summary>
         /// Creates an instance of the <see cref="PropertyReassignmentEventArgs"/> class.
@@ -28,26 +28,8 @@ namespace StructuredLogger.BinaryLogger
             string helpKeyword = null,
             string senderName = null,
             MessageImportance importance = MessageImportance.Low)
-            : base(subcategory: null, code: null, file: file, lineNumber: line, columnNumber: column, 0, 0, message, helpKeyword, senderName, importance)
+            : base(propertyName, previousValue, newValue, location: message, message)
         {
-            PropertyName = propertyName;
-            PreviousValue = previousValue;
-            NewValue = newValue;
         }
-
-        /// <summary>
-        /// The name of the property whose value was reassigned.
-        /// </summary>
-        public string PropertyName { get; set; }
-
-        /// <summary>
-        /// The previous value of the reassigned property.
-        /// </summary>
-        public string PreviousValue { get; set; }
-
-        /// <summary>
-        /// The new value of the reassigned property.
-        /// </summary>
-        public string NewValue { get; set; }
     }
 }

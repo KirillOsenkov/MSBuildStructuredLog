@@ -2,7 +2,7 @@
 
 namespace StructuredLogger.BinaryLogger
 {
-    internal class ExtendedPropertyInitialValueSetEventArgs : BuildMessageEventArgs
+    public class ExtendedPropertyInitialValueSetEventArgs : PropertyInitialValueSetEventArgs
     {
         /// <summary>
         /// Creates an instance of the <see cref="ExtendedPropertyInitialValueSetEventArgs"/> class.
@@ -28,26 +28,8 @@ namespace StructuredLogger.BinaryLogger
             string helpKeyword = null,
             string senderName = null,
             MessageImportance importance = MessageImportance.Low)
-            : base(subcategory: null, code: null, file: file, lineNumber: line, columnNumber: column, 0, 0, message, helpKeyword, senderName, importance)
+            : base(propertyName, propertyValue, propertySource, message, helpKeyword, senderName, importance)
         {
-            PropertyName = propertyName;
-            PropertyValue = propertyValue;
-            PropertySource = propertySource;
         }
-
-        /// <summary>
-        /// The name of the property.
-        /// </summary>
-        public string PropertyName { get; set; }
-
-        /// <summary>
-        /// The value of the property.
-        /// </summary>
-        public string PropertyValue { get; set; }
-
-        /// <summary>
-        /// The source of the property.
-        /// </summary>
-        public string PropertySource { get; set; }
     }
 }
