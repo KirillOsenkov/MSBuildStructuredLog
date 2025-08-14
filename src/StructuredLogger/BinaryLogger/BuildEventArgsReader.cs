@@ -1365,18 +1365,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 if (_fileFormatVersion >= 25)
                 {
-                    var extendedEvent = new ExtendedPropertyReassignmentEventArgs(
+                    var reassignmentMessage = GetPropertyReassignmentMessage(propertyName, newValue, previousValue, $"{fields.File} ({fields.LineNumber},{fields.ColumnNumber})");
+                    var reassignmentEvent = new PropertyReassignmentEventArgs(
                         propertyName,
                         previousValue,
                         newValue,
-                        fields.File,
-                        fields.LineNumber,
-                        fields.ColumnNumber,
-                        GetPropertyReassignmentMessage(propertyName, newValue, previousValue, $"{fields.File} ({fields.LineNumber},{fields.ColumnNumber})"));
+                        // the message contains the location
+                        reassignmentMessage,
+                        reassignmentMessage);
 
-                    SetCommonFields(extendedEvent, fields);
+                    SetCommonFields(reassignmentEvent, fields);
 
-                    return extendedEvent;
+                    return reassignmentEvent;
                 }
                 else
                 {
@@ -1437,17 +1437,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 message = FormatResourceStringIgnoreCodeAndKeyword(Strings.PropertyAssignment, propertyName, propertyValue, formattedSource);
             }
 
-            var e = new ExtendedPropertyInitialValueSetEventArgs(
+            var e = new PropertyInitialValueSetEventArgs(
                 propertyName,
                 propertyValue,
                 propertySource,
-                fields.File,
-                fields.LineNumber,
-                fields.ColumnNumber,
-                message,
-                fields.HelpKeyword,
-                fields.SenderName,
-                fields.Importance);
+                message);
             SetCommonFields(e, fields);
 
             return e;
