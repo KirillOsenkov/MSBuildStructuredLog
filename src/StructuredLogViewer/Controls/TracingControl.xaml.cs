@@ -415,13 +415,36 @@ namespace StructuredLogViewer.Controls
                 return;
             }
 
+            var minStartTime = long.MaxValue;
+            var maxEndTime = long.MinValue;
+
             // Sometimes the Binlog recorded start and end time are not accurate.
             // Scan though the nodes to see if there are any nodes outside of the range.
-            var endTimeArray = timeline.Lanes.SelectMany(l => l.Value.Blocks).Select(b => b.EndTime.Ticks).Max();
-            var startTimeArray = timeline.Lanes.SelectMany(l => l.Value.Blocks).Select(b => b.StartTime.Ticks).Min();
+            foreach (var lane in timeline.Lanes)
+            {
+                foreach (var block in lane.Value.Blocks)
+                {
+                    if (block.StartTime.Ticks < minStartTime)
+                    {
+                        minStartTime = block.StartTime.Ticks;
+                    }
 
-            GlobalEndTime = Math.Max(endTimeArray, globalEnd);
-            GlobalStartTime = Math.Min(startTimeArray, globalStart);
+                    if (block.EndTime.Ticks > maxEndTime)
+                    {
+                        maxEndTime = block.EndTime.Ticks;
+                    }
+                }
+            }
+
+            if (globalEnd > 0)
+            {
+                GlobalEndTime = Math.Max(maxEndTime, globalEnd);
+            }
+
+            if (globalStart > 0)
+            {
+                GlobalStartTime = Math.Min(minStartTime, globalStart);
+            }
 
             // Quick size count
             int totalItems = 0;
