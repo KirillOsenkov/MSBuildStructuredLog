@@ -35,6 +35,7 @@ namespace StructuredLogViewer.Avalonia.Controls
 
         private MenuItem copyItem;
         private MenuItem copySubtreeItem;
+        private MenuItem copyVisibleSubtreeItem;
         private MenuItem sortChildrenByNameItem;
         private MenuItem sortChildrenByDurationItem;
         private MenuItem copyNameItem;
@@ -143,22 +144,28 @@ namespace StructuredLogViewer.Avalonia.Controls
             sharedTreeContextMenu = new ContextMenu();
             var sharedCopyAllItem = new MenuItem() { Header = "Copy All" };
             var sharedCopySubtreeItem = new MenuItem() { Header = "Copy subtree" };
+            var sharedCopyVisibleSubtreeItem = new MenuItem() { Header = "Copy visible subtree" };
             sharedCopyAllItem.Click += (s, a) => CopyAll();
             sharedCopySubtreeItem.Click += (s, a) => CopySubtree();
+            sharedCopyVisibleSubtreeItem.Click += (s, a) => CopySubtree(visibleOnly: true);
             sharedTreeContextMenu.AddItem(sharedCopyAllItem);
             sharedTreeContextMenu.AddItem(sharedCopySubtreeItem);
+            sharedTreeContextMenu.AddItem(sharedCopyVisibleSubtreeItem);
 
             // Files
             filesTreeContextMenu = new ContextMenu();
             var filesCopyAllItem = new MenuItem { Header = "Copy All" };
             var filesCopyPathsItem = new MenuItem { Header = "Copy file paths" };
             var filesCopySubtreeItem = new MenuItem { Header = "Copy subtree" };
+            var filesCopyVisibleSubtreeItem = new MenuItem { Header = "Copy visible subtree" };
             filesCopyAllItem.Click += (s, a) => CopyAll();
             filesCopyPathsItem.Click += (s, a) => CopyPaths();
             filesCopySubtreeItem.Click += (s, a) => CopySubtree();
+            filesCopyVisibleSubtreeItem.Click += (s, a) => CopySubtree(visibleOnly: true);
             filesTreeContextMenu.AddItem(filesCopyAllItem);
             filesTreeContextMenu.AddItem(filesCopyPathsItem);
             filesTreeContextMenu.AddItem(filesCopySubtreeItem);
+            filesTreeContextMenu.AddItem(filesCopyVisibleSubtreeItem);
 
             // Build Log
             var contextMenu = new ContextMenu();
@@ -166,6 +173,7 @@ namespace StructuredLogViewer.Avalonia.Controls
             //contextMenu.Opened += ContextMenu_Opened;
             copyItem = new MenuItem() { Header = "Copy" };
             copySubtreeItem = new MenuItem() { Header = "Copy subtree" };
+            copyVisibleSubtreeItem = new MenuItem() { Header = "Copy visible subtree" };
             sortChildrenByNameItem = new MenuItem() { Header = "Sort children by name" };
             sortChildrenByDurationItem = new MenuItem() { Header = "Sort children by duration" };
             copyNameItem = new MenuItem() { Header = "Copy name" };
@@ -176,6 +184,7 @@ namespace StructuredLogViewer.Avalonia.Controls
             hideItem = new MenuItem() { Header = "Hide" };
             copyItem.Click += (s, a) => Copy();
             copySubtreeItem.Click += (s, a) => CopySubtree(treeView);
+            copyVisibleSubtreeItem.Click += (s, a) => CopySubtree(treeView, visibleOnly: true);
             sortChildrenByNameItem.Click += (s, a) => SortChildrenByName();
             sortChildrenByDurationItem.Click += (s, a) => SortChildrenByDuration();
             copyNameItem.Click += (s, a) => CopyName();
@@ -188,6 +197,7 @@ namespace StructuredLogViewer.Avalonia.Controls
             contextMenu.AddItem(preprocessItem);
             contextMenu.AddItem(copyItem);
             contextMenu.AddItem(copySubtreeItem);
+            contextMenu.AddItem(copyVisibleSubtreeItem);
             contextMenu.AddItem(sortChildrenByNameItem);
             contextMenu.AddItem(sortChildrenByDurationItem);
             contextMenu.AddItem(copyNameItem);
@@ -485,6 +495,7 @@ Recent:
             showFileInExplorerItem.IsVisible = CanShowInExplorer();
             var hasChildren = node is TreeNode t && t.HasChildren;
             copySubtreeItem.IsVisible = hasChildren;
+            copyVisibleSubtreeItem.IsVisible = hasChildren;
             sortChildrenByNameItem.IsVisible = hasChildren;
             sortChildrenByDurationItem.IsVisible = hasChildren;
             preprocessItem.IsVisible = node is IPreprocessable p && preprocessedFileManager.CanPreprocess(p);
@@ -1002,7 +1013,7 @@ Recent:
             }
         }
 
-        public void CopySubtree(TreeView tree = null)
+        public void CopySubtree(TreeView tree = null, bool visibleOnly = false)
         {
             tree = tree ?? ActiveTreeView;
             if (tree == null)
@@ -1012,7 +1023,7 @@ Recent:
 
             if (tree.SelectedItem is BaseNode treeNode)
             {
-                var text = Microsoft.Build.Logging.StructuredLogger.StringWriter.GetString(treeNode);
+                var text = Microsoft.Build.Logging.StructuredLogger.StringWriter.GetString(treeNode, visibleOnly);
                 CopyToClipboard(text);
             }
         }

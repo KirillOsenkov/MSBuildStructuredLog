@@ -39,6 +39,7 @@ namespace StructuredLogViewer.Controls
         private MenuItem gotoMenuGroup;
         private MenuItem copyItem;
         private MenuItem copySubtreeItem;
+        private MenuItem copyVisibleSubtreeItem;
         private MenuItem viewSubtreeTextItem;
         private MenuItem searchInSubtreeItem;
         private MenuItem searchInNodeByNameItem;
@@ -169,16 +170,19 @@ namespace StructuredLogViewer.Controls
             var sharedCopyItem = new MenuItem() { Header = "Copy" };
             var sharedCopyAllItem = new MenuItem() { Header = "Copy All" };
             var sharedCopySubtreeItem = new MenuItem() { Header = "Copy subtree" };
+            var sharedCopyVisibleSubtreeItem = new MenuItem() { Header = "Copy visible subtree" };
             favoriteSharedItem.Click += (s, a) => AddToFavorites();
             unfavoriteSharedItem.Click += (s, a) => RemoveFromFavorites();
             sharedCopyItem.Click += (s, a) => Copy();
             sharedCopyAllItem.Click += (s, a) => CopyAll();
             sharedCopySubtreeItem.Click += (s, a) => CopySubtree();
+            sharedCopyVisibleSubtreeItem.Click += (s, a) => CopySubtree(visibleOnly: true);
             sharedTreeContextMenu.AddItem(favoriteSharedItem);
             sharedTreeContextMenu.AddItem(unfavoriteSharedItem);
             sharedTreeContextMenu.AddItem(sharedCopyItem);
             sharedTreeContextMenu.AddItem(sharedCopyAllItem);
             sharedTreeContextMenu.AddItem(sharedCopySubtreeItem);
+            sharedTreeContextMenu.AddItem(sharedCopyVisibleSubtreeItem);
 
             // Files
             filesTreeContextMenu = new ContextMenu();
@@ -186,14 +190,17 @@ namespace StructuredLogViewer.Controls
             var filesCopyAllItem = new MenuItem { Header = "Copy All" };
             var filesCopyPathsItem = new MenuItem { Header = "Copy file paths" };
             var filesCopySubtreeItem = new MenuItem { Header = "Copy subtree" };
+            var filesCopyVisibleSubtreeItem = new MenuItem { Header = "Copy visible subtree" };
             filesCopyItem.Click += (s, a) => Copy();
             filesCopyAllItem.Click += (s, a) => CopyAll();
             filesCopyPathsItem.Click += (s, a) => CopyPaths();
             filesCopySubtreeItem.Click += (s, a) => CopySubtree();
+            filesCopyVisibleSubtreeItem.Click += (s, a) => CopySubtree(visibleOnly: true);
             filesTreeContextMenu.AddItem(filesCopyItem);
             filesTreeContextMenu.AddItem(filesCopyAllItem);
             filesTreeContextMenu.AddItem(filesCopyPathsItem);
             filesTreeContextMenu.AddItem(filesCopySubtreeItem);
+            filesTreeContextMenu.AddItem(filesCopyVisibleSubtreeItem);
 
             // Build Log
             var contextMenu = new ContextMenu();
@@ -204,6 +211,7 @@ namespace StructuredLogViewer.Controls
 
             copyItem = new MenuItem() { Header = "Copy" };
             copySubtreeItem = new MenuItem() { Header = "Copy subtree" };
+            copyVisibleSubtreeItem = new MenuItem() { Header = "Copy visible subtree" };
             viewSubtreeTextItem = new MenuItem() { Header = "View subtree text" };
             searchInSubtreeItem = new MenuItem() { Header = "Search in subtree" };
             excludeSubtreeFromSearchItem = new MenuItem() { Header = "Exclude subtree from search" };
@@ -246,6 +254,7 @@ namespace StructuredLogViewer.Controls
             debugItem = new MenuItem() { Header = "Debug" };
             copyItem.Click += (s, a) => Copy();
             copySubtreeItem.Click += (s, a) => CopySubtree(ActiveTreeView);
+            copyVisibleSubtreeItem.Click += (s, a) => CopySubtree(ActiveTreeView, visibleOnly: true);
             viewSubtreeTextItem.Click += (s, a) => ViewSubtreeText();
             searchInSubtreeItem.Click += (s, a) => SearchInSubtree();
             excludeSubtreeFromSearchItem.Click += (s, a) => ExcludeSubtreeFromSearch();
@@ -309,6 +318,7 @@ namespace StructuredLogViewer.Controls
 
             contextMenu.AddItem(copyItem);
             contextMenu.AddItem(copySubtreeItem);
+            contextMenu.AddItem(copyVisibleSubtreeItem);
             contextMenu.AddItem(copyFilePathItem);
             contextMenu.AddItem(copyChildrenItem);
             contextMenu.AddItem(copyNameItem);
@@ -977,6 +987,7 @@ Recent (");
             var hasChildren = node is TreeNode t && t.HasChildren;
             var hasChildrenVisibility = hasChildren ? Visibility.Visible : Visibility.Collapsed;
             copySubtreeItem.Visibility = hasChildrenVisibility;
+            copyVisibleSubtreeItem.Visibility = hasChildrenVisibility;
             viewSubtreeTextItem.Visibility = hasChildrenVisibility;
             copyChildrenItem.Visibility = hasChildrenVisibility;
             sortChildrenByNameItem.Visibility = hasChildrenVisibility;
@@ -1893,7 +1904,7 @@ Recent (");
             }
         }
 
-        public void CopySubtree(TreeView tree = null)
+        public void CopySubtree(TreeView tree = null, bool visibleOnly = false)
         {
             tree ??= ActiveTreeView;
             if (tree == null)
@@ -1903,7 +1914,7 @@ Recent (");
 
             if (tree.SelectedItem is BaseNode treeNode)
             {
-                var text = Microsoft.Build.Logging.StructuredLogger.StringWriter.GetString(treeNode);
+                var text = Microsoft.Build.Logging.StructuredLogger.StringWriter.GetString(treeNode, visibleOnly);
                 CopyToClipboard(text);
             }
         }
