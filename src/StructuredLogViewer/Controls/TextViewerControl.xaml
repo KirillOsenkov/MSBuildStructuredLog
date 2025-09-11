@@ -63,7 +63,8 @@
                Background="Transparent"
                BorderThickness="0"
                IsReadOnly="True" 
-               IsReadOnlyCaretVisible="True" />
+               IsReadOnlyCaretVisible="True"
+               ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=Text}" />
     </DockPanel>
 
     <a:TextEditor x:Name="textEditor"

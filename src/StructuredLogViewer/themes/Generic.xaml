@@ -1211,7 +1211,7 @@
   </ControlTemplate>
 
   <DataTemplate x:Key="SourceFileTabHeaderTemplate">
-    <Grid>
+    <Grid ToolTip="{Binding FullPath}">
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="Auto" />
         <ColumnDefinition Width="Auto" />

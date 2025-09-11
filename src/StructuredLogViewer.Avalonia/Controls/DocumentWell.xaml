@@ -10,7 +10,7 @@
     <TabControl Name="tabControl" ItemsSource="{Binding #documentWell.Tabs}">
       <TabControl.ItemTemplate>
         <DataTemplate DataType="{x:Type local:SourceFileTab}">
-            <StackPanel Orientation="Horizontal">
+            <StackPanel Orientation="Horizontal" ToolTip.Tip="{Binding FilePath}">
                 <TextBlock MinWidth="50"
                             Text="{Binding FileName}"
                             VerticalAlignment="Center" />
