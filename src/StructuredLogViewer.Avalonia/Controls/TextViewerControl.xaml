@@ -47,7 +47,8 @@
                Padding="4"
                Background="Transparent"
                BorderThickness="0"
-               IsReadOnly="True" />
+               IsReadOnly="True"
+               ToolTip.Tip="{Binding #filePathText.Text}" />
     </DockPanel>
 
     <a:TextEditor Name="textEditor"

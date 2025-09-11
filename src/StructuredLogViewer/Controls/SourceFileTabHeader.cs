@@ -13,9 +13,11 @@ namespace StructuredLogViewer.Controls
             this.tab = sourceFileTab;
             Close = new Command(InvokeClose);
             Header = Path.GetFileName(tab.FilePath);
+            FullPath = tab.FilePath;
         }
 
         public string Header { get; private set; }
+        public string FullPath { get; private set; }
 
         public Command Close { get; }
         public event Action<SourceFileTab> CloseRequested;
