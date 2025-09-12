@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows;
@@ -6,14 +6,22 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogViewer.Controls;
 
 public class GraphHostControl : DockPanel
 {
-    public GraphHostControl()
+    private readonly string initialSelection;
+    
+    public GraphHostControl() : this(null)
     {
+    }
+    
+    public GraphHostControl(string initialSelection)
+    {
+        this.initialSelection = initialSelection;
         Initialize();
     }
 
@@ -71,10 +79,26 @@ public class GraphHostControl : DockPanel
             if (graph != null)
             {
                 graphControl.Digraph = graph;
+                
+                // Apply initial selection if specified
+                if (!string.IsNullOrEmpty(initialSelection))
+                {
+                    // Delay until loaded
+                    Dispatcher.BeginInvoke(() => Locate(initialSelection), DispatcherPriority.Loaded);
+                }
             }
 
             UpdateVisibility();
         }
+    }
+
+    /// <summary>
+    /// Locates and selects a node in the graph by searching for the specified text.
+    /// </summary>
+    /// <param name="text">The text to search for in the graph nodes</param>
+    public void Locate(string text)
+    {
+        graphControl?.Locate(text);
     }
 
     private void UpdateVisibility()
