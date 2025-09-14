@@ -116,6 +116,34 @@ public class GraphControl
         }
     }
 
+    private bool directReferencesOnly;
+    private Vertex focusVertex;
+    public bool DirectReferencesOnly
+    {
+        get => directReferencesOnly;
+        set
+        {
+            if (directReferencesOnly == value)
+            {
+                return;
+            }
+
+            directReferencesOnly = value;
+            
+            // If enabling direct references only mode, set focus to first selected vertex
+            if (value && selectedVertices.Any())
+            {
+                focusVertex = selectedVertices.First();
+            }
+            else if (!value)
+            {
+                focusVertex = null;
+            }
+            
+            Redraw();
+        }
+    }
+
     private bool layerByDepth;
     public bool LayerByDepth
     {
@@ -171,8 +199,16 @@ public class GraphControl
             return;
         }
 
-        var maxHeight = graph.Vertices.Max(g => g.Height);
-        var maxDepth = graph.Vertices.Max(g => g.Depth);
+        // Get vertices to display based on filtering mode
+        var verticesToDisplay = GetVerticesToDisplay();
+        
+        if (!verticesToDisplay.Any())
+        {
+            return;
+        }
+
+        var maxHeight = verticesToDisplay.Max(g => g.Height);
+        var maxDepth = verticesToDisplay.Max(g => g.Depth);
         var primaryOrientation = Orientation.Vertical;
         var secondaryOrientation = Orientation.Horizontal;
         if (Horizontal)
@@ -189,7 +225,7 @@ public class GraphControl
             groupBy = v => maxDepth - v.Depth;
         }
 
-        var groups = graph.Vertices.GroupBy(groupBy).OrderBy(g => g.Key).ToArray();
+        var groups = verticesToDisplay.GroupBy(groupBy).OrderBy(g => g.Key).ToArray();
         if (Inverted)
         {
             groups = groups.Reverse().ToArray();
@@ -211,6 +247,14 @@ public class GraphControl
 
                 var paddingHeight = Math.Pow(vertex.InDegree, 0.6);
                 var opacity = vertex.InDegree > 1 ? 0.9 : 0.5;
+                
+                // Highlight the focus vertex if in direct references mode
+                if (DirectReferencesOnly && vertex == focusVertex)
+                {
+                    opacity = 1.0;
+                    background = DarkTheme ? Color.FromRgb(255, 140, 0) : Color.FromRgb(255, 255, 0); // Orange/Yellow highlight
+                }
+                
                 var vertexControl = new TextBlock()
                 {
                     Text = vertex.Title.TrimQuotes(),
@@ -241,6 +285,13 @@ public class GraphControl
                             SelectVertices([vertex]);
                         }
                     }
+                    
+                    // In direct references mode, clicking a vertex recenters the graph on that vertex
+                    if (DirectReferencesOnly && vertex != focusVertex)
+                    {
+                        focusVertex = vertex;
+                        Redraw();
+                    }
                 };
                 layerPanel.Children.Add(vertexControl);
             }
@@ -249,6 +300,49 @@ public class GraphControl
         }
 
         SelectVertices(selectedVertices.ToArray());
+    }
+
+    private IEnumerable<Vertex> GetVerticesToDisplay()
+    {
+        if (!DirectReferencesOnly)
+        {
+            return graph.Vertices;
+        }
+
+        // If no focus vertex is set, use the first vertex with the highest in-degree (most connected)
+        // or fall back to the first vertex
+        if (focusVertex == null)
+        {
+            focusVertex = graph.Vertices
+                .OrderByDescending(v => v.InDegree + v.Outgoing.Count())
+                .ThenBy(v => v.Title)
+                .FirstOrDefault();
+                
+            if (focusVertex == null)
+            {
+                return Enumerable.Empty<Vertex>();
+            }
+        }
+
+        // In direct references mode, show only the focus vertex and its directly connected vertices
+        var directlyConnected = new HashSet<Vertex>();
+        
+        // Add the focus vertex itself
+        directlyConnected.Add(focusVertex);
+        
+        // Add vertices that the focus vertex depends on (outgoing connections)
+        foreach (var outgoing in focusVertex.Outgoing)
+        {
+            directlyConnected.Add(outgoing);
+        }
+        
+        // Add vertices that depend on the focus vertex (incoming connections)
+        foreach (var incoming in focusVertex.Incoming)
+        {
+            directlyConnected.Add(incoming);
+        }
+        
+        return directlyConnected;
     }
 
     private Color ComputeBackground(int depth)
@@ -378,7 +472,7 @@ public class GraphControl
 
         selectedVertices.UnionWith(vertices);
 
-        var controls = vertices.Select(GetControl).ToArray();
+        var controls = vertices.Select(GetControl).Where(c => c != null).ToArray();
         SelectControls(controls);
     }
 
@@ -481,11 +575,19 @@ public class GraphControl
 
     private void AddIncomingEdges(Rect destinationRect, Vertex destinationVertex)
     {
+        var visibleVertices = DirectReferencesOnly ? GetVerticesToDisplay().ToHashSet() : null;
+        
         foreach (var incoming in destinationVertex.Incoming)
         {
             if (HideTransitiveEdges &&
                 incoming.TransitiveOutgoing != null &&
                 incoming.TransitiveOutgoing.Contains(destinationVertex))
+            {
+                continue;
+            }
+
+            // In direct references mode, only show edges to visible vertices
+            if (DirectReferencesOnly && visibleVertices != null && !visibleVertices.Contains(incoming))
             {
                 continue;
             }
@@ -502,9 +604,16 @@ public class GraphControl
     private void AddOutgoingEdges(Rect sourceRect, Vertex node)
     {
         IEnumerable<Vertex> list = HideTransitiveEdges ? node.NonRedundantOutgoing : node.Outgoing;
+        var visibleVertices = DirectReferencesOnly ? GetVerticesToDisplay().ToHashSet() : null;
 
         foreach (var outgoing in list)
         {
+            // In direct references mode, only show edges to visible vertices
+            if (DirectReferencesOnly && visibleVertices != null && !visibleVertices.Contains(outgoing))
+            {
+                continue;
+            }
+
             if (GetControl(outgoing) is { } destinationControl)
             {
                 var destinationRect = GetRectOnCanvas(destinationControl);
@@ -553,7 +662,15 @@ public class GraphControl
             foundControl.BringIntoView();
         }
 
-        SelectVertices(found.Select(GetVertex).ToArray());
+        var foundVertices = found.Select(GetVertex).ToArray();
+        SelectVertices(foundVertices);
+        
+        // In direct references mode, set focus to the first found vertex
+        if (DirectReferencesOnly && foundVertices.Any())
+        {
+            focusVertex = foundVertices.First();
+            Redraw();
+        }
     }
 
     private FrameworkElement FindControlByText(string text)
