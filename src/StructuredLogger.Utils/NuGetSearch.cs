@@ -1010,6 +1010,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             var assetsFile = FindAssetsFile(projectFile);
+            if (assetsFile == null)
+            {
+                return GetDigraph();
+            }
+
             var dependencies = GetNuGetDependencies(assetsFile);
             return GetDigraph(dependencies);
         }
