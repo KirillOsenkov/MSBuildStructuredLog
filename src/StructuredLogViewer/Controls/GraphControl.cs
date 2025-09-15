@@ -9,6 +9,13 @@ using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogViewer.Controls;
 
+public enum GraphFilterMode
+{
+    None,
+    DirectReferencesOnly,
+    ReachableOnly
+}
+
 public class GraphControl
 {
     private ScrollViewer scrollViewer;
@@ -116,26 +123,27 @@ public class GraphControl
         }
     }
 
-    private bool directReferencesOnly;
+    private GraphFilterMode filterMode;
     private Vertex focusVertex;
-    public bool DirectReferencesOnly
+
+    public GraphFilterMode FilterMode
     {
-        get => directReferencesOnly;
+        get => filterMode;
         set
         {
-            if (directReferencesOnly == value)
+            if (filterMode == value)
             {
                 return;
             }
 
-            directReferencesOnly = value;
-            
-            // If enabling direct references only mode, set focus to first selected vertex
-            if (value && selectedVertices.Any())
+            filterMode = value;
+
+            // If enabling a filtering mode, set focus to first selected vertex
+            if (value != GraphFilterMode.None && selectedVertices.Any())
             {
                 focusVertex = selectedVertices.First();
             }
-            else if (!value)
+            else if (value == GraphFilterMode.None)
             {
                 focusVertex = null;
             }
@@ -247,9 +255,9 @@ public class GraphControl
 
                 var paddingHeight = Math.Pow(vertex.InDegree, 0.6);
                 var opacity = vertex.InDegree > 1 ? 0.9 : 0.5;
-                
-                // Highlight the focus vertex if in direct references mode
-                if (DirectReferencesOnly && vertex == focusVertex)
+
+                // Highlight the focus vertex if in filtering mode
+                if (filterMode != GraphFilterMode.None && vertex == focusVertex)
                 {
                     opacity = 1.0;
                     background = DarkTheme ? Color.FromRgb(255, 140, 0) : Color.FromRgb(255, 255, 0); // Orange/Yellow highlight
@@ -285,9 +293,9 @@ public class GraphControl
                             SelectVertices([vertex]);
                         }
                     }
-                    
-                    // In direct references mode, clicking a vertex recenters the graph on that vertex
-                    if (DirectReferencesOnly && vertex != focusVertex)
+
+                    // In filtering mode, clicking a vertex recenters the graph on that vertex
+                    if (filterMode != GraphFilterMode.None && vertex != focusVertex)
                     {
                         focusVertex = vertex;
                         Redraw();
@@ -304,7 +312,7 @@ public class GraphControl
 
     private IEnumerable<Vertex> GetVerticesToDisplay()
     {
-        if (!DirectReferencesOnly)
+        if (filterMode == GraphFilterMode.None)
         {
             return graph.Vertices;
         }
@@ -324,6 +332,16 @@ public class GraphControl
             }
         }
 
+        return filterMode switch
+        {
+            GraphFilterMode.DirectReferencesOnly => GetDirectlyConnectedVertices(),
+            GraphFilterMode.ReachableOnly => GetReachableVertices(),
+            _ => graph.Vertices,
+        };
+    }
+
+    private IEnumerable<Vertex> GetDirectlyConnectedVertices()
+    {
         // In direct references mode, show only the focus vertex and its directly connected vertices
         var directlyConnected = new HashSet<Vertex>();
         
@@ -343,6 +361,35 @@ public class GraphControl
         }
         
         return directlyConnected;
+    }
+
+    private IEnumerable<Vertex> GetReachableVertices()
+    {
+        // In reachable mode, show the focus vertex and all vertices reachable in both directions
+        var reachableVertices = new HashSet<Vertex>();
+
+        // Add the focus vertex itself
+        reachableVertices.Add(focusVertex);
+
+        // Add all vertices reachable from the focus vertex (forward direction)
+        foreach (var vertex in graph.Vertices)
+        {
+            if (vertex != focusVertex && graph.CanReach(focusVertex, vertex))
+            {
+                reachableVertices.Add(vertex);
+            }
+        }
+
+        // Add all vertices that can reach the focus vertex (backward direction)
+        foreach (var vertex in graph.Vertices)
+        {
+            if (vertex != focusVertex && graph.CanReach(vertex, focusVertex))
+            {
+                reachableVertices.Add(vertex);
+            }
+        }
+
+        return reachableVertices;
     }
 
     private Color ComputeBackground(int depth)
@@ -575,8 +622,8 @@ public class GraphControl
 
     private void AddIncomingEdges(Rect destinationRect, Vertex destinationVertex)
     {
-        var visibleVertices = DirectReferencesOnly ? GetVerticesToDisplay().ToHashSet() : null;
-        
+        var visibleVertices = filterMode != GraphFilterMode.None ? GetVerticesToDisplay().ToHashSet() : null;
+
         foreach (var incoming in destinationVertex.Incoming)
         {
             if (HideTransitiveEdges &&
@@ -586,8 +633,8 @@ public class GraphControl
                 continue;
             }
 
-            // In direct references mode, only show edges to visible vertices
-            if (DirectReferencesOnly && visibleVertices != null && !visibleVertices.Contains(incoming))
+            // In filtering mode, only show edges to visible vertices
+            if (filterMode != GraphFilterMode.None && visibleVertices != null && !visibleVertices.Contains(incoming))
             {
                 continue;
             }
@@ -604,12 +651,12 @@ public class GraphControl
     private void AddOutgoingEdges(Rect sourceRect, Vertex node)
     {
         IEnumerable<Vertex> list = HideTransitiveEdges ? node.NonRedundantOutgoing : node.Outgoing;
-        var visibleVertices = DirectReferencesOnly ? GetVerticesToDisplay().ToHashSet() : null;
+        var visibleVertices = filterMode != GraphFilterMode.None ? GetVerticesToDisplay().ToHashSet() : null;
 
         foreach (var outgoing in list)
         {
-            // In direct references mode, only show edges to visible vertices
-            if (DirectReferencesOnly && visibleVertices != null && !visibleVertices.Contains(outgoing))
+            // In filtering mode, only show edges to visible vertices
+            if (filterMode != GraphFilterMode.None && visibleVertices != null && !visibleVertices.Contains(outgoing))
             {
                 continue;
             }
@@ -639,6 +686,7 @@ public class GraphControl
         if (clearSelection)
         {
             selectedVertices.Clear();
+            focusVertex = null;
         }
 
         selectedControls.Clear();
@@ -664,9 +712,9 @@ public class GraphControl
 
         var foundVertices = found.Select(GetVertex).ToArray();
         SelectVertices(foundVertices);
-        
-        // In direct references mode, set focus to the first found vertex
-        if (DirectReferencesOnly && foundVertices.Any())
+
+        // In filtering mode, set focus to the first found vertex
+        if (filterMode != GraphFilterMode.None && foundVertices.Any())
         {
             focusVertex = foundVertices.First();
             Redraw();

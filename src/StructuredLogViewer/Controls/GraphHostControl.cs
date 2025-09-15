@@ -184,12 +184,16 @@ public class GraphHostControl : DockPanel
             Margin = new Thickness(0, 0, 8, 0)
         };
 
-        var directReferencesOnlyCheck = new CheckBox
+        var filterModeComboBox = new ComboBox
         {
-            Content = "Direct references only",
             VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(0, 0, 8, 0)
+            Margin = new Thickness(0, 0, 8, 0),
+            Width = 150
         };
+        filterModeComboBox.Items.Add("No filter");
+        filterModeComboBox.Items.Add("Direct references only");
+        filterModeComboBox.Items.Add("Reachable only");
+        filterModeComboBox.SelectedIndex = 0; // Default to "No filter"
 
         var helpButton = new Button
         {
@@ -273,7 +277,7 @@ public class GraphHostControl : DockPanel
 
         toolbar.Children.Add(showTextButton);
         toolbar.Children.Add(transitiveReduceCheck);
-        toolbar.Children.Add(directReferencesOnlyCheck);
+        toolbar.Children.Add(filterModeComboBox);
         toolbar.Children.Add(depthCheckbox);
         toolbar.Children.Add(horizontalCheckbox);
         toolbar.Children.Add(invertedCheckbox);
@@ -330,8 +334,16 @@ public class GraphHostControl : DockPanel
         transitiveReduceCheck.Checked += (s, e) => graphControl.HideTransitiveEdges = true;
         transitiveReduceCheck.Unchecked += (s, e) => graphControl.HideTransitiveEdges = false;
 
-        directReferencesOnlyCheck.Checked += (s, e) => graphControl.DirectReferencesOnly = true;
-        directReferencesOnlyCheck.Unchecked += (s, e) => graphControl.DirectReferencesOnly = false;
+        filterModeComboBox.SelectionChanged += (s, e) =>
+        {
+            graphControl.FilterMode = filterModeComboBox.SelectedIndex switch
+            {
+                0 => GraphFilterMode.None,
+                1 => GraphFilterMode.DirectReferencesOnly,
+                2 => GraphFilterMode.ReachableOnly,
+                _ => GraphFilterMode.None
+            };
+        };
 
         void Locate()
         {
