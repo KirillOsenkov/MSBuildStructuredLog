@@ -136,14 +136,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (before.Length > 0)
             {
                 var folder = new Folder { Name = $"BeforeTargets" };
-                Add(folder, before.Reverse());
+                Add(folder, before.AsEnumerable().Reverse());
                 graphFolder.AddChild(folder);
             }
 
             if (after.Length > 0)
             {
                 var folder = new Folder { Name = $"AfterTargets" };
-                Add(folder, after.Reverse());
+                Add(folder, after.AsEnumerable().Reverse());
                 graphFolder.AddChild(folder);
             }
 

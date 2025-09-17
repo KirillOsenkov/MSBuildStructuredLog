@@ -228,7 +228,7 @@ public class GraphControl
         var groups = verticesToDisplay.GroupBy(groupBy).OrderBy(g => g.Key).ToArray();
         if (Inverted)
         {
-            groups = groups.Reverse().ToArray();
+            Array.Reverse(groups);
         }
 
         foreach (var vertexGroup in groups)
