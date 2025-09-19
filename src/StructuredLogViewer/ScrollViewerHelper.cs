@@ -53,6 +53,9 @@ namespace StructuredLogViewer
             if (d == null)
                 return null;
 
+            if (d is T t)
+                return t;
+
             var childCount = VisualTreeHelper.GetChildrenCount(d);
 
             for (var i = 0; i < childCount; i++)

@@ -47,12 +47,13 @@ public class GraphControl
         grid.Children.Add(canvas);
         grid.Children.Add(layersControl);
 
-        scrollViewer = new ScrollViewer()
+        scrollViewer = new ScrollViewer
         {
             HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
-            VerticalScrollBarVisibility = ScrollBarVisibility.Auto
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            Content = grid
         };
-        scrollViewer.Content = grid;
+        scrollViewer.SetValue(ScrollViewerHelper.ShiftWheelScrollsHorizontallyProperty, true);
     }
 
     private bool darkTheme;
