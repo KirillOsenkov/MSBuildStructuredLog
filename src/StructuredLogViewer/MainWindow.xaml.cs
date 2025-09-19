@@ -1055,6 +1055,11 @@ that project." };
             {
                 FocusSearch();
             }
+            else if (e.Key == Key.F && e.KeyboardDevice.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
+            {
+                CurrentBuildControl?.SelectFindInFilesTab();
+                e.Handled = true;
+            }
         }
 
         private void Window_KeyUp(object sender, KeyEventArgs e)

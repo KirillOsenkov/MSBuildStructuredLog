@@ -1916,6 +1916,24 @@ Recent (");
             leftPaneTabControl.SelectedItem = searchLogTab;
         }
 
+        public void SelectFindInFilesTab(string newText = null)
+        {
+            // Only proceed if Find in Files tab is available
+            if (findInFilesTab.Visibility != Visibility.Visible)
+            {
+                return;
+            }
+
+            if (newText != null)
+            {
+                findInFilesControl.SearchText = newText;
+            }
+
+            leftPaneTabControl.SelectedItem = findInFilesTab;
+            findInFilesControl.searchTextBox.Focus();
+            findInFilesControl.searchTextBox.SelectAll();
+        }
+
         public void Delete()
         {
             var node = treeView.SelectedItem as TreeNode;
