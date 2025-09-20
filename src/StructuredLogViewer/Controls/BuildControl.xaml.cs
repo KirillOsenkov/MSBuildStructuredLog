@@ -540,6 +540,11 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
         private void PopulateProjectReferenceGraph()
         {
+            if (projectReferenceGraphTab.Content is GraphHostControl)
+            {
+                return;
+            }
+
             var graph = Build.ProjectReferenceGraph.Graph;
 
             var graphHostControl = new GraphHostControl();

@@ -336,6 +336,7 @@ public class GraphHostControl : DockPanel
 
         filterModeComboBox.SelectionChanged += (s, e) =>
         {
+            e.Handled = true;
             graphControl.FilterMode = filterModeComboBox.SelectedIndex switch
             {
                 0 => GraphFilterMode.None,
