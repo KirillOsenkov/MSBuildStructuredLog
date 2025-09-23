@@ -33,7 +33,7 @@ public class FileTypes
     public static FilePickerFileType Sln { get; } =
         new("Solution File")
         {
-            Patterns = new[] { "*.sln", "*.slnf" },
+            Patterns = new[] { "*.sln", "*.slnf", "*.slnx"},
             MimeTypes = new[] { "text/plain" },
             AppleUniformTypeIdentifiers = new[] { "public.text" }
         };
