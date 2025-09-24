@@ -10,6 +10,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Presenters;
 using Avalonia.Input;
+using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
@@ -367,7 +368,8 @@ namespace StructuredLogViewer.Avalonia
             Title = projectFilePath + " - " + DefaultTitle;
 
             string customArguments = SettingsService.GetCustomArguments(filePath);
-            var parametersScreen = new BuildParametersScreen();
+            IClipboard clipboardService = GetTopLevel(this)?.Clipboard;
+            var parametersScreen = new BuildParametersScreen(clipboardService);
             parametersScreen.BrowseForMSBuildRequsted += BrowseForMSBuildExe;
             parametersScreen.PrefixArguments = filePath.QuoteIfNeeded();
             parametersScreen.MSBuildArguments = customArguments;

@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
+using Avalonia.Input.Platform;
 using Microsoft.Build.Logging.StructuredLogger;
 using StructuredLogViewer.Core;
 
@@ -9,13 +10,15 @@ namespace StructuredLogViewer.Avalonia.Controls
 {
     public class BuildParametersScreen : ObservableObject
     {
+        private readonly IClipboard? clipboard;
         public event Action BuildRequested;
         public event Action CancelRequested;
 
         public event Func<System.Threading.Tasks.Task> BrowseForMSBuildRequsted;
 
-        public BuildParametersScreen()
+        public BuildParametersScreen(IClipboard? clipboard)
         {
+            this.clipboard = clipboard;
             UpdateMSBuildLocations();
         }
 
@@ -69,7 +72,7 @@ namespace StructuredLogViewer.Avalonia.Controls
         private void Copy()
         {
             string commandLine = $@"{MSBuildLocation.QuoteIfNeeded()} {PrefixArguments} {MSBuildArguments} {PostfixArguments}";
-            //Clipboard.SetText(commandLine);
+            clipboard?.SetTextAsync(commandLine);
         }
 
         public async System.Threading.Tasks.Task BrowseForMSBuildAsync()
