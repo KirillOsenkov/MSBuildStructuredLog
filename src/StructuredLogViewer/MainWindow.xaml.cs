@@ -836,7 +836,7 @@ that project." };
         private void OpenProjectOrSolution()
         {
             var openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = "MSBuild projects and solutions (*.sln;*.*proj)|*.sln;*.*proj|All files (*.*)|*";
+            openFileDialog.Filter = "MSBuild projects and solutions (*.sln;*.slnx;*.*proj)|*.sln;*.slnx;*.*proj|All files (*.*)|*";
             openFileDialog.Title = "Open a solution or project";
             openFileDialog.CheckFileExists = true;
             var result = openFileDialog.ShowDialog(this);

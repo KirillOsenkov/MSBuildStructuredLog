@@ -15,20 +15,26 @@
                 <Separator />
                 <MenuItem Name="Build"
                           Header="_Build Solution/Project..."
-                          HotKey="F6" />
+                          HotKey="F6"
+                          InputGesture="F6"/>
                 <MenuItem Name="Rebuild"
                           Header="Rebuild Solution/Project"
-                          HotKey="Shift+F6" />
+                          HotKey="Shift+F6"
+                          InputGesture="Shift+F6"/>
                 <Separator />
                 <MenuItem Name="Open"
                           Header="_Open Log..."
-                          HotKey="Ctrl+O" />
+                          HotKey="Ctrl+O"
+                          InputGesture="Ctrl+O"/>
                 <MenuItem Name="ReloadMenu"
                           Header="_Reload"
-                          HotKey="F5" />
+                          HotKey="F5"
+                          InputGesture="F5"/>
                 <MenuItem Name="SaveAsMenu"
                           Header="_Save Log As..."
-                          HotKey="Ctrl+S" />
+                          HotKey="Ctrl+S"
+                          InputGesture="Ctrl+S"
+                          />
                 <Separator />
                 <MenuItem Name="RecentProjectsMenu"
                           Header="Recent Projects"
@@ -45,7 +51,8 @@
                 <Separator />
                 <MenuItem Name="Exit"
                           Header="E_xit"
-                          HotKey="Alt+F4" />
+                          HotKey="Alt+F4"
+                          InputGesture="Alt+F4"/>
             </MenuItem>
             <MenuItem Header="_Help">
                 <MenuItem Name="HelpLink"

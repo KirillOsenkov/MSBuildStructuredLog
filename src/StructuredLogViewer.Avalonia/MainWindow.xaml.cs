@@ -10,6 +10,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Presenters;
 using Avalonia.Input;
+using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
@@ -367,7 +368,8 @@ namespace StructuredLogViewer.Avalonia
             Title = projectFilePath + " - " + DefaultTitle;
 
             string customArguments = SettingsService.GetCustomArguments(filePath);
-            var parametersScreen = new BuildParametersScreen();
+            IClipboard clipboardService = GetTopLevel(this)?.Clipboard;
+            var parametersScreen = new BuildParametersScreen(clipboardService);
             parametersScreen.BrowseForMSBuildRequsted += BrowseForMSBuildExe;
             parametersScreen.PrefixArguments = filePath.QuoteIfNeeded();
             parametersScreen.MSBuildArguments = customArguments;
@@ -518,23 +520,7 @@ namespace StructuredLogViewer.Avalonia
 
         private async void Window_KeyUp(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.F5)
-            {
-                Reload();
-            }
-            else if (e.Key == Key.F6 && e.KeyModifiers.HasFlag(KeyModifiers.Shift))
-            {
-                RebuildProjectOrSolution();
-            }
-            else if (e.Key == Key.F6)
-            {
-                await OpenProjectOrSolution();
-            }
-            else if (e.Key == Key.O && e.KeyModifiers.HasFlag(KeyModifiers.Control))
-            {
-                await OpenLogFile();
-            }
-            else if (e.Key == Key.F && e.KeyModifiers.HasFlag(KeyModifiers.Control))
+            if (e.Key == Key.F && e.KeyModifiers.HasFlag(KeyModifiers.Control))
             {
                 FocusSearch();
             }
@@ -545,10 +531,6 @@ namespace StructuredLogViewer.Avalonia
                 {
                     await Clipboard.SetTextAsync(content.MSBuildCommandLine);
                 }
-            }
-            else if (e.Key == Key.S && e.KeyModifiers.HasFlag(KeyModifiers.Control))
-            {
-                _ = SaveAs();
             }
         }
 
