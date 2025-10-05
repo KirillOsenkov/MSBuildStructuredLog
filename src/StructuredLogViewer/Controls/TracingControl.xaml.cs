@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -257,6 +258,7 @@ namespace StructuredLogViewer.Controls
             PreviewMouseWheel += TimelineControl_MouseWheel;
             grid.LayoutTransform = scaleTransform;
             overlayGrid.LayoutTransform = scaleTransform;
+            touchPoints = 0;
         }
 
         public void Dispose()
@@ -287,34 +289,6 @@ namespace StructuredLogViewer.Controls
         private double viewPortHeight = 0;
         private double textHeight;
 
-        private void ScrollViewer_Loaded(object sender, RoutedEventArgs e)
-        {
-            scrollViewer.ScrollToHorizontalOffset(horizontalOffset);
-            scrollViewer.ScrollToVerticalOffset(verticalOffset);
-        }
-
-        private void ScrollViewer_Unloaded(object sender, RoutedEventArgs e)
-        {
-            horizontalOffset = scrollViewer.HorizontalOffset;
-            verticalOffset = scrollViewer.VerticalOffset;
-        }
-
-        private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
-        {
-            if (e.HorizontalChange == 0 && e.VerticalChange == 0 && e.ViewportWidthChange <= 0 && e.ViewportHeightChange <= 0)
-            {
-                return;
-            }
-
-            horizontalOffset = scrollViewer.HorizontalOffset;
-            verticalOffset = scrollViewer.VerticalOffset;
-            viewPortWidth = scrollViewer.ViewportWidth;
-            viewPortHeight = scrollViewer.ViewportHeight;
-            UpdateRenderArea();
-
-            e.Handled = true;
-        }
-
         private void UpdateRenderArea()
         {
             if (lanesPanel != null)
@@ -329,18 +303,6 @@ namespace StructuredLogViewer.Controls
                     }
                 }
             }
-        }
-
-        private void zoomSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            double ratio = zoomSlider.Value;
-            if (Math.Abs(zoomSlider.Value - 1) <= 0.001)
-            {
-                ratio = 1;
-            }
-
-            Zoom(ratio);
-            resetZoomButton.Visibility = ratio == 1 ? Visibility.Hidden : Visibility.Visible;
         }
 
         private void Zoom(double value)
@@ -1213,6 +1175,12 @@ namespace StructuredLogViewer.Controls
         private bool isMouseMoving;
         private Point lastMousePos;
 
+        #region XAML Events
+        private void ResetZoom_Click(object sender, RoutedEventArgs e)
+        {
+            zoomSlider.Value = 1;
+        }
+
         private void Canvas_MouseUp(object sender, MouseButtonEventArgs e)
         {
             if (isMouseMoving)
@@ -1266,19 +1234,166 @@ namespace StructuredLogViewer.Controls
                 return;
             }
 
-            var vect = Point.Subtract(lastMousePos, currentMousePos);
-            if (isMouseMoving || vect.Length > 5)
+            var vector = Point.Subtract(lastMousePos, currentMousePos);
+            if (isMouseMoving || vector.Length > 5)
             {
                 isMouseMoving = true;
-                scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset + vect.X);
-                scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset + vect.Y);
+                scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset + vector.X);
+                scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset + vector.Y);
                 lastMousePos = currentMousePos;
+            }
+        }
+
+        enum TouchGesture
+        {
+            None,
+            Move,
+            Pinch
+        }
+
+        TouchGesture touchOptions = TouchGesture.None;
+        int touchPoints = 0;
+
+        private void Grid_TouchDown(object sender, TouchEventArgs e)
+        {
+            CloseToolTips();
+            Interlocked.Increment(ref touchPoints);
+        }
+
+        private void Grid_TouchUp(object sender, TouchEventArgs e)
+        {
+            var numPoints = Interlocked.Decrement(ref touchPoints);
+            if (numPoints <= 0)
+            {
+                // handle the case where touch started outside of our window.
+                if (numPoints < 0)
+                {
+                    Interlocked.Exchange(ref touchPoints, 0);
+                }
+
+                if (touchOptions == TouchGesture.None)
+                {
+                    // assume tap.
+                    var panelTouchPoint = e.GetTouchPoint(this.lanesPanel);
+                    var gridTouchPoint = e.GetTouchPoint(this);
+                    if (panelTouchPoint != null || gridTouchPoint != null)
+                    {
+                        UpdateToolTips(gridTouchPoint.Position, true);
+
+                        if (VisualTreeHelper.HitTest(this.lanesPanel, panelTouchPoint.Position)?.VisualHit is FastCanvas canvas)
+                        {
+                            if (canvas.TryGetTextBlockAtPosition(e.GetTouchPoint(canvas).Position, out TextField textBlock, out Point resultPoint))
+                            {
+                                var activePoint = canvas.TranslatePoint(resultPoint, overlayCanvas);
+                                HighlightTextBlock(textBlock, activePoint);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    touchOptions = TouchGesture.None;
+                }
+            }
+        }
+
+        private void Grid_ManipulationStarted(object sender, ManipulationStartedEventArgs e)
+        {
+            this.ToolTip = null;
+            e.Handled = true;
+        }
+
+        private void Grid_ManipulationDelta(object sender, ManipulationDeltaEventArgs e)
+        {
+            if (touchPoints == 1 && (touchOptions == TouchGesture.None || touchOptions == TouchGesture.Move))
+            {
+                touchOptions = TouchGesture.Move;
+                var vector = e.CumulativeManipulation.Translation;
+
+                scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset - vector.X);
+                scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset - vector.Y);
+
+                e.Handled = true;
+            }
+            else if (touchPoints == 2)
+            {
+                touchOptions = TouchGesture.Pinch;
+                Point? origin = (e.ManipulationContainer as FrameworkElement)?.TranslatePoint(e.ManipulationOrigin, this);
+
+                var scale = e.DeltaManipulation.Scale.X;
+
+                if (scale != 1 && scale != 0)
+                {
+                    // limit the zoom range.
+                    var newZoom = Math.Min(scale * this.zoomSlider.Value, maximumZoom);
+                    newZoom = Math.Max(scale * this.zoomSlider.Value, minimumZoom);
+
+                    if (newZoom < maximumZoom && newZoom > minimumZoom)
+                    {
+                        // Zoom
+                        this.scaleFactor = newZoom;
+                        this.zoomSlider.Value = newZoom;
+
+                        if (origin is not null)
+                        {
+                            double mouseOffsetX = origin.Value.X * (1 - scale);
+                            double mouseOffsetY = origin.Value.Y * (1 - scale);
+
+                            scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset * scale - mouseOffsetX);
+                            scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset * scale - mouseOffsetY);
+                        }
+                    }
+                }
+
+                e.Handled = true;
             }
         }
 
         TextField lastHoverText;
 
-        private void UpdateToolTips(Point mousePos)
+        private void zoomSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            double ratio = zoomSlider.Value;
+            if (Math.Abs(zoomSlider.Value - 1) <= 0.001)
+            {
+                ratio = 1;
+            }
+
+            Zoom(ratio);
+            resetZoomButton.Visibility = ratio == 1 ? Visibility.Hidden : Visibility.Visible;
+        }
+
+        private void ScrollViewer_Loaded(object sender, RoutedEventArgs e)
+        {
+            scrollViewer.ScrollToHorizontalOffset(horizontalOffset);
+            scrollViewer.ScrollToVerticalOffset(verticalOffset);
+        }
+
+        private void ScrollViewer_Unloaded(object sender, RoutedEventArgs e)
+        {
+            horizontalOffset = scrollViewer.HorizontalOffset;
+            verticalOffset = scrollViewer.VerticalOffset;
+        }
+
+        private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            if (e.HorizontalChange == 0 && e.VerticalChange == 0 && e.ViewportWidthChange <= 0 && e.ViewportHeightChange <= 0)
+            {
+                return;
+            }
+
+            horizontalOffset = scrollViewer.HorizontalOffset;
+            verticalOffset = scrollViewer.VerticalOffset;
+            viewPortWidth = scrollViewer.ViewportWidth;
+            viewPortHeight = scrollViewer.ViewportHeight;
+            UpdateRenderArea();
+
+            e.Handled = true;
+        }
+
+        #endregion
+
+        private void UpdateToolTips(Point mousePos, bool forceOpen = false)
         {
             var graphPoint = this.TranslatePoint(mousePos, overlayCanvas);
             var hitResult = VisualTreeHelper.HitTest(this.lanesPanel, graphPoint);
@@ -1302,7 +1417,7 @@ namespace StructuredLogViewer.Controls
                         lastHoverText = resultText;
 
                         // Toggle tooltip to force it to redraw at the new mouse position.
-                        if (toolTipControl.IsOpen)
+                        if (toolTipControl.IsOpen || forceOpen)
                         {
                             toolTipControl.IsOpen = false;
                             toolTipControl.IsOpen = true;
@@ -1310,6 +1425,22 @@ namespace StructuredLogViewer.Controls
                     }
                 }
             }
+        }
+
+        private void CloseToolTips()
+        {
+            foreach (var panel in this.lanesPanel.Children)
+            {
+                if (panel is FastCanvas canvas)
+                {
+                    if (canvas.ToolTip is ToolTip tooltip)
+                    {
+                        tooltip.IsOpen = false;
+                    }
+                }
+            }
+
+            lastHoverText = null;
         }
 
         private static readonly Brush nodeBackground = new SolidColorBrush(Color.FromArgb(20, 180, 180, 180));
@@ -1341,9 +1472,5 @@ namespace StructuredLogViewer.Controls
             return Brushes.Transparent;
         }
 
-        private void ResetZoom_Click(object sender, RoutedEventArgs e)
-        {
-            zoomSlider.Value = 1;
-        }
     }
 }

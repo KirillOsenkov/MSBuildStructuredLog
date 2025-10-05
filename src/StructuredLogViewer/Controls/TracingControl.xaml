@@ -24,8 +24,15 @@
         </Grid.ContextMenu>
         <ScrollViewer x:Name="scrollViewer"
                 HorizontalScrollBarVisibility="Auto" 
-                VerticalScrollBarVisibility="Auto" Loaded="ScrollViewer_Loaded" Unloaded="ScrollViewer_Unloaded" ScrollChanged="ScrollViewer_ScrollChanged">
-            <Grid>
+                VerticalScrollBarVisibility="Auto"
+                      Loaded="ScrollViewer_Loaded"
+                      Unloaded="ScrollViewer_Unloaded"
+                      ScrollChanged="ScrollViewer_ScrollChanged">
+            <Grid IsManipulationEnabled="True"
+                  TouchDown="Grid_TouchDown"
+                  TouchUp="Grid_TouchUp"
+                  ManipulationStarted="Grid_ManipulationStarted"
+                  ManipulationDelta="Grid_ManipulationDelta">
                 <Grid x:Name="overlayGrid" Panel.ZIndex="100" />
                 <!-- Note: This grid needs to be transparent so that Mouse Move and Down will register on the empty background. -->
                 <Grid x:Name="grid"
