@@ -289,34 +289,6 @@ namespace StructuredLogViewer.Controls
         private double viewPortHeight = 0;
         private double textHeight;
 
-        private void ScrollViewer_Loaded(object sender, RoutedEventArgs e)
-        {
-            scrollViewer.ScrollToHorizontalOffset(horizontalOffset);
-            scrollViewer.ScrollToVerticalOffset(verticalOffset);
-        }
-
-        private void ScrollViewer_Unloaded(object sender, RoutedEventArgs e)
-        {
-            horizontalOffset = scrollViewer.HorizontalOffset;
-            verticalOffset = scrollViewer.VerticalOffset;
-        }
-
-        private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
-        {
-            if (e.HorizontalChange == 0 && e.VerticalChange == 0 && e.ViewportWidthChange <= 0 && e.ViewportHeightChange <= 0)
-            {
-                return;
-            }
-
-            horizontalOffset = scrollViewer.HorizontalOffset;
-            verticalOffset = scrollViewer.VerticalOffset;
-            viewPortWidth = scrollViewer.ViewportWidth;
-            viewPortHeight = scrollViewer.ViewportHeight;
-            UpdateRenderArea();
-
-            e.Handled = true;
-        }
-
         private void UpdateRenderArea()
         {
             if (lanesPanel != null)
@@ -331,18 +303,6 @@ namespace StructuredLogViewer.Controls
                     }
                 }
             }
-        }
-
-        private void zoomSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            double ratio = zoomSlider.Value;
-            if (Math.Abs(zoomSlider.Value - 1) <= 0.001)
-            {
-                ratio = 1;
-            }
-
-            Zoom(ratio);
-            resetZoomButton.Visibility = ratio == 1 ? Visibility.Hidden : Visibility.Visible;
         }
 
         private void Zoom(double value)
@@ -1215,6 +1175,12 @@ namespace StructuredLogViewer.Controls
         private bool isMouseMoving;
         private Point lastMousePos;
 
+        #region XAML Events
+        private void ResetZoom_Click(object sender, RoutedEventArgs e)
+        {
+            zoomSlider.Value = 1;
+        }
+
         private void Canvas_MouseUp(object sender, MouseButtonEventArgs e)
         {
             if (isMouseMoving)
@@ -1278,14 +1244,14 @@ namespace StructuredLogViewer.Controls
             }
         }
 
-        enum GestureOptions
+        enum TouchGesture
         {
             None,
             Move,
             Pinch
         }
 
-        GestureOptions touchOptions = GestureOptions.None;
+        TouchGesture touchOptions = TouchGesture.None;
         int touchPoints = 0;
 
         private void Grid_TouchDown(object sender, TouchEventArgs e)
@@ -1305,7 +1271,7 @@ namespace StructuredLogViewer.Controls
                     Interlocked.Exchange(ref touchPoints, 0);
                 }
 
-                if (touchOptions == GestureOptions.None)
+                if (touchOptions == TouchGesture.None)
                 {
                     // assume tap.
                     var panelTouchPoint = e.GetTouchPoint(this.lanesPanel);
@@ -1326,7 +1292,7 @@ namespace StructuredLogViewer.Controls
                 }
                 else
                 {
-                    touchOptions = GestureOptions.None;
+                    touchOptions = TouchGesture.None;
                 }
             }
         }
@@ -1339,9 +1305,9 @@ namespace StructuredLogViewer.Controls
 
         private void Grid_ManipulationDelta(object sender, ManipulationDeltaEventArgs e)
         {
-            if (touchPoints == 1 && (touchOptions == GestureOptions.None || touchOptions == GestureOptions.Move))
+            if (touchPoints == 1 && (touchOptions == TouchGesture.None || touchOptions == TouchGesture.Move))
             {
-                touchOptions = GestureOptions.Move;
+                touchOptions = TouchGesture.Move;
                 var vector = e.CumulativeManipulation.Translation;
 
                 scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset - vector.X);
@@ -1351,7 +1317,7 @@ namespace StructuredLogViewer.Controls
             }
             else if (touchPoints == 2)
             {
-                touchOptions = GestureOptions.Pinch;
+                touchOptions = TouchGesture.Pinch;
                 Point? origin = (e.ManipulationContainer as FrameworkElement)?.TranslatePoint(e.ManipulationOrigin, this);
 
                 var scale = e.DeltaManipulation.Scale.X;
@@ -1384,6 +1350,48 @@ namespace StructuredLogViewer.Controls
         }
 
         TextField lastHoverText;
+
+        private void zoomSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            double ratio = zoomSlider.Value;
+            if (Math.Abs(zoomSlider.Value - 1) <= 0.001)
+            {
+                ratio = 1;
+            }
+
+            Zoom(ratio);
+            resetZoomButton.Visibility = ratio == 1 ? Visibility.Hidden : Visibility.Visible;
+        }
+
+        private void ScrollViewer_Loaded(object sender, RoutedEventArgs e)
+        {
+            scrollViewer.ScrollToHorizontalOffset(horizontalOffset);
+            scrollViewer.ScrollToVerticalOffset(verticalOffset);
+        }
+
+        private void ScrollViewer_Unloaded(object sender, RoutedEventArgs e)
+        {
+            horizontalOffset = scrollViewer.HorizontalOffset;
+            verticalOffset = scrollViewer.VerticalOffset;
+        }
+
+        private void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            if (e.HorizontalChange == 0 && e.VerticalChange == 0 && e.ViewportWidthChange <= 0 && e.ViewportHeightChange <= 0)
+            {
+                return;
+            }
+
+            horizontalOffset = scrollViewer.HorizontalOffset;
+            verticalOffset = scrollViewer.VerticalOffset;
+            viewPortWidth = scrollViewer.ViewportWidth;
+            viewPortHeight = scrollViewer.ViewportHeight;
+            UpdateRenderArea();
+
+            e.Handled = true;
+        }
+
+        #endregion
 
         private void UpdateToolTips(Point mousePos, bool forceOpen = false)
         {
@@ -1464,9 +1472,5 @@ namespace StructuredLogViewer.Controls
             return Brushes.Transparent;
         }
 
-        private void ResetZoom_Click(object sender, RoutedEventArgs e)
-        {
-            zoomSlider.Value = 1;
-        }
     }
 }
