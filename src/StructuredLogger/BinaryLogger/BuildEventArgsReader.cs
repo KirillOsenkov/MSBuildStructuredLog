@@ -2071,7 +2071,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 // the file.
                 // Win-win: small binlog playback is fast and large binlog playback
                 // doesn't OOM.
-                if (text.Length <= StringSizeThreshold && totalAllocatedShortStrings < 1_000_000_000)
+                if (stream == null || (text.Length <= StringSizeThreshold && totalAllocatedShortStrings < 1_000_000_000))
                 {
                     totalAllocatedShortStrings += text.Length;
                     return text;
