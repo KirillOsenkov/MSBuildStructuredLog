@@ -232,7 +232,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 else if (data is FileData fileData)
                 {
                     GetResults(fileData, resultSet, matcher, maxResults);
-                    if (resultSet.Count == 1)
+                    if (resultSet.Count == 1 || resultSet.Where(r => r.RootFolder == "Incoming").Count() == 1)
                     {
                         FoundSingleFileCopy?.Invoke(fileData, resultSet);
                         TryExplainSingleFileCopy(fileData, resultSet);
@@ -351,6 +351,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private void TryExplainSingleFileCopy(FileData fileData, IList<SearchResult> resultSet)
         {
             var singleResult = resultSet.FirstOrDefault();
+            if (resultSet.Count > 1)
+            {
+                singleResult = resultSet.FirstOrDefault(r => r.RootFolder == "Incoming");
+            }
 
             var fileCopyInfo =
                 singleResult.AssociatedFileCopy ??
