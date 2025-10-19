@@ -184,6 +184,13 @@ public class GraphHostControl : DockPanel
             Margin = new Thickness(0, 0, 8, 0)
         };
 
+        var allEdgesCheckbox = new CheckBox
+        {
+            Content = "All edges",
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(0, 0, 8, 0)
+        };
+
         var filterModeComboBox = new ComboBox
         {
             VerticalAlignment = VerticalAlignment.Center,
@@ -277,6 +284,7 @@ public class GraphHostControl : DockPanel
 
         toolbar.Children.Add(showTextButton);
         toolbar.Children.Add(transitiveReduceCheck);
+        toolbar.Children.Add(allEdgesCheckbox);
         toolbar.Children.Add(filterModeComboBox);
         toolbar.Children.Add(depthCheckbox);
         toolbar.Children.Add(horizontalCheckbox);
@@ -333,6 +341,9 @@ public class GraphHostControl : DockPanel
 
         transitiveReduceCheck.Checked += (s, e) => graphControl.HideTransitiveEdges = true;
         transitiveReduceCheck.Unchecked += (s, e) => graphControl.HideTransitiveEdges = false;
+
+        allEdgesCheckbox.Checked += (s, e) => graphControl.ShowAllEdges = true;
+        allEdgesCheckbox.Unchecked += (s, e) => graphControl.ShowAllEdges = false;
 
         filterModeComboBox.SelectionChanged += (s, e) =>
         {

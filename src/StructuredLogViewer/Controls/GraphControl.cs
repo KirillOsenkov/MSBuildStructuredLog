@@ -22,13 +22,16 @@ public class GraphControl
     private Grid grid;
     private StackPanel layersControl;
     private Canvas canvas;
+    private Canvas allEdgesCanvas;
 
     private Dictionary<Vertex, FrameworkElement> controlFromVertex = new();
     private HashSet<FrameworkElement> selectedControls = new();
     private HashSet<Vertex> selectedVertices = new();
 
-    private Color outgoingColor, incomingColor, border;
+    private Color outgoingColor, incomingColor, border, allEdgesColor;
+    private Brush outgoingSolidBrush;
     private Brush outgoingBrush, incomingBrush;
+    private Brush allEdgesBrush;
 
     public UIElement CanvasElement => grid;
 
@@ -41,9 +44,12 @@ public class GraphControl
         layersControl = new StackPanel { Orientation = Orientation.Vertical };
 
         canvas = new Canvas();
-        canvas.SetResourceReference(Panel.BackgroundProperty, "Theme_WhiteBackground");
+
+        allEdgesCanvas = new Canvas();
+        allEdgesCanvas.SetResourceReference(Panel.BackgroundProperty, "Theme_WhiteBackground");
 
         grid = new Grid();
+        grid.Children.Add(allEdgesCanvas);
         grid.Children.Add(canvas);
         grid.Children.Add(layersControl);
 
@@ -69,16 +75,20 @@ public class GraphControl
                 outgoingColor = Colors.MediumOrchid;
                 border = Colors.DeepSkyBlue;
                 incomingColor = Colors.PaleGreen;
+                allEdgesColor = Color.FromArgb(40, 255, 255, 255);
             }
             else
             {
                 outgoingColor = Colors.MediumOrchid;
                 border = Colors.DarkCyan;
                 incomingColor = Colors.Green;
+                allEdgesColor = Color.FromArgb(40, 128, 128, 128);
             }
 
             outgoingBrush = new LinearGradientBrush(outgoingColor, border, 90.0);
+            outgoingSolidBrush = new SolidColorBrush(outgoingColor);
             incomingBrush = new LinearGradientBrush(border, incomingColor, 90.0);
+            allEdgesBrush = new SolidColorBrush(allEdgesColor);
         }
     }
 
@@ -120,7 +130,30 @@ public class GraphControl
             }
 
             hideTransitiveEdges = value;
-            SelectVertices(selectedVertices.ToArray());
+            if (ShowAllEdges)
+            {
+                Redraw();
+            }
+            else
+            {
+                SelectVertices(selectedVertices.ToArray());
+            }
+        }
+    }
+
+    private bool showAllEdges;
+    public bool ShowAllEdges
+    {
+        get => showAllEdges;
+        set
+        {
+            if (showAllEdges == value)
+            {
+                return;
+            }
+
+            showAllEdges = value;
+            Redraw();
         }
     }
 
@@ -308,6 +341,20 @@ public class GraphControl
             layersControl.Children.Add(layerPanel);
         }
 
+        if (ShowAllEdges)
+        {
+            layersControl.UpdateLayout();
+            HashSet<Vertex> visibleVertices = filterMode != GraphFilterMode.None ? GetVerticesToDisplay().ToHashSet() : null;
+
+            foreach (var vertex in verticesToDisplay)
+            {
+                var vertexControl = GetControl(vertex);
+                vertexControl.UpdateLayout();
+                var sourceRect = GetRectOnCanvas(vertexControl, allEdgesCanvas);
+                AddOutgoingEdges(sourceRect, vertex, allEdges: true, visibleVertices: visibleVertices);
+            }
+        }
+
         SelectVertices(selectedVertices.ToArray());
     }
 
@@ -415,7 +462,7 @@ public class GraphControl
         return background;
     }
 
-    Rect GetRectOnCanvas(FrameworkElement control)
+    Rect GetRectOnCanvas(FrameworkElement control, Canvas canvas)
     {
         return new Rect(
             control.TranslatePoint(new Point(0, 0), canvas),
@@ -423,7 +470,7 @@ public class GraphControl
         );
     }
 
-    void AddLine(Point sourcePoint, Point destinationPoint, Brush stroke)
+    void AddLine(Point sourcePoint, Point destinationPoint, Brush stroke, Canvas canvas)
     {
         var line = new System.Windows.Shapes.Line
         {
@@ -436,20 +483,20 @@ public class GraphControl
         canvas.Children.Add(line);
     }
 
-    void AddLine(Rect sourceRect, Rect destinationRect, Brush stroke)
+    void AddLine(Rect sourceRect, Rect destinationRect, Brush stroke, Canvas canvas)
     {
         var sourceCenter = Center(sourceRect);
         var destinationCenter = Center(destinationRect);
         var sourcePoint = GetPointOnBoundary(sourceRect, destinationCenter);
         var destinationPoint = GetPointOnBoundary(destinationRect, sourceCenter);
-        AddLine(sourcePoint, destinationPoint, stroke);
+        AddLine(sourcePoint, destinationPoint, stroke, canvas);
     }
 
-    void AddLine(FrameworkElement fromControl, FrameworkElement toControl, Brush stroke)
+    void AddLine(FrameworkElement fromControl, FrameworkElement toControl, Brush stroke, Canvas canvas)
     {
-        var sourceRect = GetRectOnCanvas(fromControl);
-        var destinationRect = GetRectOnCanvas(toControl);
-        AddLine(sourceRect, destinationRect, stroke);
+        var sourceRect = GetRectOnCanvas(fromControl, canvas);
+        var destinationRect = GetRectOnCanvas(toControl, canvas);
+        AddLine(sourceRect, destinationRect, stroke, canvas);
     }
 
     private Point Center(Rect rect) => new Point(rect.Left + rect.Width / 2, rect.Top + rect.Height / 2);
@@ -485,7 +532,7 @@ public class GraphControl
 
     void AddRectangle(FrameworkElement element, Brush stroke, Brush fill = null)
     {
-        var rect = GetRectOnCanvas(element);
+        var rect = GetRectOnCanvas(element, canvas);
         AddRectangle(rect, stroke, fill);
     }
 
@@ -608,13 +655,13 @@ public class GraphControl
 
         foreach (var edge in edges)
         {
-            AddLine(edge.start, edge.end, outgoingBrush);
+            AddLine(edge.start, edge.end, outgoingBrush, canvas);
         }
     }
 
     void SelectControl(FrameworkElement vertexControl)
     {
-        var sourceRect = GetRectOnCanvas(vertexControl);
+        var sourceRect = GetRectOnCanvas(vertexControl, canvas);
         var vertex = GetVertex(vertexControl);
         AddOutgoingEdges(sourceRect, vertex);
         AddIncomingEdges(sourceRect, vertex);
@@ -642,31 +689,42 @@ public class GraphControl
 
             if (GetControl(incoming) is { } sourceControl)
             {
-                var sourceRect = GetRectOnCanvas(sourceControl);
-                AddLine(sourceRect, destinationRect, incomingBrush);
+                var sourceRect = GetRectOnCanvas(sourceControl, canvas);
+                AddLine(sourceRect, destinationRect, incomingBrush, canvas);
                 AddRectangle(sourceRect, new SolidColorBrush(incomingColor));
             }
         }
     }
 
-    private void AddOutgoingEdges(Rect sourceRect, Vertex node)
+    private void AddOutgoingEdges(Rect sourceRect, Vertex node, bool allEdges = false, HashSet<Vertex> visibleVertices = null)
     {
         IEnumerable<Vertex> list = HideTransitiveEdges ? node.NonRedundantOutgoing : node.Outgoing;
-        var visibleVertices = filterMode != GraphFilterMode.None ? GetVerticesToDisplay().ToHashSet() : null;
+
+        if (!allEdges)
+        {
+            visibleVertices = filterMode != GraphFilterMode.None ? GetVerticesToDisplay().ToHashSet() : null;
+        }
+
+        var edgeBrush = allEdges ? allEdgesBrush : outgoingBrush;
+        var canvas = allEdges ? allEdgesCanvas : this.canvas;
 
         foreach (var outgoing in list)
         {
             // In filtering mode, only show edges to visible vertices
-            if (filterMode != GraphFilterMode.None && visibleVertices != null && !visibleVertices.Contains(outgoing))
+            if (visibleVertices != null && !visibleVertices.Contains(outgoing))
             {
                 continue;
             }
 
             if (GetControl(outgoing) is { } destinationControl)
             {
-                var destinationRect = GetRectOnCanvas(destinationControl);
-                AddLine(sourceRect, destinationRect, outgoingBrush);
-                AddRectangle(destinationRect, new SolidColorBrush(outgoingColor));
+                var destinationRect = GetRectOnCanvas(destinationControl, canvas);
+
+                AddLine(sourceRect, destinationRect, edgeBrush, canvas);
+                if (!allEdges)
+                {
+                    AddRectangle(destinationRect, outgoingSolidBrush);
+                }
             }
         }
     }
@@ -693,6 +751,7 @@ public class GraphControl
         selectedControls.Clear();
         controlFromVertex.Clear();
         canvas.Children.Clear();
+        allEdgesCanvas.Children.Clear();
         layersControl.Children.Clear();
     }
 
