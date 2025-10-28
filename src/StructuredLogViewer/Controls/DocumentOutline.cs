@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Linq;
 using System.Text;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using ICSharpCode.AvalonEdit;
+using ICSharpCode.AvalonEdit.Document;
+using ICSharpCode.AvalonEdit.Rendering;
 using Microsoft.Build.Logging.StructuredLogger;
 using StructuredLogViewer.Controls;
 
@@ -16,8 +19,13 @@ namespace StructuredLogViewer
 
         public event Action<Import> ImportSelected;
 
+        private ToolTip toolTip;
+        private TextViewerControl textViewerControl;
+
         public void Install(TextViewerControl textViewerControl)
         {
+            this.textViewerControl = textViewerControl;
+
             textViewerControl.EditorExtension = this;
             var textEditor = textViewerControl.TextEditor;
             var textArea = textEditor.TextArea;
@@ -39,19 +47,83 @@ namespace StructuredLogViewer
             };
         }
 
-        private void TryUpdateToolTipText(TextViewerControl textViewerControl, System.Windows.Point mousePosition)
-        {
-            var textPos = textViewerControl.TextEditor.GetPositionFromPoint(mousePosition);
-            textViewerControl.ToolTip ??= new ToolTip() { Placement = PlacementMode.Relative, PlacementTarget = textViewerControl.TextEditor };
-            ToolTip tooltip = textViewerControl.ToolTip as ToolTip;
+        private int lastQuickInfoStart;
+        private int lastQuickInfoEnd;
 
-            if (!textPos.HasValue || !this.TryGetWordAtPosition(textViewerControl, textPos.Value, out string type, out string title)
+        private void TryUpdateToolTipText(TextViewerControl textViewerControl, Point mousePosition)
+        {
+            var offset = GetOffsetFromMousePosition(mousePosition);
+
+            if (offset >= 0 && lastQuickInfoStart != -1 && lastQuickInfoEnd != -1)
+            {
+                if (offset >= lastQuickInfoStart && offset <= lastQuickInfoEnd)
+                {
+                    return;
+                }
+            }
+
+            if (offset == -1 || !this.TryGetWordAtPosition(
+                textViewerControl,
+                offset,
+                out int start,
+                out int end,
+                out string type,
+                out string title)
                 || string.IsNullOrEmpty(type) || string.IsNullOrEmpty(title))
+            {
+                lastQuickInfoStart = -1;
+                lastQuickInfoEnd = -1;
+                CloseToolTip();
+                return;
+            }
+
+            if (toolTip == null)
+            {
+                toolTip = new ToolTip
+                {
+                    Placement = PlacementMode.Relative,
+                    PlacementTarget = textViewerControl.TextEditor.TextArea.TextView,
+                    StaysOpen = true
+                };
+            }
+
+            lastQuickInfoStart = start;
+            lastQuickInfoEnd = end;
+
+            var contentText = GetToolTipText(type, title);
+
+            if (string.IsNullOrEmpty(contentText))
             {
                 CloseToolTip();
                 return;
             }
 
+            var textEditor = textViewerControl.TextEditor;
+            var textArea = textEditor.TextArea;
+            var textView = textArea.TextView;
+            var startLocation = textEditor.Document.GetLocation(start);
+            var point = textView.GetVisualPosition(
+                new TextViewPosition(startLocation), VisualYPosition.LineBottom);
+            toolTip.HorizontalOffset = point.X - textView.ScrollOffset.X;
+            toolTip.VerticalOffset = point.Y - textView.ScrollOffset.Y;
+            toolTip.Content = contentText;
+
+            if (!toolTip.IsOpen)
+            {
+                toolTip.IsOpen = true;
+            }
+
+            void CloseToolTip()
+            {
+                if (toolTip != null)
+                {
+                    toolTip.IsOpen = false;
+                }
+            }
+        }
+
+        private string GetToolTipText(string type, string title)
+        {
             StringBuilder content = new();
 
             if (type == "<PropertyGroup>")
@@ -106,37 +178,40 @@ namespace StructuredLogViewer
                 }
             }
 
-            if (content.Length == 0)
-            {
-                CloseToolTip();
-                return;
-            }
-
-            tooltip.HorizontalOffset = mousePosition.X;
-            tooltip.VerticalOffset = mousePosition.Y;
-            tooltip.Content = $"{content}";
-
-            if (!tooltip.IsOpen)
-            {
-                tooltip.IsOpen = true;
-            }
-
-            void CloseToolTip()
-            {
-                tooltip.IsOpen = false;
-                tooltip.Content = string.Empty;
-            }
+            var contentText = content.ToString();
+            return contentText;
         }
 
-        private bool TryGetWordAtPosition(TextViewerControl textViewerControl, TextViewPosition textPos, out string type, out string word)
+        private int GetOffsetFromMousePosition(Point mousePosition)
+        {
+            var textPos = textViewerControl.TextEditor.GetPositionFromPoint(mousePosition);
+            int offset = -1;
+            if (textPos.HasValue)
+            {
+                var position = textPos.Value;
+                var document = textViewerControl.TextEditor.Document;
+                offset = document.GetOffset(position.Line, position.Column);
+            }
+
+            return offset;
+        }
+
+        private bool TryGetWordAtPosition(
+            TextViewerControl textViewerControl,
+            int offset,
+            out int start,
+            out int end,
+            out string type,
+            out string word)
         {
             type = string.Empty;
             word = string.Empty;
+            start = -1;
+            end = -1;
 
             var document = textViewerControl.TextEditor.Document;
-            var offset = document.GetOffset(textPos.Line, textPos.Column);
-            int start = ICSharpCode.AvalonEdit.Document.TextUtilities.GetNextCaretPosition(document, offset + 1, System.Windows.Documents.LogicalDirection.Backward, ICSharpCode.AvalonEdit.Document.CaretPositioningMode.WordBorder);
-            int end = ICSharpCode.AvalonEdit.Document.TextUtilities.GetNextCaretPosition(document, offset, System.Windows.Documents.LogicalDirection.Forward, ICSharpCode.AvalonEdit.Document.CaretPositioningMode.WordBorder);
+            start = ICSharpCode.AvalonEdit.Document.TextUtilities.GetNextCaretPosition(document, offset + 1, System.Windows.Documents.LogicalDirection.Backward, ICSharpCode.AvalonEdit.Document.CaretPositioningMode.WordBorder);
+            end = ICSharpCode.AvalonEdit.Document.TextUtilities.GetNextCaretPosition(document, offset, System.Windows.Documents.LogicalDirection.Forward, ICSharpCode.AvalonEdit.Document.CaretPositioningMode.WordBorder);
 
             if (start == -1 || end == -1 || end <= start)
             {
