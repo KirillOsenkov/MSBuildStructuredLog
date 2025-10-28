@@ -179,12 +179,36 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public void OnTaskAdded(Task task)
         {
-            tasksById[task.Id] = task;
+            int id = task.Id;
+
+            // It can happen that a ProjectStarted event arrives before the TaskStarted for the parent
+            // MSBuild task. If we're the real MSBuild task, reparent those temporarily orphaned
+            // projects under this real (presumably MSBuild) task.
+            if (tasksById.TryGetValue(id, out var placeholder))
+            {
+                if (placeholder.HasChildren)
+                {
+                    foreach (var child in placeholder.Children)
+                    {
+                        child.Parent = null;
+                        task.AddChild(child);
+                    }
+                }
+            }
+
+            tasksById[id] = task;
         }
 
         public Task GetTaskById(int id)
         {
-            tasksById.TryGetValue(id, out var task);
+            if (!tasksById.TryGetValue(id, out var task))
+            {
+                // The MSBuild task that caused this project to build hasn't arrived yet.
+                // Temporarily parent under a placeholder.
+                task = new PlaceholderTask { Id = id };
+                tasksById[id] = task;
+            }
+
             return task;
         }
 

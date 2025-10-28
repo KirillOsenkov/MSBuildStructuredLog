@@ -27,6 +27,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
     }
 
+    /// <summary>
+    /// Used temporarily to parent projects to some task if the ProjectStarted event
+    /// arrives before the TaskStarted of the parent MSBuild task
+    /// </summary>
+    internal class PlaceholderTask : Task
+    {
+    }
+
     public class MSBuildTask : Task
     {
         //public override string TypeName => nameof(MSBuildTask);
