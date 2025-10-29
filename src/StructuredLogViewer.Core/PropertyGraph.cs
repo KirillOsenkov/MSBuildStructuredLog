@@ -46,7 +46,7 @@ public class PropertyGraph
         var text = PreprocessedFileManager.SourceFileResolver.GetSourceFileText(evaluation.ProjectFile);
         var propertyNames = new HashSet<string>(properties, StringComparer.OrdinalIgnoreCase);
 
-        if (Visit(resultFolder, text, importsFolder.Children.OfType<Import>(), propertyNames))
+        if (Visit(evaluation.ProjectFile, resultFolder, text, importsFolder.Children.OfType<Import>(), propertyNames))
         {
             return new SearchResult(resultFolder);
         }
@@ -54,7 +54,7 @@ public class PropertyGraph
         return null;
     }
 
-    private bool Visit(TreeNode resultParent, SourceText text, IEnumerable<Import> imports, HashSet<string> propertyNames)
+    private bool Visit(string filePath, TreeNode resultParent, SourceText text, IEnumerable<Import> imports, HashSet<string> propertyNames)
     {
         bool foundResults = false;
 
@@ -74,7 +74,7 @@ public class PropertyGraph
                 IsExpanded = true
             };
             var importText = PreprocessedFileManager.SourceFileResolver.GetSourceFileText(importBefore.ImportedProjectFilePath);
-            bool nestedFound = Visit(resultImport, importText, importBefore.Children.OfType<Import>(), propertyNames);
+            bool nestedFound = Visit(importBefore.ImportedProjectFilePath, resultImport, importText, importBefore.Children.OfType<Import>(), propertyNames);
             if (nestedFound)
             {
                 resultParent.AddChild(resultImport);
@@ -104,7 +104,12 @@ public class PropertyGraph
                 IsExpanded = true
             };
             var importText = PreprocessedFileManager.SourceFileResolver.GetSourceFileText(importAfter.ImportedProjectFilePath);
-            bool nestedFound = Visit(resultImport, importText, importAfter.Children.OfType<Import>(), propertyNames);
+            bool nestedFound = Visit(
+                importAfter.ImportedProjectFilePath,
+                resultImport,
+                importText,
+                importAfter.Children.OfType<Import>(),
+                propertyNames);
             if (nestedFound)
             {
                 resultParent.AddChild(resultImport);
@@ -129,6 +134,7 @@ public class PropertyGraph
 
                             var sourceTextLineResult = new SourceFileLine
                             {
+                                SourceFilePath = filePath,
                                 LineText = text.GetText(((SyntaxNode)propertyElement).Span),
                                 LineNumber = startLine
                             };
@@ -170,7 +176,12 @@ public class PropertyGraph
                                 IsExpanded = true
                             };
                             var importText = PreprocessedFileManager.SourceFileResolver.GetSourceFileText(importNode.ImportedProjectFilePath);
-                            var nestedFound = Visit(resultImport, importText, importNode.Children.OfType<Import>(), propertyNames);
+                            var nestedFound = Visit(
+                                importNode.ImportedProjectFilePath,
+                                resultImport,
+                                importText,
+                                importNode.Children.OfType<Import>(),
+                                propertyNames);
                             if (nestedFound)
                             {
                                 resultParent.AddChild(resultImport);

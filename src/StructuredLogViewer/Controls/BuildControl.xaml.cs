@@ -1183,6 +1183,7 @@ Recent (");
                     {
                         var sourceFileLine = new SourceFileLine()
                         {
+                            SourceFilePath = file.Item1,
                             LineNumber = line.Item1 + 1,
                             LineText = line.Item2
                         };
