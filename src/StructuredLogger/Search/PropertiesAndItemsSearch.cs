@@ -59,8 +59,13 @@ namespace StructuredLogViewer
                 CollectStrings(root, strings);
             }
 
-            var search = new Search(roots, strings.Instances, maxResults, markResultsInTree);
-            var results = search.FindNodes(searchText, cancellationToken);
+            IEnumerable<SearchResult> results = CollectResults(
+                searchText,
+                maxResults,
+                markResultsInTree,
+                roots,
+                strings,
+                cancellationToken);
 
             // When they're searching for $additem Foo, add the contents of the $additem folder
             // to search results, because this is what they likely want
@@ -123,6 +128,45 @@ namespace StructuredLogViewer
                 results = results.Concat(executionResults).ToArray();
             }
 
+            return results;
+        }
+
+        private static IEnumerable<SearchResult> CollectResults(
+            string searchText,
+            int maxResults,
+            bool markResultsInTree,
+            List<TreeNode> roots,
+            StringCache strings,
+            CancellationToken cancellationToken)
+        {
+            var matcher = new NodeQueryMatcher(searchText);
+            if (matcher.TypeKeyword == "property" &&
+                matcher.Terms.Count > 1 &&
+                matcher.NameTermIndex == -1 &&
+                matcher.ValueTermIndex == -1)
+            {
+                var list = new List<SearchResult>();
+
+                foreach (var term in matcher.Terms)
+                {
+                    var nested = CollectResults(
+                        $"$property {term.GetText()}",
+                        maxResults,
+                        markResultsInTree,
+                        roots,
+                        strings,
+                        cancellationToken);
+                    if (nested != null)
+                    {
+                        list.AddRange(nested);
+                    }
+                }
+
+                return list;
+            }
+
+            var search = new Search(roots, strings.Instances, maxResults, markResultsInTree);
+            var results = search.FindNodes(searchText, cancellationToken);
             return results;
         }
 

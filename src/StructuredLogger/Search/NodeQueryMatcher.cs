@@ -89,6 +89,18 @@ namespace StructuredLogViewer
         public static bool operator ==(Term left, Term right) => left.Equals(right);
         public static bool operator !=(Term left, Term right) => !left.Equals(right);
 
+        public string GetText()
+        {
+            var text = Word;
+
+            if (Quotes)
+            {
+                text = $"\"{text}\"";
+            }
+
+            return text;
+        }
+
         public override string ToString()
         {
             return $"'{Word}' Quotes={Quotes}";
