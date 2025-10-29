@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Language.Xml;
 
@@ -39,6 +40,23 @@ namespace StructuredLogViewer
                 }
 
                 return xmlRoot;
+            }
+        }
+
+        public IXmlElement RootElement
+        {
+            get
+            {
+                var root = XmlRoot.Root;
+
+                // work around a bug in Xml Parser where a virtual parent is created around the root element
+                // when the root element is preceded by trivia (comment)
+                if (root.Name == null && root.Elements.FirstOrDefault() is IXmlElement firstElement && firstElement.Name == "Project")
+                {
+                    root = firstElement;
+                }
+
+                return root;
             }
         }
 
@@ -84,6 +102,16 @@ namespace StructuredLogViewer
             return Text.Substring(line.Start, end - line.Start + 1);
         }
 
+        public string GetText(TextSpan span)
+        {
+            return Text.Substring(span.Start, span.Length);
+        }
+
+        public string GetText(int start, int length)
+        {
+            return Text.Substring(start, length);
+        }
+
         public int GetLineNumberFromPosition(int startPosition)
         {
             for (int i = 0; i < Lines.Count; i++)
@@ -100,6 +128,21 @@ namespace StructuredLogViewer
         public override string ToString()
         {
             return Text;
+        }
+
+
+        public int GetPosition(int lineNumber1Based, int columnNumber1Based)
+        {
+            if (lineNumber1Based >= 1 && lineNumber1Based <= Lines.Count)
+            {
+                var line = Lines[lineNumber1Based - 1];
+                if (columnNumber1Based <= line.Length)
+                {
+                    return line.Start + columnNumber1Based - 1;
+                }
+            }
+
+            return -1;
         }
     }
 }

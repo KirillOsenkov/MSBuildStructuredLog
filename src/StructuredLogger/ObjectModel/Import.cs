@@ -1,4 +1,6 @@
-﻿namespace Microsoft.Build.Logging.StructuredLogger
+﻿using System;
+
+namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class Import : TextNode, IHasRelevance, IPreprocessable, IHasSourceFile, IHasLineNumber
     {
@@ -26,6 +28,18 @@
         }
 
         public string Location => $" at ({Line};{Column})";
+
+        public static bool IsImportBefore(string path)
+        {
+            return path.EndsWith("Sdk.props", StringComparison.OrdinalIgnoreCase) ||
+                   path.EndsWith(".ImportBefore.targets", StringComparison.OrdinalIgnoreCase);
+        }
+
+        public static bool IsImportAfter(string path)
+        {
+            return path.EndsWith("Sdk.targets", StringComparison.OrdinalIgnoreCase) ||
+                   path.EndsWith(".ImportAfter.targets", StringComparison.OrdinalIgnoreCase);
+        }
 
         public override string TypeName => nameof(Import);
 

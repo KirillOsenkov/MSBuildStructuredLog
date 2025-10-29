@@ -418,6 +418,8 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             preprocessedFileManager.DisplayFile += filePath => DisplayFile(filePath);
             Build.TextProvider = evaluation => preprocessedFileManager.GetPreprocessedText(evaluation);
 
+            var propertyGraph = new PropertyGraph(preprocessedFileManager, propertiesAndItemsSearch);
+
             navigationHelper = new NavigationHelper(Build, sourceFileResolver);
             navigationHelper.OpenFileRequested += filePath => DisplayFile(filePath);
 
@@ -2764,17 +2766,10 @@ Recent (");
                 return false;
             }
 
-            var xml = text.XmlRoot.Root;
-            IXmlElement root = xml;
+            IXmlElement root = text.RootElement;
+
             int startPosition = 0;
             int line = 0;
-
-            // work around a bug in Xml Parser where a virtual parent is created around the root element
-            // when the root element is preceded by trivia (comment)
-            if (root.Name == null && root.Elements.FirstOrDefault() is IXmlElement firstElement && firstElement.Name == "Project")
-            {
-                root = firstElement;
-            }
 
             foreach (var element in root.Elements)
             {

@@ -8,6 +8,8 @@ namespace StructuredLogViewer
 {
     public class PropertiesAndItemsSearch
     {
+        public event Func<ProjectEvaluation, IEnumerable<SearchResult>, IEnumerable<SearchResult>> AugmentResults;
+
         public IEnumerable<SearchResult> Search(
             TimedNode context,
             string searchText,
@@ -18,6 +20,8 @@ namespace StructuredLogViewer
             var roots = new List<TreeNode>();
 
             Build build = context.GetRoot() as Build;
+
+            ProjectEvaluation evaluation = ((IProjectOrEvaluation)context).GetEvaluation(build);
 
             Project project = context as Project;
 
@@ -126,6 +130,11 @@ namespace StructuredLogViewer
                      r.Node is RemoveItem)
                      && !nodesSoFar.Contains(r.Node));
                 results = results.Concat(executionResults).ToArray();
+            }
+
+            if (AugmentResults != null)
+            {
+                results = AugmentResults(evaluation, results);
             }
 
             return results;

@@ -16,6 +16,8 @@ namespace StructuredLogViewer
         private readonly Dictionary<string, string> preprocessedFileCache = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, PreprocessContext> preprocessContexts = new Dictionary<string, PreprocessContext>(StringComparer.OrdinalIgnoreCase);
 
+        public SourceFileResolver SourceFileResolver => sourceFileResolver;
+
         public PreprocessedFileManager(Build build, SourceFileResolver sourceFileResolver)
         {
             this.build = build;
@@ -332,14 +334,12 @@ namespace StructuredLogViewer
                 bool noLocation = import.Line == 0 && import.Column == 0;
                 if (noLocation)
                 {
-                    if (projectPath.EndsWith("Sdk.props", StringComparison.OrdinalIgnoreCase) ||
-                        projectPath.EndsWith(".ImportBefore.targets", StringComparison.OrdinalIgnoreCase))
+                    if (Import.IsImportBefore(projectPath))
                     {
                         importsBefore.Add(import);
                         importsList.Remove(import);
                     }
-                    else if (projectPath.EndsWith("Sdk.targets", StringComparison.OrdinalIgnoreCase) ||
-                        projectPath.EndsWith(".ImportAfter.targets", StringComparison.OrdinalIgnoreCase))
+                    else if (Import.IsImportAfter(projectPath))
                     {
                         importsAfter.Add(import);
                         importsList.Remove(import);
