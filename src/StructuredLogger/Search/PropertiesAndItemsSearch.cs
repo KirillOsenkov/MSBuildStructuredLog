@@ -77,7 +77,7 @@ namespace StructuredLogViewer
             foreach (var result in results)
             {
                 var node = result.Node;
-                if (node is not Folder itemType)
+                if (node is not AddOrRemoveItem)
                 {
                     otherResults.Add(result);
                     foreach (var ancestor in node.GetParentChainExcludingThis())
@@ -90,7 +90,7 @@ namespace StructuredLogViewer
             var includeFolderChildren = new List<BaseNode>();
 
             // Iterate over all folders where no other results are under that folder.
-            foreach (var folder in results.Select(r => r.Node).OfType<Folder>().Where(f => !allAncestors.Contains(f)))
+            foreach (var folder in results.Select(r => r.Node).OfType<AddOrRemoveItem>().Where(f => !allAncestors.Contains(f)))
             {
                 foreach (var item in folder.Children.OfType<Item>())
                 {

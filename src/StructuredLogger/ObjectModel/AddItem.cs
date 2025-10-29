@@ -1,6 +1,6 @@
 ﻿namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class AddItem : NamedNode, IHasLineNumber
+    public class AddItem : AddOrRemoveItem, IHasLineNumber
     {
         public AddItem()
         {
@@ -10,6 +10,10 @@
         public override string TypeName => nameof(AddItem);
 
         public int? LineNumber { get; set; }
+    }
+
+    public class AddOrRemoveItem : NamedNode
+    {
     }
 
     public class TaskParameterItem : AddItem

@@ -1,6 +1,6 @@
 ﻿namespace Microsoft.Build.Logging.StructuredLogger
 {
-    public class RemoveItem : NamedNode, IHasLineNumber
+    public class RemoveItem : AddOrRemoveItem, IHasLineNumber
     {
         public RemoveItem()
         {
