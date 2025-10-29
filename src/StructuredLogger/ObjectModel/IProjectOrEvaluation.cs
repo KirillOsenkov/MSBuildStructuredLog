@@ -14,15 +14,27 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
     public static class ProjectOrEvaluationHelper
     {
-        public static ProjectEvaluation GetEvaluation(this IProjectOrEvaluation projectOrEvaluation, Build build)
+        public static ProjectEvaluation GetEvaluation(this IProjectOrEvaluation projectOrEvaluation, Build build = null)
         {
             if (projectOrEvaluation is ProjectEvaluation evaluation)
             {
                 return evaluation;
             }
 
-            if (projectOrEvaluation is Project project && (evaluation = build.FindEvaluation(project.EvaluationId)) != null)
+            if (projectOrEvaluation is Project project)
             {
+                evaluation = null;
+
+                if (build == null)
+                {
+                    build = project.GetRoot() as Build;
+                }
+
+                if (build != null)
+                {
+                    evaluation = build.FindEvaluation(project.EvaluationId);
+                }
+
                 return evaluation;
             }
 
