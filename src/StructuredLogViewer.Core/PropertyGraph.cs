@@ -54,7 +54,12 @@ public class PropertyGraph
         return null;
     }
 
-    private bool Visit(string filePath, TreeNode resultParent, SourceText text, IEnumerable<Import> imports, HashSet<string> propertyNames)
+    private bool Visit(
+        string filePath,
+        TreeNode resultParent,
+        SourceText text,
+        IEnumerable<Import> imports,
+        HashSet<string> propertyNames)
     {
         bool foundResults = false;
 
@@ -125,13 +130,48 @@ public class PropertyGraph
 
                 if (name == "PropertyGroup")
                 {
+                    var condition = GetParsedCondition(element, text, filePath);
+                    if (condition != null)
+                    {
+                        if (condition.PropertyNames.Overlaps(propertyNames))
+                        {
+                            var sourceTextLineResult = new SourceFileLine
+                            {
+                                SourceFilePath = filePath,
+                                LineText = condition.Text,
+                                LineNumber = condition.Line
+                            };
+                            resultParent.AddChild(sourceTextLineResult);
+                            foundResults = true;
+                        }
+                    }
+
                     foreach (var propertyElement in element.Elements)
                     {
                         string propertyName = propertyElement.Name;
+                        var startLine = text.GetLineNumberFromPosition(((SyntaxNode)propertyElement).SpanStart) + 1;
+                        if (propertyName == "IntermediateOutputPath")
+                        {
+                        }
+
+                        var propertyCondition = GetParsedCondition(propertyElement, text, filePath);
+                        if (propertyCondition != null)
+                        {
+                            if (propertyCondition.PropertyNames.Overlaps(propertyNames))
+                            {
+                                var sourceTextLineResult = new SourceFileLine
+                                {
+                                    SourceFilePath = filePath,
+                                    LineText = propertyCondition.Text,
+                                    LineNumber = propertyCondition.Line
+                                };
+                                resultParent.AddChild(sourceTextLineResult);
+                                foundResults = true;
+                            }
+                        }
+
                         if (propertyNames.Contains(propertyName))
                         {
-                            var startLine = text.GetLineNumberFromPosition(((SyntaxNode)propertyElement).SpanStart) + 1;
-
                             var sourceTextLineResult = new SourceFileLine
                             {
                                 SourceFilePath = filePath,
@@ -140,6 +180,23 @@ public class PropertyGraph
                             };
                             resultParent.AddChild(sourceTextLineResult);
                             foundResults = true;
+                        }
+
+                        var value = propertyElement.Value;
+                        var parsedValue = GetParsedValue(propertyElement, text, filePath);
+                        if (parsedValue != null)
+                        {
+                            if (parsedValue.PropertyNames.Overlaps(propertyNames))
+                            {
+                                var sourceTextLineResult = new SourceFileLine
+                                {
+                                    SourceFilePath = filePath,
+                                    LineText = parsedValue.Text,
+                                    LineNumber = parsedValue.Line
+                                };
+                                resultParent.AddChild(sourceTextLineResult);
+                                foundResults = true;
+                            }
                         }
                     }
                 }
@@ -196,5 +253,64 @@ public class PropertyGraph
         }
 
         return foundResults;
+    }
+
+    private static ParsedExpression GetParsedValue(IXmlElement element, SourceText text, string filePath)
+    {
+        var syntax = element.AsSyntaxElement;
+        if (string.IsNullOrWhiteSpace(element.Value))
+        {
+            return null;
+        }
+
+        if (syntax.Content.Count == 1 && syntax.Content[0] is XmlTextSyntax textSyntax)
+        {
+            var parsed = ParsedExpression.Parse(textSyntax.Value);
+            parsed.FilePath = filePath;
+            var lineAndColumn = text.GetLineAndColumn1Based(textSyntax.SpanStart);
+            parsed.Line = lineAndColumn.Line;
+            parsed.Column = lineAndColumn.Column;
+            return parsed;
+        }
+
+        return null;
+    }
+
+    private static ParsedExpression GetParsedCondition(IXmlElement element, SourceText text, string filePath)
+    {
+        var conditionAttribute = GetConditionAttribute(element);
+        if (conditionAttribute != null)
+        {
+            var parsed = ParsedExpression.Parse(conditionAttribute.Value);
+            if (parsed != null)
+            {
+                parsed.FilePath = filePath;
+                var lineAndColumn = text.GetLineAndColumn1Based(conditionAttribute.SpanStart);
+                parsed.Line = lineAndColumn.Line;
+                parsed.Column = lineAndColumn.Column;
+                return parsed;
+            }
+        }
+
+        return null;
+    }
+
+    private static XmlAttributeSyntax GetConditionAttribute(IXmlElement element)
+    {
+        if (element == null || element.Attributes == null)
+        {
+            return null;
+        }
+
+        var syntax = element.AsSyntaxElement;
+        foreach (var attribute in syntax.Attributes)
+        {
+            if (attribute.Name == "Condition")
+            {
+                return attribute;
+            }
+        }
+
+        return null;
     }
 }

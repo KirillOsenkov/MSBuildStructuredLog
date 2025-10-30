@@ -125,11 +125,18 @@ namespace StructuredLogViewer
             return 0;
         }
 
+        public (int Line, int Column) GetLineAndColumn1Based(int position)
+        {
+            var lineNumber = GetLineNumberFromPosition(position);
+            var column = position - Lines[lineNumber].Start + 1;
+            var line = lineNumber + 1;
+            return (line, column);
+        }
+
         public override string ToString()
         {
             return Text;
         }
-
 
         public int GetPosition(int lineNumber1Based, int columnNumber1Based)
         {
