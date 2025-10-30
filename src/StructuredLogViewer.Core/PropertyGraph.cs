@@ -206,6 +206,22 @@ public class PropertyGraph
                 }
                 else if (name == "When")
                 {
+                    var condition = GetParsedCondition(element, text, filePath);
+                    if (condition != null)
+                    {
+                        if (condition.PropertyNames.Overlaps(propertyNames))
+                        {
+                            var sourceTextLineResult = new SourceFileLine
+                            {
+                                SourceFilePath = filePath,
+                                LineText = condition.Text,
+                                LineNumber = condition.Line
+                            };
+                            resultParent.AddChild(sourceTextLineResult);
+                            foundResults = true;
+                        }
+                    }
+
                     VisitElement(element);
                 }
                 else if (name == "Otherwise")
@@ -214,10 +230,42 @@ public class PropertyGraph
                 }
                 else if (name == "ImportGroup")
                 {
+                    var condition = GetParsedCondition(element, text, filePath);
+                    if (condition != null)
+                    {
+                        if (condition.PropertyNames.Overlaps(propertyNames))
+                        {
+                            var sourceTextLineResult = new SourceFileLine
+                            {
+                                SourceFilePath = filePath,
+                                LineText = condition.Text,
+                                LineNumber = condition.Line
+                            };
+                            resultParent.AddChild(sourceTextLineResult);
+                            foundResults = true;
+                        }
+                    }
+
                     VisitElement(element);
                 }
                 else if (name == "Import")
                 {
+                    var condition = GetParsedCondition(element, text, filePath);
+                    if (condition != null)
+                    {
+                        if (condition.PropertyNames.Overlaps(propertyNames))
+                        {
+                            var sourceTextLineResult = new SourceFileLine
+                            {
+                                SourceFilePath = filePath,
+                                LineText = condition.Text,
+                                LineNumber = condition.Line
+                            };
+                            resultParent.AddChild(sourceTextLineResult);
+                            foundResults = true;
+                        }
+                    }
+
                     for (int i = 0; i < importPositions.Count; i++)
                     {
                         var importNode = importArray[i];
