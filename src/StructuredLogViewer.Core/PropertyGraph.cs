@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.Language.Xml;
 using StructuredLogViewer;
@@ -54,6 +55,14 @@ public class PropertyGraph
         return null;
     }
 
+    private class PropertyUsage
+    {
+        public string Name;
+        public int Position;
+        public int RelativePosition;
+        public bool IsWrite;
+    }
+
     private bool Visit(
         string filePath,
         TreeNode resultParent,
@@ -76,7 +85,8 @@ public class PropertyGraph
                 importBefore.Line,
                 importBefore.Column)
             {
-                IsExpanded = true
+                IsExpanded = true,
+                Text = Path.GetFileName(importBefore.ImportedProjectFilePath)
             };
             var importText = PreprocessedFileManager.SourceFileResolver.GetSourceFileText(importBefore.ImportedProjectFilePath);
             bool nestedFound = Visit(importBefore.ImportedProjectFilePath, resultImport, importText, importBefore.Children.OfType<Import>(), propertyNames);
@@ -106,7 +116,8 @@ public class PropertyGraph
                 importAfter.Line,
                 importAfter.Column)
             {
-                IsExpanded = true
+                IsExpanded = true,
+                Text = Path.GetFileName(importAfter.ImportedProjectFilePath)
             };
             var importText = PreprocessedFileManager.SourceFileResolver.GetSourceFileText(importAfter.ImportedProjectFilePath);
             bool nestedFound = Visit(
@@ -135,13 +146,11 @@ public class PropertyGraph
                     {
                         if (condition.PropertyNames.Overlaps(propertyNames))
                         {
-                            var sourceTextLineResult = new SourceFileLine
-                            {
-                                SourceFilePath = filePath,
-                                LineText = condition.Text,
-                                LineNumber = condition.Line
-                            };
-                            resultParent.AddChild(sourceTextLineResult);
+                            var sourceTextLineResult = GetOrAddLine(
+                                resultParent,
+                                filePath,
+                                condition.Line,
+                                condition.Text);
                             foundResults = true;
                         }
                     }
@@ -150,35 +159,30 @@ public class PropertyGraph
                     {
                         string propertyName = propertyElement.Name;
                         var startLine = text.GetLineNumberFromPosition(((SyntaxNode)propertyElement).SpanStart) + 1;
-                        if (propertyName == "IntermediateOutputPath")
-                        {
-                        }
+                        bool shouldIncludeProperty = false;
+                        List<PropertyUsage> usages = new();
 
                         var propertyCondition = GetParsedCondition(propertyElement, text, filePath);
                         if (propertyCondition != null)
                         {
                             if (propertyCondition.PropertyNames.Overlaps(propertyNames))
                             {
-                                var sourceTextLineResult = new SourceFileLine
-                                {
-                                    SourceFilePath = filePath,
-                                    LineText = propertyCondition.Text,
-                                    LineNumber = propertyCondition.Line
-                                };
-                                resultParent.AddChild(sourceTextLineResult);
-                                foundResults = true;
+                                var sourceTextLineResult = GetOrAddLine(
+                                    resultParent,
+                                    filePath,
+                                    propertyCondition.Line,
+                                    propertyCondition.Text);
+                                shouldIncludeProperty = true;
                             }
                         }
 
                         if (propertyNames.Contains(propertyName))
                         {
-                            var sourceTextLineResult = new SourceFileLine
-                            {
-                                SourceFilePath = filePath,
-                                LineText = text.GetText(((SyntaxNode)propertyElement).Span),
-                                LineNumber = startLine
-                            };
-                            resultParent.AddChild(sourceTextLineResult);
+                            var sourceTextLineResult = GetOrAddLine(
+                                resultParent,
+                                filePath,
+                                startLine,
+                                text.GetText(((SyntaxNode)propertyElement).Span));
                             foundResults = true;
                         }
 
@@ -188,15 +192,19 @@ public class PropertyGraph
                         {
                             if (parsedValue.PropertyNames.Overlaps(propertyNames))
                             {
-                                var sourceTextLineResult = new SourceFileLine
-                                {
-                                    SourceFilePath = filePath,
-                                    LineText = parsedValue.Text,
-                                    LineNumber = parsedValue.Line
-                                };
-                                resultParent.AddChild(sourceTextLineResult);
+                                var sourceTextLineResult = GetOrAddLine(
+                                    resultParent,
+                                    filePath,
+                                    parsedValue.Line,
+                                    parsedValue.Text);
                                 foundResults = true;
                             }
+                        }
+
+                        if (shouldIncludeProperty)
+                        {
+                            foundResults = true;
+
                         }
                     }
                 }
@@ -211,13 +219,11 @@ public class PropertyGraph
                     {
                         if (condition.PropertyNames.Overlaps(propertyNames))
                         {
-                            var sourceTextLineResult = new SourceFileLine
-                            {
-                                SourceFilePath = filePath,
-                                LineText = condition.Text,
-                                LineNumber = condition.Line
-                            };
-                            resultParent.AddChild(sourceTextLineResult);
+                            var sourceTextLineResult = GetOrAddLine(
+                                resultParent,
+                                filePath,
+                                condition.Line,
+                                condition.Text);
                             foundResults = true;
                         }
                     }
@@ -235,13 +241,11 @@ public class PropertyGraph
                     {
                         if (condition.PropertyNames.Overlaps(propertyNames))
                         {
-                            var sourceTextLineResult = new SourceFileLine
-                            {
-                                SourceFilePath = filePath,
-                                LineText = condition.Text,
-                                LineNumber = condition.Line
-                            };
-                            resultParent.AddChild(sourceTextLineResult);
+                            var sourceTextLineResult = GetOrAddLine(
+                                resultParent,
+                                filePath,
+                                condition.Line,
+                                condition.Text);
                             foundResults = true;
                         }
                     }
@@ -255,13 +259,11 @@ public class PropertyGraph
                     {
                         if (condition.PropertyNames.Overlaps(propertyNames))
                         {
-                            var sourceTextLineResult = new SourceFileLine
-                            {
-                                SourceFilePath = filePath,
-                                LineText = condition.Text,
-                                LineNumber = condition.Line
-                            };
-                            resultParent.AddChild(sourceTextLineResult);
+                            var sourceTextLineResult = GetOrAddLine(
+                                resultParent,
+                                filePath,
+                                condition.Line,
+                                condition.Text);
                             foundResults = true;
                         }
                     }
@@ -278,7 +280,8 @@ public class PropertyGraph
                                 importNode.Line,
                                 importNode.Column)
                             {
-                                IsExpanded = true
+                                IsExpanded = true,
+                                Text = Path.GetFileName(importNode.ImportedProjectFilePath)
                             };
                             var importText = PreprocessedFileManager.SourceFileResolver.GetSourceFileText(importNode.ImportedProjectFilePath);
                             var nestedFound = Visit(
@@ -301,6 +304,33 @@ public class PropertyGraph
         }
 
         return foundResults;
+    }
+
+    private SourceFileLineWithHighlights GetOrAddLine(
+        TreeNode parent,
+        string filePath,
+        int lineNumber,
+        string lineText)
+    {
+        foreach (var child in parent.Children.OfType<SourceFileLineWithHighlights>())
+        {
+            if (string.Equals(child.SourceFilePath, filePath, StringComparison.OrdinalIgnoreCase) &&
+                child.LineNumber == lineNumber &&
+                child.LineText == lineText)
+            {
+                return child;
+            }
+        }
+
+        var sourceTextLineResult = new SourceFileLineWithHighlights
+        {
+            SourceFilePath = filePath,
+            LineText = lineText,
+            LineNumber = lineNumber
+        };
+        parent.AddChild(sourceTextLineResult);
+
+        return sourceTextLineResult;
     }
 
     private static ParsedExpression GetParsedValue(IXmlElement element, SourceText text, string filePath)
