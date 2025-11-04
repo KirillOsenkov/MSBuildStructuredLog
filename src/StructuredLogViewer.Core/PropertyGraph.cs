@@ -136,13 +136,21 @@ public class PropertyGraph
                     var condition = GetParsedCondition(element, text, filePath);
                     if (condition != null)
                     {
-                        if (condition.PropertyNames.Overlaps(propertyNames))
+                        if (condition.PropertyNames.Overlaps(propertyNames) && element is XmlElementSyntax xmlElement)
                         {
                             var sourceTextLineResult = GetOrAddLine(
                                 resultParent,
                                 filePath,
-                                condition.Line,
-                                condition.Text);
+                                text,
+                                xmlElement.StartTag);
+                            List<PropertyUsage> usages = new();
+                            AddUsages(condition, usages);
+                            foreach (var usage in usages)
+                            {
+                                usage.Position = usage.Position - xmlElement.StartTag.SpanStart;
+                                sourceTextLineResult.AddUsage(usage);
+                            }
+
                             foundResults = true;
                         }
                     }
@@ -312,6 +320,17 @@ public class PropertyGraph
         }
 
         return foundResults;
+    }
+
+    private SourceFileLineWithHighlights GetOrAddLine(
+        TreeNode parent,
+        string filePath,
+        SourceText text,
+        SyntaxNode node)
+    {
+        var startLine = text.GetLineNumberFromPosition(node.Span.Start) + 1;
+        var lineText = text.GetText(node.Span);
+        return GetOrAddLine(parent, filePath, startLine, lineText);
     }
 
     private SourceFileLineWithHighlights GetOrAddLine(
