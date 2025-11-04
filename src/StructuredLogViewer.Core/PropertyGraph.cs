@@ -19,7 +19,7 @@ public class PropertyGraph
 
     private IEnumerable<SearchResult> Search_AugmentResults(ProjectEvaluation evaluation, IEnumerable<SearchResult> results)
     {
-        if (results.All(r => r.Node is Property))
+        if (results.All(r => r.Node is Property) && results.Count() < 10)
         {
             var names = results.Select(r => ((Property)r.Node).Name).ToArray();
 
@@ -53,14 +53,6 @@ public class PropertyGraph
         }
 
         return null;
-    }
-
-    private class PropertyUsage
-    {
-        public string Name;
-        public int Position;
-        public int RelativePosition;
-        public bool IsWrite;
     }
 
     private bool Visit(
@@ -158,53 +150,43 @@ public class PropertyGraph
                     foreach (var propertyElement in element.Elements)
                     {
                         string propertyName = propertyElement.Name;
-                        var startLine = text.GetLineNumberFromPosition(((SyntaxNode)propertyElement).SpanStart) + 1;
-                        bool shouldIncludeProperty = false;
+                        var propertyNode = (SyntaxNode)propertyElement;
+                        var propertySpan = propertyNode.Span;
+                        var propertyStart = propertySpan.Start;
+                        var startLine = text.GetLineNumberFromPosition(propertyStart) + 1;
                         List<PropertyUsage> usages = new();
 
                         var propertyCondition = GetParsedCondition(propertyElement, text, filePath);
-                        if (propertyCondition != null)
-                        {
-                            if (propertyCondition.PropertyNames.Overlaps(propertyNames))
-                            {
-                                var sourceTextLineResult = GetOrAddLine(
-                                    resultParent,
-                                    filePath,
-                                    propertyCondition.Line,
-                                    propertyCondition.Text);
-                                shouldIncludeProperty = true;
-                            }
-                        }
+                        AddUsages(propertyCondition, usages);
 
                         if (propertyNames.Contains(propertyName))
                         {
-                            var sourceTextLineResult = GetOrAddLine(
-                                resultParent,
-                                filePath,
-                                startLine,
-                                text.GetText(((SyntaxNode)propertyElement).Span));
-                            foundResults = true;
+                            var usage = new PropertyUsage
+                            {
+                                Name = propertyName,
+                                Position = propertyElement.AsSyntaxElement.NameNode.SpanStart,
+                                IsWrite = true
+                            };
+                            usages.Add(usage);
                         }
 
                         var value = propertyElement.Value;
                         var parsedValue = GetParsedValue(propertyElement, text, filePath);
-                        if (parsedValue != null)
-                        {
-                            if (parsedValue.PropertyNames.Overlaps(propertyNames))
-                            {
-                                var sourceTextLineResult = GetOrAddLine(
-                                    resultParent,
-                                    filePath,
-                                    parsedValue.Line,
-                                    parsedValue.Text);
-                                foundResults = true;
-                            }
-                        }
+                        AddUsages(parsedValue, usages);
 
-                        if (shouldIncludeProperty)
+                        if (usages.Count > 0)
                         {
                             foundResults = true;
-
+                            var sourceTextLineResult = GetOrAddLine(
+                                resultParent,
+                                filePath,
+                                startLine,
+                                text.GetText(propertySpan));
+                            foreach (var usage in usages)
+                            {
+                                usage.Position = usage.Position - propertyStart;
+                                sourceTextLineResult.AddUsage(usage);
+                            }
                         }
                     }
                 }
@@ -303,6 +285,32 @@ public class PropertyGraph
             }
         }
 
+        void AddUsages(ParsedExpression expression, List<PropertyUsage> usages)
+        {
+            if (expression == null)
+            {
+                return;
+            }
+
+            int conditionStart = expression.Position;
+            foreach (var occurrence in expression.PropertyReads)
+            {
+                var occurrenceStart = conditionStart + occurrence.Start;
+                var occurrenceText = expression.Text.Substring(occurrence.Start, occurrence.Length);
+                if (!propertyNames.Contains(occurrenceText))
+                {
+                    continue;
+                }
+
+                var usage = new PropertyUsage
+                {
+                    Name = occurrenceText,
+                    Position = occurrenceStart
+                };
+                usages.Add(usage);
+            }
+        }
+
         return foundResults;
     }
 
@@ -348,6 +356,7 @@ public class PropertyGraph
             var lineAndColumn = text.GetLineAndColumn1Based(textSyntax.SpanStart);
             parsed.Line = lineAndColumn.Line;
             parsed.Column = lineAndColumn.Column;
+            parsed.Position = textSyntax.Span.Start;
             return parsed;
         }
 
@@ -366,6 +375,7 @@ public class PropertyGraph
                 var lineAndColumn = text.GetLineAndColumn1Based(conditionAttribute.SpanStart);
                 parsed.Line = lineAndColumn.Line;
                 parsed.Column = lineAndColumn.Column;
+                parsed.Position = conditionAttribute.ValueNode.TextTokens.Span.Start;
                 return parsed;
             }
         }

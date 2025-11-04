@@ -774,11 +774,35 @@
     </DataTemplate.Triggers>
   </DataTemplate>
 
+  <DataTemplate DataType="{x:Type core:SourceFileLineWithHighlights}">
+    <StackPanel Orientation="Horizontal">
+      <TextBlock x:Name="lineNumber" Text="{Binding LineNumber}" FontFamily="Consolas" Foreground="Teal" Margin="0,0,12,0" />
+      <ItemsControl x:Name="text" ItemsSource="{Binding Highlights}" Focusable="False" VerticalAlignment="Center">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <StackPanel Orientation="Horizontal" IsItemsHost="True" />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+      </ItemsControl>
+    </StackPanel>
+    <DataTemplate.Triggers>
+      <DataTrigger Binding="{Binding IsSelected}" Value="True">
+        <Setter TargetName="lineNumber" Property="Foreground" Value="White" />
+      </DataTrigger>
+    </DataTemplate.Triggers>
+  </DataTemplate>
+
   <DataTemplate DataType="{x:Type l:HighlightedText}">
     <TextBlock x:Name="text" Foreground="Black" Background="Yellow" Text="{Binding Text}" />
     <DataTemplate.Triggers>
       <DataTrigger Binding="{Binding Style}" Value="time">
         <Setter TargetName="text" Property="Background" Value="Lavender" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding Style}" Value="write">
+        <Setter TargetName="text" Property="Background" Value="Turquoise" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding Style}" Value="read">
+        <Setter TargetName="text" Property="Background" Value="PaleTurquoise" />
       </DataTrigger>
     </DataTemplate.Triggers>
   </DataTemplate>

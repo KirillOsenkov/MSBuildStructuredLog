@@ -14,6 +14,7 @@ public class ParsedExpression
     public string FilePath { get; set; }
     public int Line { get; set; }
     public int Column { get; set; }
+    public int Position { get; set; }
 
     public IList<Span> PropertyReads { get; set; } = new List<Span>();
     public HashSet<string> PropertyNames { get; set; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
