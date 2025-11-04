@@ -133,27 +133,7 @@ public class PropertyGraph
 
                 if (name == "PropertyGroup")
                 {
-                    var condition = GetParsedCondition(element, text, filePath);
-                    if (condition != null)
-                    {
-                        if (condition.PropertyNames.Overlaps(propertyNames) && element is XmlElementSyntax xmlElement)
-                        {
-                            var sourceTextLineResult = GetOrAddLine(
-                                resultParent,
-                                filePath,
-                                text,
-                                xmlElement.StartTag);
-                            List<PropertyUsage> usages = new();
-                            AddUsages(condition, usages);
-                            foreach (var usage in usages)
-                            {
-                                usage.Position = usage.Position - xmlElement.StartTag.SpanStart;
-                                sourceTextLineResult.AddUsage(usage);
-                            }
-
-                            foundResults = true;
-                        }
-                    }
+                    foundResults |= TryAddCondition(element);
 
                     foreach (var propertyElement in element.Elements)
                     {
@@ -204,19 +184,7 @@ public class PropertyGraph
                 }
                 else if (name == "When")
                 {
-                    var condition = GetParsedCondition(element, text, filePath);
-                    if (condition != null)
-                    {
-                        if (condition.PropertyNames.Overlaps(propertyNames))
-                        {
-                            var sourceTextLineResult = GetOrAddLine(
-                                resultParent,
-                                filePath,
-                                condition.Line,
-                                condition.Text);
-                            foundResults = true;
-                        }
-                    }
+                    foundResults |= TryAddCondition(element);
 
                     VisitElement(element);
                 }
@@ -226,37 +194,13 @@ public class PropertyGraph
                 }
                 else if (name == "ImportGroup")
                 {
-                    var condition = GetParsedCondition(element, text, filePath);
-                    if (condition != null)
-                    {
-                        if (condition.PropertyNames.Overlaps(propertyNames))
-                        {
-                            var sourceTextLineResult = GetOrAddLine(
-                                resultParent,
-                                filePath,
-                                condition.Line,
-                                condition.Text);
-                            foundResults = true;
-                        }
-                    }
+                    foundResults |= TryAddCondition(element);
 
                     VisitElement(element);
                 }
                 else if (name == "Import")
                 {
-                    var condition = GetParsedCondition(element, text, filePath);
-                    if (condition != null)
-                    {
-                        if (condition.PropertyNames.Overlaps(propertyNames))
-                        {
-                            var sourceTextLineResult = GetOrAddLine(
-                                resultParent,
-                                filePath,
-                                condition.Line,
-                                condition.Text);
-                            foundResults = true;
-                        }
-                    }
+                    foundResults |= TryAddCondition(element);
 
                     for (int i = 0; i < importPositions.Count; i++)
                     {
@@ -291,6 +235,33 @@ public class PropertyGraph
                     }
                 }
             }
+        }
+
+        bool TryAddCondition(IXmlElement element)
+        {
+            var condition = GetParsedCondition(element, text, filePath);
+            if (condition != null)
+            {
+                if (condition.PropertyNames.Overlaps(propertyNames) && element is XmlElementSyntax xmlElement)
+                {
+                    var sourceTextLineResult = GetOrAddLine(
+                        resultParent,
+                        filePath,
+                        text,
+                        xmlElement.StartTag);
+                    List<PropertyUsage> usages = new();
+                    AddUsages(condition, usages);
+                    foreach (var usage in usages)
+                    {
+                        usage.Position = usage.Position - xmlElement.StartTag.SpanStart;
+                        sourceTextLineResult.AddUsage(usage);
+                    }
+
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         void AddUsages(ParsedExpression expression, List<PropertyUsage> usages)
