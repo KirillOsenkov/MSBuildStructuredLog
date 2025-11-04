@@ -9,6 +9,11 @@ namespace Microsoft.Build.Logging.StructuredLogger;
 
 public class PropertyGraph
 {
+    public class GraphWalkContext
+    {
+        public HashSet<string> PropertyNames { get; set; }
+    }
+
     public PreprocessedFileManager PreprocessedFileManager { get; }
 
     public PropertyGraph(PreprocessedFileManager preprocessedFileManager, PropertiesAndItemsSearch search)
@@ -23,7 +28,10 @@ public class PropertyGraph
         {
             var names = results.Select(r => ((Property)r.Node).Name).ToArray();
 
-            var graphNode = GetPropertyGraph(evaluation, names);
+            var context = new GraphWalkContext();
+            context.PropertyNames = new HashSet<string>(names, StringComparer.OrdinalIgnoreCase);
+
+            var graphNode = GetPropertyGraph(evaluation, context);
             if (graphNode != null)
             {
                 results = results.Append(graphNode).ToArray();
@@ -33,7 +41,7 @@ public class PropertyGraph
         return results;
     }
 
-    public SearchResult GetPropertyGraph(ProjectEvaluation evaluation, IEnumerable<string> properties)
+    public SearchResult GetPropertyGraph(ProjectEvaluation evaluation, GraphWalkContext context)
     {
         var importsFolder = evaluation.ImportsFolder;
 
@@ -45,9 +53,8 @@ public class PropertyGraph
         var resultFolder = new Folder { Name = "Property Graph", IsExpanded = true };
 
         var text = PreprocessedFileManager.SourceFileResolver.GetSourceFileText(evaluation.ProjectFile);
-        var propertyNames = new HashSet<string>(properties, StringComparer.OrdinalIgnoreCase);
 
-        if (Visit(evaluation.ProjectFile, resultFolder, text, importsFolder.Children.OfType<Import>(), propertyNames))
+        if (Visit(evaluation.ProjectFile, resultFolder, text, importsFolder.Children.OfType<Import>(), context))
         {
             return new SearchResult(resultFolder);
         }
@@ -60,7 +67,7 @@ public class PropertyGraph
         TreeNode resultParent,
         SourceText text,
         IEnumerable<Import> imports,
-        HashSet<string> propertyNames)
+        GraphWalkContext context)
     {
         bool foundResults = false;
 
@@ -81,7 +88,12 @@ public class PropertyGraph
                 Text = Path.GetFileName(importBefore.ImportedProjectFilePath)
             };
             var importText = PreprocessedFileManager.SourceFileResolver.GetSourceFileText(importBefore.ImportedProjectFilePath);
-            bool nestedFound = Visit(importBefore.ImportedProjectFilePath, resultImport, importText, importBefore.Children.OfType<Import>(), propertyNames);
+            bool nestedFound = Visit(
+                importBefore.ImportedProjectFilePath,
+                resultImport,
+                importText,
+                importBefore.Children.OfType<Import>(),
+                context);
             if (nestedFound)
             {
                 resultParent.AddChild(resultImport);
@@ -117,7 +129,7 @@ public class PropertyGraph
                 resultImport,
                 importText,
                 importAfter.Children.OfType<Import>(),
-                propertyNames);
+                context);
             if (nestedFound)
             {
                 resultParent.AddChild(resultImport);
@@ -147,7 +159,7 @@ public class PropertyGraph
                         var propertyCondition = GetParsedCondition(propertyElement, text, filePath);
                         AddUsages(propertyCondition, usages);
 
-                        if (propertyNames.Contains(propertyName))
+                        if (context.PropertyNames == null || context.PropertyNames.Contains(propertyName))
                         {
                             var usage = new PropertyUsage
                             {
@@ -223,7 +235,7 @@ public class PropertyGraph
                                 resultImport,
                                 importText,
                                 importNode.Children.OfType<Import>(),
-                                propertyNames);
+                                context);
                             if (nestedFound)
                             {
                                 resultParent.AddChild(resultImport);
@@ -242,7 +254,7 @@ public class PropertyGraph
             var condition = GetParsedCondition(element, text, filePath);
             if (condition != null)
             {
-                if (condition.PropertyNames.Overlaps(propertyNames) && element is XmlElementSyntax xmlElement)
+                if ((context.PropertyNames == null || condition.PropertyNames.Overlaps(context.PropertyNames)) && element is XmlElementSyntax xmlElement)
                 {
                     var sourceTextLineResult = GetOrAddLine(
                         resultParent,
@@ -276,7 +288,7 @@ public class PropertyGraph
             {
                 var occurrenceStart = conditionStart + occurrence.Start;
                 var occurrenceText = expression.Text.Substring(occurrence.Start, occurrence.Length);
-                if (!propertyNames.Contains(occurrenceText))
+                if (context.PropertyNames != null && !context.PropertyNames.Contains(occurrenceText))
                 {
                     continue;
                 }
