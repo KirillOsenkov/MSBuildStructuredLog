@@ -12,6 +12,18 @@ public class PropertyGraph
     public class GraphWalkContext
     {
         public HashSet<string> PropertyNames { get; set; }
+        public Digraph Graph { get; set; }
+        public Dictionary<string, Vertex> CurrentNodes { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
+        public Vertex GetVertex(string propertyName)
+        {
+            if (CurrentNodes.TryGetValue(propertyName, out var existing))
+            {
+                return existing;
+            }
+
+            return Graph.GetOrCreate($"Initial value: {propertyName}", t => propertyName);
+        }
     }
 
     public PreprocessedFileManager PreprocessedFileManager { get; }
@@ -145,7 +157,23 @@ public class PropertyGraph
 
                 if (name == "PropertyGroup")
                 {
-                    foundResults |= TryAddCondition(element);
+                    Vertex propertyGroupConditionVertex = null;
+
+                    var usagesInCondition = TryAddCondition(element);
+                    if (usagesInCondition != null)
+                    {
+                        foundResults = true;
+                        if (context.Graph is { } graph)
+                        {
+                            var lineNumber = text.GetLineNumberFromPosition(element.AsSyntaxElement.AsNode.SpanStart) + 1;
+                            propertyGroupConditionVertex = graph.GetOrCreate($"PropertyGroup Condition {Path.GetFileName(filePath)}:{lineNumber}");
+                            foreach (var usage in usagesInCondition.Select(u => u.Name).Distinct())
+                            {
+                                var previousVertex = context.GetVertex(usage);
+                                propertyGroupConditionVertex.AddChild(previousVertex);
+                            }
+                        }
+                    }
 
                     foreach (var propertyElement in element.Elements)
                     {
@@ -187,6 +215,19 @@ public class PropertyGraph
                                 usage.Position = usage.Position - propertyStart;
                                 sourceTextLineResult.AddUsage(usage);
                             }
+
+                            if (context.Graph is { } graph)
+                            {
+                                var assignmentVertex = graph.GetOrCreate($"{propertyName} {Path.GetFileName(filePath)}:{startLine}");
+
+                                foreach (var usage in usages.Select(u => u.Name).Distinct())
+                                {
+                                    var previousVertex = context.GetVertex(usage);
+                                    assignmentVertex.AddChild(previousVertex);
+                                }
+
+                                context.CurrentNodes[propertyName] = assignmentVertex;
+                            }
                         }
                     }
                 }
@@ -196,7 +237,7 @@ public class PropertyGraph
                 }
                 else if (name == "When")
                 {
-                    foundResults |= TryAddCondition(element);
+                    foundResults |= TryAddCondition(element) != null;
 
                     VisitElement(element);
                 }
@@ -206,13 +247,13 @@ public class PropertyGraph
                 }
                 else if (name == "ImportGroup")
                 {
-                    foundResults |= TryAddCondition(element);
+                    foundResults |= TryAddCondition(element) != null;
 
                     VisitElement(element);
                 }
                 else if (name == "Import")
                 {
-                    foundResults |= TryAddCondition(element);
+                    foundResults |= TryAddCondition(element) != null;
 
                     for (int i = 0; i < importPositions.Count; i++)
                     {
@@ -249,7 +290,7 @@ public class PropertyGraph
             }
         }
 
-        bool TryAddCondition(IXmlElement element)
+        List<PropertyUsage> TryAddCondition(IXmlElement element)
         {
             var condition = GetParsedCondition(element, text, filePath);
             if (condition != null)
@@ -269,11 +310,11 @@ public class PropertyGraph
                         sourceTextLineResult.AddUsage(usage);
                     }
 
-                    return true;
+                    return usages;
                 }
             }
 
-            return false;
+            return null;
         }
 
         void AddUsages(ParsedExpression expression, List<PropertyUsage> usages)

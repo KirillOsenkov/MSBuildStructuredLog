@@ -132,6 +132,13 @@
                   </Grid>
                 </TabItem>
 
+                <TabItem x:Name="propertyGraphTab" Header="Properties" Visibility="Collapsed">
+                  <Grid>
+                    <TextBlock x:Name="propertyGraphWatermark" HorizontalAlignment="Center"
+                               VerticalAlignment="Center">Property graph</TextBlock>
+                  </Grid>
+                </TabItem>
+
               </TabControl>
             </local:SplitterPanel.FirstChild>
 

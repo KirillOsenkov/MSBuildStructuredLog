@@ -33,6 +33,7 @@ namespace StructuredLogViewer.Controls
         private ArchiveFileResolver archiveFile => sourceFileResolver.ArchiveFile;
         private PreprocessedFileManager preprocessedFileManager;
         private NavigationHelper navigationHelper;
+        private PropertyGraph propertyGraph;
 
         private MenuItem searchMenuGroup;
         private MenuItem copyMenuGroup;
@@ -63,6 +64,7 @@ namespace StructuredLogViewer.Controls
         private MenuItem showFileInExplorerItem;
         private MenuItem preprocessItem;
         private MenuItem targetGraphItem;
+        private MenuItem propertyGraphItem;
         private MenuItem viewInTargetGraphItem;
         private MenuItem nugetGraphItem;
         private MenuItem searchNuGetItem;
@@ -239,6 +241,7 @@ namespace StructuredLogViewer.Controls
             showFileInExplorerItem = new MenuItem() { Header = "Show in Explorer" };
             preprocessItem = new MenuItem() { Header = "Preprocess" };
             targetGraphItem = new MenuItem { Header = "Target Graph" };
+            propertyGraphItem = new MenuItem { Header = "Property Graph" };
             viewInTargetGraphItem = new MenuItem { Header = "Target Graph" };
             nugetGraphItem = new MenuItem { Header = "NuGet Graph" };
             var nugetImage = new System.Windows.Shapes.Path
@@ -283,6 +286,7 @@ namespace StructuredLogViewer.Controls
             showFileInExplorerItem.Click += (s, a) => ShowFileInExplorer();
             preprocessItem.Click += (s, a) => Preprocess(treeView.SelectedItem as IPreprocessable);
             targetGraphItem.Click += (s, a) => ViewTargetGraph(treeView.SelectedItem as IProjectOrEvaluation);
+            propertyGraphItem.Click += (s, a) => ViewPropertyGraph(treeView.SelectedItem as IProjectOrEvaluation);
             viewInTargetGraphItem.Click += (s, a) => ViewTargetGraphForTarget(treeView.SelectedItem as Target);
             nugetGraphItem.Click += (s, a) => ViewNuGetGraph(treeView.SelectedItem as IProjectOrEvaluation);
             searchNuGetItem.Click += (s, a) => SearchNuGet(treeView.SelectedItem as IProjectOrEvaluation);
@@ -301,6 +305,7 @@ namespace StructuredLogViewer.Controls
             contextMenu.AddItem(openFileItem);
             contextMenu.AddItem(preprocessItem);
             contextMenu.AddItem(targetGraphItem);
+            contextMenu.AddItem(propertyGraphItem);
             contextMenu.AddItem(nugetGraphItem);
 
             contextMenu.AddItem(searchMenuGroup);
@@ -418,7 +423,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             preprocessedFileManager.DisplayFile += filePath => DisplayFile(filePath);
             Build.TextProvider = evaluation => preprocessedFileManager.GetPreprocessedText(evaluation);
 
-            var propertyGraph = new PropertyGraph(preprocessedFileManager, propertiesAndItemsSearch);
+            propertyGraph = new PropertyGraph(preprocessedFileManager, propertiesAndItemsSearch);
 
             navigationHelper = new NavigationHelper(Build, sourceFileResolver);
             navigationHelper.OpenFileRequested += filePath => DisplayFile(filePath);
@@ -494,6 +499,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             copyFilePathItem = null;
             preprocessItem = null;
             targetGraphItem = null;
+            propertyGraphItem = null;
             viewInTargetGraphItem = null;
             nugetGraphItem = null;
             searchNuGetItem = null;
@@ -864,6 +870,29 @@ Recent (");
 
         private void Preprocess(IPreprocessable project) => preprocessedFileManager.ShowPreprocessed(project);
 
+        private void ViewPropertyGraph(IProjectOrEvaluation projectOrEvaluation)
+        {
+            var graph = new Digraph();
+            var context = new PropertyGraph.GraphWalkContext()
+            {
+                Graph = graph
+            };
+            var resultNode = propertyGraph.GetPropertyGraph(projectOrEvaluation.GetEvaluation(), context);
+
+            graph.RemoveCycles();
+            graph.CalculateHeight();
+            graph.CalculateDepth();
+            graph.ComputeTransitiveReduction();
+
+            var host = new GraphHostControl();
+            host.DisplayText += text => DisplayText(text, "Graph");
+            host.GoToSearch += text => SelectPropertiesAndItemsTab($"$property {text}");
+            host.Graph = graph;
+            propertyGraphTab.Content = host;
+            propertyGraphTab.Visibility = Visibility.Visible;
+            centralTabControl.SelectedItem = propertyGraphTab;
+        }
+
         private void ViewTargetGraph(IProjectOrEvaluation projectOrEvaluation)
         {
             var targetGraph = Build.TargetGraphManager.GetTargetGraph(projectOrEvaluation.GetEvaluation(Build));
@@ -1030,11 +1059,13 @@ Recent (");
             sortChildrenByNameItem.Visibility = hasChildrenVisibility;
             sortChildrenByDurationItem.Visibility = hasChildrenVisibility;
             filterChildrenItem.Visibility = hasChildrenVisibility;
+            var projectOrEvaluationVisibility = node is IProjectOrEvaluation ? Visibility.Visible : Visibility.Collapsed;
             preprocessItem.Visibility = node is IPreprocessable p && preprocessedFileManager.CanPreprocess(p) ? Visibility.Visible : Visibility.Collapsed;
-            targetGraphItem.Visibility = node is IProjectOrEvaluation ? Visibility.Visible : Visibility.Collapsed;
+            targetGraphItem.Visibility = projectOrEvaluationVisibility;
             viewInTargetGraphItem.Visibility = node is Target ? Visibility.Visible : Visibility.Collapsed;
+            propertyGraphItem.Visibility = projectOrEvaluationVisibility;
             nugetGraphItem.Visibility = node is IProjectOrEvaluation or Package ? Visibility.Visible : Visibility.Collapsed;
-            searchNuGetItem.Visibility = node is IProjectOrEvaluation ? Visibility.Visible : Visibility.Collapsed;
+            searchNuGetItem.Visibility = projectOrEvaluationVisibility;
             Visibility canRun = Build?.LogFilePath != null && node is Task ? Visibility.Visible : Visibility.Collapsed;
             runItem.Visibility = canRun;
             debugItem.Visibility = canRun;
@@ -1922,6 +1953,16 @@ Recent (");
             }
 
             leftPaneTabControl.SelectedItem = searchLogTab;
+        }
+
+        public void SelectPropertiesAndItemsTab(string newText = null)
+        {
+            if (newText != null)
+            {
+                propertiesAndItemsControl.SearchText = newText;
+            }
+
+            leftPaneTabControl.SelectedItem = propertiesAndItemsTab;
         }
 
         public void SelectFindInFilesTab(string newText = null)
