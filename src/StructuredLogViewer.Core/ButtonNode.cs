@@ -5,7 +5,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 {
     public class ButtonNode : TextNode
     {
-        public ICommand Command => new Command(OnClick);
+        public ICommand Command => new Command(() => OnClick?.Invoke());
 
         public Action OnClick { get; set; }
 

@@ -73,11 +73,15 @@ public class PropertyGraph
     }
 
     public PreprocessedFileManager PreprocessedFileManager { get; }
+    public PropertiesAndItemsSearch Search { get; }
+
+    public event Action<string> PropertySearchRequested;
 
     public PropertyGraph(PreprocessedFileManager preprocessedFileManager, PropertiesAndItemsSearch search)
     {
         search.AugmentResults += Search_AugmentResults;
         PreprocessedFileManager = preprocessedFileManager;
+        Search = search;
     }
 
     private IEnumerable<SearchResult> Search_AugmentResults(ProjectEvaluation evaluation, IEnumerable<SearchResult> results)
@@ -93,6 +97,11 @@ public class PropertyGraph
             var graphNode = GetPropertyGraph(context);
             if (graphNode != null)
             {
+                foreach (var button in ((TreeNode)graphNode.Node).FindChildrenRecursive<ButtonNode>())
+                {
+                    button.OnClick = () => PropertySearchRequested?.Invoke(button.Text);
+                }
+
                 results = results.Append(graphNode).ToArray();
             }
         }
@@ -138,19 +147,26 @@ public class PropertyGraph
             var nodesInReverseOrder = resultFolder.FindChildrenRecursive<SourceFileLineWithHighlights>().Reverse().ToArray();
             HashSet<string> foundPropertyWrites = new(StringComparer.OrdinalIgnoreCase);
 
+            HashSet<string> otherPropertyReads = new(StringComparer.OrdinalIgnoreCase);
+
             foreach (var line in nodesInReverseOrder)
             {
+                string writtenProperty = line.WrittenProperty;
                 bool isReadBeforeWrite = false;
+
                 foreach (var readProperty in line.ReadProperties)
                 {
+                    if (writtenProperty != null && (context.PropertyNames == null || !context.PropertyNames.Contains(readProperty)))
+                    {
+                        otherPropertyReads.Add(readProperty);
+                    }
+
                     if (foundPropertyWrites.Contains(readProperty))
                     {
                         isReadBeforeWrite = true;
-                        break;
                     }
                 }
 
-                string writtenProperty = line.WrittenProperty;
                 if (writtenProperty != null)
                 {
                     foundPropertyWrites.Add(writtenProperty);
@@ -160,6 +176,25 @@ public class PropertyGraph
                 {
                     line.IsReadBeforeWrite = true;
                 }
+            }
+
+            if (otherPropertyReads.Count > 0)
+            {
+                var additional = new Folder
+                {
+                    Name = "These properties also depend on:",
+                    IsExpanded = true
+                };
+                foreach (var readProperty in otherPropertyReads)
+                {
+                    var button = new ButtonNode
+                    {
+                        Text = readProperty
+                    };
+                    additional.AddChild(button);
+                }
+
+                resultFolder.AddChild(additional);
             }
 
             return new SearchResult(resultFolder);
@@ -289,6 +324,7 @@ public class PropertyGraph
                             {
                                 Name = propertyName,
                                 Position = propertyElement.AsSyntaxElement.NameNode.SpanStart,
+                                PropertyOfInterest = true,
                                 IsWrite = true
                             };
                             usages.Add(usage);
@@ -301,7 +337,7 @@ public class PropertyGraph
                         var parsedValue = GetParsedValue(propertyElement, text, filePath);
                         AddUsages(parsedValue, usages);
 
-                        if (usages.Count > 0)
+                        if (usages.Where(u => u.PropertyOfInterest).Count() > 0)
                         {
                             foundResults = true;
                             var sourceTextLineResult = GetOrAddLine(
@@ -447,15 +483,12 @@ public class PropertyGraph
             {
                 var occurrenceStart = conditionStart + occurrence.Start;
                 var occurrenceText = expression.Text.Substring(occurrence.Start, occurrence.Length);
-                if (context.PropertyNames != null && !context.PropertyNames.Contains(occurrenceText))
-                {
-                    continue;
-                }
 
                 var usage = new PropertyUsage
                 {
                     Name = occurrenceText,
-                    Position = occurrenceStart
+                    Position = occurrenceStart,
+                    PropertyOfInterest = context.PropertyNames == null || context.PropertyNames.Contains(occurrenceText)
                 };
                 usages.Add(usage);
             }

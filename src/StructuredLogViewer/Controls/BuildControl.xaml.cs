@@ -424,6 +424,10 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             Build.TextProvider = evaluation => preprocessedFileManager.GetPreprocessedText(evaluation);
 
             propertyGraph = new PropertyGraph(preprocessedFileManager, propertiesAndItemsSearch);
+            propertyGraph.PropertySearchRequested += propertyName =>
+            {
+                propertiesAndItemsControl.SearchText += $" \"{propertyName}\"";
+            };
 
             navigationHelper = new NavigationHelper(Build, sourceFileResolver);
             navigationHelper.OpenFileRequested += filePath => DisplayFile(filePath);

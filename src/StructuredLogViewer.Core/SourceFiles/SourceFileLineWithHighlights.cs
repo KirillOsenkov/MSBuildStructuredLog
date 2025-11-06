@@ -10,6 +10,7 @@ public class PropertyUsage
     public int Position;
     public int RelativePosition;
     public bool IsWrite;
+    public bool PropertyOfInterest;
 }
 
 public class SourceFileLineWithHighlights : SourceFileLine
@@ -63,6 +64,11 @@ public class SourceFileLineWithHighlights : SourceFileLine
         for (int i = 0; i < usages.Count; i++)
         {
             var usage = usages[i];
+            if (!usage.PropertyOfInterest)
+            {
+                continue;
+            }
+
             if (start < usage.Position)
             {
                 highlights.Add(LineText.Substring(start, usage.Position - start));

@@ -33,8 +33,19 @@ public class ParsedExpression
             if (span.StartsWith("$(") && span.EndsWith(")"))
             {
                 var propertyName = span.Substring(2, span.Length - 3);
-                result.PropertyNames.Add(propertyName);
-                result.PropertyReads.Add(new Span(index + 2, span.Length - 3));
+                bool isProperty = true;
+
+                if (propertyName.StartsWith("Registry:") ||
+                    propertyName.StartsWith("["))
+                {
+                    isProperty = false;
+                }
+
+                if (isProperty)
+                {
+                    result.PropertyNames.Add(propertyName);
+                    result.PropertyReads.Add(new Span(index + 2, span.Length - 3));
+                }
             }
 
             index += span.Length;
