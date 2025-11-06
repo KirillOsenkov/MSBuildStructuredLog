@@ -111,9 +111,11 @@ namespace StructuredLogViewer
                 return import.ImportedProjectFilePath;
             }
 
-            if (selectedNode is IHasSourceFile file && IsValidExistingPath(file.SourceFilePath))
+            if (selectedNode is IHasSourceFile file &&
+                file.SourceFilePath is string sourceFilePath &&
+                IsValidExistingPath(sourceFilePath))
             {
-                return file.SourceFilePath;
+                return sourceFilePath;
             }
 
             return null;

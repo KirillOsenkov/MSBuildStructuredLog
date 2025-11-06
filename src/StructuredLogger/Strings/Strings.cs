@@ -149,6 +149,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             PropertyReassignmentRegex = new Regex(propertyReassignment, RegexOptions.Compiled | RegexOptions.Singleline);
 
             PropertyAssignment = GetString("PropertyAssignment");
+            var propertyAssignment = GetPropertyAssignmentText();
+            PropertyAssignmentRegex = new Regex(propertyAssignment, RegexOptions.Compiled | RegexOptions.Singleline);
+
+            FileLineAndColumnRegex = new Regex(@"(?<File>.*) \((?<Line>\d+),(?<Column>\d+)\)", RegexOptions.Compiled | RegexOptions.Singleline);
 
             UninitializedPropertyRead = GetString("UninitializedPropertyRead");
 
@@ -327,7 +331,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 case "cs-CZ":
                     text = text
-                        .Replace(@"$({0})={1} (", @"\$\((?<Name>\w+)\)=""(?<NewValue>.*)"" \(")
+                        .Replace(@"$({0})={1} (", @"\$\((?<Name>\w+)\)=(?<NewValue>.*) \(")
                         .Replace(@"{2})", @"(?<OldValue>.*)\)")
                         .Replace("{3}", @"(?<File>.*) \((?<Line>\d+),(?<Column>\d+)\)");
                     break;
@@ -354,6 +358,37 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         .Replace(@"$({0})=""{1}"" (", @"\$\((?<Name>\w+)\)=""(?<NewValue>.*)"" \(")
                         .Replace(@"{2}"")", @"(?<OldValue>.*)""\)")
                         .Replace("{3}", @"(?<File>.*) \((?<Line>\d+),(?<Column>\d+)\)");
+                    break;
+            }
+
+            return "^" + text + "$";
+        }
+
+        private static string GetPropertyAssignmentText()
+        {
+            string text = PropertyAssignment;
+
+            switch (Culture)
+            {
+                case "cs-CZ":
+                    text = text
+                        .Replace(@"$({0})={1} ", @"\$\((?<Name>\w+)\)=(?<NewValue>.*) ")
+                        .Replace("{2}", @"(?<Source>.*)");
+                    break;
+                case "pl-PL":
+                    text = text
+                        .Replace(@"$({0})=„{1}” ", @"\$\((?<Name>\w+)\)=„(?<NewValue>.*)” ")
+                        .Replace("{2}", @"(?<Source>.*)");
+                    break;
+                case "zh-Hans":
+                    text = text
+                        .Replace(@"$({0})=“{1}” ", @"\$\((?<Name>\w+)\)=“(?<NewValue>.*)” ")
+                        .Replace("{2}", @"(?<Source>.*)");
+                    break;
+                default:
+                    text = text
+                        .Replace(@"$({0})=""{1}"" ", @"\$\((?<Name>\w+)\)=""(?<NewValue>.*)"" ")
+                        .Replace("{2}", @"(?<Source>.*)");
                     break;
             }
 
@@ -404,6 +439,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static Regex ProjectImportSkippedFalseConditionRegex { get; set; }
         public static Regex ProjectImportSkippedExpressionEvaluatedToEmptyRegex { get; set; }
         public static Regex ProjectImportSkippedNoMatchesRegex { get; set; }
+        public static Regex PropertyAssignmentRegex { get; set; }
         public static Regex PropertyReassignmentRegex { get; set; }
         public static Regex DeferredResponseFileRegex { get; set; }
         public static Regex MessageMetaprojectGenerated { get; set; }
@@ -414,6 +450,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static Regex AssemblyFoldersExLocation { get; set; }
         public static Regex ConflictReferenceSameSDK { get; set; }
         public static Regex ConflictRedistDifferentSDK { get; set; }
+        public static Regex FileLineAndColumnRegex { get; set; }
 
         /// <summary>
         /// "There was a conflict between \"{0}\" and \"{1}\"."
@@ -643,6 +680,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static string GeneratorReport => "Generator Report";
         public static string Properties => "Properties";
         public static string PropertyReassignmentFolder => "Property reassignment";
+        public static string PropertyAssignmentFolder => "Property initialized";
         public static string Global => "Global";
         public static string EntryTargets => "Entry targets";
         public static string TargetFramework => "TargetFramework";

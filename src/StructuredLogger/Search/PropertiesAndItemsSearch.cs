@@ -55,6 +55,12 @@ namespace StructuredLogViewer
                 {
                     roots.Add(reassignments);
                 }
+
+                var assignments = root.FindChild<TimedNode>(Strings.PropertyAssignmentFolder);
+                if (assignments != null)
+                {
+                    roots.Add(assignments);
+                }
             }
 
             var strings = new StringCache();
@@ -203,7 +209,9 @@ namespace StructuredLogViewer
                 case Folder folder:
                     strings.Intern(folder.Name);
                     break;
-                case Message message when Strings.PropertyReassignmentRegex.IsMatch(message.Text):
+                case Message message when
+                    Strings.PropertyReassignmentRegex.IsMatch(message.Text) ||
+                    Strings.PropertyAssignmentRegex.IsMatch(message.Text):
                     strings.Intern(message.Text);
                     break;
                 default:

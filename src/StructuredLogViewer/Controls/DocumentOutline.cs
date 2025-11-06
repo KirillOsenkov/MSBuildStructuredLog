@@ -139,8 +139,7 @@ namespace StructuredLogViewer
                 }
 
                 // Search the "Property reassignment" folder.
-                ;
-                var prFolder = this.PreprocessContext.Evaluation.Children.FirstOrDefault(p => p.Title == Strings.PropertyReassignmentFolder);
+                var prFolder = this.PreprocessContext.Evaluation.PropertyReassignmentFolder;
                 if (prFolder is TimedNode folder)
                 {
                     var entryFolder = folder.Children.FirstOrDefault(p => p.Title == title);
@@ -172,6 +171,27 @@ namespace StructuredLogViewer
                                 value = value.NormalizePropertyValue();
                                 content.Append($"\n{count}: " + value);
                                 count++;
+                            }
+                        }
+                    }
+                }
+
+                var assignmentFolder = this.PreprocessContext.Evaluation.PropertyAssignmentFolder;
+                if (assignmentFolder is TimedNode)
+                {
+                    var entryFolder = assignmentFolder.Children.FirstOrDefault(p => p.Title == title);
+                    if (entryFolder is Folder prEntries)
+                    {
+                        foreach (var entry in prEntries.Children)
+                        {
+                            var match = Strings.PropertyAssignmentRegex.Match(entry.Title);
+                            if (match.Success)
+                            {
+                                string value;
+
+                                value = match.Groups["NewValue"].Value;
+                                value = value.NormalizePropertyValue();
+                                content.Append($"\nInitial value: " + value);
                             }
                         }
                     }

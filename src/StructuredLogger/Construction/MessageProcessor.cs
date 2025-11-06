@@ -445,6 +445,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             TreeNode parent = null;
             BaseNode nodeToAdd = null;
+            Message messageNode = null;
             bool lowRelevance = false;
             bool preserveTimestamp = false;
 
@@ -545,10 +546,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     parent = evaluation;
                 }
 
-                Match match = null;
                 PropertyReassignmentEventArgs propertyReassignment = args as PropertyReassignmentEventArgs;
+                PropertyInitialValueSetEventArgs propertyInitialValueSet = args as PropertyInitialValueSetEventArgs;
+
+                Match propertyReassignmentMatch = null;
+                Match propertyInitialValueSetMatch = null;
+
                 if (propertyReassignment != null ||
-                    ((match = Strings.PropertyReassignmentRegex.Match(message)) != null && match.Success))
+                    ((propertyReassignmentMatch = Strings.PropertyReassignmentRegex.Match(message)) != null && propertyReassignmentMatch.Success))
                 {
                     TimedNode properties;
                     if (evaluation != null)
@@ -562,11 +567,83 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     var propertyName = propertyReassignment != null ?
                         propertyReassignment.PropertyName :
-                        match != null ?
-                            match.Groups["Name"].Value :
+                        propertyReassignmentMatch != null ?
+                            propertyReassignmentMatch.Groups["Name"].Value :
                             Strings.GetPropertyName(message);
 
                     parent = properties.GetOrCreateNodeWithName<Folder>(propertyName);
+
+                    if (propertyReassignment != null)
+                    {
+                        if (propertyReassignment.File != null)
+                        {
+                            messageNode = new MessageWithLocation
+                            {
+                                FilePath = propertyReassignment.File,
+                                Line = propertyReassignment.LineNumber
+                            };
+                        }
+                    }
+                    else if (propertyReassignmentMatch != null)
+                    {
+                        if (propertyReassignmentMatch.Groups["File"].Value is string file &&
+                            propertyReassignmentMatch.Groups["Line"].Value is string line &&
+                            int.TryParse(line, out var lineNumber))
+                        {
+                            messageNode = new MessageWithLocation
+                            {
+                                FilePath = file,
+                                Line = lineNumber
+                            };
+                        }
+                    }
+                }
+                else if (propertyInitialValueSet != null ||
+                    ((propertyInitialValueSetMatch = Strings.PropertyAssignmentRegex.Match(message)) != null && propertyInitialValueSetMatch.Success))
+                {
+                    TimedNode properties;
+                    if (evaluation != null)
+                    {
+                        properties = evaluation.PropertyAssignmentFolder;
+                    }
+                    else
+                    {
+                        properties = parent.GetOrCreateNodeWithName<TimedNode>(Strings.PropertyAssignmentFolder, addAtBeginning: true);
+                    }
+
+                    var propertyName = propertyInitialValueSet != null ?
+                        propertyInitialValueSet.PropertyName :
+                        propertyInitialValueSetMatch != null ?
+                            propertyInitialValueSetMatch.Groups["Name"].Value :
+                            Strings.GetPropertyName(message);
+
+                    parent = properties.GetOrCreateNodeWithName<Folder>(propertyName);
+
+                    if (propertyInitialValueSet != null)
+                    {
+                        if (propertyInitialValueSet.File != null)
+                        {
+                            messageNode = new MessageWithLocation
+                            {
+                                FilePath = propertyInitialValueSet.File,
+                                Line = propertyInitialValueSet.LineNumber
+                            };
+                        }
+                    }
+                    else if (propertyInitialValueSetMatch != null)
+                    {
+                        if (propertyInitialValueSetMatch.Groups["Source"].Value is string source &&
+                            Strings.FileLineAndColumnRegex.Match(source) is { } match &&
+                            match.Success &&
+                            int.TryParse(match.Groups["Line"].Value, out var lineNumber))
+                        {
+                            messageNode = new MessageWithLocation
+                            {
+                                FilePath = match.Groups["File"].Value,
+                                Line = lineNumber
+                            };
+                        }
+                    }
                 }
                 else if (parent == evaluation && !evaluation.MessageTexts.Add(message))
                 {
@@ -677,7 +754,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
                 else
                 {
-                    Message messageNode = null;
                     string text = message;
 
                     if (args is BuildMessageEventArgs buildMessageEventArgs)

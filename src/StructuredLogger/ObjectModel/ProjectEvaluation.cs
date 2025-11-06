@@ -86,6 +86,24 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        private TimedNode propertyAssignmentFolder;
+        public TimedNode PropertyAssignmentFolder
+        {
+            get
+            {
+                if (propertyAssignmentFolder == null)
+                {
+                    propertyAssignmentFolder = new TimedNode
+                    {
+                        Name = Strings.PropertyAssignmentFolder
+                    };
+                    this.AddChildAtBeginning(propertyAssignmentFolder);
+                }
+
+                return propertyAssignmentFolder;
+            }
+        }
+
         private Dictionary<string, Import> importsMap = new Dictionary<string, Import>();
 
         public void AddImport(TextNode textNode)
@@ -94,7 +112,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             IHasSourceFile importOrNot = (IHasSourceFile)textNode;
 
-            if (importOrNot.SourceFilePath != this.ProjectFile && importsMap.TryGetValue(importOrNot.SourceFilePath, out var foundParent))
+            if (importOrNot.SourceFilePath is string sourceFilePath &&
+                sourceFilePath != null &&
+                sourceFilePath != this.ProjectFile &&
+                importsMap.TryGetValue(sourceFilePath, out var foundParent))
             {
                 parent = foundParent;
             }

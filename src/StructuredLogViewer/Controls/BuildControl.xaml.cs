@@ -2517,9 +2517,9 @@ Recent (");
         {
             return node is AbstractDiagnostic
                 || node is Project
-                || (node is Target t && t.SourceFilePath != null && sourceFileResolver.HasFile(t.SourceFilePath))
+                || (node is Target t && t.SourceFilePath is string targetFilePath && sourceFileResolver.HasFile(targetFilePath))
                 || (node is Task task && task.Parent is Target parentTarget && sourceFileResolver.HasFile(parentTarget.SourceFilePath))
-                || (node is IHasSourceFile ihsf && ihsf.SourceFilePath != null && sourceFileResolver.HasFile(ihsf.SourceFilePath));
+                || (node is IHasSourceFile ihsf && ihsf.SourceFilePath is string sourceFilePath && sourceFileResolver.HasFile(sourceFilePath));
         }
 
         private bool HasFullText(BaseNode node)

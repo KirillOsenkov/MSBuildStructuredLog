@@ -183,12 +183,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
             foreach (var projectEvaluation in evaluations)
             {
                 var properties = projectEvaluation.FindChild<NamedNode>(Strings.PropertyReassignmentFolder);
-                if (properties == null)
+                if (properties != null)
                 {
-                    continue;
+                    properties.SortChildren();
                 }
 
-                properties.SortChildren();
+                properties = projectEvaluation.FindChild<NamedNode>(Strings.PropertyAssignmentFolder);
+                if (properties != null)
+                {
+                    properties.SortChildren();
+                }
+
                 projectEvaluation.RelativeDuration = projectEvaluation.Duration.TotalMilliseconds * 100.0 / longestDuration;
             }
         }
