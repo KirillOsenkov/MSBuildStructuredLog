@@ -1373,6 +1373,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         // the message contains the location
                         reassignmentMessage,
                         reassignmentMessage);
+                    if (fields.File != null)
+                    {
+                        Reflector.SetFile(reassignmentEvent, fields.File);
+                    }
+
+                    if (fields.LineNumber != 0)
+                    {
+                        Reflector.SetLineNumber(reassignmentEvent, fields.LineNumber);
+                    }
+
+                    if (fields.ColumnNumber != 0)
+                    {
+                        Reflector.SetColumnNumber(reassignmentEvent, fields.ColumnNumber);
+                    }
 
                     SetCommonFields(reassignmentEvent, fields);
 
@@ -1443,6 +1457,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 propertySource,
                 message);
             SetCommonFields(e, fields);
+
+            if (fields.File != null)
+            {
+                Reflector.SetFile(e, fields.File);
+            }
+
+            if (fields.LineNumber != 0)
+            {
+                Reflector.SetLineNumber(e, fields.LineNumber);
+            }
+
+            if (fields.ColumnNumber != 0)
+            {
+                Reflector.SetColumnNumber(e, fields.ColumnNumber);
+            }
 
             return e;
         }

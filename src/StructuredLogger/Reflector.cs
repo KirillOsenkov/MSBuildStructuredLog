@@ -134,6 +134,24 @@ namespace Microsoft.Build.Logging.StructuredLogger
             timeStampSetter(args, timestamp);
         }
 
+        private static Action<BuildMessageEventArgs, string> fileSetter = GetFieldSetter<BuildMessageEventArgs, string>("file");
+        public static void SetFile(BuildMessageEventArgs args, string file)
+        {
+            fileSetter(args, file);
+        }
+
+        private static Action<BuildMessageEventArgs, int> lineNumberSetter = GetFieldSetter<BuildMessageEventArgs, int>("lineNumber");
+        public static void SetLineNumber(BuildMessageEventArgs args, int lineNumber)
+        {
+            lineNumberSetter(args, lineNumber);
+        }
+
+        private static Action<BuildMessageEventArgs, int> columnNumberSetter = GetFieldSetter<BuildMessageEventArgs, int>("columnNumber");
+        public static void SetColumnNumber(BuildMessageEventArgs args, int columnNumber)
+        {
+            columnNumberSetter(args, columnNumber);
+        }
+
         private static Func<T, R> GetFieldAccessor<T, R>(string fieldName)
         {
             ParameterExpression param = Expression.Parameter(typeof(T), "instance");
