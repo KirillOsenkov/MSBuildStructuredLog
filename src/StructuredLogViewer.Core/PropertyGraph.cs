@@ -299,7 +299,7 @@ public class PropertyGraph
                                 sourceTextLineResult.IsBold = true;
                                 sourceTextLineResult.IsExpanded = true;
                             }
-                            else if (reportWrite)
+                            else if (reportWrite && context.Evaluation.PropertyAssignmentFolder != null)
                             {
                                 sourceTextLineResult.IsLowRelevance = true;
                             }

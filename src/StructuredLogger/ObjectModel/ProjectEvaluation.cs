@@ -87,7 +87,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         private TimedNode propertyAssignmentFolder;
-        public TimedNode PropertyAssignmentFolder
+        public TimedNode PropertyAssignmentFolder => propertyAssignmentFolder;
+
+        public TimedNode EnsurePropertyAssignmentFolder
         {
             get
             {

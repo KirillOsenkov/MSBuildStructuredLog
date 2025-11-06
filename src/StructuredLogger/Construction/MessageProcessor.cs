@@ -604,7 +604,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     TimedNode properties;
                     if (evaluation != null)
                     {
-                        properties = evaluation.PropertyAssignmentFolder;
+                        properties = evaluation.EnsurePropertyAssignmentFolder;
                     }
                     else
                     {
