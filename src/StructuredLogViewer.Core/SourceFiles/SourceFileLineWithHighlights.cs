@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.Build.Logging.StructuredLogger;
 
@@ -19,6 +20,11 @@ public class SourceFileLineWithHighlights : SourceFileLine
     {
         usages.Add(usage);
     }
+
+    public IEnumerable<string> ReadProperties =>
+        usages.Where(u => !u.IsWrite).Select(u => u.Name).Distinct(StringComparer.OrdinalIgnoreCase);
+
+    public string WrittenProperty => usages.FirstOrDefault(u => u.IsWrite)?.Name;
 
     private bool isBold;
     public bool IsBold

@@ -136,14 +136,27 @@ public class PropertyGraph
         if (Visit(projectFile, resultFolder, text, importsFolder.Children.OfType<Import>(), context) || resultFolder.HasChildren)
         {
             var nodesInReverseOrder = resultFolder.FindChildrenRecursive<SourceFileLineWithHighlights>().Reverse().ToArray();
-            bool foundWrite = false;
+            HashSet<string> foundPropertyWrites = new(StringComparer.OrdinalIgnoreCase);
+
             foreach (var line in nodesInReverseOrder)
             {
-                if (line.IsBold)
+                bool isReadBeforeWrite = false;
+                foreach (var readProperty in line.ReadProperties)
                 {
-                    foundWrite = true;
+                    if (foundPropertyWrites.Contains(readProperty))
+                    {
+                        isReadBeforeWrite = true;
+                        break;
+                    }
                 }
-                else if (foundWrite && !line.IsLowRelevance)
+
+                string writtenProperty = line.WrittenProperty;
+                if (writtenProperty != null)
+                {
+                    foundPropertyWrites.Add(writtenProperty);
+                }
+
+                if (isReadBeforeWrite)
                 {
                     line.IsReadBeforeWrite = true;
                 }
