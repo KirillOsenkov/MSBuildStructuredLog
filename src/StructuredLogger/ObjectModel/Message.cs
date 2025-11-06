@@ -26,6 +26,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public override string TypeName => nameof(Message);
     }
 
+    public class PropertyAssignmentMessage : MessageWithLocation
+    {
+        public string NewValue { get; set; }
+    }
+
+    public class PropertyInitialAssignmentMessage : PropertyAssignmentMessage
+    {
+        public string Source { get; set; }
+    }
+
+    public class PropertyReassignmentMessage : PropertyAssignmentMessage
+    {
+        public string PreviousValue { get; set; }
+    }
+
     public class Message : TextNode, IHasRelevance, IHasSourceFile, IHasLineNumber
     {
         /// <summary>

@@ -20,6 +20,13 @@ public class SourceFileLineWithHighlights : SourceFileLine
         usages.Add(usage);
     }
 
+    private bool isBold;
+    public bool IsBold
+    {
+        get => isBold;
+        set => SetField(ref isBold, value);
+    }
+
     private List<object> highlights;
     public List<object> Highlights
     {

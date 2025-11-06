@@ -344,7 +344,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private Task lastTask;
 
         private Task GetTask(BuildEventContext buildEventContext)
-         {
+        {
             if (buildEventContext.EqualTo(lastTaskBuildEventContext))
             {
                 return lastTask;
@@ -575,26 +575,26 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     if (propertyReassignment != null)
                     {
-                        if (propertyReassignment.File != null)
+                        messageNode = new PropertyReassignmentMessage
                         {
-                            messageNode = new MessageWithLocation
-                            {
-                                FilePath = propertyReassignment.File,
-                                Line = propertyReassignment.LineNumber
-                            };
-                        }
+                            FilePath = propertyReassignment.File,
+                            Line = propertyReassignment.LineNumber,
+                            NewValue = propertyReassignment.NewValue,
+                            PreviousValue = propertyReassignment.PreviousValue
+                        };
                     }
                     else if (propertyReassignmentMatch != null)
                     {
+                        var reassignment = new PropertyReassignmentMessage();
+                        messageNode = reassignment;
+                        reassignment.NewValue = propertyReassignmentMatch.Groups["NewValue"].Value;
+                        reassignment.PreviousValue = propertyReassignmentMatch.Groups["OldValue"].Value;
                         if (propertyReassignmentMatch.Groups["File"].Value is string file &&
                             propertyReassignmentMatch.Groups["Line"].Value is string line &&
                             int.TryParse(line, out var lineNumber))
                         {
-                            messageNode = new MessageWithLocation
-                            {
-                                FilePath = file,
-                                Line = lineNumber
-                            };
+                            reassignment.FilePath = file;
+                            reassignment.Line = lineNumber;
                         }
                     }
                 }
@@ -621,27 +621,27 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     if (propertyInitialValueSet != null)
                     {
-                        if (propertyInitialValueSet.File != null)
+                        messageNode = new PropertyInitialAssignmentMessage
                         {
-                            messageNode = new MessageWithLocation
-                            {
-                                FilePath = propertyInitialValueSet.File,
-                                Line = propertyInitialValueSet.LineNumber
-                            };
-                        }
+                            FilePath = propertyInitialValueSet.File,
+                            Line = propertyInitialValueSet.LineNumber,
+                            NewValue = propertyInitialValueSet.PropertyValue,
+                            Source = propertyInitialValueSet.PropertySource
+                        };
                     }
                     else if (propertyInitialValueSetMatch != null)
                     {
-                        if (propertyInitialValueSetMatch.Groups["Source"].Value is string source &&
-                            Strings.FileLineAndColumnRegex.Match(source) is { } match &&
+                        var initialAssignmentMessage = new PropertyInitialAssignmentMessage();
+                        messageNode = initialAssignmentMessage;
+                        string source = propertyInitialValueSetMatch.Groups["Source"].Value;
+                        initialAssignmentMessage.Source = source;
+                        if (Strings.FileLineAndColumnRegex.Match(source) is { } match &&
                             match.Success &&
                             int.TryParse(match.Groups["Line"].Value, out var lineNumber))
                         {
-                            messageNode = new MessageWithLocation
-                            {
-                                FilePath = match.Groups["File"].Value,
-                                Line = lineNumber
-                            };
+                            initialAssignmentMessage.FilePath = match.Groups["File"].Value;
+                            initialAssignmentMessage.Line = lineNumber;
+                            initialAssignmentMessage.NewValue = propertyInitialValueSetMatch.Groups["NewValue"].Value;
                         }
                     }
                 }
@@ -764,7 +764,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             Intern(text);
                         }
 
-                        if (!string.IsNullOrEmpty(buildMessageEventArgs.File))
+                        if (messageNode == null && !string.IsNullOrEmpty(buildMessageEventArgs.File))
                         {
                             messageNode = new MessageWithLocation
                             {

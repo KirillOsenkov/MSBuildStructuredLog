@@ -11,6 +11,7 @@ public class PropertyGraph
 {
     public class GraphWalkContext
     {
+        public ProjectEvaluation Evaluation { get; set; }
         public HashSet<string> PropertyNames { get; set; }
         public Digraph Graph { get; set; }
         public Dictionary<string, Vertex> CurrentNodes { get; set; } = new(StringComparer.OrdinalIgnoreCase);
@@ -23,6 +24,51 @@ public class PropertyGraph
             }
 
             return Graph.GetOrCreate($"Initial value: {propertyName}", t => propertyName);
+        }
+
+        public string FindAssignment(string propertyName, string filePath, int lineNumber)
+        {
+            string result;
+
+            if (Evaluation.PropertyAssignmentFolder != null)
+            {
+                result = FindAssignment(Evaluation.PropertyAssignmentFolder);
+                if (result != null)
+                {
+                    return result;
+                }
+            }
+
+            if (Evaluation.PropertyReassignmentFolder != null)
+            {
+                result = FindAssignment(Evaluation.PropertyReassignmentFolder);
+                if (result != null)
+                {
+                    return result;
+                }
+            }
+
+            return null;
+
+            string FindAssignment(TimedNode folder)
+            {
+                var childFolder = folder.FindChild<Folder>(propertyName);
+                if (childFolder == null)
+                {
+                    return null;
+                }
+
+                foreach (var messageWithLocation in childFolder.Children.OfType<PropertyAssignmentMessage>())
+                {
+                    if (string.Equals(filePath, messageWithLocation.FilePath, StringComparison.OrdinalIgnoreCase) &&
+                        messageWithLocation.Line == lineNumber)
+                    {
+                        return messageWithLocation.NewValue;
+                    }
+                }
+
+                return null;
+            }
         }
     }
 
@@ -41,9 +87,10 @@ public class PropertyGraph
             var names = results.Select(r => ((Property)r.Node).Name).ToArray();
 
             var context = new GraphWalkContext();
+            context.Evaluation = evaluation;
             context.PropertyNames = new HashSet<string>(names, StringComparer.OrdinalIgnoreCase);
 
-            var graphNode = GetPropertyGraph(evaluation, context);
+            var graphNode = GetPropertyGraph(context);
             if (graphNode != null)
             {
                 results = results.Append(graphNode).ToArray();
@@ -53,8 +100,9 @@ public class PropertyGraph
         return results;
     }
 
-    public SearchResult GetPropertyGraph(ProjectEvaluation evaluation, GraphWalkContext context)
+    public SearchResult GetPropertyGraph(GraphWalkContext context)
     {
+        var evaluation = context.Evaluation;
         var importsFolder = evaluation.ImportsFolder;
 
         if (importsFolder == null)
@@ -64,9 +112,28 @@ public class PropertyGraph
 
         var resultFolder = new Folder { Name = "Property Graph", IsExpanded = true };
 
-        var text = PreprocessedFileManager.SourceFileResolver.GetSourceFileText(evaluation.ProjectFile);
+        var projectFile = evaluation.ProjectFile;
+        var text = PreprocessedFileManager.SourceFileResolver.GetSourceFileText(projectFile);
 
-        if (Visit(evaluation.ProjectFile, resultFolder, text, importsFolder.Children.OfType<Import>(), context))
+        if (evaluation.PropertyAssignmentFolder is { } assignmentFolder)
+        {
+            if (context.PropertyNames != null)
+            {
+                foreach (var propertyName in context.PropertyNames)
+                {
+                    var propertyFolder = assignmentFolder.FindChild<Folder>(propertyName);
+                    if (propertyFolder != null &&
+                        propertyFolder.Children.OfType<PropertyInitialAssignmentMessage>().FirstOrDefault() is { } initialAssignment &&
+                        initialAssignment.FilePath == null)
+                    {
+                        var proxy = new ProxyNode() { Original = initialAssignment };
+                        resultFolder.AddChild(proxy);
+                    }
+                }
+            }
+        }
+
+        if (Visit(projectFile, resultFolder, text, importsFolder.Children.OfType<Import>(), context) || resultFolder.HasChildren)
         {
             return new SearchResult(resultFolder);
         }
@@ -178,6 +245,8 @@ public class PropertyGraph
                     foreach (var propertyElement in element.Elements)
                     {
                         string propertyName = propertyElement.Name;
+                        string newValue = null;
+                        bool reportWrite = false;
                         var propertyNode = (SyntaxNode)propertyElement;
                         var propertySpan = propertyNode.Span;
                         var propertyStart = propertySpan.Start;
@@ -196,6 +265,9 @@ public class PropertyGraph
                                 IsWrite = true
                             };
                             usages.Add(usage);
+                            reportWrite = true;
+
+                            newValue = context.FindAssignment(propertyName, filePath, startLine);
                         }
 
                         var value = propertyElement.Value;
@@ -214,6 +286,22 @@ public class PropertyGraph
                             {
                                 usage.Position = usage.Position - propertyStart;
                                 sourceTextLineResult.AddUsage(usage);
+                            }
+
+                            if (newValue != null)
+                            {
+                                var property = new Property
+                                {
+                                    Name = propertyName,
+                                    Value = newValue
+                                };
+                                sourceTextLineResult.AddChild(property);
+                                sourceTextLineResult.IsBold = true;
+                                sourceTextLineResult.IsExpanded = true;
+                            }
+                            else if (reportWrite)
+                            {
+                                sourceTextLineResult.IsLowRelevance = true;
                             }
 
                             if (context.Graph is { } graph)

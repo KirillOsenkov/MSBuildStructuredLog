@@ -875,9 +875,10 @@ Recent (");
             var graph = new Digraph();
             var context = new PropertyGraph.GraphWalkContext()
             {
-                Graph = graph
+                Graph = graph,
+                Evaluation = projectOrEvaluation.GetEvaluation()
             };
-            var resultNode = propertyGraph.GetPropertyGraph(projectOrEvaluation.GetEvaluation(), context);
+            var resultNode = propertyGraph.GetPropertyGraph(context);
 
             graph.RemoveCycles();
             graph.CalculateHeight();

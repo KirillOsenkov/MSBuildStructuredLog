@@ -774,8 +774,8 @@
     </DataTemplate.Triggers>
   </DataTemplate>
 
-  <DataTemplate DataType="{x:Type core:SourceFileLineWithHighlights}">
-    <StackPanel Orientation="Horizontal">
+  <HierarchicalDataTemplate DataType="{x:Type core:SourceFileLineWithHighlights}" ItemsSource="{Binding Children}">
+    <StackPanel x:Name="rootPanel" Orientation="Horizontal">
       <TextBlock x:Name="lineNumber" Text="{Binding LineNumber}" FontFamily="Consolas" Foreground="Teal" Margin="0,0,12,0" />
       <ItemsControl x:Name="text" ItemsSource="{Binding Highlights}" Focusable="False" VerticalAlignment="Center">
         <ItemsControl.ItemsPanel>
@@ -785,12 +785,18 @@
         </ItemsControl.ItemsPanel>
       </ItemsControl>
     </StackPanel>
-    <DataTemplate.Triggers>
+    <HierarchicalDataTemplate.Triggers>
       <DataTrigger Binding="{Binding IsSelected}" Value="True">
         <Setter TargetName="lineNumber" Property="Foreground" Value="White" />
       </DataTrigger>
-    </DataTemplate.Triggers>
-  </DataTemplate>
+      <DataTrigger Binding="{Binding IsLowRelevance}" Value="True">
+        <Setter TargetName="rootPanel" Property="Opacity" Value="0.25" />
+      </DataTrigger>
+      <DataTrigger Binding="{Binding IsBold}" Value="True">
+        <Setter TargetName="text" Property="FontWeight" Value="SemiBold" />
+      </DataTrigger>
+    </HierarchicalDataTemplate.Triggers>
+  </HierarchicalDataTemplate>
 
   <DataTemplate DataType="{x:Type l:HighlightedText}">
     <TextBlock x:Name="text" Foreground="Black" Background="Yellow" Text="{Binding Text}" />
