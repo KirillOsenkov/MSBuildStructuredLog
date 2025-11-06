@@ -293,9 +293,9 @@ public class PropertyGraph
                             };
                             usages.Add(usage);
                             reportWrite = true;
-
-                            newValue = context.FindAssignment(propertyName, filePath, startLine);
                         }
+
+                        newValue = context.FindAssignment(propertyName, filePath, startLine);
 
                         var value = propertyElement.Value;
                         var parsedValue = GetParsedValue(propertyElement, text, filePath);
@@ -317,16 +317,19 @@ public class PropertyGraph
 
                             if (newValue != null)
                             {
-                                var property = new Property
+                                if (reportWrite)
                                 {
-                                    Name = propertyName,
-                                    Value = newValue
-                                };
-                                sourceTextLineResult.AddChild(property);
-                                sourceTextLineResult.IsBold = true;
-                                sourceTextLineResult.IsExpanded = true;
+                                    var property = new Property
+                                    {
+                                        Name = propertyName,
+                                        Value = newValue
+                                    };
+                                    sourceTextLineResult.AddChild(property);
+                                    sourceTextLineResult.IsBold = true;
+                                    sourceTextLineResult.IsExpanded = true;
+                                }
                             }
-                            else if (reportWrite && context.Evaluation.PropertyAssignmentFolder != null)
+                            else if (context.Evaluation.PropertyAssignmentFolder != null)
                             {
                                 sourceTextLineResult.IsLowRelevance = true;
                             }
