@@ -514,6 +514,9 @@ public class PropertyGraph
         int lineNumber,
         string lineText)
     {
+        lineText = lineText.Replace('\r', ' ');
+        lineText = lineText.Replace('\n', ' ');
+
         foreach (var child in parent.Children.OfType<SourceFileLineWithHighlights>())
         {
             if (string.Equals(child.SourceFilePath, filePath, StringComparison.OrdinalIgnoreCase) &&
