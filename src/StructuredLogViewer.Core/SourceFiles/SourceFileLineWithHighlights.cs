@@ -27,6 +27,13 @@ public class SourceFileLineWithHighlights : SourceFileLine
         set => SetField(ref isBold, value);
     }
 
+    private bool isReadBeforeWrite;
+    public bool IsReadBeforeWrite
+    {
+        get => isReadBeforeWrite;
+        set => SetField(ref isReadBeforeWrite, value);
+    }
+
     private List<object> highlights;
     public List<object> Highlights
     {

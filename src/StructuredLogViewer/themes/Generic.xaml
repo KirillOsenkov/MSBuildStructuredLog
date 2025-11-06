@@ -795,6 +795,9 @@
       <DataTrigger Binding="{Binding IsBold}" Value="True">
         <Setter TargetName="text" Property="FontWeight" Value="SemiBold" />
       </DataTrigger>
+      <DataTrigger Binding="{Binding IsReadBeforeWrite}" Value="True">
+        <Setter TargetName="rootPanel" Property="Background" Value="#40FF8080" />
+      </DataTrigger>
     </HierarchicalDataTemplate.Triggers>
   </HierarchicalDataTemplate>
 

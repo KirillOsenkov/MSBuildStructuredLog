@@ -135,6 +135,20 @@ public class PropertyGraph
 
         if (Visit(projectFile, resultFolder, text, importsFolder.Children.OfType<Import>(), context) || resultFolder.HasChildren)
         {
+            var nodesInReverseOrder = resultFolder.FindChildrenRecursive<SourceFileLineWithHighlights>().Reverse().ToArray();
+            bool foundWrite = false;
+            foreach (var line in nodesInReverseOrder)
+            {
+                if (line.IsBold)
+                {
+                    foundWrite = true;
+                }
+                else if (foundWrite && !line.IsLowRelevance)
+                {
+                    line.IsReadBeforeWrite = true;
+                }
+            }
+
             return new SearchResult(resultFolder);
         }
 
