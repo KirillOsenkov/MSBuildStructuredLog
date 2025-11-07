@@ -166,7 +166,7 @@ public class PropertyGraph
             foreach (var line in nodesInReverseOrder)
             {
                 string writtenProperty = line.WrittenProperty;
-                bool isReadBeforeWrite = false;
+                List<string> readBeforeWrite = null;
 
                 foreach (var readProperty in line.ReadProperties)
                 {
@@ -177,18 +177,20 @@ public class PropertyGraph
 
                     if (foundPropertyWrites.Contains(readProperty))
                     {
-                        isReadBeforeWrite = true;
+                        readBeforeWrite ??= new();
+                        readBeforeWrite.Add(readProperty);
                     }
                 }
 
-                if (writtenProperty != null)
+                if (writtenProperty != null && !line.IsLowRelevance)
                 {
                     foundPropertyWrites.Add(writtenProperty);
                 }
 
-                if (isReadBeforeWrite)
+                if (readBeforeWrite != null)
                 {
                     line.IsReadBeforeWrite = true;
+                    line.CustomToolTip = $"The following properties are read here and then written to later: {string.Join(", ", readBeforeWrite)}";
                 }
             }
 

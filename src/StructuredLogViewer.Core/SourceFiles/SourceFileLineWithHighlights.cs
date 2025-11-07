@@ -34,6 +34,15 @@ public class SourceFileLineWithHighlights : SourceFileLine
         set => SetField(ref isBold, value);
     }
 
+    public override string ToolTip => CustomToolTip;
+
+    private string customToolTip;
+    public string CustomToolTip
+    {
+        get => customToolTip;
+        set => SetField(ref customToolTip, value);
+    }
+
     private bool isReadBeforeWrite;
     public bool IsReadBeforeWrite
     {
