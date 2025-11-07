@@ -135,8 +135,22 @@ public class PropertyGraph
                         propertyFolder.Children.OfType<PropertyInitialAssignmentMessage>().FirstOrDefault() is { } initialAssignment &&
                         initialAssignment.FilePath == null)
                     {
-                        var proxy = new ProxyNode() { Original = initialAssignment };
-                        resultFolder.AddChild(proxy);
+                        var line = new SourceFileLineWithHighlights
+                        {
+                            LineText = initialAssignment.Text,
+                            LineNumber = -1,
+                            IsBold = true
+                        };
+                        int position = initialAssignment.Text.IndexOf(propertyName);
+                        line.AddUsage(new PropertyUsage
+                        {
+                            Name = propertyName,
+                            PropertyOfInterest = true,
+                            Position = position,
+                            IsWrite = true
+                        });
+
+                        resultFolder.AddChild(line);
                     }
                 }
             }

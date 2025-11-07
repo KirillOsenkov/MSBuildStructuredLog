@@ -776,7 +776,12 @@
 
   <HierarchicalDataTemplate DataType="{x:Type core:SourceFileLineWithHighlights}" ItemsSource="{Binding Children}">
     <StackPanel x:Name="rootPanel" Orientation="Horizontal">
-      <TextBlock x:Name="lineNumber" Text="{Binding LineNumber}" FontFamily="Consolas" Foreground="Teal" Margin="0,0,12,0" />
+      <TextBlock x:Name="lineNumber"
+                 Text="{Binding LineNumber}"
+                 FontFamily="Consolas"
+                 Foreground="Teal"
+                 Margin="0,0,12,0"
+                 VerticalAlignment="Center" />
       <ItemsControl x:Name="text" ItemsSource="{Binding Highlights}" Focusable="False" VerticalAlignment="Center">
         <ItemsControl.ItemsPanel>
           <ItemsPanelTemplate>
@@ -786,6 +791,9 @@
       </ItemsControl>
     </StackPanel>
     <HierarchicalDataTemplate.Triggers>
+      <DataTrigger Binding="{Binding LineNumber}" Value="-1">
+        <Setter TargetName="lineNumber" Property="Visibility" Value="Collapsed" />
+      </DataTrigger>
       <DataTrigger Binding="{Binding IsSelected}" Value="True">
         <Setter TargetName="lineNumber" Property="Foreground" Value="White" />
       </DataTrigger>
