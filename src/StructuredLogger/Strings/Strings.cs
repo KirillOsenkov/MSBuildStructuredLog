@@ -377,17 +377,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     break;
                 case "pl-PL":
                     text = text
-                        .Replace(@"$({0})=„{1}” ", @"\$\((?<Name>\w+)\)=„(?<NewValue>.*)” ")
+                        .Replace(@"$({0})=„{1}”", @"\$\((?<Name>\w+)\)=„(?<NewValue>.*)”")
                         .Replace("{2}", @"(?<Source>.*)");
                     break;
                 case "zh-Hans":
                     text = text
-                        .Replace(@"$({0})=“{1}” ", @"\$\((?<Name>\w+)\)=“(?<NewValue>.*)” ")
+                        .Replace(@"$({0})=“{1}”", @"\$\((?<Name>\w+)\)=“(?<NewValue>.*)”")
                         .Replace("{2}", @"(?<Source>.*)");
                     break;
                 default:
                     text = text
-                        .Replace(@"$({0})=""{1}"" ", @"\$\((?<Name>\w+)\)=""(?<NewValue>.*)"" ")
+                        .Replace(@"$({0})=""{1}""", @"\$\((?<Name>\w+)\)=""(?<NewValue>.*)""")
                         .Replace("{2}", @"(?<Source>.*)");
                     break;
             }
