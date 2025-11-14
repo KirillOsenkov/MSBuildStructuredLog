@@ -228,6 +228,12 @@ public class PropertyGraph
     {
         bool foundResults = false;
 
+        // Sometimes we see the text for _wpftmp.csproj missing, not much we can do here without it
+        if (text == null)
+        {
+            return false;
+        }
+
         var root = text.RootElement;
 
         var importsBefore = imports.Where(i => i.Line == 0 && Import.IsImportBefore(i.ImportedProjectFilePath)).ToArray();
