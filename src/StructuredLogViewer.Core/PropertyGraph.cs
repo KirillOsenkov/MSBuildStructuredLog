@@ -86,7 +86,7 @@ public class PropertyGraph
 
     private IEnumerable<SearchResult> Search_AugmentResults(ProjectEvaluation evaluation, IEnumerable<SearchResult> results)
     {
-        if (results.All(r => r.Node is Property) && results.Count() < 10)
+        if (results.All(r => r.Node is Property) && results.Count() < 20)
         {
             var names = results.Select(r => ((Property)r.Node).Name).ToArray();
 
