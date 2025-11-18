@@ -43,8 +43,14 @@ public class ParsedExpression
 
                 if (isProperty)
                 {
+                    var dot = propertyName.IndexOf('.');
+                    if (dot >= 0)
+                    {
+                        propertyName = propertyName.Substring(0, dot);
+                    }
+
                     result.PropertyNames.Add(propertyName);
-                    result.PropertyReads.Add(new Span(index + 2, span.Length - 3));
+                    result.PropertyReads.Add(new Span(index + 2, propertyName.Length));
                 }
             }
 
