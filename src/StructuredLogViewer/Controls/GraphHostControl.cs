@@ -360,10 +360,7 @@ public class GraphHostControl : DockPanel
         void Locate()
         {
             var text = searchTextBox.Text;
-            if (!string.IsNullOrWhiteSpace(text))
-            {
-                graphControl.Locate(text);
-            }
+            graphControl.Locate(text);
         }
 
         Children.Add(graphControl.Content);
