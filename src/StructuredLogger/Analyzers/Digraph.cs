@@ -398,11 +398,11 @@ public class Digraph
         }
     }
 
-    public string GetDotText(bool transitiveReduce = false)
+    public string GetDotText(bool transitiveReduce = false, IEnumerable<Vertex> verticesToDisplay = null)
     {
         var writer = new System.IO.StringWriter();
         writer.WriteLine("digraph {");
-        WriteVertices(writer, transitiveReduction: transitiveReduce);
+        WriteVertices(writer, transitiveReduction: transitiveReduce, verticesToDisplay: verticesToDisplay);
         writer.WriteLine("}");
         return writer.ToString();
     }
@@ -478,9 +478,13 @@ public class Digraph
         string arrow = "->",
         string indent = "  ",
         bool quotes = true,
-        bool transitiveReduction = false)
+        bool transitiveReduction = false,
+        IEnumerable<Vertex> verticesToDisplay = null)
     {
-        foreach (var vertex in vertices.Values.OrderBy(r => r.Title, StringComparer.OrdinalIgnoreCase))
+        verticesToDisplay ??= vertices.Values;
+        var verticesSet = new HashSet<Vertex>(verticesToDisplay);
+
+        foreach (var vertex in verticesToDisplay.OrderBy(r => r.Title, StringComparer.OrdinalIgnoreCase))
         {
             if (vertex.OutDegree == 0)
             {
@@ -501,6 +505,11 @@ public class Digraph
 
             foreach (var reference in outgoing.OrderBy(r => r.Title, StringComparer.OrdinalIgnoreCase))
             {
+                if (!verticesSet.Contains(reference))
+                {
+                    continue;
+                }
+
                 var referenceKey = reference.Title;
                 if (!quotes)
                 {

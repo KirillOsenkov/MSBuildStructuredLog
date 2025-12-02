@@ -344,7 +344,7 @@ public class GraphControl
         SelectVertices(selectedVertices.ToArray());
     }
 
-    private IEnumerable<Vertex> GetVerticesToDisplay()
+    public IEnumerable<Vertex> GetVerticesToDisplay()
     {
         if (filterMode == GraphFilterMode.None || !SelectedAndSpecifiedVertices.Any())
         {

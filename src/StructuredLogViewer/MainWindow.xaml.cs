@@ -690,6 +690,11 @@ namespace StructuredLogViewer
                 graph.ComputeTransitiveReduction();
 
                 var graphHostControl = new GraphHostControl();
+                graphHostControl.DisplayText += text =>
+                {
+                    Clipboard.SetText(text);
+                    MessageBox.Show("Text copied to clipboard");
+                };
                 graphHostControl.Graph = graph;
 
                 SetContent(graphHostControl);

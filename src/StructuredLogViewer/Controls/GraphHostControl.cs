@@ -251,7 +251,7 @@ public class GraphHostControl : DockPanel
 
         showTextButton.Click += (s, e) =>
         {
-            var text = graph.GetDotText(transitiveReduceCheck.IsChecked == true);
+            var text = graph.GetDotText(transitiveReduceCheck.IsChecked == true, graphControl.GetVerticesToDisplay());
             DisplayText?.Invoke(text);
         };
 
