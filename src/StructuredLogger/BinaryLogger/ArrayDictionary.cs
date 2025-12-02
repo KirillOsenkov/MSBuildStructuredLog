@@ -225,9 +225,17 @@ namespace Microsoft.Build.Collections
                 return;
             }
 
-            sorted = true;
+            lock (keys)
+            {
+                if (sorted)
+                {
+                    return;
+                }
 
-            Array.Sort(keys, values);
+                sorted = true;
+
+                Array.Sort(keys, values);
+            }
         }
 
         private struct Enumerator : IEnumerator<KeyValuePair<TKey, TValue>>, IDictionaryEnumerator
