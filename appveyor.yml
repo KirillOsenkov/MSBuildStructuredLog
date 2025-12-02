@@ -23,7 +23,7 @@ for:
       - choco upgrade chocolatey
       - dotnet tool update -g checkbinarycompat
       - ps: Invoke-WebRequest -Uri 'https://dot.net/v1/dotnet-install.ps1' -UseBasicParsing -OutFile "$env:temp\dotnet-install.ps1"
-      - ps: '& $env:temp\dotnet-install.ps1 -Version "8.0.302"'
+      - ps: '& $env:temp\dotnet-install.ps1 -Version "10.0.100"'
     build_script:
       - dotnet msbuild /p:Configuration=Release /clp:v=m MSBuildStructuredLog.sln /logger:"C:\Program Files\AppVeyor\BuildAgent\dotnetcore\Appveyor.MSBuildLogger.dll"
       - checkbinarycompat bin\StructuredLogViewer\Release\net472
