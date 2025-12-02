@@ -22,10 +22,12 @@ for:
     init:
       - choco upgrade chocolatey
       - ps: Invoke-WebRequest -Uri 'https://dot.net/v1/dotnet-install.ps1' -UseBasicParsing -OutFile "$env:temp\dotnet-install.ps1"
-      - ps: '& $env:temp\dotnet-install.ps1 -Version "10.0.100"'
+      - ps: '& $env:temp\dotnet-install.ps1 -Version "10.0.100" -InstallDir "C:\Program Files\dotnet"'
       - dotnet tool update -g checkbinarycompat
+      - dotnet --info
     build_script:
       - dotnet msbuild /p:Configuration=Release /clp:v=m MSBuildStructuredLog.sln /logger:"C:\Program Files\AppVeyor\BuildAgent\dotnetcore\Appveyor.MSBuildLogger.dll"
+      - dotnet --info
       - checkbinarycompat bin\StructuredLogViewer\Release\net472
     after_build:
       - ps: >-
