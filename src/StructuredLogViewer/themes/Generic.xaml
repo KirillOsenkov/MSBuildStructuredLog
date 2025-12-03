@@ -993,12 +993,12 @@
           VerticalAlignment="Center">
         <Rectangle Fill="Black">
           <Rectangle.Effect>
-            <DropShadowEffect BlurRadius="40" 
-                            Color="LightGray" 
+            <DropShadowEffect BlurRadius="20" 
+                            Color="Black" 
                             Direction="-45" 
-                            Opacity="1.0" 
+                            Opacity="0.2" 
                             RenderingBias="Performance" 
-                            ShadowDepth="40" />
+                            ShadowDepth="10" />
           </Rectangle.Effect>
         </Rectangle>
         <Grid Background="{DynamicResource Theme_WhiteBackground}">
