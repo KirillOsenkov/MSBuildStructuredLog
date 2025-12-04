@@ -353,7 +353,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var singleResult = resultSet.FirstOrDefault();
             if (resultSet.Count > 1)
             {
-                singleResult = resultSet.FirstOrDefault(r => r.RootFolder == "Incoming");
+                singleResult = resultSet.FirstOrDefault(r => r.RootFolder == "Incoming")
+                    ?? singleResult;
             }
 
             var fileCopyInfo =
