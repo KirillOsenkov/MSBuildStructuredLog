@@ -484,9 +484,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 lock (syncLock)
                 {
-                    var project = GetOrAddProject(args.BuildEventContext.ProjectContextId);
-                    var target = project.GetTargetById(args.BuildEventContext.TargetId);
-                    var task = target.GetTaskById(args.BuildEventContext.TaskId);
+                    var buildEventContext = args.BuildEventContext;
+                    var project = GetOrAddProject(buildEventContext.ProjectContextId);
+                    var task = project.GetTaskById(buildEventContext.TaskId);
+                    if (task == null)
+                    {
+                        var target = project.GetTargetById(buildEventContext.TargetId);
+                        task = target.GetTaskById(buildEventContext.TaskId);
+                    }
 
                     task.EndTime = args.Timestamp;
                 }
@@ -780,15 +785,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             Project project = GetOrAddProject(buildEventContext.ProjectContextId);
             result = project;
-            if (buildEventContext.TargetId > 0)
+            var targetId = buildEventContext.TargetId;
+            var taskId = buildEventContext.TaskId;
+            if (targetId > 0)
             {
-                var target = project.GetTargetById(buildEventContext.TargetId);
+                var target = project.GetTargetById(targetId);
                 if (target != null)
                 {
                     result = target;
-                    if (buildEventContext.TaskId > 0)
+                    if (taskId > 0)
                     {
-                        var task = target.GetTaskById(buildEventContext.TaskId);
+                        var task = project.GetTaskById(taskId) ?? target.GetTaskById(taskId);
                         if (task != null)
                         {
                             result = task;

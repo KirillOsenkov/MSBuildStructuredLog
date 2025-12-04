@@ -350,14 +350,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 return lastTask;
             }
 
-            Target target = GetTarget(buildEventContext);
+            var project = construction.GetProject(buildEventContext.ProjectContextId);
+            if (project == null)
+            {
+                lastTaskBuildEventContext = null;
+                return null;
+            }
+
+            Target target = project.GetTargetById(buildEventContext.TargetId);
             if (target == null)
             {
                 lastTaskBuildEventContext = null;
                 return null;
             }
 
-            var task = target.GetTaskById(buildEventContext.TaskId);
+            var taskId = buildEventContext.TaskId;
+            var task = project.GetTaskById(taskId) ?? target.GetTaskById(taskId);
             lastTaskBuildEventContext = buildEventContext;
             lastTask = task;
             return task;
