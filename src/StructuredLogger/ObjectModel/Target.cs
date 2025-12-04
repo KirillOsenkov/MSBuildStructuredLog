@@ -89,6 +89,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private Dictionary<int, Task> tasksById;
 
+        /// <summary>
+        /// This should never be called anymore (replaced by Project.GetTaskById())
+        /// </summary>
         public Task GetTaskById(int taskId)
         {
             if (tasksById == null)
