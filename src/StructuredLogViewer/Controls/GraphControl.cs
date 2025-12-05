@@ -788,7 +788,7 @@ public class GraphControl
         var newSelection = oldSelection.Intersect(displayedVertices).Union(specifiedVertices).ToArray();
         SelectVertices(newSelection);
 
-        BringIntoView(SelectedAndSpecifiedVertices.FirstOrDefault());
+        BringIntoView(SpecifiedAndSelectedVertices.FirstOrDefault());
     }
 
     private void BringIntoView(Vertex vertex)
@@ -837,6 +837,7 @@ public class GraphControl
 
     public IReadOnlyList<Vertex> SelectedVertices => selectedVertices.ToArray();
     public IReadOnlyList<Vertex> SelectedAndSpecifiedVertices => selectedVertices.Union(specifiedVertices).ToArray();
+    public IReadOnlyList<Vertex> SpecifiedAndSelectedVertices => specifiedVertices.Union(selectedVertices).ToArray();
 
     public UIElement Content => scrollViewer;
 }
