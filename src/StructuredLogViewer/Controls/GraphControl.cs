@@ -28,6 +28,7 @@ public class GraphControl
     private HashSet<FrameworkElement> selectedControls = new();
     private HashSet<Vertex> selectedVertices = new();
     private HashSet<Vertex> specifiedVertices = new();
+    private IEnumerable<Vertex> displayedVertices = [];
 
     private Color outgoingColor, incomingColor, border, allEdgesColor;
     private Brush outgoingSolidBrush;
@@ -226,12 +227,15 @@ public class GraphControl
 
     private void Populate()
     {
-        if (graph.IsEmpty)
+        if (graph == null || graph.IsEmpty)
         {
             return;
         }
 
         var verticesToDisplay = GetVerticesToDisplay();
+
+        displayedVertices = verticesToDisplay;
+
         if (!verticesToDisplay.Any())
         {
             return;
@@ -344,18 +348,36 @@ public class GraphControl
         SelectVertices(selectedVertices.ToArray());
     }
 
+    public IEnumerable<Vertex> AllVertices
+    {
+        get
+        {
+            if (graph == null)
+            {
+                return [];
+            }
+
+            return graph.Vertices;
+        }
+    }
+
     public IEnumerable<Vertex> GetVerticesToDisplay()
     {
+        if (graph == null)
+        {
+            return [];
+        }
+
         if (filterMode == GraphFilterMode.None || !SelectedAndSpecifiedVertices.Any())
         {
-            return graph.Vertices;
+            return AllVertices;
         }
 
         return filterMode switch
         {
             GraphFilterMode.DirectReferencesOnly => GetDirectlyConnectedVertices(),
             GraphFilterMode.ReachableOnly => GetReachableVertices(),
-            _ => graph.Vertices,
+            _ => AllVertices,
         };
     }
 
@@ -752,23 +774,21 @@ public class GraphControl
         }
 
         var parts = text.Split([';'], StringSplitOptions.RemoveEmptyEntries);
-        var found = parts.Select(p => FindControlByText(p)).Where(c => c != null).ToArray();
-        foreach (var foundControl in found)
-        {
-            foundControl.BringIntoView();
-        }
 
-        var foundVertices = found.Select(GetVertex).ToArray();
+        var foundVertices = parts.Select(p => FindVertexByText(p)).Where(v => v != null).ToArray();
         specifiedVertices.UnionWith(foundVertices);
 
-        SelectVertices(foundVertices);
+        var oldSelection = selectedVertices.ToArray();
 
         if (filterMode != GraphFilterMode.None)
         {
             Redraw();
-
-            BringIntoView(SelectedAndSpecifiedVertices.FirstOrDefault());
         }
+
+        var newSelection = oldSelection.Intersect(displayedVertices).Union(specifiedVertices).ToArray();
+        SelectVertices(newSelection);
+
+        BringIntoView(SelectedAndSpecifiedVertices.FirstOrDefault());
     }
 
     private void BringIntoView(Vertex vertex)
@@ -780,6 +800,21 @@ public class GraphControl
 
         var control = GetControl(vertex);
         control?.BringIntoView();
+    }
+
+    private Vertex FindVertexByText(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return null;
+        }
+
+        text = text.Trim();
+
+        return AllVertices
+            .OrderBy(v => v.Title.Length)
+            .ThenBy(v => v.Title)
+            .FirstOrDefault(v => v.Title.ContainsIgnoreCase(text));
     }
 
     private FrameworkElement FindControlByText(string text)
