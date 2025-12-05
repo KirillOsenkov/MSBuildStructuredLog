@@ -36,6 +36,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             resolveAssemblyReferenceAnalyzer = new ResolveAssemblyReferenceAnalyzer();
             cppAnalyzer = new CppAnalyzer();
             fileCopyMap = new FileCopyMap();
+            fileCopyMap.Build = build;
             projectReferenceGraph = new ProjectReferenceGraph(build);
             build.FileCopyMap = fileCopyMap;
             build.ProjectReferenceGraph = projectReferenceGraph;
