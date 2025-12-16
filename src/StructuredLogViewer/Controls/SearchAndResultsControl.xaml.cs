@@ -57,6 +57,11 @@ namespace StructuredLogViewer.Controls
             set => typingConcurrentOperation.ExecuteSearch = value;
         }
 
+        public void RetriggerSearch()
+        {
+            typingConcurrentOperation.TriggerSearch(SearchText, Search.DefaultMaxResults);
+        }
+
         public void TriggerSearch(string text, int maxResults)
         {
             typingConcurrentOperation.TriggerSearch(text, maxResults);

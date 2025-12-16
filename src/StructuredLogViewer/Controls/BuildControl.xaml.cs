@@ -1597,11 +1597,22 @@ Recent (");
 
         public void SetProjectContext(object contents)
         {
+            if (projectContext == contents)
+            {
+                return;
+            }
+
             projectContext = contents;
             propertiesAndItemsContext.Content = contents;
             var visibility = contents != null ? Visibility.Visible : Visibility.Collapsed;
             projectContextBorder.Visibility = visibility;
             propertiesAndItemsControl.TopPanel.Visibility = visibility;
+            if (contents != null &&
+                !string.IsNullOrEmpty(propertiesAndItemsControl.SearchText) &&
+                leftPaneTabControl.SelectedItem == propertiesAndItemsTab)
+            {
+                propertiesAndItemsControl.RetriggerSearch();
+            }
         }
 
         public IProjectOrEvaluation GetProjectContext()
