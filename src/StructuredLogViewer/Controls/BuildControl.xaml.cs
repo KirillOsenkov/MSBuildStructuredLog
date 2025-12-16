@@ -1162,6 +1162,8 @@ Recent (");
             NodeQueryMatcher nodeQueryMatcher = new NodeQueryMatcher(searchText);
             bool isSecretsSearch = !string.IsNullOrEmpty(searchText) && searchText.StartsWith("$secret");
 
+            List<System.Threading.Tasks.Task<(string filePath, SourceText sourceText, IReadOnlyList<int> resultLines)>> tasks = new();
+
             foreach (var file in archiveFile.Files)
             {
                 if (cancellationToken.IsCancellationRequested)
@@ -1179,12 +1181,21 @@ Recent (");
                 }
                 else
                 {
-                    var haystack = file.Value;
-                    var resultsInFile = haystack.Find(searchText);
-                    if (resultsInFile.Count > 0)
+                    var task = TPLTask.Run(() =>
                     {
-                        results.Add((file.Key, resultsInFile.Select(lineNumber => (lineNumber, haystack.GetLineText(lineNumber)))));
-                    }
+                        var resultsInFile = file.Value.Find(searchText);
+                        return (file.Key, file.Value, resultsInFile);
+                    });
+                    tasks.Add(task);
+                }
+            }
+
+            foreach (var task in tasks)
+            {
+                var result = task.Result;
+                if (result.resultLines.Count > 0)
+                {
+                    results.Add((result.filePath, result.resultLines.Select(lineNumber => (lineNumber, result.sourceText.GetLineText(lineNumber)))));
                 }
             }
 
