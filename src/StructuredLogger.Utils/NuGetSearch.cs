@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NuGet.Frameworks;
 using NuGet.ProjectModel;
 using NuGet.Versioning;
@@ -41,6 +43,65 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
 
                 return libraryMap;
+            }
+        }
+
+        private Dictionary<string, Dictionary<string, string>> centralPackageVersions;
+        public Dictionary<string, Dictionary<string, string>> CentralPackageVersions
+        {
+            get
+            {
+                if (centralPackageVersions == null)
+                {
+                    lock (this)
+                    {
+                        if (centralPackageVersions == null)
+                        {
+                            ParseJson();
+                        }
+                    }
+                }
+
+                return centralPackageVersions;
+            }
+        }
+
+        private void ParseJson()
+        {
+            centralPackageVersions = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
+
+            var root = JObject.Parse(Text);
+
+            var frameworks = root["project"]?["frameworks"] as JObject;
+            if (frameworks is null)
+            {
+                return;
+            }
+
+            foreach (var tfmProperty in frameworks.Properties())
+            {
+                var tfm = tfmProperty.Name;
+                var tfmObject = tfmProperty.Value as JObject;
+                if (tfmObject is null)
+                {
+                    continue;
+                }
+
+                var cpvObject = tfmObject["centralPackageVersions"] as JObject;
+                if (cpvObject is null)
+                {
+                    continue;
+                }
+
+                var idsAndVersions = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                foreach (var property in cpvObject.Properties())
+                {
+                    idsAndVersions[property.Name] = property.Value.Type == JTokenType.String
+                        ? (string)property.Value!
+                        : property.Value.ToString(Formatting.None);
+                }
+
+                centralPackageVersions[tfm] = idsAndVersions;
             }
         }
     }
@@ -115,7 +176,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             var projectNode = CreateProject(assetsFile);
             var matcher = new NodeQueryMatcher(fileName);
-            if (PopulatePackageContents(projectNode, lockFile, matcher, assetsFile.LibraryMap, addedDependencySection: false))
+            if (PopulatePackageContents(assetsFile, projectNode, lockFile, matcher, assetsFile.LibraryMap, addedDependencySection: false))
             {
                 var result = new SearchResult(projectNode);
                 resultCollector.Add(result);
@@ -235,9 +296,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var lockFile = file.LockFile;
             var libraryMap = file.LibraryMap;
 
-            bool addedAnything = PopulateDependencies(project, lockFile, matcher, libraryMap);
+            bool addedAnything = PopulateDependencies(file, project, lockFile, matcher, libraryMap);
 
-            addedAnything |= PopulatePackageContents(project, lockFile, matcher, libraryMap, addedDependencySection: addedAnything);
+            addedAnything |= PopulatePackageContents(file, project, lockFile, matcher, libraryMap, addedDependencySection: addedAnything);
 
             if (!addedAnything)
             {
@@ -249,6 +310,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         private bool PopulateDependencies(
+            AssetsFile assetsFile,
             Project project,
             LockFile lockFile,
             NodeQueryMatcher matcher,
@@ -277,6 +339,49 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     Name = $"Dependencies for {shortFrameworkName}",
                     IsExpanded = true
                 };
+
+                if (assetsFile.CentralPackageVersions.TryGetValue(shortFrameworkName, out var centralVersions))
+                {
+                    Folder cpvm = null;
+
+                    foreach (var dep in centralVersions)
+                    {
+                        if (matcher == null ||
+                            matcher.Terms.Count == 0 ||
+                            matcher.IsMatch(dep.Key, dep.Value) != null)
+                        {
+                            if (cpvm == null)
+                            {
+                                cpvm = new Folder
+                                {
+                                    Name = "Central package versions"
+                                };
+                            }
+
+                            string name = dep.Key;
+                            string version = dep.Value;
+                            var package = new Package
+                            {
+                                Name = name,
+                                Version = version
+                            };
+                            var fields = new[] { name, version };
+                            var proxy = WrapWithProxy(package, matcher, fields);
+                            cpvm.AddChild(proxy.node);
+                        }
+                    }
+
+                    if (cpvm != null)
+                    {
+                        if (cpvm.Children.Count == 1)
+                        {
+                            cpvm.IsExpanded = true;
+                        }
+
+                        frameworkNode.AddChild(cpvm);
+                        addedAnything = true;
+                    }
+                }
 
                 HashSet<string> expandedPackages = new(frameworkDependencies.Select(d => d.name), StringComparer.OrdinalIgnoreCase);
 
@@ -307,7 +412,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     var dependency = frameworkDependencies.FirstOrDefault(d => string.Equals(d.name, topLibrary.Name, StringComparison.OrdinalIgnoreCase)).version;
                     (TreeNode topLevelNode, SearchResult match) = CreateNode(
-                        lockFile,
                         dependency,
                         topLibrary,
                         expand,
@@ -315,7 +419,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         libraryMap);
 
                     bool added = AddDependencies(
-                        lockFile,
                         topLibrary.Name,
                         topLevelNode,
                         libraries,
@@ -372,7 +475,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         private bool AddDependencies(
-            LockFile lockFile,
             string id,
             TreeNode dependencyNode,
             Dictionary<string, LockFileTargetLibrary> lockFileTargetLibraries,
@@ -422,7 +524,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 var dependencyLibrary = dependencyLibraryAndVersionSpec.targetLibrary;
                 var (node, match) = CreateNode(
-                    lockFile,
                     dependencyLibraryAndVersionSpec.versionSpec,
                     dependencyLibrary,
                     expand,
@@ -433,7 +534,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (needToAddChildren.Contains(dependencyLibrary.Name))
                 {
                     added = AddDependencies(
-                        lockFile,
                         dependencyLibrary.Name,
                         node,
                         lockFileTargetLibraries,
@@ -453,6 +553,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         private bool PopulatePackageContents(
+            AssetsFile assetsFile,
             Project project,
             LockFile lockFile,
             NodeQueryMatcher matcher,
@@ -505,13 +606,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (!addedDependencySection && addedPackageIds.Count == 1)
             {
                 var packageMatcher = new NodeQueryMatcher(addedPackageIds.First());
-                PopulateDependencies(project, lockFile, packageMatcher, libraryMap);
+                PopulateDependencies(assetsFile, project, lockFile, packageMatcher, libraryMap);
             }
 
             if (nodesByTarget.Count == 1)
             {
                 var node = nodesByTarget.FirstOrDefault().Value.node;
-                node.IsExpanded = true;
                 project.AddChild(node);
                 addedAnything = true;
             }
@@ -522,7 +622,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     var folderName = "Packages for " + string.Join("; ", kvp.Value.targets);
                     var folder = project.GetOrCreateNodeWithName<Folder>(folderName);
                     var node = kvp.Value.node;
-                    folder.IsExpanded = true;
                     folder.AddChild(node);
                     addedAnything = true;
                 }
@@ -794,7 +893,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         private (TreeNode node, SearchResult match) CreateNode(
-            LockFile lockFile,
             string dependency,
             LockFileTargetLibrary library,
             bool expand,
