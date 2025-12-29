@@ -433,6 +433,37 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             navigationHelper.OpenFileRequested += filePath => DisplayFile(filePath);
 
             centralTabControl.SelectionChanged += CentralTabControl_SelectionChanged;
+
+            // Initialize Copilot chat control
+            InitializeCopilotChat();
+        }
+
+        private void InitializeCopilotChat()
+        {
+            try
+            {
+                copilotChatControl.Initialize(Build);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to initialize Copilot chat: {ex.Message}");
+            }
+        }
+
+        public void ToggleCopilotChat(bool show)
+        {
+            if (show)
+            {
+                copilotChatColumn.Width = new GridLength(400);
+                copilotChatBorder.Visibility = Visibility.Visible;
+                copilotSplitter.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                copilotChatColumn.Width = new GridLength(0);
+                copilotChatBorder.Visibility = Visibility.Collapsed;
+                copilotSplitter.Visibility = Visibility.Collapsed;
+            }
         }
 
         public void Dispose()
@@ -1546,6 +1577,12 @@ Recent (");
                 UpdateBreadcrumb(item);
                 UpdateProjectContext(item);
                 UpdateFindContent();
+                
+                // Update Copilot chat context
+                if (item is BaseNode node)
+                {
+                    copilotChatControl.SetSelectedNode(node);
+                }
             }
         }
 

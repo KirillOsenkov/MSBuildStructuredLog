@@ -10,7 +10,15 @@
              d:DataContext="{d:DesignInstance structuredLogger:Build}"
              d:DesignHeight="300" d:DesignWidth="300">
 
-  <local:SplitterPanel Orientation="Vertical" FirstChildRelativeSize="*" SecondChildRelativeSize="50">
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="*"/>
+      <ColumnDefinition Width="Auto"/>
+      <ColumnDefinition x:Name="copilotChatColumn" Width="0"/>
+    </Grid.ColumnDefinitions>
+    
+    <!-- Main content area -->
+    <local:SplitterPanel Grid.Column="0" Orientation="Vertical" FirstChildRelativeSize="*" SecondChildRelativeSize="50">
 
     <local:SplitterPanel.FirstChild>
       <local:SplitterPanel FirstChildRelativeSize="1*" SecondChildRelativeSize="3*">
@@ -182,5 +190,23 @@
     </local:SplitterPanel.SecondChild>
 
   </local:SplitterPanel>
+
+    <!-- Copilot Chat Panel (right side) -->
+    <GridSplitter Grid.Column="1" 
+                  x:Name="copilotSplitter"
+                  Width="5" 
+                  HorizontalAlignment="Center" 
+                  VerticalAlignment="Stretch"
+                  Visibility="Collapsed"
+                  Background="Gray"/>
+    
+    <Border Grid.Column="2" 
+            x:Name="copilotChatBorder"
+            BorderBrush="Gray"
+            BorderThickness="1,0,0,0"
+            Visibility="Collapsed">
+      <local:CopilotChatControl x:Name="copilotChatControl" />
+    </Border>
+  </Grid>
 
 </UserControl>

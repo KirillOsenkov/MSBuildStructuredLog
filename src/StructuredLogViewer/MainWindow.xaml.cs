@@ -1250,5 +1250,19 @@ that project." };
                 exceptionPanel.Visibility = Visibility.Hidden;
             }
         }
+
+        private void CopilotButton_Click(object sender, RoutedEventArgs e)
+        {
+            var buildControl = CurrentBuildControl;
+            if (buildControl != null)
+            {
+                buildControl.ToggleCopilotChat(copilotButton.IsChecked == true);
+            }
+            else
+            {
+                // No build loaded
+                copilotButton.IsChecked = false;
+            }
+        }
     }
 }
