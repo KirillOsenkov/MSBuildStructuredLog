@@ -67,6 +67,15 @@
             BorderThickness="0,1,0,0"
             Padding="8">
       <DockPanel>
+        <Button x:Name="cancelButton" 
+                DockPanel.Dock="Right"
+                Content="Cancel"
+                Padding="12,4"
+                Margin="8,0,0,0"
+                Click="CancelButton_Click"
+                IsEnabled="True"
+                MinWidth="60"
+                Visibility="Collapsed" />
         <Button x:Name="sendButton" 
                 DockPanel.Dock="Right"
                 Content="Send"

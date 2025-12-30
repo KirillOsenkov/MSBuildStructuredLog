@@ -277,9 +277,96 @@ namespace StructuredLogViewer.Controls
             statusBar.Visibility = Visibility.Collapsed;
         }
 
+        private void SetQueryInProgress()
+        {
+            sendButton.Visibility = Visibility.Collapsed;
+            cancelButton.Visibility = Visibility.Visible;
+            inputTextBox.IsEnabled = false;
+            agentModeToggle.IsEnabled = false;
+        }
+
+        private void SetQueryIdle()
+        {
+            sendButton.Visibility = Visibility.Visible;
+            cancelButton.Visibility = Visibility.Collapsed;
+            inputTextBox.IsEnabled = true;
+            agentModeToggle.IsEnabled = true;
+            inputTextBox.Focus();
+        }
+
         private async void SendButton_Click(object sender, RoutedEventArgs e)
         {
             await SendMessageAsync();
+        }
+
+        private void CancelButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Cancel the current operation
+            cancellationTokenSource?.Cancel();
+            
+            // Dismount all events from current services
+            if (chatService != null)
+            {
+                chatService.MessageAdded -= OnMessageAdded;
+                chatService.ConversationCleared -= OnConversationCleared;
+                chatService.ToolCallExecuted -= OnToolCallExecuted;
+            }
+            
+            if (agenticChatService != null)
+            {
+                agenticChatService.ProgressUpdated -= OnAgentProgressUpdated;
+                agenticChatService.MessageAdded -= OnMessageAdded;
+                agenticChatService.ToolCallExecuted -= OnToolCallExecuted;
+            }
+            
+            // Recreate service instances to prevent any late events
+            if (Build != null && BuildControl != null)
+            {
+                // Dispose old services
+                chatService?.Dispose();
+                agenticChatService?.Dispose();
+                
+                // Create new chat service
+                chatService = new LLMChatService(Build, BuildControl);
+                chatService.MessageAdded += OnMessageAdded;
+                chatService.ConversationCleared += OnConversationCleared;
+                chatService.ToolCallExecuted += OnToolCallExecuted;
+                
+                // Reconfigure with current config if available
+                if (currentConfig != null)
+                {
+                    chatService.Reconfigure(currentConfig);
+                }
+                
+                // Recreate agentic service if configured
+                if (currentConfig?.IsConfigured == true)
+                {
+                    agenticChatService = new AgenticLLMChatService(Build, BuildControl, currentConfig);
+                    agenticChatService.ProgressUpdated += OnAgentProgressUpdated;
+                    agenticChatService.MessageAdded += OnMessageAdded;
+                    agenticChatService.ToolCallExecuted += OnToolCallExecuted;
+                }
+            }
+            
+            // Update UI state
+            SetQueryIdle();
+            
+            // Clear agent progress
+            agentProgressPanel.Clear();
+            
+            ShowStatus("Request cancelled", isError: false);
+            
+            // Hide status after 2 seconds
+            var timer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(2)
+            };
+            timer.Tick += (s, args) =>
+            {
+                HideStatus();
+                timer.Stop();
+            };
+            timer.Start();
         }
 
         private void InputTextBox_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -317,15 +404,13 @@ namespace StructuredLogViewer.Controls
             // Clear input
             inputTextBox.Text = string.Empty;
 
-            // Disable send button during processing
-            sendButton.IsEnabled = false;
-            inputTextBox.IsEnabled = false;
-            agentModeToggle.IsEnabled = false;
-            ShowStatus(currentConfig?.AgentMode == true ? "Agent thinking..." : "Thinking...");
-
             // Cancel any existing operation
             cancellationTokenSource?.Cancel();
             cancellationTokenSource = new CancellationTokenSource();
+
+            // Set query in progress and show cancel button
+            SetQueryInProgress();
+            ShowStatus(currentConfig?.AgentMode == true ? "Agent thinking..." : "Thinking...");
 
             try
             {
@@ -359,6 +444,17 @@ namespace StructuredLogViewer.Controls
             catch (OperationCanceledException)
             {
                 ShowStatus("Request cancelled", isError: false);
+                // Hide status after 2 seconds
+                var timer = new System.Windows.Threading.DispatcherTimer
+                {
+                    Interval = TimeSpan.FromSeconds(2)
+                };
+                timer.Tick += (s, args) =>
+                {
+                    HideStatus();
+                    timer.Stop();
+                };
+                timer.Start();
             }
             catch (Exception ex)
             {
@@ -366,10 +462,7 @@ namespace StructuredLogViewer.Controls
             }
             finally
             {
-                sendButton.IsEnabled = true;
-                inputTextBox.IsEnabled = true;
-                agentModeToggle.IsEnabled = true;
-                inputTextBox.Focus();
+                SetQueryIdle();
             }
         }
 
@@ -377,6 +470,9 @@ namespace StructuredLogViewer.Controls
         {
             // Cancel any ongoing operation
             cancellationTokenSource?.Cancel();
+            
+            // Update state immediately
+            SetQueryIdle();
             
             // Clear the conversation
             chatService?.ClearConversation();
@@ -393,7 +489,6 @@ namespace StructuredLogViewer.Controls
             
             HideStatus();
             inputTextBox.Text = string.Empty;
-            inputTextBox.Focus();
         }
 
         private void AgentModeToggle_Click(object sender, RoutedEventArgs e)
