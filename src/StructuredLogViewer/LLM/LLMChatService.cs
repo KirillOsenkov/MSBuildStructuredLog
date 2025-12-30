@@ -140,9 +140,9 @@ Available context:
             if (!IsConfigured)
             {
                 var errorMsg = "LLM is not configured. Please set the required environment variables:\n" +
-                             "- AZURE_FOUNDRY_ENDPOINT\n" +
-                             "- AZURE_FOUNDRY_API_KEY\n" +
-                             "- AZURE_FOUNDRY_MODEL_NAME (optional, defaults to gpt-4)";
+                             "- LLM_ENDPOINT (your Azure endpoint)\n" +
+                             "- LLM_API_KEY (your API key)\n" +
+                             "- LLM_MODEL (model name, e.g., gpt-4)";
                 
                 MessageAdded?.Invoke(this, new ChatMessageViewModel("System", errorMsg, isError: true));
                 return errorMsg;

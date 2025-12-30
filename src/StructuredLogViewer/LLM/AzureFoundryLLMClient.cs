@@ -18,15 +18,7 @@ namespace StructuredLogViewer.LLM
     {
         private readonly IChatClient chatClient;
         private readonly string modelName;
-        private readonly ClientType clientType;
         private bool disposed;
-
-        private enum ClientType
-        {
-            AzureOpenAI,
-            AzureInference,
-            Anthropic
-        }
 
         public AzureFoundryLLMClient(LLMConfiguration config)
         {
@@ -40,30 +32,20 @@ namespace StructuredLogViewer.LLM
             var endpoint = new Uri(config.Endpoint);
             var credential = new AzureKeyCredential(config.ApiKey);
 
-            // Detect which client to use based on endpoint and model
-            bool isAnthropic = config.Endpoint.Contains("/anthropic/", StringComparison.OrdinalIgnoreCase) ||
-                              modelName.StartsWith("claude", StringComparison.OrdinalIgnoreCase);
-
-            if (isAnthropic)
+            if (config.Type == LLMConfiguration.ClientType.Anthropic)
             {
-                // Anthropic models in Azure AI Foundry
                 // The Anthropic.SDK package doesn't easily support custom endpoints
                 // Create a simple HTTP-based client wrapper instead
-                clientType = ClientType.Anthropic;
                 chatClient = new AnthropicHttpChatClient(config.Endpoint, config.ApiKey, modelName);
             }
-            else if (config.UseAzureOpenAI)
+            else if (config.Type == LLMConfiguration.ClientType.AzureOpenAI)
             {
-                // Azure OpenAI client
-                clientType = ClientType.AzureOpenAI;
                 var openAIClient = new AzureOpenAIClient(endpoint, credential);
                 var openAIChatClient = openAIClient.GetChatClient(modelName);
                 chatClient = openAIChatClient.AsChatClient();
             }
             else
             {
-                // Azure AI Inference client for GitHub Models or other inference endpoints
-                clientType = ClientType.AzureInference;
                 var inferenceClient = new ChatCompletionsClient(endpoint, credential);
                 chatClient = inferenceClient.AsChatClient(modelName);
             }

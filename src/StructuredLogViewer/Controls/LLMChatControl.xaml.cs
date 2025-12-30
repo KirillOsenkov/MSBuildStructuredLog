@@ -101,15 +101,11 @@ namespace StructuredLogViewer.Controls
                 AddMessage(new ChatMessageDisplay
                 {
                     Role = "System",
-                    Content = "LLM is not configured. Set one of these options:\n\n" +
-                            "Option 1 - Azure OpenAI (recommended):\n" +
-                            "• AZURE_OPENAI_ENDPOINT (e.g., https://your-resource.openai.azure.com)\n" +
-                            "• AZURE_OPENAI_API_KEY\n" +
-                            "• AZURE_OPENAI_DEPLOYMENT (your deployment name, e.g., gpt-4)\n\n" +
-                            "Option 2 - Azure AI Foundry:\n" +
-                            "• AZURE_FOUNDRY_ENDPOINT\n" +
-                            "• AZURE_FOUNDRY_API_KEY\n" +
-                            "• AZURE_FOUNDRY_MODEL_NAME\n\n" +
+                    Content = "LLM is not configured. Set these environment variables:\n\n" +
+                            "• LLM_ENDPOINT (e.g., https://your-resource.openai.azure.com/)\n" +
+                            "• LLM_API_KEY (your API key)\n" +
+                            "• LLM_MODEL (e.g., gpt-4, claude-sonnet-4-5-2)\n\n" +
+                            "The system will automatically detect the provider.\n" +
                             "Restart the application after setting these variables.",
                     IsError = true
                 });

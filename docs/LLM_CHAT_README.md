@@ -15,31 +15,20 @@ The MSBuild Structured Log Viewer now includes an AI-powered LLM Chat feature th
 
 ## Setup
 
-### Option 1: Azure OpenAI (Recommended)
+Set the following environment variables:
 
-If you have an Azure OpenAI Service deployment:
+```
+LLM_ENDPOINT=https://your-resource.openai.azure.com/
+LLM_API_KEY=your-api-key
+LLM_MODEL=gpt-4
+```
 
-1. Set the following environment variables:
-   ```
-   AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
-   AZURE_OPENAI_API_KEY=your-api-key
-   AZURE_OPENAI_DEPLOYMENT=your-deployment-name
-   ```
+The system will automatically detect which provider to use based on your endpoint:
+- **Azure OpenAI**: Endpoints containing `cognitiveservices.azure.com` or `openai.azure.com`
+- **Anthropic (Azure AI Foundry)**: Endpoints containing `/anthropic/` or models starting with `claude`
+- **Azure AI Inference**: Other Azure AI Foundry or GitHub Models endpoints
 
-2. Restart the application
-
-### Option 2: Azure AI Foundry / GitHub Models
-
-If you're using Azure AI Foundry or GitHub Models:
-
-1. Set the following environment variables:
-   ```
-   AZURE_FOUNDRY_ENDPOINT=https://your-endpoint.inference.ai.azure.com
-   AZURE_FOUNDRY_API_KEY=your-api-key
-   AZURE_FOUNDRY_MODEL_NAME=gpt-4o
-   ```
-
-2. Restart the application
+After setting the variables, restart the application.
 
 ## Usage
 
