@@ -14,7 +14,7 @@
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="*"/>
       <ColumnDefinition Width="Auto"/>
-      <ColumnDefinition x:Name="llmChatColumn" Width="0"/>
+      <ColumnDefinition x:Name="llmChatColumn" Width="0" MinWidth="0"/>
     </Grid.ColumnDefinitions>
     
     <!-- Main content area -->
@@ -192,7 +192,7 @@
   </local:SplitterPanel>
 
     <!-- LLM Chat Panel (right side) -->
-    <GridSplitter Grid.Column="2"
+    <GridSplitter Grid.Column="1"
                   x:Name="llmSplitter"
                   Width="5" 
                   HorizontalAlignment="Center" 
