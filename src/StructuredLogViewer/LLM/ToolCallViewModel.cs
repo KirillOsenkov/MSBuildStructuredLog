@@ -13,6 +13,11 @@ namespace StructuredLogViewer.LLM
     public class ToolCallViewModel : INotifyPropertyChanged
     {
         private bool isExpanded;
+        private bool isInProgress;
+        private string resultText;
+        private TimeSpan? duration;
+        private bool isError;
+        private string errorMessage;
 
         public ToolCallViewModel(ToolCallInfo toolCallInfo)
         {
@@ -21,26 +26,96 @@ namespace StructuredLogViewer.LLM
                 throw new ArgumentNullException(nameof(toolCallInfo));
             }
 
+            CallId = toolCallInfo.CallId;
             ToolName = toolCallInfo.ToolName;
             StartTime = toolCallInfo.StartTime;
-            Duration = toolCallInfo.Duration;
-            IsError = toolCallInfo.IsError;
-            ErrorMessage = toolCallInfo.ErrorMessage;
-            ResultText = toolCallInfo.ResultText;
+            duration = toolCallInfo.Duration;
+            isError = toolCallInfo.IsError;
+            errorMessage = toolCallInfo.ErrorMessage;
+            resultText = toolCallInfo.ResultText;
+
+            // If no end time, this is an in-progress call
+            isInProgress = !toolCallInfo.EndTime.HasValue;
 
             // Parse arguments for structured display
             ParsedArguments = toolCallInfo.GetParsedArguments();
             ArgumentsSummary = toolCallInfo.GetArgumentsSummary(80);
         }
 
+        public Guid CallId { get; }
         public string ToolName { get; }
         public string ArgumentsSummary { get; }
         public Dictionary<string, string> ParsedArguments { get; }
-        public string ResultText { get; }
         public DateTime StartTime { get; }
-        public TimeSpan? Duration { get; }
-        public bool IsError { get; }
-        public string ErrorMessage { get; }
+
+        public string ResultText
+        {
+            get => resultText;
+            private set
+            {
+                if (resultText != value)
+                {
+                    resultText = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(FormattedResult));
+                }
+            }
+        }
+
+        public TimeSpan? Duration
+        {
+            get => duration;
+            private set
+            {
+                if (duration != value)
+                {
+                    duration = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(DurationText));
+                }
+            }
+        }
+
+        public bool IsError
+        {
+            get => isError;
+            private set
+            {
+                if (isError != value)
+                {
+                    isError = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public string ErrorMessage
+        {
+            get => errorMessage;
+            private set
+            {
+                if (errorMessage != value)
+                {
+                    errorMessage = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public bool IsInProgress
+        {
+            get => isInProgress;
+            private set
+            {
+                if (isInProgress != value)
+                {
+                    isInProgress = value;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(HeaderText));
+                    OnPropertyChanged(nameof(DurationText));
+                }
+            }
+        }
 
         public bool IsExpanded
         {
@@ -58,14 +133,33 @@ namespace StructuredLogViewer.LLM
         /// <summary>
         /// Gets the header text shown in collapsed state.
         /// </summary>
-        public string HeaderText => $"🔧 {ToolName}: {ArgumentsSummary}";
+        public string HeaderText => IsInProgress 
+            ? $"⏳ {ToolName}: {ArgumentsSummary}"
+            : $"🔧 {ToolName}: {ArgumentsSummary}";
 
         /// <summary>
         /// Gets formatted duration text.
         /// </summary>
-        public string DurationText => Duration.HasValue 
-            ? $"{Duration.Value.TotalMilliseconds:F0}ms" 
-            : "N/A";
+        public string DurationText => IsInProgress
+            ? "In progress..."
+            : (Duration.HasValue ? $"{Duration.Value.TotalMilliseconds:F0}ms" : "N/A");
+
+        /// <summary>
+        /// Updates this view model with completion data from a ToolCallInfo.
+        /// </summary>
+        public void UpdateWithCompletion(ToolCallInfo completedCallInfo)
+        {
+            if (completedCallInfo.CallId != CallId)
+            {
+                throw new InvalidOperationException("CallId mismatch when updating tool call");
+            }
+
+            IsInProgress = false;
+            Duration = completedCallInfo.Duration;
+            IsError = completedCallInfo.IsError;
+            ErrorMessage = completedCallInfo.ErrorMessage;
+            ResultText = completedCallInfo.ResultText ?? "(no result)";
+        }
 
         /// <summary>
         /// Gets formatted arguments for display.

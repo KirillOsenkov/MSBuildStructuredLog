@@ -26,6 +26,7 @@ namespace StructuredLogViewer.LLM
 
         public event EventHandler<AgentProgressEventArgs> ProgressUpdated;
         public event EventHandler<ChatMessageViewModel> MessageAdded;
+        public event EventHandler<ToolCallInfo> ToolCallExecuting;
         public event EventHandler<ToolCallInfo> ToolCallExecuted;
 
         public bool IsConfigured => configuration?.IsConfigured ?? false;
@@ -405,6 +406,7 @@ Format your answer with markdown for readability.";
                 foreach (var baseFunction in baseFunctions)
                 {
                     var monitored = new MonitoredAIFunction(baseFunction);
+                    monitored.ToolCallStarted += OnToolCallStarted;
                     monitored.ToolCallCompleted += OnToolCallCompleted;
                     tools.Add(monitored);
                 }
@@ -416,6 +418,12 @@ Format your answer with markdown for readability.";
                 System.Diagnostics.Debug.WriteLine($"Error creating tools for phase {phase}: {ex.Message}");
                 return Array.Empty<AIFunction>();
             }
+        }
+
+        private void OnToolCallStarted(object sender, ToolCallInfo toolCallInfo)
+        {
+            // Raise event for UI consumption
+            ToolCallExecuting?.Invoke(this, toolCallInfo);
         }
 
         private void OnToolCallCompleted(object sender, ToolCallInfo toolCallInfo)

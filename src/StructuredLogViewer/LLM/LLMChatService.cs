@@ -46,6 +46,7 @@ namespace StructuredLogViewer.LLM
 
         public event EventHandler<ChatMessageViewModel> MessageAdded;
         public event EventHandler ConversationCleared;
+        public event EventHandler<ToolCallInfo> ToolCallExecuting;
         public event EventHandler<ToolCallInfo> ToolCallExecuted;
 
         public bool IsConfigured => configuration?.IsConfigured ?? false;
@@ -166,6 +167,7 @@ Available context:
                 foreach (var baseFunction in baseFunctions)
                 {
                     var monitoredFunction = new MonitoredAIFunction(baseFunction);
+                    monitoredFunction.ToolCallStarted += OnToolCallStarted;
                     monitoredFunction.ToolCallCompleted += OnToolCallCompleted;
                     tools.Add(monitoredFunction);
                 }
@@ -184,6 +186,12 @@ Available context:
                 System.Diagnostics.Debug.WriteLine(ex.StackTrace);
                 return Array.Empty<AIFunction>();
             }
+        }
+
+        private void OnToolCallStarted(object sender, ToolCallInfo toolCallInfo)
+        {
+            // Raise event for UI consumption
+            ToolCallExecuting?.Invoke(this, toolCallInfo);
         }
 
         private void OnToolCallCompleted(object sender, ToolCallInfo toolCallInfo)
