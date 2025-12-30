@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -47,8 +47,16 @@ namespace StructuredLogViewer.Controls
         {
             get
             {
-                if (IsError) return new SolidColorBrush(Color.FromRgb(255, 240, 240));
-                if (IsToolCall) return new SolidColorBrush(Color.FromRgb(245, 245, 250));
+                if (IsError)
+                {
+                    return new SolidColorBrush(Color.FromRgb(255, 240, 240));
+                }
+
+                if (IsToolCall)
+                {
+                    return new SolidColorBrush(Color.FromRgb(245, 245, 250));
+                }
+
                 return Role switch
                 {
                     "User" => new SolidColorBrush(Color.FromRgb(230, 240, 255)),
@@ -62,8 +70,16 @@ namespace StructuredLogViewer.Controls
         {
             get
             {
-                if (IsError) return new SolidColorBrush(Color.FromRgb(255, 200, 200));
-                if (IsToolCall) return new SolidColorBrush(Color.FromRgb(180, 180, 200));
+                if (IsError)
+                {
+                    return new SolidColorBrush(Color.FromRgb(255, 200, 200));
+                }
+
+                if (IsToolCall)
+                {
+                    return new SolidColorBrush(Color.FromRgb(180, 180, 200));
+                }
+
                 return Role switch
                 {
                     "User" => new SolidColorBrush(Color.FromRgb(180, 200, 255)),
@@ -88,8 +104,10 @@ namespace StructuredLogViewer.Controls
     public partial class LLMChatControl : UserControl
     {
         private LLMChatService chatService;
+        private AgenticLLMChatService agenticChatService;
         private CancellationTokenSource cancellationTokenSource;
         private readonly ObservableCollection<ChatMessageDisplay> messages;
+        private bool isAgentModeEnabled = false;
 
         public Build Build { get; private set; }
         public BuildControl BuildControl { get; private set; }
@@ -106,14 +124,24 @@ namespace StructuredLogViewer.Controls
             Build = build ?? throw new ArgumentNullException(nameof(build));
             BuildControl = buildControl;
             
-            // Dispose old service if exists
+            // Dispose old services if exists
             chatService?.Dispose();
+            agenticChatService?.Dispose();
             
             // Create new chat service with BuildControl reference
             chatService = new LLMChatService(build, buildControl);
             chatService.MessageAdded += OnMessageAdded;
             chatService.ConversationCleared += OnConversationCleared;
             chatService.ToolCallExecuted += OnToolCallExecuted;
+
+            // Create agentic service
+            var config = LLMConfiguration.LoadFromEnvironment();
+            if (config.IsConfigured)
+            {
+                agenticChatService = new AgenticLLMChatService(build, buildControl, config);
+                agenticChatService.ProgressUpdated += OnAgentProgressUpdated;
+                agenticChatService.MessageAdded += OnMessageAdded;
+            }
 
             // Show initial status
             ShowStatus(chatService.ConfigurationStatus);
@@ -137,6 +165,7 @@ namespace StructuredLogViewer.Controls
                     IsError = true
                 });
                 sendButton.IsEnabled = false;
+                agentModeToggle.IsEnabled = false;
             }
         }
 
@@ -147,17 +176,31 @@ namespace StructuredLogViewer.Controls
 
         private void AddWelcomeMessage()
         {
-            AddMessage(new ChatMessageDisplay
-            {
-                Role = "System",
-                Content = "Welcome to LLM Chat! I can help you analyze this MSBuild binlog.\n\n" +
+            var welcomeMsg = "Welcome to LLM Chat! I can help you analyze this MSBuild binlog.\n\n" +
                         "You can ask me about:\n" +
                         "• Build errors and warnings\n" +
                         "• Project and target information\n" +
                         "• Build duration and performance\n" +
-                        "• Specific tasks or failures\n\n" +
-                        "Try asking: \"What errors occurred?\" or \"Show me the build summary\""
+                        "• Specific tasks or failures\n\n";
+            
+            if (isAgentModeEnabled)
+            {
+                welcomeMsg += "**Agent Mode is ON** 🤖\n" +
+                             "I'll break down complex questions into research tasks for thorough analysis.\n\n";
+            }
+            
+            welcomeMsg += "Try asking: \"What errors occurred?\" or \"Show me the build summary\"";
+
+            AddMessage(new ChatMessageDisplay
+            {
+                Role = "System",
+                Content = welcomeMsg
             });
+        }
+
+        private void OnAgentProgressUpdated(object sender, AgentProgressEventArgs e)
+        {
+            agentProgressPanel.UpdateProgress(e);
         }
 
         private void OnMessageAdded(object sender, ChatMessageViewModel e)
@@ -262,7 +305,8 @@ namespace StructuredLogViewer.Controls
             // Disable send button during processing
             sendButton.IsEnabled = false;
             inputTextBox.IsEnabled = false;
-            ShowStatus("Thinking...");
+            agentModeToggle.IsEnabled = false;
+            ShowStatus(isAgentModeEnabled ? "Agent thinking..." : "Thinking...");
 
             // Cancel any existing operation
             cancellationTokenSource?.Cancel();
@@ -270,7 +314,31 @@ namespace StructuredLogViewer.Controls
 
             try
             {
-                await chatService.SendMessageAsync(message, cancellationTokenSource.Token);
+                if (isAgentModeEnabled && agenticChatService != null)
+                {
+                    // Use agent mode
+                    AddMessage(new ChatMessageDisplay
+                    {
+                        Role = "User",
+                        Content = message
+                    });
+
+                    var response = await agenticChatService.ExecuteAgenticWorkflowAsync(
+                        message, 
+                        cancellationTokenSource.Token);
+                    
+                    AddMessage(new ChatMessageDisplay
+                    {
+                        Role = "Assistant",
+                        Content = response
+                    });
+                }
+                else
+                {
+                    // Use regular interactive mode
+                    await chatService.SendMessageAsync(message, cancellationTokenSource.Token);
+                }
+                
                 HideStatus();
             }
             catch (OperationCanceledException)
@@ -285,6 +353,7 @@ namespace StructuredLogViewer.Controls
             {
                 sendButton.IsEnabled = true;
                 inputTextBox.IsEnabled = true;
+                agentModeToggle.IsEnabled = true;
                 inputTextBox.Focus();
             }
         }
@@ -298,6 +367,9 @@ namespace StructuredLogViewer.Controls
             chatService?.ClearConversation();
             messages.Clear();
             
+            // Clear agent progress
+            agentProgressPanel.Clear();
+            
             // Add welcome message back
             if (chatService?.IsConfigured == true)
             {
@@ -307,6 +379,26 @@ namespace StructuredLogViewer.Controls
             HideStatus();
             inputTextBox.Text = string.Empty;
             inputTextBox.Focus();
+        }
+
+        private void AgentModeToggle_Click(object sender, RoutedEventArgs e)
+        {
+            isAgentModeEnabled = agentModeToggle.IsChecked == true;
+            
+            // Update UI
+            agentModeText.Text = isAgentModeEnabled ? "Agent ON" : "Agent";
+            agentModeToggle.FontWeight = isAgentModeEnabled ? FontWeights.Bold : FontWeights.Normal;
+            
+            // Add notification message
+            var modeMessage = isAgentModeEnabled
+                ? "🤖 **Agent Mode Enabled**\n\nI'll now break down complex questions into research tasks for thorough analysis."
+                : "💬 **Interactive Mode**\n\nBack to single-turn conversations.";
+            
+            AddMessage(new ChatMessageDisplay
+            {
+                Role = "System",
+                Content = modeMessage
+            });
         }
 
         private void ConfigureButton_Click(object sender, RoutedEventArgs e)
@@ -350,6 +442,16 @@ namespace StructuredLogViewer.Controls
 
                     // Reconfigure the service (keeps chat history)
                     chatService?.Reconfigure(newConfig);
+                    
+                    // Reinitialize agentic service with new config
+                    agenticChatService?.Dispose();
+                    if (newConfig.IsConfigured && Build != null && BuildControl != null)
+                    {
+                        agenticChatService = new AgenticLLMChatService(Build, BuildControl, newConfig);
+                        agenticChatService.ProgressUpdated += OnAgentProgressUpdated;
+                        agenticChatService.MessageAdded += OnMessageAdded;
+                        agentModeToggle.IsEnabled = true;
+                    }
                     
                     if (chatService?.IsConfigured == true)
                     {

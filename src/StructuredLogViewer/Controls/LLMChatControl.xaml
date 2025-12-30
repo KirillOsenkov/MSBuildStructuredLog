@@ -29,12 +29,27 @@
                 Margin="4,0,0,0"
                 Click="ConfigureButton_Click"
                 ToolTip="Configure LLM settings" />
+        <ToggleButton x:Name="agentModeToggle"
+                      DockPanel.Dock="Right"
+                      Padding="8,2"
+                      Margin="4,0,0,0"
+                      Click="AgentModeToggle_Click"
+                      ToolTip="Toggle Agent Mode (multi-step reasoning for complex queries)">
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="🤖" Margin="0,0,4,0" />
+            <TextBlock x:Name="agentModeText" Text="Agent" />
+          </StackPanel>
+        </ToggleButton>
         <TextBlock Text="LLM Chat" 
                    FontWeight="Bold" 
                    VerticalAlignment="Center"
                    Foreground="{DynamicResource Theme_Foreground}"/>
       </DockPanel>
     </Border>
+    
+    <!-- Agent Progress Panel -->
+    <local:AgentProgressPanel x:Name="agentProgressPanel" 
+                              DockPanel.Dock="Top" />
 
     <!-- Status Bar -->
     <Border x:Name="statusBar" 
