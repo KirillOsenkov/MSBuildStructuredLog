@@ -1,13 +1,13 @@
 ﻿using System;
 
-namespace StructuredLogViewer.Copilot
+namespace StructuredLogViewer.LLM
 {
     /// <summary>
-    /// Configuration for Copilot Chat integration.
+    /// Configuration for LLM Chat integration.
     /// Reads settings from environment variables.
     /// Supports both Azure OpenAI and Azure AI Foundry/Inference.
     /// </summary>
-    public class CopilotConfiguration
+    public class LLMConfiguration
     {
         // Azure OpenAI (recommended for most users)
         private const string AzureOpenAIEndpointEnvVar = "AZURE_OPENAI_ENDPOINT";
@@ -29,7 +29,7 @@ namespace StructuredLogViewer.Copilot
             !string.IsNullOrWhiteSpace(ApiKey) && 
             !string.IsNullOrWhiteSpace(ModelName);
 
-        public static CopilotConfiguration LoadFromEnvironment()
+        public static LLMConfiguration LoadFromEnvironment()
         {
             // Try Azure OpenAI first (most common)
             var azureOpenAIEndpoint = Environment.GetEnvironmentVariable(AzureOpenAIEndpointEnvVar);
@@ -39,7 +39,7 @@ namespace StructuredLogViewer.Copilot
             if (!string.IsNullOrWhiteSpace(azureOpenAIEndpoint) && 
                 !string.IsNullOrWhiteSpace(azureOpenAIKey))
             {
-                return new CopilotConfiguration
+                return new LLMConfiguration
                 {
                     Endpoint = azureOpenAIEndpoint,
                     ApiKey = azureOpenAIKey,
@@ -59,7 +59,7 @@ namespace StructuredLogViewer.Copilot
                                    (foundryEndpoint.Contains("cognitiveservices.azure.com", StringComparison.OrdinalIgnoreCase) ||
                                     foundryEndpoint.Contains("openai.azure.com", StringComparison.OrdinalIgnoreCase));
 
-            return new CopilotConfiguration
+            return new LLMConfiguration
             {
                 Endpoint = foundryEndpoint,
                 ApiKey = foundryKey,
@@ -76,7 +76,7 @@ namespace StructuredLogViewer.Copilot
                 return $"Connected to {ModelName} at {provider}";
             }
 
-            return "Copilot not configured. Set either:\n" +
+            return "LLM not configured. Set either:\n" +
                    "  Azure OpenAI: AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_API_KEY, AZURE_OPENAI_DEPLOYMENT\n" +
                    "  or Azure AI Foundry: AZURE_FOUNDRY_ENDPOINT, AZURE_FOUNDRY_API_KEY, AZURE_FOUNDRY_MODEL_NAME";
         }

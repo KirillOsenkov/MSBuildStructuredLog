@@ -1251,17 +1251,17 @@ that project." };
             }
         }
 
-        private void CopilotButton_Click(object sender, RoutedEventArgs e)
+        private void LLMButton_Click(object sender, RoutedEventArgs e)
         {
             var buildControl = CurrentBuildControl;
             if (buildControl != null)
             {
-                buildControl.ToggleCopilotChat(copilotButton.IsChecked == true);
+                buildControl.ToggleLLMChat(llmButton.IsChecked == true);
             }
             else
             {
                 // No build loaded
-                copilotButton.IsChecked = false;
+                llmButton.IsChecked = false;
             }
         }
     }

@@ -8,7 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using Microsoft.Build.Logging.StructuredLogger;
-using StructuredLogViewer.Copilot;
+using StructuredLogViewer.LLM;
 
 namespace StructuredLogViewer.Controls
 {
@@ -61,15 +61,15 @@ namespace StructuredLogViewer.Controls
         }
     }
 
-    public partial class CopilotChatControl : UserControl
+    public partial class LLMChatControl : UserControl
     {
-        private CopilotChatService chatService;
+        private LLMChatService chatService;
         private CancellationTokenSource cancellationTokenSource;
         private readonly ObservableCollection<ChatMessageDisplay> messages;
 
         public Build Build { get; private set; }
 
-        public CopilotChatControl()
+        public LLMChatControl()
         {
             InitializeComponent();
             messages = new ObservableCollection<ChatMessageDisplay>();
@@ -84,7 +84,7 @@ namespace StructuredLogViewer.Controls
             chatService?.Dispose();
             
             // Create new chat service
-            chatService = new CopilotChatService(build);
+            chatService = new LLMChatService(build);
             chatService.MessageAdded += OnMessageAdded;
             chatService.ConversationCleared += OnConversationCleared;
 
@@ -101,7 +101,7 @@ namespace StructuredLogViewer.Controls
                 AddMessage(new ChatMessageDisplay
                 {
                     Role = "System",
-                    Content = "Copilot is not configured. Set one of these options:\n\n" +
+                    Content = "LLM is not configured. Set one of these options:\n\n" +
                             "Option 1 - Azure OpenAI (recommended):\n" +
                             "• AZURE_OPENAI_ENDPOINT (e.g., https://your-resource.openai.azure.com)\n" +
                             "• AZURE_OPENAI_API_KEY\n" +
@@ -127,7 +127,7 @@ namespace StructuredLogViewer.Controls
             AddMessage(new ChatMessageDisplay
             {
                 Role = "System",
-                Content = "Welcome to Copilot Chat! I can help you analyze this MSBuild binlog.\n\n" +
+                Content = "Welcome to LLM Chat! I can help you analyze this MSBuild binlog.\n\n" +
                         "You can ask me about:\n" +
                         "• Build errors and warnings\n" +
                         "• Project and target information\n" +
@@ -209,7 +209,7 @@ namespace StructuredLogViewer.Controls
         {
             if (chatService == null || !chatService.IsConfigured)
             {
-                ShowStatus("Copilot is not configured", isError: true);
+                ShowStatus("LLM is not configured", isError: true);
                 return;
             }
 

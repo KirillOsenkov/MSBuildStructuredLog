@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using Microsoft.Build.Logging.StructuredLogger;
 
-namespace StructuredLogViewer.Copilot
+namespace StructuredLogViewer.LLM
 {
     /// <summary>
-    /// Provides context information from the binlog to the Copilot chat.
+    /// Provides context information from the binlog to the LLM chat.
     /// </summary>
     public class BinlogContextProvider
     {

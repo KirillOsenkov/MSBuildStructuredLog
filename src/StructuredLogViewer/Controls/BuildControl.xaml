@@ -14,7 +14,7 @@
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="*"/>
       <ColumnDefinition Width="Auto"/>
-      <ColumnDefinition x:Name="copilotChatColumn" Width="0"/>
+      <ColumnDefinition x:Name="llmChatColumn" Width="0"/>
     </Grid.ColumnDefinitions>
     
     <!-- Main content area -->
@@ -191,9 +191,9 @@
 
   </local:SplitterPanel>
 
-    <!-- Copilot Chat Panel (right side) -->
-    <GridSplitter Grid.Column="1" 
-                  x:Name="copilotSplitter"
+    <!-- LLM Chat Panel (right side) -->
+    <GridSplitter Grid.Column="2"
+                  x:Name="llmSplitter"
                   Width="5" 
                   HorizontalAlignment="Center" 
                   VerticalAlignment="Stretch"
@@ -201,11 +201,11 @@
                   Background="Gray"/>
     
     <Border Grid.Column="2" 
-            x:Name="copilotChatBorder"
+            x:Name="llmChatBorder"
             BorderBrush="Gray"
             BorderThickness="1,0,0,0"
             Visibility="Collapsed">
-      <local:CopilotChatControl x:Name="copilotChatControl" />
+      <local:LLMChatControl x:Name="llmChatControl" />
     </Border>
   </Grid>
 

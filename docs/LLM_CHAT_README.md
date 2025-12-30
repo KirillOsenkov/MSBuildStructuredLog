@@ -1,6 +1,6 @@
-# Copilot Chat Feature
+# LLM Chat Feature
 
-The MSBuild Structured Log Viewer now includes an AI-powered Copilot Chat feature that allows you to query your build logs using natural language.
+The MSBuild Structured Log Viewer now includes an AI-powered LLM Chat feature that allows you to query your build logs using natural language.
 
 ## Features
 
@@ -44,7 +44,7 @@ If you're using Azure AI Foundry or GitHub Models:
 ## Usage
 
 1. **Open a binlog file** in the MSBuild Structured Log Viewer
-2. **Click the Copilot button** (🤖) in the toolbar
+2. **Click the LLM button** (✨) in the toolbar
 3. **Ask questions** in the chat panel, such as:
    - "What caused the build to fail?"
    - "Show me all the errors in this build"
@@ -62,9 +62,9 @@ The feature is built using:
 - **AIFunction Tool Calling**: Enables the AI to invoke build analysis tools
 
 The implementation uses a service layer pattern with minimal changes to existing code:
-- `CopilotConfiguration`: Loads configuration from environment variables
+- `LLMConfiguration`: Loads configuration from environment variables
 - `AzureFoundryLLMClient`: Creates the appropriate AI client
-- `CopilotChatService`: Orchestrates chat sessions with tool calling
+- `LLMChatService`: Orchestrates chat sessions with tool calling
 - `BinlogToolExecutor`: Implements the build analysis tools
 - `BinlogContextProvider`: Extracts context from selected build nodes
 

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Extensions.AI;
 
-namespace StructuredLogViewer.Copilot
+namespace StructuredLogViewer.LLM
 {
     /// <summary>
     /// Represents a chat message in the conversation.
@@ -28,16 +28,16 @@ namespace StructuredLogViewer.Copilot
     }
 
     /// <summary>
-    /// Main service for Copilot Chat functionality.
+    /// Main service for LLM Chat functionality.
     /// Orchestrates chat history, LLM communication, and tool execution.
     /// </summary>
-    public class CopilotChatService : IDisposable
+    public class LLMChatService : IDisposable
     {
         private readonly Build build;
         private readonly BinlogContextProvider contextProvider;
         private readonly BinlogToolExecutor toolExecutor;
         private AzureFoundryLLMClient llmClient;
-        private readonly CopilotConfiguration configuration;
+        private readonly LLMConfiguration configuration;
         private readonly List<ChatMessage> chatHistory;
         private BaseNode currentSelectedNode;
 
@@ -47,13 +47,13 @@ namespace StructuredLogViewer.Copilot
         public bool IsConfigured => configuration?.IsConfigured ?? false;
         public string ConfigurationStatus => configuration?.GetConfigurationStatus() ?? "Not initialized";
 
-        public CopilotChatService(Build build)
+        public LLMChatService(Build build)
         {
             this.build = build ?? throw new ArgumentNullException(nameof(build));
             this.contextProvider = new BinlogContextProvider(build);
             this.toolExecutor = new BinlogToolExecutor(build);
             this.chatHistory = new List<ChatMessage>();
-            this.configuration = CopilotConfiguration.LoadFromEnvironment();
+            this.configuration = LLMConfiguration.LoadFromEnvironment();
 
             InitializeLLMClient();
         }
@@ -139,7 +139,7 @@ Available context:
         {
             if (!IsConfigured)
             {
-                var errorMsg = "Copilot is not configured. Please set the required environment variables:\n" +
+                var errorMsg = "LLM is not configured. Please set the required environment variables:\n" +
                              "- AZURE_FOUNDRY_ENDPOINT\n" +
                              "- AZURE_FOUNDRY_API_KEY\n" +
                              "- AZURE_FOUNDRY_MODEL_NAME (optional, defaults to gpt-4)";

@@ -434,35 +434,35 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
             centralTabControl.SelectionChanged += CentralTabControl_SelectionChanged;
 
-            // Initialize Copilot chat control
-            InitializeCopilotChat();
+            // Initialize LLM chat control
+            InitializeLLMChat();
         }
 
-        private void InitializeCopilotChat()
+        private void InitializeLLMChat()
         {
             try
             {
-                copilotChatControl.Initialize(Build);
+                llmChatControl.Initialize(Build);
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Failed to initialize Copilot chat: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Failed to initialize LLM chat: {ex.Message}");
             }
         }
 
-        public void ToggleCopilotChat(bool show)
+        public void ToggleLLMChat(bool show)
         {
             if (show)
             {
-                copilotChatColumn.Width = new GridLength(400);
-                copilotChatBorder.Visibility = Visibility.Visible;
-                copilotSplitter.Visibility = Visibility.Visible;
+                llmChatColumn.Width = new GridLength(400);
+                llmChatBorder.Visibility = Visibility.Visible;
+                llmSplitter.Visibility = Visibility.Visible;
             }
             else
             {
-                copilotChatColumn.Width = new GridLength(0);
-                copilotChatBorder.Visibility = Visibility.Collapsed;
-                copilotSplitter.Visibility = Visibility.Collapsed;
+                llmChatColumn.Width = new GridLength(0);
+                llmChatBorder.Visibility = Visibility.Collapsed;
+                llmSplitter.Visibility = Visibility.Collapsed;
             }
         }
 
@@ -1578,10 +1578,10 @@ Recent (");
                 UpdateProjectContext(item);
                 UpdateFindContent();
                 
-                // Update Copilot chat context
+                // Update LLM chat context
                 if (item is BaseNode node)
                 {
-                    copilotChatControl.SetSelectedNode(node);
+                    llmChatControl.SetSelectedNode(node);
                 }
             }
         }

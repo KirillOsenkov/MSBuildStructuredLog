@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.Build.Logging.StructuredLogger;
 
-namespace StructuredLogViewer.Copilot
+namespace StructuredLogViewer.LLM
 {
     /// <summary>
     /// Executes binlog tools that can be called by the LLM.

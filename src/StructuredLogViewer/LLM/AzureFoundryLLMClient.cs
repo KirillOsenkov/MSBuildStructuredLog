@@ -9,7 +9,7 @@ using Azure.AI.OpenAI;
 using Azure.Core;
 using Microsoft.Extensions.AI;
 
-namespace StructuredLogViewer.Copilot
+namespace StructuredLogViewer.LLM
 {
     /// <summary>
     /// Wrapper for Azure AI clients (OpenAI, Inference, or Anthropic) implementing IChatClient.
@@ -28,13 +28,13 @@ namespace StructuredLogViewer.Copilot
             Anthropic
         }
 
-        public AzureFoundryLLMClient(CopilotConfiguration config)
+        public AzureFoundryLLMClient(LLMConfiguration config)
         {
             if (config == null)
                 throw new ArgumentNullException(nameof(config));
 
             if (!config.IsConfigured)
-                throw new InvalidOperationException("Copilot configuration is incomplete.");
+                throw new InvalidOperationException("LLM configuration is incomplete.");
 
             modelName = config.ModelName;
             var endpoint = new Uri(config.Endpoint);
