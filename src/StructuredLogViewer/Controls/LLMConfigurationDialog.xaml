@@ -101,7 +101,7 @@
                       Content="Agent mode"
                       IsChecked="True"
                       Foreground="{DynamicResource Theme_Foreground}"
-                      ToolTip="Enable agent mode for enhanced capabilities (not yet implemented)"/>
+                      ToolTip="Enable agent mode for multi-step reasoning on complex queries. Recommended for thorough analysis."/>
         </StackPanel>
 
         <!-- Info -->

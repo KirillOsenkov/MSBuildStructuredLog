@@ -107,7 +107,7 @@ namespace StructuredLogViewer.Controls
         private AgenticLLMChatService agenticChatService;
         private CancellationTokenSource cancellationTokenSource;
         private readonly ObservableCollection<ChatMessageDisplay> messages;
-        private bool isAgentModeEnabled = false;
+        private LLMConfiguration currentConfig;
 
         public Build Build { get; private set; }
         public BuildControl BuildControl { get; private set; }
@@ -134,14 +134,20 @@ namespace StructuredLogViewer.Controls
             chatService.ConversationCleared += OnConversationCleared;
             chatService.ToolCallExecuted += OnToolCallExecuted;
 
+            // Load configuration
+            currentConfig = LLMConfiguration.LoadFromEnvironment();
+            
             // Create agentic service
-            var config = LLMConfiguration.LoadFromEnvironment();
-            if (config.IsConfigured)
+            if (currentConfig.IsConfigured)
             {
-                agenticChatService = new AgenticLLMChatService(build, buildControl, config);
+                agenticChatService = new AgenticLLMChatService(build, buildControl, currentConfig);
                 agenticChatService.ProgressUpdated += OnAgentProgressUpdated;
                 agenticChatService.MessageAdded += OnMessageAdded;
             }
+
+            // Initialize agent mode toggle from config (default is true)
+            agentModeToggle.IsChecked = currentConfig.AgentMode;
+            UpdateAgentModeUI();
 
             // Show initial status
             ShowStatus(chatService.ConfigurationStatus);
@@ -183,7 +189,7 @@ namespace StructuredLogViewer.Controls
                         "• Build duration and performance\n" +
                         "• Specific tasks or failures\n\n";
             
-            if (isAgentModeEnabled)
+            if (currentConfig?.AgentMode == true)
             {
                 welcomeMsg += "**Agent Mode is ON** 🤖\n" +
                              "I'll break down complex questions into research tasks for thorough analysis.\n\n";
@@ -314,7 +320,7 @@ namespace StructuredLogViewer.Controls
             sendButton.IsEnabled = false;
             inputTextBox.IsEnabled = false;
             agentModeToggle.IsEnabled = false;
-            ShowStatus(isAgentModeEnabled ? "Agent thinking..." : "Thinking...");
+            ShowStatus(currentConfig?.AgentMode == true ? "Agent thinking..." : "Thinking...");
 
             // Cancel any existing operation
             cancellationTokenSource?.Cancel();
@@ -322,7 +328,7 @@ namespace StructuredLogViewer.Controls
 
             try
             {
-                if (isAgentModeEnabled && agenticChatService != null)
+                if (currentConfig?.AgentMode == true && agenticChatService != null)
                 {
                     // Use agent mode
                     AddMessage(new ChatMessageDisplay
@@ -391,14 +397,17 @@ namespace StructuredLogViewer.Controls
 
         private void AgentModeToggle_Click(object sender, RoutedEventArgs e)
         {
-            isAgentModeEnabled = agentModeToggle.IsChecked == true;
+            // Update config
+            if (currentConfig != null)
+            {
+                currentConfig.AgentMode = agentModeToggle.IsChecked == true;
+            }
             
             // Update UI
-            agentModeText.Text = isAgentModeEnabled ? "Agent ON" : "Agent";
-            agentModeToggle.FontWeight = isAgentModeEnabled ? FontWeights.Bold : FontWeights.Normal;
+            UpdateAgentModeUI();
             
             // Add notification message
-            var modeMessage = isAgentModeEnabled
+            var modeMessage = currentConfig?.AgentMode == true
                 ? "🤖 **Agent Mode Enabled**\n\nI'll now break down complex questions into research tasks for thorough analysis."
                 : "💬 **Interactive Mode**\n\nBack to single-turn conversations.";
             
@@ -409,14 +418,25 @@ namespace StructuredLogViewer.Controls
             });
         }
 
+        private void UpdateAgentModeUI()
+        {
+            var isEnabled = currentConfig?.AgentMode == true;
+            agentModeToggle.Content = isEnabled ? "🤖" : "💬";
+            agentModeToggle.FontWeight = isEnabled ? FontWeights.Bold : FontWeights.Normal;
+            agentModeToggle.ToolTip = isEnabled 
+                ? "Agent Mode ON: Multi-step reasoning for complex queries (click to disable)"
+                : "Interactive Mode: Single-turn conversations (click to enable agent mode)";
+        }
+
         private void ConfigureButton_Click(object sender, RoutedEventArgs e)
         {
             // Get current configuration
-            var currentConfig = chatService?.GetConfiguration() ?? LLMConfiguration.LoadFromEnvironment();
+            var configForDialog = this.currentConfig ?? LLMConfiguration.LoadFromEnvironment();
             var wasConfigured = chatService?.IsConfigured ?? false;
+            var oldAgentMode = configForDialog.AgentMode;
             
             // Show configuration dialog
-            var dialog = new LLMConfigurationDialog(currentConfig)
+            var dialog = new LLMConfigurationDialog(configForDialog)
             {
                 Owner = Window.GetWindow(this)
             };
@@ -426,11 +446,11 @@ namespace StructuredLogViewer.Controls
                 try
                 {
                     // Check if configuration actually changed
-                    bool endpointChanged = currentConfig.Endpoint != dialog.Endpoint;
-                    bool modelChanged = currentConfig.ModelName != dialog.Model;
-                    bool apiKeyChanged = currentConfig.ApiKey != dialog.ApiKey;
-                    bool autoSendChanged = currentConfig.AutoSendOnEnter != dialog.AutoSendOnEnter;
-                    bool agentModeChanged = currentConfig.AgentMode != dialog.AgentMode;
+                    bool endpointChanged = configForDialog.Endpoint != dialog.Endpoint;
+                    bool modelChanged = configForDialog.ModelName != dialog.Model;
+                    bool apiKeyChanged = configForDialog.ApiKey != dialog.ApiKey;
+                    bool autoSendChanged = configForDialog.AutoSendOnEnter != dialog.AutoSendOnEnter;
+                    bool agentModeChanged = configForDialog.AgentMode != dialog.AgentMode;
                     bool hasChanges = endpointChanged || modelChanged || apiKeyChanged || autoSendChanged || agentModeChanged;
 
                     if (!hasChanges)
@@ -440,7 +460,7 @@ namespace StructuredLogViewer.Controls
                     }
 
                     // Store old model name for message
-                    var oldModel = currentConfig.ModelName;
+                    var oldModel = configForDialog.ModelName;
 
                     // Create new configuration with user-provided values
                     var newConfig = new LLMConfiguration
@@ -455,6 +475,9 @@ namespace StructuredLogViewer.Controls
                     // Reconfigure the service (keeps chat history)
                     chatService?.Reconfigure(newConfig);
                     
+                    // Update current config reference
+                    currentConfig = newConfig;
+                    
                     // Reinitialize agentic service with new config
                     agenticChatService?.Dispose();
                     if (newConfig.IsConfigured && Build != null && BuildControl != null)
@@ -463,6 +486,24 @@ namespace StructuredLogViewer.Controls
                         agenticChatService.ProgressUpdated += OnAgentProgressUpdated;
                         agenticChatService.MessageAdded += OnMessageAdded;
                         agentModeToggle.IsEnabled = true;
+                    }
+                    
+                    // Update agent mode toggle UI to match new config
+                    agentModeToggle.IsChecked = newConfig.AgentMode;
+                    UpdateAgentModeUI();
+                    
+                    // Notify about agent mode change if it changed
+                    if (agentModeChanged && oldAgentMode != newConfig.AgentMode)
+                    {
+                        var modeMessage = newConfig.AgentMode
+                            ? "🤖 **Agent Mode Enabled**\n\nI'll now break down complex questions into research tasks for thorough analysis."
+                            : "💬 **Interactive Mode**\n\nBack to single-turn conversations.";
+                        
+                        AddMessage(new ChatMessageDisplay
+                        {
+                            Role = "System",
+                            Content = modeMessage
+                        });
                     }
                     
                     if (chatService?.IsConfigured == true)

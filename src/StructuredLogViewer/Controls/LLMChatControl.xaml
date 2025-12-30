@@ -31,15 +31,11 @@
                 ToolTip="Configure LLM settings" />
         <ToggleButton x:Name="agentModeToggle"
                       DockPanel.Dock="Right"
+                      Content="🤖"
                       Padding="8,2"
                       Margin="4,0,0,0"
                       Click="AgentModeToggle_Click"
-                      ToolTip="Toggle Agent Mode (multi-step reasoning for complex queries)">
-          <StackPanel Orientation="Horizontal">
-            <TextBlock Text="🤖" Margin="0,0,4,0" />
-            <TextBlock x:Name="agentModeText" Text="Agent" />
-          </StackPanel>
-        </ToggleButton>
+                      ToolTip="Agent Mode: Multi-step reasoning for complex queries" />
         <TextBlock Text="LLM Chat" 
                    FontWeight="Bold" 
                    VerticalAlignment="Center"
