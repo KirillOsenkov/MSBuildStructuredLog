@@ -13,6 +13,8 @@ namespace StructuredLogViewer.Controls
         public string Endpoint { get; private set; }
         public string Model { get; private set; }
         public string ApiKey { get; private set; }
+        public bool AutoSendOnEnter { get; private set; }
+        public bool AgentMode { get; private set; }
 
         public LLMConfigurationDialog(LLMConfiguration currentConfig)
         {
@@ -29,6 +31,9 @@ namespace StructuredLogViewer.Controls
                     apiKeyPasswordBox.Password = currentConfig.ApiKey;
                     apiKeyTextBox.Text = currentConfig.ApiKey;
                 }
+                
+                autoSendOnEnterCheckBox.IsChecked = currentConfig.AutoSendOnEnter;
+                agentModeCheckBox.IsChecked = currentConfig.AgentMode;
             }
 
             // Focus on first empty field
@@ -71,6 +76,8 @@ namespace StructuredLogViewer.Controls
             Endpoint = endpointTextBox.Text?.Trim();
             Model = modelTextBox.Text?.Trim();
             ApiKey = isApiKeyVisible ? apiKeyTextBox.Text?.Trim() : apiKeyPasswordBox.Password?.Trim();
+            AutoSendOnEnter = autoSendOnEnterCheckBox.IsChecked ?? true;
+            AgentMode = agentModeCheckBox.IsChecked ?? true;
 
             if (string.IsNullOrWhiteSpace(Endpoint))
             {

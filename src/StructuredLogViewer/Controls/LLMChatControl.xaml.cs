@@ -232,14 +232,22 @@ namespace StructuredLogViewer.Controls
             await SendMessageAsync();
         }
 
-        private void InputTextBox_KeyDown(object sender, KeyEventArgs e)
+        private void InputTextBox_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            // Send on Enter (without Shift)
-            if (e.Key == Key.Enter && !Keyboard.IsKeyDown(Key.LeftShift) && !Keyboard.IsKeyDown(Key.RightShift))
+            // Get current configuration to check AutoSendOnEnter setting
+            var config = chatService?.GetConfiguration();
+            bool autoSendEnabled = config?.AutoSendOnEnter ?? true;
+            
+            if (autoSendEnabled)
             {
-                e.Handled = true;
-                _ = SendMessageAsync();
+                // Send on Enter (without Shift)
+                if (e.Key == Key.Enter && !Keyboard.IsKeyDown(Key.LeftShift) && !Keyboard.IsKeyDown(Key.RightShift))
+                {
+                    e.Handled = true;
+                    _ = SendMessageAsync();
+                }
             }
+            // If autoSend is disabled, Enter will create a new line (default TextBox behavior)
         }
 
         private async System.Threading.Tasks.Task SendMessageAsync()
@@ -329,7 +337,9 @@ namespace StructuredLogViewer.Controls
                     bool endpointChanged = currentConfig.Endpoint != dialog.Endpoint;
                     bool modelChanged = currentConfig.ModelName != dialog.Model;
                     bool apiKeyChanged = currentConfig.ApiKey != dialog.ApiKey;
-                    bool hasChanges = endpointChanged || modelChanged || apiKeyChanged;
+                    bool autoSendChanged = currentConfig.AutoSendOnEnter != dialog.AutoSendOnEnter;
+                    bool agentModeChanged = currentConfig.AgentMode != dialog.AgentMode;
+                    bool hasChanges = endpointChanged || modelChanged || apiKeyChanged || autoSendChanged || agentModeChanged;
 
                     if (!hasChanges)
                     {
@@ -345,7 +355,9 @@ namespace StructuredLogViewer.Controls
                     {
                         Endpoint = dialog.Endpoint,
                         ModelName = dialog.Model,
-                        ApiKey = dialog.ApiKey
+                        ApiKey = dialog.ApiKey,
+                        AutoSendOnEnter = dialog.AutoSendOnEnter,
+                        AgentMode = dialog.AgentMode
                     };
 
                     // Reconfigure the service (keeps chat history)

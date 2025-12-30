@@ -3,12 +3,13 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Configure LLM Chat"
         Width="550"
-        Height="350"
+        Height="420"
         Background="{DynamicResource Theme_Background}"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize">
     <Grid Margin="15">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -82,8 +83,29 @@
             </Grid>
         </StackPanel>
 
+        <!-- Options -->
+        <StackPanel Grid.Row="3" Margin="0,0,0,12">
+            <TextBlock Text="Options" 
+                       FontWeight="Bold" 
+                       Margin="0,0,0,8"
+                       Foreground="{DynamicResource Theme_Foreground}"/>
+            
+            <CheckBox x:Name="autoSendOnEnterCheckBox"
+                      Content="Auto send on Enter"
+                      IsChecked="True"
+                      Margin="0,0,0,6"
+                      Foreground="{DynamicResource Theme_Foreground}"
+                      ToolTip="When enabled, pressing Enter sends the message. Use Shift+Enter for new line."/>
+            
+            <CheckBox x:Name="agentModeCheckBox"
+                      Content="Agent mode"
+                      IsChecked="True"
+                      Foreground="{DynamicResource Theme_Foreground}"
+                      ToolTip="Enable agent mode for enhanced capabilities (not yet implemented)"/>
+        </StackPanel>
+
         <!-- Info -->
-        <Border Grid.Row="3" 
+        <Border Grid.Row="4" 
                 Background="{DynamicResource Theme_InfoBarBackground}"
                 BorderBrush="Gray"
                 BorderThickness="1"
@@ -107,7 +129,7 @@
         </Border>
 
         <!-- Buttons -->
-        <Grid Grid.Row="4">
+        <Grid Grid.Row="5">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
