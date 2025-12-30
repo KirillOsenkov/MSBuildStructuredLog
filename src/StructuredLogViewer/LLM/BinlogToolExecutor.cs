@@ -13,10 +13,21 @@ namespace StructuredLogViewer.LLM
     public class BinlogToolExecutor
     {
         private readonly Build build;
+        private const int MaxOutputTokensPerTool = 3000; // Roughly 12,000 characters
 
         public BinlogToolExecutor(Build build)
         {
             this.build = build ?? throw new ArgumentNullException(nameof(build));
+        }
+
+        private string TruncateIfNeeded(string result)
+        {
+            const int maxChars = MaxOutputTokensPerTool * 4; // Conservative estimate
+            if (result.Length > maxChars)
+            {
+                return result.Substring(0, maxChars) + "\n\n[Output truncated due to length. Use more specific queries or filters.]";
+            }
+            return result;
         }
 
         [Description("Gets a summary of the build including status, duration, errors and warnings count")]
@@ -94,7 +105,7 @@ namespace StructuredLogViewer.LLM
                 sb.AppendLine($"  - {result}");
             }
 
-            return sb.ToString();
+            return TruncateIfNeeded(sb.ToString());
         }
 
         [Description("Gets all errors from the build with their details")]
@@ -170,11 +181,11 @@ namespace StructuredLogViewer.LLM
                 sb.AppendLine("No warnings found.");
             }
 
-            return sb.ToString();
+            return TruncateIfNeeded(sb.ToString());
         }
 
-        [Description("Gets list of all projects built with their status and duration")]
-        public string GetProjects()
+        [Description("Gets list of all projects built with their status and duration. Limits to first 50 projects to avoid overwhelming output.")]
+        public string GetProjects([Description("Maximum number of projects to return (default 50)")] int maxResults = 50)
         {
             var sb = new StringBuilder();
             var projects = new List<Project>();
@@ -186,8 +197,8 @@ namespace StructuredLogViewer.LLM
                 return "No projects found in the build.";
             }
 
-            sb.AppendLine($"=== Projects ({projects.Count}) ===");
-            foreach (var project in projects)
+            sb.AppendLine($"=== Projects ({projects.Count} total, showing first {Math.Min(maxResults, projects.Count)}) ===");
+            foreach (var project in projects.Take(maxResults))
             {
                 sb.AppendLine($"{project.Name}");
                 sb.AppendLine($"  Duration: {project.DurationText}");
@@ -212,7 +223,12 @@ namespace StructuredLogViewer.LLM
                 sb.AppendLine();
             }
 
-            return sb.ToString();
+            if (projects.Count > maxResults)
+            {
+                sb.AppendLine($"... and {projects.Count - maxResults} more projects");
+            }
+
+            return TruncateIfNeeded(sb.ToString());
         }
 
         [Description("Gets targets executed in a specific project")]
@@ -266,7 +282,7 @@ namespace StructuredLogViewer.LLM
                 sb.AppendLine();
             }
 
-            return sb.ToString();
+            return TruncateIfNeeded(sb.ToString());
         }
     }
 }

@@ -242,14 +242,30 @@ Return ONLY a JSON object with this exact structure (no markdown, no extra text)
         {
             var systemPrompt = GetResearchSystemPrompt();
 
-            // Build context from previous findings
+            // Build context from previous findings (with length limits)
             var previousFindings = new StringBuilder();
+            const int maxFindingsLength = 100000; // Limit previous findings to ~1250 tokens
+            
             foreach (var kvp in plan.Findings)
             {
                 if (kvp.Key != task.Id) // Don't include current task
                 {
-                    previousFindings.AppendLine($"[{kvp.Key}]: {kvp.Value}");
+                    var finding = kvp.Value;
+                    // Truncate individual findings if too long
+                    if (finding.Length > 20000)
+                    {
+                        finding = finding.Substring(0, 20000) + "... [truncated]";
+                    }
+                    
+                    previousFindings.AppendLine($"[{kvp.Key}]: {finding}");
                     previousFindings.AppendLine();
+                    
+                    // Stop if we've accumulated too much context
+                    if (previousFindings.Length > maxFindingsLength)
+                    {
+                        previousFindings.AppendLine("[Additional findings omitted to save space]");
+                        break;
+                    }
                 }
             }
 

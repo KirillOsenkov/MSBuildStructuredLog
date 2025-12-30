@@ -44,6 +44,11 @@ namespace StructuredLogViewer.LLM
         private readonly List<ChatMessage> chatHistory;
         private BaseNode currentSelectedNode;
 
+        // Token management settings
+        private const int MaxPromptTokens = 180000; // Leave buffer below 200k limit
+        private const int EstimatedTokensPerMessage = 500; // Conservative estimate
+        private const int MaxChatHistoryMessages = 20; // Keep recent context
+
         public event EventHandler<ChatMessageViewModel> MessageAdded;
         public event EventHandler ConversationCleared;
         public event EventHandler<ToolCallInfo> ToolCallExecuting;
@@ -127,6 +132,27 @@ Be concise and helpful. Format your responses clearly.
 
 Available context:
 " + contextProvider.GetBuildOverview();
+        }
+
+        /// <summary>
+        /// Trims chat history to stay within token limits by keeping only recent messages.
+        /// </summary>
+        private List<ChatMessage> GetTrimmedChatHistory()
+        {
+            if (chatHistory.Count <= MaxChatHistoryMessages)
+            {
+                return new List<ChatMessage>(chatHistory);
+            }
+
+            // Keep the most recent messages
+            var trimmedHistory = chatHistory
+                .Skip(chatHistory.Count - MaxChatHistoryMessages)
+                .ToList();
+
+            System.Diagnostics.Debug.WriteLine(
+                $"Chat history trimmed from {chatHistory.Count} to {trimmedHistory.Count} messages");
+
+            return trimmedHistory;
         }
 
         private AIFunction[] GetAvailableTools()
@@ -240,8 +266,9 @@ Available context:
                     messages.Add(new ChatMessage(ChatRole.System, systemPrompt));
                 }
 
-                // Add all chat history
-                messages.AddRange(chatHistory);
+                // Add trimmed chat history to stay within token limits
+                var trimmedHistory = GetTrimmedChatHistory();
+                messages.AddRange(trimmedHistory);
 
                 // Get tools
                 var tools = GetAvailableTools();

@@ -14,16 +14,29 @@ namespace StructuredLogViewer.LLM
     public class EmbeddedFilesToolExecutor
     {
         private readonly Build build;
+        private const int MaxOutputTokensPerTool = 3000;
 
         public EmbeddedFilesToolExecutor(Build build)
         {
             this.build = build ?? throw new ArgumentNullException(nameof(build));
         }
 
-        [Description("Lists all embedded files in the binlog with their paths. Optionally filters by regex pattern on file paths.")]
+        private string TruncateIfNeeded(string result)
+        {
+            const int maxChars = MaxOutputTokensPerTool * 4;
+            if (result.Length > maxChars)
+            {
+                return result.Substring(0, maxChars) + "\n\n[Output truncated due to length. Use more specific filters or patterns.]";
+            }
+            return result;
+        }
+
+        [Description("Lists all embedded files in the binlog with their paths. Optionally filters by regex pattern on file paths. Limited to 100 files.")]
         public string ListEmbeddedFiles(
             [Description("Optional regex pattern to filter file paths (e.g., '\\.cs$' for C# files, 'MyProject' for files containing MyProject in path)")] 
-            string pathPattern = null)
+            string pathPattern = null,
+            [Description("Maximum number of files to return (default 100)")] 
+            int maxResults = 100)
         {
             var sourceFiles = build.SourceFiles;
             
@@ -83,15 +96,23 @@ namespace StructuredLogViewer.LLM
                 string extension = string.IsNullOrEmpty(group.Key) ? "(no extension)" : group.Key;
                 sb.AppendLine($"[{extension}] ({group.Count()} files):");
                 
+                int filesShown = 0;
                 foreach (var file in group.OrderBy(f => f.FullPath))
                 {
+                    if (filesShown >= maxResults) break;
                     int lineCount = file.Text.Split('\n').Length;
                     sb.AppendLine($"  - {file.FullPath} ({lineCount} lines)");
+                    filesShown++;
+                }
+                
+                if (group.Count() > filesShown)
+                {
+                    sb.AppendLine($"  ... and {group.Count() - filesShown} more {extension} files");
                 }
                 sb.AppendLine();
             }
 
-            return sb.ToString();
+            return TruncateIfNeeded(sb.ToString());
         }
 
         [Description("Searches for text patterns within embedded files using regex. Returns matching lines with context. Can optionally filter which files to search.")]
@@ -208,7 +229,7 @@ namespace StructuredLogViewer.LLM
                 sb.AppendLine($"(Results limited to {maxMatches} matches. Use maxMatches parameter to see more.)");
             }
 
-            return sb.ToString();
+            return TruncateIfNeeded(sb.ToString());
         }
 
         [Description("Reads a specific range of lines from an embedded file. Use this to view file contents.")]
@@ -306,7 +327,7 @@ namespace StructuredLogViewer.LLM
                 result.AppendLine($"(Output limited to {maxLines} lines. Requested {requestedLines} lines.)");
             }
 
-            return result.ToString();
+            return TruncateIfNeeded(result.ToString());
         }
     }
 }
