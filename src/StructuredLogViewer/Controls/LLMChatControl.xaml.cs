@@ -68,6 +68,7 @@ namespace StructuredLogViewer.Controls
         private readonly ObservableCollection<ChatMessageDisplay> messages;
 
         public Build Build { get; private set; }
+        public BuildControl BuildControl { get; private set; }
 
         public LLMChatControl()
         {
@@ -76,15 +77,16 @@ namespace StructuredLogViewer.Controls
             messagesPanel.ItemsSource = messages;
         }
 
-        public void Initialize(Build build)
+        public void Initialize(Build build, BuildControl buildControl)
         {
             Build = build ?? throw new ArgumentNullException(nameof(build));
+            BuildControl = buildControl;
             
             // Dispose old service if exists
             chatService?.Dispose();
             
-            // Create new chat service
-            chatService = new LLMChatService(build);
+            // Create new chat service with BuildControl reference
+            chatService = new LLMChatService(build, buildControl);
             chatService.MessageAdded += OnMessageAdded;
             chatService.ConversationCleared += OnConversationCleared;
 

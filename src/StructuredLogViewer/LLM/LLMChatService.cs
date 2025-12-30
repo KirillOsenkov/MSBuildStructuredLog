@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Extensions.AI;
+using StructuredLogViewer.Controls;
 
 namespace StructuredLogViewer.LLM
 {
@@ -36,6 +37,7 @@ namespace StructuredLogViewer.LLM
         private readonly Build build;
         private readonly BinlogContextProvider contextProvider;
         private readonly BinlogToolExecutor toolExecutor;
+        private readonly BinlogUIInteractionExecutor uiInteractionExecutor;
         private AzureFoundryLLMClient llmClient;
         private readonly LLMConfiguration configuration;
         private readonly List<ChatMessage> chatHistory;
@@ -47,11 +49,12 @@ namespace StructuredLogViewer.LLM
         public bool IsConfigured => configuration?.IsConfigured ?? false;
         public string ConfigurationStatus => configuration?.GetConfigurationStatus() ?? "Not initialized";
 
-        public LLMChatService(Build build)
+        public LLMChatService(Build build, BuildControl buildControl)
         {
             this.build = build ?? throw new ArgumentNullException(nameof(build));
             this.contextProvider = new BinlogContextProvider(build);
             this.toolExecutor = new BinlogToolExecutor(build);
+            this.uiInteractionExecutor = buildControl != null ? new BinlogUIInteractionExecutor(build, buildControl) : null;
             this.chatHistory = new List<ChatMessage>();
             this.configuration = LLMConfiguration.LoadFromEnvironment();
 
@@ -132,6 +135,22 @@ Available context:
                 tools.Add(AIFunctionFactory.Create(toolExecutor.GetErrorsAndWarnings));
                 tools.Add(AIFunctionFactory.Create(toolExecutor.GetProjects));
                 tools.Add(AIFunctionFactory.Create(toolExecutor.GetProjectTargets));
+
+                // Register UI interaction tools if available
+                if (uiInteractionExecutor != null)
+                {
+                    tools.Add(AIFunctionFactory.Create(uiInteractionExecutor.SelectNodeByText));
+                    tools.Add(AIFunctionFactory.Create(uiInteractionExecutor.SelectError));
+                    tools.Add(AIFunctionFactory.Create(uiInteractionExecutor.SelectWarning));
+                    tools.Add(AIFunctionFactory.Create(uiInteractionExecutor.SelectProject));
+                    tools.Add(AIFunctionFactory.Create(uiInteractionExecutor.OpenFile));
+                    tools.Add(AIFunctionFactory.Create(uiInteractionExecutor.OpenTimeline));
+                    tools.Add(AIFunctionFactory.Create(uiInteractionExecutor.OpenTracing));
+                    tools.Add(AIFunctionFactory.Create(uiInteractionExecutor.PerformSearch));
+                    tools.Add(AIFunctionFactory.Create(uiInteractionExecutor.OpenPropertiesAndItems));
+                    tools.Add(AIFunctionFactory.Create(uiInteractionExecutor.OpenFindInFiles));
+                    tools.Add(AIFunctionFactory.Create(uiInteractionExecutor.FocusSearch));
+                }
 
                 System.Diagnostics.Debug.WriteLine($"Registered {tools.Count} tools:");
                 foreach (var tool in tools)

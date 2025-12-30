@@ -449,8 +449,8 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                 {
                     try
                     {
-                        // Initialize LLM chat control on background thread
-                        Dispatcher.Invoke(() => llmChatControl.Initialize(Build));
+                        // Initialize LLM chat control on UI thread with BuildControl reference
+                        Dispatcher.Invoke(() => llmChatControl.Initialize(Build, this));
                         
                         // Notify success on UI thread
                         Dispatcher.Invoke(() => LLMChatInitialized?.Invoke(this, true));
