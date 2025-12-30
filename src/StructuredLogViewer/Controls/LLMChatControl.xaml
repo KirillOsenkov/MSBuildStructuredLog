@@ -21,6 +21,13 @@
                 Margin="4,0,0,0"
                 Click="ClearButton_Click"
                 ToolTip="Clear conversation" />
+        <Button x:Name="configureButton" 
+                DockPanel.Dock="Right"
+                Content="⚙ Configure"
+                Padding="8,2"
+                Margin="4,0,0,0"
+                Click="ConfigureButton_Click"
+                ToolTip="Configure LLM settings" />
         <TextBlock Text="LLM Chat" 
                    FontWeight="Bold" 
                    VerticalAlignment="Center"

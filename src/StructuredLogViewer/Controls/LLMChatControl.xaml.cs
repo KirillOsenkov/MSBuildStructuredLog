@@ -267,5 +267,102 @@ namespace StructuredLogViewer.Controls
             inputTextBox.Text = string.Empty;
             inputTextBox.Focus();
         }
+
+        private void ConfigureButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Get current configuration
+            var currentConfig = chatService?.GetConfiguration() ?? LLMConfiguration.LoadFromEnvironment();
+            var wasConfigured = chatService?.IsConfigured ?? false;
+            
+            // Show configuration dialog
+            var dialog = new LLMConfigurationDialog(currentConfig)
+            {
+                Owner = Window.GetWindow(this)
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                try
+                {
+                    // Check if configuration actually changed
+                    bool endpointChanged = currentConfig.Endpoint != dialog.Endpoint;
+                    bool modelChanged = currentConfig.ModelName != dialog.Model;
+                    bool apiKeyChanged = currentConfig.ApiKey != dialog.ApiKey;
+                    bool hasChanges = endpointChanged || modelChanged || apiKeyChanged;
+
+                    if (!hasChanges)
+                    {
+                        // No changes made
+                        return;
+                    }
+
+                    // Store old model name for message
+                    var oldModel = currentConfig.ModelName;
+
+                    // Create new configuration with user-provided values
+                    var newConfig = new LLMConfiguration
+                    {
+                        Endpoint = dialog.Endpoint,
+                        ModelName = dialog.Model,
+                        ApiKey = dialog.ApiKey
+                    };
+
+                    // Reconfigure the service (keeps chat history)
+                    chatService?.Reconfigure(newConfig);
+                    
+                    if (chatService?.IsConfigured == true)
+                    {
+                        sendButton.IsEnabled = true;
+
+                        // Add configuration change message to chat
+                        string changeMessage;
+                        if (!wasConfigured)
+                        {
+                            // Transitioning from unconfigured to configured - show welcome
+                            AddWelcomeMessage();
+                            changeMessage = $"LLM configured: {newConfig.ModelName}";
+                        }
+                        else if (modelChanged)
+                        {
+                            changeMessage = $"Model changed from {oldModel} to {newConfig.ModelName}";
+                        }
+                        else
+                        {
+                            changeMessage = "LLM configuration updated";
+                        }
+
+                        AddMessage(new ChatMessageDisplay
+                        {
+                            Role = "System",
+                            Content = changeMessage
+                        });
+
+                        ShowStatus("Configuration updated successfully!");
+                        
+                        // Hide status after 2 seconds
+                        var timer = new System.Windows.Threading.DispatcherTimer
+                        {
+                            Interval = TimeSpan.FromSeconds(2)
+                        };
+                        timer.Tick += (s, args) =>
+                        {
+                            HideStatus();
+                            timer.Stop();
+                        };
+                        timer.Start();
+                    }
+                    else
+                    {
+                        ShowStatus("Configuration failed. Please check your settings.", isError: true);
+                        sendButton.IsEnabled = false;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ShowStatus($"Configuration error: {ex.Message}", isError: true);
+                    sendButton.IsEnabled = false;
+                }
+            }
+        }
     }
 }

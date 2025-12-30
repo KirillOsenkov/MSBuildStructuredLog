@@ -84,6 +84,31 @@ namespace StructuredLogViewer.LLM
             ConversationCleared?.Invoke(this, EventArgs.Empty);
         }
 
+        public LLMConfiguration GetConfiguration()
+        {
+            return configuration;
+        }
+
+        public void Reconfigure(LLMConfiguration newConfig)
+        {
+            if (newConfig == null)
+                throw new ArgumentNullException(nameof(newConfig));
+
+            // Update configuration properties
+            configuration.Endpoint = newConfig.Endpoint;
+            configuration.ApiKey = newConfig.ApiKey;
+            configuration.ModelName = newConfig.ModelName;
+            configuration.UpdateType();
+
+            // Dispose old client
+            llmClient = null;
+
+            // Reinitialize with new settings
+            InitializeLLMClient();
+
+            // Keep chat history - don't clear
+        }
+
         private string GetSystemPrompt()
         {
             return @"You are an expert assistant helping developers analyze MSBuild build logs (.binlog files).

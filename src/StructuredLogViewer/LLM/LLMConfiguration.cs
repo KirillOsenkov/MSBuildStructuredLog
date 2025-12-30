@@ -24,7 +24,17 @@ namespace StructuredLogViewer.LLM
         public string Endpoint { get; set; }
         public string ApiKey { get; set; }
         public string ModelName { get; set; }
-        public ClientType Type { get; set; }
+        public ClientType Type { get; private set; }
+
+        public LLMConfiguration()
+        {
+            // Default constructor
+        }
+
+        public void UpdateType()
+        {
+            Type = DetectClientType(Endpoint, ModelName);
+        }
 
         public bool IsConfigured => 
             !string.IsNullOrWhiteSpace(Endpoint) && 
@@ -37,13 +47,14 @@ namespace StructuredLogViewer.LLM
             var apiKey = Environment.GetEnvironmentVariable(LLMApiKeyEnvVar);
             var model = Environment.GetEnvironmentVariable(LLMModelEnvVar);
 
-            return new LLMConfiguration
+            var config = new LLMConfiguration
             {
                 Endpoint = endpoint,
                 ApiKey = apiKey,
-                ModelName = model ?? "gpt-4",
-                Type = DetectClientType(endpoint, model)
+                ModelName = model ?? "gpt-4"
             };
+            config.UpdateType();
+            return config;
         }
 
         private static ClientType DetectClientType(string endpoint, string model)
