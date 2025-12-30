@@ -26,6 +26,7 @@ namespace StructuredLogViewer.LLM
 
         public event EventHandler<AgentProgressEventArgs> ProgressUpdated;
         public event EventHandler<ChatMessageViewModel> MessageAdded;
+        public event EventHandler<ToolCallInfo> ToolCallExecuted;
 
         public bool IsConfigured => configuration?.IsConfigured ?? false;
 
@@ -350,7 +351,7 @@ Format your answer with markdown for readability.";
         /// </summary>
         private AIFunction[] GetToolsForPhase(AgentPhase phase)
         {
-            var tools = new List<AIFunction>();
+            var baseFunctions = new List<AIFunction>();
 
             try
             {
@@ -358,53 +359,69 @@ Format your answer with markdown for readability.";
                 {
                     case AgentPhase.Planning:
                         // Minimal tools for planning
-                        tools.Add(AIFunctionFactory.Create(toolExecutor.GetBuildSummary));
+                        baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.GetBuildSummary));
                         break;
 
                     case AgentPhase.Research:
                         // All investigation tools, no UI manipulation
-                        tools.Add(AIFunctionFactory.Create(toolExecutor.GetBuildSummary));
-                        tools.Add(AIFunctionFactory.Create(toolExecutor.SearchNodes));
-                        tools.Add(AIFunctionFactory.Create(toolExecutor.GetErrorsAndWarnings));
-                        tools.Add(AIFunctionFactory.Create(toolExecutor.GetProjects));
-                        tools.Add(AIFunctionFactory.Create(toolExecutor.GetProjectTargets));
-                        tools.Add(AIFunctionFactory.Create(embeddedFilesExecutor.ListEmbeddedFiles));
-                        tools.Add(AIFunctionFactory.Create(embeddedFilesExecutor.SearchEmbeddedFiles));
-                        tools.Add(AIFunctionFactory.Create(embeddedFilesExecutor.ReadEmbeddedFileLines));
+                        baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.GetBuildSummary));
+                        baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.SearchNodes));
+                        baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.GetErrorsAndWarnings));
+                        baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.GetProjects));
+                        baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.GetProjectTargets));
+                        baseFunctions.Add(AIFunctionFactory.Create(embeddedFilesExecutor.ListEmbeddedFiles));
+                        baseFunctions.Add(AIFunctionFactory.Create(embeddedFilesExecutor.SearchEmbeddedFiles));
+                        baseFunctions.Add(AIFunctionFactory.Create(embeddedFilesExecutor.ReadEmbeddedFileLines));
                         break;
 
                     case AgentPhase.Summarization:
                         // All tools including UI manipulation
-                        tools.Add(AIFunctionFactory.Create(toolExecutor.GetBuildSummary));
-                        tools.Add(AIFunctionFactory.Create(toolExecutor.SearchNodes));
-                        tools.Add(AIFunctionFactory.Create(toolExecutor.GetErrorsAndWarnings));
-                        tools.Add(AIFunctionFactory.Create(toolExecutor.GetProjects));
-                        tools.Add(AIFunctionFactory.Create(toolExecutor.GetProjectTargets));
-                        tools.Add(AIFunctionFactory.Create(embeddedFilesExecutor.ListEmbeddedFiles));
-                        tools.Add(AIFunctionFactory.Create(embeddedFilesExecutor.SearchEmbeddedFiles));
-                        tools.Add(AIFunctionFactory.Create(embeddedFilesExecutor.ReadEmbeddedFileLines));
+                        baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.GetBuildSummary));
+                        baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.SearchNodes));
+                        baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.GetErrorsAndWarnings));
+                        baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.GetProjects));
+                        baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.GetProjectTargets));
+                        baseFunctions.Add(AIFunctionFactory.Create(embeddedFilesExecutor.ListEmbeddedFiles));
+                        baseFunctions.Add(AIFunctionFactory.Create(embeddedFilesExecutor.SearchEmbeddedFiles));
+                        baseFunctions.Add(AIFunctionFactory.Create(embeddedFilesExecutor.ReadEmbeddedFileLines));
 
                         // UI tools
                         if (uiInteractionExecutor != null)
                         {
-                            tools.Add(AIFunctionFactory.Create(uiInteractionExecutor.SelectNodeByText));
-                            tools.Add(AIFunctionFactory.Create(uiInteractionExecutor.SelectError));
-                            tools.Add(AIFunctionFactory.Create(uiInteractionExecutor.SelectWarning));
-                            tools.Add(AIFunctionFactory.Create(uiInteractionExecutor.SelectProject));
-                            tools.Add(AIFunctionFactory.Create(uiInteractionExecutor.OpenFile));
-                            tools.Add(AIFunctionFactory.Create(uiInteractionExecutor.OpenTimeline));
-                            tools.Add(AIFunctionFactory.Create(uiInteractionExecutor.OpenTracing));
-                            tools.Add(AIFunctionFactory.Create(uiInteractionExecutor.PerformSearch));
+                            baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.SelectNodeByText));
+                            baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.SelectError));
+                            baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.SelectWarning));
+                            baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.SelectProject));
+                            baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.OpenFile));
+                            baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.OpenTimeline));
+                            baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.OpenTracing));
+                            baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.PerformSearch));
                         }
                         break;
                 }
+
+                // Wrap all functions with monitoring
+                var tools = new List<AIFunction>();
+                foreach (var baseFunction in baseFunctions)
+                {
+                    var monitored = new MonitoredAIFunction(baseFunction);
+                    monitored.ToolCallCompleted += OnToolCallCompleted;
+                    tools.Add(monitored);
+                }
+
+                return tools.ToArray();
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error creating tools for phase {phase}: {ex.Message}");
+                return Array.Empty<AIFunction>();
             }
+        }
 
-            return tools.ToArray();
+        private void OnToolCallCompleted(object sender, ToolCallInfo toolCallInfo)
+        {
+            // Raise event for UI consumption
+            ToolCallExecuted?.Invoke(this, toolCallInfo);
         }
 
         private void RaiseProgress(AgentPlan plan, string message = null, bool isError = false)
@@ -474,29 +491,29 @@ Use UI tools to enhance the user experience by showing them relevant parts of th
 
         #region Helper Methods
 
-        private string ExtractJsonFromResponse(string response)
+        private string ExtractJsonFromResponse(string text)
         {
-            // Remove markdown code blocks if present
-            if (response.Contains("```json"))
+            // Try to extract JSON from markdown code blocks
+            int jsonStart = text.IndexOf("```json", StringComparison.OrdinalIgnoreCase);
+            if (jsonStart < 0)
             {
-                var start = response.IndexOf("```json") + 7;
-                var end = response.LastIndexOf("```");
-                if (start > 7 && end > start)
-                {
-                    response = response.Substring(start, end - start).Trim();
-                }
+                // Try just ```
+                jsonStart = text.IndexOf("```", StringComparison.Ordinal);
             }
-            else if (response.Contains("```"))
+
+            if (jsonStart >= 0)
             {
-                var start = response.IndexOf("```") + 3;
-                var end = response.LastIndexOf("```");
-                if (start > 3 && end > start)
+                jsonStart = text.IndexOf('\n', jsonStart) + 1;
+                // Find the closing marker, searching from after the opening marker
+                int jsonEnd = text.LastIndexOf("```", StringComparison.Ordinal);
+
+                if (jsonEnd > jsonStart)
                 {
-                    response = response.Substring(start, end - start).Trim();
+                    return text.Substring(jsonStart, jsonEnd - jsonStart).Trim();
                 }
             }
 
-            return response.Trim();
+            return text.Trim();
         }
 
         #endregion

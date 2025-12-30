@@ -130,25 +130,39 @@ Available context:
 
         private AIFunction[] GetAvailableTools()
         {
-            var tools = new List<AIFunction>();
+            var baseFunctions = new List<AIFunction>();
 
             try
             {
                 // Register tools from BinlogToolExecutor - let AIFunctionFactory use the [Description] attributes
-                var baseFunctions = new[]
-                {
-                    AIFunctionFactory.Create(toolExecutor.GetBuildSummary),
-                    AIFunctionFactory.Create(toolExecutor.SearchNodes),
-                    AIFunctionFactory.Create(toolExecutor.GetErrorsAndWarnings),
-                    AIFunctionFactory.Create(toolExecutor.GetProjects),
-                    AIFunctionFactory.Create(toolExecutor.GetProjectTargets),
-                    // Embedded files tools
-                    AIFunctionFactory.Create(embeddedFilesExecutor.ListEmbeddedFiles),
-                    AIFunctionFactory.Create(embeddedFilesExecutor.SearchEmbeddedFiles),
-                    AIFunctionFactory.Create(embeddedFilesExecutor.ReadEmbeddedFileLines)
-                };
+                baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.GetBuildSummary));
+                baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.SearchNodes));
+                baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.GetErrorsAndWarnings));
+                baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.GetProjects));
+                baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.GetProjectTargets));
+                // Embedded files tools
+                baseFunctions.Add(AIFunctionFactory.Create(embeddedFilesExecutor.ListEmbeddedFiles));
+                baseFunctions.Add(AIFunctionFactory.Create(embeddedFilesExecutor.SearchEmbeddedFiles));
+                baseFunctions.Add(AIFunctionFactory.Create(embeddedFilesExecutor.ReadEmbeddedFileLines));
 
-                // Wrap each function with monitoring
+                // Register UI interaction tools if available
+                if (uiInteractionExecutor != null)
+                {
+                    baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.SelectNodeByText));
+                    baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.SelectError));
+                    baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.SelectWarning));
+                    baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.SelectProject));
+                    baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.OpenFile));
+                    baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.OpenTimeline));
+                    baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.OpenTracing));
+                    baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.PerformSearch));
+                    baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.OpenPropertiesAndItems));
+                    baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.OpenFindInFiles));
+                    baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.FocusSearch));
+                }
+
+                // Wrap all functions with monitoring
+                var tools = new List<AIFunction>();
                 foreach (var baseFunction in baseFunctions)
                 {
                     var monitoredFunction = new MonitoredAIFunction(baseFunction);
@@ -156,35 +170,20 @@ Available context:
                     tools.Add(monitoredFunction);
                 }
 
-                // Register UI interaction tools if available
-                if (uiInteractionExecutor != null)
-                {
-                    tools.Add(AIFunctionFactory.Create(uiInteractionExecutor.SelectNodeByText));
-                    tools.Add(AIFunctionFactory.Create(uiInteractionExecutor.SelectError));
-                    tools.Add(AIFunctionFactory.Create(uiInteractionExecutor.SelectWarning));
-                    tools.Add(AIFunctionFactory.Create(uiInteractionExecutor.SelectProject));
-                    tools.Add(AIFunctionFactory.Create(uiInteractionExecutor.OpenFile));
-                    tools.Add(AIFunctionFactory.Create(uiInteractionExecutor.OpenTimeline));
-                    tools.Add(AIFunctionFactory.Create(uiInteractionExecutor.OpenTracing));
-                    tools.Add(AIFunctionFactory.Create(uiInteractionExecutor.PerformSearch));
-                    tools.Add(AIFunctionFactory.Create(uiInteractionExecutor.OpenPropertiesAndItems));
-                    tools.Add(AIFunctionFactory.Create(uiInteractionExecutor.OpenFindInFiles));
-                    tools.Add(AIFunctionFactory.Create(uiInteractionExecutor.FocusSearch));
-                }
-
                 System.Diagnostics.Debug.WriteLine($"Registered {tools.Count} tools:");
                 foreach (var tool in tools)
                 {
                     System.Diagnostics.Debug.WriteLine($"  - {tool.Name}: {tool.Description}");
                 }
+
+                return tools.ToArray();
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error creating tools: {ex.Message}");
                 System.Diagnostics.Debug.WriteLine(ex.StackTrace);
+                return Array.Empty<AIFunction>();
             }
-
-            return tools.ToArray();
         }
 
         private void OnToolCallCompleted(object sender, ToolCallInfo toolCallInfo)

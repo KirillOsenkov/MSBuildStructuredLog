@@ -143,6 +143,7 @@ namespace StructuredLogViewer.Controls
                 agenticChatService = new AgenticLLMChatService(build, buildControl, currentConfig);
                 agenticChatService.ProgressUpdated += OnAgentProgressUpdated;
                 agenticChatService.MessageAdded += OnMessageAdded;
+                agenticChatService.ToolCallExecuted += OnToolCallExecuted;
             }
 
             // Initialize agent mode toggle from config (default is true)
@@ -485,6 +486,7 @@ namespace StructuredLogViewer.Controls
                         agenticChatService = new AgenticLLMChatService(Build, BuildControl, newConfig);
                         agenticChatService.ProgressUpdated += OnAgentProgressUpdated;
                         agenticChatService.MessageAdded += OnMessageAdded;
+                        agenticChatService.ToolCallExecuted += OnToolCallExecuted;
                         agentModeToggle.IsEnabled = true;
                     }
                     
