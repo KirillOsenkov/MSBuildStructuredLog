@@ -104,6 +104,8 @@ namespace StructuredLogViewer.LLM
             configuration.Endpoint = newConfig.Endpoint;
             configuration.ApiKey = newConfig.ApiKey;
             configuration.ModelName = newConfig.ModelName;
+            configuration.AutoSendOnEnter = newConfig.AutoSendOnEnter;
+            configuration.AgentMode = newConfig.AgentMode;
             configuration.UpdateType();
 
             // Dispose old client

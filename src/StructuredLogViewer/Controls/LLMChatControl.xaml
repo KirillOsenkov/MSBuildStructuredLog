@@ -85,10 +85,10 @@
                  MaxHeight="100"
                  VerticalScrollBarVisibility="Auto"
                  Padding="4"
-                 KeyDown="InputTextBox_KeyDown"
+                 PreviewKeyDown="InputTextBox_PreviewKeyDown"
                  Background="{DynamicResource Theme_Background}"
                  Foreground="{DynamicResource Theme_Foreground}"
-                 ToolTip="Type your question and press Enter or click Send (Shift+Enter for new line)"/>
+                 ToolTip="Type your question. Press Enter to send (if auto-send enabled) or click Send button."/>
       </DockPanel>
     </Border>
 

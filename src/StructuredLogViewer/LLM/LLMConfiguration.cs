@@ -25,10 +25,14 @@ namespace StructuredLogViewer.LLM
         public string ApiKey { get; set; }
         public string ModelName { get; set; }
         public ClientType Type { get; private set; }
+        public bool AutoSendOnEnter { get; set; } = true;
+        public bool AgentMode { get; set; } = true;
 
         public LLMConfiguration()
         {
             // Default constructor
+            AutoSendOnEnter = true;
+            AgentMode = true;
         }
 
         public void UpdateType()
