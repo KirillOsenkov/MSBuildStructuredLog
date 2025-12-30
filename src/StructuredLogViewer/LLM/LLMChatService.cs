@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -111,9 +111,9 @@ namespace StructuredLogViewer.LLM
 
         private string GetSystemPrompt()
         {
-            return @"You are an expert assistant helping developers analyze MSBuild build logs (.binlog files).
+            return @"You are an expert assistant helping developers analyze their MSBuild build logs (.binlog files).
 You have access to tools that can query the build data including projects, targets, tasks, errors, warnings, and timing information.
-When the user asks questions, use the available tools to retrieve accurate information from the build log.
+When the user asks questions, you must use the available tools to retrieve accurate information from the build log - as you do not have information about their builds in your training set.
 Be concise and helpful. Format your responses clearly.
 
 Available context:
@@ -126,35 +126,23 @@ Available context:
 
             try
             {
-                // Register tools from BinlogToolExecutor
-                tools.Add(AIFunctionFactory.Create(
-                    toolExecutor.GetBuildSummary,
-                    name: "GetBuildSummary",
-                    description: "Gets a summary of the build including status, duration, errors and warnings count"));
+                // Register tools from BinlogToolExecutor - let AIFunctionFactory use the [Description] attributes
+                tools.Add(AIFunctionFactory.Create(toolExecutor.GetBuildSummary));
+                tools.Add(AIFunctionFactory.Create(toolExecutor.SearchNodes));
+                tools.Add(AIFunctionFactory.Create(toolExecutor.GetErrorsAndWarnings));
+                tools.Add(AIFunctionFactory.Create(toolExecutor.GetProjects));
+                tools.Add(AIFunctionFactory.Create(toolExecutor.GetProjectTargets));
 
-                tools.Add(AIFunctionFactory.Create(
-                    toolExecutor.SearchNodes,
-                    name: "SearchNodes",
-                    description: "Searches for nodes in the build tree by text or pattern"));
-
-                tools.Add(AIFunctionFactory.Create(
-                    toolExecutor.GetErrorsAndWarnings,
-                    name: "GetErrorsAndWarnings",
-                    description: "Gets all errors and/or warnings from the build"));
-
-                tools.Add(AIFunctionFactory.Create(
-                    toolExecutor.GetProjects,
-                    name: "GetProjects",
-                    description: "Gets list of all projects built with their status and duration"));
-
-                tools.Add(AIFunctionFactory.Create(
-                    toolExecutor.GetProjectTargets,
-                    name: "GetProjectTargets",
-                    description: "Gets targets executed in a specific project"));
+                System.Diagnostics.Debug.WriteLine($"Registered {tools.Count} tools:");
+                foreach (var tool in tools)
+                {
+                    System.Diagnostics.Debug.WriteLine($"  - {tool.Name}: {tool.Description}");
+                }
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error creating tools: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine(ex.StackTrace);
             }
 
             return tools.ToArray();
@@ -207,23 +195,22 @@ Available context:
                 var tools = GetAvailableTools();
 
                 // Send to LLM with tools
+                // UseFunctionInvocation() in the client builder will automatically handle tool calls
                 var options = new ChatOptions
                 {
                     Tools = tools,
                     Temperature = 0.7f
                 };
 
-                var response = await llmClient.ChatClient.CompleteAsync(
+                System.Diagnostics.Debug.WriteLine($"ChatOptions.Tools count: {options.Tools?.Count ?? 0}");
+
+                var response = await llmClient.ChatClient.GetResponseAsync(
                     messages, 
                     options, 
                     cancellationToken);
 
-                // Process response - handle tool calls
-                string finalResponse = await ProcessResponseWithToolCalls(
-                    response, 
-                    messages, 
-                    options,
-                    cancellationToken);
+                // With UseFunctionInvocation(), the response already includes tool execution results
+                var finalResponse = response.Text ?? string.Empty;
 
                 // Add assistant response to history and UI
                 chatHistory.Add(new ChatMessage(ChatRole.Assistant, finalResponse));
@@ -243,83 +230,6 @@ Available context:
                 MessageAdded?.Invoke(this, new ChatMessageViewModel("System", errorMsg, isError: true));
                 return errorMsg;
             }
-        }
-
-        private async Task<string> ProcessResponseWithToolCalls(
-            ChatCompletion response,
-            List<ChatMessage> messages,
-            ChatOptions options,
-            CancellationToken cancellationToken,
-            int maxIterations = 5)
-        {
-            var iterations = 0;
-            var currentResponse = response;
-
-            while (iterations < maxIterations)
-            {
-                // Check if response has tool calls
-                var toolCalls = currentResponse.Message.Contents
-                    .OfType<FunctionCallContent>()
-                    .ToList();
-
-                if (!toolCalls.Any())
-                {
-                    // No tool calls, return the text response
-                    return currentResponse.Message.Text ?? string.Empty;
-                }
-
-                // Add assistant message with tool calls to history
-                messages.Add(currentResponse.Message);
-
-                // Execute each tool call
-                foreach (var toolCall in toolCalls)
-                {
-                    try
-                    {
-                        // Try to find and invoke the matching function
-                        var function = options.Tools?.Cast<AIFunction>().FirstOrDefault(t => 
-                            t.Metadata?.Name == toolCall.Name);
-                        
-                        if (function != null)
-                        {
-                            // Parse arguments - FunctionCallContent.Arguments is typically a JsonElement or dictionary
-                            var argsDict = new Dictionary<string, object>();
-                            
-                            // Invoke the function
-                            var result = await function.InvokeAsync(argsDict, cancellationToken);
-                            
-                            // Add tool result to messages
-                            var resultMessage = new ChatMessage(ChatRole.Tool, result?.ToString() ?? "null");
-                            messages.Add(resultMessage);
-
-                            System.Diagnostics.Debug.WriteLine($"Tool {toolCall.Name} returned: {result}");
-                        }
-                        else
-                        {
-                            var errorResult = $"Tool {toolCall.Name} not found";
-                            messages.Add(new ChatMessage(ChatRole.Tool, errorResult));
-                            System.Diagnostics.Debug.WriteLine(errorResult);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        var errorResult = $"Error executing tool {toolCall.Name}: {ex.Message}";
-                        messages.Add(new ChatMessage(ChatRole.Tool, errorResult));
-                        System.Diagnostics.Debug.WriteLine(errorResult);
-                    }
-                }
-
-                // Get next response from LLM with tool results
-                currentResponse = await llmClient.ChatClient.CompleteAsync(
-                    messages,
-                    options,
-                    cancellationToken);
-
-                iterations++;
-            }
-
-            // Max iterations reached, return what we have
-            return currentResponse.Message.Text ?? "Maximum tool call iterations reached.";
         }
 
         public void Dispose()
