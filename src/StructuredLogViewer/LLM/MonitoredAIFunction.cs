@@ -34,6 +34,7 @@ namespace StructuredLogViewer.LLM
         {
             var toolCallInfo = new ToolCallInfo
             {
+                CallId = Guid.NewGuid(),
                 ToolName = Name,
                 StartTime = DateTime.Now
             };

@@ -10,6 +10,7 @@ namespace StructuredLogViewer.LLM
     /// </summary>
     public class ToolCallInfo
     {
+        public Guid CallId { get; set; }
         public string ToolName { get; set; }
         public string ArgumentsJson { get; set; }
         public string ResultText { get; set; }

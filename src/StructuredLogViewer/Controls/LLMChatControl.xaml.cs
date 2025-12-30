@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows;
@@ -132,6 +133,7 @@ namespace StructuredLogViewer.Controls
             chatService = new LLMChatService(build, buildControl);
             chatService.MessageAdded += OnMessageAdded;
             chatService.ConversationCleared += OnConversationCleared;
+            chatService.ToolCallExecuting += OnToolCallExecuting;
             chatService.ToolCallExecuted += OnToolCallExecuted;
 
             // Load configuration
@@ -143,6 +145,7 @@ namespace StructuredLogViewer.Controls
                 agenticChatService = new AgenticLLMChatService(build, buildControl, currentConfig);
                 agenticChatService.ProgressUpdated += OnAgentProgressUpdated;
                 agenticChatService.MessageAdded += OnMessageAdded;
+                agenticChatService.ToolCallExecuting += OnToolCallExecuting;
                 agenticChatService.ToolCallExecuted += OnToolCallExecuted;
             }
 
@@ -223,7 +226,7 @@ namespace StructuredLogViewer.Controls
             });
         }
 
-        private void OnToolCallExecuted(object sender, ToolCallInfo toolCallInfo)
+        private void OnToolCallExecuting(object sender, ToolCallInfo toolCallInfo)
         {
             Dispatcher.InvokeAsync(() =>
             {
@@ -234,6 +237,35 @@ namespace StructuredLogViewer.Controls
                     ToolCallData = new ToolCallViewModel(toolCallInfo),
                     Content = string.Empty // Not used for tool calls
                 });
+            });
+        }
+
+        private void OnToolCallExecuted(object sender, ToolCallInfo toolCallInfo)
+        {
+            Dispatcher.InvokeAsync(() =>
+            {
+                // Try to find an existing in-progress message with the same CallId
+                var existingMessage = messages.FirstOrDefault(m => 
+                    m.IsToolCall && 
+                    m.ToolCallData != null && 
+                    m.ToolCallData.CallId == toolCallInfo.CallId);
+
+                if (existingMessage != null)
+                {
+                    // Update the existing message with completion data
+                    existingMessage.ToolCallData.UpdateWithCompletion(toolCallInfo);
+                }
+                else
+                {
+                    // No existing message found (shouldn't happen, but handle gracefully)
+                    AddMessage(new ChatMessageDisplay
+                    {
+                        Role = "Tool",
+                        IsToolCall = true,
+                        ToolCallData = new ToolCallViewModel(toolCallInfo),
+                        Content = string.Empty
+                    });
+                }
             });
         }
 
@@ -581,6 +613,7 @@ namespace StructuredLogViewer.Controls
                         agenticChatService = new AgenticLLMChatService(Build, BuildControl, newConfig);
                         agenticChatService.ProgressUpdated += OnAgentProgressUpdated;
                         agenticChatService.MessageAdded += OnMessageAdded;
+                        agenticChatService.ToolCallExecuting += OnToolCallExecuting;
                         agenticChatService.ToolCallExecuted += OnToolCallExecuted;
                         agentModeToggle.IsEnabled = true;
                     }
