@@ -36,6 +36,7 @@ namespace StructuredLogViewer.LLM
         private readonly Build build;
         private readonly BinlogContextProvider contextProvider;
         private readonly BinlogToolExecutor toolExecutor;
+        private readonly EmbeddedFilesToolExecutor embeddedFilesExecutor;
         private AzureFoundryLLMClient llmClient;
         private readonly LLMConfiguration configuration;
         private readonly List<ChatMessage> chatHistory;
@@ -53,6 +54,7 @@ namespace StructuredLogViewer.LLM
             this.build = build ?? throw new ArgumentNullException(nameof(build));
             this.contextProvider = new BinlogContextProvider(build);
             this.toolExecutor = new BinlogToolExecutor(build);
+            this.embeddedFilesExecutor = new EmbeddedFilesToolExecutor(build);
             this.chatHistory = new List<ChatMessage>();
             this.configuration = LLMConfiguration.LoadFromEnvironment();
 
@@ -134,7 +136,11 @@ Available context:
                     AIFunctionFactory.Create(toolExecutor.SearchNodes),
                     AIFunctionFactory.Create(toolExecutor.GetErrorsAndWarnings),
                     AIFunctionFactory.Create(toolExecutor.GetProjects),
-                    AIFunctionFactory.Create(toolExecutor.GetProjectTargets)
+                    AIFunctionFactory.Create(toolExecutor.GetProjectTargets),
+                    // Embedded files tools
+                    AIFunctionFactory.Create(embeddedFilesExecutor.ListEmbeddedFiles),
+                    AIFunctionFactory.Create(embeddedFilesExecutor.SearchEmbeddedFiles),
+                    AIFunctionFactory.Create(embeddedFilesExecutor.ReadEmbeddedFileLines)
                 };
 
                 // Wrap each function with monitoring
