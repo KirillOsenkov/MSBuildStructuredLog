@@ -36,9 +36,9 @@ namespace StructuredLogViewer.LLM
     {
         private readonly Build build;
         private readonly BinlogContextProvider contextProvider;
-        private readonly BinlogToolExecutor toolExecutor;
-        private readonly BinlogUIInteractionExecutor uiInteractionExecutor;
-        private readonly EmbeddedFilesToolExecutor embeddedFilesExecutor;
+        private readonly AsyncBinlogToolExecutor toolExecutor;
+        private readonly AsyncBinlogUIInteractionExecutor uiInteractionExecutor;
+        private readonly AsyncEmbeddedFilesToolExecutor embeddedFilesExecutor;
         private AzureFoundryLLMClient llmClient;
         private readonly LLMConfiguration configuration;
         private readonly List<ChatMessage> chatHistory;
@@ -56,9 +56,9 @@ namespace StructuredLogViewer.LLM
         {
             this.build = build ?? throw new ArgumentNullException(nameof(build));
             this.contextProvider = new BinlogContextProvider(build);
-            this.toolExecutor = new BinlogToolExecutor(build);
-            this.uiInteractionExecutor = buildControl != null ? new BinlogUIInteractionExecutor(build, buildControl) : null;
-            this.embeddedFilesExecutor = new EmbeddedFilesToolExecutor(build);
+            this.toolExecutor = new AsyncBinlogToolExecutor(build);
+            this.uiInteractionExecutor = buildControl != null ? new AsyncBinlogUIInteractionExecutor(build, buildControl) : null;
+            this.embeddedFilesExecutor = new AsyncEmbeddedFilesToolExecutor(build);
             this.chatHistory = new List<ChatMessage>();
             this.configuration = LLMConfiguration.LoadFromEnvironment();
 
