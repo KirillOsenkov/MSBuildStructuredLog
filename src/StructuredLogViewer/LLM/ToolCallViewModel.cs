@@ -134,7 +134,7 @@ namespace StructuredLogViewer.LLM
         /// Gets the header text shown in collapsed state.
         /// </summary>
         public string HeaderText => IsInProgress 
-            ? $"⏳ {ToolName}: {ArgumentsSummary}"
+            ? $"⏳ {ToolName}: {ArgumentsSummary} (In Progress...)"
             : $"🔧 {ToolName}: {ArgumentsSummary}";
 
         /// <summary>

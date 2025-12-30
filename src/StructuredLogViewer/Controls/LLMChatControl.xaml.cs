@@ -230,6 +230,9 @@ namespace StructuredLogViewer.Controls
         {
             Dispatcher.InvokeAsync(() =>
             {
+                // Show status banner indicating tool is executing
+                ShowStatus($"Executing tool: {toolCallInfo.ToolName} (In Progress...)");
+                
                 AddMessage(new ChatMessageDisplay
                 {
                     Role = "Tool",
@@ -244,6 +247,9 @@ namespace StructuredLogViewer.Controls
         {
             Dispatcher.InvokeAsync(() =>
             {
+                // Clear the status banner since tool execution is complete
+                HideStatus();
+                
                 // Try to find an existing in-progress message with the same CallId
                 var existingMessage = messages.FirstOrDefault(m => 
                     m.IsToolCall && 
