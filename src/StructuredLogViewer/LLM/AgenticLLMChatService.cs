@@ -142,7 +142,11 @@ Return ONLY a JSON object with this exact structure (no markdown, no extra text)
             // Parse the plan
             try
             {
-                var planData = JsonSerializer.Deserialize<PlanResponse>(planJson);
+                var jsonOptions = new JsonSerializerOptions 
+                { 
+                    PropertyNameCaseInsensitive = true 
+                };
+                var planData = JsonSerializer.Deserialize<PlanResponse>(planJson, jsonOptions);
                 if (planData?.Tasks != null && planData.Tasks.Count > 0)
                 {
                     foreach (var taskData in planData.Tasks.Take(MaxResearchTasks))
