@@ -57,6 +57,10 @@ namespace StructuredLogViewer.LLM
                 chatClient = inferenceClient.AsIChatClient(modelName);
             }
 
+            // Wrap with resilient client for automatic retry on rate limits and transient errors
+            chatClient = new ResilientChatClient(chatClient, maxRetries: 3);
+            
+            // Apply function invocation after resilient wrapper
             chatClient = new ChatClientBuilder(chatClient).UseFunctionInvocation().Build();
         }
 
