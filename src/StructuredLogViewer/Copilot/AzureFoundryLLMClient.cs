@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -185,15 +185,20 @@ namespace StructuredLogViewer.Copilot
                 }
             }
 
-            var requestBody = new
+            // Build request body - only include system if not null/empty
+            var requestBodyDict = new Dictionary<string, object>
             {
-                model = _modelName,
-                messages = messages,
-                max_tokens = options?.MaxOutputTokens ?? 1024,
-                system = systemPrompt
+                ["model"] = _modelName,
+                ["messages"] = messages,
+                ["max_tokens"] = options?.MaxOutputTokens ?? 8192
             };
 
-            var json = System.Text.Json.JsonSerializer.Serialize(requestBody);
+            if (!string.IsNullOrEmpty(systemPrompt))
+            {
+                requestBodyDict["system"] = systemPrompt;
+            }
+
+            var json = System.Text.Json.JsonSerializer.Serialize(requestBodyDict);
             var content = new System.Net.Http.StringContent(json, System.Text.Encoding.UTF8, "application/json");
 
             var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Post, $"{_endpoint}/v1/messages");
@@ -202,7 +207,13 @@ namespace StructuredLogViewer.Copilot
             request.Content = content;
 
             var response = await _httpClient.SendAsync(request, cancellationToken);
-            response.EnsureSuccessStatusCode();
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                throw new System.Net.Http.HttpRequestException(
+                    $"Anthropic API request failed with status {response.StatusCode}: {errorContent}");
+            }
 
             var responseJson = await response.Content.ReadAsStringAsync();
             var responseObj = System.Text.Json.JsonDocument.Parse(responseJson);
