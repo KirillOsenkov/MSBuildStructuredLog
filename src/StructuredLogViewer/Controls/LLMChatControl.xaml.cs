@@ -13,6 +13,24 @@ using StructuredLogViewer.LLM;
 namespace StructuredLogViewer.Controls
 {
     /// <summary>
+    /// Template selector for choosing between regular messages and tool call messages.
+    /// </summary>
+    public class ChatMessageTemplateSelector : DataTemplateSelector
+    {
+        public DataTemplate RegularMessageTemplate { get; set; }
+        public DataTemplate ToolCallMessageTemplate { get; set; }
+
+        public override DataTemplate SelectTemplate(object item, DependencyObject container)
+        {
+            if (item is ChatMessageDisplay message)
+            {
+                return message.IsToolCall ? ToolCallMessageTemplate : RegularMessageTemplate;
+            }
+            return RegularMessageTemplate;
+        }
+    }
+
+    /// <summary>
     /// View model for displaying chat messages in the UI
     /// </summary>
     public class ChatMessageDisplay : INotifyPropertyChanged
@@ -20,12 +38,17 @@ namespace StructuredLogViewer.Controls
         public string Role { get; set; }
         public string Content { get; set; }
         public bool IsError { get; set; }
+        
+        // Tool call support
+        public bool IsToolCall { get; set; }
+        public ToolCallViewModel ToolCallData { get; set; }
 
         public Brush RoleBackground
         {
             get
             {
                 if (IsError) return new SolidColorBrush(Color.FromRgb(255, 240, 240));
+                if (IsToolCall) return new SolidColorBrush(Color.FromRgb(245, 245, 250));
                 return Role switch
                 {
                     "User" => new SolidColorBrush(Color.FromRgb(230, 240, 255)),
@@ -40,6 +63,7 @@ namespace StructuredLogViewer.Controls
             get
             {
                 if (IsError) return new SolidColorBrush(Color.FromRgb(255, 200, 200));
+                if (IsToolCall) return new SolidColorBrush(Color.FromRgb(180, 180, 200));
                 return Role switch
                 {
                     "User" => new SolidColorBrush(Color.FromRgb(180, 200, 255)),
@@ -87,6 +111,7 @@ namespace StructuredLogViewer.Controls
             chatService = new LLMChatService(build);
             chatService.MessageAdded += OnMessageAdded;
             chatService.ConversationCleared += OnConversationCleared;
+            chatService.ToolCallExecuted += OnToolCallExecuted;
 
             // Show initial status
             ShowStatus(chatService.ConfigurationStatus);
@@ -142,6 +167,20 @@ namespace StructuredLogViewer.Controls
                     Role = e.Role,
                     Content = e.Content,
                     IsError = e.IsError
+                });
+            });
+        }
+
+        private void OnToolCallExecuted(object sender, ToolCallInfo toolCallInfo)
+        {
+            Dispatcher.InvokeAsync(() =>
+            {
+                AddMessage(new ChatMessageDisplay
+                {
+                    Role = "Tool",
+                    IsToolCall = true,
+                    ToolCallData = new ToolCallViewModel(toolCallInfo),
+                    Content = string.Empty // Not used for tool calls
                 });
             });
         }

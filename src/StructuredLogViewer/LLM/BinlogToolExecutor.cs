@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -57,7 +57,7 @@ namespace StructuredLogViewer.LLM
             return sb.ToString();
         }
 
-        [Description("Searches for nodes in the build tree by text or pattern. Returns matching nodes.")]
+        [Description("Searches for nodes in the build tree by text or pattern given via 'query' argument. Returns matching nodes.")]
         public string SearchNodes(
             [Description("The search query text or pattern")] string query,
             [Description("Maximum number of results to return (default 10)")] int maxResults = 10)

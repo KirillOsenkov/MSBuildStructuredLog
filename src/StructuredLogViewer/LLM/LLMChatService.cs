@@ -43,6 +43,7 @@ namespace StructuredLogViewer.LLM
 
         public event EventHandler<ChatMessageViewModel> MessageAdded;
         public event EventHandler ConversationCleared;
+        public event EventHandler<ToolCallInfo> ToolCallExecuted;
 
         public bool IsConfigured => configuration?.IsConfigured ?? false;
         public string ConfigurationStatus => configuration?.GetConfigurationStatus() ?? "Not initialized";
@@ -127,11 +128,22 @@ Available context:
             try
             {
                 // Register tools from BinlogToolExecutor - let AIFunctionFactory use the [Description] attributes
-                tools.Add(AIFunctionFactory.Create(toolExecutor.GetBuildSummary));
-                tools.Add(AIFunctionFactory.Create(toolExecutor.SearchNodes));
-                tools.Add(AIFunctionFactory.Create(toolExecutor.GetErrorsAndWarnings));
-                tools.Add(AIFunctionFactory.Create(toolExecutor.GetProjects));
-                tools.Add(AIFunctionFactory.Create(toolExecutor.GetProjectTargets));
+                var baseFunctions = new[]
+                {
+                    AIFunctionFactory.Create(toolExecutor.GetBuildSummary),
+                    AIFunctionFactory.Create(toolExecutor.SearchNodes),
+                    AIFunctionFactory.Create(toolExecutor.GetErrorsAndWarnings),
+                    AIFunctionFactory.Create(toolExecutor.GetProjects),
+                    AIFunctionFactory.Create(toolExecutor.GetProjectTargets)
+                };
+
+                // Wrap each function with monitoring
+                foreach (var baseFunction in baseFunctions)
+                {
+                    var monitoredFunction = new MonitoredAIFunction(baseFunction);
+                    monitoredFunction.ToolCallCompleted += OnToolCallCompleted;
+                    tools.Add(monitoredFunction);
+                }
 
                 System.Diagnostics.Debug.WriteLine($"Registered {tools.Count} tools:");
                 foreach (var tool in tools)
@@ -146,6 +158,12 @@ Available context:
             }
 
             return tools.ToArray();
+        }
+
+        private void OnToolCallCompleted(object sender, ToolCallInfo toolCallInfo)
+        {
+            // Raise event for UI consumption
+            ToolCallExecuted?.Invoke(this, toolCallInfo);
         }
 
         public async Task<string> SendMessageAsync(string userMessage, CancellationToken cancellationToken = default)

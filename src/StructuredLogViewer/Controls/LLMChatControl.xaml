@@ -82,8 +82,9 @@
                   VerticalScrollBarVisibility="Auto"
                   Padding="8">
       <ItemsControl x:Name="messagesPanel">
-        <ItemsControl.ItemTemplate>
-          <DataTemplate>
+        <ItemsControl.Resources>
+          <!-- Template for regular messages -->
+          <DataTemplate x:Key="RegularMessageTemplate">
             <Border Margin="0,0,0,8"
                     Padding="8"
                     CornerRadius="4"
@@ -101,7 +102,94 @@
               </DockPanel>
             </Border>
           </DataTemplate>
-        </ItemsControl.ItemTemplate>
+          
+          <!-- Template for tool call messages -->
+          <DataTemplate x:Key="ToolCallMessageTemplate">
+            <Border Margin="0,0,0,8"
+                    Padding="0"
+                    CornerRadius="4"
+                    Background="{Binding RoleBackground}"
+                    BorderBrush="{Binding RoleBorder}"
+                    BorderThickness="1">
+              <Expander IsExpanded="{Binding ToolCallData.IsExpanded, Mode=TwoWay}">
+                <Expander.Header>
+                  <TextBlock Text="{Binding ToolCallData.HeaderText, Mode=OneWay}"
+                             FontFamily="Consolas"
+                             FontSize="11"
+                             Foreground="#555"
+                             TextTrimming="CharacterEllipsis"
+                             Padding="4,2"/>
+                </Expander.Header>
+                <Border Background="White" 
+                        Padding="12"
+                        BorderBrush="#DDD"
+                        BorderThickness="0,1,0,0">
+                  <StackPanel>
+                    <!-- Tool Name -->
+                    <TextBlock Text="Tool Name" 
+                               FontWeight="Bold" 
+                               Foreground="#333"
+                               Margin="0,0,0,4"/>
+                    <TextBlock Text="{Binding ToolCallData.ToolName, Mode=OneWay}"
+                               FontFamily="Consolas"
+                               Foreground="#0066CC"
+                               Margin="0,0,0,12"/>
+                    
+                    <!-- Arguments -->
+                    <TextBlock Text="Arguments" 
+                               FontWeight="Bold" 
+                               Foreground="#333"
+                               Margin="0,0,0,4"/>
+                    <TextBox Text="{Binding ToolCallData.FormattedArguments, Mode=OneWay}"
+                             IsReadOnly="True"
+                             TextWrapping="Wrap"
+                             FontFamily="Consolas"
+                             FontSize="11"
+                             Background="#F9F9F9"
+                             BorderBrush="#DDD"
+                             BorderThickness="1"
+                             Padding="6"
+                             Margin="0,0,0,12"
+                             MaxHeight="200"
+                             VerticalScrollBarVisibility="Auto"/>
+                    
+                    <!-- Result -->
+                    <TextBlock Text="Result" 
+                               FontWeight="Bold" 
+                               Foreground="#333"
+                               Margin="0,0,0,4"/>
+                    <TextBox Text="{Binding ToolCallData.FormattedResult, Mode=OneWay}"
+                             IsReadOnly="True"
+                             TextWrapping="Wrap"
+                             FontFamily="Consolas"
+                             FontSize="11"
+                             Background="#F9F9F9"
+                             BorderBrush="#DDD"
+                             BorderThickness="1"
+                             Padding="6"
+                             Margin="0,0,0,12"
+                             MaxHeight="300"
+                             VerticalScrollBarVisibility="Auto"/>
+                    
+                    <!-- Timing Info -->
+                    <TextBlock Foreground="#666" FontSize="10">
+                      <Run Text="Executed: "/>
+                      <Run Text="{Binding ToolCallData.StartTime, Mode=OneWay, StringFormat='{}{0:HH:mm:ss}'}"/>
+                      <Run Text=" • Duration: "/>
+                      <Run Text="{Binding ToolCallData.DurationText, Mode=OneWay}"/>
+                    </TextBlock>
+                  </StackPanel>
+                </Border>
+              </Expander>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.Resources>
+        
+        <ItemsControl.ItemTemplateSelector>
+          <local:ChatMessageTemplateSelector 
+            RegularMessageTemplate="{StaticResource RegularMessageTemplate}"
+            ToolCallMessageTemplate="{StaticResource ToolCallMessageTemplate}"/>
+        </ItemsControl.ItemTemplateSelector>
       </ItemsControl>
     </ScrollViewer>
   </DockPanel>
