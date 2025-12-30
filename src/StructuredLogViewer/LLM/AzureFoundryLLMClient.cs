@@ -23,10 +23,14 @@ namespace StructuredLogViewer.LLM
         public AzureFoundryLLMClient(LLMConfiguration config)
         {
             if (config == null)
+            {
                 throw new ArgumentNullException(nameof(config));
+            }
 
             if (!config.IsConfigured)
+            {
                 throw new InvalidOperationException("LLM configuration is incomplete.");
+            }
 
             modelName = config.ModelName;
             var endpoint = new Uri(config.Endpoint);

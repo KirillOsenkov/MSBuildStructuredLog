@@ -476,6 +476,7 @@ namespace StructuredLogViewer
             if (mainContent.Content is BuildControl current)
             {
                 lastSearchText = current.searchLogControl.SearchText;
+                current.LLMChatInitialized -= OnLLMChatInitialized;
             }
 
             mainContent.Content = content;
@@ -485,19 +486,24 @@ namespace StructuredLogViewer
                 logFilePath = null;
                 projectFilePath = null;
                 currentBuild = null;
+                llmButton.Visibility = Visibility.Collapsed;
             }
 
-            if (content is BuildControl)
+            if (content is BuildControl buildControl)
             {
                 ReloadMenu.Visibility = logFilePath != null ? Visibility.Visible : Visibility.Collapsed;
                 SaveAsMenu.Visibility = Visibility.Visible;
                 RedactSecretsMenu.Visibility = Visibility.Visible;
+
+                // Subscribe to LLM chat initialization event
+                buildControl.LLMChatInitialized += OnLLMChatInitialized;
             }
             else
             {
                 ReloadMenu.Visibility = Visibility.Collapsed;
                 SaveAsMenu.Visibility = Visibility.Collapsed;
                 RedactSecretsMenu.Visibility = Visibility.Collapsed;
+                llmButton.Visibility = Visibility.Collapsed;
             }
 
             // If we had text inside search log control bring it back
@@ -1248,6 +1254,18 @@ that project." };
             else
             {
                 exceptionPanel.Visibility = Visibility.Hidden;
+            }
+        }
+
+        private void OnLLMChatInitialized(object sender, bool success)
+        {
+            if (success)
+            {
+                llmButton.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                llmButton.Visibility = Visibility.Collapsed;
             }
         }
 

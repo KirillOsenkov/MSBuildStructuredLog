@@ -29,6 +29,9 @@ namespace StructuredLogViewer.Controls
         public TreeViewItem SelectedTreeViewItem { get; private set; }
         public string LogFilePath => Build?.LogFilePath;
 
+        // Event fired when LLM chat initialization completes
+        public event EventHandler<bool> LLMChatInitialized;
+
         private SourceFileResolver sourceFileResolver;
         private ArchiveFileResolver archiveFile => sourceFileResolver.ArchiveFile;
         private PreprocessedFileManager preprocessedFileManager;
@@ -434,19 +437,36 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
             centralTabControl.SelectionChanged += CentralTabControl_SelectionChanged;
 
-            // Initialize LLM chat control
-            InitializeLLMChat();
+            // Initialize LLM chat control asynchronously
+            _ = InitializeLLMChatAsync();
         }
 
-        private void InitializeLLMChat()
+        private async System.Threading.Tasks.Task InitializeLLMChatAsync()
         {
             try
             {
-                llmChatControl.Initialize(Build);
+                await System.Threading.Tasks.Task.Run(() =>
+                {
+                    try
+                    {
+                        // Initialize LLM chat control on background thread
+                        Dispatcher.Invoke(() => llmChatControl.Initialize(Build));
+                        
+                        // Notify success on UI thread
+                        Dispatcher.Invoke(() => LLMChatInitialized?.Invoke(this, true));
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Failed to initialize LLM chat: {ex.Message}");
+                        // Notify failure on UI thread
+                        Dispatcher.Invoke(() => LLMChatInitialized?.Invoke(this, false));
+                    }
+                });
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Failed to initialize LLM chat: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Failed to start LLM chat initialization: {ex.Message}");
+                LLMChatInitialized?.Invoke(this, false);
             }
         }
 

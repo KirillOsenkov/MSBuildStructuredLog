@@ -77,7 +77,8 @@
             ToolTip="Toggle LLM Chat (AI-powered binlog assistant)"
             Background="{DynamicResource Theme_InfoBarBackground}"
             Foreground="{DynamicResource Theme_Foreground}"
-            BorderThickness="1">
+            BorderThickness="1"
+            Visibility="Collapsed">
           <StackPanel Orientation="Horizontal">
             <TextBlock Text="✨" FontSize="14" Margin="0,0,4,0" />
             <TextBlock Text="LLM" />
