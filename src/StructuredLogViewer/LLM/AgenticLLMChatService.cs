@@ -103,7 +103,11 @@ namespace StructuredLogViewer.LLM
             plan.Phase = AgentPhase.Planning;
             RaiseProgress(plan, "Creating research plan...");
 
-            var systemPrompt = GetPlanningSystemPrompt();
+            // Get research tools to include their definitions in planning context
+            var researchTools = GetToolsForPhase(AgentPhase.Research);
+            var toolDescriptions = GetToolDescriptions(researchTools);
+
+            var systemPrompt = GetPlanningSystemPrompt(toolDescriptions);
             var userPrompt = $@"User Question: {plan.UserQuery}
 
 Build Overview:
@@ -381,6 +385,7 @@ Format your answer with markdown for readability.";
                     case AgentPhase.Planning:
                         // Minimal tools for planning
                         baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.GetBuildSummary));
+                        baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.GetErrorsAndWarnings));
                         break;
 
                     case AgentPhase.Research:
@@ -459,33 +464,29 @@ Format your answer with markdown for readability.";
 
         #region System Prompts
 
-        private string GetPlanningSystemPrompt()
+        private string GetPlanningSystemPrompt(string researchToolDescriptions)
         {
-            return @"You are an expert MSBuild log analyzer creating a research plan.
+            return $@"You are an expert MSBuild log analyzer creating a research plan.
 
-Your task: Break down the user's question into 2-5 specific research tasks.
+Your task: Break down the user's question into 2-{MaxResearchTasks} specific research tasks.
 Each task should:
 - Have a clear, specific goal
-- Use only read-only investigation tools
+- Be designed to use the tools that will be available to the research agents
 - Produce findings that contribute to answering the user's question
 
-Available tools for research:
-- GetBuildSummary: Get build status, duration, error/warning counts
-- SearchNodes: Search for nodes in build tree
-- GetErrorsAndWarnings: List errors and/or warnings
-- GetProjects: List all projects with status
-- GetProjectTargets: Get targets for a project
-- ListEmbeddedFiles: List embedded source files
-- SearchEmbeddedFiles: Search within embedded files
-- ReadEmbeddedFileLines: Read specific lines from embedded files
+The research agents will have access to the following tools:
+
+{researchToolDescriptions}
+
+Consider these tools when designing your research plan. All tools are read-only - same as the actual overall investigation you are planning. Each task should leverage the appropriate tools to gather the necessary information.
 
 Output ONLY valid JSON in this exact format:
-{
+{{
   ""tasks"": [
-    {""id"": ""task1"", ""description"": ""Brief description"", ""goal"": ""Specific investigation goal""},
-    {""id"": ""task2"", ""description"": ""Brief description"", ""goal"": ""Specific investigation goal""}
+    {{""id"": ""task1"", ""description"": ""Brief description"", ""goal"": ""Specific investigation goal""}},
+    {{""id"": ""task2"", ""description"": ""Brief description"", ""goal"": ""Specific investigation goal""}}
   ]
-}
+}}
 
 Do not include markdown formatting or any text outside the JSON object.";
         }
@@ -518,6 +519,46 @@ Use UI tools to enhance the user experience by showing them relevant parts of th
         #endregion
 
         #region Helper Methods
+
+        /// <summary>
+        /// Generates a formatted string describing available tools based on AIFunction metadata.
+        /// </summary>
+        private string GetToolDescriptions(AIFunction[] tools)
+        {
+            var descriptions = new StringBuilder();
+            
+            foreach (var tool in tools)
+            {
+                descriptions.AppendLine($"- {tool.Name}: {tool.Description}");
+                
+                // Try to include parameter info from JSON schema
+                try
+                {
+                    var schema = tool.JsonSchema;
+                    if (schema.ValueKind == JsonValueKind.Object &&
+                        schema.TryGetProperty("properties", out var properties) &&
+                        properties.ValueKind == JsonValueKind.Object)
+                    {
+                        var paramNames = new List<string>();
+                        foreach (var property in properties.EnumerateObject())
+                        {
+                            paramNames.Add(property.Name);
+                        }
+                        
+                        if (paramNames.Count > 0)
+                        {
+                            descriptions.AppendLine($"  Parameters: {string.Join(", ", paramNames)}");
+                        }
+                    }
+                }
+                catch
+                {
+                    // If schema parsing fails, skip parameter details
+                }
+            }
+            
+            return descriptions.ToString();
+        }
 
         private string ExtractJsonFromResponse(string text)
         {

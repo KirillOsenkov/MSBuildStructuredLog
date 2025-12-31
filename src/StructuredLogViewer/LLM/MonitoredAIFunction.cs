@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,6 +28,11 @@ namespace StructuredLogViewer.LLM
         // Delegate properties to inner function
         public override string Name => innerFunction.Name;
         public override string Description => innerFunction.Description;
+        public override JsonElement JsonSchema => innerFunction.JsonSchema;
+        public override MethodInfo UnderlyingMethod => innerFunction.UnderlyingMethod;
+        public override JsonElement? ReturnJsonSchema => innerFunction.ReturnJsonSchema;
+        public override JsonSerializerOptions JsonSerializerOptions => innerFunction.JsonSerializerOptions;
+        public override IReadOnlyDictionary<string, object> AdditionalProperties => innerFunction.AdditionalProperties;
 
         protected override async ValueTask<object?> InvokeCoreAsync(
             AIFunctionArguments arguments,
