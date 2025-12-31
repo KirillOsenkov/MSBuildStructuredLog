@@ -1,28 +1,29 @@
 using System;
 using System.ComponentModel;
 using System.Linq;
-using System.Text;
 using Microsoft.Build.Logging.StructuredLogger;
 using StructuredLogViewer.Controls;
 
 namespace StructuredLogViewer.LLM
 {
     /// <summary>
-    /// Executes UI interaction tools that allow the LLM to select, highlight, and navigate to nodes in the viewer.
+    /// Async wrapper for BinlogUIInteractionExecutor that ensures expensive search operations 
+    /// happen on background threads, while only the actual UI operations run on the UI thread.
+    /// This prevents UI freezing when the LLM calls these tools.
     /// </summary>
-    public class BinlogUIInteractionExecutor
+    public class AsyncBinlogUIInteractionExecutor
     {
         private readonly Build build;
         private readonly BuildControl buildControl;
 
-        public BinlogUIInteractionExecutor(Build build, BuildControl buildControl)
+        public AsyncBinlogUIInteractionExecutor(Build build, BuildControl buildControl)
         {
             this.build = build ?? throw new ArgumentNullException(nameof(build));
             this.buildControl = buildControl ?? throw new ArgumentNullException(nameof(buildControl));
         }
 
         [Description("Selects and navigates to a specific node in the tree view by searching for it. This highlights the node and shows it in the tree.")]
-        public string SelectNodeByText(
+        public async System.Threading.Tasks.Task<string> SelectNodeByText(
             [Description("Text to search for in node names or content")] string searchText,
             [Description("Optional: Type of node to search for (e.g., 'Project', 'Target', 'Task', 'Error', 'Warning')")] string nodeType = null)
         {
@@ -31,40 +32,44 @@ namespace StructuredLogViewer.LLM
                 return "Error: Search text cannot be empty.";
             }
 
-            BaseNode foundNode = null;
-
-            build.VisitAllChildren<BaseNode>(node =>
+            // Perform expensive search on background thread
+            var foundNode = await System.Threading.Tasks.Task.Run(() =>
             {
-                if (foundNode != null) return; // Already found one
-
-                // Check node type if specified
-                if (!string.IsNullOrEmpty(nodeType))
+                BaseNode result = null;
+                build.VisitAllChildren<BaseNode>(node =>
                 {
-                    var actualType = node.GetType().Name;
-                    if (!actualType.Equals(nodeType, StringComparison.OrdinalIgnoreCase))
+                    if (result != null) return; // Already found one
+
+                    // Check node type if specified
+                    if (!string.IsNullOrEmpty(nodeType))
                     {
-                        return;
+                        var actualType = node.GetType().Name;
+                        if (!actualType.Equals(nodeType, StringComparison.OrdinalIgnoreCase))
+                        {
+                            return;
+                        }
                     }
-                }
 
-                // Check if text matches
-                var nodeText = node.ToString();
-                if (nodeText != null && nodeText.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0)
-                {
-                    foundNode = node;
-                }
-            });
+                    // Check if text matches
+                    var nodeText = node.ToString();
+                    if (nodeText != null && nodeText.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        result = node;
+                    }
+                });
+                return result;
+            }).ConfigureAwait(false);
 
             if (foundNode == null)
             {
-                return $"No node found matching '{searchText}'" + 
+                return $"No node found matching '{searchText}'" +
                        (string.IsNullOrEmpty(nodeType) ? "" : $" of type '{nodeType}'");
             }
 
             // Navigate to the node on the UI thread
             try
             {
-                buildControl.Dispatcher.Invoke(() =>
+                await buildControl.Dispatcher.InvokeAsync(() =>
                 {
                     buildControl.SelectItem(foundNode);
                 });
@@ -78,7 +83,7 @@ namespace StructuredLogViewer.LLM
         }
 
         [Description("Selects and displays a specific error in the tree view by its index or error code.")]
-        public string SelectError(
+        public async System.Threading.Tasks.Task<string> SelectError(
             [Description("Index of the error (1-based) or error code (e.g., 'CS1234')")] string errorIdentifier)
         {
             if (string.IsNullOrWhiteSpace(errorIdentifier))
@@ -86,40 +91,55 @@ namespace StructuredLogViewer.LLM
                 return "Error: Error identifier cannot be empty.";
             }
 
-            var errors = new System.Collections.Generic.List<Error>();
-            build.VisitAllChildren<Error>(e => errors.Add(e));
-
-            if (errors.Count == 0)
+            // Collect errors on background thread
+            var result = await System.Threading.Tasks.Task.Run(() =>
             {
-                return "No errors found in the build.";
-            }
+                var errorList = new System.Collections.Generic.List<Error>();
+                build.VisitAllChildren<Error>(e => errorList.Add(e));
 
-            Error targetError = null;
-
-            // Try parsing as index (1-based)
-            if (int.TryParse(errorIdentifier, out int index))
-            {
-                if (index < 1 || index > errors.Count)
+                if (errorList.Count == 0)
                 {
-                    return $"Error index {index} is out of range. Build has {errors.Count} error(s).";
+                    return (errorList, (Error)null, "No errors found in the build.");
                 }
-                targetError = errors[index - 1];
-            }
-            else
-            {
-                // Search by error code
-                targetError = errors.FirstOrDefault(e =>
-                    e.Code != null && e.Code.Equals(errorIdentifier, StringComparison.OrdinalIgnoreCase));
 
-                if (targetError == null)
+                Error target = null;
+
+                // Try parsing as index (1-based)
+                if (int.TryParse(errorIdentifier, out int index))
                 {
-                    return $"No error found with code '{errorIdentifier}'.";
+                    if (index < 1 || index > errorList.Count)
+                    {
+                        return (errorList, (Error)null, $"Error index {index} is out of range. Build has {errorList.Count} error(s).");
+                    }
+                    target = errorList[index - 1];
                 }
+                else
+                {
+                    // Search by error code
+                    target = errorList.FirstOrDefault(e =>
+                        e.Code != null && e.Code.Equals(errorIdentifier, StringComparison.OrdinalIgnoreCase));
+
+                    if (target == null)
+                    {
+                        return (errorList, (Error)null, $"No error found with code '{errorIdentifier}'.");
+                    }
+                }
+
+                return (errorList, target, (string)null);
+            }).ConfigureAwait(false);
+
+            var errors = result.Item1;
+            var targetError = result.Item2;
+            var errorMessage = result.Item3;
+
+            if (errorMessage != null)
+            {
+                return errorMessage;
             }
 
             try
             {
-                buildControl.Dispatcher.Invoke(() =>
+                await buildControl.Dispatcher.InvokeAsync(() =>
                 {
                     buildControl.SelectItem(targetError);
                 });
@@ -134,7 +154,7 @@ namespace StructuredLogViewer.LLM
         }
 
         [Description("Selects and displays a specific warning in the tree view by its index or warning code.")]
-        public string SelectWarning(
+        public async System.Threading.Tasks.Task<string> SelectWarning(
             [Description("Index of the warning (1-based) or warning code (e.g., 'CS0168')")] string warningIdentifier)
         {
             if (string.IsNullOrWhiteSpace(warningIdentifier))
@@ -142,40 +162,55 @@ namespace StructuredLogViewer.LLM
                 return "Error: Warning identifier cannot be empty.";
             }
 
-            var warnings = new System.Collections.Generic.List<Warning>();
-            build.VisitAllChildren<Warning>(w => warnings.Add(w));
-
-            if (warnings.Count == 0)
+            // Collect warnings on background thread
+            var result = await System.Threading.Tasks.Task.Run(() =>
             {
-                return "No warnings found in the build.";
-            }
+                var warningList = new System.Collections.Generic.List<Warning>();
+                build.VisitAllChildren<Warning>(w => warningList.Add(w));
 
-            Warning targetWarning = null;
-
-            // Try parsing as index (1-based)
-            if (int.TryParse(warningIdentifier, out int index))
-            {
-                if (index < 1 || index > warnings.Count)
+                if (warningList.Count == 0)
                 {
-                    return $"Warning index {index} is out of range. Build has {warnings.Count} warning(s).";
+                    return (warningList, (Warning)null, "No warnings found in the build.");
                 }
-                targetWarning = warnings[index - 1];
-            }
-            else
-            {
-                // Search by warning code
-                targetWarning = warnings.FirstOrDefault(w =>
-                    w.Code != null && w.Code.Equals(warningIdentifier, StringComparison.OrdinalIgnoreCase));
 
-                if (targetWarning == null)
+                Warning target = null;
+
+                // Try parsing as index (1-based)
+                if (int.TryParse(warningIdentifier, out int index))
                 {
-                    return $"No warning found with code '{warningIdentifier}'.";
+                    if (index < 1 || index > warningList.Count)
+                    {
+                        return (warningList, (Warning)null, $"Warning index {index} is out of range. Build has {warningList.Count} warning(s).");
+                    }
+                    target = warningList[index - 1];
                 }
+                else
+                {
+                    // Search by warning code
+                    target = warningList.FirstOrDefault(w =>
+                        w.Code != null && w.Code.Equals(warningIdentifier, StringComparison.OrdinalIgnoreCase));
+
+                    if (target == null)
+                    {
+                        return (warningList, (Warning)null, $"No warning found with code '{warningIdentifier}'.");
+                    }
+                }
+
+                return (warningList, target, (string)null);
+            }).ConfigureAwait(false);
+
+            var warnings = result.Item1;
+            var targetWarning = result.Item2;
+            var errorMessage = result.Item3;
+
+            if (errorMessage != null)
+            {
+                return errorMessage;
             }
 
             try
             {
-                buildControl.Dispatcher.Invoke(() =>
+                await buildControl.Dispatcher.InvokeAsync(() =>
                 {
                     buildControl.SelectItem(targetWarning);
                 });
@@ -190,7 +225,7 @@ namespace StructuredLogViewer.LLM
         }
 
         [Description("Selects and displays a specific project in the tree view by name or partial name match.")]
-        public string SelectProject(
+        public async System.Threading.Tasks.Task<string> SelectProject(
             [Description("Name or partial name of the project")] string projectName)
         {
             if (string.IsNullOrWhiteSpace(projectName))
@@ -198,17 +233,20 @@ namespace StructuredLogViewer.LLM
                 return "Error: Project name cannot be empty.";
             }
 
-            Project foundProject = null;
-
-            build.VisitAllChildren<Project>(p =>
+            // Search for project on background thread
+            var foundProject = await System.Threading.Tasks.Task.Run(() =>
             {
-                if (foundProject != null) return;
-
-                if (p.Name != null && p.Name.IndexOf(projectName, StringComparison.OrdinalIgnoreCase) >= 0)
+                Project result = null;
+                build.VisitAllChildren<Project>(p =>
                 {
-                    foundProject = p;
-                }
-            });
+                    if (result != null) return;
+                    if (p.Name != null && p.Name.IndexOf(projectName, StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        result = p;
+                    }
+                });
+                return result;
+            }).ConfigureAwait(false);
 
             if (foundProject == null)
             {
@@ -217,7 +255,7 @@ namespace StructuredLogViewer.LLM
 
             try
             {
-                buildControl.Dispatcher.Invoke(() =>
+                await buildControl.Dispatcher.InvokeAsync(() =>
                 {
                     buildControl.SelectItem(foundProject);
                 });
@@ -231,7 +269,7 @@ namespace StructuredLogViewer.LLM
         }
 
         [Description("Opens a source file in the document viewer. Useful for viewing files referenced in errors, warnings, or tasks.")]
-        public string OpenFile(
+        public async System.Threading.Tasks.Task<string> OpenFile(
             [Description("Full path or partial path/filename to open")] string filePath,
             [Description("Optional: Line number to navigate to (1-based)")] int lineNumber = 0)
         {
@@ -243,7 +281,7 @@ namespace StructuredLogViewer.LLM
             try
             {
                 bool success = false;
-                buildControl.Dispatcher.Invoke(() =>
+                await buildControl.Dispatcher.InvokeAsync(() =>
                 {
                     success = buildControl.DisplayFile(filePath, lineNumber);
                 });
@@ -264,39 +302,43 @@ namespace StructuredLogViewer.LLM
         }
 
         [Description("Opens the Timeline view and navigates to a specific timed node (project, target, or task).")]
-        public string OpenTimeline(
+        public async System.Threading.Tasks.Task<string> OpenTimeline(
             [Description("Optional: Name of project, target, or task to highlight in timeline")] string nodeName = null)
         {
             try
             {
-                buildControl.Dispatcher.Invoke(() =>
+                // Search for node on background thread if needed
+                TimedNode foundNode = null;
+                if (!string.IsNullOrWhiteSpace(nodeName))
                 {
-                    if (!string.IsNullOrWhiteSpace(nodeName))
+                    foundNode = await System.Threading.Tasks.Task.Run(() =>
                     {
-                        // Find the node first
-                        TimedNode foundNode = null;
+                        TimedNode result = null;
                         build.VisitAllChildren<TimedNode>(node =>
                         {
-                            if (foundNode != null) return;
+                            if (result != null) return;
 
                             var nodeText = node.ToString();
                             if (nodeText != null && nodeText.IndexOf(nodeName, StringComparison.OrdinalIgnoreCase) >= 0)
                             {
-                                foundNode = node;
+                                result = node;
                             }
                         });
+                        return result;
+                    }).ConfigureAwait(false);
+                }
 
-                        if (foundNode != null)
-                        {
-                            buildControl.SelectItem(foundNode);
-                        }
+                await buildControl.Dispatcher.InvokeAsync(() =>
+                {
+                    if (foundNode != null)
+                    {
+                        buildControl.SelectItem(foundNode);
                     }
-
                     buildControl.GoToTimeLine();
                 });
 
-                return string.IsNullOrWhiteSpace(nodeName) 
-                    ? "Opened Timeline view" 
+                return string.IsNullOrWhiteSpace(nodeName)
+                    ? "Opened Timeline view"
                     : $"Opened Timeline view for: {nodeName}";
             }
             catch (Exception ex)
@@ -306,34 +348,38 @@ namespace StructuredLogViewer.LLM
         }
 
         [Description("Opens the Tracing view and navigates to a specific timed node for detailed performance analysis.")]
-        public string OpenTracing(
+        public async System.Threading.Tasks.Task<string> OpenTracing(
             [Description("Optional: Name of project, target, or task to analyze in tracing view")] string nodeName = null)
         {
             try
             {
-                buildControl.Dispatcher.Invoke(() =>
+                // Search for node on background thread if needed
+                TimedNode foundNode = null;
+                if (!string.IsNullOrWhiteSpace(nodeName))
                 {
-                    if (!string.IsNullOrWhiteSpace(nodeName))
+                    foundNode = await System.Threading.Tasks.Task.Run(() =>
                     {
-                        // Find the node first
-                        TimedNode foundNode = null;
+                        TimedNode result = null;
                         build.VisitAllChildren<TimedNode>(node =>
                         {
-                            if (foundNode != null) return;
+                            if (result != null) return;
 
                             var nodeText = node.ToString();
                             if (nodeText != null && nodeText.IndexOf(nodeName, StringComparison.OrdinalIgnoreCase) >= 0)
                             {
-                                foundNode = node;
+                                result = node;
                             }
                         });
+                        return result;
+                    }).ConfigureAwait(false);
+                }
 
-                        if (foundNode != null)
-                        {
-                            buildControl.SelectItem(foundNode);
-                        }
+                await buildControl.Dispatcher.InvokeAsync(() =>
+                {
+                    if (foundNode != null)
+                    {
+                        buildControl.SelectItem(foundNode);
                     }
-
                     buildControl.GoToTracing();
                 });
 
@@ -348,7 +394,7 @@ namespace StructuredLogViewer.LLM
         }
 
         [Description("Performs a search in the build log and optionally selects the first result.")]
-        public string PerformSearch(
+        public async System.Threading.Tasks.Task<string> PerformSearch(
             [Description("Search query text")] string searchText,
             [Description("Whether to automatically select the first search result")] bool selectFirst = true)
         {
@@ -359,12 +405,12 @@ namespace StructuredLogViewer.LLM
 
             try
             {
-                buildControl.Dispatcher.Invoke(() =>
+                await buildControl.Dispatcher.InvokeAsync(() =>
                 {
                     buildControl.SelectSearchTab(searchText);
                 });
 
-                return $"Performed search for: '{searchText}'" + 
+                return $"Performed search for: '{searchText}'" +
                        (selectFirst ? " and selected first result" : "");
             }
             catch (Exception ex)
@@ -374,32 +420,36 @@ namespace StructuredLogViewer.LLM
         }
 
         [Description("Opens the Properties and Items tab to view MSBuild properties and items for the selected or specified project.")]
-        public string OpenPropertiesAndItems(
+        public async System.Threading.Tasks.Task<string> OpenPropertiesAndItems(
             [Description("Optional: Project name to set context for")] string projectName = null)
         {
             try
             {
-                buildControl.Dispatcher.Invoke(() =>
+                // Search for project on background thread if needed
+                Project foundProject = null;
+                if (!string.IsNullOrWhiteSpace(projectName))
                 {
-                    if (!string.IsNullOrWhiteSpace(projectName))
+                    foundProject = await System.Threading.Tasks.Task.Run(() =>
                     {
-                        // Find and select the project first
-                        Project foundProject = null;
+                        Project result = null;
                         build.VisitAllChildren<Project>(p =>
                         {
-                            if (foundProject != null) return;
+                            if (result != null) return;
                             if (p.Name != null && p.Name.IndexOf(projectName, StringComparison.OrdinalIgnoreCase) >= 0)
                             {
-                                foundProject = p;
+                                result = p;
                             }
                         });
+                        return result;
+                    }).ConfigureAwait(false);
+                }
 
-                        if (foundProject != null)
-                        {
-                            buildControl.SelectItem(foundProject);
-                        }
+                await buildControl.Dispatcher.InvokeAsync(() =>
+                {
+                    if (foundProject != null)
+                    {
+                        buildControl.SelectItem(foundProject);
                     }
-
                     buildControl.SelectPropertiesAndItemsTab();
                 });
 
@@ -414,12 +464,12 @@ namespace StructuredLogViewer.LLM
         }
 
         [Description("Opens the Find in Files tab for full-text search across embedded files.")]
-        public string OpenFindInFiles(
+        public async System.Threading.Tasks.Task<string> OpenFindInFiles(
             [Description("Optional: Initial search text to populate")] string searchText = null)
         {
             try
             {
-                buildControl.Dispatcher.Invoke(() =>
+                await buildControl.Dispatcher.InvokeAsync(() =>
                 {
                     buildControl.SelectFindInFilesTab(searchText);
                 });
@@ -435,11 +485,11 @@ namespace StructuredLogViewer.LLM
         }
 
         [Description("Focuses the main search box at the top of the window, ready for user input.")]
-        public string FocusSearch()
+        public async System.Threading.Tasks.Task<string> FocusSearch()
         {
             try
             {
-                buildControl.Dispatcher.Invoke(() =>
+                await buildControl.Dispatcher.InvokeAsync(() =>
                 {
                     buildControl.FocusSearch();
                 });
