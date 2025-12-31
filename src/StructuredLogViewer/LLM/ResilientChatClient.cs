@@ -12,6 +12,26 @@ using Azure;
 namespace StructuredLogViewer.LLM
 {
     /// <summary>
+    /// Type of resilience action being taken
+    /// </summary>
+    public enum ResilienceType
+    {
+        Throttling,
+        ContextTrimming
+    }
+
+    /// <summary>
+    /// Event args for resilience events
+    /// </summary>
+    public class ResilienceEventArgs : EventArgs
+    {
+        public string Message { get; set; }
+        public int Attempt { get; set; }
+        public int MaxAttempts { get; set; }
+        public ResilienceType Type { get; set; }
+    }
+
+    /// <summary>
     /// Wraps an IChatClient to provide automatic retry with exponential backoff for recoverable errors.
     /// Handles rate limit errors, transient failures, and context overflow with intelligent truncation.
     /// </summary>
@@ -22,7 +42,12 @@ namespace StructuredLogViewer.LLM
         private readonly TimeSpan initialDelay;
         private readonly TimeSpan maxDelay;
 
-        public ResilientChatClient(IChatClient innerClient, int maxRetries = 3, TimeSpan? initialDelay = null, TimeSpan? maxDelay = null)
+        /// <summary>
+        /// Raised when the client is retrying a request due to recoverable errors
+        /// </summary>
+        public event EventHandler<ResilienceEventArgs> RequestRetrying;
+
+        public ResilientChatClient(IChatClient innerClient, int maxRetries = 10, TimeSpan? initialDelay = null, TimeSpan? maxDelay = null)
         {
             this.innerClient = innerClient ?? throw new ArgumentNullException(nameof(innerClient));
             this.maxRetries = maxRetries;
@@ -81,6 +106,15 @@ namespace StructuredLogViewer.LLM
                             $"Context overflow detected: {contextOverflow.CurrentTokens} > {contextOverflow.MaxTokens} " +
                             $"(attempt {attempt}/{maxRetries})");
 
+                        // Raise context trimming event
+                        RequestRetrying?.Invoke(this, new ResilienceEventArgs
+                        {
+                            Message = "Context trimmed",
+                            Attempt = attempt,
+                            MaxAttempts = maxRetries,
+                            Type = ResilienceType.ContextTrimming
+                        });
+
                         // Truncate messages to fit within limit
                         currentMessages = TruncateMessages(
                             currentMessages, 
@@ -121,6 +155,15 @@ namespace StructuredLogViewer.LLM
                                 maxDelay.TotalSeconds));
                             System.Diagnostics.Debug.WriteLine($"Retryable error encountered. Waiting {delay.TotalSeconds}s before retry (attempt {attempt}/{maxRetries}): {ex.Message}");
                         }
+
+                        // Raise throttling event
+                        RequestRetrying?.Invoke(this, new ResilienceEventArgs
+                        {
+                            Message = "Throttling requests",
+                            Attempt = attempt,
+                            MaxAttempts = maxRetries,
+                            Type = ResilienceType.Throttling
+                        });
 
                         // Check if delay would exceed cancellation
                         try

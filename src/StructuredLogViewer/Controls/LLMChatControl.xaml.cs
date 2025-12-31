@@ -135,6 +135,7 @@ namespace StructuredLogViewer.Controls
             chatService.ConversationCleared += OnConversationCleared;
             chatService.ToolCallExecuting += OnToolCallExecuting;
             chatService.ToolCallExecuted += OnToolCallExecuted;
+            chatService.RequestRetrying += OnRequestRetrying;
 
             // Load configuration
             currentConfig = LLMConfiguration.LoadFromEnvironment();
@@ -147,6 +148,7 @@ namespace StructuredLogViewer.Controls
                 agenticChatService.MessageAdded += OnMessageAdded;
                 agenticChatService.ToolCallExecuting += OnToolCallExecuting;
                 agenticChatService.ToolCallExecuted += OnToolCallExecuted;
+                agenticChatService.RequestRetrying += OnRequestRetrying;
             }
 
             // Initialize agent mode toggle from config (default is true)
@@ -281,6 +283,14 @@ namespace StructuredLogViewer.Controls
             {
                 messages.Clear();
                 AddWelcomeMessage();
+            });
+        }
+
+        private void OnRequestRetrying(object sender, ResilienceEventArgs e)
+        {
+            Dispatcher.InvokeAsync(() =>
+            {
+                ShowStatus($"{e.Message} (attempt {e.Attempt}/{e.MaxAttempts})");
             });
         }
 

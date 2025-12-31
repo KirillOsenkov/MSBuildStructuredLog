@@ -53,6 +53,7 @@ namespace StructuredLogViewer.LLM
         public event EventHandler ConversationCleared;
         public event EventHandler<ToolCallInfo> ToolCallExecuting;
         public event EventHandler<ToolCallInfo> ToolCallExecuted;
+        public event EventHandler<ResilienceEventArgs> RequestRetrying;
 
         public bool IsConfigured => configuration?.IsConfigured ?? false;
         public string ConfigurationStatus => configuration?.GetConfigurationStatus() ?? "Not initialized";
@@ -77,6 +78,12 @@ namespace StructuredLogViewer.LLM
                 try
                 {
                     llmClient = new AzureFoundryLLMClient(configuration);
+                    
+                    // Subscribe to resilience events
+                    if (llmClient.ResilientClient != null)
+                    {
+                        llmClient.ResilientClient.RequestRetrying += (sender, e) => RequestRetrying?.Invoke(this, e);
+                    }
                 }
                 catch (Exception ex)
                 {
