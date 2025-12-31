@@ -2,7 +2,7 @@ using System;
 using System.Security;
 using System.Windows;
 using System.Windows.Controls;
-using StructuredLogViewer.LLM;
+using StructuredLogger.LLM;
 
 namespace StructuredLogViewer.Controls
 {

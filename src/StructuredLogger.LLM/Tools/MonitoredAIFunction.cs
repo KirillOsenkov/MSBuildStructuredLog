@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.AI;
 
-namespace StructuredLogViewer.LLM
+namespace StructuredLogger.LLM
 {
     /// <summary>
     /// Wraps an AIFunction to monitor and capture tool call executions.

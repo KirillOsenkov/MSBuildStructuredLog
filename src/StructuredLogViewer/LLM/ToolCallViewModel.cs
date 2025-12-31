@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using StructuredLogger.LLM;
 
 namespace StructuredLogViewer.LLM
 {
@@ -133,7 +134,7 @@ namespace StructuredLogViewer.LLM
         /// <summary>
         /// Gets the header text shown in collapsed state.
         /// </summary>
-        public string HeaderText => IsInProgress 
+        public string HeaderText => IsInProgress
             ? $"⏳ {ToolName}: {ArgumentsSummary} (In Progress...)"
             : $"🔧 {ToolName}: {ArgumentsSummary}";
 

@@ -2,7 +2,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
-using StructuredLogViewer.LLM;
+using StructuredLogger.LLM;
 
 namespace StructuredLogViewer.Controls
 {
@@ -34,7 +34,7 @@ namespace StructuredLogViewer.Controls
 
                 // Update header
                 headerText.Text = $"Agent Mode: {plan.Phase}";
-                if (plan.Phase == AgentPhase.Research && plan.CurrentTask != null)
+                if (plan.Phase == AgentExecutionPhase.Research && plan.CurrentTask != null)
                 {
                     headerText.Text += $" (Task {plan.CurrentTaskIndex + 1}/{plan.ResearchTasks.Count})";
                 }
@@ -74,7 +74,7 @@ namespace StructuredLogViewer.Controls
                 statusText.Text += $" • {duration}";
 
                 // Hide panel when complete
-                if (plan.Phase == AgentPhase.Complete || plan.Phase == AgentPhase.Failed)
+                if (plan.Phase == AgentExecutionPhase.Complete || plan.Phase == AgentExecutionPhase.Failed)
                 {
                     // Keep visible for a few seconds, then fade out
                     var timer = new System.Windows.Threading.DispatcherTimer

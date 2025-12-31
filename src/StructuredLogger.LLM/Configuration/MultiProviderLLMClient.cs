@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Anthropic;
@@ -10,18 +9,20 @@ using Azure.AI.OpenAI;
 using Azure.Core;
 using Microsoft.Extensions.AI;
 
-namespace StructuredLogViewer.LLM
+namespace StructuredLogger.LLM
 {
     /// <summary>
-    /// Wrapper for Azure AI clients (OpenAI, Inference, or Anthropic) implementing IChatClient.
+    /// Multi-provider LLM client supporting Azure OpenAI, Azure AI Inference, and Anthropic.
+    /// Provides automatic retry and resilience logic.
     /// </summary>
-    public class AzureFoundryLLMClient : IDisposable
+    public class MultiProviderLLMClient : IDisposable
     {
         private readonly IChatClient chatClient;
         private readonly ResilientChatClient resilientClient;
         private readonly string modelName;
+        private readonly LLMConfiguration.ClientType clientType;
 
-        public AzureFoundryLLMClient(LLMConfiguration config)
+        public MultiProviderLLMClient(LLMConfiguration config)
         {
             if (config == null)
             {
@@ -34,6 +35,7 @@ namespace StructuredLogViewer.LLM
             }
 
             modelName = config.ModelName;
+            clientType = config.Type;
             var endpoint = new Uri(config.Endpoint);
             var credential = new AzureKeyCredential(config.ApiKey);
 
@@ -66,6 +68,14 @@ namespace StructuredLogViewer.LLM
             chatClient = new ChatClientBuilder(chatClient).UseFunctionInvocation().Build();
         }
 
+        public string ProviderName => clientType switch
+        {
+            LLMConfiguration.ClientType.AzureOpenAI => "Azure OpenAI",
+            LLMConfiguration.ClientType.AzureInference => "Azure AI Inference",
+            LLMConfiguration.ClientType.Anthropic => "Anthropic",
+            _ => "Unknown"
+        };
+
         public IChatClient ChatClient => chatClient;
 
         /// <summary>
@@ -73,9 +83,25 @@ namespace StructuredLogViewer.LLM
         /// </summary>
         public ResilientChatClient ResilientClient => resilientClient;
 
+        public async Task<ChatResponse> CompleteChatAsync(
+            IList<ChatMessage> messages,
+            ChatOptions? options = null,
+            CancellationToken cancellationToken = default)
+        {
+            return await chatClient.GetResponseAsync(messages, options, cancellationToken);
+        }
+
+        public IAsyncEnumerable<ChatResponseUpdate> CompleteChatStreamingAsync(
+            IList<ChatMessage> messages,
+            ChatOptions? options = null,
+            CancellationToken cancellationToken = default)
+        {
+            return chatClient.GetStreamingResponseAsync(messages, options, cancellationToken);
+        }
+
         public void Dispose()
         {
-            chatClient.Dispose();
+            chatClient?.Dispose();
         }
     }
 }

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.Build.Logging.StructuredLogger;
 
-namespace StructuredLogViewer.LLM
+namespace StructuredLogger.LLM
 {
     /// <summary>
     /// Provides context information from the binlog to the LLM chat.

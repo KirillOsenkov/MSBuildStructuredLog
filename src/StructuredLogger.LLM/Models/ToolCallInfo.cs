@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 
-namespace StructuredLogViewer.LLM
+namespace StructuredLogger.LLM
 {
     /// <summary>
     /// Contains information about a tool call execution including arguments, results, and timing.

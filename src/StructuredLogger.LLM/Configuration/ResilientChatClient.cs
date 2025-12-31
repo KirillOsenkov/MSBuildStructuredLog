@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -9,7 +9,7 @@ using Microsoft.Extensions.AI;
 using Anthropic.Exceptions;
 using Azure;
 
-namespace StructuredLogViewer.LLM
+namespace StructuredLogger.LLM
 {
     /// <summary>
     /// Type of resilience action being taken

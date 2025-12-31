@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
 
-namespace StructuredLogViewer.LLM
+namespace StructuredLogger.LLM
 {
     /// <summary>
-    /// Represents the current phase of agent execution.
+    /// Represents the current execution phase status of an agent workflow.
+    /// Different from <see cref="AgentPhase"/> which is a Flags enum for tool availability.
     /// </summary>
-    public enum AgentPhase
+    public enum AgentExecutionPhase
     {
         Idle,
         Planning,
@@ -69,7 +70,7 @@ namespace StructuredLogViewer.LLM
     {
         public string UserQuery { get; set; }
         public List<ResearchTask> ResearchTasks { get; set; }
-        public AgentPhase Phase { get; set; }
+        public AgentExecutionPhase Phase { get; set; }
         public int CurrentTaskIndex { get; set; }
         public Dictionary<string, string> Findings { get; set; }
         public string FinalSummary { get; set; }
@@ -92,7 +93,7 @@ namespace StructuredLogViewer.LLM
         {
             UserQuery = userQuery;
             ResearchTasks = new List<ResearchTask>();
-            Phase = AgentPhase.Idle;
+            Phase = AgentExecutionPhase.Idle;
             CurrentTaskIndex = -1;
             Findings = new Dictionary<string, string>();
             StartTime = DateTime.Now;
@@ -104,13 +105,13 @@ namespace StructuredLogViewer.LLM
     /// </summary>
     public class AgentProgressEventArgs : EventArgs
     {
-        public AgentPhase Phase { get; set; }
+        public AgentExecutionPhase Phase { get; set; }
         public ResearchTask CurrentTask { get; set; }
         public AgentPlan Plan { get; set; }
         public string Message { get; set; }
         public bool IsError { get; set; }
 
-        public AgentProgressEventArgs(AgentPlan plan, string message = null, bool isError = false)
+        public AgentProgressEventArgs(AgentPlan plan, string? message = null, bool isError = false)
         {
             Plan = plan;
             Phase = plan.Phase;

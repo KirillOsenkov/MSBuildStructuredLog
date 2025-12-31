@@ -9,6 +9,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using Microsoft.Build.Logging.StructuredLogger;
+using StructuredLogger.LLM;
 using StructuredLogViewer.LLM;
 
 namespace StructuredLogViewer.Controls
@@ -129,13 +130,20 @@ namespace StructuredLogViewer.Controls
             chatService?.Dispose();
             agenticChatService?.Dispose();
             
-            // Create new chat service with BuildControl reference
-            chatService = new LLMChatService(build, buildControl);
+            // Create new chat service
+            chatService = new LLMChatService(build);
             chatService.MessageAdded += OnMessageAdded;
             chatService.ConversationCleared += OnConversationCleared;
             chatService.ToolCallExecuting += OnToolCallExecuting;
             chatService.ToolCallExecuted += OnToolCallExecuted;
             chatService.RequestRetrying += OnRequestRetrying;
+
+            // Register UI interaction tools if BuildControl is available
+            if (buildControl != null)
+            {
+                var uiInteractionExecutor = new BinlogUIInteractionExecutor(build, buildControl);
+                chatService.RegisterToolContainer(uiInteractionExecutor);
+            }
 
             // Load configuration
             currentConfig = LLMConfiguration.LoadFromEnvironment();
@@ -143,7 +151,7 @@ namespace StructuredLogViewer.Controls
             // Create agentic service
             if (currentConfig.IsConfigured)
             {
-                agenticChatService = new AgenticLLMChatService(build, buildControl, currentConfig);
+                agenticChatService = new AgenticLLMChatService(build, currentConfig);
                 agenticChatService.ProgressUpdated += OnAgentProgressUpdated;
                 agenticChatService.MessageAdded += OnMessageAdded;
                 agenticChatService.ToolCallExecuting += OnToolCallExecuting;
@@ -368,17 +376,24 @@ namespace StructuredLogViewer.Controls
             }
             
             // Recreate service instances to prevent any late events
-            if (Build != null && BuildControl != null)
+            if (Build != null)
             {
                 // Dispose old services
                 chatService?.Dispose();
                 agenticChatService?.Dispose();
                 
                 // Create new chat service
-                chatService = new LLMChatService(Build, BuildControl);
+                chatService = new LLMChatService(Build);
                 chatService.MessageAdded += OnMessageAdded;
                 chatService.ConversationCleared += OnConversationCleared;
                 chatService.ToolCallExecuted += OnToolCallExecuted;
+                
+                // Register UI interaction tools if BuildControl is available
+                if (BuildControl != null)
+                {
+                    var uiInteractionExecutor = new BinlogUIInteractionExecutor(Build, BuildControl);
+                    chatService.RegisterToolContainer(uiInteractionExecutor);
+                }
                 
                 // Reconfigure with current config if available
                 if (currentConfig != null)
@@ -389,7 +404,14 @@ namespace StructuredLogViewer.Controls
                 // Recreate agentic service if configured
                 if (currentConfig?.IsConfigured == true)
                 {
-                    agenticChatService = new AgenticLLMChatService(Build, BuildControl, currentConfig);
+                    agenticChatService = new AgenticLLMChatService(Build, currentConfig);
+                    
+                    // Register UI interaction tools for agentic service
+                    if (BuildControl != null)
+                    {
+                        var uiInteractionExecutor = new BinlogUIInteractionExecutor(Build, BuildControl);
+                        agenticChatService.RegisterToolContainer(uiInteractionExecutor);
+                    }
                     agenticChatService.ProgressUpdated += OnAgentProgressUpdated;
                     agenticChatService.MessageAdded += OnMessageAdded;
                     agenticChatService.ToolCallExecuted += OnToolCallExecuted;
@@ -624,13 +646,21 @@ namespace StructuredLogViewer.Controls
                     
                     // Reinitialize agentic service with new config
                     agenticChatService?.Dispose();
-                    if (newConfig.IsConfigured && Build != null && BuildControl != null)
+                    if (newConfig.IsConfigured && Build != null)
                     {
-                        agenticChatService = new AgenticLLMChatService(Build, BuildControl, newConfig);
+                        agenticChatService = new AgenticLLMChatService(Build, newConfig);
                         agenticChatService.ProgressUpdated += OnAgentProgressUpdated;
                         agenticChatService.MessageAdded += OnMessageAdded;
                         agenticChatService.ToolCallExecuting += OnToolCallExecuting;
                         agenticChatService.ToolCallExecuted += OnToolCallExecuted;
+                        
+                        // Register UI interaction tools
+                        if (BuildControl != null)
+                        {
+                            var uiInteractionExecutor = new BinlogUIInteractionExecutor(Build, BuildControl);
+                            agenticChatService.RegisterToolContainer(uiInteractionExecutor);
+                        }
+                        
                         agentModeToggle.IsEnabled = true;
                     }
                     

@@ -5,44 +5,21 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Extensions.AI;
-using StructuredLogViewer.Controls;
 
-namespace StructuredLogViewer.LLM
+namespace StructuredLogger.LLM
 {
-    /// <summary>
-    /// Represents a chat message in the conversation.
-    /// </summary>
-    public class ChatMessageViewModel
-    {
-        public string Role { get; set; } // "User", "Assistant", "System"
-        public string Content { get; set; }
-        public DateTime Timestamp { get; set; }
-        public bool IsError { get; set; }
-
-        public ChatMessageViewModel(string role, string content, bool isError = false)
-        {
-            Role = role;
-            Content = content;
-            Timestamp = DateTime.Now;
-            IsError = isError;
-        }
-    }
-
     /// <summary>
     /// Main service for LLM Chat functionality.
     /// Orchestrates chat history, LLM communication, and tool execution.
     /// </summary>
     public class LLMChatService : IDisposable
     {
-        private readonly Build build;
         private readonly BinlogContextProvider contextProvider;
-        private readonly AsyncBinlogToolExecutor toolExecutor;
-        private readonly AsyncBinlogUIInteractionExecutor uiInteractionExecutor;
-        private readonly AsyncEmbeddedFilesToolExecutor embeddedFilesExecutor;
-        private AzureFoundryLLMClient llmClient;
+        private readonly List<IToolsContainer> toolContainers;
+        private MultiProviderLLMClient? llmClient;
         private readonly LLMConfiguration configuration;
         private readonly List<ChatMessage> chatHistory;
-        private BaseNode currentSelectedNode;
+        private BaseNode? currentSelectedNode;
 
         // Token management settings
         private const int MaxPromptTokens = 180000; // Leave buffer below 200k limit
@@ -58,17 +35,33 @@ namespace StructuredLogViewer.LLM
         public bool IsConfigured => configuration?.IsConfigured ?? false;
         public string ConfigurationStatus => configuration?.GetConfigurationStatus() ?? "Not initialized";
 
-        public LLMChatService(Build build, BuildControl buildControl)
+        public LLMChatService(Build build, LLMConfiguration config = null)
         {
-            this.build = build ?? throw new ArgumentNullException(nameof(build));
             this.contextProvider = new BinlogContextProvider(build);
-            this.toolExecutor = new AsyncBinlogToolExecutor(build);
-            this.uiInteractionExecutor = buildControl != null ? new AsyncBinlogUIInteractionExecutor(build, buildControl) : null;
-            this.embeddedFilesExecutor = new AsyncEmbeddedFilesToolExecutor(build);
+            this.toolContainers = new List<IToolsContainer>();
             this.chatHistory = new List<ChatMessage>();
-            this.configuration = LLMConfiguration.LoadFromEnvironment();
+            this.configuration = config ?? LLMConfiguration.LoadFromEnvironment();
 
-            InitializeLLMClient();
+            // Register default tool executors
+            RegisterToolContainer(new BinlogToolExecutor(build));
+            RegisterToolContainer(new EmbeddedFilesToolExecutor(build));
+
+            if (configuration.IsConfigured)
+            {
+                InitializeLLMClient();
+            }
+        }
+
+        /// <summary>
+        /// Registers an additional tool executor with this service.
+        /// Used to add UI-specific tools after service construction.
+        /// </summary>
+        public void RegisterToolContainer(IToolsContainer container)
+        {
+            if (container == null)
+                throw new ArgumentNullException(nameof(container));
+
+            toolContainers.Add(container);
         }
 
         private void InitializeLLMClient()
@@ -77,12 +70,13 @@ namespace StructuredLogViewer.LLM
             {
                 try
                 {
-                    llmClient = new AzureFoundryLLMClient(configuration);
+                    var client = new MultiProviderLLMClient(configuration);
+                    this.llmClient = client;
                     
                     // Subscribe to resilience events
-                    if (llmClient.ResilientClient != null)
+                    if (client.ResilientClient != null)
                     {
-                        llmClient.ResilientClient.RequestRetrying += (sender, e) => RequestRetrying?.Invoke(this, e);
+                        client.ResilientClient.RequestRetrying += (sender, e) => RequestRetrying?.Invoke(this, e);
                     }
                 }
                 catch (Exception ex)
@@ -121,9 +115,6 @@ namespace StructuredLogViewer.LLM
             configuration.AgentMode = newConfig.AgentMode;
             configuration.UpdateType();
 
-            // Dispose old client
-            llmClient = null;
-
             // Reinitialize with new settings
             InitializeLLMClient();
 
@@ -132,13 +123,17 @@ namespace StructuredLogViewer.LLM
 
         private string GetSystemPrompt()
         {
+            var overview = contextProvider is BinlogContextProvider provider
+                ? provider.GetBuildOverview()
+                : "Build log loaded";
+
             return @"You are an expert assistant helping developers analyze their MSBuild build logs (.binlog files).
 You have access to tools that can query the build data including projects, targets, tasks, errors, warnings, and timing information.
 When the user asks questions, you must use the available tools to retrieve accurate information from the build log - as you do not have information about their builds in your training set.
 Be concise and helpful. Format your responses clearly.
 
 Available context:
-" + contextProvider.GetBuildOverview();
+" + overview;
         }
 
         /// <summary>
@@ -162,50 +157,32 @@ Available context:
             return trimmedHistory;
         }
 
-        private AIFunction[] GetAvailableTools()
+        private AIFunction[] GetAvailableTools(AgentPhase phase = AgentPhase.All)
         {
-            var baseFunctions = new List<AIFunction>();
-
             try
             {
-                // Register tools from BinlogToolExecutor - let AIFunctionFactory use the [Description] attributes
-                baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.GetBuildSummary));
-                baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.SearchNodes));
-                baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.GetErrorsAndWarnings));
-                baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.GetProjects));
-                baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.GetProjectTargets));
-                // Embedded files tools
-                baseFunctions.Add(AIFunctionFactory.Create(embeddedFilesExecutor.ListEmbeddedFiles));
-                baseFunctions.Add(AIFunctionFactory.Create(embeddedFilesExecutor.SearchEmbeddedFiles));
-                baseFunctions.Add(AIFunctionFactory.Create(embeddedFilesExecutor.ReadEmbeddedFileLines));
-
-                // Register UI interaction tools if available
-                if (uiInteractionExecutor != null)
-                {
-                    baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.SelectNodeByText));
-                    baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.SelectError));
-                    baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.SelectWarning));
-                    baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.SelectProject));
-                    baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.OpenFile));
-                    baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.OpenTimeline));
-                    baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.OpenTracing));
-                    baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.PerformSearch));
-                    baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.OpenPropertiesAndItems));
-                    baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.OpenFindInFiles));
-                    baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.FocusSearch));
-                }
-
-                // Wrap all functions with monitoring
                 var tools = new List<AIFunction>();
-                foreach (var baseFunction in baseFunctions)
+
+                // Enumerate all tool executors and get their tools
+                foreach (var executor in toolContainers)
                 {
-                    var monitoredFunction = new MonitoredAIFunction(baseFunction);
-                    monitoredFunction.ToolCallStarted += OnToolCallStarted;
-                    monitoredFunction.ToolCallCompleted += OnToolCallCompleted;
-                    tools.Add(monitoredFunction);
+                    foreach (var (function, applicablePhases) in executor.GetTools())
+                    {
+                        // Filter by phase
+                        if ((applicablePhases & phase) == 0)
+                        {
+                            continue; // Skip tools not applicable to this phase
+                        }
+
+                        // Wrap with monitoring
+                        var monitoredFunction = new MonitoredAIFunction(function);
+                        monitoredFunction.ToolCallStarted += OnToolCallStarted;
+                        monitoredFunction.ToolCallCompleted += OnToolCallCompleted;
+                        tools.Add(monitoredFunction);
+                    }
                 }
 
-                System.Diagnostics.Debug.WriteLine($"Registered {tools.Count} tools:");
+                System.Diagnostics.Debug.WriteLine($"Registered {tools.Count} tools for phase {phase}:");
                 foreach (var tool in tools)
                 {
                     System.Diagnostics.Debug.WriteLine($"  - {tool.Name}: {tool.Description}");
@@ -266,9 +243,9 @@ Available context:
                 if (chatHistory.Count == 1)
                 {
                     var systemPrompt = GetSystemPrompt();
-                    if (currentSelectedNode != null)
+                    if (currentSelectedNode != null && contextProvider is BinlogContextProvider provider)
                     {
-                        systemPrompt += "\n\n" + contextProvider.GetSelectedNodeContext(currentSelectedNode);
+                        systemPrompt += "\n\n" + provider.GetSelectedNodeContext(currentSelectedNode);
                     }
                     messages.Add(new ChatMessage(ChatRole.System, systemPrompt));
                 }
@@ -290,7 +267,7 @@ Available context:
 
                 System.Diagnostics.Debug.WriteLine($"ChatOptions.Tools count: {options.Tools?.Count ?? 0}");
 
-                var response = await llmClient.ChatClient.GetResponseAsync(
+                var response = await llmClient.CompleteChatAsync(
                     messages, 
                     options, 
                     cancellationToken);
@@ -320,7 +297,10 @@ Available context:
 
         public void Dispose()
         {
-            llmClient?.Dispose();
+            if (llmClient is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
         }
     }
 }

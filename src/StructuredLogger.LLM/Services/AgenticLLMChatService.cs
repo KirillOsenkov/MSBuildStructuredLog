@@ -5,10 +5,10 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Extensions.AI;
-using StructuredLogViewer.Controls;
 
-namespace StructuredLogViewer.LLM
+namespace StructuredLogger.LLM
 {
     /// <summary>
     /// Orchestrates agentic multi-step reasoning for complex log analysis.
@@ -16,12 +16,9 @@ namespace StructuredLogViewer.LLM
     /// </summary>
     public class AgenticLLMChatService : IDisposable
     {
-        private readonly Microsoft.Build.Logging.StructuredLogger.Build build;
         private readonly BinlogContextProvider contextProvider;
-        private readonly AsyncBinlogToolExecutor toolExecutor;
-        private readonly AsyncBinlogUIInteractionExecutor uiInteractionExecutor;
-        private readonly AsyncEmbeddedFilesToolExecutor embeddedFilesExecutor;
-        private readonly AzureFoundryLLMClient llmClient;
+        private readonly List<IToolsContainer> toolContainers;
+        private MultiProviderLLMClient? llmClient;
         private readonly LLMConfiguration configuration;
 
         public event EventHandler<AgentProgressEventArgs> ProgressUpdated;
@@ -36,25 +33,39 @@ namespace StructuredLogViewer.LLM
         public int MaxResearchTasks { get; set; } = 5;
         public int MaxTokensPerTask { get; set; } = 4000;
 
-        public AgenticLLMChatService(Microsoft.Build.Logging.StructuredLogger.Build build, BuildControl buildControl, LLMConfiguration config)
+        public AgenticLLMChatService(Build build, LLMConfiguration config)
         {
-            this.build = build ?? throw new ArgumentNullException(nameof(build));
             this.contextProvider = new BinlogContextProvider(build);
-            this.toolExecutor = new AsyncBinlogToolExecutor(build);
-            this.uiInteractionExecutor = buildControl != null ? new AsyncBinlogUIInteractionExecutor(build, buildControl) : null;
-            this.embeddedFilesExecutor = new AsyncEmbeddedFilesToolExecutor(build);
+            this.toolContainers = new List<IToolsContainer>();
             this.configuration = config ?? throw new ArgumentNullException(nameof(config));
+
+            // Register default tool executors
+            RegisterToolContainer(new BinlogToolExecutor(build));
+            RegisterToolContainer(new EmbeddedFilesToolExecutor(build));
 
             if (configuration.IsConfigured)
             {
-                llmClient = new AzureFoundryLLMClient(configuration);
+                var client = new MultiProviderLLMClient(configuration);
+                this.llmClient = client;
                 
                 // Subscribe to resilience events
-                if (llmClient.ResilientClient != null)
+                if (client.ResilientClient != null)
                 {
-                    llmClient.ResilientClient.RequestRetrying += (sender, e) => RequestRetrying?.Invoke(this, e);
+                    client.ResilientClient.RequestRetrying += (sender, e) => RequestRetrying?.Invoke(this, e);
                 }
             }
+        }
+
+        /// <summary>
+        /// Registers an additional tool executor with this service.
+        /// Used to add UI-specific tools after service construction.
+        /// </summary>
+        public void RegisterToolContainer(IToolsContainer executor)
+        {
+            if (executor == null)
+                throw new ArgumentNullException(nameof(executor));
+
+            toolContainers.Add(executor);
         }
 
         /// <summary>
@@ -80,7 +91,7 @@ namespace StructuredLogViewer.LLM
                 // Phase 3: Summarization
                 await SummarizationPhaseAsync(plan, cancellationToken);
 
-                plan.Phase = AgentPhase.Complete;
+                plan.Phase = AgentExecutionPhase.Complete;
                 plan.EndTime = DateTime.Now;
                 RaiseProgress(plan, "Agent workflow completed successfully.");
 
@@ -88,14 +99,14 @@ namespace StructuredLogViewer.LLM
             }
             catch (OperationCanceledException)
             {
-                plan.Phase = AgentPhase.Failed;
+                plan.Phase = AgentExecutionPhase.Failed;
                 plan.Error = "Operation cancelled by user.";
                 RaiseProgress(plan, plan.Error, isError: true);
                 return plan.Error;
             }
             catch (Exception ex)
             {
-                plan.Phase = AgentPhase.Failed;
+                plan.Phase = AgentExecutionPhase.Failed;
                 plan.Error = $"Agent workflow failed: {ex.Message}";
                 RaiseProgress(plan, plan.Error, isError: true);
                 return plan.Error;
@@ -105,9 +116,9 @@ namespace StructuredLogViewer.LLM
         /// <summary>
         /// Phase 1: Generate a research plan by breaking down the user query.
         /// </summary>
-        private async Task PlanningPhaseAsync(AgentPlan plan, CancellationToken cancellationToken)
+        private async System.Threading.Tasks.Task PlanningPhaseAsync(AgentPlan plan, CancellationToken cancellationToken)
         {
-            plan.Phase = AgentPhase.Planning;
+            plan.Phase = AgentExecutionPhase.Planning;
             RaiseProgress(plan, "Creating research plan...");
 
             // Get research tools to include their definitions in planning context
@@ -115,10 +126,15 @@ namespace StructuredLogViewer.LLM
             var toolDescriptions = GetToolDescriptions(researchTools);
 
             var systemPrompt = GetPlanningSystemPrompt(toolDescriptions);
+            
+            var overview = contextProvider is BinlogContextProvider provider
+                ? provider.GetBuildOverview()
+                : "Build log loaded";
+
             var userPrompt = $@"User Question: {plan.UserQuery}
 
 Build Overview:
-{contextProvider.GetBuildOverview()}
+{overview}
 
 Create a research plan with 2-{MaxResearchTasks} specific tasks to answer this question.
 Return ONLY a JSON object with this exact structure (no markdown, no extra text):
@@ -144,7 +160,7 @@ Return ONLY a JSON object with this exact structure (no markdown, no extra text)
                 Temperature = 0.3f
             };
 
-            var response = await llmClient.ChatClient.GetResponseAsync(messages, options, cancellationToken);
+            var response = await llmClient.CompleteChatAsync(messages, options, cancellationToken);
             var planJson = response.Text?.Trim() ?? "";
 
             // Try to extract JSON if wrapped in markdown
@@ -191,9 +207,9 @@ Return ONLY a JSON object with this exact structure (no markdown, no extra text)
         /// <summary>
         /// Phase 2: Execute each research task sequentially.
         /// </summary>
-        private async Task ResearchPhaseAsync(AgentPlan plan, CancellationToken cancellationToken)
+        private async System.Threading.Tasks.Task ResearchPhaseAsync(AgentPlan plan, CancellationToken cancellationToken)
         {
-            plan.Phase = AgentPhase.Research;
+            plan.Phase = AgentExecutionPhase.Research;
             plan.CurrentTaskIndex = 0;
 
             for (int i = 0; i < plan.ResearchTasks.Count; i++)
@@ -255,7 +271,7 @@ Return ONLY a JSON object with this exact structure (no markdown, no extra text)
 
             // Build context from previous findings (with length limits)
             var previousFindings = new StringBuilder();
-            const int maxFindingsLength = 100000; // Limit previous findings to ~1250 tokens
+            const int maxFindingsLength = 100000; // Limit previous findings
             
             foreach (var kvp in plan.Findings)
             {
@@ -280,11 +296,15 @@ Return ONLY a JSON object with this exact structure (no markdown, no extra text)
                 }
             }
 
+            var overview = contextProvider is BinlogContextProvider provider
+                ? provider.GetBuildOverview()
+                : "Build log loaded";
+
             var userPrompt = $@"Task Goal: {task.Goal}
 Task Description: {task.Description}
 
 Build Overview:
-{contextProvider.GetBuildOverview()}
+{overview}
 
 Previous Findings:
 {previousFindings}
@@ -307,16 +327,16 @@ Focus only on this specific task goal. Output your findings as a summary.";
                 MaxOutputTokens = MaxTokensPerTask
             };
 
-            var response = await llmClient.ChatClient.GetResponseAsync(messages, options, cancellationToken);
+            var response = await llmClient.CompleteChatAsync(messages, options, cancellationToken);
             return response.Text ?? "No findings generated.";
         }
 
         /// <summary>
-        /// Phase 3: Synthesize all findings and present final answer with UI manipulation.
+        /// Phase 3: Synthesize all findings and present final answer.
         /// </summary>
-        private async Task SummarizationPhaseAsync(AgentPlan plan, CancellationToken cancellationToken)
+        private async System.Threading.Tasks.Task SummarizationPhaseAsync(AgentPlan plan, CancellationToken cancellationToken)
         {
-            plan.Phase = AgentPhase.Summarization;
+            plan.Phase = AgentExecutionPhase.Summarization;
             RaiseProgress(plan, "Synthesizing findings and preparing answer...");
 
             MessageAdded?.Invoke(this, new ChatMessageViewModel(
@@ -351,10 +371,8 @@ Research Findings:
 
 Your task:
 1. Synthesize the findings into a coherent, well-structured answer
-2. Use UI tools to navigate to relevant parts of the log (errors, projects, files)
-3. Provide clear, actionable insights
+2. Provide clear, actionable insights
 
-You have access to UI manipulation tools to help the user see relevant parts of their build.
 Format your answer with markdown for readability.";
 
             var messages = new List<ChatMessage>
@@ -363,7 +381,7 @@ Format your answer with markdown for readability.";
                 new ChatMessage(ChatRole.User, userPrompt)
             };
 
-            // Get ALL tools for summarization (including UI tools)
+            // Get ALL tools for summarization
             var allTools = GetToolsForPhase(AgentPhase.Summarization);
 
             var options = new ChatOptions
@@ -372,7 +390,7 @@ Format your answer with markdown for readability.";
                 Temperature = 0.7f
             };
 
-            var response = await llmClient.ChatClient.GetResponseAsync(messages, options, cancellationToken);
+            var response = await llmClient.CompleteChatAsync(messages, options, cancellationToken);
             plan.FinalSummary = response.Text ?? "No summary generated.";
 
             RaiseProgress(plan, "Summarization complete.");
@@ -383,64 +401,27 @@ Format your answer with markdown for readability.";
         /// </summary>
         private AIFunction[] GetToolsForPhase(AgentPhase phase)
         {
-            var baseFunctions = new List<AIFunction>();
-
             try
             {
-                switch (phase)
-                {
-                    case AgentPhase.Planning:
-                        // Minimal tools for planning
-                        baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.GetBuildSummary));
-                        baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.GetErrorsAndWarnings));
-                        break;
-
-                    case AgentPhase.Research:
-                        // All investigation tools, no UI manipulation
-                        baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.GetBuildSummary));
-                        baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.SearchNodes));
-                        baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.GetErrorsAndWarnings));
-                        baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.GetProjects));
-                        baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.GetProjectTargets));
-                        baseFunctions.Add(AIFunctionFactory.Create(embeddedFilesExecutor.ListEmbeddedFiles));
-                        baseFunctions.Add(AIFunctionFactory.Create(embeddedFilesExecutor.SearchEmbeddedFiles));
-                        baseFunctions.Add(AIFunctionFactory.Create(embeddedFilesExecutor.ReadEmbeddedFileLines));
-                        break;
-
-                    case AgentPhase.Summarization:
-                        // All tools including UI manipulation
-                        baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.GetBuildSummary));
-                        baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.SearchNodes));
-                        baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.GetErrorsAndWarnings));
-                        baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.GetProjects));
-                        baseFunctions.Add(AIFunctionFactory.Create(toolExecutor.GetProjectTargets));
-                        baseFunctions.Add(AIFunctionFactory.Create(embeddedFilesExecutor.ListEmbeddedFiles));
-                        baseFunctions.Add(AIFunctionFactory.Create(embeddedFilesExecutor.SearchEmbeddedFiles));
-                        baseFunctions.Add(AIFunctionFactory.Create(embeddedFilesExecutor.ReadEmbeddedFileLines));
-
-                        // UI tools
-                        if (uiInteractionExecutor != null)
-                        {
-                            baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.SelectNodeByText));
-                            baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.SelectError));
-                            baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.SelectWarning));
-                            baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.SelectProject));
-                            baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.OpenFile));
-                            baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.OpenTimeline));
-                            baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.OpenTracing));
-                            baseFunctions.Add(AIFunctionFactory.Create(uiInteractionExecutor.PerformSearch));
-                        }
-                        break;
-                }
-
-                // Wrap all functions with monitoring
                 var tools = new List<AIFunction>();
-                foreach (var baseFunction in baseFunctions)
+
+                // Enumerate all tool executors and get their tools
+                foreach (var executor in toolContainers)
                 {
-                    var monitored = new MonitoredAIFunction(baseFunction);
-                    monitored.ToolCallStarted += OnToolCallStarted;
-                    monitored.ToolCallCompleted += OnToolCallCompleted;
-                    tools.Add(monitored);
+                    foreach (var (function, applicablePhases) in executor.GetTools())
+                    {
+                        // Filter by phase
+                        if ((applicablePhases & phase) == 0)
+                        {
+                            continue; // Skip tools not applicable to this phase
+                        }
+
+                        // Wrap with monitoring
+                        var monitored = new MonitoredAIFunction(function);
+                        monitored.ToolCallStarted += OnToolCallStarted;
+                        monitored.ToolCallCompleted += OnToolCallCompleted;
+                        tools.Add(monitored);
+                    }
                 }
 
                 return tools.ToArray();
@@ -515,12 +496,10 @@ Output your findings as a clear summary that will be used by another agent to sy
 Your task:
 1. Review all research findings
 2. Synthesize them into a coherent, well-structured answer
-3. Use UI manipulation tools to navigate the viewer to relevant parts (errors, projects, files)
-4. Provide clear, actionable insights
+3. Provide clear, actionable insights
 
 Format your answer with markdown for readability.
-Be helpful and specific.
-Use UI tools to enhance the user experience by showing them relevant parts of their build.";
+Be helpful and specific.";
         }
 
         #endregion
@@ -612,7 +591,10 @@ Use UI tools to enhance the user experience by showing them relevant parts of th
 
         public void Dispose()
         {
-            llmClient?.Dispose();
+            if (llmClient is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
         }
     }
 }

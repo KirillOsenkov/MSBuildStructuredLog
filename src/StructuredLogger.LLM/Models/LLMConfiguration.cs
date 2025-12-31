@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 
-namespace StructuredLogViewer.LLM
+namespace StructuredLogger.LLM
 {
     /// <summary>
     /// Configuration for LLM Chat integration.

@@ -1,21 +1,21 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using Microsoft.Build.Logging.StructuredLogger;
 
-namespace StructuredLogViewer.LLM
+namespace StructuredLogger.LLM
 {
     /// <summary>
-    /// Executes binlog tools that can be called by the LLM.
+    /// Core implementation of binlog tool execution logic.
+    /// Separated from the IToolExecutor implementation for reuse.
     /// </summary>
-    public class BinlogToolExecutor
+    internal class BinlogToolExecutorCore
     {
         private readonly Build build;
         private const int MaxOutputTokensPerTool = 3000; // Roughly 12,000 characters
 
-        public BinlogToolExecutor(Build build)
+        public BinlogToolExecutorCore(Build build)
         {
             this.build = build ?? throw new ArgumentNullException(nameof(build));
         }
@@ -30,7 +30,6 @@ namespace StructuredLogViewer.LLM
             return result;
         }
 
-        [Description("Gets a summary of the build including status, duration, errors and warnings count")]
         public string GetBuildSummary()
         {
             var sb = new StringBuilder();
@@ -68,10 +67,7 @@ namespace StructuredLogViewer.LLM
             return sb.ToString();
         }
 
-        [Description("Searches for nodes in the build tree by text or pattern given via 'query' argument. Returns matching nodes.")]
-        public string SearchNodes(
-            [Description("The search query text or pattern")] string query,
-            [Description("Maximum number of results to return (default 10)")] int maxResults = 10)
+        public string SearchNodes(string query, int maxResults = 10)
         {
             if (string.IsNullOrWhiteSpace(query))
             {
@@ -108,9 +104,7 @@ namespace StructuredLogViewer.LLM
             return TruncateIfNeeded(sb.ToString());
         }
 
-        [Description("Gets all errors from the build with their details")]
-        public string GetErrorsAndWarnings(
-            [Description("Type of messages to retrieve: 'errors', 'warnings', or 'all'")] string type = "all")
+        public string GetErrorsAndWarnings(string type = "all")
         {
             var sb = new StringBuilder();
             var errors = new List<Error>();
@@ -184,8 +178,7 @@ namespace StructuredLogViewer.LLM
             return TruncateIfNeeded(sb.ToString());
         }
 
-        [Description("Gets list of all projects built with their status and duration. Limits to first 50 projects to avoid overwhelming output.")]
-        public string GetProjects([Description("Maximum number of projects to return (default 50)")] int maxResults = 50)
+        public string GetProjects(int maxResults = 50)
         {
             var sb = new StringBuilder();
             var projects = new List<Project>();
@@ -231,9 +224,7 @@ namespace StructuredLogViewer.LLM
             return TruncateIfNeeded(sb.ToString());
         }
 
-        [Description("Gets targets executed in a specific project")]
-        public string GetProjectTargets(
-            [Description("Name of the project to get targets for")] string projectName)
+        public string GetProjectTargets(string projectName)
         {
             if (string.IsNullOrWhiteSpace(projectName))
             {
@@ -270,7 +261,7 @@ namespace StructuredLogViewer.LLM
                 sb.AppendLine($"{target.Name}");
                 sb.AppendLine($"  Duration: {target.DurationText}");
                 
-                if (target.HasChildren)
+                if (target is TreeNode treeNode && treeNode.HasChildren)
                 {
                     var tasks = new List<Microsoft.Build.Logging.StructuredLogger.Task>();
                     target.VisitAllChildren<Microsoft.Build.Logging.StructuredLogger.Task>(t => tasks.Add(t));

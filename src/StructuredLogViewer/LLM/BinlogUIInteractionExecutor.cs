@@ -1,29 +1,52 @@
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Build.Logging.StructuredLogger;
+using Microsoft.Extensions.AI;
+using StructuredLogger.LLM;
 using StructuredLogViewer.Controls;
 
 namespace StructuredLogViewer.LLM
 {
     /// <summary>
-    /// Async wrapper for BinlogUIInteractionExecutor that ensures expensive search operations 
-    /// happen on background threads, while only the actual UI operations run on the UI thread.
-    /// This prevents UI freezing when the LLM calls these tools.
+    /// UI interaction tool executor that enables LLM to manipulate the WPF viewer.
+    /// Provides tools for navigation, selection, and view switching.
+    /// This is UI-specific and should only be used in StructuredLogViewer, not in CLI.
     /// </summary>
-    public class AsyncBinlogUIInteractionExecutor
+    public class BinlogUIInteractionExecutor : IToolsContainer
     {
         private readonly Build build;
         private readonly BuildControl buildControl;
 
-        public AsyncBinlogUIInteractionExecutor(Build build, BuildControl buildControl)
+        public BinlogUIInteractionExecutor(Build build, BuildControl buildControl)
         {
             this.build = build ?? throw new ArgumentNullException(nameof(build));
             this.buildControl = buildControl ?? throw new ArgumentNullException(nameof(buildControl));
         }
 
+        public IEnumerable<(AIFunction Function, StructuredLogger.LLM.AgentPhase ApplicablePhases)> GetTools()
+        {
+            // Return all UI interaction tools - these are only applicable during summarization phase
+            var phase = StructuredLogger.LLM.AgentPhase.Summarization;
+            
+            yield return (AIFunctionFactory.Create(SelectNodeByTextAsync), phase);
+            yield return (AIFunctionFactory.Create(SelectErrorAsync), phase);
+            yield return (AIFunctionFactory.Create(SelectWarningAsync), phase);
+            yield return (AIFunctionFactory.Create(SelectProjectAsync), phase);
+            yield return (AIFunctionFactory.Create(OpenFileAsync), phase);
+            yield return (AIFunctionFactory.Create(OpenTimelineAsync), phase);
+            yield return (AIFunctionFactory.Create(OpenTracingAsync), phase);
+            yield return (AIFunctionFactory.Create(PerformSearchAsync), phase);
+            yield return (AIFunctionFactory.Create(OpenPropertiesAndItemsAsync), phase);
+            yield return (AIFunctionFactory.Create(OpenFindInFilesAsync), phase);
+            yield return (AIFunctionFactory.Create(FocusSearchAsync), phase);
+        }
+
         [Description("Selects and navigates to a specific node in the tree view by searching for it. This highlights the node and shows it in the tree.")]
-        public async System.Threading.Tasks.Task<string> SelectNodeByText(
+        public async System.Threading.Tasks.Task<string> SelectNodeByTextAsync(
             [Description("Text to search for in node names or content")] string searchText,
             [Description("Optional: Type of node to search for (e.g., 'Project', 'Target', 'Task', 'Error', 'Warning')")] string nodeType = null)
         {
@@ -83,7 +106,7 @@ namespace StructuredLogViewer.LLM
         }
 
         [Description("Selects and displays a specific error in the tree view by its index or error code.")]
-        public async System.Threading.Tasks.Task<string> SelectError(
+        public async System.Threading.Tasks.Task<string> SelectErrorAsync(
             [Description("Index of the error (1-based) or error code (e.g., 'CS1234')")] string errorIdentifier)
         {
             if (string.IsNullOrWhiteSpace(errorIdentifier))
@@ -94,7 +117,7 @@ namespace StructuredLogViewer.LLM
             // Collect errors on background thread
             var result = await System.Threading.Tasks.Task.Run(() =>
             {
-                var errorList = new System.Collections.Generic.List<Error>();
+                var errorList = new List<Error>();
                 build.VisitAllChildren<Error>(e => errorList.Add(e));
 
                 if (errorList.Count == 0)
@@ -154,7 +177,7 @@ namespace StructuredLogViewer.LLM
         }
 
         [Description("Selects and displays a specific warning in the tree view by its index or warning code.")]
-        public async System.Threading.Tasks.Task<string> SelectWarning(
+        public async System.Threading.Tasks.Task<string> SelectWarningAsync(
             [Description("Index of the warning (1-based) or warning code (e.g., 'CS0168')")] string warningIdentifier)
         {
             if (string.IsNullOrWhiteSpace(warningIdentifier))
@@ -165,7 +188,7 @@ namespace StructuredLogViewer.LLM
             // Collect warnings on background thread
             var result = await System.Threading.Tasks.Task.Run(() =>
             {
-                var warningList = new System.Collections.Generic.List<Warning>();
+                var warningList = new List<Warning>();
                 build.VisitAllChildren<Warning>(w => warningList.Add(w));
 
                 if (warningList.Count == 0)
@@ -225,7 +248,7 @@ namespace StructuredLogViewer.LLM
         }
 
         [Description("Selects and displays a specific project in the tree view by name or partial name match.")]
-        public async System.Threading.Tasks.Task<string> SelectProject(
+        public async System.Threading.Tasks.Task<string> SelectProjectAsync(
             [Description("Name or partial name of the project")] string projectName)
         {
             if (string.IsNullOrWhiteSpace(projectName))
@@ -269,7 +292,7 @@ namespace StructuredLogViewer.LLM
         }
 
         [Description("Opens a source file in the document viewer. Useful for viewing files referenced in errors, warnings, or tasks.")]
-        public async System.Threading.Tasks.Task<string> OpenFile(
+        public async System.Threading.Tasks.Task<string> OpenFileAsync(
             [Description("Full path or partial path/filename to open")] string filePath,
             [Description("Optional: Line number to navigate to (1-based)")] int lineNumber = 0)
         {
@@ -302,7 +325,7 @@ namespace StructuredLogViewer.LLM
         }
 
         [Description("Opens the Timeline view and navigates to a specific timed node (project, target, or task).")]
-        public async System.Threading.Tasks.Task<string> OpenTimeline(
+        public async System.Threading.Tasks.Task<string> OpenTimelineAsync(
             [Description("Optional: Name of project, target, or task to highlight in timeline")] string nodeName = null)
         {
             try
@@ -348,7 +371,7 @@ namespace StructuredLogViewer.LLM
         }
 
         [Description("Opens the Tracing view and navigates to a specific timed node for detailed performance analysis.")]
-        public async System.Threading.Tasks.Task<string> OpenTracing(
+        public async System.Threading.Tasks.Task<string> OpenTracingAsync(
             [Description("Optional: Name of project, target, or task to analyze in tracing view")] string nodeName = null)
         {
             try
@@ -394,7 +417,7 @@ namespace StructuredLogViewer.LLM
         }
 
         [Description("Performs a search in the build log and optionally selects the first result.")]
-        public async System.Threading.Tasks.Task<string> PerformSearch(
+        public async System.Threading.Tasks.Task<string> PerformSearchAsync(
             [Description("Search query text")] string searchText,
             [Description("Whether to automatically select the first search result")] bool selectFirst = true)
         {
@@ -420,7 +443,7 @@ namespace StructuredLogViewer.LLM
         }
 
         [Description("Opens the Properties and Items tab to view MSBuild properties and items for the selected or specified project.")]
-        public async System.Threading.Tasks.Task<string> OpenPropertiesAndItems(
+        public async System.Threading.Tasks.Task<string> OpenPropertiesAndItemsAsync(
             [Description("Optional: Project name to set context for")] string projectName = null)
         {
             try
@@ -464,7 +487,7 @@ namespace StructuredLogViewer.LLM
         }
 
         [Description("Opens the Find in Files tab for full-text search across embedded files.")]
-        public async System.Threading.Tasks.Task<string> OpenFindInFiles(
+        public async System.Threading.Tasks.Task<string> OpenFindInFilesAsync(
             [Description("Optional: Initial search text to populate")] string searchText = null)
         {
             try
@@ -485,7 +508,7 @@ namespace StructuredLogViewer.LLM
         }
 
         [Description("Focuses the main search box at the top of the window, ready for user input.")]
-        public async System.Threading.Tasks.Task<string> FocusSearch()
+        public async System.Threading.Tasks.Task<string> FocusSearchAsync()
         {
             try
             {
