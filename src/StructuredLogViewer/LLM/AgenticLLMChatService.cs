@@ -28,6 +28,7 @@ namespace StructuredLogViewer.LLM
         public event EventHandler<ChatMessageViewModel> MessageAdded;
         public event EventHandler<ToolCallInfo> ToolCallExecuting;
         public event EventHandler<ToolCallInfo> ToolCallExecuted;
+        public event EventHandler<ResilienceEventArgs> RequestRetrying;
 
         public bool IsConfigured => configuration?.IsConfigured ?? false;
 
@@ -47,6 +48,12 @@ namespace StructuredLogViewer.LLM
             if (configuration.IsConfigured)
             {
                 llmClient = new AzureFoundryLLMClient(configuration);
+                
+                // Subscribe to resilience events
+                if (llmClient.ResilientClient != null)
+                {
+                    llmClient.ResilientClient.RequestRetrying += (sender, e) => RequestRetrying?.Invoke(this, e);
+                }
             }
         }
 

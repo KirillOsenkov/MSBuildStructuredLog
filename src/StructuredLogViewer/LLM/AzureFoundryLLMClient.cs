@@ -18,6 +18,7 @@ namespace StructuredLogViewer.LLM
     public class AzureFoundryLLMClient : IDisposable
     {
         private readonly IChatClient chatClient;
+        private readonly ResilientChatClient resilientClient;
         private readonly string modelName;
 
         public AzureFoundryLLMClient(LLMConfiguration config)
@@ -58,13 +59,19 @@ namespace StructuredLogViewer.LLM
             }
 
             // Wrap with resilient client for automatic retry on rate limits and transient errors
-            chatClient = new ResilientChatClient(chatClient, maxRetries: 3);
+            resilientClient = new ResilientChatClient(chatClient, maxRetries: 10);
+            chatClient = resilientClient;
             
             // Apply function invocation after resilient wrapper
             chatClient = new ChatClientBuilder(chatClient).UseFunctionInvocation().Build();
         }
 
         public IChatClient ChatClient => chatClient;
+
+        /// <summary>
+        /// Access to the resilient client for event subscription
+        /// </summary>
+        public ResilientChatClient ResilientClient => resilientClient;
 
         public void Dispose()
         {
