@@ -139,6 +139,7 @@ namespace StructuredLogViewer.LLM
                     var expectedKey = requiredMatches[0];
                     remappings[providedKey] = expectedKey;
                     unmatchedExpected.Remove(expectedKey);
+                    unmatchedProvided.Remove(providedKey);
                     
                     System.Diagnostics.Debug.WriteLine(
                         $"[MonitoredAIFunction] Remapping argument '{providedKey}' -> '{expectedKey}' (required) for function '{Name}'");
@@ -154,6 +155,7 @@ namespace StructuredLogViewer.LLM
                         var expectedKey = allMatches[0];
                         remappings[providedKey] = expectedKey;
                         unmatchedExpected.Remove(expectedKey);
+                        unmatchedProvided.Remove(providedKey);
                         
                         System.Diagnostics.Debug.WriteLine(
                             $"[MonitoredAIFunction] Remapping argument '{providedKey}' -> '{expectedKey}' (optional) for function '{Name}'");
@@ -170,6 +172,17 @@ namespace StructuredLogViewer.LLM
                     System.Diagnostics.Debug.WriteLine(
                         $"[MonitoredAIFunction] Ambiguous required matches for '{providedKey}': {string.Join(", ", requiredMatches)} - not remapping");
                 }
+            }
+
+            // Final fallback: if exactly one unmatched provided arg and one unmatched expected arg remain, match them
+            if (unmatchedProvided.Count == 1 && unmatchedExpected.Count == 1)
+            {
+                var providedKey = unmatchedProvided.First();
+                var expectedKey = unmatchedExpected.First();
+                remappings[providedKey] = expectedKey;
+                
+                System.Diagnostics.Debug.WriteLine(
+                    $"[MonitoredAIFunction] Remapping last remaining argument '{providedKey}' -> '{expectedKey}' for function '{Name}'");
             }
 
             // If no remappings needed, return original
