@@ -60,6 +60,8 @@ namespace StructuredLogger.LLM
             Description = description;
             Goal = goal;
             Status = TaskStatus.NotStarted;
+            Findings = string.Empty;
+            Error = string.Empty;
         }
     }
 
@@ -73,16 +75,16 @@ namespace StructuredLogger.LLM
         public AgentExecutionPhase Phase { get; set; }
         public int CurrentTaskIndex { get; set; }
         public Dictionary<string, string> Findings { get; set; }
-        public string FinalSummary { get; set; }
+        public string? FinalSummary { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime? EndTime { get; set; }
-        public string Error { get; set; }
+        public string? Error { get; set; }
 
         public TimeSpan? Duration => EndTime.HasValue 
             ? EndTime.Value - StartTime 
             : (DateTime.Now - StartTime);
 
-        public ResearchTask CurrentTask => CurrentTaskIndex >= 0 && CurrentTaskIndex < ResearchTasks.Count 
+        public ResearchTask? CurrentTask => CurrentTaskIndex >= 0 && CurrentTaskIndex < ResearchTasks.Count 
             ? ResearchTasks[CurrentTaskIndex] 
             : null;
 
@@ -106,9 +108,9 @@ namespace StructuredLogger.LLM
     public class AgentProgressEventArgs : EventArgs
     {
         public AgentExecutionPhase Phase { get; set; }
-        public ResearchTask CurrentTask { get; set; }
+        public ResearchTask? CurrentTask { get; set; }
         public AgentPlan Plan { get; set; }
-        public string Message { get; set; }
+        public string? Message { get; set; }
         public bool IsError { get; set; }
 
         public AgentProgressEventArgs(AgentPlan plan, string? message = null, bool isError = false)

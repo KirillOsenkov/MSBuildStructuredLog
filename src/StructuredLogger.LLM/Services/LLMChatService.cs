@@ -26,16 +26,16 @@ namespace StructuredLogger.LLM
         private const int EstimatedTokensPerMessage = 500; // Conservative estimate
         private const int MaxChatHistoryMessages = 20; // Keep recent context
 
-        public event EventHandler<ChatMessageViewModel> MessageAdded;
-        public event EventHandler ConversationCleared;
-        public event EventHandler<ToolCallInfo> ToolCallExecuting;
-        public event EventHandler<ToolCallInfo> ToolCallExecuted;
-        public event EventHandler<ResilienceEventArgs> RequestRetrying;
+        public event EventHandler<ChatMessageViewModel>? MessageAdded;
+        public event EventHandler? ConversationCleared;
+        public event EventHandler<ToolCallInfo>? ToolCallExecuting;
+        public event EventHandler<ToolCallInfo>? ToolCallExecuted;
+        public event EventHandler<ResilienceEventArgs>? RequestRetrying;
 
         public bool IsConfigured => configuration?.IsConfigured ?? false;
         public string ConfigurationStatus => configuration?.GetConfigurationStatus() ?? "Not initialized";
 
-        public LLMChatService(Build build, LLMConfiguration config = null)
+        public LLMChatService(Build build, LLMConfiguration? config = null)
         {
             this.contextProvider = new BinlogContextProvider(build);
             this.toolContainers = new List<IToolsContainer>();
@@ -198,13 +198,13 @@ Available context:
             }
         }
 
-        private void OnToolCallStarted(object sender, ToolCallInfo toolCallInfo)
+        private void OnToolCallStarted(object? sender, ToolCallInfo toolCallInfo)
         {
             // Raise event for UI consumption
             ToolCallExecuting?.Invoke(this, toolCallInfo);
         }
 
-        private void OnToolCallCompleted(object sender, ToolCallInfo toolCallInfo)
+        private void OnToolCallCompleted(object? sender, ToolCallInfo toolCallInfo)
         {
             // Raise event for UI consumption
             ToolCallExecuted?.Invoke(this, toolCallInfo);
@@ -267,7 +267,7 @@ Available context:
 
                 System.Diagnostics.Debug.WriteLine($"ChatOptions.Tools count: {options.Tools?.Count ?? 0}");
 
-                var response = await llmClient.CompleteChatAsync(
+                var response = await llmClient!.CompleteChatAsync(
                     messages, 
                     options, 
                     cancellationToken);

@@ -124,7 +124,7 @@ namespace StructuredLogger.LLM
             return sb.ToString();
         }
 
-        public string GetFullContext(BaseNode selectedNode = null)
+        public string GetFullContext(BaseNode? selectedNode = null)
         {
             var sb = new StringBuilder();
             sb.AppendLine(GetBuildOverview());

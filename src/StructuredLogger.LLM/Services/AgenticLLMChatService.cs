@@ -21,11 +21,11 @@ namespace StructuredLogger.LLM
         private MultiProviderLLMClient? llmClient;
         private readonly LLMConfiguration configuration;
 
-        public event EventHandler<AgentProgressEventArgs> ProgressUpdated;
-        public event EventHandler<ChatMessageViewModel> MessageAdded;
-        public event EventHandler<ToolCallInfo> ToolCallExecuting;
-        public event EventHandler<ToolCallInfo> ToolCallExecuted;
-        public event EventHandler<ResilienceEventArgs> RequestRetrying;
+        public event EventHandler<AgentProgressEventArgs>? ProgressUpdated;
+        public event EventHandler<ChatMessageViewModel>? MessageAdded;
+        public event EventHandler<ToolCallInfo>? ToolCallExecuting;
+        public event EventHandler<ToolCallInfo>? ToolCallExecuted;
+        public event EventHandler<ResilienceEventArgs>? RequestRetrying;
 
         public bool IsConfigured => configuration?.IsConfigured ?? false;
 
@@ -160,7 +160,7 @@ Return ONLY a JSON object with this exact structure (no markdown, no extra text)
                 Temperature = 0.3f
             };
 
-            var response = await llmClient.CompleteChatAsync(messages, options, cancellationToken);
+            var response = await llmClient!.CompleteChatAsync(messages, options, cancellationToken);
             var planJson = response.Text?.Trim() ?? "";
 
             // Try to extract JSON if wrapped in markdown
@@ -327,7 +327,7 @@ Focus only on this specific task goal. Output your findings as a summary.";
                 MaxOutputTokens = MaxTokensPerTask
             };
 
-            var response = await llmClient.CompleteChatAsync(messages, options, cancellationToken);
+            var response = await llmClient!.CompleteChatAsync(messages, options, cancellationToken);
             return response.Text ?? "No findings generated.";
         }
 
@@ -390,7 +390,7 @@ Format your answer with markdown for readability.";
                 Temperature = 0.7f
             };
 
-            var response = await llmClient.CompleteChatAsync(messages, options, cancellationToken);
+            var response = await llmClient!.CompleteChatAsync(messages, options, cancellationToken);
             plan.FinalSummary = response.Text ?? "No summary generated.";
 
             RaiseProgress(plan, "Summarization complete.");
@@ -433,19 +433,19 @@ Format your answer with markdown for readability.";
             }
         }
 
-        private void OnToolCallStarted(object sender, ToolCallInfo toolCallInfo)
+        private void OnToolCallStarted(object? sender, ToolCallInfo toolCallInfo)
         {
             // Raise event for UI consumption
             ToolCallExecuting?.Invoke(this, toolCallInfo);
         }
 
-        private void OnToolCallCompleted(object sender, ToolCallInfo toolCallInfo)
+        private void OnToolCallCompleted(object? sender, ToolCallInfo toolCallInfo)
         {
             // Raise event for UI consumption
             ToolCallExecuted?.Invoke(this, toolCallInfo);
         }
 
-        private void RaiseProgress(AgentPlan plan, string message = null, bool isError = false)
+        private void RaiseProgress(AgentPlan plan, string? message = null, bool isError = false)
         {
             ProgressUpdated?.Invoke(this, new AgentProgressEventArgs(plan, message, isError));
         }
@@ -577,14 +577,14 @@ Be helpful and specific.";
 
         private class PlanResponse
         {
-            public List<TaskData> Tasks { get; set; }
+            public List<TaskData> Tasks { get; set; } = new List<TaskData>();
         }
 
         private class TaskData
         {
-            public string Id { get; set; }
-            public string Description { get; set; }
-            public string Goal { get; set; }
+            public string Id { get; set; } = string.Empty;
+            public string Description { get; set; } = string.Empty;
+            public string Goal { get; set; } = string.Empty;
         }
 
         #endregion

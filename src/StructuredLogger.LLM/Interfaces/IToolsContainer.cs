@@ -1,7 +1,5 @@
-﻿using Microsoft.Extensions.AI;
+using Microsoft.Extensions.AI;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace StructuredLogger.LLM
 {

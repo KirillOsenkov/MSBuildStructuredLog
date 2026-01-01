@@ -36,7 +36,7 @@ namespace StructuredLogger.LLM
 
         [Description("Lists all embedded files in the binlog with their paths. Optionally filters by regex pattern.")]
         public async System.Threading.Tasks.Task<string> ListEmbeddedFilesAsync(
-            [Description("Optional regex pattern to filter file paths")] string pathPattern = null,
+            [Description("Optional regex pattern to filter file paths")] string? pathPattern = null,
             [Description("Maximum number of files to return (default 100)")] int maxResults = 100)
         {
             return await System.Threading.Tasks.Task.Run(() => core.ListEmbeddedFiles(pathPattern, maxResults));
@@ -45,7 +45,7 @@ namespace StructuredLogger.LLM
         [Description("Searches for text patterns within embedded files using regex.")]
         public async System.Threading.Tasks.Task<string> SearchEmbeddedFilesAsync(
             [Description("Regex pattern to search for in file contents")] string searchPattern,
-            [Description("Optional regex pattern to filter which files to search")] string filePathPattern = null,
+            [Description("Optional regex pattern to filter which files to search")] string? filePathPattern = null,
             [Description("Maximum number of matches to return")] int maxMatches = 20)
         {
             return await System.Threading.Tasks.Task.Run(() => core.SearchEmbeddedFiles(searchPattern, filePathPattern, maxMatches));

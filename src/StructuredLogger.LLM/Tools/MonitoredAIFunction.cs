@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -17,8 +17,8 @@ namespace StructuredLogger.LLM
     {
         private readonly AIFunction innerFunction;
 
-        public event EventHandler<ToolCallInfo> ToolCallStarted;
-        public event EventHandler<ToolCallInfo> ToolCallCompleted;
+        public event EventHandler<ToolCallInfo>? ToolCallStarted;
+        public event EventHandler<ToolCallInfo>? ToolCallCompleted;
 
         public MonitoredAIFunction(AIFunction innerFunction)
         {
@@ -29,10 +29,10 @@ namespace StructuredLogger.LLM
         public override string Name => innerFunction.Name;
         public override string Description => innerFunction.Description;
         public override JsonElement JsonSchema => innerFunction.JsonSchema;
-        public override MethodInfo UnderlyingMethod => innerFunction.UnderlyingMethod;
+        public override MethodInfo? UnderlyingMethod => innerFunction.UnderlyingMethod;
         public override JsonElement? ReturnJsonSchema => innerFunction.ReturnJsonSchema;
         public override JsonSerializerOptions JsonSerializerOptions => innerFunction.JsonSerializerOptions;
-        public override IReadOnlyDictionary<string, object> AdditionalProperties => innerFunction.AdditionalProperties;
+        public override IReadOnlyDictionary<string, object?> AdditionalProperties => innerFunction.AdditionalProperties;
 
         protected override async ValueTask<object?> InvokeCoreAsync(
             AIFunctionArguments arguments,
@@ -51,7 +51,7 @@ namespace StructuredLogger.LLM
             // Serialize arguments for display (using corrected arguments)
             try
             {
-                var argsDict = new Dictionary<string, object>();
+                var argsDict = new Dictionary<string, object?>();
                 foreach (var arg in correctedArguments)
                 {
                     argsDict[arg.Key] = arg.Value;
@@ -275,7 +275,11 @@ namespace StructuredLogger.LLM
                         {
                             if (element.ValueKind == JsonValueKind.String)
                             {
-                                requiredNames.Add(element.GetString());
+                                var str = element.GetString();
+                                if (str != null)
+                                {
+                                    requiredNames.Add(str);
+                                }
                             }
                         }
                     }

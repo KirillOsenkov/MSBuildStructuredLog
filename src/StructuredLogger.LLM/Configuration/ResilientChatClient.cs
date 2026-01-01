@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -25,7 +25,7 @@ namespace StructuredLogger.LLM
     /// </summary>
     public class ResilienceEventArgs : EventArgs
     {
-        public string Message { get; set; }
+        public string Message { get; set; } = string.Empty;
         public int Attempt { get; set; }
         public int MaxAttempts { get; set; }
         public ResilienceType Type { get; set; }
@@ -45,7 +45,7 @@ namespace StructuredLogger.LLM
         /// <summary>
         /// Raised when the client is retrying a request due to recoverable errors
         /// </summary>
-        public event EventHandler<ResilienceEventArgs> RequestRetrying;
+        public event EventHandler<ResilienceEventArgs>? RequestRetrying;
 
         public ResilientChatClient(IChatClient innerClient, int maxRetries = 10, TimeSpan? initialDelay = null, TimeSpan? maxDelay = null)
         {
@@ -55,15 +55,15 @@ namespace StructuredLogger.LLM
             this.maxDelay = maxDelay ?? TimeSpan.FromMinutes(2);
         }
 
-        public Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions options = null, CancellationToken cancellationToken = default)
+        public Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
             return ExecuteWithRetryAsync(
                 messages,
-                options,
+                options ?? new ChatOptions(),
                 cancellationToken);
         }
 
-        public IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions options = null, CancellationToken cancellationToken = default)
+        public IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default)
         {
             // Note: Streaming doesn't benefit as much from retry logic since it's already started,
             // but we wrap it for consistency
@@ -75,7 +75,7 @@ namespace StructuredLogger.LLM
             innerClient?.Dispose();
         }
 
-        public object GetService(Type serviceType, object serviceKey = null)
+        public object? GetService(Type serviceType, object? serviceKey = null)
         {
             return innerClient.GetService(serviceType, serviceKey);
         }
@@ -95,7 +95,7 @@ namespace StructuredLogger.LLM
                 {
                     return await innerClient.GetResponseAsync(currentMessages, options, cancellationToken);
                 }
-                catch (Exception ex) when (attempt < maxRetries)
+                catch (Exception ex) when (attempt < maxRetries && ex is not OperationCanceledException)
                 {
                     // Check if this is a context overflow error
                     var contextOverflow = ExtractContextOverflowInfo(ex, currentMessages);
@@ -411,8 +411,8 @@ namespace StructuredLogger.LLM
             var result = new List<ChatMessage>();
 
             // Identify system message (usually first) and latest user message (usually last)
-            ChatMessage systemMessage = null;
-            ChatMessage latestUserMessage = null;
+            ChatMessage? systemMessage = null;
+            ChatMessage? latestUserMessage = null;
             var middleMessages = new List<ChatMessage>();
 
             for (int i = 0; i < messages.Count; i++)

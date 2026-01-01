@@ -231,7 +231,7 @@ namespace StructuredLogger.LLM
                 return "Error: Project name cannot be empty.";
             }
 
-            Project project = null;
+            Project? project = null;
             build.VisitAllChildren<Project>(p =>
             {
                 if (p.Name != null && p.Name.IndexOf(projectName, StringComparison.OrdinalIgnoreCase) >= 0)

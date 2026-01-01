@@ -11,14 +11,14 @@ namespace StructuredLogger.LLM
     public class ToolCallInfo
     {
         public Guid CallId { get; set; }
-        public string ToolName { get; set; }
-        public string ArgumentsJson { get; set; }
-        public string ResultText { get; set; }
+        public string ToolName { get; set; } = string.Empty;
+        public string ArgumentsJson { get; set; } = string.Empty;
+        public string ResultText { get; set; } = string.Empty;
         public DateTime StartTime { get; set; }
         public DateTime? EndTime { get; set; }
         public TimeSpan? Duration => EndTime.HasValue ? EndTime.Value - StartTime : null;
         public bool IsError { get; set; }
-        public string ErrorMessage { get; set; }
+        public string ErrorMessage { get; set; } = string.Empty;
 
         /// <summary>
         /// Gets a dictionary of parsed arguments for user-friendly display.
@@ -78,7 +78,7 @@ namespace StructuredLogger.LLM
             switch (element.ValueKind)
             {
                 case JsonValueKind.String:
-                    return element.GetString();
+                    return element.GetString() ?? string.Empty;
                 case JsonValueKind.Number:
                     return element.GetRawText();
                 case JsonValueKind.True:

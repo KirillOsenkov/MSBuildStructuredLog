@@ -21,9 +21,9 @@ namespace StructuredLogger.LLM
             Anthropic
         }
 
-        public string Endpoint { get; set; }
-        public string ApiKey { get; set; }
-        public string ModelName { get; set; }
+        public string Endpoint { get; set; } = string.Empty;
+        public string ApiKey { get; set; } = string.Empty;
+        public string ModelName { get; set; } = string.Empty;
         public ClientType Type { get; private set; }
         public bool AutoSendOnEnter { get; set; } = true;
         public bool AgentMode { get; set; } = true;
@@ -53,8 +53,8 @@ namespace StructuredLogger.LLM
 
             var config = new LLMConfiguration
             {
-                Endpoint = endpoint,
-                ApiKey = apiKey,
+                Endpoint = endpoint ?? string.Empty,
+                ApiKey = apiKey ?? string.Empty,
                 ModelName = model ?? "gpt-4"
             };
             config.UpdateType();

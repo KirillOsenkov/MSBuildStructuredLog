@@ -30,7 +30,7 @@ namespace StructuredLogger.LLM
             return result;
         }
 
-        public string ListEmbeddedFiles(string pathPattern = null, int maxResults = 100)
+        public string ListEmbeddedFiles(string? pathPattern = null, int maxResults = 100)
         {
             var sourceFiles = build.SourceFiles;
             
@@ -42,7 +42,7 @@ namespace StructuredLogger.LLM
             var sb = new StringBuilder();
             sb.AppendLine($"=== Embedded Files ===");
 
-            Regex regex = null;
+            Regex? regex = null;
             if (!string.IsNullOrWhiteSpace(pathPattern))
             {
                 try
@@ -109,7 +109,7 @@ namespace StructuredLogger.LLM
             return TruncateIfNeeded(sb.ToString());
         }
 
-        public string SearchEmbeddedFiles(string searchPattern, string filePathPattern = null, int maxMatches = 20)
+        public string SearchEmbeddedFiles(string searchPattern, string? filePathPattern = null, int maxMatches = 20)
         {
             if (string.IsNullOrWhiteSpace(searchPattern))
             {
@@ -133,7 +133,7 @@ namespace StructuredLogger.LLM
                 return $"Error: Invalid search pattern '{searchPattern}': {ex.Message}";
             }
 
-            Regex filePathRegex = null;
+            Regex? filePathRegex = null;
             if (!string.IsNullOrWhiteSpace(filePathPattern))
             {
                 try
