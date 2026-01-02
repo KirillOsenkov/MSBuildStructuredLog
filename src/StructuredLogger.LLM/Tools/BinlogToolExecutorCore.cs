@@ -1,7 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogger.LLM
@@ -55,9 +56,18 @@ namespace StructuredLogger.LLM
             
             build.VisitAllChildren<BaseNode>(node =>
             {
-                if (node is Error) errorCount++;
-                else if (node is Warning) warningCount++;
-                else if (node is Project) projectCount++;
+                if (node is Error)
+                {
+                    errorCount++;
+                }
+                else if (node is Warning)
+                {
+                    warningCount++;
+                }
+                else if (node is Project)
+                {
+                    projectCount++;
+                }
             });
 
             sb.AppendLine($"Projects Built: {projectCount}");
@@ -74,34 +84,104 @@ namespace StructuredLogger.LLM
                 return "Error: Search query cannot be empty.";
             }
 
-            var results = new List<string>();
-            int count = 0;
-
-            build.VisitAllChildren<BaseNode>(node =>
+            try
             {
-                if (count >= maxResults) return;
+                // Use the sophisticated search infrastructure from StructuredLogViewer
+                var search = new StructuredLogViewer.Search(
+                    new[] { build },
+                    build.StringTable.Instances,
+                    maxResults,
+                    markResultsInTree: false);
 
-                var text = node.ToString();
-                if (text != null && text.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0)
+                var searchResults = search.FindNodes(query, CancellationToken.None);
+                var resultsList = searchResults.ToList();
+
+                if (resultsList.Count == 0)
                 {
-                    results.Add($"{node.GetType().Name}: {text}");
-                    count++;
+                    return $"No nodes found matching '{query}'.";
                 }
-            });
 
-            if (results.Count == 0)
-            {
-                return $"No nodes found matching '{query}'.";
+                var sb = new StringBuilder();
+                sb.AppendLine($"Found {resultsList.Count} matching nodes (max {maxResults}):");
+                sb.AppendLine();
+
+                foreach (var result in resultsList)
+                {
+                    var node = result.Node;
+                    var nodeType = node.GetType().Name;
+                    var nodeText = node.ToString();
+
+                    sb.AppendLine($"[{nodeType}] {nodeText}");
+
+                    // Show matched fields for better context
+                    if (result.WordsInFields.Count > 0)
+                    {
+                        foreach (var (field, match) in result.WordsInFields)
+                        {
+                            if (field != nodeText)
+                            {
+                                sb.AppendLine($"  Matched: '{match}' in '{field}'");
+                            }
+                        }
+                    }
+
+                    // Show parent context (project/target)
+                    var project = node.GetNearestParent<Project>();
+                    if (project != null && node != project)
+                    {
+                        sb.AppendLine($"  Project: {project.Name}");
+                    }
+
+                    var target = node.GetNearestParent<Target>();
+                    if (target != null && node != target && (project == null || target != (object)project))
+                    {
+                        sb.AppendLine($"  Target: {target.Name}");
+                    }
+
+                    // Show duration if available
+                    if (node is TimedNode timedNode && timedNode.Duration.TotalMilliseconds > 0)
+                    {
+                        sb.AppendLine($"  Duration: {timedNode.DurationText}");
+                    }
+
+                    // Show error/warning details
+                    if (node is Error error)
+                    {
+                        if (!string.IsNullOrEmpty(error.Code))
+                        {
+                            sb.AppendLine($"  Code: {error.Code}");
+                        }
+                        if (!string.IsNullOrEmpty(error.File))
+                        {
+                            sb.AppendLine($"  File: {error.File}:{error.LineNumber}");
+                        }
+                    }
+                    else if (node is Warning warning)
+                    {
+                        if (!string.IsNullOrEmpty(warning.Code))
+                        {
+                            sb.AppendLine($"  Code: {warning.Code}");
+                        }
+                        if (!string.IsNullOrEmpty(warning.File))
+                        {
+                            sb.AppendLine($"  File: {warning.File}:{warning.LineNumber}");
+                        }
+                    }
+
+                    sb.AppendLine();
+                }
+
+                if (resultsList.Count >= maxResults)
+                {
+                    sb.AppendLine($"(Showing first {maxResults} results. Refine your query for more specific results.)");
+                }
+
+                return TruncateIfNeeded(sb.ToString());
             }
-
-            var sb = new StringBuilder();
-            sb.AppendLine($"Found {results.Count} matching nodes:");
-            foreach (var result in results)
+            catch (Exception ex)
             {
-                sb.AppendLine($"  - {result}");
+                return $"Error performing search: {ex.Message}\n\nQuery: '{query}'";
             }
-
-            return TruncateIfNeeded(sb.ToString());
         }
 
         public string GetErrorsAndWarnings(string type = "all")
@@ -112,8 +192,14 @@ namespace StructuredLogger.LLM
 
             build.VisitAllChildren<BaseNode>(node =>
             {
-                if (node is Error error) errors.Add(error);
-                else if (node is Warning warning) warnings.Add(warning);
+                if (node is Error error)
+                {
+                    errors.Add(error);
+                }
+                else if (node is Warning warning)
+                {
+                    warnings.Add(warning);
+                }
             });
 
             bool showErrors = type.Equals("all", StringComparison.OrdinalIgnoreCase) || 
@@ -205,8 +291,14 @@ namespace StructuredLogger.LLM
                 int projWarnings = 0;
                 project.VisitAllChildren<BaseNode>(node =>
                 {
-                    if (node is Error) projErrors++;
-                    else if (node is Warning) projWarnings++;
+                    if (node is Error)
+                    {
+                        projErrors++;
+                    }
+                    else if (node is Warning)
+                    {
+                        projWarnings++;
+                    }
                 });
 
                 if (projErrors > 0 || projWarnings > 0)

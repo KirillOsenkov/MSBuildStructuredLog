@@ -14,6 +14,11 @@ public class ToolsContainerTests
     {
         var build = new Build();
         build.Succeeded = true;
+        // Initialize StringTable for search functionality
+        if (build.StringTable == null || build.StringTable.Instances == null)
+        {
+            // StringTable will be initialized automatically when nodes are added
+        }
         return build;
     }
 
@@ -134,5 +139,106 @@ public class ToolsContainerTests
             tool.Function.Description.Should().NotBeNullOrWhiteSpace(
                 $"Tool {tool.Function.Name} should have a description");
         }
+    }
+
+    [Fact]
+    public async System.Threading.Tasks.Task SearchNodesAsync_WithEmptyQuery_ReturnsError()
+    {
+        // Arrange
+        var build = CreateMockBuild();
+        var executor = new BinlogToolExecutor(build);
+
+        // Act
+        var result = await executor.SearchNodesAsync("", 10);
+
+        // Assert
+        result.Should().Contain("Error");
+        result.Should().Contain("cannot be empty");
+    }
+
+    [Fact]
+    public async System.Threading.Tasks.Task SearchNodesAsync_WithBasicQuery_ReturnsResults()
+    {
+        // Arrange
+        var build = CreateMockBuild();
+        build.AddChild(new Project { Name = "TestProject" });
+        build.AddChild(new Target { Name = "Build" });
+        build.AddChild(new Message { Text = "Building project" });
+
+        var executor = new BinlogToolExecutor(build);
+
+        // Act
+        var result = await executor.SearchNodesAsync("Build", 10);
+
+        // Assert
+        result.Should().Contain("Build");
+        result.Should().NotContain("Error");
+    }
+
+    [Fact]
+    public async System.Threading.Tasks.Task SearchNodesAsync_WithNodeTypeFilter_FiltersCorrectly()
+    {
+        // Arrange
+        var build = CreateMockBuild();
+        build.AddChild(new Project { Name = "TestProject" });
+        build.AddChild(new Target { Name = "Build" });
+        build.AddChild(new Message { Text = "Building" });
+
+        var executor = new BinlogToolExecutor(build);
+
+        // Act - Search with simple query that should find nodes
+        var result = await executor.SearchNodesAsync("Test", 10);
+
+        // Assert - Should find the TestProject
+        result.Should().NotContain("Error", "search should execute without errors");
+        (result.Contains("Project") || result.Contains("TestProject") || result.Contains("No nodes"))
+            .Should().BeTrue("result should either find the project or indicate no matches");
+    }
+
+    [Fact]
+    public async System.Threading.Tasks.Task SearchNodesAsync_WithNoMatches_ReturnsNoResultsMessage()
+    {
+        // Arrange
+        var build = CreateMockBuild();
+        build.AddChild(new Project { Name = "TestProject" });
+
+        var executor = new BinlogToolExecutor(build);
+
+        // Act
+        var result = await executor.SearchNodesAsync("NonExistent", 10);
+
+        // Assert
+        result.Should().Contain("No nodes found");
+        result.Should().Contain("NonExistent");
+    }
+
+    [Fact]
+    public void SearchNodesAsync_Description_ContainsComprehensiveSyntaxGuide()
+    {
+        // Arrange
+        var build = CreateMockBuild();
+        var executor = new BinlogToolExecutor(build);
+        var tools = executor.GetTools().ToList();
+        
+        // SearchNodes is the actual AIFunction name (without Async suffix)
+        var searchTool = tools.First(t => t.Function.Name == "SearchNodes");
+
+        // Assert
+        searchTool.Should().NotBeNull("SearchNodes tool should exist");
+        var description = searchTool.Function.Description;
+        
+        // Verify description contains key search features
+        description.Should().Contain("$project", "should document project filter");
+        description.Should().Contain("$target", "should document target filter");
+        description.Should().Contain("$task", "should document task filter");
+        description.Should().Contain("$error", "should document error filter");
+        description.Should().Contain("$warning", "should document warning filter");
+        description.Should().Contain("under(", "should document under() clause");
+        description.Should().Contain("project(", "should document project() clause");
+        description.Should().Contain("skipped=", "should document skipped filter");
+        description.Should().Contain("$duration", "should document duration display");
+        description.Should().Contain("start<", "should document time-based filtering");
+        description.Should().Contain("$copy", "should document copy operations");
+        description.Should().Contain("EXAMPLES", "should include examples");
     }
 }

@@ -33,10 +33,63 @@ namespace StructuredLogger.LLM
             yield return (AIFunctionFactory.Create(GetProjectTargetsAsync), AgentPhase.Research | AgentPhase.Summarization);
         }
 
-        [Description("Searches for nodes in the build tree by text or pattern. Returns matching nodes.")]
+        [Description(@"Searches the build tree using advanced query syntax. Supports multiple search operators:
+
+BASIC SEARCH:
+  - Multiple words: space = AND operator (e.g., 'csc error' finds nodes with both terms)
+  - Exact phrase: Use double quotes (e.g., '""Copying file""' for exact match)
+  - Single word in quotes: Exact match, no substring (e.g., '""Build""' matches 'Build' but not 'PreBuild')
+
+NODE TYPE FILTERS:
+  - $project: Search for projects (e.g., '$project MyApp')
+  - $target: Search for targets (e.g., '$target Build')
+  - $task: Search for tasks (e.g., '$task Csc' or '$csc' shorthand)
+  - $error: Search for errors
+  - $warning: Search for warnings
+  - $message: Search for messages
+  - $property: Search for properties
+  - $item: Search for items
+  - $metadata: Search for metadata
+  - $copy: Search for file copy operations (e.g., '$copy MyFile.dll')
+  - $nuget: Search NuGet packages (e.g., '$nuget Newtonsoft')
+
+HIERARCHY FILTERS:
+  - under(FILTER): Include only results under nodes matching FILTER (e.g., 'error under($project MyApp)')
+  - notunder(FILTER): Exclude results under nodes matching FILTER
+  - project(NAME): Filter by parent project (e.g., 'Csc project(MyApp.csproj)')
+  - not(FILTER): Exclude results matching FILTER
+
+PROPERTY/ITEM FILTERS:
+  - name=VALUE: Match by name (e.g., '$property name=Configuration')
+  - value=VALUE: Match by value (e.g., '$property value=Debug')
+  - skipped=true/false: Filter targets by skipped status (e.g., '$target skipped=false')
+
+TIME-BASED FILTERS:
+  - start<""TIMESTAMP"": Events starting before timestamp
+  - start>""TIMESTAMP"": Events starting after timestamp
+  - end<""TIMESTAMP"": Events ending before timestamp
+  - end>""TIMESTAMP"": Events ending after timestamp
+  - Example: '$task start>""2023-11-23 14:30:00"" end<""2023-11-23 14:35:00""'
+
+DURATION/TIME DISPLAY:
+  - $time or $duration: Include duration in results, sort by duration descending
+  - $start: Include start time in results
+  - $end: Include end time in results
+
+EXAMPLES:
+  - 'error': Find all errors
+  - '$project MyApp': Find project named MyApp
+  - 'Csc $time': Find Csc task invocations with durations
+  - '$error under($project Core)': Find errors in Core project
+  - '$target skipped=false $duration': Find executed targets sorted by duration
+  - 'Copying file project(MyApp.csproj)': Find file copies in MyApp project
+  - '$copy bin\\Debug': Find all files copied to bin\Debug
+  - '$task start>""2023-11-23 14:30:00""': Find tasks starting after specific time
+
+Returns detailed information about matching nodes including type, text, parent context, duration, and error/warning details.")]
         public async System.Threading.Tasks.Task<string> SearchNodesAsync(
-            [Description("The search query text or pattern")] string query,
-            [Description("Maximum number of results to return (default 10)")] int maxResults = 10)
+            [Description("Search query using the syntax described above. Can be simple text or use advanced operators.")] string query,
+            [Description("Maximum number of results to return (default 10, increase for broader searches)")] int maxResults = 10)
         {
             return await System.Threading.Tasks.Task.Run(() => core.SearchNodes(query, maxResults));
         }
