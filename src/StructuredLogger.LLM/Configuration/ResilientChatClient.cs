@@ -5,9 +5,10 @@ using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.AI;
 using Anthropic.Exceptions;
 using Azure;
+using Microsoft.Build.Logging.StructuredLogger;
+using Microsoft.Extensions.AI;
 
 namespace StructuredLogger.LLM
 {
@@ -131,7 +132,7 @@ namespace StructuredLogger.LLM
                             $"Retrying with {currentMessages.Count} messages (estimated {EstimateTokens(currentMessages)} tokens)");
                         
                         // Small delay before retry
-                        await Task.Delay(TimeSpan.FromMilliseconds(500), cancellationToken);
+                        await System.Threading.Tasks.Task.Delay(TimeSpan.FromMilliseconds(500), cancellationToken);
                         continue;
                     }
 
@@ -168,7 +169,7 @@ namespace StructuredLogger.LLM
                         // Check if delay would exceed cancellation
                         try
                         {
-                            await Task.Delay(delay, cancellationToken);
+                            await System.Threading.Tasks.Task.Delay(delay, cancellationToken);
                         }
                         catch (OperationCanceledException)
                         {
@@ -210,7 +211,7 @@ namespace StructuredLogger.LLM
             }
 
             // Check for HTTP status code in message (fallback)
-            if (ex.Message.Contains("429") || ex.Message.Contains("Rate limit", StringComparison.OrdinalIgnoreCase))
+            if (ex.Message.Contains("429") || ex.Message.ContainsIgnoreCase("Rate limit"))
             {
                 return true;
             }
@@ -332,11 +333,11 @@ namespace StructuredLogger.LLM
             }
 
             // Check for generic "context" and "token" keywords
-            if (message.Contains("context", StringComparison.OrdinalIgnoreCase) &&
-                message.Contains("token", StringComparison.OrdinalIgnoreCase) &&
-                (message.Contains("too long", StringComparison.OrdinalIgnoreCase) ||
-                 message.Contains("exceeds", StringComparison.OrdinalIgnoreCase) ||
-                 message.Contains("limit", StringComparison.OrdinalIgnoreCase)))
+            if (message.ContainsIgnoreCase("context") &&
+                message.ContainsIgnoreCase("token") &&
+                (message.ContainsIgnoreCase("too long") ||
+                 message.ContainsIgnoreCase("exceeds") ||
+                 message.ContainsIgnoreCase("limit")))
             {
                 // Generic context overflow without specific numbers
                 // Use conservative defaults
@@ -353,7 +354,7 @@ namespace StructuredLogger.LLM
             if (ex is AnthropicBadRequestException)
             {
                 // If it's a bad request and mentions tokens, likely a context issue
-                if (message.Contains("token", StringComparison.OrdinalIgnoreCase))
+                if (message.ContainsIgnoreCase("token"))
                 {
                     currentTokens = EstimateTokens(messages);
                     return new ContextOverflowInfo
@@ -400,7 +401,9 @@ namespace StructuredLogger.LLM
             int currentTokens)
         {
             if (messages.Count == 0)
+            {
                 return messages;
+            }
 
             // Calculate target tokens (use 95% of max as safety margin, or 80% of current if max unknown)
             int targetTokens = maxTokens > 0 ? (int)(maxTokens * 0.95) : (int)(currentTokens * 0.8);
@@ -484,7 +487,9 @@ namespace StructuredLogger.LLM
                     var msg = result[i];
                     var msgText = msg.Text;
                     if (string.IsNullOrEmpty(msgText))
+                    {
                         continue;
+                    }
 
                     // Don't truncate system message or final user message too aggressively
                     bool isImportant = (i == 0 && msg.Role == ChatRole.System) || 

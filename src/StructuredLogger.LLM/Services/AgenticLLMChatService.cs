@@ -63,7 +63,9 @@ namespace StructuredLogger.LLM
         public void RegisterToolContainer(IToolsContainer executor)
         {
             if (executor == null)
+            {
                 throw new ArgumentNullException(nameof(executor));
+            }
 
             toolContainers.Add(executor);
         }
