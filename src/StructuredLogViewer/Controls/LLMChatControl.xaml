@@ -36,7 +36,7 @@
                       Margin="4,0,0,0"
                       Click="AgentModeToggle_Click"
                       ToolTip="Agent Mode: Multi-step reasoning for complex queries" />
-        <TextBlock Text="LLM Chat" 
+        <TextBlock Text="LLM Chat (Preview)" 
                    FontWeight="Bold" 
                    VerticalAlignment="Center"
                    Foreground="{DynamicResource Theme_Foreground}"/>

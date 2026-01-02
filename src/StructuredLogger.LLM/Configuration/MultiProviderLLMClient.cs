@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -151,8 +151,6 @@ namespace StructuredLogger.LLM
             LLMConfiguration.ClientType.GitHubCopilot => "GitHub Copilot",
             _ => "Unknown"
         };
-
-        public bool IsInitialized => isInitialized;
 
         public IChatClient ChatClient
         {

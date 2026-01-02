@@ -35,7 +35,7 @@ namespace StructuredLogger.LLM
         public int MaxResearchTasks { get; set; } = 5;
         public int MaxTokensPerTask { get; set; } = 4000;
 
-        public AgenticLLMChatService(Build build, LLMConfiguration config, ILLMLogger? logger = null)
+        private AgenticLLMChatService(Build build, LLMConfiguration config, ILLMLogger? logger)
         {
             this.contextProvider = new BinlogContextProvider(build);
             this.toolContainers = new List<IToolsContainer>();
@@ -46,33 +46,41 @@ namespace StructuredLogger.LLM
             RegisterToolContainer(new BinlogToolExecutor(build));
             RegisterToolContainer(new EmbeddedFilesToolExecutor(build));
             RegisterToolContainer(new ListEventsToolExecutor(build));
-
-            if (configuration.IsConfigured)
-            {
-                var client = new MultiProviderLLMClient(configuration, logger: logger);
-                this.llmClient = client;
-                
-                // For non-GitHub Copilot, client is ready immediately
-                // For GitHub Copilot, InitializeAsync must be called before use
-                if (client.IsInitialized)
-                {
-                    SubscribeToResilienceEvents(client);
-                }
-            }
         }
 
         /// <summary>
-        /// Initializes the LLM client asynchronously.
-        /// Required for GitHub Copilot clients (for device flow authentication).
-        /// No-op for other providers (already initialized synchronously).
+        /// Creates and initializes a new instance of AgenticLLMChatService.
         /// </summary>
-        public async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken = default)
+        /// <param name="build">The build to analyze.</param>
+        /// <param name="config">LLM configuration.</param>
+        /// <param name="logger">Optional logger for diagnostics.</param>
+        /// <param name="cancellationToken">Cancellation token for async initialization.</param>
+        /// <returns>A fully initialized AgenticLLMChatService instance.</returns>
+        public static async System.Threading.Tasks.Task<AgenticLLMChatService> CreateAsync(
+            Build build,
+            LLMConfiguration config,
+            ILLMLogger? logger = null,
+            CancellationToken cancellationToken = default)
         {
-            if (llmClient != null && !llmClient.IsInitialized)
+            var service = new AgenticLLMChatService(build, config, logger);
+            
+            await service.InitializeLLMClientAsync(cancellationToken);
+            
+            return service;
+        }
+
+        private async System.Threading.Tasks.Task InitializeLLMClientAsync(CancellationToken cancellationToken)
+        {
+            if (!configuration.IsConfigured)
             {
-                await llmClient.InitializeAsync(cancellationToken);
-                SubscribeToResilienceEvents(llmClient);
+                return;
             }
+
+            var client = new MultiProviderLLMClient(configuration, logger: logger);
+            await client.InitializeAsync(cancellationToken);
+            this.llmClient = client;
+            
+            SubscribeToResilienceEvents(client);
         }
 
         private void SubscribeToResilienceEvents(MultiProviderLLMClient client)
