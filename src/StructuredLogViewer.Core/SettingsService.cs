@@ -673,5 +673,19 @@ namespace StructuredLogViewer
                 return null;
             }
         }
+
+        /// <summary>
+        /// Clears persisted LLM configuration (useful when tokens expire or become invalid).
+        /// </summary>
+        public static void ClearLLMConfiguration()
+        {
+            LLMEndpoint = null;
+            LLMModel = null;
+            LLMApiKeyEncrypted = null;
+            LLMAutoSendOnEnter = true;
+            LLMAgentMode = true;
+            LLMLoggingLevel = 1;
+            LLMAvailableModels = null;
+        }
     }
 }

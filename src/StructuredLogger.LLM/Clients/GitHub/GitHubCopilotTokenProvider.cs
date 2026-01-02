@@ -39,6 +39,7 @@ namespace StructuredLogger.LLM.Clients.GitHub
         /// <summary>
         /// Gets a Copilot token by exchanging the GitHub access token.
         /// </summary>
+        /// <exception cref="UnauthorizedAccessException">Thrown when the GitHub access token is invalid or expired.</exception>
         public async Task<CopilotToken> GetCopilotTokenAsync(CancellationToken cancellationToken = default)
         {
             var request = new HttpRequestMessage(HttpMethod.Get, CopilotTokenUrl);
@@ -48,6 +49,15 @@ namespace StructuredLogger.LLM.Clients.GitHub
             request.Headers.Add("X-GitHub-Api-Version", GitHubApiVersion);
 
             var response = await httpClient.SendAsync(request, cancellationToken);
+            
+            // Handle expired or invalid GitHub access token
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized || 
+                response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+            {
+                throw new UnauthorizedAccessException(
+                    "GitHub access token is invalid or expired. Please re-authenticate using the GitHub Login button in the configuration dialog.");
+            }
+            
             response.EnsureSuccessStatusCode();
 
             var json = await response.Content.ReadAsStringAsync();

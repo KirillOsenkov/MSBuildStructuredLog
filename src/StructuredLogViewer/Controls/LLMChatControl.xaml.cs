@@ -157,14 +157,33 @@ namespace StructuredLogViewer.Controls
             {
                 if (t.IsFaulted)
                 {
+                    var exception = t.Exception?.GetBaseException();
+                    
                     Dispatcher.Invoke(() =>
                     {
-                        AddMessage(new ChatMessageDisplay
+                        // Check if it's an authentication error
+                        if (exception is UnauthorizedAccessException)
                         {
-                            Role = "System",
-                            Content = $"Failed to initialize LLM services: {t.Exception?.GetBaseException()?.Message}",
-                            IsError = true
-                        });
+                            // Clear invalid persisted credentials
+                            SettingsService.ClearLLMConfiguration();
+                            
+                            AddMessage(new ChatMessageDisplay
+                            {
+                                Role = "System",
+                                Content = $"⚠️ Authentication Error\n\n{exception.Message}\n\n" +
+                                         "Your saved credentials have been cleared. Please click 'Configure' to re-authenticate.",
+                                IsError = true
+                            });
+                        }
+                        else
+                        {
+                            AddMessage(new ChatMessageDisplay
+                            {
+                                Role = "System",
+                                Content = $"Failed to initialize LLM services: {exception?.Message}",
+                                IsError = true
+                            });
+                        }
                     });
                 }
             });
@@ -554,6 +573,21 @@ namespace StructuredLogViewer.Controls
                     timer.Stop();
                 };
                 timer.Start();
+            }
+            catch (UnauthorizedAccessException uaEx)
+            {
+                // GitHub token expired or invalid - clear persisted config and prompt user
+                SettingsService.ClearLLMConfiguration();
+                
+                AddMessage(new ChatMessageDisplay
+                {
+                    Role = "System",
+                    Content = $"⚠️ Authentication Error\n\n{uaEx.Message}\n\n" +
+                             "Your saved credentials have been cleared. Please click 'Configure' to re-authenticate.",
+                    IsError = true
+                });
+                
+                ShowStatus("Authentication failed - please reconfigure", isError: true);
             }
             catch (Exception ex)
             {
