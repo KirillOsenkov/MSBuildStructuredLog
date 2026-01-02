@@ -148,8 +148,8 @@ namespace StructuredLogViewer.Controls
                 });
             }, LoggingLevel.Normal);
             
-            // Load configuration
-            currentConfig = LLMConfiguration.LoadFromEnvironment();
+            // Load configuration from persisted settings or environment
+            currentConfig = LLMConfigurationDialog.LoadPersistedConfiguration();
             chatLogger.Level = currentConfig.LoggingLevel;
             
             // Create and configure LLM services asynchronously
@@ -626,7 +626,7 @@ namespace StructuredLogViewer.Controls
         private void ConfigureButton_Click(object sender, RoutedEventArgs e)
         {
             // Get current configuration
-            var configForDialog = this.currentConfig ?? LLMConfiguration.LoadFromEnvironment();
+            var configForDialog = this.currentConfig ?? LLMConfigurationDialog.LoadPersistedConfiguration();
             var wasConfigured = chatService?.IsConfigured ?? false;
             var oldAgentMode = configForDialog.AgentMode;
             

@@ -14,6 +14,7 @@ namespace StructuredLogViewer.Controls
     public partial class LLMConfigurationDialog : Window
     {
         private bool isApiKeyVisible = false;
+        private bool shouldPersist = false;
 
         public string Endpoint { get; private set; }
         public string Model { get; private set; }
@@ -22,6 +23,47 @@ namespace StructuredLogViewer.Controls
         public bool AgentMode { get; private set; }
         public LoggingLevel LoggingLevel { get; private set; }
         public System.Collections.Generic.List<string>? AvailableModels { get; private set; }
+        public bool ShouldPersist => shouldPersist;
+
+        /// <summary>
+        /// Loads LLM configuration from persisted settings.
+        /// Returns configuration from SettingsService if available, otherwise from environment variables.
+        /// </summary>
+        public static LLMConfiguration LoadPersistedConfiguration()
+        {
+            var config = new LLMConfiguration();
+            
+            // Try to load from persisted settings first
+            var persistedEndpoint = SettingsService.LLMEndpoint;
+            if (!string.IsNullOrEmpty(persistedEndpoint))
+            {
+                config.Endpoint = persistedEndpoint;
+                config.ModelName = SettingsService.LLMModel ?? string.Empty;
+                
+                // Decrypt API key
+                var encryptedKey = SettingsService.LLMApiKeyEncrypted;
+                config.ApiKey = SettingsService.DecryptString(encryptedKey) ?? string.Empty;
+                
+                config.AutoSendOnEnter = SettingsService.LLMAutoSendOnEnter;
+                config.AgentMode = SettingsService.LLMAgentMode;
+                config.LoggingLevel = (LoggingLevel)SettingsService.LLMLoggingLevel;
+                
+                // Parse available models
+                var modelsString = SettingsService.LLMAvailableModels;
+                if (!string.IsNullOrEmpty(modelsString))
+                {
+                    config.AvailableModels = modelsString.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(m => m.Trim())
+                        .ToList();
+                }
+                
+                config.UpdateType();
+                return config;
+            }
+            
+            // Fallback to environment variables
+            return LLMConfiguration.LoadFromEnvironment();
+        }
 
         public LLMConfigurationDialog(LLMConfiguration currentConfig)
         {
@@ -109,6 +151,21 @@ namespace StructuredLogViewer.Controls
 
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
+            ValidateAndSaveSettings(false);
+        }
+
+        private void ApplyButton_Click(object sender, RoutedEventArgs e)
+        {
+            ValidateAndSaveSettings(false);
+        }
+
+        private void ApplyAndPersistButton_Click(object sender, RoutedEventArgs e)
+        {
+            ValidateAndSaveSettings(true);
+        }
+
+        private void ValidateAndSaveSettings(bool persist)
+        {
             // Validate inputs
             Endpoint = endpointTextBox.Text?.Trim();
             Model = modelComboBox.IsEditable ? modelComboBox.Text?.Trim() : (modelComboBox.SelectedItem as string)?.Trim();
@@ -116,6 +173,7 @@ namespace StructuredLogViewer.Controls
             AutoSendOnEnter = autoSendOnEnterCheckBox.IsChecked ?? true;
             AgentMode = agentModeCheckBox.IsChecked ?? true;
             LoggingLevel = (LoggingLevel)loggingLevelComboBox.SelectedIndex;
+            shouldPersist = persist;
 
             if (string.IsNullOrWhiteSpace(Endpoint))
             {
@@ -153,6 +211,27 @@ namespace StructuredLogViewer.Controls
                     }
 
                     return;
+                }
+            }
+
+            // If persisting, save to SettingsService
+            if (persist)
+            {
+                SettingsService.LLMEndpoint = Endpoint;
+                SettingsService.LLMModel = Model;
+                SettingsService.LLMApiKeyEncrypted = SettingsService.EncryptString(ApiKey);
+                SettingsService.LLMAutoSendOnEnter = AutoSendOnEnter;
+                SettingsService.LLMAgentMode = AgentMode;
+                SettingsService.LLMLoggingLevel = (int)LoggingLevel;
+                
+                // Store available models as comma-separated list
+                if (AvailableModels != null && AvailableModels.Count > 0)
+                {
+                    SettingsService.LLMAvailableModels = string.Join(",", AvailableModels);
+                }
+                else
+                {
+                    SettingsService.LLMAvailableModels = null;
                 }
             }
 
