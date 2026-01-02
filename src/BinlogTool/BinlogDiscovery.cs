@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -52,7 +52,7 @@ namespace BinlogTool
             return result.Distinct().ToList();
         }
 
-        private static List<string> ParseCsvPaths(string csvPaths)
+        internal static List<string> ParseCsvPaths(string csvPaths)
         {
             var result = new List<string>();
             var current = "";

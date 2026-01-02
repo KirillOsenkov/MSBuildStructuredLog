@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using Xunit;
 
 namespace BinlogTool.Tests;
@@ -6,55 +6,63 @@ namespace BinlogTool.Tests;
 public class BinlogDiscoveryTests
 {
     [Fact]
-    public void DiscoverBinlogs_WithNullPath_ReturnsEmptyList()
-    {
-        // Act
-        var result = BinlogDiscovery.DiscoverBinlogs(null, recurse: false);
-
-        // Assert
-        result.Should().NotBeNull();
-        // We can't test actual file discovery without setting up test files
-        // Just verify it doesn't throw and returns a list
-    }
-
-    [Fact]
-    public void DiscoverBinlogs_WithEmptyString_ReturnsEmptyList()
-    {
-        // Act
-        var result = BinlogDiscovery.DiscoverBinlogs("", recurse: false);
-
-        // Assert
-        result.Should().NotBeNull();
-    }
-
-    [Fact]
     public void ParseCsvPaths_WithSinglePath_ReturnsSingleItem()
     {
-        // Note: This tests the internal logic through the public API
-        // We'd need to make ParseCsvPaths public or internal for direct testing
-        // For now, we test through DiscoverBinlogs with explicit file path
-        
+        // Arrange
+        var input = "build.binlog";
+
         // Act
-        var result = BinlogDiscovery.DiscoverBinlogs("test.binlog", recurse: false);
+        var result = BinlogDiscovery.ParseCsvPaths(input);
 
         // Assert
-        result.Should().NotBeNull();
-        // Actual discovery would fail if file doesn't exist, but that's expected
+        result.Should().HaveCount(1);
+        result[0].Should().Be("build.binlog");
     }
 
     [Fact]
-    public void DiscoverBinlogs_WithNonExistentPath_ReturnsEmptyList()
+    public void ParseCsvPaths_WithMultiplePaths_ReturnsAllPaths()
     {
         // Arrange
-        var nonExistentPath = "C:\\NonExistent\\Path\\file.binlog";
+        var input = "build.binlog,test.binlog,deploy.binlog";
 
         // Act
-        var result = BinlogDiscovery.DiscoverBinlogs(nonExistentPath, recurse: false);
+        var result = BinlogDiscovery.ParseCsvPaths(input);
 
         // Assert
-        result.Should().BeEmpty();
+        result.Should().HaveCount(3);
+        result[0].Should().Be("build.binlog");
+        result[1].Should().Be("test.binlog");
+        result[2].Should().Be("deploy.binlog");
     }
 
-    // Note: More comprehensive tests would require creating temporary test files
-    // or mocking the file system. These tests verify the basic API contract.
+    [Fact]
+    public void ParseCsvPaths_WithQuotedPathContainingComma_TreatsCommaAsLiteral()
+    {
+        // Arrange
+        var input = "\"C:\\Program Files\\Build, Test.binlog\",other.binlog";
+
+        // Act
+        var result = BinlogDiscovery.ParseCsvPaths(input);
+
+        // Assert
+        result.Should().HaveCount(2);
+        result[0].Should().Be("C:\\Program Files\\Build, Test.binlog");
+        result[1].Should().Be("other.binlog");
+    }
+
+    [Fact]
+    public void ParseCsvPaths_WithSpacesAroundPaths_TrimsWhitespace()
+    {
+        // Arrange
+        var input = " build.binlog , test.binlog , deploy.binlog ";
+
+        // Act
+        var result = BinlogDiscovery.ParseCsvPaths(input);
+
+        // Assert
+        result.Should().HaveCount(3);
+        result[0].Should().Be("build.binlog");
+        result[1].Should().Be("test.binlog");
+        result[2].Should().Be("deploy.binlog");
+    }
 }
