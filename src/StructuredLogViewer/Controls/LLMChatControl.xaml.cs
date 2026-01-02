@@ -10,6 +10,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using Microsoft.Build.Logging.StructuredLogger;
 using StructuredLogger.LLM;
+using StructuredLogger.LLM.Logging;
 using StructuredLogViewer.LLM;
 
 namespace StructuredLogViewer.Controls
@@ -110,6 +111,8 @@ namespace StructuredLogViewer.Controls
         private CancellationTokenSource cancellationTokenSource;
         private readonly ObservableCollection<ChatMessageDisplay> messages;
         private LLMConfiguration currentConfig;
+        private bool isInitialized;
+        private ChatWindowLogger chatLogger;
 
         public Build Build { get; private set; }
         public BuildControl BuildControl { get; private set; }
@@ -123,41 +126,36 @@ namespace StructuredLogViewer.Controls
 
         public void Initialize(Build build, BuildControl buildControl)
         {
+            if (isInitialized)
+            {
+                return; // Already initialized
+            }
+
             Build = build ?? throw new ArgumentNullException(nameof(build));
             BuildControl = buildControl;
             
-            // Dispose old services if exists
-            chatService?.Dispose();
-            agenticChatService?.Dispose();
-            
-            // Create new chat service
-            chatService = new LLMChatService(build);
-            chatService.MessageAdded += OnMessageAdded;
-            chatService.ConversationCleared += OnConversationCleared;
-            chatService.ToolCallExecuting += OnToolCallExecuting;
-            chatService.ToolCallExecuted += OnToolCallExecuted;
-            chatService.RequestRetrying += OnRequestRetrying;
-
-            // Register UI interaction tools if BuildControl is available
-            if (buildControl != null)
+            // Create chat window logger
+            chatLogger = new ChatWindowLogger((message, isError) =>
             {
-                var uiInteractionExecutor = new BinlogUIInteractionExecutor(build, buildControl);
-                chatService.RegisterToolContainer(uiInteractionExecutor);
-            }
-
+                Dispatcher.Invoke(() =>
+                {
+                    AddMessage(new ChatMessageDisplay
+                    {
+                        Role = "System",
+                        Content = message,
+                        IsError = isError
+                    });
+                });
+            }, LoggingLevel.Normal);
+            
             // Load configuration
             currentConfig = LLMConfiguration.LoadFromEnvironment();
+            chatLogger.Level = currentConfig.LoggingLevel;
             
-            // Create agentic service
-            if (currentConfig.IsConfigured)
-            {
-                agenticChatService = new AgenticLLMChatService(build, currentConfig);
-                agenticChatService.ProgressUpdated += OnAgentProgressUpdated;
-                agenticChatService.MessageAdded += OnMessageAdded;
-                agenticChatService.ToolCallExecuting += OnToolCallExecuting;
-                agenticChatService.ToolCallExecuted += OnToolCallExecuted;
-                agenticChatService.RequestRetrying += OnRequestRetrying;
-            }
+            // Create and configure LLM services
+            CreateLLMServices();
+            
+            isInitialized = true;
 
             // Initialize agent mode toggle from config (default is true)
             agentModeToggle.IsChecked = currentConfig.AgentMode;
@@ -180,12 +178,96 @@ namespace StructuredLogViewer.Controls
                             "• LLM_ENDPOINT (e.g., https://your-resource.openai.azure.com/)\n" +
                             "• LLM_API_KEY (your API key)\n" +
                             "• LLM_MODEL (e.g., gpt-4, claude-sonnet-4-5-2)\n\n" +
-                            "The system will automatically detect the provider.\n" +
-                            "Restart the application after setting these variables.",
+                            "Or use 'Configure' menu to configure/login.",
                     IsError = true
                 });
                 sendButton.IsEnabled = false;
                 agentModeToggle.IsEnabled = false;
+            }
+        }
+
+        private void CreateLLMServices()
+        {
+            if (Build == null)
+            {
+                return;
+            }
+
+            // Dispose old services if they exist
+            LLMChatService? oldChatService = chatService;
+            AgenticLLMChatService? oldAgenticChatService = agenticChatService;
+            
+            // Create new chat service with logger
+            chatService = new LLMChatService(Build, null, chatLogger);
+            chatService.MessageAdded += OnMessageAdded;
+            chatService.ConversationCleared += OnConversationCleared;
+            chatService.ToolCallExecuting += OnToolCallExecuting;
+            chatService.ToolCallExecuted += OnToolCallExecuted;
+            chatService.RequestRetrying += OnRequestRetrying;
+
+            // Register UI interaction tools if BuildControl is available
+            if (BuildControl != null)
+            {
+                var uiInteractionExecutor = new BinlogUIInteractionExecutor(Build, BuildControl);
+                chatService.RegisterToolContainer(uiInteractionExecutor);
+            }
+
+            // Reconfigure with current config if available
+            if (currentConfig != null)
+            {
+                chatService.Reconfigure(currentConfig);
+            }
+            
+            // Create agentic service if configured
+            if (currentConfig?.IsConfigured == true)
+            {
+                agenticChatService = new AgenticLLMChatService(Build, currentConfig, chatLogger);
+                
+                // Register UI interaction tools for agentic service
+                if (BuildControl != null)
+                {
+                    var uiInteractionExecutor = new BinlogUIInteractionExecutor(Build, BuildControl);
+                    agenticChatService.RegisterToolContainer(uiInteractionExecutor);
+                }
+                
+                agenticChatService.ProgressUpdated += OnAgentProgressUpdated;
+                agenticChatService.MessageAdded += OnMessageAdded;
+                agenticChatService.ToolCallExecuting += OnToolCallExecuting;
+                agenticChatService.ToolCallExecuted += OnToolCallExecuted;
+                agenticChatService.RequestRetrying += OnRequestRetrying;
+
+                // Initialize services asynchronously (needed for GitHub Copilot device flow)
+                _ = InitializeServicesAsync();
+            }
+
+            System.Threading.Tasks.Task.Delay(1000).ContinueWith(t => { oldChatService?.Dispose(); oldAgenticChatService?.Dispose(); });
+        }
+
+        private async System.Threading.Tasks.Task InitializeServicesAsync()
+        {
+            try
+            {
+                if (chatService != null)
+                {
+                    await chatService.InitializeAsync();
+                }
+
+                if (agenticChatService != null)
+                {
+                    await agenticChatService.InitializeAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    AddMessage(new ChatMessageDisplay
+                    {
+                        Role = "System",
+                        Content = $"Failed to initialize LLM services: {ex.Message}",
+                        IsError = true
+                    });
+                });
             }
         }
 
@@ -365,58 +447,22 @@ namespace StructuredLogViewer.Controls
             {
                 chatService.MessageAdded -= OnMessageAdded;
                 chatService.ConversationCleared -= OnConversationCleared;
+                chatService.ToolCallExecuting -= OnToolCallExecuting;
                 chatService.ToolCallExecuted -= OnToolCallExecuted;
+                chatService.RequestRetrying -= OnRequestRetrying;
             }
             
             if (agenticChatService != null)
             {
                 agenticChatService.ProgressUpdated -= OnAgentProgressUpdated;
                 agenticChatService.MessageAdded -= OnMessageAdded;
+                agenticChatService.ToolCallExecuting -= OnToolCallExecuting;
                 agenticChatService.ToolCallExecuted -= OnToolCallExecuted;
+                agenticChatService.RequestRetrying -= OnRequestRetrying;
             }
             
             // Recreate service instances to prevent any late events
-            if (Build != null)
-            {
-                // Dispose old services
-                chatService?.Dispose();
-                agenticChatService?.Dispose();
-                
-                // Create new chat service
-                chatService = new LLMChatService(Build);
-                chatService.MessageAdded += OnMessageAdded;
-                chatService.ConversationCleared += OnConversationCleared;
-                chatService.ToolCallExecuted += OnToolCallExecuted;
-                
-                // Register UI interaction tools if BuildControl is available
-                if (BuildControl != null)
-                {
-                    var uiInteractionExecutor = new BinlogUIInteractionExecutor(Build, BuildControl);
-                    chatService.RegisterToolContainer(uiInteractionExecutor);
-                }
-                
-                // Reconfigure with current config if available
-                if (currentConfig != null)
-                {
-                    chatService.Reconfigure(currentConfig);
-                }
-                
-                // Recreate agentic service if configured
-                if (currentConfig?.IsConfigured == true)
-                {
-                    agenticChatService = new AgenticLLMChatService(Build, currentConfig);
-                    
-                    // Register UI interaction tools for agentic service
-                    if (BuildControl != null)
-                    {
-                        var uiInteractionExecutor = new BinlogUIInteractionExecutor(Build, BuildControl);
-                        agenticChatService.RegisterToolContainer(uiInteractionExecutor);
-                    }
-                    agenticChatService.ProgressUpdated += OnAgentProgressUpdated;
-                    agenticChatService.MessageAdded += OnMessageAdded;
-                    agenticChatService.ToolCallExecuted += OnToolCallExecuted;
-                }
-            }
+            CreateLLMServices();
             
             // Update UI state
             SetQueryIdle();
@@ -617,7 +663,12 @@ namespace StructuredLogViewer.Controls
                     bool apiKeyChanged = configForDialog.ApiKey != dialog.ApiKey;
                     bool autoSendChanged = configForDialog.AutoSendOnEnter != dialog.AutoSendOnEnter;
                     bool agentModeChanged = configForDialog.AgentMode != dialog.AgentMode;
-                    bool hasChanges = endpointChanged || modelChanged || apiKeyChanged || autoSendChanged || agentModeChanged;
+                    bool loggingLevelChanged = configForDialog.LoggingLevel != dialog.LoggingLevel;
+                    
+                    // Services only need to be recreated if model settings changed
+                    bool needsServiceRecreation = endpointChanged || modelChanged || apiKeyChanged;
+                    
+                    bool hasChanges = needsServiceRecreation || autoSendChanged || agentModeChanged || loggingLevelChanged;
 
                     if (!hasChanges)
                     {
@@ -635,32 +686,45 @@ namespace StructuredLogViewer.Controls
                         ModelName = dialog.Model,
                         ApiKey = dialog.ApiKey,
                         AutoSendOnEnter = dialog.AutoSendOnEnter,
-                        AgentMode = dialog.AgentMode
+                        AgentMode = dialog.AgentMode,
+                        LoggingLevel = dialog.LoggingLevel
                     };
-
-                    // Reconfigure the service (keeps chat history)
-                    chatService?.Reconfigure(newConfig);
+                    newConfig.UpdateType();
                     
+                    // Preserve available models if endpoint hasn't changed, otherwise clear them
+                    if (endpointChanged)
+                    {
+                        newConfig.AvailableModels = null;
+                    }
+                    else
+                    {
+                        // Copy from either dialog (if newly fetched) or existing config
+                        newConfig.AvailableModels = dialog.AvailableModels ?? configForDialog.AvailableModels;
+                    }
+
                     // Update current config reference
                     currentConfig = newConfig;
                     
-                    // Reinitialize agentic service with new config
-                    agenticChatService?.Dispose();
-                    if (newConfig.IsConfigured && Build != null)
+                    // Update logger level if it changed
+                    if (loggingLevelChanged && chatLogger != null)
                     {
-                        agenticChatService = new AgenticLLMChatService(Build, newConfig);
-                        agenticChatService.ProgressUpdated += OnAgentProgressUpdated;
-                        agenticChatService.MessageAdded += OnMessageAdded;
-                        agenticChatService.ToolCallExecuting += OnToolCallExecuting;
-                        agenticChatService.ToolCallExecuted += OnToolCallExecuted;
-                        
-                        // Register UI interaction tools
-                        if (BuildControl != null)
-                        {
-                            var uiInteractionExecutor = new BinlogUIInteractionExecutor(Build, BuildControl);
-                            agenticChatService.RegisterToolContainer(uiInteractionExecutor);
-                        }
-                        
+                        chatLogger.Level = dialog.LoggingLevel;
+                    }
+                    
+                    // Only recreate services if model settings actually changed
+                    if (needsServiceRecreation)
+                    {
+                        CreateLLMServices();
+                    }
+                    else if (chatService != null)
+                    {
+                        // Just reconfigure existing service with new settings
+                        chatService.Reconfigure(newConfig);
+                    }
+                    
+                    // Update agent mode toggle enablement
+                    if (newConfig.IsConfigured)
+                    {
                         agentModeToggle.IsEnabled = true;
                     }
                     

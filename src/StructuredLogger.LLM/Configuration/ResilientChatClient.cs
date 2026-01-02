@@ -96,7 +96,7 @@ namespace StructuredLogger.LLM
                 {
                     return await innerClient.GetResponseAsync(currentMessages, options, cancellationToken);
                 }
-                catch (Exception ex) when (attempt < maxRetries && ex is not OperationCanceledException)
+                catch (Exception ex) when (attempt < maxRetries && ex is not OperationCanceledException && !cancellationToken.IsCancellationRequested)
                 {
                     // Check if this is a context overflow error
                     var contextOverflow = ExtractContextOverflowInfo(ex, currentMessages);

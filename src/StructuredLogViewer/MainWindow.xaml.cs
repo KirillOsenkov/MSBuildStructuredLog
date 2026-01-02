@@ -495,7 +495,10 @@ namespace StructuredLogViewer
                 SaveAsMenu.Visibility = Visibility.Visible;
                 RedactSecretsMenu.Visibility = Visibility.Visible;
 
-                // Subscribe to LLM chat initialization event
+                // Show LLM button immediately - initialization will happen lazily when first opened
+                llmButton.Visibility = Visibility.Visible;
+                
+                // Subscribe to LLM chat initialization event (still used for error reporting)
                 buildControl.LLMChatInitialized += OnLLMChatInitialized;
             }
             else
@@ -1259,13 +1262,12 @@ that project." };
 
         private void OnLLMChatInitialized(object sender, bool success)
         {
-            if (success)
+            // Event is now primarily used to report initialization errors
+            // Button is already visible since we use lazy initialization
+            if (!success)
             {
-                llmButton.Visibility = Visibility.Visible;
-            }
-            else
-            {
-                llmButton.Visibility = Visibility.Collapsed;
+                // Could show an error message to the user here if needed
+                System.Diagnostics.Debug.WriteLine("LLM chat initialization failed");
             }
         }
 

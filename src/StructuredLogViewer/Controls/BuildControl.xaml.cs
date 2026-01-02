@@ -437,12 +437,18 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
             centralTabControl.SelectionChanged += CentralTabControl_SelectionChanged;
 
-            // Initialize LLM chat control asynchronously
-            _ = InitializeLLMChatAsync();
+            // LLM chat will be initialized lazily when first shown via ToggleLLMChat
         }
+
+        private bool llmChatInitialized = false;
 
         private async System.Threading.Tasks.Task InitializeLLMChatAsync()
         {
+            if (llmChatInitialized)
+            {
+                return; // Already initialized
+            }
+
             try
             {
                 await System.Threading.Tasks.Task.Run(() =>
@@ -453,7 +459,11 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                         Dispatcher.Invoke(() => llmChatControl.Initialize(Build, this));
                         
                         // Notify success on UI thread
-                        Dispatcher.Invoke(() => LLMChatInitialized?.Invoke(this, true));
+                        Dispatcher.Invoke(() =>
+                        {
+                            llmChatInitialized = true;
+                            LLMChatInitialized?.Invoke(this, true);
+                        });
                     }
                     catch (Exception ex)
                     {
@@ -474,6 +484,12 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
         {
             if (show)
             {
+                // Initialize LLM chat control on first show (lazy initialization)
+                if (!llmChatInitialized)
+                {
+                    _ = InitializeLLMChatAsync();
+                }
+                
                 llmChatColumn.Width = new GridLength(400);
                 llmChatBorder.Visibility = Visibility.Visible;
                 llmSplitter.Visibility = Visibility.Visible;

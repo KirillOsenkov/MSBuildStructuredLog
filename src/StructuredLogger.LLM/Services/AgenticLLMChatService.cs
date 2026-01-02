@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Extensions.AI;
+using StructuredLogger.LLM.Logging;
 
 namespace StructuredLogger.LLM
 {
@@ -20,6 +21,7 @@ namespace StructuredLogger.LLM
         private readonly List<IToolsContainer> toolContainers;
         private MultiProviderLLMClient? llmClient;
         private readonly LLMConfiguration configuration;
+        private readonly ILLMLogger? logger;
 
         public event EventHandler<AgentProgressEventArgs>? ProgressUpdated;
         public event EventHandler<ChatMessageViewModel>? MessageAdded;
@@ -33,11 +35,12 @@ namespace StructuredLogger.LLM
         public int MaxResearchTasks { get; set; } = 5;
         public int MaxTokensPerTask { get; set; } = 4000;
 
-        public AgenticLLMChatService(Build build, LLMConfiguration config)
+        public AgenticLLMChatService(Build build, LLMConfiguration config, ILLMLogger? logger = null)
         {
             this.contextProvider = new BinlogContextProvider(build);
             this.toolContainers = new List<IToolsContainer>();
             this.configuration = config ?? throw new ArgumentNullException(nameof(config));
+            this.logger = logger;
 
             // Register default tool executors
             RegisterToolContainer(new BinlogToolExecutor(build));
@@ -46,14 +49,38 @@ namespace StructuredLogger.LLM
 
             if (configuration.IsConfigured)
             {
-                var client = new MultiProviderLLMClient(configuration);
+                var client = new MultiProviderLLMClient(configuration, logger: logger);
                 this.llmClient = client;
                 
-                // Subscribe to resilience events
-                if (client.ResilientClient != null)
+                // For non-GitHub Copilot, client is ready immediately
+                // For GitHub Copilot, InitializeAsync must be called before use
+                if (client.IsInitialized)
                 {
-                    client.ResilientClient.RequestRetrying += (sender, e) => RequestRetrying?.Invoke(this, e);
+                    SubscribeToResilienceEvents(client);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Initializes the LLM client asynchronously.
+        /// Required for GitHub Copilot clients (for device flow authentication).
+        /// No-op for other providers (already initialized synchronously).
+        /// </summary>
+        public async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken = default)
+        {
+            if (llmClient != null && !llmClient.IsInitialized)
+            {
+                await llmClient.InitializeAsync(cancellationToken);
+                SubscribeToResilienceEvents(llmClient);
+            }
+        }
+
+        private void SubscribeToResilienceEvents(MultiProviderLLMClient client)
+        {
+            // Subscribe to resilience events
+            if (client.ResilientClient != null)
+            {
+                client.ResilientClient.RequestRetrying += (sender, e) => RequestRetrying?.Invoke(this, e);
             }
         }
 
@@ -431,7 +458,7 @@ Format your answer with markdown for readability.";
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error creating tools for phase {phase}: {ex.Message}");
+                logger?.LogError($"Error creating tools for phase {phase}: {ex.Message}");
                 return Array.Empty<AIFunction>();
             }
         }

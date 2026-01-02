@@ -161,8 +161,10 @@ Options:
                               If omitted, searches for *.binlog in current directory
   --recurse                   Search subdirectories for binlog files
   -llm-endpoint:<url>         LLM endpoint URL (overrides LLM_ENDPOINT env var)
+                              Use 'github-copilot' for GitHub Copilot
   -llm-model:<model>          LLM model name (overrides LLM_MODEL env var)
   -llm-api-key:<key>          LLM API key (overrides LLM_API_KEY env var)
+                              For GitHub Copilot: use GitHub token (optional - device flow if omitted)
   -mode:<agent|singleshot>    Execution mode (default: agent)
   -interactive                Enter interactive REPL mode
   -verbose                    Show detailed progress and tool results
@@ -170,9 +172,9 @@ Options:
   -help                       Show this help message
 
 Environment Variables:
-  LLM_ENDPOINT                LLM service endpoint URL
+  LLM_ENDPOINT                LLM service endpoint URL or 'github-copilot'
   LLM_MODEL                   Model name (e.g., claude-sonnet-4-5-2, gpt-4)
-  LLM_API_KEY                 API key for authentication
+  LLM_API_KEY                 API key or GitHub token (optional for Copilot device flow)
 
 Examples:
   binlogtool prompt why is this build slow
@@ -180,12 +182,17 @@ Examples:
   binlogtool prompt -binlog:custom.binlog what errors occurred
   binlogtool prompt -interactive
   binlogtool prompt -verbose -llm-api-key:abc analyze the build
+  
+  # GitHub Copilot examples:
+  binlogtool prompt -llm-endpoint:github-copilot -llm-api-key:ghu_... why did the build fail
+  binlogtool prompt -llm-endpoint:copilot -interactive
 
 Notes:
   - All options must come before the prompt text
   - Prompt text can contain spaces and special characters
   - Agent mode breaks down complex queries into research tasks
   - SingleShot mode gives direct answers without planning
+  - GitHub Copilot supports device flow authentication (no API key needed)
 ");
         }
     }

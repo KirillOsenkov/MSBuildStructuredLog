@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Extensions.AI;
+using StructuredLogger.LLM.Logging;
 
 namespace StructuredLogger.LLM
 {
@@ -20,6 +21,7 @@ namespace StructuredLogger.LLM
         private readonly LLMConfiguration configuration;
         private readonly List<ChatMessage> chatHistory;
         private BaseNode? currentSelectedNode;
+        private readonly ILLMLogger? logger;
 
         // Token management settings
         private const int MaxPromptTokens = 180000; // Leave buffer below 200k limit
@@ -35,12 +37,13 @@ namespace StructuredLogger.LLM
         public bool IsConfigured => configuration?.IsConfigured ?? false;
         public string ConfigurationStatus => configuration?.GetConfigurationStatus() ?? "Not initialized";
 
-        public LLMChatService(Build build, LLMConfiguration? config = null)
+        public LLMChatService(Build build, LLMConfiguration? config = null, ILLMLogger? logger = null)
         {
             this.contextProvider = new BinlogContextProvider(build);
             this.toolContainers = new List<IToolsContainer>();
             this.chatHistory = new List<ChatMessage>();
             this.configuration = config ?? LLMConfiguration.LoadFromEnvironment();
+            this.logger = logger;
 
             // Register default tool executors
             RegisterToolContainer(new BinlogToolExecutor(build));
@@ -60,7 +63,9 @@ namespace StructuredLogger.LLM
         public void RegisterToolContainer(IToolsContainer container)
         {
             if (container == null)
+            {
                 throw new ArgumentNullException(nameof(container));
+            }
 
             toolContainers.Add(container);
         }
@@ -71,19 +76,43 @@ namespace StructuredLogger.LLM
             {
                 try
                 {
-                    var client = new MultiProviderLLMClient(configuration);
+                    var client = new MultiProviderLLMClient(configuration, logger: logger);
                     this.llmClient = client;
                     
-                    // Subscribe to resilience events
-                    if (client.ResilientClient != null)
+                    // For non-GitHub Copilot, client is ready immediately
+                    // For GitHub Copilot, InitializeAsync must be called before use
+                    if (client.IsInitialized)
                     {
-                        client.ResilientClient.RequestRetrying += (sender, e) => RequestRetrying?.Invoke(this, e);
+                        SubscribeToResilienceEvents(client);
                     }
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Failed to initialize LLM client: {ex.Message}");
+                    logger?.LogError($"Failed to initialize LLM client: {ex.Message}");
                 }
+            }
+        }
+
+        /// <summary>
+        /// Initializes the LLM client asynchronously.
+        /// Required for GitHub Copilot clients (for device flow authentication).
+        /// No-op for other providers (already initialized synchronously).
+        /// </summary>
+        public async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken = default)
+        {
+            if (llmClient != null && !llmClient.IsInitialized)
+            {
+                await llmClient.InitializeAsync(cancellationToken);
+                SubscribeToResilienceEvents(llmClient);
+            }
+        }
+
+        private void SubscribeToResilienceEvents(MultiProviderLLMClient client)
+        {
+            // Subscribe to resilience events
+            if (client.ResilientClient != null)
+            {
+                client.ResilientClient.RequestRetrying += (sender, e) => RequestRetrying?.Invoke(this, e);
             }
         }
 
@@ -106,7 +135,9 @@ namespace StructuredLogger.LLM
         public void Reconfigure(LLMConfiguration newConfig)
         {
             if (newConfig == null)
+            {
                 throw new ArgumentNullException(nameof(newConfig));
+            }
 
             // Update configuration properties
             configuration.Endpoint = newConfig.Endpoint;
@@ -152,7 +183,7 @@ Available context:
                 .Skip(chatHistory.Count - MaxChatHistoryMessages)
                 .ToList();
 
-            System.Diagnostics.Debug.WriteLine(
+            logger?.LogVerbose(
                 $"Chat history trimmed from {chatHistory.Count} to {trimmedHistory.Count} messages");
 
             return trimmedHistory;
@@ -183,18 +214,18 @@ Available context:
                     }
                 }
 
-                System.Diagnostics.Debug.WriteLine($"Registered {tools.Count} tools for phase {phase}:");
+                logger?.LogVerbose($"Registered {tools.Count} tools for phase {phase}:");
                 foreach (var tool in tools)
                 {
-                    System.Diagnostics.Debug.WriteLine($"  - {tool.Name}: {tool.Description}");
+                    logger?.LogVerbose($"  - {tool.Name}: {tool.Description ?? "(no description)"}");
                 }
 
                 return tools.ToArray();
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error creating tools: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine(ex.StackTrace);
+                logger?.LogError($"Error creating tools: {ex.Message}");
+                logger?.LogVerbose(ex.StackTrace ?? "(no stack trace)");
                 return Array.Empty<AIFunction>();
             }
         }
@@ -218,7 +249,8 @@ Available context:
                 var errorMsg = "LLM is not configured. Please set the required environment variables:\n" +
                              "- LLM_ENDPOINT (your Azure endpoint)\n" +
                              "- LLM_API_KEY (your API key)\n" +
-                             "- LLM_MODEL (model name, e.g., gpt-4)";
+                             "- LLM_MODEL (model name, e.g., gpt-4)\n\n" +
+                             "Or use 'Configure' menu to configure/login.";
                 
                 MessageAdded?.Invoke(this, new ChatMessageViewModel("System", errorMsg, isError: true));
                 return errorMsg;
@@ -266,7 +298,7 @@ Available context:
                     Temperature = 0.7f
                 };
 
-                System.Diagnostics.Debug.WriteLine($"ChatOptions.Tools count: {options.Tools?.Count ?? 0}");
+                logger?.LogVerbose($"ChatOptions.Tools count: {options.Tools?.Count ?? 0}");
 
                 var response = await llmClient!.CompleteChatAsync(
                     messages, 

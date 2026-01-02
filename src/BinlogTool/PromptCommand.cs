@@ -1,10 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Logging.StructuredLogger;
 using StructuredLogger.LLM;
+using StructuredLogger.LLM.Logging;
 
 namespace BinlogTool
 {
@@ -93,6 +94,33 @@ namespace BinlogTool
 
                 // Configure LLM
                 var llmConfig = config.ToLLMConfiguration();
+                
+                // If GitHub Copilot is not configured (no API key), trigger device flow
+                if (!llmConfig.IsConfigured && llmConfig.Type == LLMConfiguration.ClientType.GitHubCopilot)
+                {
+                    logger.LogSystem("GitHub Copilot selected but no API key provided. Initiating device flow authentication...");
+                    logger.LogSystem("");
+                    
+                    try
+                    {
+                        using var authenticator = new StructuredLogger.LLM.Clients.GitHub.GitHubDeviceFlowAuthenticator();
+                        var githubToken = await authenticator.AuthenticateAsync(cancellationTokenSource.Token);
+                        
+                        // Update configuration with obtained token
+                        llmConfig.ApiKey = githubToken;
+                        
+                        logger.LogSystem("");
+                        logger.LogSystem("✓ Authentication successful!");
+                        logger.LogSystem("");
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError($"Authentication failed: {ex.Message}");
+                        return -2;
+                    }
+                }
+                
+                // Check if configuration is complete
                 if (!llmConfig.IsConfigured)
                 {
                     logger.LogError("LLM is not configured.");
@@ -101,6 +129,8 @@ namespace BinlogTool
                     logger.LogSystem("  LLM_MODEL - Model name (e.g., claude-sonnet-4-5-2, gpt-4)");
                     logger.LogSystem("  LLM_API_KEY - API key for authentication");
                     logger.LogSystem("Or use command-line options: -llm-endpoint, -llm-model, -llm-api-key");
+                    logger.LogSystem("");
+                    logger.LogSystem("For GitHub Copilot, set LLM_ENDPOINT to 'github-copilot' and device flow will be used.");
                     return -2;
                 }
 
@@ -166,7 +196,11 @@ namespace BinlogTool
                 if (llmConfig.AgentMode)
                 {
                     // Agent mode - multi-step reasoning
-                    var agenticService = new AgenticLLMChatService(build, llmConfig);
+                    var loggerAdapter = new CliLoggerAdapter(logger);
+                    var agenticService = new AgenticLLMChatService(build, llmConfig, loggerAdapter);
+                    
+                    // Initialize async (required for GitHub Copilot)
+                    await agenticService.InitializeAsync(cancellationToken);
                     
                     // Subscribe to events
                     agenticService.ProgressUpdated += reporter.OnAgentProgress;
@@ -184,7 +218,11 @@ namespace BinlogTool
                 else
                 {
                     // Single-shot mode - direct Q&A
-                    var chatService = new LLMChatService(build, llmConfig);
+                    var loggerAdapter = new CliLoggerAdapter(logger);
+                    var chatService = new LLMChatService(build, llmConfig, loggerAdapter);
+                    
+                    // Initialize async (required for GitHub Copilot)
+                    await chatService.InitializeAsync(cancellationToken);
                     
                     // Subscribe to events
                     chatService.MessageAdded += reporter.OnMessage;
@@ -225,14 +263,17 @@ namespace BinlogTool
             AgenticLLMChatService agenticService = null;
 
             // Initialize appropriate service
-            void InitializeServices()
+            async System.Threading.Tasks.Task InitializeServicesAsync()
             {
                 chatService?.Dispose();
                 agenticService?.Dispose();
 
+                var loggerAdapter = new CliLoggerAdapter(logger);
+
                 if (llmConfig.AgentMode)
                 {
-                    agenticService = new AgenticLLMChatService(build, llmConfig);
+                    agenticService = new AgenticLLMChatService(build, llmConfig, loggerAdapter);
+                    await agenticService.InitializeAsync(cancellationToken);
                     agenticService.ProgressUpdated += reporter.OnAgentProgress;
                     agenticService.MessageAdded += reporter.OnMessage;
                     agenticService.ToolCallExecuting += reporter.OnToolCallStarted;
@@ -241,7 +282,8 @@ namespace BinlogTool
                 }
                 else
                 {
-                    chatService = new LLMChatService(build, llmConfig);
+                    chatService = new LLMChatService(build, llmConfig, loggerAdapter);
+                    await chatService.InitializeAsync(cancellationToken);
                     chatService.MessageAdded += reporter.OnMessage;
                     chatService.ToolCallExecuting += reporter.OnToolCallStarted;
                     chatService.ToolCallExecuted += reporter.OnToolCallCompleted;
@@ -249,7 +291,7 @@ namespace BinlogTool
                 }
             }
 
-            InitializeServices();
+            await InitializeServicesAsync();
 
             while (!cancellationToken.IsCancellationRequested)
             {
@@ -283,13 +325,13 @@ namespace BinlogTool
                     if (mode.Equals("agent", StringComparison.OrdinalIgnoreCase))
                     {
                         llmConfig.AgentMode = true;
-                        InitializeServices();
+                        await InitializeServicesAsync();
                         logger.LogSystem("Switched to Agent mode.");
                     }
                     else if (mode.Equals("singleshot", StringComparison.OrdinalIgnoreCase))
                     {
                         llmConfig.AgentMode = false;
-                        InitializeServices();
+                        await InitializeServicesAsync();
                         logger.LogSystem("Switched to Single-Shot mode.");
                     }
                     else
