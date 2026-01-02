@@ -42,6 +42,7 @@ namespace StructuredLogger.LLM
             // Register default tool executors
             RegisterToolContainer(new BinlogToolExecutor(build));
             RegisterToolContainer(new EmbeddedFilesToolExecutor(build));
+            RegisterToolContainer(new ListEventsToolExecutor(build));
 
             if (configuration.IsConfigured)
             {

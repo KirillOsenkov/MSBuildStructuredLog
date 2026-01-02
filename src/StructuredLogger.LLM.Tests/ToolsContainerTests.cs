@@ -120,7 +120,7 @@ public class ToolsContainerTests
 
         // Assert
         allTools.Should().NotBeEmpty();
-        allTools.Should().HaveCount(8, "BinlogToolExecutor(5) + EmbeddedFilesToolExecutor(3) = 8");
+        allTools.Should().HaveCount(9, "BinlogToolExecutor(5) + EmbeddedFilesToolExecutor(3) + ListEventsToolExecutor(1) = 9");
     }
 
     [Fact]
