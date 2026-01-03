@@ -159,5 +159,22 @@ namespace StructuredLogger.LLM
                    "The system will automatically detect the provider based on the endpoint.\n" +
                    "GUI/CLI provides additional configuration options.";
         }
+
+        /// <summary>
+        /// Loads configuration from persisted settings.
+        /// </summary>
+        public static LLMConfiguration LoadFromPersisted()
+        {
+            // This will be implemented in the UI layer that has access to SettingsService
+            return new LLMConfiguration();
+        }
+
+        /// <summary>
+        /// Saves configuration to persisted settings.
+        /// </summary>
+        public void SaveToPersisted()
+        {
+            // This will be implemented in the UI layer that has access to SettingsService
+        }
     }
 }

@@ -37,12 +37,12 @@ namespace StructuredLogger.LLM
         public bool IsConfigured => configuration?.IsConfigured ?? false;
         public string ConfigurationStatus => configuration?.GetConfigurationStatus() ?? "Not initialized";
 
-        public LLMChatService(Build build, LLMConfiguration? config = null, ILLMLogger? logger = null)
+        private LLMChatService(Build build, LLMConfiguration config, ILLMLogger? logger)
         {
             this.contextProvider = new BinlogContextProvider(build);
             this.toolContainers = new List<IToolsContainer>();
             this.chatHistory = new List<ChatMessage>();
-            this.configuration = config ?? LLMConfiguration.LoadFromEnvironment();
+            this.configuration = config;
             this.logger = logger;
 
             // Register default tool executors
@@ -50,11 +50,28 @@ namespace StructuredLogger.LLM
             RegisterToolContainer(new EmbeddedFilesToolExecutor(build));
             RegisterToolContainer(new ListEventsToolExecutor(build));
             RegisterToolContainer(new ResultsToolExecutor());
+        }
 
-            if (configuration.IsConfigured)
-            {
-                InitializeLLMClient();
-            }
+        /// <summary>
+        /// Creates and initializes a new instance of LLMChatService.
+        /// </summary>
+        /// <param name="build">The build to analyze.</param>
+        /// <param name="config">Optional LLM configuration. If null, loads from environment.</param>
+        /// <param name="logger">Optional logger for diagnostics.</param>
+        /// <param name="cancellationToken">Cancellation token for async initialization.</param>
+        /// <returns>A fully initialized LLMChatService instance.</returns>
+        public static async System.Threading.Tasks.Task<LLMChatService> CreateAsync(
+            Build build, 
+            LLMConfiguration? config = null, 
+            ILLMLogger? logger = null,
+            CancellationToken cancellationToken = default)
+        {
+            var configuration = config ?? LLMConfiguration.LoadFromEnvironment();
+            var service = new LLMChatService(build, configuration, logger);
+            
+            await service.InitializeLLMClientAsync(cancellationToken);
+            
+            return service;
         }
 
         /// <summary>
@@ -71,40 +88,25 @@ namespace StructuredLogger.LLM
             toolContainers.Add(container);
         }
 
-        private void InitializeLLMClient()
+        private async System.Threading.Tasks.Task InitializeLLMClientAsync(CancellationToken cancellationToken)
         {
-            if (configuration.IsConfigured)
+            if (!configuration.IsConfigured)
             {
-                try
-                {
-                    var client = new MultiProviderLLMClient(configuration, logger: logger);
-                    this.llmClient = client;
-                    
-                    // For non-GitHub Copilot, client is ready immediately
-                    // For GitHub Copilot, InitializeAsync must be called before use
-                    if (client.IsInitialized)
-                    {
-                        SubscribeToResilienceEvents(client);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    logger?.LogError($"Failed to initialize LLM client: {ex.Message}");
-                }
+                return;
             }
-        }
 
-        /// <summary>
-        /// Initializes the LLM client asynchronously.
-        /// Required for GitHub Copilot clients (for device flow authentication).
-        /// No-op for other providers (already initialized synchronously).
-        /// </summary>
-        public async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken = default)
-        {
-            if (llmClient != null && !llmClient.IsInitialized)
+            try
             {
-                await llmClient.InitializeAsync(cancellationToken);
-                SubscribeToResilienceEvents(llmClient);
+                var client = new MultiProviderLLMClient(configuration, logger: logger);
+                await client.InitializeAsync(cancellationToken);
+                this.llmClient = client;
+                
+                SubscribeToResilienceEvents(client);
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError($"Failed to initialize LLM client: {ex.Message}");
+                throw;
             }
         }
 
@@ -133,7 +135,7 @@ namespace StructuredLogger.LLM
             return configuration;
         }
 
-        public void Reconfigure(LLMConfiguration newConfig)
+        public async System.Threading.Tasks.Task ReconfigureAsync(LLMConfiguration newConfig, CancellationToken cancellationToken = default)
         {
             if (newConfig == null)
             {
@@ -149,7 +151,7 @@ namespace StructuredLogger.LLM
             configuration.UpdateType();
 
             // Reinitialize with new settings
-            InitializeLLMClient();
+            await InitializeLLMClientAsync(cancellationToken);
 
             // Keep chat history - don't clear
         }

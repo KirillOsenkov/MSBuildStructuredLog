@@ -148,12 +148,45 @@ namespace StructuredLogViewer.Controls
                 });
             }, LoggingLevel.Normal);
             
-            // Load configuration
-            currentConfig = LLMConfiguration.LoadFromEnvironment();
+            // Load configuration from persisted settings or environment
+            currentConfig = LLMConfigurationDialog.LoadPersistedConfiguration();
             chatLogger.Level = currentConfig.LoggingLevel;
             
-            // Create and configure LLM services
-            CreateLLMServices();
+            // Create and configure LLM services asynchronously
+            _ = CreateLLMServicesAsync().ContinueWith(t =>
+            {
+                if (t.IsFaulted)
+                {
+                    var exception = t.Exception?.GetBaseException();
+                    
+                    Dispatcher.Invoke(() =>
+                    {
+                        // Check if it's an authentication error
+                        if (exception is UnauthorizedAccessException)
+                        {
+                            // Clear invalid persisted credentials
+                            SettingsService.ClearLLMConfiguration();
+                            
+                            AddMessage(new ChatMessageDisplay
+                            {
+                                Role = "System",
+                                Content = $"⚠️ Authentication Error\n\n{exception.Message}\n\n" +
+                                         "Your saved credentials have been cleared. Please click 'Configure' to re-authenticate.",
+                                IsError = true
+                            });
+                        }
+                        else
+                        {
+                            AddMessage(new ChatMessageDisplay
+                            {
+                                Role = "System",
+                                Content = $"Failed to initialize LLM services: {exception?.Message}",
+                                IsError = true
+                            });
+                        }
+                    });
+                }
+            });
             
             isInitialized = true;
 
@@ -186,7 +219,7 @@ namespace StructuredLogViewer.Controls
             }
         }
 
-        private void CreateLLMServices()
+        private async System.Threading.Tasks.Task CreateLLMServicesAsync()
         {
             if (Build == null)
             {
@@ -198,7 +231,7 @@ namespace StructuredLogViewer.Controls
             AgenticLLMChatService? oldAgenticChatService = agenticChatService;
             
             // Create new chat service with logger
-            chatService = new LLMChatService(Build, null, chatLogger);
+            chatService = await LLMChatService.CreateAsync(Build, null, chatLogger);
             chatService.MessageAdded += OnMessageAdded;
             chatService.ConversationCleared += OnConversationCleared;
             chatService.ToolCallExecuting += OnToolCallExecuting;
@@ -215,13 +248,13 @@ namespace StructuredLogViewer.Controls
             // Reconfigure with current config if available
             if (currentConfig != null)
             {
-                chatService.Reconfigure(currentConfig);
+                await chatService.ReconfigureAsync(currentConfig);
             }
             
             // Create agentic service if configured
             if (currentConfig?.IsConfigured == true)
             {
-                agenticChatService = new AgenticLLMChatService(Build, currentConfig, chatLogger);
+                agenticChatService = await AgenticLLMChatService.CreateAsync(Build, currentConfig, chatLogger);
                 
                 // Register UI interaction tools for agentic service
                 if (BuildControl != null)
@@ -235,40 +268,9 @@ namespace StructuredLogViewer.Controls
                 agenticChatService.ToolCallExecuting += OnToolCallExecuting;
                 agenticChatService.ToolCallExecuted += OnToolCallExecuted;
                 agenticChatService.RequestRetrying += OnRequestRetrying;
-
-                // Initialize services asynchronously (needed for GitHub Copilot device flow)
-                _ = InitializeServicesAsync();
             }
 
-            System.Threading.Tasks.Task.Delay(1000).ContinueWith(t => { oldChatService?.Dispose(); oldAgenticChatService?.Dispose(); });
-        }
-
-        private async System.Threading.Tasks.Task InitializeServicesAsync()
-        {
-            try
-            {
-                if (chatService != null)
-                {
-                    await chatService.InitializeAsync();
-                }
-
-                if (agenticChatService != null)
-                {
-                    await agenticChatService.InitializeAsync();
-                }
-            }
-            catch (Exception ex)
-            {
-                Dispatcher.Invoke(() =>
-                {
-                    AddMessage(new ChatMessageDisplay
-                    {
-                        Role = "System",
-                        Content = $"Failed to initialize LLM services: {ex.Message}",
-                        IsError = true
-                    });
-                });
-            }
+            _ = System.Threading.Tasks.Task.Delay(1000).ContinueWith(t => { oldChatService?.Dispose(); oldAgenticChatService?.Dispose(); });
         }
 
         public void SetSelectedNode(BaseNode node)
@@ -462,7 +464,7 @@ namespace StructuredLogViewer.Controls
             }
             
             // Recreate service instances to prevent any late events
-            CreateLLMServices();
+            _ = CreateLLMServicesAsync();
             
             // Update UI state
             SetQueryIdle();
@@ -572,6 +574,21 @@ namespace StructuredLogViewer.Controls
                 };
                 timer.Start();
             }
+            catch (UnauthorizedAccessException uaEx)
+            {
+                // GitHub token expired or invalid - clear persisted config and prompt user
+                SettingsService.ClearLLMConfiguration();
+                
+                AddMessage(new ChatMessageDisplay
+                {
+                    Role = "System",
+                    Content = $"⚠️ Authentication Error\n\n{uaEx.Message}\n\n" +
+                             "Your saved credentials have been cleared. Please click 'Configure' to re-authenticate.",
+                    IsError = true
+                });
+                
+                ShowStatus("Authentication failed - please reconfigure", isError: true);
+            }
             catch (Exception ex)
             {
                 ShowStatus($"Error: {ex.Message}", isError: true);
@@ -643,7 +660,7 @@ namespace StructuredLogViewer.Controls
         private void ConfigureButton_Click(object sender, RoutedEventArgs e)
         {
             // Get current configuration
-            var configForDialog = this.currentConfig ?? LLMConfiguration.LoadFromEnvironment();
+            var configForDialog = this.currentConfig ?? LLMConfigurationDialog.LoadPersistedConfiguration();
             var wasConfigured = chatService?.IsConfigured ?? false;
             var oldAgentMode = configForDialog.AgentMode;
             
@@ -714,12 +731,12 @@ namespace StructuredLogViewer.Controls
                     // Only recreate services if model settings actually changed
                     if (needsServiceRecreation)
                     {
-                        CreateLLMServices();
+                        _ = CreateLLMServicesAsync();
                     }
                     else if (chatService != null)
                     {
                         // Just reconfigure existing service with new settings
-                        chatService.Reconfigure(newConfig);
+                        _ = chatService.ReconfigureAsync(newConfig);
                     }
                     
                     // Update agent mode toggle enablement

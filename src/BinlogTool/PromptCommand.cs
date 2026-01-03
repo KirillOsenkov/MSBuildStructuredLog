@@ -197,10 +197,7 @@ namespace BinlogTool
                 {
                     // Agent mode - multi-step reasoning
                     var loggerAdapter = new CliLoggerAdapter(logger);
-                    var agenticService = new AgenticLLMChatService(build, llmConfig, loggerAdapter);
-                    
-                    // Initialize async (required for GitHub Copilot)
-                    await agenticService.InitializeAsync(cancellationToken);
+                    var agenticService = await AgenticLLMChatService.CreateAsync(build, llmConfig, loggerAdapter, cancellationToken);
                     
                     // Subscribe to events
                     agenticService.ProgressUpdated += reporter.OnAgentProgress;
@@ -219,10 +216,7 @@ namespace BinlogTool
                 {
                     // Single-shot mode - direct Q&A
                     var loggerAdapter = new CliLoggerAdapter(logger);
-                    var chatService = new LLMChatService(build, llmConfig, loggerAdapter);
-                    
-                    // Initialize async (required for GitHub Copilot)
-                    await chatService.InitializeAsync(cancellationToken);
+                    var chatService = await LLMChatService.CreateAsync(build, llmConfig, loggerAdapter, cancellationToken);
                     
                     // Subscribe to events
                     chatService.MessageAdded += reporter.OnMessage;
@@ -272,8 +266,7 @@ namespace BinlogTool
 
                 if (llmConfig.AgentMode)
                 {
-                    agenticService = new AgenticLLMChatService(build, llmConfig, loggerAdapter);
-                    await agenticService.InitializeAsync(cancellationToken);
+                    agenticService = await AgenticLLMChatService.CreateAsync(build, llmConfig, loggerAdapter, cancellationToken);
                     agenticService.ProgressUpdated += reporter.OnAgentProgress;
                     agenticService.MessageAdded += reporter.OnMessage;
                     agenticService.ToolCallExecuting += reporter.OnToolCallStarted;
@@ -282,8 +275,7 @@ namespace BinlogTool
                 }
                 else
                 {
-                    chatService = new LLMChatService(build, llmConfig, loggerAdapter);
-                    await chatService.InitializeAsync(cancellationToken);
+                    chatService = await LLMChatService.CreateAsync(build, llmConfig, loggerAdapter, cancellationToken);
                     chatService.MessageAdded += reporter.OnMessage;
                     chatService.ToolCallExecuting += reporter.OnToolCallStarted;
                     chatService.ToolCallExecuted += reporter.OnToolCallCompleted;
