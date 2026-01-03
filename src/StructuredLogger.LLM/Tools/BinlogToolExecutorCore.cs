@@ -21,16 +21,6 @@ namespace StructuredLogger.LLM
             this.build = build ?? throw new ArgumentNullException(nameof(build));
         }
 
-        private string TruncateIfNeeded(string result)
-        {
-            const int maxChars = MaxOutputTokensPerTool * 4; // Conservative estimate
-            if (result.Length > maxChars)
-            {
-                return result.Substring(0, maxChars) + "\n\n[Output truncated due to length. Use more specific queries or filters.]";
-            }
-            return result;
-        }
-
         public string GetBuildSummary()
         {
             var sb = new StringBuilder();
@@ -176,7 +166,7 @@ namespace StructuredLogger.LLM
                     sb.AppendLine($"(Showing first {maxResults} results. Refine your query for more specific results.)");
                 }
 
-                return TruncateIfNeeded(sb.ToString());
+                return sb.ToString();
             }
             catch (Exception ex)
             {
@@ -261,7 +251,7 @@ namespace StructuredLogger.LLM
                 sb.AppendLine("No warnings found.");
             }
 
-            return TruncateIfNeeded(sb.ToString());
+            return sb.ToString();
         }
 
         public string GetProjects(int maxResults = 50)
@@ -313,7 +303,7 @@ namespace StructuredLogger.LLM
                 sb.AppendLine($"... and {projects.Count - maxResults} more projects");
             }
 
-            return TruncateIfNeeded(sb.ToString());
+            return sb.ToString();
         }
 
         public string GetProjectTargets(string projectName)
@@ -365,7 +355,7 @@ namespace StructuredLogger.LLM
                 sb.AppendLine();
             }
 
-            return TruncateIfNeeded(sb.ToString());
+            return sb.ToString();
         }
     }
 }

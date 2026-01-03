@@ -49,6 +49,7 @@ namespace StructuredLogger.LLM
             RegisterToolContainer(new BinlogToolExecutor(build));
             RegisterToolContainer(new EmbeddedFilesToolExecutor(build));
             RegisterToolContainer(new ListEventsToolExecutor(build));
+            RegisterToolContainer(new ResultsToolExecutor());
 
             if (configuration.IsConfigured)
             {
