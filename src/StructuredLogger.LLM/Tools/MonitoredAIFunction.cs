@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,10 +13,21 @@ namespace StructuredLogger.LLM
     /// <summary>
     /// Wraps an AIFunction to monitor and capture tool call executions.
     /// Raises events when tool calls start and complete, including timing and result information.
+    /// Also catalogs results in ResultManager for later search and retrieval.
     /// </summary>
     public class MonitoredAIFunction : AIFunction
     {
         private readonly AIFunction innerFunction;
+        private readonly ResultManager resultManager;
+        private const int MaxOutputTokensPerTool = 3000; // Roughly 12,000 characters
+
+        // Tools that should NOT be cataloged
+        private static readonly HashSet<string> NonCatalogedTools = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "ListResults",
+            "SearchResult",
+            "GetBuildSummary"  // Small, typically not truncated
+        };
 
         public event EventHandler<ToolCallInfo>? ToolCallStarted;
         public event EventHandler<ToolCallInfo>? ToolCallCompleted;
@@ -23,6 +35,7 @@ namespace StructuredLogger.LLM
         public MonitoredAIFunction(AIFunction innerFunction)
         {
             this.innerFunction = innerFunction ?? throw new ArgumentNullException(nameof(innerFunction));
+            this.resultManager = ResultManager.Instance;
         }
 
         // Delegate properties to inner function
@@ -73,7 +86,18 @@ namespace StructuredLogger.LLM
                 var result = await innerFunction.InvokeAsync(correctedArguments, cancellationToken);
                 
                 toolCallInfo.EndTime = DateTime.Now;
-                toolCallInfo.ResultText = result?.ToString() ?? "(no result)";
+                
+                // Handle string results - catalog and potentially truncate
+                if (result is string stringResult && !NonCatalogedTools.Contains(Name))
+                {
+                    var (catalogedResult, resultId) = CatalogAndTruncateResult(Name, correctedArguments, stringResult);
+                    toolCallInfo.ResultText = catalogedResult;
+                    result = catalogedResult;
+                }
+                else
+                {
+                    toolCallInfo.ResultText = result?.ToString() ?? "(no result)";
+                }
                 
                 // Raise completion event
                 ToolCallCompleted?.Invoke(this, toolCallInfo);
@@ -291,6 +315,103 @@ namespace StructuredLogger.LLM
             }
 
             return (paramNames, requiredNames);
+        }
+
+        /// <summary>
+        /// Catalogs a result in ResultManager, truncates if needed, and prepends metadata.
+        /// Returns the (potentially truncated) result with metadata and the ResultId.
+        /// </summary>
+        private (string resultWithMetadata, string resultId) CatalogAndTruncateResult(
+            string toolName, AIFunctionArguments arguments, string fullResult)
+        {
+            try
+            {
+                // Format arguments as invocation expression
+                string argsExpression = FormatArgumentsExpression(arguments);
+
+                // Determine if truncation is needed
+                const int maxChars = MaxOutputTokensPerTool * 4;
+                string returnedResult;
+                bool needsTruncation = fullResult.Length > maxChars;
+                
+                if (needsTruncation)
+                {
+                    returnedResult = fullResult.Substring(0, maxChars) +
+                        "\n\n[Output truncated. Use more specific queries or filters. Or use SearchResult to find specific content in this untruncated result.]";
+                }
+                else
+                {
+                    returnedResult = fullResult;
+                }
+
+                // Store in ResultManager (it will calculate truncation percentage)
+                string resultId = resultManager.StoreResult(toolName, argsExpression, fullResult, returnedResult);
+                
+                // Prepend metadata to the returned result
+                string resultWithMetadata = resultManager.PrependMetadata(resultId, returnedResult);
+                
+                return (resultWithMetadata, resultId);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to catalog result: {ex.Message}");
+                // Return original result without metadata if cataloging fails
+                return (fullResult, string.Empty);
+            }
+        }
+
+        /// <summary>
+        /// Formats arguments as a readable invocation expression.
+        /// Example: query="*restore*", maxResults=10
+        /// </summary>
+        private string FormatArgumentsExpression(AIFunctionArguments arguments)
+        {
+            var parts = new List<string>();
+            
+            foreach (var arg in arguments)
+            {
+                var value = arg.Value;
+                string formattedValue;
+
+                if (value == null)
+                {
+                    formattedValue = "null";
+                }
+                else if (value is string stringValue)
+                {
+                    // Escape quotes in string values
+                    formattedValue = $"\"{stringValue.Replace("\"", "\"\"")}\"";
+                }
+                else if (value is bool boolValue)
+                {
+                    formattedValue = boolValue ? "true" : "false";
+                }
+                else if (value is System.Collections.IEnumerable enumerable && !(value is string))
+                {
+                    // Format arrays/lists
+                    var items = new List<string>();
+                    foreach (var item in enumerable)
+                    {
+                        if (item is string s)
+                        {
+                            items.Add($"\"{s}\"");
+                        }
+                        else
+                        {
+                            items.Add(item?.ToString() ?? "null");
+                        }
+                    }
+                    formattedValue = $"[{string.Join(", ", items)}]";
+                }
+                else
+                {
+                    formattedValue = value.ToString() ?? "null";
+                }
+
+                parts.Add($"{arg.Key}={formattedValue}");
+            }
+
+            return string.Join(", ", parts);
         }
     }
 }

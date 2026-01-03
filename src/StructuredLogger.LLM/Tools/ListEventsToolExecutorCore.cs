@@ -496,7 +496,7 @@ namespace StructuredLogger.LLM
                 sb.AppendLine("- Verify names match actual project/target/task names");
             }
 
-            return TruncateIfNeeded(sb.ToString());
+            return sb.ToString();
         }
 
         private string FormatDuration(TimeSpan duration)

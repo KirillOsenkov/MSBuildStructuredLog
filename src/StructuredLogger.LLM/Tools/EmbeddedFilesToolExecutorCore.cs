@@ -20,16 +20,6 @@ namespace StructuredLogger.LLM
             this.build = build ?? throw new ArgumentNullException(nameof(build));
         }
 
-        private string TruncateIfNeeded(string result)
-        {
-            const int maxChars = MaxOutputTokensPerTool * 4;
-            if (result.Length > maxChars)
-            {
-                return result.Substring(0, maxChars) + "\n\n[Output truncated due to length. Use more specific filters or patterns.]";
-            }
-            return result;
-        }
-
         public string ListEmbeddedFiles(string? pathPattern = null, int maxResults = 100)
         {
             var sourceFiles = build.SourceFiles;
@@ -106,7 +96,7 @@ namespace StructuredLogger.LLM
                 sb.AppendLine();
             }
 
-            return TruncateIfNeeded(sb.ToString());
+            return sb.ToString();
         }
 
         public string SearchEmbeddedFiles(string searchPattern, string? filePathPattern = null, int maxMatches = 20)
@@ -216,7 +206,7 @@ namespace StructuredLogger.LLM
                 sb.AppendLine($"(Results limited to {maxMatches} matches. Use maxMatches parameter to see more.)");
             }
 
-            return TruncateIfNeeded(sb.ToString());
+            return sb.ToString();
         }
 
         public string ReadEmbeddedFileLines(string filePath, int startLine = 1, int endLine = -1, int maxLines = 100)
@@ -305,7 +295,7 @@ namespace StructuredLogger.LLM
                 result.AppendLine($"(Output limited to {maxLines} lines. Requested {requestedLines} lines.)");
             }
 
-            return TruncateIfNeeded(result.ToString());
+            return result.ToString();
         }
     }
 }
