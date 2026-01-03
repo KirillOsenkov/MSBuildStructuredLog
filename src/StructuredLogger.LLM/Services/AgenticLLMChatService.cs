@@ -174,14 +174,24 @@ namespace StructuredLogger.LLM
 Build Overview:
 {overview}
 
-Create a research plan with 2-{MaxResearchTasks} specific tasks to answer this question.
-Return ONLY a JSON object with this exact structure (no markdown, no extra text):
+Analyze this question carefully. Think through:
+- What information is needed to answer this question?
+- What specific aspects of the build should be investigated?
+- Which tools would be most appropriate for each investigation?
+- Are there any ambiguities that you will not be able to resolve yourself and that absolutely need clarification from the user?
+
+You can use the available tools (including AskUser if the question is ambiguous) to help you plan better.
+
+After your analysis, create a research plan with 2-{MaxResearchTasks} specific tasks.
+End your response with the plan in JSON format:
+```json
 {{
   ""tasks"": [
     {{""id"": ""task1"", ""description"": ""Brief description"", ""goal"": ""Specific investigation goal""}},
     {{""id"": ""task2"", ""description"": ""Brief description"", ""goal"": ""Specific investigation goal""}}
   ]
-}}";
+}}
+```";
 
             var messages = new List<ChatMessage>
             {
@@ -189,20 +199,30 @@ Return ONLY a JSON object with this exact structure (no markdown, no extra text)
                 new ChatMessage(ChatRole.User, userPrompt)
             };
 
-            // Get tools for planning phase (minimal tools)
+            // Get tools for planning phase (including AskUser)
             var planningTools = GetToolsForPhase(AgentPhase.Planning);
 
             var options = new ChatOptions
             {
                 Tools = planningTools,
-                Temperature = 0.3f
+                Temperature = 0.4f // Slightly higher to encourage thinking
             };
 
             var response = await llmClient!.CompleteChatAsync(messages, options, cancellationToken);
-            var planJson = response.Text?.Trim() ?? "";
+            var fullResponse = response.Text?.Trim() ?? "";
 
-            // Try to extract JSON if wrapped in markdown
-            planJson = ExtractJsonFromResponse(planJson);
+            // Separate thinking from plan JSON
+            var (thinking, planJson) = ExtractThinkingAndPlan(fullResponse);
+            
+            // Store the thinking
+            if (!string.IsNullOrWhiteSpace(thinking))
+            {
+                plan.PlanningThinking = thinking;
+                RaiseMessage(new ChatMessageViewModel(
+                    "Assistant",
+                    $"**Planning Analysis:**\n\n{thinking}"
+                ));
+            }
 
             // Parse the plan
             try
@@ -488,33 +508,48 @@ Format your answer with markdown for readability.";
             ProgressUpdated?.Invoke(this, new AgentProgressEventArgs(plan, message, isError));
         }
 
+        private void RaiseMessage(ChatMessageViewModel message)
+        {
+            MessageAdded?.Invoke(this, message);
+        }
+
         #region System Prompts
 
         private string GetPlanningSystemPrompt(string researchToolDescriptions)
         {
             return $@"You are an expert MSBuild log analyzer creating a research plan.
 
-Your task: Break down the user's question into 2-{MaxResearchTasks} specific research tasks.
-Each task should:
+Your task: Analyze the user's question and create a research plan with 2-{MaxResearchTasks} specific tasks.
+
+You have access to tools during planning:
+- **AskUser**: Use this if the user's question is ambiguous or unclear. Don't hesitate to ask for clarification.
+- Other planning tools as available
+
+First, think through the question:
+1. What are the key aspects that need investigation?
+2. What tools would be most effective for gathering information?
+3. Is the question clear or ambiguous? If you are very unclear about requirements, consider using AskUser to clarify.
+
+Then create specific research tasks. Each task should:
 - Have a clear, specific goal
 - Be designed to use the tools that will be available to the research agents
 - Produce findings that contribute to answering the user's question
 
-The research agents will have access to the following tools:
+The research agents will have access to these tools:
 
 {researchToolDescriptions}
 
-Consider these tools when designing your research plan. All tools are read-only - same as the actual overall investigation you are planning. Each task should leverage the appropriate tools to gather the necessary information.
+Consider these tools when designing your research plan. All tools are read-only. Each task should leverage the appropriate tools to gather the necessary information.
 
-Output ONLY valid JSON in this exact format:
+After your thinking and any tool calls, end your response with the plan in JSON format:
+```json
 {{
   ""tasks"": [
     {{""id"": ""task1"", ""description"": ""Brief description"", ""goal"": ""Specific investigation goal""}},
     {{""id"": ""task2"", ""description"": ""Brief description"", ""goal"": ""Specific investigation goal""}}
   ]
 }}
-
-Do not include markdown formatting or any text outside the JSON object.";
+```";
         }
 
         private string GetResearchSystemPrompt()
@@ -607,6 +642,93 @@ Be helpful and specific.";
             }
 
             return text.Trim();
+        }
+
+        /// <summary>
+        /// Extracts thinking/reasoning and plan JSON from a response.
+        /// Returns the thinking text and the JSON plan separately.
+        /// </summary>
+        private (string thinking, string planJson) ExtractThinkingAndPlan(string response)
+        {
+            if (string.IsNullOrWhiteSpace(response))
+            {
+                return (string.Empty, "{}");
+            }
+
+            // Strategy: Find the last JSON block in the response
+            // Everything before it is thinking, the JSON block is the plan
+
+            // First, try to find JSON in markdown code blocks
+            int lastJsonBlockStart = response.LastIndexOf("```json", StringComparison.OrdinalIgnoreCase);
+            if (lastJsonBlockStart < 0)
+            {
+                lastJsonBlockStart = response.LastIndexOf("```", StringComparison.Ordinal);
+            }
+
+            if (lastJsonBlockStart >= 0)
+            {
+                // Found a code block, extract JSON from it
+                int jsonContentStart = response.IndexOf('\n', lastJsonBlockStart) + 1;
+                int jsonBlockEnd = response.IndexOf("```", jsonContentStart, StringComparison.Ordinal);
+
+                if (jsonBlockEnd > jsonContentStart)
+                {
+                    string thinking = response.Substring(0, lastJsonBlockStart).Trim();
+                    string planJson = response.Substring(jsonContentStart, jsonBlockEnd - jsonContentStart).Trim();
+                    return (thinking, planJson);
+                }
+            }
+
+            // No markdown code block, try to find raw JSON
+            // Look for the last occurrence of { followed by "tasks"
+            int lastJsonStart = -1;
+            int searchPos = 0;
+            
+            while (true)
+            {
+                int pos = response.IndexOf("{", searchPos, StringComparison.Ordinal);
+                if (pos < 0) break;
+                
+                // Check if this looks like our tasks JSON
+                int tasksPos = response.IndexOf("\"tasks\"", pos, StringComparison.Ordinal);
+                if (tasksPos > pos && tasksPos < pos + 50) // Within reasonable distance
+                {
+                    lastJsonStart = pos;
+                }
+                
+                searchPos = pos + 1;
+            }
+
+            if (lastJsonStart >= 0)
+            {
+                // Try to find the matching closing brace
+                int braceCount = 0;
+                int jsonEnd = -1;
+                
+                for (int i = lastJsonStart; i < response.Length; i++)
+                {
+                    if (response[i] == '{') braceCount++;
+                    else if (response[i] == '}') 
+                    {
+                        braceCount--;
+                        if (braceCount == 0)
+                        {
+                            jsonEnd = i + 1;
+                            break;
+                        }
+                    }
+                }
+
+                if (jsonEnd > lastJsonStart)
+                {
+                    string thinking = response.Substring(0, lastJsonStart).Trim();
+                    string planJson = response.Substring(lastJsonStart, jsonEnd - lastJsonStart).Trim();
+                    return (thinking, planJson);
+                }
+            }
+
+            // Fallback: treat entire response as JSON, no thinking
+            return (string.Empty, response.Trim());
         }
 
         #endregion

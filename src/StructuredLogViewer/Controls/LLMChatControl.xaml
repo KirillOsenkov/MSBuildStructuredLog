@@ -203,12 +203,52 @@
               </Expander>
             </Border>
           </DataTemplate>
+          
+          <!-- Template for question messages with option buttons -->
+          <DataTemplate x:Key="QuestionMessageTemplate">
+            <Border Margin="0,0,0,8"
+                    Padding="8"
+                    CornerRadius="4"
+                    Background="#FFF9E6"
+                    BorderBrush="#FFB84D"
+                    BorderThickness="2">
+              <StackPanel>
+                <TextBlock DockPanel.Dock="Top"
+                           Text="{Binding Role}"
+                           FontWeight="Bold"
+                           Foreground="{Binding RoleForeground}"
+                           Margin="0,0,0,4"/>
+                <local:MarkdownTextBlock MarkdownText="{Binding Content}"
+                                         Foreground="{Binding ContentForeground}"
+                                         Margin="0,0,0,8"/>
+                <!-- Option buttons if available -->
+                <ItemsControl ItemsSource="{Binding QuestionOptions}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Button Content="{Binding}"
+                              Margin="0,2"
+                              Padding="8,4"
+                              HorizontalAlignment="Stretch"
+                              Click="OptionButton_Click"
+                              Tag="{Binding}"/>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock Text="Or type your own response below..." 
+                           FontStyle="Italic"
+                           FontSize="11"
+                           Foreground="#666"
+                           Margin="0,8,0,0"/>
+              </StackPanel>
+            </Border>
+          </DataTemplate>
         </ItemsControl.Resources>
         
         <ItemsControl.ItemTemplateSelector>
           <local:ChatMessageTemplateSelector 
             RegularMessageTemplate="{StaticResource RegularMessageTemplate}"
-            ToolCallMessageTemplate="{StaticResource ToolCallMessageTemplate}"/>
+            ToolCallMessageTemplate="{StaticResource ToolCallMessageTemplate}"
+            QuestionMessageTemplate="{StaticResource QuestionMessageTemplate}"/>
         </ItemsControl.ItemTemplateSelector>
       </ItemsControl>
     </ScrollViewer>

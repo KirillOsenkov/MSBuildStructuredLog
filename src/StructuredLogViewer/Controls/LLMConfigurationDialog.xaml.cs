@@ -15,12 +15,14 @@ namespace StructuredLogViewer.Controls
     {
         private bool isApiKeyVisible = false;
         private bool shouldPersist = false;
+        private string initialEndpoint;
 
         public string Endpoint { get; private set; }
         public string Model { get; private set; }
         public string ApiKey { get; private set; }
         public bool AutoSendOnEnter { get; private set; }
         public bool AgentMode { get; private set; }
+        public bool EnableAskUser { get; private set; }
         public LoggingLevel LoggingLevel { get; private set; }
         public System.Collections.Generic.List<string>? AvailableModels { get; private set; }
         public bool ShouldPersist => shouldPersist;
@@ -72,6 +74,7 @@ namespace StructuredLogViewer.Controls
             // Pre-populate with current configuration
             if (currentConfig != null)
             {
+                initialEndpoint = currentConfig.Endpoint ?? "";
                 endpointTextBox.Text = currentConfig.Endpoint ?? "";
                 
                 // Restore available models if present
@@ -100,6 +103,7 @@ namespace StructuredLogViewer.Controls
                 
                 autoSendOnEnterCheckBox.IsChecked = currentConfig.AutoSendOnEnter;
                 agentModeCheckBox.IsChecked = currentConfig.AgentMode;
+                enableAskUserCheckBox.IsChecked = SettingsService.LLMEnableAskUser;
                 loggingLevelComboBox.SelectedIndex = (int)currentConfig.LoggingLevel;
             }
             else
@@ -125,6 +129,23 @@ namespace StructuredLogViewer.Controls
                     apiKeyPasswordBox.Focus();
                 }
             };
+        }
+
+        private void EndpointTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            // If the endpoint was changed from its initial value, make model editable
+            // and clear prepopulated models
+            var currentEndpoint = endpointTextBox.Text?.Trim() ?? "";
+            if (!string.Equals(currentEndpoint, initialEndpoint, StringComparison.OrdinalIgnoreCase))
+            {
+                // User changed the endpoint - switch to free text mode
+                var currentModelText = modelComboBox.IsEditable ? modelComboBox.Text : (modelComboBox.SelectedItem as string);
+                
+                modelComboBox.Items.Clear();
+                modelComboBox.IsEditable = true;
+                modelComboBox.Text = currentModelText ?? "";
+                AvailableModels = null;
+            }
         }
 
         private void ToggleApiKeyVisibility_Click(object sender, RoutedEventArgs e)
@@ -172,6 +193,7 @@ namespace StructuredLogViewer.Controls
             ApiKey = isApiKeyVisible ? apiKeyTextBox.Text?.Trim() : apiKeyPasswordBox.Password?.Trim();
             AutoSendOnEnter = autoSendOnEnterCheckBox.IsChecked ?? true;
             AgentMode = agentModeCheckBox.IsChecked ?? true;
+            EnableAskUser = enableAskUserCheckBox.IsChecked ?? true;
             LoggingLevel = (LoggingLevel)loggingLevelComboBox.SelectedIndex;
             shouldPersist = persist;
 
@@ -222,6 +244,7 @@ namespace StructuredLogViewer.Controls
                 SettingsService.LLMApiKeyEncrypted = SettingsService.EncryptString(ApiKey);
                 SettingsService.LLMAutoSendOnEnter = AutoSendOnEnter;
                 SettingsService.LLMAgentMode = AgentMode;
+                SettingsService.LLMEnableAskUser = EnableAskUser;
                 SettingsService.LLMLoggingLevel = (int)LoggingLevel;
                 
                 // Store available models as comma-separated list

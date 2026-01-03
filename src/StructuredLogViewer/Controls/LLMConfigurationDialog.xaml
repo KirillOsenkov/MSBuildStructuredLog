@@ -26,6 +26,7 @@
             <TextBox x:Name="endpointTextBox"
                      Padding="4"
                      ToolTip="E.g., https://your-resource.openai.azure.com/"
+                     TextChanged="EndpointTextBox_TextChanged"
                      Background="{DynamicResource Theme_Background}"
                      Foreground="{DynamicResource Theme_Foreground}"/>
         </StackPanel>
@@ -115,6 +116,13 @@
                       Margin="0,0,0,6"
                       Foreground="{DynamicResource Theme_Foreground}"
                       ToolTip="Enable agent mode for multi-step reasoning on complex queries. Recommended for thorough analysis."/>
+
+            <CheckBox x:Name="enableAskUserCheckBox"
+                      Content="Enable LLM user clarification"
+                      IsChecked="True"
+                      Margin="0,0,0,6"
+                      Foreground="{DynamicResource Theme_Foreground}"
+                      ToolTip="Allow the LLM to ask clarifying questions when requirements are ambiguous. Recommended for interactive analysis."/>
 
             <DockPanel Margin="0,6,0,0">
                 <TextBlock Text="Logging Level:" 

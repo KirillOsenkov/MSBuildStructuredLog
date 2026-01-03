@@ -438,6 +438,13 @@ namespace StructuredLogViewer
             set => Set(ref llmAvailableModels, value);
         }
 
+        private static bool llmEnableAskUser = true; // Default to enabled
+        public static bool LLMEnableAskUser
+        {
+            get => Get(ref llmEnableAskUser);
+            set => Set(ref llmEnableAskUser, value);
+        }
+
 
         private static void EnsureSettingsRead()
         {
@@ -461,6 +468,7 @@ namespace StructuredLogViewer
         const string LLMAgentModeSetting = "LLMAgentMode=";
         const string LLMLoggingLevelSetting = "LLMLoggingLevel=";
         const string LLMAvailableModelsSetting = "LLMAvailableModels=";
+        const string LLMEnableAskUserSetting = "LLMEnableAskUser=";
 
         private static void SaveSettings()
         {
@@ -479,6 +487,7 @@ namespace StructuredLogViewer
             sb.AppendLine(LLMAgentModeSetting + llmAgentMode.ToString());
             sb.AppendLine(LLMLoggingLevelSetting + llmLoggingLevel.ToString());
             sb.AppendLine(LLMAvailableModelsSetting + llmAvailableModels);
+            sb.AppendLine(LLMEnableAskUserSetting + llmEnableAskUser.ToString());
 
             using (SingleGlobalInstance.Acquire(Path.GetFileName(settingsFilePath)))
             {
@@ -514,6 +523,7 @@ namespace StructuredLogViewer
                     ProcessLine(LLMAgentModeSetting, line, ref llmAgentMode);
                     ProcessInt(LLMLoggingLevelSetting, line, ref llmLoggingLevel);
                     ProcessString(LLMAvailableModelsSetting, line, ref llmAvailableModels);
+                    ProcessLine(LLMEnableAskUserSetting, line, ref llmEnableAskUser);
 
                     void ProcessString(string setting, string text, ref string? variable)
                     {

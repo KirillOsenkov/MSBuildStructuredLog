@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -22,11 +23,16 @@ namespace StructuredLogViewer.Controls
     {
         public DataTemplate RegularMessageTemplate { get; set; }
         public DataTemplate ToolCallMessageTemplate { get; set; }
+        public DataTemplate QuestionMessageTemplate { get; set; }
 
         public override DataTemplate SelectTemplate(object item, DependencyObject container)
         {
             if (item is ChatMessageDisplay message)
             {
+                if (message.IsQuestion)
+                {
+                    return QuestionMessageTemplate;
+                }
                 return message.IsToolCall ? ToolCallMessageTemplate : RegularMessageTemplate;
             }
             return RegularMessageTemplate;
@@ -45,6 +51,11 @@ namespace StructuredLogViewer.Controls
         // Tool call support
         public bool IsToolCall { get; set; }
         public ToolCallViewModel ToolCallData { get; set; }
+        
+        // Question/Answer support
+        public bool IsQuestion { get; set; }
+        public string[] QuestionOptions { get; set; }
+        public Action<string> OnAnswerProvided { get; set; }
 
         public Brush RoleBackground
         {
@@ -113,6 +124,8 @@ namespace StructuredLogViewer.Controls
         private LLMConfiguration currentConfig;
         private bool isInitialized;
         private ChatWindowLogger chatLogger;
+        private TaskCompletionSource<string> waitingForUserResponse;
+        private ChatMessageDisplay currentQuestionMessage;
 
         public Build Build { get; private set; }
         public BuildControl BuildControl { get; private set; }
@@ -245,6 +258,13 @@ namespace StructuredLogViewer.Controls
                 chatService.RegisterToolContainer(uiInteractionExecutor);
             }
 
+            // Register AskUser tool if enabled
+            if (SettingsService.LLMEnableAskUser)
+            {
+                var askUserExecutor = new AskUserToolExecutor(new GuiUserInteraction(this));
+                chatService.RegisterToolContainer(askUserExecutor);
+            }
+
             // Reconfigure with current config if available
             if (currentConfig != null)
             {
@@ -261,6 +281,13 @@ namespace StructuredLogViewer.Controls
                 {
                     var uiInteractionExecutor = new BinlogUIInteractionExecutor(Build, BuildControl);
                     agenticChatService.RegisterToolContainer(uiInteractionExecutor);
+                }
+                
+                // Register AskUser tool if enabled
+                if (SettingsService.LLMEnableAskUser)
+                {
+                    var askUserExecutor = new AskUserToolExecutor(new GuiUserInteraction(this));
+                    agenticChatService.RegisterToolContainer(askUserExecutor);
                 }
                 
                 agenticChatService.ProgressUpdated += OnAgentProgressUpdated;
@@ -397,6 +424,70 @@ namespace StructuredLogViewer.Controls
             }, System.Windows.Threading.DispatcherPriority.Background);
         }
 
+        /// <summary>
+        /// Asks the user for input via the chat interface.
+        /// Used by the AskUser tool to clarify ambiguous requirements.
+        /// </summary>
+        public async Task<string> AskUserForInput(string question, string[]? options = null)
+        {
+            // Create a completion source to wait for user response
+            waitingForUserResponse = new TaskCompletionSource<string>();
+            
+            // Display the question in the chat with interactive options
+            currentQuestionMessage = new ChatMessageDisplay
+            {
+                Role = "Assistant",
+                Content = $"🤔 **Clarification Needed**\n\n{question}",
+                IsQuestion = true,
+                QuestionOptions = options,
+                OnAnswerProvided = (answer) =>
+                {
+                    // User provided an answer
+                    waitingForUserResponse?.TrySetResult(answer);
+                }
+            };
+            
+            AddMessage(currentQuestionMessage);
+            
+            // Enable input for user to respond and show Send button
+            inputTextBox.IsEnabled = true;
+            sendButton.Visibility = Visibility.Visible;
+            cancelButton.Visibility = Visibility.Collapsed;
+            inputTextBox.Focus();
+            
+            // Wait for the user to respond asynchronously
+            string response;
+            try
+            {
+                response = await waitingForUserResponse.Task;
+                
+                // Display the user's response in the chat
+                AddMessage(new ChatMessageDisplay
+                {
+                    Role = "User",
+                    Content = response
+                });
+                
+                // Clear the question state
+                currentQuestionMessage = null;
+                waitingForUserResponse = null;
+                
+                // Restore to "in progress" state - disable input and show Cancel button
+                inputTextBox.IsEnabled = false;
+                sendButton.Visibility = Visibility.Collapsed;
+                cancelButton.Visibility = Visibility.Visible;
+            }
+            catch
+            {
+                response = string.Empty;
+                inputTextBox.IsEnabled = false;
+                sendButton.Visibility = Visibility.Collapsed;
+                cancelButton.Visibility = Visibility.Visible;
+            }
+            
+            return response ?? string.Empty;
+        }
+
         private void ShowStatus(string status, bool isError = false)
         {
             statusText.Text = status;
@@ -415,6 +506,15 @@ namespace StructuredLogViewer.Controls
         private void HideStatus()
         {
             statusBar.Visibility = Visibility.Collapsed;
+        }
+
+        private void OptionButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.Tag is string option)
+            {
+                // User clicked an option button
+                currentQuestionMessage?.OnAnswerProvided?.Invoke(option);
+            }
         }
 
         private void SetQueryInProgress()
@@ -521,6 +621,14 @@ namespace StructuredLogViewer.Controls
 
             // Clear input
             inputTextBox.Text = string.Empty;
+
+            // Check if we're waiting for a response to a question
+            if (waitingForUserResponse != null)
+            {
+                // User is answering a question
+                currentQuestionMessage?.OnAnswerProvided?.Invoke(message);
+                return;
+            }
 
             // Cancel any existing operation
             cancellationTokenSource?.Cancel();

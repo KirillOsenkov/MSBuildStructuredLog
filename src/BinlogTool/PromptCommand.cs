@@ -267,6 +267,10 @@ namespace BinlogTool
                 if (llmConfig.AgentMode)
                 {
                     agenticService = await AgenticLLMChatService.CreateAsync(build, llmConfig, loggerAdapter, cancellationToken);
+                    
+                    // Register AskUser tool for interactive user clarification
+                    agenticService.RegisterToolContainer(new AskUserToolExecutor(new ConsoleUserInteraction()));
+                    
                     agenticService.ProgressUpdated += reporter.OnAgentProgress;
                     agenticService.MessageAdded += reporter.OnMessage;
                     agenticService.ToolCallExecuting += reporter.OnToolCallStarted;
@@ -276,6 +280,10 @@ namespace BinlogTool
                 else
                 {
                     chatService = await LLMChatService.CreateAsync(build, llmConfig, loggerAdapter, cancellationToken);
+                    
+                    // Register AskUser tool for interactive user clarification
+                    chatService.RegisterToolContainer(new AskUserToolExecutor(new ConsoleUserInteraction()));
+                    
                     chatService.MessageAdded += reporter.OnMessage;
                     chatService.ToolCallExecuting += reporter.OnToolCallStarted;
                     chatService.ToolCallExecuted += reporter.OnToolCallCompleted;
