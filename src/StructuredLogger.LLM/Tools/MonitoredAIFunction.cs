@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.AI;
+using StructuredLogger.LLM.Logging;
 
 namespace StructuredLogger.LLM
 {
@@ -19,6 +20,7 @@ namespace StructuredLogger.LLM
     {
         private readonly AIFunction innerFunction;
         private readonly ResultManager resultManager;
+        private readonly ILLMLogger? logger;
         private const int MaxOutputTokensPerTool = 3000; // Roughly 12,000 characters
 
         // Tools that should NOT be cataloged
@@ -32,10 +34,11 @@ namespace StructuredLogger.LLM
         public event EventHandler<ToolCallInfo>? ToolCallStarted;
         public event EventHandler<ToolCallInfo>? ToolCallCompleted;
 
-        public MonitoredAIFunction(AIFunction innerFunction)
+        public MonitoredAIFunction(AIFunction innerFunction, ILLMLogger? logger = null)
         {
             this.innerFunction = innerFunction ?? throw new ArgumentNullException(nameof(innerFunction));
             this.resultManager = ResultManager.Instance;
+            this.logger = logger;
         }
 
         // Delegate properties to inner function
@@ -73,7 +76,7 @@ namespace StructuredLogger.LLM
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Failed to serialize arguments: {ex.Message}");
+                logger?.LogError($"Failed to serialize arguments: {ex.Message}");
                 toolCallInfo.ArgumentsJson = "{}";
             }
 
@@ -171,7 +174,7 @@ namespace StructuredLogger.LLM
                     unmatchedExpected.Remove(expectedKey);
                     unmatchedProvided.Remove(providedKey);
                     
-                    System.Diagnostics.Debug.WriteLine(
+                    logger?.LogVerbose(
                         $"[MonitoredAIFunction] Remapping argument '{providedKey}' -> '{expectedKey}' (required) for function '{Name}'");
                 }
                 else if (requiredMatches.Count == 0)
@@ -187,19 +190,19 @@ namespace StructuredLogger.LLM
                         unmatchedExpected.Remove(expectedKey);
                         unmatchedProvided.Remove(providedKey);
                         
-                        System.Diagnostics.Debug.WriteLine(
+                        logger?.LogVerbose(
                             $"[MonitoredAIFunction] Remapping argument '{providedKey}' -> '{expectedKey}' (optional) for function '{Name}'");
                     }
                     else if (allMatches.Count > 1)
                     {
-                        System.Diagnostics.Debug.WriteLine(
+                        logger?.LogVerbose(
                             $"[MonitoredAIFunction] Ambiguous matches for '{providedKey}': {string.Join(", ", allMatches)} - not remapping");
                     }
                 }
                 else
                 {
                     // Multiple matches in required parameters - ambiguous
-                    System.Diagnostics.Debug.WriteLine(
+                    logger?.LogVerbose(
                         $"[MonitoredAIFunction] Ambiguous required matches for '{providedKey}': {string.Join(", ", requiredMatches)} - not remapping");
                 }
             }
@@ -211,7 +214,7 @@ namespace StructuredLogger.LLM
                 var expectedKey = unmatchedExpected.First();
                 remappings[providedKey] = expectedKey;
                 
-                System.Diagnostics.Debug.WriteLine(
+                logger?.LogVerbose(
                     $"[MonitoredAIFunction] Remapping last remaining argument '{providedKey}' -> '{expectedKey}' for function '{Name}'");
             }
 
@@ -311,7 +314,7 @@ namespace StructuredLogger.LLM
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Failed to parse function schema: {ex.Message}");
+                logger?.LogError($"Failed to parse function schema: {ex.Message}");
             }
 
             return (paramNames, requiredNames);
@@ -354,7 +357,7 @@ namespace StructuredLogger.LLM
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Failed to catalog result: {ex.Message}");
+                logger?.LogError($"Failed to catalog result: {ex.Message}");
                 // Return original result without metadata if cataloging fails
                 return (fullResult, string.Empty);
             }

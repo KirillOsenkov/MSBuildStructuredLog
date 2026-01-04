@@ -133,7 +133,6 @@ namespace StructuredLogger.LLM.Clients.GitHub
 
                 if (!string.IsNullOrEmpty(tokenResponse.AccessToken))
                 {
-                    System.Diagnostics.Debug.WriteLine("GitHub access token obtained successfully");
                     return tokenResponse.AccessToken!;
                 }
 

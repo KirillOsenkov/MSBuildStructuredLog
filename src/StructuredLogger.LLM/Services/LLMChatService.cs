@@ -24,8 +24,6 @@ namespace StructuredLogger.LLM
         private readonly ILLMLogger? logger;
 
         // Token management settings
-        private const int MaxPromptTokens = 180000; // Leave buffer below 200k limit
-        private const int EstimatedTokensPerMessage = 500; // Conservative estimate
         private const int MaxChatHistoryMessages = 20; // Keep recent context
 
         public event EventHandler<ChatMessageViewModel>? MessageAdded;
@@ -85,7 +83,11 @@ namespace StructuredLogger.LLM
                 throw new ArgumentNullException(nameof(container));
             }
 
-            toolContainers.Add(container);
+            // Prevent duplicate registration
+            if (!toolContainers.Contains(container))
+            {
+                toolContainers.Add(container);
+            }
         }
 
         private async System.Threading.Tasks.Task InitializeLLMClientAsync(CancellationToken cancellationToken)
@@ -178,7 +180,7 @@ Available context:
         {
             if (chatHistory.Count <= MaxChatHistoryMessages)
             {
-                return new List<ChatMessage>(chatHistory);
+                return chatHistory;
             }
 
             // Keep the most recent messages
@@ -210,7 +212,7 @@ Available context:
                         }
 
                         // Wrap with monitoring
-                        var monitoredFunction = new MonitoredAIFunction(function);
+                        var monitoredFunction = new MonitoredAIFunction(function, logger);
                         monitoredFunction.ToolCallStarted += OnToolCallStarted;
                         monitoredFunction.ToolCallCompleted += OnToolCallCompleted;
                         tools.Add(monitoredFunction);

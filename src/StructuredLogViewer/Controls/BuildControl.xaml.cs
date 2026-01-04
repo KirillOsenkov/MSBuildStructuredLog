@@ -467,14 +467,15 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                     }
                     catch (Exception ex)
                     {
-                        System.Diagnostics.Debug.WriteLine($"Failed to initialize LLM chat: {ex.Message}");
-                        // Notify failure on UI thread
+                        // Log initialization failure and notify on UI thread
+                        System.Diagnostics.Debug.WriteLine($"LLM chat initialization failed: {ex.Message}");
                         Dispatcher.Invoke(() => LLMChatInitialized?.Invoke(this, false));
                     }
                 });
             }
             catch (Exception ex)
             {
+                // Log failure to start LLM chat initialization task
                 System.Diagnostics.Debug.WriteLine($"Failed to start LLM chat initialization: {ex.Message}");
                 LLMChatInitialized?.Invoke(this, false);
             }

@@ -20,6 +20,11 @@ namespace StructuredLogViewer.Controls
 
         public async Task<string> AskUser(string question, string[]? options = null)
         {
+            if (string.IsNullOrWhiteSpace(question))
+            {
+                throw new ArgumentException("Question cannot be null or empty", nameof(question));
+            }
+
             // Must be invoked on UI thread
             if (chatControl.Dispatcher.CheckAccess())
             {

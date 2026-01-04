@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using StructuredLogger.LLM.Logging;
 
 namespace StructuredLogger.LLM.Clients.GitHub
 {
@@ -19,6 +20,7 @@ namespace StructuredLogger.LLM.Clients.GitHub
         private readonly string githubAccessToken;
         private readonly CopilotAccountType accountType;
         private readonly HttpClient httpClient;
+        private readonly ILLMLogger? logger;
         private CopilotToken? currentToken;
 
         public event EventHandler<CopilotToken>? TokenRefreshed;
@@ -26,7 +28,7 @@ namespace StructuredLogger.LLM.Clients.GitHub
         /// <summary>
         /// Initializes a new instance of the GitHubCopilotTokenProvider.
         /// </summary>
-        public GitHubCopilotTokenProvider(string githubAccessToken, CopilotAccountType accountType = CopilotAccountType.Individual)
+        public GitHubCopilotTokenProvider(string githubAccessToken, CopilotAccountType accountType = CopilotAccountType.Individual, ILLMLogger? logger = null)
         {
             if (string.IsNullOrWhiteSpace(githubAccessToken))
                 throw new ArgumentException("GitHub access token is required.", nameof(githubAccessToken));
@@ -34,6 +36,7 @@ namespace StructuredLogger.LLM.Clients.GitHub
             this.githubAccessToken = githubAccessToken;
             this.accountType = accountType;
             this.httpClient = new HttpClient();
+            this.logger = logger;
         }
 
         /// <summary>
@@ -72,7 +75,7 @@ namespace StructuredLogger.LLM.Clients.GitHub
             token.BaseUrl = ExtractBaseUrlFromToken(token.Token, accountType);
 
             currentToken = token;
-            System.Diagnostics.Debug.WriteLine($"Copilot token obtained. Expires at: {token.ExpiresAt}");
+            logger?.LogVerbose($"Copilot token obtained. Expires at: {token.ExpiresAt}");
             
             return token;
         }

@@ -77,7 +77,7 @@ namespace StructuredLogger.LLM.Clients.GitHub
             }
 
             // Create token provider and get initial Copilot token
-            var tokenProvider = new GitHubCopilotTokenProvider(githubToken!, accountType);
+            var tokenProvider = new GitHubCopilotTokenProvider(githubToken!, accountType, logger);
             await tokenProvider.GetCopilotTokenAsync(cancellationToken);
 
             // Create client with logger

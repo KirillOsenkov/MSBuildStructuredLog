@@ -104,7 +104,11 @@ namespace StructuredLogger.LLM
                 throw new ArgumentNullException(nameof(executor));
             }
 
-            toolContainers.Add(executor);
+            // Prevent duplicate registration
+            if (!toolContainers.Contains(executor))
+            {
+                toolContainers.Add(executor);
+            }
         }
 
         /// <summary>
@@ -476,7 +480,7 @@ Format your answer with markdown for readability.";
                         }
 
                         // Wrap with monitoring
-                        var monitored = new MonitoredAIFunction(function);
+                        var monitored = new MonitoredAIFunction(function, logger);
                         monitored.ToolCallStarted += OnToolCallStarted;
                         monitored.ToolCallCompleted += OnToolCallCompleted;
                         tools.Add(monitored);
@@ -688,8 +692,11 @@ Be helpful and specific.";
             while (true)
             {
                 int pos = response.IndexOf("{", searchPos, StringComparison.Ordinal);
-                if (pos < 0) break;
-                
+                if (pos < 0)
+                {
+                    break;
+                }
+
                 // Check if this looks like our tasks JSON
                 int tasksPos = response.IndexOf("\"tasks\"", pos, StringComparison.Ordinal);
                 if (tasksPos > pos && tasksPos < pos + 50) // Within reasonable distance
@@ -708,7 +715,10 @@ Be helpful and specific.";
                 
                 for (int i = lastJsonStart; i < response.Length; i++)
                 {
-                    if (response[i] == '{') braceCount++;
+                    if (response[i] == '{')
+                    {
+                        braceCount++;
+                    }
                     else if (response[i] == '}') 
                     {
                         braceCount--;

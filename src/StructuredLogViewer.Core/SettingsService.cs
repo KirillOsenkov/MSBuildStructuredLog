@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Build.Logging.StructuredLogger;
 using StructuredLogViewer.Core;
@@ -639,52 +636,6 @@ namespace StructuredLogViewer
         }
 
         /// <summary>
-        /// Encrypts a string using DPAPI (Data Protection API) for the current user.
-        /// </summary>
-        public static string? EncryptString(string? plainText)
-        {
-            if (string.IsNullOrEmpty(plainText))
-            {
-                return null;
-            }
-
-            try
-            {
-                byte[] plainBytes = Encoding.UTF8.GetBytes(plainText);
-                byte[] encryptedBytes = ProtectedData.Protect(plainBytes, null, DataProtectionScope.CurrentUser);
-                return Convert.ToBase64String(encryptedBytes);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Failed to encrypt string: {ex.Message}");
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Decrypts a string that was encrypted using DPAPI.
-        /// </summary>
-        public static string? DecryptString(string? encryptedText)
-        {
-            if (string.IsNullOrEmpty(encryptedText))
-            {
-                return null;
-            }
-
-            try
-            {
-                byte[] encryptedBytes = Convert.FromBase64String(encryptedText);
-                byte[] plainBytes = ProtectedData.Unprotect(encryptedBytes, null, DataProtectionScope.CurrentUser);
-                return Encoding.UTF8.GetString(plainBytes);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Failed to decrypt string: {ex.Message}");
-                return null;
-            }
-        }
-
-        /// <summary>
         /// Clears persisted LLM configuration (useful when tokens expire or become invalid).
         /// </summary>
         public static void ClearLLMConfiguration()
@@ -696,6 +647,7 @@ namespace StructuredLogViewer
             LLMAgentMode = true;
             LLMLoggingLevel = 1;
             LLMAvailableModels = null;
+            LLMEnableAskUser = true;
         }
     }
 }

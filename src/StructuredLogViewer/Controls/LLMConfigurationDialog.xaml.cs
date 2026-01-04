@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -16,6 +18,7 @@ namespace StructuredLogViewer.Controls
         private bool isApiKeyVisible = false;
         private bool shouldPersist = false;
         private string initialEndpoint;
+        private readonly ILLMLogger? logger;
 
         public string Endpoint { get; private set; }
         public string Model { get; private set; }
@@ -44,13 +47,12 @@ namespace StructuredLogViewer.Controls
                 
                 // Decrypt API key
                 var encryptedKey = SettingsService.LLMApiKeyEncrypted;
-                config.ApiKey = SettingsService.DecryptString(encryptedKey) ?? string.Empty;
+                config.ApiKey = DecryptString(encryptedKey, null) ?? string.Empty;
                 
                 config.AutoSendOnEnter = SettingsService.LLMAutoSendOnEnter;
                 config.AgentMode = SettingsService.LLMAgentMode;
                 config.LoggingLevel = (LoggingLevel)SettingsService.LLMLoggingLevel;
                 
-                // Parse available models
                 var modelsString = SettingsService.LLMAvailableModels;
                 if (!string.IsNullOrEmpty(modelsString))
                 {
@@ -67,9 +69,10 @@ namespace StructuredLogViewer.Controls
             return LLMConfiguration.LoadFromEnvironment();
         }
 
-        public LLMConfigurationDialog(LLMConfiguration currentConfig)
+        public LLMConfigurationDialog(LLMConfiguration currentConfig, ILLMLogger? logger = null)
         {
             InitializeComponent();
+            this.logger = logger;
 
             // Pre-populate with current configuration
             if (currentConfig != null)
@@ -108,6 +111,7 @@ namespace StructuredLogViewer.Controls
             }
             else
             {
+                initialEndpoint = "";
                 // Default to editable textbox
                 modelComboBox.IsEditable = true;
                 loggingLevelComboBox.SelectedIndex = 1; // Default to Normal
@@ -241,7 +245,7 @@ namespace StructuredLogViewer.Controls
             {
                 SettingsService.LLMEndpoint = Endpoint;
                 SettingsService.LLMModel = Model;
-                SettingsService.LLMApiKeyEncrypted = SettingsService.EncryptString(ApiKey);
+                SettingsService.LLMApiKeyEncrypted = EncryptString(ApiKey);
                 SettingsService.LLMAutoSendOnEnter = AutoSendOnEnter;
                 SettingsService.LLMAgentMode = AgentMode;
                 SettingsService.LLMEnableAskUser = EnableAskUser;
@@ -363,7 +367,8 @@ namespace StructuredLogViewer.Controls
                 
                 if (!response.IsSuccessStatusCode)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Models endpoint returned: {response.StatusCode}");
+                    // Models endpoint returned error - could be permission issue or invalid token
+                    logger?.LogInfo($"GitHub Copilot models endpoint returned: {response.StatusCode}");
                     return false;
                 }
                 
@@ -417,8 +422,55 @@ namespace StructuredLogViewer.Controls
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Failed to load GitHub Copilot models: {ex.Message}");
+                // Log failure to load GitHub Copilot models (could be network, auth, or format issue)
+                logger?.LogError($"Failed to load GitHub Copilot models: {ex.Message}");
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// Encrypts a string using DPAPI (Data Protection API) for the current user.
+        /// </summary>
+        private string? EncryptString(string? plainText)
+        {
+            if (string.IsNullOrEmpty(plainText))
+            {
+                return null;
+            }
+
+            try
+            {
+                byte[] plainBytes = Encoding.UTF8.GetBytes(plainText);
+                byte[] encryptedBytes = ProtectedData.Protect(plainBytes, null, DataProtectionScope.CurrentUser);
+                return Convert.ToBase64String(encryptedBytes);
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError($"Failed to encrypt string: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Decrypts a string that was encrypted using DPAPI.
+        /// </summary>
+        private static string? DecryptString(string? encryptedText, ILLMLogger? logger)
+        {
+            if (string.IsNullOrEmpty(encryptedText))
+            {
+                return null;
+            }
+
+            try
+            {
+                byte[] encryptedBytes = Convert.FromBase64String(encryptedText);
+                byte[] plainBytes = ProtectedData.Unprotect(encryptedBytes, null, DataProtectionScope.CurrentUser);
+                return Encoding.UTF8.GetString(plainBytes);
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError($"Failed to decrypt string: {ex.Message}");
+                return null;
             }
         }
     }

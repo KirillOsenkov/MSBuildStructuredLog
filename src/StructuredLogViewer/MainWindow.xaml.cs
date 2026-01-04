@@ -1267,7 +1267,6 @@ that project." };
             if (!success)
             {
                 // Could show an error message to the user here if needed
-                System.Diagnostics.Debug.WriteLine("LLM chat initialization failed");
             }
         }
 

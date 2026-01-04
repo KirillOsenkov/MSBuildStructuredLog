@@ -9,6 +9,7 @@ using Anthropic.Exceptions;
 using Azure;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Extensions.AI;
+using StructuredLogger.LLM.Logging;
 
 namespace StructuredLogger.LLM
 {
@@ -42,18 +43,20 @@ namespace StructuredLogger.LLM
         private readonly int maxRetries;
         private readonly TimeSpan initialDelay;
         private readonly TimeSpan maxDelay;
+        private readonly ILLMLogger? logger;
 
         /// <summary>
         /// Raised when the client is retrying a request due to recoverable errors
         /// </summary>
         public event EventHandler<ResilienceEventArgs>? RequestRetrying;
 
-        public ResilientChatClient(IChatClient innerClient, int maxRetries = 10, TimeSpan? initialDelay = null, TimeSpan? maxDelay = null)
+        public ResilientChatClient(IChatClient innerClient, int maxRetries = 10, TimeSpan? initialDelay = null, TimeSpan? maxDelay = null, ILLMLogger? logger = null)
         {
             this.innerClient = innerClient ?? throw new ArgumentNullException(nameof(innerClient));
             this.maxRetries = maxRetries;
             this.initialDelay = initialDelay ?? TimeSpan.FromSeconds(1);
             this.maxDelay = maxDelay ?? TimeSpan.FromMinutes(2);
+            this.logger = logger;
         }
 
         public Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default)
@@ -103,7 +106,7 @@ namespace StructuredLogger.LLM
                     if (contextOverflow.IsOverflow)
                     {
                         attempt++;
-                        System.Diagnostics.Debug.WriteLine(
+                        logger?.LogInfo(
                             $"Context overflow detected: {contextOverflow.CurrentTokens} > {contextOverflow.MaxTokens} " +
                             $"(attempt {attempt}/{maxRetries})");
 
@@ -124,11 +127,11 @@ namespace StructuredLogger.LLM
 
                         if (currentMessages.Count == 0)
                         {
-                            System.Diagnostics.Debug.WriteLine("Cannot truncate messages further. Throwing exception.");
+                            logger?.LogError("Cannot truncate messages further. Throwing exception.");
                             throw;
                         }
 
-                        System.Diagnostics.Debug.WriteLine(
+                        logger?.LogInfo(
                             $"Retrying with {currentMessages.Count} messages (estimated {EstimateTokens(currentMessages)} tokens)");
                         
                         // Small delay before retry
@@ -146,7 +149,7 @@ namespace StructuredLogger.LLM
                         if (waitTime.HasValue)
                         {
                             delay = waitTime.Value;
-                            System.Diagnostics.Debug.WriteLine($"Rate limit hit. Waiting {delay.TotalSeconds}s as specified in error (attempt {attempt}/{maxRetries})");
+                            logger?.LogInfo($"Rate limit hit. Waiting {delay.TotalSeconds}s as specified in error (attempt {attempt}/{maxRetries})");
                         }
                         else
                         {
@@ -154,7 +157,7 @@ namespace StructuredLogger.LLM
                             delay = TimeSpan.FromSeconds(Math.Min(
                                 initialDelay.TotalSeconds * Math.Pow(2, attempt - 1),
                                 maxDelay.TotalSeconds));
-                            System.Diagnostics.Debug.WriteLine($"Retryable error encountered. Waiting {delay.TotalSeconds}s before retry (attempt {attempt}/{maxRetries}): {ex.Message}");
+                            logger?.LogInfo($"Retryable error encountered. Waiting {delay.TotalSeconds}s before retry (attempt {attempt}/{maxRetries}): {ex.Message}");
                         }
 
                         // Raise throttling event
@@ -408,7 +411,7 @@ namespace StructuredLogger.LLM
             // Calculate target tokens (use 95% of max as safety margin, or 80% of current if max unknown)
             int targetTokens = maxTokens > 0 ? (int)(maxTokens * 0.95) : (int)(currentTokens * 0.8);
 
-            System.Diagnostics.Debug.WriteLine(
+            logger?.LogVerbose(
                 $"Truncating messages: current={currentTokens}, max={maxTokens}, target={targetTokens}");
 
             var result = new List<ChatMessage>();
@@ -461,7 +464,7 @@ namespace StructuredLogger.LLM
 
                 // Remove oldest message
                 includedMiddle.RemoveAt(0);
-                System.Diagnostics.Debug.WriteLine($"Removed 1 message, {includedMiddle.Count} middle messages remaining");
+                logger?.LogVerbose($"Removed 1 message, {includedMiddle.Count} middle messages remaining");
             }
 
             result.AddRange(includedMiddle);
@@ -476,7 +479,7 @@ namespace StructuredLogger.LLM
             estimatedTokens = EstimateTokens(result);
             if (estimatedTokens > targetTokens && result.Count > 0)
             {
-                System.Diagnostics.Debug.WriteLine(
+                logger?.LogVerbose(
                     $"Still too large ({estimatedTokens} tokens), truncating message contents");
 
                 // Truncate from end backwards, but preserve system and last user message structure
@@ -516,7 +519,7 @@ namespace StructuredLogger.LLM
                 }
             }
 
-            System.Diagnostics.Debug.WriteLine(
+            logger?.LogVerbose(
                 $"Truncation complete: {messages.Count} -> {result.Count} messages, " +
                 $"estimated {EstimateTokens(result)} tokens");
 

@@ -443,7 +443,7 @@ namespace StructuredLogger.LLM.Clients.GitHub
                             }
                             catch (JsonException ex)
                             {
-                                System.Diagnostics.Debug.WriteLine($"Failed to deserialize tool call arguments: {ex.Message}");
+                                logger?.LogError($"Failed to deserialize tool call arguments: {ex.Message}");
                             }
                         }
                     }

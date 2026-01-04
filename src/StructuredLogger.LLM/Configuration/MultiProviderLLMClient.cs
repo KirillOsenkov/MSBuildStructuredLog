@@ -136,7 +136,7 @@ namespace StructuredLogger.LLM
             }
 
             // Wrap with resilient client for automatic retry on rate limits and transient errors
-            resilientClient = new ResilientChatClient(chatClient, maxRetries: 10);
+            resilientClient = new ResilientChatClient(chatClient, maxRetries: 10, logger: logger);
             chatClient = resilientClient;
             
             // Apply function invocation after resilient wrapper

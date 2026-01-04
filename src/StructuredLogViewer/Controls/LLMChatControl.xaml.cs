@@ -477,8 +477,10 @@ namespace StructuredLogViewer.Controls
                 sendButton.Visibility = Visibility.Collapsed;
                 cancelButton.Visibility = Visibility.Visible;
             }
-            catch
+            catch (Exception ex)
             {
+                // If user input fails, log and return empty string and restore UI state
+                chatLogger?.LogError($"Failed to get user input: {ex.Message}");
                 response = string.Empty;
                 inputTextBox.IsEnabled = false;
                 sendButton.Visibility = Visibility.Collapsed;
@@ -773,7 +775,7 @@ namespace StructuredLogViewer.Controls
             var oldAgentMode = configForDialog.AgentMode;
             
             // Show configuration dialog
-            var dialog = new LLMConfigurationDialog(configForDialog)
+            var dialog = new LLMConfigurationDialog(configForDialog, chatLogger)
             {
                 Owner = Window.GetWindow(this)
             };
