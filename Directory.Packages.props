@@ -20,6 +20,7 @@
     <PackageVersion Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Azure.AI.Inference" Version="1.0.0-beta.5" />
     <PackageVersion Include="Azure.AI.OpenAI" Version="2.8.0-beta.1" />
+    <PackageVersion Include="Azure.Core" Version="1.50.0" />
     <PackageVersion Include="DiffPlex" Version="1.7.2" />
     <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="10.1.1-preview.1.25612.2" />
     <PackageVersion Include="DotUtils.MsBuild.BinlogRedactor.SensitiveDataDetector" Version="0.0.9" />
