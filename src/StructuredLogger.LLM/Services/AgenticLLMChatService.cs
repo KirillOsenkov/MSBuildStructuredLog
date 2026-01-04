@@ -624,31 +624,6 @@ Be helpful and specific.";
             return descriptions.ToString();
         }
 
-        private string ExtractJsonFromResponse(string text)
-        {
-            // Try to extract JSON from markdown code blocks
-            int jsonStart = text.IndexOf("```json", StringComparison.OrdinalIgnoreCase);
-            if (jsonStart < 0)
-            {
-                // Try just ```
-                jsonStart = text.IndexOf("```", StringComparison.Ordinal);
-            }
-
-            if (jsonStart >= 0)
-            {
-                jsonStart = text.IndexOf('\n', jsonStart) + 1;
-                // Find the closing marker, searching from after the opening marker
-                int jsonEnd = text.LastIndexOf("```", StringComparison.Ordinal);
-
-                if (jsonEnd > jsonStart)
-                {
-                    return text.Substring(jsonStart, jsonEnd - jsonStart).Trim();
-                }
-            }
-
-            return text.Trim();
-        }
-
         /// <summary>
         /// Extracts thinking/reasoning and plan JSON from a response.
         /// Returns the thinking text and the JSON plan separately.
