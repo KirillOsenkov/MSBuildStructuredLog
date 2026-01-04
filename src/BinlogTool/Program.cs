@@ -10,11 +10,12 @@ namespace BinlogTool
 {
     class Program
     {
-        static int Main(string[] args)
+        static async System.Threading.Tasks.Task<int> Main(string[] args)
         {
             if (args.Length == 0)
             {
                 Console.WriteLine(@"Usage:
+    binlogtool prompt [options] <prompt-text>    - Analyze binlog using LLM (use -help for details)
     binlogtool listtools input.binlog
     binlogtool savefiles input.binlog output_path
     binlogtool listnuget input.binlog output_path
@@ -29,6 +30,12 @@ namespace BinlogTool
             }
 
             var firstArg = args[0];
+
+            // LLM Prompt command
+            if (string.Equals(firstArg, "prompt", StringComparison.OrdinalIgnoreCase))
+            {
+                return await new PromptCommand().Execute(args);
+            }
 
             if (args.Length == 3 && string.Equals(firstArg, "savefiles", StringComparison.OrdinalIgnoreCase))
             {

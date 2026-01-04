@@ -24,8 +24,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="BinlogTool.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\StructuredLogger.Utils\StructuredLogger.Utils.csproj" />
     <ProjectReference Include="..\StructuredLogger\StructuredLogger.csproj" />
+    <ProjectReference Include="..\StructuredLogger.LLM\StructuredLogger.LLM.csproj" />
   </ItemGroup>
 
   <ItemGroup>

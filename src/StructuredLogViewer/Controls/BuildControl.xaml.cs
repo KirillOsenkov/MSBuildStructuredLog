@@ -29,6 +29,9 @@ namespace StructuredLogViewer.Controls
         public TreeViewItem SelectedTreeViewItem { get; private set; }
         public string LogFilePath => Build?.LogFilePath;
 
+        // Event fired when LLM chat initialization completes
+        public event EventHandler<bool> LLMChatInitialized;
+
         private SourceFileResolver sourceFileResolver;
         private ArchiveFileResolver archiveFile => sourceFileResolver.ArchiveFile;
         private PreprocessedFileManager preprocessedFileManager;
@@ -433,6 +436,71 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             navigationHelper.OpenFileRequested += filePath => DisplayFile(filePath);
 
             centralTabControl.SelectionChanged += CentralTabControl_SelectionChanged;
+
+            // LLM chat will be initialized lazily when first shown via ToggleLLMChat
+        }
+
+        private bool llmChatInitialized = false;
+
+        private async System.Threading.Tasks.Task InitializeLLMChatAsync()
+        {
+            if (llmChatInitialized)
+            {
+                return; // Already initialized
+            }
+
+            try
+            {
+                await System.Threading.Tasks.Task.Run(() =>
+                {
+                    try
+                    {
+                        // Initialize LLM chat control on UI thread with BuildControl reference
+                        Dispatcher.Invoke(() => llmChatControl.Initialize(Build, this));
+                        
+                        // Notify success on UI thread
+                        Dispatcher.Invoke(() =>
+                        {
+                            llmChatInitialized = true;
+                            LLMChatInitialized?.Invoke(this, true);
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log initialization failure and notify on UI thread
+                        System.Diagnostics.Debug.WriteLine($"LLM chat initialization failed: {ex.Message}");
+                        Dispatcher.Invoke(() => LLMChatInitialized?.Invoke(this, false));
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                // Log failure to start LLM chat initialization task
+                System.Diagnostics.Debug.WriteLine($"Failed to start LLM chat initialization: {ex.Message}");
+                LLMChatInitialized?.Invoke(this, false);
+            }
+        }
+
+        public void ToggleLLMChat(bool show)
+        {
+            if (show)
+            {
+                // Initialize LLM chat control on first show (lazy initialization)
+                if (!llmChatInitialized)
+                {
+                    _ = InitializeLLMChatAsync();
+                }
+                
+                llmChatColumn.Width = new GridLength(400);
+                llmChatBorder.Visibility = Visibility.Visible;
+                llmSplitter.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                llmChatColumn.Width = new GridLength(0);
+                llmChatBorder.Visibility = Visibility.Collapsed;
+                llmSplitter.Visibility = Visibility.Collapsed;
+            }
         }
 
         public void Dispose()
@@ -1546,6 +1614,12 @@ Recent (");
                 UpdateBreadcrumb(item);
                 UpdateProjectContext(item);
                 UpdateFindContent();
+                
+                // Update LLM chat context
+                if (item is BaseNode node)
+                {
+                    llmChatControl.SetSelectedNode(node);
+                }
             }
         }
 
