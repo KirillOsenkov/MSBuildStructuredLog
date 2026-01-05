@@ -23,6 +23,8 @@ namespace StructuredLogger.LLM
             this.core = new ListEventsToolExecutorCore(build);
         }
 
+        public bool HasGuiTools => false;
+
         public IEnumerable<(AIFunction Function, AgentPhase ApplicablePhases)> GetTools()
         {
             yield return (AIFunctionFactory.Create(ListEventsAsync), AgentPhase.Research | AgentPhase.Summarization);

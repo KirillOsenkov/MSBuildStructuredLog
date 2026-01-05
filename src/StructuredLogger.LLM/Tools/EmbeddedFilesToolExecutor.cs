@@ -26,6 +26,8 @@ namespace StructuredLogger.LLM
             this.core = new EmbeddedFilesToolExecutorCore(build);
         }
 
+        public bool HasGuiTools => false;
+
         public IEnumerable<(AIFunction Function, AgentPhase ApplicablePhases)> GetTools()
         {
             // Return all tools with their applicable phases

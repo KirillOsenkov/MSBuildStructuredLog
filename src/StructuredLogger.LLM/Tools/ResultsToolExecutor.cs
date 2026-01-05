@@ -20,6 +20,8 @@ namespace StructuredLogger.LLM
             this.resultManager = ResultManager.Instance;
         }
 
+        public bool HasGuiTools => false;
+
         public IEnumerable<(AIFunction Function, AgentPhase ApplicablePhases)> GetTools()
         {
             // ListResults is useful in all phases to see what data is available

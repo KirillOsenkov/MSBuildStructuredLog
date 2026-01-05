@@ -164,13 +164,35 @@ namespace StructuredLogger.LLM
                 ? provider.GetBuildOverview()
                 : "Build log loaded";
 
-            return @"You are an expert assistant helping developers analyze their MSBuild build logs (.binlog files).
+            var basePrompt = @"You are an expert assistant helping developers analyze their MSBuild build logs (.binlog files).
 You have access to tools that can query the build data including projects, targets, tasks, errors, warnings, and timing information.
 When the user asks questions, you must use the available tools to retrieve accurate information from the build log - as you do not have information about their builds in your training set.
 Be concise and helpful. Format your responses clearly.
 
 Available context:
 " + overview;
+
+            // Check if we have GUI manipulation tools available
+            if (HasGuiManipulationTools())
+            {
+                basePrompt += @"
+
+You have access to GUI manipulation tools that can help users visualize and explore their build:
+- Use tools like SelectNodeByTextAsync, SelectErrorAsync, SelectWarningAsync to navigate the UI to relevant nodes
+- Use OpenTimelineAsync, OpenTracingAsync, PerformSearchAsync to switch views and help users explore data
+- Use these tools proactively when they can help clarify or support your findings
+- These tools make your responses interactive - leverage them to provide a better user experience
+
+When answering questions, consider:
+- Which errors/warnings should be highlighted for the user to see?
+- What nodes or files would help illustrate the answer?
+- Would timeline or tracing views provide useful context?
+- Should the user see specific search results?
+
+Use GUI tools to make your insights actionable and immediately explorable by the user.";
+            }
+
+            return basePrompt;
         }
 
         /// <summary>
@@ -233,6 +255,14 @@ Available context:
                 logger?.LogVerbose(ex.StackTrace ?? "(no stack trace)");
                 return Array.Empty<AIFunction>();
             }
+        }
+
+        /// <summary>
+        /// Checks if any registered tool containers provide GUI manipulation tools.
+        /// </summary>
+        private bool HasGuiManipulationTools()
+        {
+            return toolContainers.Any(container => container.HasGuiTools);
         }
 
         private void OnToolCallStarted(object? sender, ToolCallInfo toolCallInfo)

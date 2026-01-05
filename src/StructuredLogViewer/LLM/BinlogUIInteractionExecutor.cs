@@ -27,6 +27,11 @@ namespace StructuredLogViewer.LLM
             this.buildControl = buildControl ?? throw new ArgumentNullException(nameof(buildControl));
         }
 
+        /// <summary>
+        /// Indicates that this container provides GUI manipulation tools.
+        /// </summary>
+        public bool HasGuiTools => true;
+
         public IEnumerable<(AIFunction Function, StructuredLogger.LLM.AgentPhase ApplicablePhases)> GetTools()
         {
             // Return all UI interaction tools - these are only applicable during summarization phase

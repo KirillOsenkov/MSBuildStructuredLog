@@ -569,7 +569,7 @@ Output your findings as a clear summary that will be used by another agent to sy
 
         private string GetSummarizationSystemPrompt()
         {
-            return @"You are synthesizing research findings to answer the user's question about their MSBuild log.
+            var basePrompt = @"You are synthesizing research findings to answer the user's question about their MSBuild log.
 
 Your task:
 1. Review all research findings
@@ -578,6 +578,28 @@ Your task:
 
 Format your answer with markdown for readability.
 Be helpful and specific.";
+
+            // Check if we have GUI manipulation tools available
+            if (HasGuiManipulationTools())
+            {
+                basePrompt += @"
+
+You have access to GUI manipulation tools that can help users visualize and explore findings:
+- Use tools like SelectNodeByTextAsync, SelectErrorAsync, SelectWarningAsync to navigate the UI to relevant nodes
+- Use OpenTimelineAsync, OpenTracingAsync, PerformSearchAsync to switch views and help users explore data
+- Use these tools proactively when they can help clarify or support your findings
+- These tools make your answer interactive - leverage them to provide a better user experience
+
+When presenting findings, consider:
+- Which errors/warnings should be highlighted for the user to see?
+- What nodes or files would help illustrate the issue?
+- Would timeline or tracing views provide useful context?
+- Should the user see specific search results?
+
+Use GUI tools to make your insights actionable and immediately explorable by the user.";
+            }
+
+            return basePrompt;
         }
 
         #endregion
@@ -622,6 +644,14 @@ Be helpful and specific.";
             }
             
             return descriptions.ToString();
+        }
+
+        /// <summary>
+        /// Checks if any registered tool containers provide GUI manipulation tools.
+        /// </summary>
+        private bool HasGuiManipulationTools()
+        {
+            return toolContainers.Any(container => container.HasGuiTools);
         }
 
         /// <summary>

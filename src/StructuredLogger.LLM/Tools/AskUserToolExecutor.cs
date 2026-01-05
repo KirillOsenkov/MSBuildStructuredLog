@@ -18,6 +18,8 @@ namespace StructuredLogger.LLM
             this.userInteraction = userInteraction ?? throw new ArgumentNullException(nameof(userInteraction));
         }
 
+        public bool HasGuiTools => false;
+
         public IEnumerable<(AIFunction Function, AgentPhase ApplicablePhases)> GetTools()
         {
             // AskUser is available in all phases, but should be used judiciously

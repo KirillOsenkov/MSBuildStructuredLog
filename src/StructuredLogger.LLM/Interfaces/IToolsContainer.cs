@@ -10,6 +10,12 @@ namespace StructuredLogger.LLM
     public interface IToolsContainer
     {
         /// <summary>
+        /// Gets whether this container provides GUI manipulation tools.
+        /// GUI manipulation tools are those that can interact with the UI to show, highlight, or navigate to specific content.
+        /// </summary>
+        bool HasGuiTools { get; }
+
+        /// <summary>
         /// Gets all tools provided by this container with their applicable phases.
         /// </summary>
         /// <returns>Enumerable of tuples containing AIFunction and the phases where it's applicable.</returns>

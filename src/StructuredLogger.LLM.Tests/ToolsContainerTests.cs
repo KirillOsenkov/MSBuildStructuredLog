@@ -241,4 +241,17 @@ public class ToolsContainerTests
         description.Should().Contain("$copy", "should document copy operations");
         description.Should().Contain("EXAMPLES", "should include examples");
     }
+
+    [Fact]
+    public void ToolsContainer_HasGuiTools_DefaultsToFalse()
+    {
+        // Arrange
+        var build = CreateMockBuild();
+
+        // Act & Assert - All non-UI tool containers should return false for HasGuiTools
+        new BinlogToolExecutor(build).HasGuiTools.Should().BeFalse("BinlogToolExecutor should not have GUI tools");
+        new EmbeddedFilesToolExecutor(build).HasGuiTools.Should().BeFalse("EmbeddedFilesToolExecutor should not have GUI tools");
+        new ListEventsToolExecutor(build).HasGuiTools.Should().BeFalse("ListEventsToolExecutor should not have GUI tools");
+        new ResultsToolExecutor().HasGuiTools.Should().BeFalse("ResultsToolExecutor should not have GUI tools");
+    }
 }
