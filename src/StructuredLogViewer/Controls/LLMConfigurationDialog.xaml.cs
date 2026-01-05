@@ -308,6 +308,10 @@ namespace StructuredLogViewer.Controls
                     apiKeyPasswordBox.Password = githubToken;
                 }
 
+                // Populate the GitHub Copilot endpoint URL
+                endpointTextBox.Text = "https://api.githubcopilot.com";
+                initialEndpoint = "https://api.githubcopilot.com";
+
                 // Try to fetch models from GitHub Copilot API
                 githubLoginButton.Content = "⏳ Loading models...";
                 bool modelsLoaded = await TryLoadGitHubCopilotModelsAsync(githubToken);
