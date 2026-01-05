@@ -85,7 +85,6 @@ namespace StructuredLogger.LLM
 
         private void SubscribeToResilienceEvents(MultiProviderLLMClient client)
         {
-            // Subscribe to resilience events
             if (client.ResilientClient != null)
             {
                 client.ResilientClient.RequestRetrying += (sender, e) => RequestRetrying?.Invoke(this, e);
