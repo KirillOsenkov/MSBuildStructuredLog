@@ -187,7 +187,7 @@ Analyze this question carefully. Think through:
 
 You can use the available tools (including AskUser if the question is ambiguous) to help you plan better.
 
-After your analysis, create a research plan with 2-{MaxResearchTasks} specific tasks.
+After your analysis, create a research plan with 1-{MaxResearchTasks} specific tasks.
 End your response with the plan in JSON format:
 ```json
 {{
@@ -237,7 +237,18 @@ End your response with the plan in JSON format:
                     PropertyNameCaseInsensitive = true 
                 };
                 var planData = JsonSerializer.Deserialize<PlanResponse>(planJson, jsonOptions);
-                if (planData?.Tasks != null && planData.Tasks.Count > 0)
+                
+                // Check if planning agent provided a direct answer
+                if (!string.IsNullOrWhiteSpace(planData?.DirectAnswer))
+                {
+                    plan.DirectAnswer = planData!.DirectAnswer;
+                    RaiseProgress(plan, "Planning agent provided direct answer (trivial query detected).");
+                    RaiseMessage(new ChatMessageViewModel(
+                        "Assistant",
+                        $"**Direct Answer (no research needed):**\n\n{planData.DirectAnswer}"
+                    ));
+                }
+                else if (planData?.Tasks != null && planData.Tasks.Count > 0)
                 {
                     foreach (var taskData in planData.Tasks.Take(MaxResearchTasks))
                     {
@@ -252,7 +263,7 @@ End your response with the plan in JSON format:
                 }
                 else
                 {
-                    throw new Exception("No tasks in plan response.");
+                    throw new Exception("No tasks or direct answer in plan response.");
                 }
             }
             catch (Exception ex)
@@ -273,6 +284,16 @@ End your response with the plan in JSON format:
         private async System.Threading.Tasks.Task ResearchPhaseAsync(AgentPlan plan, CancellationToken cancellationToken)
         {
             plan.Phase = AgentExecutionPhase.Research;
+            
+            // Skip research if planning agent provided a direct answer
+            if (!string.IsNullOrWhiteSpace(plan.DirectAnswer))
+            {
+                RaiseProgress(plan, "Skipping research phase (direct answer provided by planning agent).");
+                // Store direct answer as a finding for summarization phase
+                plan.Findings["direct"] = plan.DirectAnswer!;
+                return;
+            }
+            
             plan.CurrentTaskIndex = 0;
 
             for (int i = 0; i < plan.ResearchTasks.Count; i++)
@@ -411,20 +432,34 @@ Focus only on this specific task goal. Output your findings as a summary.";
 
             // Compile all findings
             var allFindings = new StringBuilder();
-            for (int i = 0; i < plan.ResearchTasks.Count; i++)
+            
+            // Check if we have a direct answer from planning phase
+            if (!string.IsNullOrWhiteSpace(plan.DirectAnswer))
             {
-                var task = plan.ResearchTasks[i];
-                allFindings.AppendLine($"## Task {i + 1}: {task.Description}");
-                allFindings.AppendLine($"Status: {task.Status}");
-                if (task.Status == TaskStatus.Complete)
-                {
-                    allFindings.AppendLine($"Findings: {task.Findings}");
-                }
-                else if (task.Status == TaskStatus.Failed)
-                {
-                    allFindings.AppendLine($"Error: {task.Error}");
-                }
+                allFindings.AppendLine("## Direct Answer from Planning Phase");
+                allFindings.AppendLine("The planning agent determined this question could be answered directly without examining the build log:");
                 allFindings.AppendLine();
+                allFindings.AppendLine(plan.DirectAnswer);
+                allFindings.AppendLine();
+            }
+            else
+            {
+                // Compile findings from research tasks
+                for (int i = 0; i < plan.ResearchTasks.Count; i++)
+                {
+                    var task = plan.ResearchTasks[i];
+                    allFindings.AppendLine($"## Task {i + 1}: {task.Description}");
+                    allFindings.AppendLine($"Status: {task.Status}");
+                    if (task.Status == TaskStatus.Complete)
+                    {
+                        allFindings.AppendLine($"Findings: {task.Findings}");
+                    }
+                    else if (task.Status == TaskStatus.Failed)
+                    {
+                        allFindings.AppendLine($"Error: {task.Error}");
+                    }
+                    allFindings.AppendLine();
+                }
             }
 
             var userPrompt = $@"User Question: {plan.UserQuery}
@@ -435,6 +470,7 @@ Research Findings:
 Your task:
 1. Synthesize the findings into a coherent, well-structured answer
 2. Provide clear, actionable insights
+3. If a direct answer was provided, enhance it with formatting and ensure it fully addresses the user's question
 
 Format your answer with markdown for readability.";
 
@@ -524,7 +560,7 @@ Format your answer with markdown for readability.";
         {
             return $@"You are an expert MSBuild log analyzer creating a research plan.
 
-Your task: Analyze the user's question and create a research plan with 2-{MaxResearchTasks} specific tasks.
+Your task: Analyze the user's question and determine if it needs research or if you already know the answer.
 
 You have access to tools during planning:
 - **AskUser**: Use this if the user's question is ambiguous or unclear. Don't hesitate to ask for clarification.
@@ -534,19 +570,22 @@ First, think through the question:
 1. What are the key aspects that need investigation?
 2. What tools would be most effective for gathering information?
 3. Is the question clear or ambiguous? If you are very unclear about requirements, consider using AskUser to clarify.
-
-Then create specific research tasks. Each task should:
-- Have a clear, specific goal
-- Be designed to use the tools that will be available to the research agents
-- Produce findings that contribute to answering the user's question
+4. Is this a trivial question that you can answer directly based on general MSBuild knowledge WITHOUT needing to analyze the specific build log?
+   - If you are VERY CONFIDENT you know the answer, you can provide it directly instead of creating research tasks.
 
 The research agents will have access to these tools:
 
 {researchToolDescriptions}
 
-Consider these tools when designing your research plan. All tools are read-only. Each task should leverage the appropriate tools to gather the necessary information.
+**Two Response Options:**
 
-After your thinking and any tool calls, end your response with the plan in JSON format:
+**Option 1 - Research Required** (default, use when answer requires examining this specific build log):
+Create specific research tasks with 1-{MaxResearchTasks} tasks. Each task should:
+- Have a clear, specific goal
+- Be designed to use the tools that will be available to the research agents
+- Produce findings that contribute to answering the user's question
+
+End your response with the plan in JSON format:
 ```json
 {{
   ""tasks"": [
@@ -554,7 +593,16 @@ After your thinking and any tool calls, end your response with the plan in JSON 
     {{""id"": ""task2"", ""description"": ""Brief description"", ""goal"": ""Specific investigation goal""}}
   ]
 }}
-```";
+```
+
+**Option 2 - Direct Answer** (use ONLY when you are confident about the answer based on general knowledge):
+Provide the answer directly. End your response with JSON format:
+```json
+{{
+  ""directAnswer"": ""Your complete answer to the user's question""
+}}
+```
+";
         }
 
         private string GetResearchSystemPrompt()
@@ -754,6 +802,7 @@ Use GUI tools to make your insights actionable and immediately explorable by the
         private class PlanResponse
         {
             public List<TaskData> Tasks { get; set; } = new List<TaskData>();
+            public string? DirectAnswer { get; set; }
         }
 
         private class TaskData

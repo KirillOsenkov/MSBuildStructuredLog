@@ -76,6 +76,7 @@ namespace StructuredLogger.LLM
         public int CurrentTaskIndex { get; set; }
         public Dictionary<string, string> Findings { get; set; }
         public string? PlanningThinking { get; set; }
+        public string? DirectAnswer { get; set; }
         public string? FinalSummary { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime? EndTime { get; set; }
