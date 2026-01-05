@@ -31,7 +31,6 @@ namespace StructuredLogger.LLM
 
         public bool IsConfigured => configuration?.IsConfigured ?? false;
 
-        // Configuration
         public int MaxResearchTasks { get; set; } = 5;
         public int MaxTokensPerTask { get; set; } = 4000;
 
