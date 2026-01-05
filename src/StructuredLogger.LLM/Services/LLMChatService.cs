@@ -172,7 +172,6 @@ Be concise and helpful. Format your responses clearly.
 Available context:
 " + overview;
 
-            // Check if we have GUI manipulation tools available
             if (HasGuiManipulationTools())
             {
                 basePrompt += @"
