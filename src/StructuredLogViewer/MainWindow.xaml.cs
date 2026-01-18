@@ -1250,5 +1250,10 @@ that project." };
                 exceptionPanel.Visibility = Visibility.Hidden;
             }
         }
+
+        private void LLMButton_Click(object sender, RoutedEventArgs e)
+        {
+            Process.Start(new ProcessStartInfo("https://github.com/JanKrivanek/MSBuildStructuredLog/releases") { UseShellExecute = true });
+        }
     }
 }
