@@ -44,6 +44,7 @@
         <MenuItem Header="Search Syntax" Click="HelpLink3_Click" />
         <MenuItem Header="https://github.com/KirillOsenkov/MSBuildStructuredLog" Click="HelpLink_Click" />
         <MenuItem Header="https://msbuildlog.com" Click="HelpLink2_Click" />
+        <MenuItem Header="Try a prototype with LLM-integration" Click="LLMButton_Click" />
         <Separator />
         <MenuItem Header="About" Click="HelpAbout_Click" />
       </MenuItem>
@@ -65,6 +66,7 @@
         <Button x:Name="closeExceptionButton"
             Click="CloseException_Click"
             BorderThickness="0"
+            VerticalAlignment="Center"
             TextBlock.Foreground="Black"
             Background="Transparent"
             MinWidth="16"
@@ -74,13 +76,14 @@
             Padding="8,2,8,2"
             Margin="0,0,8,0"
             Click="LLMButton_Click"
-            ToolTip="Download LLM-enabled preview version"
+            VerticalAlignment="Center"
+            ToolTip="Try a prototype with LLM integration"
             Background="{DynamicResource Theme_InfoBarBackground}"
             Foreground="{DynamicResource Theme_Foreground}"
             BorderThickness="1">
-          <StackPanel Orientation="Horizontal">
-            <TextBlock Text="✨" FontSize="14" Margin="0,0,4,0" />
-            <TextBlock Text="LLM (Preview)" />
+          <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <TextBlock Text="✨" FontSize="14" Margin="0,0,4,0" VerticalAlignment="Center" />
+            <TextBlock Text="LLM integration (Preview)" VerticalAlignment="Center" />
           </StackPanel>
       </Button>
     </StackPanel>
