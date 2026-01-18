@@ -476,6 +476,7 @@ namespace StructuredLogViewer
             if (mainContent.Content is BuildControl current)
             {
                 lastSearchText = current.searchLogControl.SearchText;
+                current.LLMChatInitialized -= OnLLMChatInitialized;
             }
 
             mainContent.Content = content;
@@ -485,19 +486,27 @@ namespace StructuredLogViewer
                 logFilePath = null;
                 projectFilePath = null;
                 currentBuild = null;
+                llmButton.Visibility = Visibility.Collapsed;
             }
 
-            if (content is BuildControl)
+            if (content is BuildControl buildControl)
             {
                 ReloadMenu.Visibility = logFilePath != null ? Visibility.Visible : Visibility.Collapsed;
                 SaveAsMenu.Visibility = Visibility.Visible;
                 RedactSecretsMenu.Visibility = Visibility.Visible;
+
+                // Show LLM button immediately - initialization will happen lazily when first opened
+                llmButton.Visibility = Visibility.Visible;
+                
+                // Subscribe to LLM chat initialization event (still used for error reporting)
+                buildControl.LLMChatInitialized += OnLLMChatInitialized;
             }
             else
             {
                 ReloadMenu.Visibility = Visibility.Collapsed;
                 SaveAsMenu.Visibility = Visibility.Collapsed;
                 RedactSecretsMenu.Visibility = Visibility.Collapsed;
+                llmButton.Visibility = Visibility.Collapsed;
             }
 
             // If we had text inside search log control bring it back
@@ -1248,6 +1257,30 @@ that project." };
             else
             {
                 exceptionPanel.Visibility = Visibility.Hidden;
+            }
+        }
+
+        private void OnLLMChatInitialized(object sender, bool success)
+        {
+            // Event is now primarily used to report initialization errors
+            // Button is already visible since we use lazy initialization
+            if (!success)
+            {
+                // Could show an error message to the user here if needed
+            }
+        }
+
+        private void LLMButton_Click(object sender, RoutedEventArgs e)
+        {
+            var buildControl = CurrentBuildControl;
+            if (buildControl != null)
+            {
+                buildControl.ToggleLLMChat(llmButton.IsChecked == true);
+            }
+            else
+            {
+                // No build loaded
+                llmButton.IsChecked = false;
             }
         }
     }

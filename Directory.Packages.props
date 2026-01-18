@@ -10,6 +10,7 @@
   <ItemGroup>
     <PackageVersion Include="AdonisUI" Version="1.17.1" />
     <PackageVersion Include="AdonisUI.ClassicTheme" Version="1.17.1" />
+    <PackageVersion Include="Anthropic.Foundry" Version="0.1.0" />
     <PackageVersion Include="AutomaticGraphLayout.Drawing" Version="1.1.12" />
     <PackageVersion Include="AutomaticGraphLayout.WpfGraphControl" Version="1.1.12" />
     <PackageVersion Include="AvalonEdit" Version="6.3.0.90" />
@@ -17,7 +18,11 @@
     <PackageVersion Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Azure.AI.Inference" Version="1.0.0-beta.5" />
+    <PackageVersion Include="Azure.AI.OpenAI" Version="2.8.0-beta.1" />
+    <PackageVersion Include="Azure.Core" Version="1.50.0" />
     <PackageVersion Include="DiffPlex" Version="1.7.2" />
+    <PackageVersion Include="Microsoft.Extensions.AI.OpenAI" Version="10.1.1-preview.1.25612.2" />
     <PackageVersion Include="DotUtils.MsBuild.BinlogRedactor.SensitiveDataDetector" Version="0.0.9" />
     <PackageVersion Include="DotUtils.StreamUtils.Sources" Version="0.0.8" />
     <PackageVersion Include="FluentAssertions" Version="6.12.0" />
@@ -27,6 +32,9 @@
     <PackageVersion Include="Microsoft.Build.Locator" Version="1.9.1" />
     <PackageVersion Include="Microsoft.Build.Tasks.Core" Version="$(MSBuildPackageVersion)" />
     <PackageVersion Include="Microsoft.Build.Utilities.Core" Version="$(MSBuildPackageVersion)" />
+    <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.AI" Version="10.1.1" />
+    <PackageVersion Include="Microsoft.Extensions.AI.AzureAIInference" Version="10.0.0-preview.1.25559.3" />
     <PackageVersion Include="Microsoft.IO.Redist" Version="6.1.0" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
     <!-- never update Cecil as this is the version required by Squirrel -->
@@ -37,14 +45,19 @@
     <PackageVersion Include="NuGet.ProjectModel" Version="6.11.0" />
     <PackageVersion Include="Nullable" Version="1.3.1" />
     <PackageVersion Include="squirrel.windows" Version="1.4.4" />
+    <PackageVersion Include="System.ClientModel" Version="1.8.1" />
     <PackageVersion Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
     <PackageVersion Include="System.Collections.Immutable" Version="8.0.0" />
+    <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="10.0.1" />
     <PackageVersion Include="System.Formats.Asn1" Version="8.0.1" />
-    <PackageVersion Include="System.Memory" Version="4.6.0" />
-    <PackageVersion Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.0" />
-    <PackageVersion Include="System.Text.Json" Version="8.0.5" />
+    <PackageVersion Include="System.Memory" Version="4.6.3" />
+    <PackageVersion Include="System.Memory.Data" Version="10.0.0" />
+    <PackageVersion Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
+    <PackageVersion Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
+    <PackageVersion Include="System.Text.Encodings.Web" Version="10.0.1" />
+    <PackageVersion Include="System.Text.Json" Version="10.0.1" />
     <PackageVersion Include="System.Threading.Tasks.Dataflow" Version="8.0.0" />
-    <PackageVersion Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
+    <PackageVersion Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
     <PackageVersion Include="xunit" Version="2.9.0" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
   </ItemGroup>

@@ -1,0 +1,198 @@
+<Window x:Class="StructuredLogViewer.Controls.LLMConfigurationDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Configure LLM Chat"
+        Width="620"
+        SizeToContent="Height"
+        MinHeight="400"
+        MaxHeight="800"
+        Background="{DynamicResource Theme_Background}"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize">
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Model Authentication Section -->
+        <GroupBox Grid.Row="0" 
+                  Header="Model Authentication" 
+                  Margin="0,0,0,12"
+                  Foreground="{DynamicResource Theme_Foreground}">
+            <StackPanel Margin="8">
+                <!-- GitHub Login -->
+                <DockPanel Margin="0,0,0,12">
+                    <Button x:Name="githubLoginButton"
+                            DockPanel.Dock="Left"
+                            Content="🔑 GitHub Login"
+                            Click="GitHubLoginButton_Click"
+                            Padding="12,4"
+                            ToolTip="Authenticate with GitHub Copilot (OAuth)"
+                            Background="{DynamicResource Theme_Background}"
+                            Foreground="{DynamicResource Theme_Foreground}"/>
+                    <TextBlock Text="Or provide the following authentication options manually:"
+                               VerticalAlignment="Center"
+                               Margin="12,0,0,0"
+                               FontStyle="Italic"
+                               Foreground="{DynamicResource Theme_Foreground}"/>
+                </DockPanel>
+                
+                <!-- Endpoint -->
+                <StackPanel Margin="0,0,0,12">
+                    <TextBlock Text="Endpoint URL" 
+                               FontWeight="Bold" 
+                               Margin="0,0,0,4"
+                               Foreground="{DynamicResource Theme_Foreground}"/>
+                    <TextBox x:Name="endpointTextBox"
+                             Padding="4"
+                             ToolTip="E.g., https://your-resource.openai.azure.com/"
+                             TextChanged="EndpointTextBox_TextChanged"
+                             Background="{DynamicResource Theme_Background}"
+                             Foreground="{DynamicResource Theme_Foreground}"/>
+                </StackPanel>
+
+                <!-- Model Name -->
+                <StackPanel Margin="0,0,0,12">
+                    <TextBlock Text="Model/Deployment Name" 
+                               FontWeight="Bold" 
+                               Margin="0,0,0,4"
+                               Foreground="{DynamicResource Theme_Foreground}"/>
+                    <ComboBox x:Name="modelComboBox"
+                             Padding="4"
+                             IsEditable="True"
+                             ToolTip="Select or enter a model name"
+                             Background="{DynamicResource Theme_Background}"
+                             Foreground="{DynamicResource Theme_Foreground}"/>
+                </StackPanel>
+
+                <!-- API Key -->
+                <StackPanel>
+                    <TextBlock Text="API Key" 
+                               FontWeight="Bold"
+                               Margin="0,0,0,4"
+                               Foreground="{DynamicResource Theme_Foreground}"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        
+                        <PasswordBox x:Name="apiKeyPasswordBox"
+                                     Grid.Column="0"
+                                     Padding="4"
+                                     PasswordChar="●"
+                                     Background="{DynamicResource Theme_Background}"
+                                     Foreground="{DynamicResource Theme_Foreground}"
+                                     ToolTip="Your API key (kept secure)"/>
+                        
+                        <TextBox x:Name="apiKeyTextBox"
+                                 Grid.Column="0"
+                                 Padding="4"
+                                 Visibility="Collapsed"
+                                 Background="{DynamicResource Theme_Background}"
+                                 Foreground="{DynamicResource Theme_Foreground}"
+                                 ToolTip="Your API key"/>
+                        
+                        <Button x:Name="toggleApiKeyButton"
+                                Grid.Column="1"
+                                Content="👁"
+                                Width="30"
+                                Margin="4,0,0,0"
+                                Click="ToggleApiKeyVisibility_Click"
+                                ToolTip="Show/Hide API Key"
+                                Background="{DynamicResource Theme_Background}"
+                                Foreground="{DynamicResource Theme_Foreground}"/>
+                    </Grid>
+                </StackPanel>
+            </StackPanel>
+        </GroupBox>
+
+        <!-- Chat Options Section -->
+        <GroupBox Grid.Row="1" 
+                  Header="Chat Options" 
+                  Margin="0,0,0,12"
+                  Foreground="{DynamicResource Theme_Foreground}">
+            <StackPanel Margin="8">
+                <CheckBox x:Name="autoSendOnEnterCheckBox"
+                          Content="Auto send on Enter"
+                          IsChecked="True"
+                          Margin="0,0,0,6"
+                          Foreground="{DynamicResource Theme_Foreground}"
+                          ToolTip="When enabled, pressing Enter sends the message. Use Shift+Enter for new line."/>
+
+                <CheckBox x:Name="agentModeCheckBox"
+                          Content="Agent mode"
+                          IsChecked="True"
+                          Margin="0,0,0,6"
+                          Foreground="{DynamicResource Theme_Foreground}"
+                          ToolTip="Enable agent mode for multi-step reasoning on complex queries. Recommended for thorough analysis."/>
+
+                <CheckBox x:Name="enableAskUserCheckBox"
+                          Content="Enable LLM user clarification"
+                          IsChecked="True"
+                          Margin="0,0,0,6"
+                          Foreground="{DynamicResource Theme_Foreground}"
+                          ToolTip="Allow the LLM to ask clarifying questions when requirements are ambiguous. Recommended for interactive analysis."/>
+
+                <DockPanel Margin="0,6,0,0">
+                    <TextBlock Text="Logging Level:" 
+                               VerticalAlignment="Center" 
+                               Margin="0,0,8,0"
+                               Foreground="{DynamicResource Theme_Foreground}"/>
+                    <ComboBox x:Name="loggingLevelComboBox"
+                              SelectedIndex="1"
+                              Background="{DynamicResource Theme_Background}"
+                              Foreground="{DynamicResource Theme_Foreground}"
+                              ToolTip="Control how much debug information is shown in the chat">
+                        <ComboBoxItem Content="Quiet (errors only)"/>
+                        <ComboBoxItem Content="Normal (errors + info)"/>
+                        <ComboBoxItem Content="Verbose (all debug)"/>
+                    </ComboBox>
+                </DockPanel>
+            </StackPanel>
+        </GroupBox>
+
+        <!-- Buttons -->
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="1" 
+                    Content="Apply"
+                    Click="ApplyButton_Click"
+                    MinWidth="75" 
+                    MinHeight="23" 
+                    Margin="0,0,10,0" 
+                    Padding="15,2"
+                    Background="{DynamicResource Theme_Background}"
+                    Foreground="{DynamicResource Theme_Foreground}"
+                    ToolTip="Apply settings for this session only"/>
+            <Button Grid.Column="2" 
+                    IsDefault="True" 
+                    Content="Apply and Persist"
+                    Click="ApplyAndPersistButton_Click"
+                    MinWidth="75" 
+                    MinHeight="23" 
+                    Margin="0,0,10,0" 
+                    Padding="15,2"
+                    Background="{DynamicResource Theme_Background}"
+                    Foreground="{DynamicResource Theme_Foreground}"
+                    ToolTip="Apply settings and save them for future sessions"/>
+            <Button Grid.Column="3" 
+                    IsCancel="True" 
+                    Content="Cancel"
+                    MinWidth="75" 
+                    MinHeight="23" 
+                    Padding="15,2"
+                    Background="{DynamicResource Theme_Background}"
+                    Foreground="{DynamicResource Theme_Foreground}"/>
+        </Grid>
+    </Grid>
+</Window>

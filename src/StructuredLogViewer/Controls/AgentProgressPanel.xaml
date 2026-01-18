@@ -1,0 +1,112 @@
+<UserControl x:Class="StructuredLogViewer.Controls.AgentProgressPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="150" d:DesignWidth="400"
+             Background="{DynamicResource Theme_Background}">
+  <Border BorderBrush="#3498db"
+          BorderThickness="2"
+          CornerRadius="4"
+          Margin="8,8,8,4"
+          Background="#f8f9fa">
+    <DockPanel>
+      <!-- Header with collapse button -->
+      <Border DockPanel.Dock="Top"
+              Background="#3498db"
+              Padding="8,4">
+        <DockPanel>
+          <Button x:Name="collapseButton"
+                  DockPanel.Dock="Right"
+                  Content="▲"
+                  Width="24"
+                  Height="24"
+                  Background="Transparent"
+                  BorderThickness="0"
+                  Foreground="White"
+                  FontWeight="Bold"
+                  Click="CollapseButton_Click"
+                  ToolTip="Collapse/Expand" />
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Text="🤖" FontSize="16" Margin="0,0,6,0" />
+            <TextBlock x:Name="headerText"
+                       Text="Agent Mode"
+                       FontWeight="Bold"
+                       FontSize="14"
+                       Foreground="White"
+                       VerticalAlignment="Center" />
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <!-- Collapsible content panel -->
+      <Grid x:Name="contentPanel"
+            Margin="8">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="*" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Progress message -->
+        <TextBlock x:Name="progressMessage"
+                   Grid.Row="0"
+                   Text="Initializing..."
+                   Foreground="#2c3e50"
+                   FontWeight="SemiBold"
+                   Margin="0,0,0,8"
+                   TextWrapping="Wrap" />
+
+        <!-- Tasks list -->
+        <Border Grid.Row="1"
+                BorderBrush="#ddd"
+                BorderThickness="1"
+                CornerRadius="3"
+                Padding="6"
+                Background="White"
+                MaxHeight="120">
+          <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <ItemsControl x:Name="tasksPanel">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <DockPanel Margin="0,2">
+                    <TextBlock Text="{Binding StatusEmoji}"
+                               Width="20"
+                               DockPanel.Dock="Left"
+                               VerticalAlignment="Center" />
+                    <TextBlock DockPanel.Dock="Left"
+                               VerticalAlignment="Center"
+                               Margin="4,0,0,0">
+                      <Run Text="{Binding Id, Mode=OneWay}" FontWeight="SemiBold" />
+                      <Run Text=": " />
+                      <Run Text="{Binding Description, Mode=OneWay}" />
+                    </TextBlock>
+                  </DockPanel>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+        </Border>
+
+        <!-- Status bar -->
+        <DockPanel Grid.Row="2"
+                   Margin="0,8,0,0">
+          <TextBlock x:Name="statusText"
+                     DockPanel.Dock="Left"
+                     Text="Ready"
+                     FontSize="11"
+                     Foreground="#7f8c8d"
+                     VerticalAlignment="Center" />
+          <ProgressBar x:Name="progressBar"
+                       Height="4"
+                       Margin="8,0,0,0"
+                       Minimum="0"
+                       Maximum="100"
+                       Value="0"
+                       Foreground="#3498db" />
+        </DockPanel>
+      </Grid>
+    </DockPanel>
+  </Border>
+</UserControl>

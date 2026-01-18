@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -387,6 +385,64 @@ namespace StructuredLogViewer
             set => Set(ref ignoreEmbeddedFiles, value);
         }
 
+        // LLM Configuration Settings
+        private static string? llmEndpoint;
+        public static string? LLMEndpoint
+        {
+            get => Get(ref llmEndpoint);
+            set => Set(ref llmEndpoint, value);
+        }
+
+        private static string? llmModel;
+        public static string? LLMModel
+        {
+            get => Get(ref llmModel);
+            set => Set(ref llmModel, value);
+        }
+
+        private static string? llmApiKeyEncrypted;
+        public static string? LLMApiKeyEncrypted
+        {
+            get => Get(ref llmApiKeyEncrypted);
+            set => Set(ref llmApiKeyEncrypted, value);
+        }
+
+        private static bool llmAutoSendOnEnter = true;
+        public static bool LLMAutoSendOnEnter
+        {
+            get => Get(ref llmAutoSendOnEnter);
+            set => Set(ref llmAutoSendOnEnter, value);
+        }
+
+        private static bool llmAgentMode = true;
+        public static bool LLMAgentMode
+        {
+            get => Get(ref llmAgentMode);
+            set => Set(ref llmAgentMode, value);
+        }
+
+        private static int llmLoggingLevel = 1; // Default to Normal
+        public static int LLMLoggingLevel
+        {
+            get => Get(ref llmLoggingLevel);
+            set => Set(ref llmLoggingLevel, value);
+        }
+
+        private static string? llmAvailableModels;
+        public static string? LLMAvailableModels
+        {
+            get => Get(ref llmAvailableModels);
+            set => Set(ref llmAvailableModels, value);
+        }
+
+        private static bool llmEnableAskUser = true; // Default to enabled
+        public static bool LLMEnableAskUser
+        {
+            get => Get(ref llmEnableAskUser);
+            set => Set(ref llmEnableAskUser, value);
+        }
+
+
         private static void EnsureSettingsRead()
         {
             if (!settingsRead)
@@ -402,6 +458,14 @@ namespace StructuredLogViewer
         const string UseDarkThemeSetting = "UseDarkTheme=";
         const string WindowPositionSetting = "WindowPosition=";
         const string IgnoreEmbeddedFilesSetting = "IgnoreEmbeddedFiles=";
+        const string LLMEndpointSetting = "LLMEndpoint=";
+        const string LLMModelSetting = "LLMModel=";
+        const string LLMApiKeyEncryptedSetting = "LLMApiKeyEncrypted=";
+        const string LLMAutoSendOnEnterSetting = "LLMAutoSendOnEnter=";
+        const string LLMAgentModeSetting = "LLMAgentMode=";
+        const string LLMLoggingLevelSetting = "LLMLoggingLevel=";
+        const string LLMAvailableModelsSetting = "LLMAvailableModels=";
+        const string LLMEnableAskUserSetting = "LLMEnableAskUser=";
 
         private static void SaveSettings()
         {
@@ -413,6 +477,14 @@ namespace StructuredLogViewer
             sb.AppendLine(UseDarkThemeSetting + useDarkTheme.ToString());
             sb.AppendLine(WindowPositionSetting + windowPosition);
             sb.AppendLine(IgnoreEmbeddedFilesSetting + IgnoreEmbeddedFiles);
+            sb.AppendLine(LLMEndpointSetting + llmEndpoint);
+            sb.AppendLine(LLMModelSetting + llmModel);
+            sb.AppendLine(LLMApiKeyEncryptedSetting + llmApiKeyEncrypted);
+            sb.AppendLine(LLMAutoSendOnEnterSetting + llmAutoSendOnEnter.ToString());
+            sb.AppendLine(LLMAgentModeSetting + llmAgentMode.ToString());
+            sb.AppendLine(LLMLoggingLevelSetting + llmLoggingLevel.ToString());
+            sb.AppendLine(LLMAvailableModelsSetting + llmAvailableModels);
+            sb.AppendLine(LLMEnableAskUserSetting + llmEnableAskUser.ToString());
 
             using (SingleGlobalInstance.Acquire(Path.GetFileName(settingsFilePath)))
             {
@@ -441,6 +513,14 @@ namespace StructuredLogViewer
                     ProcessLine(UseDarkThemeSetting, line, ref useDarkTheme);
                     ProcessString(WindowPositionSetting, line, ref windowPosition);
                     ProcessString(IgnoreEmbeddedFilesSetting, line, ref ignoreEmbeddedFiles);
+                    ProcessString(LLMEndpointSetting, line, ref llmEndpoint);
+                    ProcessString(LLMModelSetting, line, ref llmModel);
+                    ProcessString(LLMApiKeyEncryptedSetting, line, ref llmApiKeyEncrypted);
+                    ProcessLine(LLMAutoSendOnEnterSetting, line, ref llmAutoSendOnEnter);
+                    ProcessLine(LLMAgentModeSetting, line, ref llmAgentMode);
+                    ProcessInt(LLMLoggingLevelSetting, line, ref llmLoggingLevel);
+                    ProcessString(LLMAvailableModelsSetting, line, ref llmAvailableModels);
+                    ProcessLine(LLMEnableAskUserSetting, line, ref llmEnableAskUser);
 
                     void ProcessString(string setting, string text, ref string? variable)
                     {
@@ -464,6 +544,20 @@ namespace StructuredLogViewer
                         if (bool.TryParse(value, out bool boolValue))
                         {
                             variable = boolValue;
+                        }
+                    }
+
+                    void ProcessInt(string setting, string text, ref int variable)
+                    {
+                        if (!text.StartsWith(setting))
+                        {
+                            return;
+                        }
+
+                        var value = text.Substring(setting.Length);
+                        if (int.TryParse(value, out int intValue))
+                        {
+                            variable = intValue;
                         }
                     }
                 }
@@ -539,6 +633,21 @@ namespace StructuredLogViewer
                 {
                 }
             }
+        }
+
+        /// <summary>
+        /// Clears persisted LLM configuration (useful when tokens expire or become invalid).
+        /// </summary>
+        public static void ClearLLMConfiguration()
+        {
+            LLMEndpoint = null;
+            LLMModel = null;
+            LLMApiKeyEncrypted = null;
+            LLMAutoSendOnEnter = true;
+            LLMAgentMode = true;
+            LLMLoggingLevel = 1;
+            LLMAvailableModels = null;
+            LLMEnableAskUser = true;
         }
     }
 }

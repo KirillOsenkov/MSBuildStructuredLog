@@ -1,0 +1,308 @@
+<UserControl x:Class="StructuredLogViewer.Controls.LLMChatControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:StructuredLogViewer.Controls"
+             mc:Ignorable="d"
+             d:DesignHeight="450" d:DesignWidth="400"
+             Background="{DynamicResource Theme_Background}">
+  <DockPanel>
+    <!-- Header -->
+    <Border DockPanel.Dock="Top"
+            Background="{DynamicResource Theme_InfoBarBackground}"
+            BorderBrush="Gray"
+            BorderThickness="0,0,0,1"
+            Padding="8,4">
+      <DockPanel>
+        <Button x:Name="clearButton"
+                DockPanel.Dock="Right"
+                Content="Clear"
+                Padding="8,2"
+                Margin="4,0,0,0"
+                Click="ClearButton_Click"
+                ToolTip="Clear conversation" />
+        <Button x:Name="configureButton"
+                DockPanel.Dock="Right"
+                Content="⚙ Configure"
+                Padding="8,2"
+                Margin="4,0,0,0"
+                Click="ConfigureButton_Click"
+                ToolTip="Configure LLM settings" />
+        <ToggleButton x:Name="agentModeToggle"
+                      DockPanel.Dock="Right"
+                      Content="🤖"
+                      Padding="8,2"
+                      Margin="4,0,0,0"
+                      Click="AgentModeToggle_Click"
+                      ToolTip="Agent Mode: Multi-step reasoning for complex queries" />
+        <TextBlock Text="LLM Chat (Preview)"
+                   FontWeight="Bold"
+                   VerticalAlignment="Center"
+                   Foreground="{DynamicResource Theme_Foreground}"/>
+      </DockPanel>
+    </Border>
+
+    <!-- Agent Progress Panel -->
+    <local:AgentProgressPanel x:Name="agentProgressPanel"
+                              DockPanel.Dock="Top" />
+
+    <!-- Status Bar -->
+    <Border x:Name="statusBar"
+            DockPanel.Dock="Top"
+            Background="{DynamicResource Theme_InfoBarBackground}"
+            BorderBrush="Gray"
+            BorderThickness="0,0,0,1"
+            Padding="8,4"
+            Visibility="Collapsed">
+      <TextBlock x:Name="statusText"
+                 TextWrapping="Wrap"
+                 Foreground="{DynamicResource Theme_Foreground}"/>
+    </Border>
+
+    <!-- Input Area -->
+    <Border DockPanel.Dock="Bottom"
+            Background="{DynamicResource Theme_Background}"
+            BorderBrush="Gray"
+            BorderThickness="0,1,0,0"
+            Padding="8">
+      <StackPanel>
+        <!-- Attachment Bar for Multi-Binlog Support -->
+        <StackPanel x:Name="attachmentBar"
+                    Orientation="Horizontal"
+                    Margin="0,0,0,6">
+          <!-- Attach Button (paperclip) -->
+          <Button x:Name="attachBinlogButton"
+                  Click="AttachBinlog_Click"
+                  ToolTip="Attach additional binlog files for comparison"
+                  Background="Transparent"
+                  BorderThickness="0"
+                  Padding="4,2"
+                  Cursor="Hand">
+            <TextBlock Text="📎" FontSize="14"/>
+          </Button>
+          <!-- Attached Files List (horizontal, compact) -->
+          <ItemsControl x:Name="attachedFilesList">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Orientation="Horizontal"/>
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border Background="{DynamicResource Theme_InfoBarBackground}"
+                        CornerRadius="3"
+                        Margin="2,0"
+                        Padding="6,2">
+                  <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="{Binding FileName}"
+                               ToolTip="{Binding FullPath}"
+                               VerticalAlignment="Center"
+                               FontSize="11"
+                               Foreground="{DynamicResource Theme_Foreground}"/>
+                    <Button Content="✕"
+                            Click="DetachBinlog_Click"
+                            Tag="{Binding BuildId}"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            FontSize="10"
+                            Padding="4,0,0,0"
+                            Cursor="Hand"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource Theme_Foreground}"/>
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+        <!-- Input Controls -->
+        <DockPanel>
+          <Button x:Name="cancelButton"
+                  DockPanel.Dock="Right"
+                  Content="Cancel"
+                  Padding="12,4"
+                  Margin="8,0,0,0"
+                  Click="CancelButton_Click"
+                  IsEnabled="True"
+                  MinWidth="60"
+                  Visibility="Collapsed" />
+          <Button x:Name="sendButton"
+                  DockPanel.Dock="Right"
+                  Content="Send"
+                  Padding="12,4"
+                  Margin="8,0,0,0"
+                  Click="SendButton_Click"
+                  IsEnabled="True"
+                  MinWidth="60" />
+          <TextBox x:Name="inputTextBox"
+                   TextWrapping="Wrap"
+                   AcceptsReturn="True"
+                   MaxHeight="100"
+                   VerticalScrollBarVisibility="Auto"
+                   Padding="4"
+                   PreviewKeyDown="InputTextBox_PreviewKeyDown"
+                   Background="{DynamicResource Theme_Background}"
+                   Foreground="{DynamicResource Theme_Foreground}"
+                   ToolTip="Type your question. Press Enter to send (if auto-send enabled) or click Send button."/>
+        </DockPanel>
+      </StackPanel>
+    </Border>
+
+    <!-- Chat Messages Area -->
+    <ScrollViewer x:Name="chatScrollViewer"
+                  VerticalScrollBarVisibility="Auto"
+                  Padding="8">
+      <ItemsControl x:Name="messagesPanel">
+        <ItemsControl.Resources>
+          <!-- Template for regular messages -->
+          <DataTemplate x:Key="RegularMessageTemplate">
+            <Border Margin="0,0,0,8"
+                    Padding="8"
+                    CornerRadius="4"
+                    Background="{Binding RoleBackground}"
+                    BorderBrush="{Binding RoleBorder}"
+                    BorderThickness="1">
+              <DockPanel>
+                <TextBlock DockPanel.Dock="Top"
+                           Text="{Binding Role}"
+                           FontWeight="Bold"
+                           Foreground="{Binding RoleForeground}"
+                           Margin="0,0,0,4"/>
+                <local:MarkdownTextBlock MarkdownText="{Binding Content}"
+                                         Foreground="{Binding ContentForeground}"/>
+              </DockPanel>
+            </Border>
+          </DataTemplate>
+
+          <!-- Template for tool call messages -->
+          <DataTemplate x:Key="ToolCallMessageTemplate">
+            <Border Margin="0,0,0,8"
+                    Padding="0"
+                    CornerRadius="4"
+                    Background="{Binding RoleBackground}"
+                    BorderBrush="{Binding RoleBorder}"
+                    BorderThickness="1">
+              <Expander IsExpanded="{Binding ToolCallData.IsExpanded, Mode=TwoWay}">
+                <Expander.Header>
+                  <TextBlock Text="{Binding ToolCallData.HeaderText, Mode=OneWay}"
+                             FontFamily="Consolas"
+                             FontSize="11"
+                             Foreground="#555"
+                             TextTrimming="CharacterEllipsis"
+                             Padding="4,2"/>
+                </Expander.Header>
+                <Border Background="White"
+                        Padding="12"
+                        BorderBrush="#DDD"
+                        BorderThickness="0,1,0,0">
+                  <StackPanel>
+                    <!-- Tool Name -->
+                    <TextBlock Text="Tool Name"
+                               FontWeight="Bold"
+                               Foreground="#333"
+                               Margin="0,0,0,4"/>
+                    <TextBlock Text="{Binding ToolCallData.ToolName, Mode=OneWay}"
+                               FontFamily="Consolas"
+                               Foreground="#0066CC"
+                               Margin="0,0,0,12"/>
+
+                    <!-- Arguments -->
+                    <TextBlock Text="Arguments"
+                               FontWeight="Bold"
+                               Foreground="#333"
+                               Margin="0,0,0,4"/>
+                    <TextBox Text="{Binding ToolCallData.FormattedArguments, Mode=OneWay}"
+                             IsReadOnly="True"
+                             TextWrapping="Wrap"
+                             FontFamily="Consolas"
+                             FontSize="11"
+                             Background="#F9F9F9"
+                             BorderBrush="#DDD"
+                             BorderThickness="1"
+                             Padding="6"
+                             Margin="0,0,0,12"
+                             MaxHeight="200"
+                             VerticalScrollBarVisibility="Auto"/>
+
+                    <!-- Result -->
+                    <TextBlock Text="Result"
+                               FontWeight="Bold"
+                               Foreground="#333"
+                               Margin="0,0,0,4"/>
+                    <TextBox Text="{Binding ToolCallData.FormattedResult, Mode=OneWay}"
+                             IsReadOnly="True"
+                             TextWrapping="Wrap"
+                             FontFamily="Consolas"
+                             FontSize="11"
+                             Background="#F9F9F9"
+                             BorderBrush="#DDD"
+                             BorderThickness="1"
+                             Padding="6"
+                             Margin="0,0,0,12"
+                             MaxHeight="300"
+                             VerticalScrollBarVisibility="Auto"/>
+
+                    <!-- Timing Info -->
+                    <TextBlock Foreground="#666" FontSize="10">
+                      <Run Text="Executed: "/>
+                      <Run Text="{Binding ToolCallData.StartTime, Mode=OneWay, StringFormat='{}{0:HH:mm:ss}'}"/>
+                      <Run Text=" • Duration: "/>
+                      <Run Text="{Binding ToolCallData.DurationText, Mode=OneWay}"/>
+                    </TextBlock>
+                  </StackPanel>
+                </Border>
+              </Expander>
+            </Border>
+          </DataTemplate>
+
+          <!-- Template for question messages with option buttons -->
+          <DataTemplate x:Key="QuestionMessageTemplate">
+            <Border Margin="0,0,0,8"
+                    Padding="8"
+                    CornerRadius="4"
+                    Background="#FFF9E6"
+                    BorderBrush="#FFB84D"
+                    BorderThickness="2">
+              <StackPanel>
+                <TextBlock DockPanel.Dock="Top"
+                           Text="{Binding Role}"
+                           FontWeight="Bold"
+                           Foreground="{Binding RoleForeground}"
+                           Margin="0,0,0,4"/>
+                <local:MarkdownTextBlock MarkdownText="{Binding Content}"
+                                         Foreground="{Binding ContentForeground}"
+                                         Margin="0,0,0,8"/>
+                <!-- Option buttons if available -->
+                <ItemsControl ItemsSource="{Binding QuestionOptions}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Button Content="{Binding}"
+                              Margin="0,2"
+                              Padding="8,4"
+                              HorizontalAlignment="Stretch"
+                              Click="OptionButton_Click"
+                              Tag="{Binding}"/>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock Text="Or type your own response below..."
+                           FontStyle="Italic"
+                           FontSize="11"
+                           Foreground="#666"
+                           Margin="0,8,0,0"/>
+              </StackPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.Resources>
+
+        <ItemsControl.ItemTemplateSelector>
+          <local:ChatMessageTemplateSelector
+            RegularMessageTemplate="{StaticResource RegularMessageTemplate}"
+            ToolCallMessageTemplate="{StaticResource ToolCallMessageTemplate}"
+            QuestionMessageTemplate="{StaticResource QuestionMessageTemplate}"/>
+        </ItemsControl.ItemTemplateSelector>
+      </ItemsControl>
+    </ScrollViewer>
+  </DockPanel>
+</UserControl>
