@@ -238,7 +238,7 @@ Analyze this question carefully. Think through:
 - Which tools would be most appropriate for each investigation?
 - Are there any ambiguities that you will not be able to resolve yourself and that absolutely need clarification from the user?
 
-You can use the available tools (including AskUser if the question is ambiguous) to help you plan better.
+You can use the available tools (including AskUser if the question is ambiguous, unclear or unrelated) to help you plan better.
 
 After your analysis, create a research plan with 1-{MaxResearchTasks} specific tasks.
 End your response with the plan in JSON format:

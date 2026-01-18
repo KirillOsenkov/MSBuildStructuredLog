@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using Microsoft.Extensions.AI;
@@ -50,6 +50,7 @@ EXAMPLES OF GOOD USE:
 - User asks about 'the slow project' but 5 projects have similar durations
 - User says 'fix the configuration' but multiple configuration issues exist
 - User requests analysis of 'the problematic target' when several targets failed
+- User asks something that seems completely unrelated to the build log content
 
 EXAMPLES OF BAD USE:
 - Asking which project when user clearly stated the name
