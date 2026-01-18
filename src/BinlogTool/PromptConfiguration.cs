@@ -20,6 +20,10 @@ namespace BinlogTool
         public CliLogger.Verbosity Verbosity { get; set; } = CliLogger.Verbosity.Normal;
         public string PromptText { get; set; }
 
+        // Multi-binlog support
+        public int MaxBinlogs { get; set; } = 10;      // Limit number of binlogs
+        public string PrimaryBuildId { get; set; }      // Specify primary build
+
         public static (PromptConfiguration config, string errorMessage) Parse(string[] args)
         {
             var config = new PromptConfiguration();
@@ -51,6 +55,21 @@ namespace BinlogTool
                     else if (arg.Equals("--recurse", StringComparison.OrdinalIgnoreCase))
                     {
                         config.Recurse = true;
+                    }
+                    else if (arg.StartsWith("-max-binlogs:", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (int.TryParse(arg.Substring("-max-binlogs:".Length), out int max) && max > 0)
+                        {
+                            config.MaxBinlogs = max;
+                        }
+                        else
+                        {
+                            return (null, "Invalid -max-binlogs value. Must be a positive integer.");
+                        }
+                    }
+                    else if (arg.StartsWith("-primary:", StringComparison.OrdinalIgnoreCase))
+                    {
+                        config.PrimaryBuildId = arg.Substring("-primary:".Length);
                     }
                     else if (arg.StartsWith("-llm-endpoint:", StringComparison.OrdinalIgnoreCase))
                     {
@@ -92,7 +111,7 @@ namespace BinlogTool
                     {
                         config.Verbosity = CliLogger.Verbosity.Quiet;
                     }
-                    else if (arg.Equals("-help", StringComparison.OrdinalIgnoreCase) || 
+                    else if (arg.Equals("-help", StringComparison.OrdinalIgnoreCase) ||
                              arg.Equals("--help", StringComparison.OrdinalIgnoreCase) ||
                              arg.Equals("-h", StringComparison.OrdinalIgnoreCase))
                     {
@@ -157,14 +176,18 @@ Usage:
   binlogtool prompt -interactive [options]
 
 Options:
-  -binlog:<path>              Path to binlog file(s), comma-separated
-                              If omitted, searches for *.binlog in current directory
+  -binlog:<path>              Path to binlog file(s). Can specify multiple times.
+                              Supports wildcards. If omitted, searches current directory.
   --recurse                   Search subdirectories for binlog files
+  -max-binlogs:<n>            Maximum number of binlogs to load (default: 10)
+  -primary:<build_id>         Set specific build as primary (e.g., 'build_001')
+
   -llm-endpoint:<url>         LLM endpoint URL (overrides LLM_ENDPOINT env var)
                               Use 'github-copilot' for GitHub Copilot
   -llm-model:<model>          LLM model name (overrides LLM_MODEL env var)
   -llm-api-key:<key>          LLM API key (overrides LLM_API_KEY env var)
                               For GitHub Copilot: use GitHub token (optional - device flow if omitted)
+
   -mode:<agent|singleshot>    Execution mode (default: agent)
   -interactive                Enter interactive REPL mode
   -verbose                    Show detailed progress and tool results
@@ -176,15 +199,32 @@ Environment Variables:
   LLM_MODEL                   Model name (e.g., claude-sonnet-4-5-2, gpt-4)
   LLM_API_KEY                 API key or GitHub token (optional for Copilot device flow)
 
+Multi-Binlog Support:
+  Multiple binlog files can be loaded for comparative analysis.
+  Use -binlog: multiple times or wildcards to load multiple files.
+  All builds are queryable via tools using the buildId parameter.
+  The first loaded build is the default (PRIMARY) build.
+
+Interactive Mode Commands:
+  .builds          - List all loaded builds
+  .primary <id>    - Set primary build
+  .add <path>      - Add another binlog file
+  .remove <id>     - Remove a build
+  .help            - Show interactive help
+  exit/quit        - Exit interactive mode
+  clear            - Clear chat history
+  /mode agent      - Switch to Agent mode
+  /mode singleshot - Switch to Single-Shot mode
+
 Examples:
   binlogtool prompt why is this build slow
   binlogtool prompt -mode:singleshot count the projects
-  binlogtool prompt -binlog:custom.binlog what errors occurred
+  binlogtool prompt -binlog:build1.binlog -binlog:build2.binlog compare these builds
+  binlogtool prompt -binlog:*.binlog -max-binlogs:5 find common errors
   binlogtool prompt -interactive
-  binlogtool prompt -verbose -llm-api-key:abc analyze the build
-  
+
   # GitHub Copilot examples:
-  binlogtool prompt -llm-endpoint:github-copilot -llm-api-key:ghu_... why did the build fail
+  binlogtool prompt -llm-endpoint:github-copilot why did the build fail
   binlogtool prompt -llm-endpoint:copilot -interactive
 
 Notes:

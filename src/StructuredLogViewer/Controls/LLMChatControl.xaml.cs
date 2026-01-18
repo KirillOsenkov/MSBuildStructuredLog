@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -10,6 +11,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using Microsoft.Build.Logging.StructuredLogger;
+using Microsoft.Win32;
 using StructuredLogger.LLM;
 using StructuredLogger.LLM.Logging;
 using StructuredLogViewer.LLM;
@@ -47,11 +49,11 @@ namespace StructuredLogViewer.Controls
         public string Role { get; set; }
         public string Content { get; set; }
         public bool IsError { get; set; }
-        
+
         // Tool call support
         public bool IsToolCall { get; set; }
         public ToolCallViewModel ToolCallData { get; set; }
-        
+
         // Question/Answer support
         public bool IsQuestion { get; set; }
         public string[] QuestionOptions { get; set; }
@@ -104,8 +106,8 @@ namespace StructuredLogViewer.Controls
         }
 
         public Brush RoleForeground => new SolidColorBrush(Color.FromRgb(60, 60, 60));
-        public Brush ContentForeground => IsError ? 
-            new SolidColorBrush(Color.FromRgb(180, 0, 0)) : 
+        public Brush ContentForeground => IsError ?
+            new SolidColorBrush(Color.FromRgb(180, 0, 0)) :
             new SolidColorBrush(Color.FromRgb(40, 40, 40));
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -113,6 +115,16 @@ namespace StructuredLogViewer.Controls
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+    }
+
+    /// <summary>
+    /// Simple display model for attached binlog chips in the UI.
+    /// </summary>
+    public class AttachedBinlogInfo
+    {
+        public string BuildId { get; set; }
+        public string FileName { get; set; }  // Just the filename for display
+        public string FullPath { get; set; }  // Full path for tooltip
     }
 
     public partial class LLMChatControl : UserControl
@@ -127,6 +139,10 @@ namespace StructuredLogViewer.Controls
         private TaskCompletionSource<string> waitingForUserResponse;
         private ChatMessageDisplay currentQuestionMessage;
 
+        // Multi-binlog support
+        private MultiBuildContext buildContext;
+        private readonly ObservableCollection<AttachedBinlogInfo> attachedBinlogs;
+
         public Build Build { get; private set; }
         public BuildControl BuildControl { get; private set; }
 
@@ -134,7 +150,9 @@ namespace StructuredLogViewer.Controls
         {
             InitializeComponent();
             messages = new ObservableCollection<ChatMessageDisplay>();
+            attachedBinlogs = new ObservableCollection<AttachedBinlogInfo>();
             messagesPanel.ItemsSource = messages;
+            attachedFilesList.ItemsSource = attachedBinlogs;
         }
 
         public void Initialize(Build build, BuildControl buildControl)
@@ -146,7 +164,14 @@ namespace StructuredLogViewer.Controls
 
             Build = build ?? throw new ArgumentNullException(nameof(build));
             BuildControl = buildControl;
-            
+
+            // Create multi-build context with the implicit build (from viewer)
+            // This is the primary build - additional binlogs can be attached via UI
+            buildContext = new MultiBuildContext();
+            buildContext.AddBuild(build); // This is the primary/implicit build
+            // Note: We don't show the implicit build in attachedBinlogs list
+            // Only additional attached binlogs are shown in the UI
+
             // Create chat window logger
             chatLogger = new ChatWindowLogger((message, isError) =>
             {
@@ -160,18 +185,18 @@ namespace StructuredLogViewer.Controls
                     });
                 });
             }, LoggingLevel.Normal);
-            
+
             // Load configuration from persisted settings or environment
             currentConfig = LLMConfigurationDialog.LoadPersistedConfiguration();
             chatLogger.Level = currentConfig.LoggingLevel;
-            
+
             // Create and configure LLM services asynchronously
             _ = CreateLLMServicesAsync().ContinueWith(t =>
             {
                 if (t.IsFaulted)
                 {
                     var exception = t.Exception?.GetBaseException();
-                    
+
                     Dispatcher.Invoke(() =>
                     {
                         // Check if it's an authentication error
@@ -179,7 +204,7 @@ namespace StructuredLogViewer.Controls
                         {
                             // Clear invalid persisted credentials
                             SettingsService.ClearLLMConfiguration();
-                            
+
                             AddMessage(new ChatMessageDisplay
                             {
                                 Role = "System",
@@ -200,7 +225,7 @@ namespace StructuredLogViewer.Controls
                     });
                 }
             });
-            
+
             isInitialized = true;
 
             // Initialize agent mode toggle from config (default is true)
@@ -234,7 +259,7 @@ namespace StructuredLogViewer.Controls
 
         private async System.Threading.Tasks.Task CreateLLMServicesAsync()
         {
-            if (Build == null)
+            if (Build == null || buildContext == null)
             {
                 return;
             }
@@ -242,9 +267,9 @@ namespace StructuredLogViewer.Controls
             // Dispose old services if they exist
             LLMChatService? oldChatService = chatService;
             AgenticLLMChatService? oldAgenticChatService = agenticChatService;
-            
-            // Create new chat service with logger
-            chatService = await LLMChatService.CreateAsync(Build, null, chatLogger);
+
+            // Create new chat service with multi-build context
+            chatService = await LLMChatService.CreateAsync(buildContext, null, chatLogger);
             chatService.MessageAdded += OnMessageAdded;
             chatService.ConversationCleared += OnConversationCleared;
             chatService.ToolCallExecuting += OnToolCallExecuting;
@@ -252,6 +277,7 @@ namespace StructuredLogViewer.Controls
             chatService.RequestRetrying += OnRequestRetrying;
 
             // Register UI interaction tools if BuildControl is available
+            // Note: UI tools operate on primary build only (the one open in viewer)
             if (BuildControl != null)
             {
                 var uiInteractionExecutor = new BinlogUIInteractionExecutor(Build, BuildControl);
@@ -270,26 +296,26 @@ namespace StructuredLogViewer.Controls
             {
                 await chatService.ReconfigureAsync(currentConfig);
             }
-            
+
             // Create agentic service if configured
             if (currentConfig?.IsConfigured == true)
             {
-                agenticChatService = await AgenticLLMChatService.CreateAsync(Build, currentConfig, chatLogger);
-                
+                agenticChatService = await AgenticLLMChatService.CreateAsync(buildContext, currentConfig, chatLogger);
+
                 // Register UI interaction tools for agentic service
                 if (BuildControl != null)
                 {
                     var uiInteractionExecutor = new BinlogUIInteractionExecutor(Build, BuildControl);
                     agenticChatService.RegisterToolContainer(uiInteractionExecutor);
                 }
-                
+
                 // Register AskUser tool if enabled
                 if (SettingsService.LLMEnableAskUser)
                 {
                     var askUserExecutor = new AskUserToolExecutor(new GuiUserInteraction(this));
                     agenticChatService.RegisterToolContainer(askUserExecutor);
                 }
-                
+
                 agenticChatService.ProgressUpdated += OnAgentProgressUpdated;
                 agenticChatService.MessageAdded += OnMessageAdded;
                 agenticChatService.ToolCallExecuting += OnToolCallExecuting;
@@ -313,13 +339,15 @@ namespace StructuredLogViewer.Controls
                         "• Project and target information\n" +
                         "• Build duration and performance\n" +
                         "• Specific tasks or failures\n\n";
-            
+
             if (currentConfig?.AgentMode == true)
             {
                 welcomeMsg += "**Agent Mode is ON** 🤖\n" +
                              "I'll break down complex questions into research tasks for thorough analysis.\n\n";
             }
-            
+
+            welcomeMsg += "📎 **Multi-Binlog Support**: Use the attachment button to add more binlog files for comparison.\n\n";
+
             welcomeMsg += "Try asking: \"What errors occurred?\" or \"Show me the build summary\"";
 
             AddMessage(new ChatMessageDisplay
@@ -353,7 +381,7 @@ namespace StructuredLogViewer.Controls
             {
                 // Show status banner indicating tool is executing
                 ShowStatus($"Executing tool: {toolCallInfo.ToolName} (In Progress...)");
-                
+
                 AddMessage(new ChatMessageDisplay
                 {
                     Role = "Tool",
@@ -370,11 +398,11 @@ namespace StructuredLogViewer.Controls
             {
                 // Clear the status banner since tool execution is complete
                 HideStatus();
-                
+
                 // Try to find an existing in-progress message with the same CallId
-                var existingMessage = messages.FirstOrDefault(m => 
-                    m.IsToolCall && 
-                    m.ToolCallData != null && 
+                var existingMessage = messages.FirstOrDefault(m =>
+                    m.IsToolCall &&
+                    m.ToolCallData != null &&
                     m.ToolCallData.CallId == toolCallInfo.CallId);
 
                 if (existingMessage != null)
@@ -416,7 +444,7 @@ namespace StructuredLogViewer.Controls
         private void AddMessage(ChatMessageDisplay message)
         {
             messages.Add(message);
-            
+
             // Scroll to bottom
             Dispatcher.InvokeAsync(() =>
             {
@@ -432,7 +460,7 @@ namespace StructuredLogViewer.Controls
         {
             // Create a completion source to wait for user response
             waitingForUserResponse = new TaskCompletionSource<string>();
-            
+
             // Display the question in the chat with interactive options
             currentQuestionMessage = new ChatMessageDisplay
             {
@@ -446,32 +474,32 @@ namespace StructuredLogViewer.Controls
                     waitingForUserResponse?.TrySetResult(answer);
                 }
             };
-            
+
             AddMessage(currentQuestionMessage);
-            
+
             // Enable input for user to respond and show Send button
             inputTextBox.IsEnabled = true;
             sendButton.Visibility = Visibility.Visible;
             cancelButton.Visibility = Visibility.Collapsed;
             inputTextBox.Focus();
-            
+
             // Wait for the user to respond asynchronously
             string response;
             try
             {
                 response = await waitingForUserResponse.Task;
-                
+
                 // Display the user's response in the chat
                 AddMessage(new ChatMessageDisplay
                 {
                     Role = "User",
                     Content = response
                 });
-                
+
                 // Clear the question state
                 currentQuestionMessage = null;
                 waitingForUserResponse = null;
-                
+
                 // Restore to "in progress" state - disable input and show Cancel button
                 inputTextBox.IsEnabled = false;
                 sendButton.Visibility = Visibility.Collapsed;
@@ -486,7 +514,7 @@ namespace StructuredLogViewer.Controls
                 sendButton.Visibility = Visibility.Collapsed;
                 cancelButton.Visibility = Visibility.Visible;
             }
-            
+
             return response ?? string.Empty;
         }
 
@@ -494,7 +522,7 @@ namespace StructuredLogViewer.Controls
         {
             statusText.Text = status;
             statusBar.Visibility = Visibility.Visible;
-            
+
             if (isError)
             {
                 statusBar.Background = new SolidColorBrush(Color.FromRgb(255, 240, 240));
@@ -545,7 +573,7 @@ namespace StructuredLogViewer.Controls
         {
             // Cancel the current operation
             cancellationTokenSource?.Cancel();
-            
+
             // Dismount all events from current services
             if (chatService != null)
             {
@@ -555,7 +583,7 @@ namespace StructuredLogViewer.Controls
                 chatService.ToolCallExecuted -= OnToolCallExecuted;
                 chatService.RequestRetrying -= OnRequestRetrying;
             }
-            
+
             if (agenticChatService != null)
             {
                 agenticChatService.ProgressUpdated -= OnAgentProgressUpdated;
@@ -564,18 +592,18 @@ namespace StructuredLogViewer.Controls
                 agenticChatService.ToolCallExecuted -= OnToolCallExecuted;
                 agenticChatService.RequestRetrying -= OnRequestRetrying;
             }
-            
+
             // Recreate service instances to prevent any late events
             _ = CreateLLMServicesAsync();
-            
+
             // Update UI state
             SetQueryIdle();
-            
+
             // Clear agent progress
             agentProgressPanel.Clear();
-            
+
             ShowStatus("Request cancelled", isError: false);
-            
+
             // Hide status after 2 seconds
             var timer = new System.Windows.Threading.DispatcherTimer
             {
@@ -594,7 +622,7 @@ namespace StructuredLogViewer.Controls
             // Get current configuration to check AutoSendOnEnter setting
             var config = chatService?.GetConfiguration();
             bool autoSendEnabled = config?.AutoSendOnEnter ?? true;
-            
+
             if (autoSendEnabled)
             {
                 // Send on Enter (without Shift)
@@ -652,9 +680,9 @@ namespace StructuredLogViewer.Controls
                     });
 
                     var response = await agenticChatService.ExecuteAgenticWorkflowAsync(
-                        message, 
+                        message,
                         cancellationTokenSource.Token);
-                    
+
                     AddMessage(new ChatMessageDisplay
                     {
                         Role = "Assistant",
@@ -666,7 +694,7 @@ namespace StructuredLogViewer.Controls
                     // Use regular interactive mode
                     await chatService.SendMessageAsync(message, cancellationTokenSource.Token);
                 }
-                
+
                 HideStatus();
             }
             catch (OperationCanceledException)
@@ -688,7 +716,7 @@ namespace StructuredLogViewer.Controls
             {
                 // GitHub token expired or invalid - clear persisted config and prompt user
                 SettingsService.ClearLLMConfiguration();
-                
+
                 AddMessage(new ChatMessageDisplay
                 {
                     Role = "System",
@@ -696,7 +724,7 @@ namespace StructuredLogViewer.Controls
                              "Your saved credentials have been cleared. Please click 'Configure' to re-authenticate.",
                     IsError = true
                 });
-                
+
                 ShowStatus("Authentication failed - please reconfigure", isError: true);
             }
             catch (Exception ex)
@@ -713,25 +741,124 @@ namespace StructuredLogViewer.Controls
         {
             // Cancel any ongoing operation
             cancellationTokenSource?.Cancel();
-            
+
             // Update state immediately
             SetQueryIdle();
-            
+
             // Clear the conversation
             chatService?.ClearConversation();
             messages.Clear();
-            
+
             // Clear agent progress
             agentProgressPanel.Clear();
-            
+
             // Add welcome message back
             if (chatService?.IsConfigured == true)
             {
                 AddWelcomeMessage();
             }
-            
+
             HideStatus();
             inputTextBox.Text = string.Empty;
+        }
+
+        /// <summary>
+        /// Attach additional binlog file(s) for multi-build comparison.
+        /// </summary>
+        private void AttachBinlog_Click(object sender, RoutedEventArgs e)
+        {
+            var openFileDialog = new OpenFileDialog
+            {
+                Filter = "Binary Log Files (*.binlog)|*.binlog",
+                Title = "Attach Additional Binlog",
+                Multiselect = true
+            };
+
+            if (openFileDialog.ShowDialog() == true)
+            {
+                foreach (var filePath in openFileDialog.FileNames)
+                {
+                    // Skip if already attached (check by full path)
+                    if (buildContext?.GetAllBuilds().Any(b =>
+                        b.FullPath?.Equals(filePath, StringComparison.OrdinalIgnoreCase) == true) == true)
+                    {
+                        AddMessage(new ChatMessageDisplay
+                        {
+                            Role = "System",
+                            Content = $"'{Path.GetFileName(filePath)}' is already loaded.",
+                            IsError = false
+                        });
+                        continue;
+                    }
+
+                    try
+                    {
+                        var build = BinaryLog.ReadBuild(filePath);
+                        var buildId = buildContext.AddBuild(build);
+
+                        // Add to visible list (only additional binlogs shown, not the implicit one)
+                        attachedBinlogs.Add(new AttachedBinlogInfo
+                        {
+                            BuildId = buildId,
+                            FileName = Path.GetFileName(filePath),
+                            FullPath = filePath
+                        });
+
+                        AddMessage(new ChatMessageDisplay
+                        {
+                            Role = "System",
+                            Content = $"📎 Attached: {Path.GetFileName(filePath)} [{buildId}]\n" +
+                                     $"You can now compare and analyze multiple builds."
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        AddMessage(new ChatMessageDisplay
+                        {
+                            Role = "System",
+                            Content = $"Failed to load '{Path.GetFileName(filePath)}': {ex.Message}",
+                            IsError = true
+                        });
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Detach/remove an attached binlog.
+        /// </summary>
+        private void DetachBinlog_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is string buildId)
+            {
+                // Remove from context
+                try
+                {
+                    buildContext?.RemoveBuild(buildId);
+
+                    // Remove from UI list
+                    var item = attachedBinlogs.FirstOrDefault(b => b.BuildId == buildId);
+                    if (item != null)
+                    {
+                        attachedBinlogs.Remove(item);
+                        AddMessage(new ChatMessageDisplay
+                        {
+                            Role = "System",
+                            Content = $"Detached: {item.FileName}"
+                        });
+                    }
+                }
+                catch (InvalidOperationException ex)
+                {
+                    // Cannot remove primary build
+                    AddMessage(new ChatMessageDisplay
+                    {
+                        Role = "System",
+                        Content = ex.Message,
+                        IsError = true
+                    });
+                }
+            }
         }
 
         private void AgentModeToggle_Click(object sender, RoutedEventArgs e)
@@ -741,15 +868,15 @@ namespace StructuredLogViewer.Controls
             {
                 currentConfig.AgentMode = agentModeToggle.IsChecked == true;
             }
-            
+
             // Update UI
             UpdateAgentModeUI();
-            
+
             // Add notification message
             var modeMessage = currentConfig?.AgentMode == true
                 ? "🤖 **Agent Mode Enabled**\n\nI'll now break down complex questions into research tasks for thorough analysis."
                 : "💬 **Interactive Mode**\n\nBack to single-turn conversations.";
-            
+
             AddMessage(new ChatMessageDisplay
             {
                 Role = "System",
@@ -762,7 +889,7 @@ namespace StructuredLogViewer.Controls
             var isEnabled = currentConfig?.AgentMode == true;
             agentModeToggle.Content = isEnabled ? "🤖" : "💬";
             agentModeToggle.FontWeight = isEnabled ? FontWeights.Bold : FontWeights.Normal;
-            agentModeToggle.ToolTip = isEnabled 
+            agentModeToggle.ToolTip = isEnabled
                 ? "Agent Mode ON: Multi-step reasoning for complex queries (click to disable)"
                 : "Interactive Mode: Single-turn conversations (click to enable agent mode)";
         }
@@ -773,7 +900,7 @@ namespace StructuredLogViewer.Controls
             var configForDialog = this.currentConfig ?? LLMConfigurationDialog.LoadPersistedConfiguration();
             var wasConfigured = chatService?.IsConfigured ?? false;
             var oldAgentMode = configForDialog.AgentMode;
-            
+
             // Show configuration dialog
             var dialog = new LLMConfigurationDialog(configForDialog, chatLogger)
             {
@@ -791,10 +918,10 @@ namespace StructuredLogViewer.Controls
                     bool autoSendChanged = configForDialog.AutoSendOnEnter != dialog.AutoSendOnEnter;
                     bool agentModeChanged = configForDialog.AgentMode != dialog.AgentMode;
                     bool loggingLevelChanged = configForDialog.LoggingLevel != dialog.LoggingLevel;
-                    
+
                     // Services only need to be recreated if model settings changed
                     bool needsServiceRecreation = endpointChanged || modelChanged || apiKeyChanged;
-                    
+
                     bool hasChanges = needsServiceRecreation || autoSendChanged || agentModeChanged || loggingLevelChanged;
 
                     if (!hasChanges)
@@ -817,7 +944,7 @@ namespace StructuredLogViewer.Controls
                         LoggingLevel = dialog.LoggingLevel
                     };
                     newConfig.UpdateType();
-                    
+
                     // Preserve available models if endpoint hasn't changed, otherwise clear them
                     if (endpointChanged)
                     {
@@ -831,13 +958,13 @@ namespace StructuredLogViewer.Controls
 
                     // Update current config reference
                     currentConfig = newConfig;
-                    
+
                     // Update logger level if it changed
                     if (loggingLevelChanged && chatLogger != null)
                     {
                         chatLogger.Level = dialog.LoggingLevel;
                     }
-                    
+
                     // Only recreate services if model settings actually changed
                     if (needsServiceRecreation)
                     {
@@ -848,31 +975,31 @@ namespace StructuredLogViewer.Controls
                         // Just reconfigure existing service with new settings
                         _ = chatService.ReconfigureAsync(newConfig);
                     }
-                    
+
                     // Update agent mode toggle enablement
                     if (newConfig.IsConfigured)
                     {
                         agentModeToggle.IsEnabled = true;
                     }
-                    
+
                     // Update agent mode toggle UI to match new config
                     agentModeToggle.IsChecked = newConfig.AgentMode;
                     UpdateAgentModeUI();
-                    
+
                     // Notify about agent mode change if it changed
                     if (agentModeChanged && oldAgentMode != newConfig.AgentMode)
                     {
                         var modeMessage = newConfig.AgentMode
                             ? "🤖 **Agent Mode Enabled**\n\nI'll now break down complex questions into research tasks for thorough analysis."
                             : "💬 **Interactive Mode**\n\nBack to single-turn conversations.";
-                        
+
                         AddMessage(new ChatMessageDisplay
                         {
                             Role = "System",
                             Content = modeMessage
                         });
                     }
-                    
+
                     if (chatService?.IsConfigured == true)
                     {
                         sendButton.IsEnabled = true;
@@ -901,7 +1028,7 @@ namespace StructuredLogViewer.Controls
                         });
 
                         ShowStatus("Configuration updated successfully!");
-                        
+
                         // Hide status after 2 seconds
                         var timer = new System.Windows.Threading.DispatcherTimer
                         {

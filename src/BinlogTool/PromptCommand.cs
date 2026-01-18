@@ -69,46 +69,81 @@ namespace BinlogTool
                     logger.LogVerbose($"  - {file}");
                 }
 
-                // For now, use the first binlog file
-                // TODO: Support multiple binlogs
-                var binlogPath = binlogFiles[0];
-                if (binlogFiles.Count > 1)
+                // Load all discovered binlogs into a multi-build context
+                var buildContext = new MultiBuildContext();
+                var maxBinlogs = config.MaxBinlogs;
+                var filesToLoad = binlogFiles.Take(maxBinlogs).ToList();
+
+                if (binlogFiles.Count > maxBinlogs)
                 {
-                    logger.LogSystem($"Multiple binlogs found. Using: {System.IO.Path.GetFileName(binlogPath)}");
+                    logger.LogSystem($"Limiting to first {maxBinlogs} binlog files (use -max-binlogs: to change).");
                 }
 
-                // Load binlog
-                logger.LogSystem($"Loading binlog: {System.IO.Path.GetFileName(binlogPath)}");
-                Build build;
-                try
+                logger.LogSystem($"Loading {filesToLoad.Count} binlog file(s)...");
+
+                foreach (var binlogPath in filesToLoad)
                 {
-                    build = BinaryLog.ReadBuild(binlogPath);
+                    try
+                    {
+                        var build = BinaryLog.ReadBuild(binlogPath);
+                        var buildId = buildContext.AddBuild(build);
+                        logger.LogVerbose($"  ✓ Loaded: {System.IO.Path.GetFileName(binlogPath)} as [{buildId}]");
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogWarning($"  ✗ Failed to load: {System.IO.Path.GetFileName(binlogPath)} - {ex.Message}");
+                    }
                 }
-                catch (Exception ex)
+
+                if (buildContext.BuildCount == 0)
                 {
-                    logger.LogError($"Failed to load binlog: {ex.Message}");
+                    logger.LogError("No binlog files could be loaded.");
                     return -1;
                 }
 
-                logger.LogVerbose($"Build loaded: {build.Succeeded} (Duration: {build.DurationText})");
+                // Display loaded builds summary
+                logger.LogSystem("");
+                logger.LogSystem("Loaded builds:");
+                foreach (var buildInfo in buildContext.GetAllBuilds())
+                {
+                    var primary = buildInfo.IsPrimary ? " [PRIMARY]" : "";
+                    var status = buildInfo.Succeeded ? "✓" : "✗";
+                    logger.LogSystem($"  [{buildInfo.BuildId}] {buildInfo.FriendlyName}{primary} - {status} {buildInfo.DurationText}");
+                    logger.LogVerbose($"         Path: {buildInfo.FullPath}");
+                }
+                logger.LogSystem("");
+
+                // If specific primary requested, set it
+                if (!string.IsNullOrEmpty(config.PrimaryBuildId))
+                {
+                    try
+                    {
+                        buildContext.SetPrimaryBuild(config.PrimaryBuildId);
+                        logger.LogVerbose($"Primary build set to: {config.PrimaryBuildId}");
+                    }
+                    catch (ArgumentException)
+                    {
+                        logger.LogWarning($"Requested primary build '{config.PrimaryBuildId}' not found. Using default.");
+                    }
+                }
 
                 // Configure LLM
                 var llmConfig = config.ToLLMConfiguration();
-                
+
                 // If GitHub Copilot is not configured (no API key), trigger device flow
                 if (!llmConfig.IsConfigured && llmConfig.Type == LLMConfiguration.ClientType.GitHubCopilot)
                 {
                     logger.LogSystem("GitHub Copilot selected but no API key provided. Initiating device flow authentication...");
                     logger.LogSystem("");
-                    
+
                     try
                     {
                         using var authenticator = new StructuredLogger.LLM.Clients.GitHub.GitHubDeviceFlowAuthenticator();
                         var githubToken = await authenticator.AuthenticateAsync(cancellationTokenSource.Token);
-                        
+
                         // Update configuration with obtained token
                         llmConfig.ApiKey = githubToken;
-                        
+
                         logger.LogSystem("");
                         logger.LogSystem("✓ Authentication successful!");
                         logger.LogSystem("");
@@ -119,7 +154,7 @@ namespace BinlogTool
                         return -2;
                     }
                 }
-                
+
                 // Check if configuration is complete
                 if (!llmConfig.IsConfigured)
                 {
@@ -139,11 +174,11 @@ namespace BinlogTool
                 // Execute based on mode
                 if (config.Interactive)
                 {
-                    return await ExecuteInteractiveMode(build, llmConfig, cancellationTokenSource.Token);
+                    return await ExecuteInteractiveMode(buildContext, llmConfig, cancellationTokenSource.Token);
                 }
                 else
                 {
-                    return await ExecuteSinglePrompt(build, llmConfig, config.PromptText, cancellationTokenSource.Token);
+                    return await ExecuteSinglePrompt(buildContext, llmConfig, config.PromptText, cancellationTokenSource.Token);
                 }
             }
             catch (OperationCanceledException)
@@ -182,8 +217,8 @@ namespace BinlogTool
         }
 
         private async Task<int> ExecuteSinglePrompt(
-            Build build, 
-            LLMConfiguration llmConfig, 
+            MultiBuildContext buildContext,
+            LLMConfiguration llmConfig,
             string promptText,
             CancellationToken cancellationToken)
         {
@@ -197,8 +232,8 @@ namespace BinlogTool
                 {
                     // Agent mode - multi-step reasoning
                     var loggerAdapter = new CliLoggerAdapter(logger);
-                    var agenticService = await AgenticLLMChatService.CreateAsync(build, llmConfig, loggerAdapter, cancellationToken);
-                    
+                    var agenticService = await AgenticLLMChatService.CreateAsync(buildContext, llmConfig, loggerAdapter, cancellationToken);
+
                     // Subscribe to events
                     agenticService.ProgressUpdated += reporter.OnAgentProgress;
                     agenticService.MessageAdded += reporter.OnMessage;
@@ -207,7 +242,7 @@ namespace BinlogTool
                     agenticService.RequestRetrying += reporter.OnRetrying;
 
                     var result = await agenticService.ExecuteAgenticWorkflowAsync(promptText, cancellationToken);
-                    
+
                     logger.LogSystem("");
                     logger.LogSystem("=== Final Answer ===");
                     logger.LogResponse(result);
@@ -216,8 +251,8 @@ namespace BinlogTool
                 {
                     // Single-shot mode - direct Q&A
                     var loggerAdapter = new CliLoggerAdapter(logger);
-                    var chatService = await LLMChatService.CreateAsync(build, llmConfig, loggerAdapter, cancellationToken);
-                    
+                    var chatService = await LLMChatService.CreateAsync(buildContext, llmConfig, loggerAdapter, cancellationToken);
+
                     // Subscribe to events
                     chatService.MessageAdded += reporter.OnMessage;
                     chatService.ToolCallExecuting += reporter.OnToolCallStarted;
@@ -225,7 +260,7 @@ namespace BinlogTool
                     chatService.RequestRetrying += reporter.OnRetrying;
 
                     var result = await chatService.SendMessageAsync(promptText, cancellationToken);
-                    
+
                     logger.LogSystem("");
                     logger.LogResponse(result);
                 }
@@ -245,12 +280,13 @@ namespace BinlogTool
         }
 
         private async Task<int> ExecuteInteractiveMode(
-            Build build,
+            MultiBuildContext buildContext,
             LLMConfiguration llmConfig,
             CancellationToken cancellationToken)
         {
             logger.LogSystem("Entering interactive mode. Type 'exit' or 'quit' to leave, 'clear' to clear history.");
             logger.LogSystem($"Mode: {(llmConfig.AgentMode ? "Agent" : "Single-Shot")} (use '/mode agent' or '/mode singleshot' to switch)");
+            logger.LogSystem($"Builds loaded: {buildContext.BuildCount} (use '.builds' to list, '.primary <id>' to change primary)");
             logger.LogSystem("");
 
             LLMChatService chatService = null;
@@ -266,11 +302,11 @@ namespace BinlogTool
 
                 if (llmConfig.AgentMode)
                 {
-                    agenticService = await AgenticLLMChatService.CreateAsync(build, llmConfig, loggerAdapter, cancellationToken);
-                    
+                    agenticService = await AgenticLLMChatService.CreateAsync(buildContext, llmConfig, loggerAdapter, cancellationToken);
+
                     // Register AskUser tool for interactive user clarification
                     agenticService.RegisterToolContainer(new AskUserToolExecutor(new ConsoleUserInteraction()));
-                    
+
                     agenticService.ProgressUpdated += reporter.OnAgentProgress;
                     agenticService.MessageAdded += reporter.OnMessage;
                     agenticService.ToolCallExecuting += reporter.OnToolCallStarted;
@@ -279,11 +315,11 @@ namespace BinlogTool
                 }
                 else
                 {
-                    chatService = await LLMChatService.CreateAsync(build, llmConfig, loggerAdapter, cancellationToken);
-                    
+                    chatService = await LLMChatService.CreateAsync(buildContext, llmConfig, loggerAdapter, cancellationToken);
+
                     // Register AskUser tool for interactive user clarification
                     chatService.RegisterToolContainer(new AskUserToolExecutor(new ConsoleUserInteraction()));
-                    
+
                     chatService.MessageAdded += reporter.OnMessage;
                     chatService.ToolCallExecuting += reporter.OnToolCallStarted;
                     chatService.ToolCallExecuted += reporter.OnToolCallCompleted;
@@ -295,13 +331,20 @@ namespace BinlogTool
 
             while (!cancellationToken.IsCancellationRequested)
             {
-                // Prompt for input
-                Console.Write("> ");
+                // Prompt for input with build context
+                Console.Write($"[{buildContext.PrimaryBuildId}]> ");
                 var input = Console.ReadLine();
 
                 if (string.IsNullOrWhiteSpace(input))
                 {
                     continue;
+                }
+
+                // Handle dot commands for build management
+                if (input.StartsWith("."))
+                {
+                    if (HandleDotCommand(input, buildContext))
+                        continue;
                 }
 
                 // Handle commands
@@ -356,7 +399,7 @@ namespace BinlogTool
                         logger.LogSystem("");
                         logger.LogResponse(result);
                     }
-                    
+
                     Console.WriteLine();
                 }
                 catch (OperationCanceledException)
@@ -376,6 +419,114 @@ namespace BinlogTool
             agenticService?.Dispose();
 
             return 0;
+        }
+
+        /// <summary>
+        /// Handles dot commands for build management in interactive mode.
+        /// </summary>
+        private bool HandleDotCommand(string input, MultiBuildContext context)
+        {
+            var parts = input.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
+            var command = parts[0].ToLowerInvariant();
+            var arg = parts.Length > 1 ? parts[1] : null;
+
+            switch (command)
+            {
+                case ".builds":
+                    // List all loaded builds
+                    logger.LogSystem("Loaded builds:");
+                    foreach (var buildInfo in context.GetAllBuilds())
+                    {
+                        var primary = buildInfo.IsPrimary ? " [PRIMARY]" : "";
+                        var status = buildInfo.Succeeded ? "✓" : "✗";
+                        logger.LogSystem($"  [{buildInfo.BuildId}] {buildInfo.FriendlyName}{primary} - {status} {buildInfo.DurationText}");
+                        logger.LogVerbose($"         Path: {buildInfo.FullPath}");
+                    }
+                    return true;
+
+                case ".primary":
+                    // Switch primary build
+                    if (string.IsNullOrEmpty(arg))
+                    {
+                        logger.LogSystem($"Current primary: {context.PrimaryBuildId}");
+                        logger.LogSystem("Usage: .primary <build_id>");
+                    }
+                    else
+                    {
+                        try
+                        {
+                            context.SetPrimaryBuild(arg);
+                            logger.LogSystem($"Primary build changed to: {arg}");
+                        }
+                        catch (ArgumentException ex)
+                        {
+                            logger.LogError(ex.Message);
+                        }
+                    }
+                    return true;
+
+                case ".add":
+                    // Add another binlog
+                    if (string.IsNullOrEmpty(arg))
+                    {
+                        logger.LogSystem("Usage: .add <path_to_binlog>");
+                    }
+                    else
+                    {
+                        try
+                        {
+                            var build = BinaryLog.ReadBuild(arg);
+                            var buildId = context.AddBuild(build);
+                            logger.LogSystem($"Added build: [{buildId}] from {System.IO.Path.GetFileName(arg)}");
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogError($"Failed to load binlog: {ex.Message}");
+                        }
+                    }
+                    return true;
+
+                case ".remove":
+                    // Remove a build
+                    if (string.IsNullOrEmpty(arg))
+                    {
+                        logger.LogSystem("Usage: .remove <build_id>");
+                    }
+                    else
+                    {
+                        try
+                        {
+                            context.RemoveBuild(arg);
+                            logger.LogSystem($"Removed build: {arg}");
+                        }
+                        catch (ArgumentException ex)
+                        {
+                            logger.LogError(ex.Message);
+                        }
+                        catch (InvalidOperationException ex)
+                        {
+                            logger.LogError(ex.Message);
+                        }
+                    }
+                    return true;
+
+                case ".help":
+                    logger.LogSystem("Interactive Commands:");
+                    logger.LogSystem("  .builds          - List all loaded builds");
+                    logger.LogSystem("  .primary <id>    - Set primary build");
+                    logger.LogSystem("  .add <path>      - Add another binlog file");
+                    logger.LogSystem("  .remove <id>     - Remove a build");
+                    logger.LogSystem("  .help            - Show this help");
+                    logger.LogSystem("  exit/quit        - Exit interactive mode");
+                    logger.LogSystem("  clear            - Clear chat history");
+                    logger.LogSystem("  /mode agent      - Switch to Agent mode");
+                    logger.LogSystem("  /mode singleshot - Switch to Single-Shot mode");
+                    return true;
+
+                default:
+                    logger.LogWarning($"Unknown command: {command}. Type .help for available commands.");
+                    return true;
+            }
         }
 
         private void OnCancelKeyPress(object sender, ConsoleCancelEventArgs e)

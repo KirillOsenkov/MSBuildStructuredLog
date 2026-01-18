@@ -67,6 +67,15 @@ namespace BinlogTool
             Console.Error.WriteLine(message);
         }
 
+        public void LogWarning(string message)
+        {
+            if (level >= Verbosity.Normal)
+            {
+                WriteColored("[WARNING] ", ConsoleColor.DarkYellow);
+                Console.WriteLine(message);
+            }
+        }
+
         public void LogResponse(string message)
         {
             Console.WriteLine(message);

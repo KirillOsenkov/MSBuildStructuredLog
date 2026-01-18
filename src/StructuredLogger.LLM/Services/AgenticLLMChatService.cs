@@ -14,10 +14,12 @@ namespace StructuredLogger.LLM
     /// <summary>
     /// Orchestrates agentic multi-step reasoning for complex log analysis.
     /// Manages planning, research, and summarization phases.
+    /// Supports multiple binlog files through MultiBuildContext.
     /// </summary>
     public class AgenticLLMChatService : IDisposable
     {
-        private readonly BinlogContextProvider contextProvider;
+        private readonly MultiBuildContext buildContext;
+        private readonly MultiBuildContextProvider contextProvider;
         private readonly List<IToolsContainer> toolContainers;
         private MultiProviderLLMClient? llmClient;
         private readonly LLMConfiguration configuration;
@@ -34,22 +36,66 @@ namespace StructuredLogger.LLM
         public int MaxResearchTasks { get; set; } = 5;
         public int MaxTokensPerTask { get; set; } = 4000;
 
-        private AgenticLLMChatService(Build build, LLMConfiguration config, ILLMLogger? logger)
+        /// <summary>
+        /// Creates a new AgenticLLMChatService with multi-build support.
+        /// </summary>
+        private AgenticLLMChatService(MultiBuildContext context, LLMConfiguration config, ILLMLogger? logger)
         {
-            this.contextProvider = new BinlogContextProvider(build);
+            this.buildContext = context ?? throw new ArgumentNullException(nameof(context));
+            this.contextProvider = new MultiBuildContextProvider(context);
             this.toolContainers = new List<IToolsContainer>();
             this.configuration = config ?? throw new ArgumentNullException(nameof(config));
             this.logger = logger;
 
-            // Register default tool executors
-            RegisterToolContainer(new BinlogToolExecutor(build));
-            RegisterToolContainer(new EmbeddedFilesToolExecutor(build));
-            RegisterToolContainer(new ListEventsToolExecutor(build));
+            // Register default tool executors with multi-build context
+            RegisterToolContainer(new BinlogToolExecutor(context));
+            RegisterToolContainer(new EmbeddedFilesToolExecutor(context));
+            RegisterToolContainer(new ListEventsToolExecutor(context));
             RegisterToolContainer(new ResultsToolExecutor());
         }
 
         /// <summary>
-        /// Creates and initializes a new instance of AgenticLLMChatService.
+        /// Creates a new AgenticLLMChatService for a single build (backward compatibility).
+        /// </summary>
+        private AgenticLLMChatService(Build build, LLMConfiguration config, ILLMLogger? logger)
+            : this(CreateSingleBuildContext(build), config, logger)
+        {
+        }
+
+        private static MultiBuildContext CreateSingleBuildContext(Build build)
+        {
+            if (build == null)
+            {
+                throw new ArgumentNullException(nameof(build));
+            }
+            var context = new MultiBuildContext();
+            context.AddBuild(build);
+            return context;
+        }
+
+        /// <summary>
+        /// Creates and initializes a new instance of AgenticLLMChatService with multi-build support.
+        /// </summary>
+        /// <param name="context">The multi-build context containing loaded builds.</param>
+        /// <param name="config">LLM configuration.</param>
+        /// <param name="logger">Optional logger for diagnostics.</param>
+        /// <param name="cancellationToken">Cancellation token for async initialization.</param>
+        /// <returns>A fully initialized AgenticLLMChatService instance.</returns>
+        public static async System.Threading.Tasks.Task<AgenticLLMChatService> CreateAsync(
+            MultiBuildContext context,
+            LLMConfiguration config,
+            ILLMLogger? logger = null,
+            CancellationToken cancellationToken = default)
+        {
+            var service = new AgenticLLMChatService(context, config, logger);
+
+            await service.InitializeLLMClientAsync(cancellationToken);
+
+            return service;
+        }
+
+        /// <summary>
+        /// Creates and initializes a new instance of AgenticLLMChatService for a single build.
         /// </summary>
         /// <param name="build">The build to analyze.</param>
         /// <param name="config">LLM configuration.</param>
@@ -63,9 +109,9 @@ namespace StructuredLogger.LLM
             CancellationToken cancellationToken = default)
         {
             var service = new AgenticLLMChatService(build, config, logger);
-            
+
             await service.InitializeLLMClientAsync(cancellationToken);
-            
+
             return service;
         }
 
@@ -79,7 +125,7 @@ namespace StructuredLogger.LLM
             var client = new MultiProviderLLMClient(configuration, logger: logger);
             await client.InitializeAsync(cancellationToken);
             this.llmClient = client;
-            
+
             SubscribeToResilienceEvents(client);
         }
 
@@ -167,15 +213,24 @@ namespace StructuredLogger.LLM
             var toolDescriptions = GetToolDescriptions(researchTools);
 
             var systemPrompt = GetPlanningSystemPrompt(toolDescriptions);
-            
-            var overview = contextProvider is BinlogContextProvider provider
-                ? provider.GetBuildOverview()
-                : "Build log loaded";
+
+            var overview = contextProvider.GetAllBuildsOverview();
+
+            // Add multi-build guidance if applicable
+            var multiBuildGuidance = buildContext.BuildCount > 1
+                ? @"
+
+IMPORTANT: Multiple binlog files are loaded. When creating research tasks:
+- Specify which build(s) each task should investigate using buildId
+- Consider whether the question applies to all builds or specific ones
+- Research tasks can use buildId parameter to target specific builds
+- Use ListBuilds tool to see available builds"
+                : "";
 
             var userPrompt = $@"User Question: {plan.UserQuery}
 
 Build Overview:
-{overview}
+{overview}{multiBuildGuidance}
 
 Analyze this question carefully. Think through:
 - What information is needed to answer this question?
@@ -216,7 +271,7 @@ End your response with the plan in JSON format:
 
             // Separate thinking from plan JSON
             var (thinking, planJson) = ExtractThinkingAndPlan(fullResponse);
-            
+
             // Store the thinking
             if (!string.IsNullOrWhiteSpace(thinking))
             {
@@ -230,12 +285,12 @@ End your response with the plan in JSON format:
             // Parse the plan
             try
             {
-                var jsonOptions = new JsonSerializerOptions 
-                { 
-                    PropertyNameCaseInsensitive = true 
+                var jsonOptions = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
                 };
                 var planData = JsonSerializer.Deserialize<PlanResponse>(planJson, jsonOptions);
-                
+
                 // Check if planning agent provided a direct answer
                 if (!string.IsNullOrWhiteSpace(planData?.DirectAnswer))
                 {
@@ -282,7 +337,7 @@ End your response with the plan in JSON format:
         private async System.Threading.Tasks.Task ResearchPhaseAsync(AgentPlan plan, CancellationToken cancellationToken)
         {
             plan.Phase = AgentExecutionPhase.Research;
-            
+
             // Skip research if planning agent provided a direct answer
             if (!string.IsNullOrWhiteSpace(plan.DirectAnswer))
             {
@@ -291,7 +346,7 @@ End your response with the plan in JSON format:
                 plan.Findings["direct"] = plan.DirectAnswer!;
                 return;
             }
-            
+
             plan.CurrentTaskIndex = 0;
 
             for (int i = 0; i < plan.ResearchTasks.Count; i++)
@@ -354,7 +409,7 @@ End your response with the plan in JSON format:
             // Build context from previous findings (with length limits)
             var previousFindings = new StringBuilder();
             const int maxFindingsLength = 100000; // Limit previous findings
-            
+
             foreach (var kvp in plan.Findings)
             {
                 if (kvp.Key != task.Id) // Don't include current task
@@ -365,10 +420,10 @@ End your response with the plan in JSON format:
                     {
                         finding = finding.Substring(0, 20000) + "... [truncated]";
                     }
-                    
+
                     previousFindings.AppendLine($"[{kvp.Key}]: {finding}");
                     previousFindings.AppendLine();
-                    
+
                     // Stop if we've accumulated too much context
                     if (previousFindings.Length > maxFindingsLength)
                     {
@@ -378,9 +433,7 @@ End your response with the plan in JSON format:
                 }
             }
 
-            var overview = contextProvider is BinlogContextProvider provider
-                ? provider.GetBuildOverview()
-                : "Build log loaded";
+            var overview = contextProvider.GetAllBuildsOverview();
 
             var userPrompt = $@"Task Goal: {task.Goal}
 Task Description: {task.Description}
@@ -430,7 +483,7 @@ Focus only on this specific task goal. Output your findings as a summary.";
 
             // Compile all findings
             var allFindings = new StringBuilder();
-            
+
             // Check if we have a direct answer from planning phase
             if (!string.IsNullOrWhiteSpace(plan.DirectAnswer))
             {
@@ -658,11 +711,11 @@ Use GUI tools to make your insights actionable and immediately explorable by the
         private string GetToolDescriptions(AIFunction[] tools)
         {
             var descriptions = new StringBuilder();
-            
+
             foreach (var tool in tools)
             {
                 descriptions.AppendLine($"- {tool.Name}: {tool.Description}");
-                
+
                 // Try to include parameter info from JSON schema
                 try
                 {
@@ -676,7 +729,7 @@ Use GUI tools to make your insights actionable and immediately explorable by the
                         {
                             paramNames.Add(property.Name);
                         }
-                        
+
                         if (paramNames.Count > 0)
                         {
                             descriptions.AppendLine($"  Parameters: {string.Join(", ", paramNames)}");
@@ -688,7 +741,7 @@ Use GUI tools to make your insights actionable and immediately explorable by the
                     // If schema parsing fails, skip parameter details
                 }
             }
-            
+
             return descriptions.ToString();
         }
 
@@ -739,7 +792,7 @@ Use GUI tools to make your insights actionable and immediately explorable by the
             // Look for the last occurrence of { followed by "tasks"
             int lastJsonStart = -1;
             int searchPos = 0;
-            
+
             while (true)
             {
                 int pos = response.IndexOf("{", searchPos, StringComparison.Ordinal);
@@ -754,7 +807,7 @@ Use GUI tools to make your insights actionable and immediately explorable by the
                 {
                     lastJsonStart = pos;
                 }
-                
+
                 searchPos = pos + 1;
             }
 
@@ -763,14 +816,14 @@ Use GUI tools to make your insights actionable and immediately explorable by the
                 // Try to find the matching closing brace
                 int braceCount = 0;
                 int jsonEnd = -1;
-                
+
                 for (int i = lastJsonStart; i < response.Length; i++)
                 {
                     if (response[i] == '{')
                     {
                         braceCount++;
                     }
-                    else if (response[i] == '}') 
+                    else if (response[i] == '}')
                     {
                         braceCount--;
                         if (braceCount == 0)

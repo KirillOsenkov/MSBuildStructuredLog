@@ -11,16 +11,58 @@ namespace StructuredLogger.LLM
     /// <summary>
     /// Tool for listing and filtering build events with detailed information.
     /// Provides chronological access to projects, targets, tasks, errors, warnings, and messages.
+    /// Supports multiple binlog files with optional buildId parameter.
     /// </summary>
     public class ListEventsToolExecutor : IToolsContainer
     {
-        private readonly Build build;
-        private readonly ListEventsToolExecutorCore core;
+        private readonly MultiBuildContext context;
 
-        public ListEventsToolExecutor(Build build)
+        /// <summary>
+        /// Creates a ListEventsToolExecutor with multi-build support.
+        /// </summary>
+        /// <param name="context">The multi-build context containing loaded builds.</param>
+        public ListEventsToolExecutor(MultiBuildContext context)
         {
-            this.build = build ?? throw new ArgumentNullException(nameof(build));
-            this.core = new ListEventsToolExecutorCore(build);
+            this.context = context ?? throw new ArgumentNullException(nameof(context));
+        }
+
+        /// <summary>
+        /// Creates a ListEventsToolExecutor for a single build (backward compatibility).
+        /// </summary>
+        /// <param name="build">The build to analyze.</param>
+        public ListEventsToolExecutor(Build build)
+            : this(CreateSingleBuildContext(build))
+        {
+        }
+
+        private static MultiBuildContext CreateSingleBuildContext(Build build)
+        {
+            if (build == null)
+            {
+                throw new ArgumentNullException(nameof(build));
+            }
+            var ctx = new MultiBuildContext();
+            ctx.AddBuild(build);
+            return ctx;
+        }
+
+        /// <summary>
+        /// Resolves a build and returns both the Build and friendly name.
+        /// </summary>
+        private (Build build, string friendlyName) ResolveBuildWithName(string buildId)
+        {
+            if (string.IsNullOrEmpty(buildId))
+            {
+                var primary = context.GetPrimaryBuild();
+                return (primary.Build, primary.FriendlyName);
+            }
+
+            if (!context.TryGetBuild(buildId, out var buildInfo))
+            {
+                throw new ArgumentException($"Build '{buildId}' not found. Use ListBuilds to see available builds.");
+            }
+
+            return (buildInfo.Build, buildInfo.FriendlyName);
         }
 
         public bool HasGuiTools => false;
@@ -32,7 +74,7 @@ namespace StructuredLogger.LLM
 
         [Description(@"Lists build events from the binlog with detailed filtering and pagination.
 
-This tool provides access to the chronological sequence of build events (projects, targets, 
+This tool provides access to the chronological sequence of build events (projects, targets,
 tasks, errors, warnings, messages) with rich filtering capabilities.
 
 KEY CONCEPTS:
@@ -99,49 +141,51 @@ TIPS:
 - Combine event types for related analysis (e.g., Target + Task)
 - Use pagination (skip/maxResults) for large result sets
 - Sort by duration to find performance bottlenecks
+
+Use buildId parameter to query a specific build when multiple binlogs are loaded.
 ")]
         public async System.Threading.Tasks.Task<string> ListEventsAsync(
             [Description("Array of event types to include: 'Project', 'Target', 'Task', 'Error', 'Warning', 'Message'. Defaults to all types if not specified.")]
-            string[]? eventTypes = null,
+            string[] eventTypes = null,
 
             [Description("Filter events that started after this time (format: 'yyyy-MM-dd HH:mm:ss' or 'yyyy-MM-ddTHH:mm:ss')")]
-            string? startAfter = null,
+            string startAfter = null,
 
             [Description("Filter events that started before this time")]
-            string? startBefore = null,
+            string startBefore = null,
 
             [Description("Filter events that ended after this time")]
-            string? endAfter = null,
+            string endAfter = null,
 
             [Description("Filter events that ended before this time")]
-            string? endBefore = null,
+            string endBefore = null,
 
             [Description("Filter events with duration >= this value (format: 'HH:mm:ss' or seconds as string)")]
-            string? minDuration = null,
+            string minDuration = null,
 
             [Description("Filter events with duration <= this value")]
-            string? maxDuration = null,
+            string maxDuration = null,
 
             [Description("Filter by project name (partial match, case-insensitive)")]
-            string? projectName = null,
+            string projectName = null,
 
             [Description("Filter by exact project file path")]
-            string? projectPath = null,
+            string projectPath = null,
 
             [Description("Filter by target name (partial match, case-insensitive)")]
-            string? targetName = null,
+            string targetName = null,
 
             [Description("Filter by task name (e.g., 'Csc', 'Copy', 'MSBuild')")]
-            string? taskName = null,
+            string taskName = null,
 
             [Description("Search text in event content (case-insensitive)")]
-            string? searchText = null,
+            string searchText = null,
 
             [Description("Filter errors by code (e.g., 'CS0103')")]
-            string? errorCode = null,
+            string errorCode = null,
 
             [Description("Filter warnings by code (e.g., 'MSB3644')")]
-            string? warningCode = null,
+            string warningCode = null,
 
             [Description("Filter by success status: true for succeeded, false for failed, null for all")]
             bool? succeeded = null,
@@ -162,12 +206,18 @@ TIPS:
             string sortBy = "startTime",
 
             [Description("Sort in descending order (default: false)")]
-            bool descending = false)
+            bool descending = false,
+
+            [Description("Build ID to query. Omit for primary build. Use ListBuilds to see available builds.")]
+            string buildId = null)
         {
             return await System.Threading.Tasks.Task.Run(() =>
             {
                 try
                 {
+                    var (build, friendlyName) = ResolveBuildWithName(buildId);
+                    var core = new ListEventsToolExecutorCore(build);
+
                     var filters = new EventFilters
                     {
                         EventTypes = eventTypes,
@@ -193,7 +243,13 @@ TIPS:
                         Descending = descending
                     };
 
-                    return core.ListEvents(filters);
+                    var result = core.ListEvents(filters);
+
+                    if (context.BuildCount > 1)
+                    {
+                        return $"[Events from {friendlyName}]\n{result}";
+                    }
+                    return result;
                 }
                 catch (Exception ex)
                 {
@@ -202,7 +258,7 @@ TIPS:
             });
         }
 
-        private DateTime? ParseDateTime(string? value)
+        private DateTime? ParseDateTime(string value)
         {
             if (string.IsNullOrWhiteSpace(value))
                 return null;
@@ -213,7 +269,7 @@ TIPS:
             throw new ArgumentException($"Invalid date/time format: '{value}'. Use 'yyyy-MM-dd HH:mm:ss' or 'yyyy-MM-ddTHH:mm:ss'");
         }
 
-        private TimeSpan? ParseTimeSpan(string? value)
+        private TimeSpan? ParseTimeSpan(string value)
         {
             if (string.IsNullOrWhiteSpace(value))
                 return null;

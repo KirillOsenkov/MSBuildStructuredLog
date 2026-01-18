@@ -12,10 +12,12 @@ namespace StructuredLogger.LLM
     /// <summary>
     /// Main service for LLM Chat functionality.
     /// Orchestrates chat history, LLM communication, and tool execution.
+    /// Supports multiple binlog files through MultiBuildContext.
     /// </summary>
     public class LLMChatService : IDisposable
     {
-        private readonly BinlogContextProvider contextProvider;
+        private readonly MultiBuildContext buildContext;
+        private readonly MultiBuildContextProvider contextProvider;
         private readonly List<IToolsContainer> toolContainers;
         private MultiProviderLLMClient? llmClient;
         private readonly LLMConfiguration configuration;
@@ -35,23 +37,68 @@ namespace StructuredLogger.LLM
         public bool IsConfigured => configuration?.IsConfigured ?? false;
         public string ConfigurationStatus => configuration?.GetConfigurationStatus() ?? "Not initialized";
 
-        private LLMChatService(Build build, LLMConfiguration config, ILLMLogger? logger)
+        /// <summary>
+        /// Creates a new LLMChatService with multi-build support.
+        /// </summary>
+        private LLMChatService(MultiBuildContext context, LLMConfiguration config, ILLMLogger? logger)
         {
-            this.contextProvider = new BinlogContextProvider(build);
+            this.buildContext = context ?? throw new ArgumentNullException(nameof(context));
+            this.contextProvider = new MultiBuildContextProvider(context);
             this.toolContainers = new List<IToolsContainer>();
             this.chatHistory = new List<ChatMessage>();
             this.configuration = config;
             this.logger = logger;
 
-            // Register default tool executors
-            RegisterToolContainer(new BinlogToolExecutor(build));
-            RegisterToolContainer(new EmbeddedFilesToolExecutor(build));
-            RegisterToolContainer(new ListEventsToolExecutor(build));
+            // Register default tool executors with multi-build context
+            RegisterToolContainer(new BinlogToolExecutor(context));
+            RegisterToolContainer(new EmbeddedFilesToolExecutor(context));
+            RegisterToolContainer(new ListEventsToolExecutor(context));
             RegisterToolContainer(new ResultsToolExecutor());
         }
 
         /// <summary>
-        /// Creates and initializes a new instance of LLMChatService.
+        /// Creates a new LLMChatService for a single build (backward compatibility).
+        /// </summary>
+        private LLMChatService(Build build, LLMConfiguration config, ILLMLogger? logger)
+            : this(CreateSingleBuildContext(build), config, logger)
+        {
+        }
+
+        private static MultiBuildContext CreateSingleBuildContext(Build build)
+        {
+            if (build == null)
+            {
+                throw new ArgumentNullException(nameof(build));
+            }
+            var context = new MultiBuildContext();
+            context.AddBuild(build);
+            return context;
+        }
+
+        /// <summary>
+        /// Creates and initializes a new instance of LLMChatService with multi-build support.
+        /// </summary>
+        /// <param name="context">The multi-build context containing loaded builds.</param>
+        /// <param name="config">Optional LLM configuration. If null, loads from environment.</param>
+        /// <param name="logger">Optional logger for diagnostics.</param>
+        /// <param name="cancellationToken">Cancellation token for async initialization.</param>
+        /// <returns>A fully initialized LLMChatService instance.</returns>
+        public static async System.Threading.Tasks.Task<LLMChatService> CreateAsync(
+            MultiBuildContext context,
+            LLMConfiguration? config = null,
+            ILLMLogger? logger = null,
+            CancellationToken cancellationToken = default)
+        {
+            var configuration = config ?? LLMConfiguration.LoadFromEnvironment();
+            var service = new LLMChatService(context, configuration, logger);
+
+            await service.InitializeLLMClientAsync(cancellationToken);
+
+            return service;
+        }
+
+        /// <summary>
+        /// Creates and initializes a new instance of LLMChatService for a single build.
         /// </summary>
         /// <param name="build">The build to analyze.</param>
         /// <param name="config">Optional LLM configuration. If null, loads from environment.</param>
@@ -59,17 +106,49 @@ namespace StructuredLogger.LLM
         /// <param name="cancellationToken">Cancellation token for async initialization.</param>
         /// <returns>A fully initialized LLMChatService instance.</returns>
         public static async System.Threading.Tasks.Task<LLMChatService> CreateAsync(
-            Build build, 
-            LLMConfiguration? config = null, 
+            Build build,
+            LLMConfiguration? config = null,
             ILLMLogger? logger = null,
             CancellationToken cancellationToken = default)
         {
             var configuration = config ?? LLMConfiguration.LoadFromEnvironment();
             var service = new LLMChatService(build, configuration, logger);
-            
+
             await service.InitializeLLMClientAsync(cancellationToken);
-            
+
             return service;
+        }
+
+        /// <summary>
+        /// Adds a build to the context. Can be called after service creation.
+        /// </summary>
+        public string AddBuild(Build build, string? friendlyName = null)
+        {
+            return buildContext.AddBuild(build, friendlyName);
+        }
+
+        /// <summary>
+        /// Removes a build from the context.
+        /// </summary>
+        public void RemoveBuild(string buildId)
+        {
+            buildContext.RemoveBuild(buildId);
+        }
+
+        /// <summary>
+        /// Sets the primary build.
+        /// </summary>
+        public void SetPrimaryBuild(string buildId)
+        {
+            buildContext.SetPrimaryBuild(buildId);
+        }
+
+        /// <summary>
+        /// Gets info about all loaded builds.
+        /// </summary>
+        public IEnumerable<BuildInfo> GetLoadedBuilds()
+        {
+            return buildContext.GetAllBuilds();
         }
 
         /// <summary>
@@ -102,7 +181,7 @@ namespace StructuredLogger.LLM
                 var client = new MultiProviderLLMClient(configuration, logger: logger);
                 await client.InitializeAsync(cancellationToken);
                 this.llmClient = client;
-                
+
                 SubscribeToResilienceEvents(client);
             }
             catch (Exception ex)
@@ -160,17 +239,38 @@ namespace StructuredLogger.LLM
 
         private string GetSystemPrompt()
         {
-            var overview = contextProvider is BinlogContextProvider provider
-                ? provider.GetBuildOverview()
-                : "Build log loaded";
+            var overview = contextProvider.GetAllBuildsOverview();
+            var buildCount = buildContext.BuildCount;
 
-            var basePrompt = @"You are an expert assistant helping developers analyze their MSBuild build logs (.binlog files).
+            string basePrompt;
+            if (buildCount > 1)
+            {
+                basePrompt = $@"You are an expert assistant helping developers analyze MSBuild build logs (.binlog files).
+Multiple binlog files are loaded. Always clarify which build you're referring to using the build ID or friendly name.
+
+You have access to tools that can query build data including projects, targets, tasks, errors, warnings, and timing information.
+
+IMPORTANT: Tools accept an optional `buildId` parameter to target a specific build. If omitted, tools operate on the PRIMARY build.
+
+{overview}
+
+Guidelines for multi-build analysis:
+- Always mention which build your findings come from (e.g., ""In the Tests build..."")
+- If a question could apply to multiple builds, check all relevant builds
+- Use ListBuilds tool to see available builds and their IDs
+- Consider comparing results across builds when relevant
+- Be explicit about the build context to avoid confusion";
+            }
+            else
+            {
+                basePrompt = $@"You are an expert assistant helping developers analyze their MSBuild build log (.binlog file).
 You have access to tools that can query the build data including projects, targets, tasks, errors, warnings, and timing information.
 When the user asks questions, you must use the available tools to retrieve accurate information from the build log - as you do not have information about their builds in your training set.
 Be concise and helpful. Format your responses clearly.
 
 Available context:
-" + overview;
+{overview}";
+            }
 
             if (HasGuiManipulationTools())
             {
@@ -285,7 +385,7 @@ Use GUI tools to make your insights actionable and immediately explorable by the
                              "- LLM_API_KEY (your API key)\n" +
                              "- LLM_MODEL (model name, e.g., gpt-4)\n\n" +
                              "Or use 'Configure' menu to configure/login.";
-                
+
                 MessageAdded?.Invoke(this, new ChatMessageViewModel("System", errorMsg, isError: true));
                 return errorMsg;
             }
@@ -305,14 +405,14 @@ Use GUI tools to make your insights actionable and immediately explorable by the
             {
                 // Prepare messages with system prompt
                 var messages = new List<ChatMessage>();
-                
+
                 // Add system prompt only at the start
                 if (chatHistory.Count == 1)
                 {
                     var systemPrompt = GetSystemPrompt();
-                    if (currentSelectedNode != null && contextProvider is BinlogContextProvider provider)
+                    if (currentSelectedNode != null)
                     {
-                        systemPrompt += "\n\n" + provider.GetSelectedNodeContext(currentSelectedNode);
+                        systemPrompt += "\n\n" + contextProvider.GetSelectedNodeContext(currentSelectedNode, buildContext.PrimaryBuildId);
                     }
                     messages.Add(new ChatMessage(ChatRole.System, systemPrompt));
                 }
@@ -335,8 +435,8 @@ Use GUI tools to make your insights actionable and immediately explorable by the
                 logger?.LogVerbose($"ChatOptions.Tools count: {options.Tools?.Count ?? 0}");
 
                 var response = await llmClient!.CompleteChatAsync(
-                    messages, 
-                    options, 
+                    messages,
+                    options,
                     cancellationToken);
 
                 // With UseFunctionInvocation(), the response already includes tool execution results
