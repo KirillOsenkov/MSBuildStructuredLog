@@ -148,7 +148,7 @@ namespace StructuredLogViewer.Controls
             propertiesAndItemsControl.RecentItemsCategory = "PropertiesAndItems";
 
             secretsSearch = (SecretsSearch)build.SearchExtensions.FirstOrDefault(se => se is SecretsSearch);
-            SetProjectContext(null);
+            SetProjectContext(null, force: true);
 
             VirtualizingPanel.SetIsVirtualizing(treeView, SettingsService.EnableTreeViewVirtualization);
 
@@ -1626,17 +1626,21 @@ Recent (");
 
         private object projectContext;
 
-        public void SetProjectContext(object contents)
+        public void SetProjectContext(object contents, bool force = false)
         {
-            if (projectContext == contents)
+            if (projectContext == contents && !force)
             {
                 return;
             }
 
+            var visibility = contents != null ? Visibility.Visible : Visibility.Collapsed;
+
+            contents ??= "A project or evaluation must be selected.";
+
             projectContext = contents;
             propertiesAndItemsContext.Content = contents;
-            var visibility = contents != null ? Visibility.Visible : Visibility.Collapsed;
-            projectContextBorder.Visibility = visibility;
+            projectContextBorder.Visibility = Visibility.Visible;
+            projectContextLabel.Visibility = visibility;
             propertiesAndItemsControl.TopPanel.Visibility = visibility;
             if (contents != null &&
                 !string.IsNullOrEmpty(propertiesAndItemsControl.SearchText) &&
