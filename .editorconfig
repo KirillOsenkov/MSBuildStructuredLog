@@ -11,6 +11,9 @@ indent_style = space
 trim_trailing_whitespace = true
 max_line_length = 120
 
+[*.{md,sh}]
+end_of_line = lf
+
 # MSBuild
 [*.{csproj,proj,projitems,shproj,fsproj,target,props}]
 indent_style = space
