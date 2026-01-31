@@ -31,18 +31,21 @@ namespace StructuredLogViewer
 
         public static void AddRecentLogFile(string filePath)
         {
-            AddRecentItem(filePath, recentLogsFilePath);
+            var fullPath = Path.GetFullPath(filePath);
+            AddRecentItem(fullPath, recentLogsFilePath);
         }
 
         public static void AddRecentProject(string filePath)
         {
-            AddRecentItem(filePath, recentProjectsFilePath);
+            var fullPath = Path.GetFullPath(filePath);
+            AddRecentItem(fullPath, recentProjectsFilePath);
         }
 
         public static void AddRecentMSBuildLocation(string filePath)
         {
+            var fullPath = Path.GetFullPath(filePath);
             cachedRecentMSBuildLocations = null;
-            AddRecentItem(filePath, recentMSBuildLocationsFilePath);
+            AddRecentItem(fullPath, recentMSBuildLocationsFilePath);
         }
 
         private static IEnumerable<string>? cachedRecentMSBuildLocations;
