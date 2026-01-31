@@ -4,7 +4,7 @@
     <CentralPackageTransitivePinningEnabled>True</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <PropertyGroup>
-    <AvaloniaVersion>11.1.3</AvaloniaVersion>
+    <AvaloniaVersion>11.3.11</AvaloniaVersion>
     <MSBuildPackageVersion>17.5.0</MSBuildPackageVersion>
   </PropertyGroup>
   <ItemGroup>
