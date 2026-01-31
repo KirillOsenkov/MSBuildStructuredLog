@@ -30,7 +30,7 @@ Alternatively, you can install from Homebrew:
 brew install structuredlogviewer
 ```
 
-## Building & Running the Avalonia version on Mac:
+## Building & Running the Avalonia version on Mac/Linux:
 
 ```
 git clone https://github.com/KirillOsenkov/MSBuildStructuredLog
