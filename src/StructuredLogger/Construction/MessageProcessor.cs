@@ -583,10 +583,21 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     if (propertyReassignment != null)
                     {
+                        string filePath = propertyReassignment.File;
+                        int line = propertyReassignment.LineNumber;
+                        if (filePath == null && propertyReassignment.Location is string location)
+                        {
+                            if (Strings.LocationRegex.Match(location) is { } match && match.Success)
+                            {
+                                filePath = match.Groups[1].Value;
+                                int.TryParse(match.Groups[2].Value, out line);
+                            }
+                        }
+
                         messageNode = new PropertyReassignmentMessage
                         {
-                            FilePath = propertyReassignment.File,
-                            Line = propertyReassignment.LineNumber,
+                            FilePath = filePath,
+                            Line = line,
                             NewValue = propertyReassignment.NewValue,
                             PreviousValue = propertyReassignment.PreviousValue
                         };

@@ -148,6 +148,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             string propertyReassignment = GetPropertyReassignmentText();
             PropertyReassignmentRegex = new Regex(propertyReassignment, RegexOptions.Compiled | RegexOptions.Singleline);
 
+            LocationRegex = new Regex("""^(?<path>.+) \((?<line>\d+),(?<column>\d+)\)$""", RegexOptions.Compiled | RegexOptions.Singleline);
+
             PropertyAssignment = GetString("PropertyAssignment");
             var propertyAssignment = GetPropertyAssignmentText();
             PropertyAssignmentRegex = new Regex(propertyAssignment, RegexOptions.Compiled | RegexOptions.Singleline);
@@ -441,6 +443,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public static Regex ProjectImportSkippedNoMatchesRegex { get; set; }
         public static Regex PropertyAssignmentRegex { get; set; }
         public static Regex PropertyReassignmentRegex { get; set; }
+        public static Regex LocationRegex { get; set; }
         public static Regex DeferredResponseFileRegex { get; set; }
         public static Regex MessageMetaprojectGenerated { get; set; }
         public static Regex UnifiedPrimaryReferencePrefix { get; set; }
