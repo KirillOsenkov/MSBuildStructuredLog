@@ -16,6 +16,7 @@ namespace StructuredLogViewer
     public class EditorExtension
     {
         public PreprocessedFileManager.PreprocessContext PreprocessContext { get; set; }
+        public ProjectEvaluation Evaluation { get; set; }
 
         public event Action<Import> ImportSelected;
 
@@ -33,8 +34,11 @@ namespace StructuredLogViewer
             caret.PositionChanged += (s, e) =>
             {
                 var caretOffset = textEditor.CaretOffset;
-                var projectImport = PreprocessContext.GetImportFromPosition(caretOffset);
-                ImportSelected?.Invoke(projectImport);
+                if (PreprocessContext != null)
+                {
+                    var projectImport = PreprocessContext.GetImportFromPosition(caretOffset);
+                    ImportSelected?.Invoke(projectImport);
+                }
             };
 
             textEditor.MouseHover += (sender, e) =>
@@ -124,11 +128,17 @@ namespace StructuredLogViewer
 
         private string GetToolTipText(string type, string title)
         {
+            var evaluation = Evaluation;
+            if (evaluation == null)
+            {
+                return null;
+            }
+
             StringBuilder content = new();
 
             if (type == "<PropertyGroup>")
             {
-                var propertyGroup = this.PreprocessContext.Evaluation.Children.FirstOrDefault(p => p.Title == Strings.Properties);
+                var propertyGroup = evaluation.Children.FirstOrDefault(p => p.Title == Strings.Properties);
                 if (propertyGroup is Folder propertyFolder)
                 {
                     var propertyEntry = propertyFolder.Children.FirstOrDefault(p => p.Title == title);
@@ -139,7 +149,7 @@ namespace StructuredLogViewer
                 }
 
                 // Search the "Property reassignment" folder.
-                var prFolder = this.PreprocessContext.Evaluation.PropertyReassignmentFolder;
+                var prFolder = evaluation.PropertyReassignmentFolder;
                 if (prFolder is TimedNode folder)
                 {
                     var entryFolder = folder.Children.FirstOrDefault(p => p.Title == title);
@@ -176,7 +186,7 @@ namespace StructuredLogViewer
                     }
                 }
 
-                var assignmentFolder = this.PreprocessContext.Evaluation.PropertyAssignmentFolder;
+                var assignmentFolder = evaluation.PropertyAssignmentFolder;
                 if (assignmentFolder is TimedNode)
                 {
                     var entryFolder = assignmentFolder.Children.FirstOrDefault(p => p.Title == title);

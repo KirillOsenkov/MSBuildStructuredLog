@@ -2703,7 +2703,8 @@ Recent (");
 
                             if (documentWell.tabControl.SelectedItem is TabItem current &&
                                 current.Content is TextViewerControl currentTextViewer &&
-                                currentTextViewer.EditorExtension is { } extension)
+                                currentTextViewer.EditorExtension is { } extension &&
+                                extension.PreprocessContext != null)
                             {
                                 int offset = extension.PreprocessContext.FindFileOffset(sourceFilePath);
                                 if (offset > 0)
@@ -2814,27 +2815,24 @@ Recent (");
                 preprocess = preprocessedFileManager.GetPreprocessAction(preprocessableFilePath, PreprocessedFileManager.GetEvaluationKey(evaluation));
             }
 
-            EditorExtension editorExtension = null;
             var context = preprocessedFileManager.TryGetContext(sourceFilePath);
-            if (context != null)
+            evaluation ??= context?.Evaluation;
+
+            var editorExtension = new EditorExtension();
+            editorExtension.PreprocessContext = context;
+            editorExtension.Evaluation = evaluation;
+
+            editorExtension.ImportSelected += import =>
             {
-                editorExtension = new EditorExtension();
-                editorExtension.PreprocessContext = context;
-
-                evaluation ??= context.Evaluation;
-
-                editorExtension.ImportSelected += import =>
+                if (import != null)
                 {
-                    if (import != null)
-                    {
-                        UpdateBreadcrumb(import);
-                    }
-                    else if (evaluation != null)
-                    {
-                        UpdateBreadcrumb(evaluation);
-                    }
-                };
-            }
+                    UpdateBreadcrumb(import);
+                }
+                else if (evaluation != null)
+                {
+                    UpdateBreadcrumb(evaluation);
+                }
+            };
 
             documentWell.DisplaySource(
                 preprocessableFilePath,
