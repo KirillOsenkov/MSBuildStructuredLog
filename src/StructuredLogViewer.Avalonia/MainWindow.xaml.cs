@@ -87,7 +87,7 @@ namespace StructuredLogViewer.Avalonia
 
         private async Task<bool> TryOpenFromClipboard()
         {
-            var text = await Clipboard.GetTextAsync();
+            var text = await Clipboard.TryGetTextAsync();
             if (string.IsNullOrEmpty(text) || text.Length > 260)
             {
                 return false;
