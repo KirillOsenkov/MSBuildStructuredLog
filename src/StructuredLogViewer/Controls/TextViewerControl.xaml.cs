@@ -219,6 +219,7 @@ namespace StructuredLogViewer.Controls
                 foldingStrategy.UpdateFoldings(this.FoldingManager, textEditor.Document);
 
                 gotoProjectMenu.Visibility = Visibility.Visible;
+                gotoPropertyMenu.Visibility = Visibility.Visible;
             }
             else if (!looksLikeXml && IsXml)
             {
@@ -404,6 +405,25 @@ async
             {
                 textEditor.Select(projFolding.StartOffset, projFolding.Title.Length);
                 textEditor.ScrollTo(textEditor.Document.GetLineByOffset(projFolding.StartOffset).LineNumber, 0);
+            }
+        }
+
+        private string currentProperty;
+        public string CurrentProperty
+        {
+            get => currentProperty;
+            set
+            {
+                currentProperty = value;
+                gotoPropertyMenu.Visibility = !string.IsNullOrEmpty(currentProperty) ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
+
+        private void gotoPropertyFoldingMenu_Click(object sender, RoutedEventArgs e)
+        {
+            if (CurrentProperty != null)
+            {
+                EditorExtension.RaiseGoToProperty(CurrentProperty);
             }
         }
     }

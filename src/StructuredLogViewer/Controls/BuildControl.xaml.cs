@@ -2833,6 +2833,10 @@ Recent (");
                     UpdateBreadcrumb(evaluation);
                 }
             };
+            editorExtension.GoToProperty += propertyName =>
+            {
+                SelectPropertiesAndItemsTab($"$property {propertyName}");
+            };
 
             documentWell.DisplaySource(
                 preprocessableFilePath,

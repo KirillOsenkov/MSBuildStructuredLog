@@ -76,7 +76,8 @@
       <a:TextEditor.ContextMenu>
         <ContextMenu>
           <MenuItem Header="Copy" Click="copyMenu_Click" />
-          <MenuItem x:Name="gotoProjectMenu" Header="Goto including Project" Click="gotoProjectFoldingMenu_Click" Visibility="Collapsed"/>
+          <MenuItem x:Name="gotoProjectMenu" Header="Go to including project" Click="gotoProjectFoldingMenu_Click" Visibility="Collapsed" />
+          <MenuItem x:Name="gotoPropertyMenu" Header="Go to property" Click="gotoPropertyFoldingMenu_Click" Visibility="Collapsed" />
         </ContextMenu>
       </a:TextEditor.ContextMenu>
     </a:TextEditor>

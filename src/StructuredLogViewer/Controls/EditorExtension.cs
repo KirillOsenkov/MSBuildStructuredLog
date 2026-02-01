@@ -19,6 +19,7 @@ namespace StructuredLogViewer
         public ProjectEvaluation Evaluation { get; set; }
 
         public event Action<Import> ImportSelected;
+        public event Action<string> GoToProperty;
 
         private ToolTip toolTip;
         private TextViewerControl textViewerControl;
@@ -33,12 +34,31 @@ namespace StructuredLogViewer
             var caret = textArea.Caret;
             caret.PositionChanged += (s, e) =>
             {
+                CloseToolTip();
+
                 var caretOffset = textEditor.CaretOffset;
                 if (PreprocessContext != null)
                 {
                     var projectImport = PreprocessContext.GetImportFromPosition(caretOffset);
                     ImportSelected?.Invoke(projectImport);
                 }
+
+                string currentProperty = null;
+                if (TryGetWordAtPosition(
+                    textViewerControl,
+                    caretOffset,
+                    out int start,
+                    out int end,
+                    out string type,
+                    out string word))
+                {
+                    if (type == "<PropertyGroup>")
+                    {
+                        currentProperty = word;
+                    }
+                }
+
+                textViewerControl.CurrentProperty = currentProperty;
             };
 
             textEditor.MouseHover += (sender, e) =>
@@ -53,6 +73,11 @@ namespace StructuredLogViewer
 
         private int lastQuickInfoStart;
         private int lastQuickInfoEnd;
+
+        public void RaiseGoToProperty(string property)
+        {
+            GoToProperty?.Invoke(property);
+        }
 
         private void TryUpdateToolTipText(TextViewerControl textViewerControl, Point mousePosition)
         {
@@ -116,13 +141,13 @@ namespace StructuredLogViewer
             {
                 toolTip.IsOpen = true;
             }
+        }
 
-            void CloseToolTip()
+        private void CloseToolTip()
+        {
+            if (toolTip != null)
             {
-                if (toolTip != null)
-                {
-                    toolTip.IsOpen = false;
-                }
+                toolTip.IsOpen = false;
             }
         }
 
@@ -240,8 +265,16 @@ namespace StructuredLogViewer
             end = -1;
 
             var document = textViewerControl.TextEditor.Document;
-            start = ICSharpCode.AvalonEdit.Document.TextUtilities.GetNextCaretPosition(document, offset + 1, System.Windows.Documents.LogicalDirection.Backward, ICSharpCode.AvalonEdit.Document.CaretPositioningMode.WordBorder);
-            end = ICSharpCode.AvalonEdit.Document.TextUtilities.GetNextCaretPosition(document, offset, System.Windows.Documents.LogicalDirection.Forward, ICSharpCode.AvalonEdit.Document.CaretPositioningMode.WordBorder);
+            start = ICSharpCode.AvalonEdit.Document.TextUtilities.GetNextCaretPosition(
+                document,
+                offset + 1,
+                System.Windows.Documents.LogicalDirection.Backward,
+                CaretPositioningMode.WordBorder);
+            end = ICSharpCode.AvalonEdit.Document.TextUtilities.GetNextCaretPosition(
+                document,
+                offset,
+                System.Windows.Documents.LogicalDirection.Forward,
+                CaretPositioningMode.WordBorder);
 
             if (start == -1 || end == -1 || end <= start)
             {
