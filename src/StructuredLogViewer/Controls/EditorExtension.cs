@@ -54,7 +54,15 @@ namespace StructuredLogViewer
                 {
                     if (type == "<PropertyGroup>")
                     {
-                        currentProperty = word;
+                        if (start > 2)
+                        {
+                            var document = textViewerControl.TextEditor.Document;
+                            string prefix = document.GetText(start - 2, 2);
+                            if (prefix == "$(" || prefix[1] == '<')
+                            {
+                                currentProperty = word;
+                            }
+                        }
                     }
                 }
 
@@ -284,9 +292,9 @@ namespace StructuredLogViewer
             // Try parsing the word by looking for the special characters before the word.
             if (start > 2)
             {
-                // naively check for $(.
+                // naively check for $( or <.
                 word = document.GetText(start - 2, 2);
-                if (word == "$(")
+                if (word == "$(" || word[1] == '<')
                 {
                     word = document.GetText(start, end - start).Trim();
                     type = "<PropertyGroup>";

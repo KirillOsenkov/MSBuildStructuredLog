@@ -897,7 +897,7 @@ Recent (");
 
             var host = new GraphHostControl();
             host.DisplayText += text => DisplayText(text, "Graph");
-            host.GoToSearch += text => SelectPropertiesAndItemsTab($"$property {text}");
+            host.GoToSearch += text => SearchForProperty(text);
             host.Graph = graph;
             propertyGraphTab.Content = host;
             propertyGraphTab.Visibility = Visibility.Visible;
@@ -2241,20 +2241,18 @@ Recent (");
             var selectedItem = treeView.SelectedItem;
             if (selectedItem is Property property)
             {
-                SelectPropertiesAndItemsTab(GetQuery(property.Name));
+                SearchForProperty(property.Name);
             }
             else if (selectedItem is PropertyAssignmentMessage assignment)
             {
-                SelectPropertiesAndItemsTab(GetQuery(assignment.Parent.Title));
+                SearchForProperty(assignment.Parent.Title);
             }
             else if (selectedItem is Folder reassignmentFolder
                 && reassignmentFolder.Parent is TimedNode parent
                 && (parent.Name == Strings.PropertyReassignmentFolder || parent.Name == Strings.PropertyAssignmentFolder))
             {
-                SelectPropertiesAndItemsTab(GetQuery(reassignmentFolder.Name));
+                SearchForProperty(reassignmentFolder.Name);
             }
-
-            string GetQuery(string name) => $"$property \"{name}\"";
         }
 
         public void SearchInSubtree()
@@ -2835,7 +2833,7 @@ Recent (");
             };
             editorExtension.GoToProperty += propertyName =>
             {
-                SelectPropertiesAndItemsTab($"$property {propertyName}");
+                SearchForProperty(propertyName);
             };
 
             documentWell.DisplaySource(

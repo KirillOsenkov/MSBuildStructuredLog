@@ -78,6 +78,11 @@ public class SourceFileLineWithHighlights : SourceFileLine
                 continue;
             }
 
+            if (usage.Position == -1)
+            {
+                continue;
+            }
+
             if (start < usage.Position)
             {
                 highlights.Add(LineText.Substring(start, usage.Position - start));
