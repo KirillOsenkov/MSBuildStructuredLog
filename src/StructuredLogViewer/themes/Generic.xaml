@@ -1,4 +1,4 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:l="clr-namespace:Microsoft.Build.Logging.StructuredLogger;assembly=StructuredLogger"
                     xmlns:local="clr-namespace:Microsoft.Build.Logging.StructuredLogger"
@@ -132,6 +132,23 @@
 
   <SolidColorBrush x:Key="SearchResultBrush" Color="DarkOrange" />
   <SolidColorBrush x:Key="ContainsSearchResultBrush" Color="Bisque" />
+
+  <Canvas x:Key="LoggerIcon" x:Shared="False">
+    <Canvas.Effect>
+      <DropShadowEffect BlurRadius="15" Color="Gray" Opacity="0.5" />
+    </Canvas.Effect>
+    <Canvas.RenderTransform>
+      <ScaleTransform ScaleX="1" ScaleY="1" />
+    </Canvas.RenderTransform>
+    <Rectangle Width="35" Height="35" Canvas.Left="0" Canvas.Top="0" Stroke="{DynamicResource TargetStroke}" Fill="{DynamicResource TargetBrush}" />
+    <Rectangle Width="35" Height="35" Canvas.Left="25" Canvas.Top="35" Stroke="{DynamicResource ParameterStroke}" Fill="{DynamicResource ParameterBrush}" />
+    <Rectangle Width="35" Height="35" Canvas.Left="25" Canvas.Top="70" Stroke="{DynamicResource TaskStroke}" Fill="{DynamicResource TaskBrush}" />
+    <Rectangle Width="35" Height="35" Canvas.Left="60" Canvas.Top="35" Stroke="{DynamicResource ItemStroke}" Fill="{DynamicResource ItemBrush}" />
+    <Rectangle Width="35" Height="35" Canvas.Left="60" Canvas.Top="70" Stroke="{DynamicResource FolderStroke}" Fill="{DynamicResource ClosedFolderBrush}" />
+    <Line X1="16" Y1="35" X2="16" Y2="87" Stroke="Black" />
+    <Line X1="16" Y1="87" X2="25" Y2="87" Stroke="Black" />
+    <Line X1="16" Y1="53" X2="25" Y2="53" Stroke="Black" />
+  </Canvas>
 
   <DrawingBrush x:Key="SlnIcon">
     <DrawingBrush.Drawing>
@@ -1042,20 +1059,7 @@
                   Grid.Column="1">
               <StackPanel>
                 <Canvas Width="100" Height="100" Margin="20">
-                  <Canvas.Effect>
-                    <DropShadowEffect BlurRadius="15" Color="Gray" Opacity="0.5" />
-                  </Canvas.Effect>
-                  <Canvas.RenderTransform>
-                    <ScaleTransform ScaleX="1" ScaleY="1" />
-                  </Canvas.RenderTransform>
-                  <Rectangle Width="35" Height="35" Canvas.Left="0" Canvas.Top="0" Stroke="{DynamicResource TargetStroke}" Fill="{DynamicResource TargetBrush}" />
-                  <Rectangle Width="35" Height="35" Canvas.Left="25" Canvas.Top="35" Stroke="{DynamicResource ParameterStroke}" Fill="{DynamicResource ParameterBrush}" />
-                  <Rectangle Width="35" Height="35" Canvas.Left="25" Canvas.Top="70" Stroke="{DynamicResource TaskStroke}" Fill="{DynamicResource TaskBrush}" />
-                  <Rectangle Width="35" Height="35" Canvas.Left="60" Canvas.Top="35" Stroke="{DynamicResource ItemStroke}" Fill="{DynamicResource ItemBrush}" />
-                  <Rectangle Width="35" Height="35" Canvas.Left="60" Canvas.Top="70" Stroke="{DynamicResource FolderStroke}" Fill="{DynamicResource ClosedFolderBrush}" />
-                  <Line X1="16" Y1="35" X2="16" Y2="87" Stroke="Black" />
-                  <Line X1="16" Y1="87" X2="25" Y2="87" Stroke="Black" />
-                  <Line X1="16" Y1="53" X2="25" Y2="53" Stroke="Black" />
+                  <ContentControl Content="{StaticResource LoggerIcon}"/>
                 </Canvas>
                 <TextBlock Text="Open Log File"
                          FontSize="16"

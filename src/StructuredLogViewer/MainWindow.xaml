@@ -1,4 +1,4 @@
-﻿<Window x:Class="StructuredLogViewer.MainWindow"
+<Window x:Class="StructuredLogViewer.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:StructuredLogViewer"
@@ -10,45 +10,60 @@
         TextOptions.TextRenderingMode="ClearType"
         KeyDown="Window_KeyDown"
         KeyUp="Window_KeyUp"
+        WindowStyle="SingleBorderWindow"
         SnapsToDevicePixels="True">
+  <WindowChrome.WindowChrome>
+    <WindowChrome
+        CaptionHeight="20"
+        CornerRadius="4"
+        ResizeBorderThickness="4"/>
+  </WindowChrome.WindowChrome>
   <DockPanel>
     <DockPanel.LayoutTransform>
       <ScaleTransform x:Name="scaleTransform" CenterX="0" CenterY="0" ScaleX="1" ScaleY="1" />
     </DockPanel.LayoutTransform>
-    <Grid DockPanel.Dock="Top">
-    <Menu x:Name="mainMenu">
-      <MenuItem Header="_File">
-        <MenuItem Header="Start Page" Click="StartPage_Click" />
-        <Separator />
-        <MenuItem Header="_Build Solution/Project..." Click="Build_Click" InputGestureText="F6" />
-        <MenuItem Header="Rebuild Solution/Project" Click="Rebuild_Click" InputGestureText="Shift+F6" />
-        <Separator />
-        <MenuItem Header="_Open Log..." Click="Open_Click" InputGestureText="Ctrl+O" />
-        <MenuItem Header="_Open Graph..." Click="OpenGraph_Click" />
-        <MenuItem x:Name="ReloadMenu" Header="_Reload" Click="Reload_Click" InputGestureText="F5" />
-        <MenuItem x:Name="SaveAsMenu" Header="_Save Log As..." Click="SaveAs_Click" InputGestureText="Ctrl+S" />
-        <MenuItem x:Name="RedactSecretsMenu" Header="_Redact Secrets" Click="RedactSecrets_Click" InputGestureText="Ctrl+R" />
-                <Separator />
-        <MenuItem x:Name="StatsMenu" Header="_Statistics..." Click="Stats_Click" />
-        <Separator />
-        <MenuItem x:Name="RecentProjectsMenu" Header="Recent Projects" Visibility="Collapsed">
-        </MenuItem>
-        <MenuItem x:Name="RecentLogsMenu" Header="Recent Logs" Visibility="Collapsed">
-        </MenuItem>
-        <Separator x:Name="RecentItemsSeparator" Visibility="Collapsed" />
-        <MenuItem Header="Set _MSBuild Path" Click="SetMSBuild_Click" />
-        <Separator />
-        <MenuItem Header="E_xit" Click="Exit_Click" InputGestureText="Alt+F4" />
-      </MenuItem>
-      <MenuItem Header="_Help">
-        <MenuItem Header="Search Syntax" Click="HelpLink3_Click" />
-        <MenuItem Header="https://github.com/KirillOsenkov/MSBuildStructuredLog" Click="HelpLink_Click" />
-        <MenuItem Header="https://msbuildlog.com" Click="HelpLink2_Click" />
-        <MenuItem Header="Try a prototype with LLM-integration" Click="LLMButton_Click" />
-        <Separator />
-        <MenuItem Header="About" Click="HelpAbout_Click" />
-      </MenuItem>
-    </Menu>
+    <Grid DockPanel.Dock="Top" WindowChrome.IsHitTestVisibleInChrome="true">
+      <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="8,8,0,0">
+        <Viewbox Stretch="Uniform" Height="20" Width="20">
+          <Canvas Width="100" Height="100">
+            <ContentControl Content="{DynamicResource LoggerIcon}" />
+          </Canvas>
+        </Viewbox>
+
+        <Menu x:Name="mainMenu" VerticalAlignment="Bottom">
+          <MenuItem Header="_File">
+            <MenuItem Header="Start Page" Click="StartPage_Click" />
+            <Separator />
+            <MenuItem Header="_Build Solution/Project..." Click="Build_Click" InputGestureText="F6" />
+            <MenuItem Header="Rebuild Solution/Project" Click="Rebuild_Click" InputGestureText="Shift+F6" />
+            <Separator />
+            <MenuItem Header="_Open Log..." Click="Open_Click" InputGestureText="Ctrl+O" />
+            <MenuItem Header="_Open Graph..." Click="OpenGraph_Click" />
+            <MenuItem x:Name="ReloadMenu" Header="_Reload" Click="Reload_Click" InputGestureText="F5" />
+            <MenuItem x:Name="SaveAsMenu" Header="_Save Log As..." Click="SaveAs_Click" InputGestureText="Ctrl+S" />
+            <MenuItem x:Name="RedactSecretsMenu" Header="_Redact Secrets" Click="RedactSecrets_Click" InputGestureText="Ctrl+R" />
+            <Separator />
+            <MenuItem x:Name="StatsMenu" Header="_Statistics..." Click="Stats_Click" />
+            <Separator />
+            <MenuItem x:Name="RecentProjectsMenu" Header="Recent Projects" Visibility="Collapsed">
+            </MenuItem>
+            <MenuItem x:Name="RecentLogsMenu" Header="Recent Logs" Visibility="Collapsed">
+            </MenuItem>
+            <Separator x:Name="RecentItemsSeparator" Visibility="Collapsed" />
+            <MenuItem Header="Set _MSBuild Path" Click="SetMSBuild_Click" />
+            <Separator />
+            <MenuItem Header="E_xit" Click="Exit_Click" InputGestureText="Alt+F4" />
+          </MenuItem>
+          <MenuItem Header="_Help">
+            <MenuItem Header="Search Syntax" Click="HelpLink3_Click" />
+            <MenuItem Header="https://github.com/KirillOsenkov/MSBuildStructuredLog" Click="HelpLink_Click" />
+            <MenuItem Header="https://msbuildlog.com" Click="HelpLink2_Click" />
+            <MenuItem Header="Try a prototype with LLM-integration" Click="LLMButton_Click" />
+            <Separator />
+            <MenuItem Header="About" Click="HelpAbout_Click" />
+          </MenuItem>
+        </Menu>
+      </StackPanel>
     <StackPanel Orientation="Horizontal"
         HorizontalAlignment="Right"
         VerticalAlignment="Top">
@@ -86,7 +101,17 @@
             <TextBlock Text="LLM integration (Preview)" VerticalAlignment="Center" />
           </StackPanel>
       </Button>
-    </StackPanel>
+        <StackPanel Orientation="Horizontal"
+                          HorizontalAlignment="Right" 
+                          Margin="10,0">
+          <Button Content="-" Width="25" Height="20" 
+                          Click="WindowMinimize_Click"/>
+          <Button x:Name="MaximizeButton" Content="□" Width="25" Height="20" 
+                          Click="WindowMaximize_Click"/>
+          <Button Content="X" Width="25" Height="20" 
+                          Click="WindowClose_Click" />
+        </StackPanel>
+      </StackPanel>
     </Grid>
     <Grid>
       <ContentPresenter x:Name="mainContent" Margin="7"/>
