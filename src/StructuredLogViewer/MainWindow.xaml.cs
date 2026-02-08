@@ -36,11 +36,11 @@ namespace StructuredLogViewer
         {
             AppDomain.CurrentDomain.FirstChanceException += CurrentDomain_FirstChanceException;
 
-            InitializeComponent();
-
             var uri = new Uri("StructuredLogViewer;component/themes/Generic.xaml", UriKind.Relative);
             var generic = new ResourceDictionary { Source = uri };
             Application.Current.Resources.MergedDictionaries.Add(generic);
+
+            InitializeComponent();
 
             SourceInitialized += MainWindow_SourceInitialized;
             Loaded += MainWindow_Loaded;
@@ -268,6 +268,9 @@ namespace StructuredLogViewer
 
         private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
+            MaximizeButton.Content = this.WindowState == WindowState.Maximized ? "❐" :
+                MaximizeButton.Content = "□";
+
             try
             {
                 if (!HandleArguments() && !TryOpenFromClipboard())
@@ -1254,6 +1257,30 @@ that project." };
         private void LLMButton_Click(object sender, RoutedEventArgs e)
         {
             Process.Start(new ProcessStartInfo("https://github.com/JanKrivanek/MSBuildStructuredLog/releases") { UseShellExecute = true });
+        }
+
+        private void WindowMinimize_Click(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState.Minimized;
+        }
+
+        private void WindowMaximize_Click(object sender, RoutedEventArgs e)
+        {
+            if (WindowState == WindowState.Maximized)
+            {
+                WindowState = WindowState.Normal;
+                MaximizeButton.Content = "□"; // Restore symbol
+            }
+            else
+            {
+                WindowState = WindowState.Maximized;
+                MaximizeButton.Content = "❐"; // Maximize symbol
+            }
+        }
+
+        private void WindowClose_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
         }
     }
 }
