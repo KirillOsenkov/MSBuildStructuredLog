@@ -1096,9 +1096,9 @@ Recent (");
             if (node is Property ||
                 node?.Parent is { } parent &&
                 (parent.Title == Strings.PropertyReassignmentFolder ||
-                parent?.Parent.Title == Strings.PropertyReassignmentFolder ||
+                parent?.Parent?.Title == Strings.PropertyReassignmentFolder ||
                 parent.Title == Strings.PropertyAssignmentFolder ||
-                parent?.Parent.Title == Strings.PropertyAssignmentFolder))
+                parent?.Parent?.Title == Strings.PropertyAssignmentFolder))
             {
                 viewPropertyItem.Visibility = Visibility.Visible;
             }
