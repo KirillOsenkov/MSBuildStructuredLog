@@ -2651,7 +2651,10 @@ Recent (");
                     case Target target when target.Parent is Folder:
                         return SearchForTarget(target.Name);
                     case Target target:
-                        return DisplayTarget(target.SourceFilePath, target.Name);
+                        return DisplayTarget(
+                            target.SourceFilePath,
+                            target.Name,
+                            evaluation: target.Project.GetEvaluation());
                     case Task task:
                         return DisplayTask(task);
                     case AddItem addItem:
@@ -2883,7 +2886,7 @@ Recent (");
             return DisplayTarget(sourceFilePath, target.Name, name);
         }
 
-        public bool DisplayTarget(string sourceFilePath, string targetName, string taskName = null)
+        public bool DisplayTarget(string sourceFilePath, string targetName, string taskName = null, ProjectEvaluation evaluation = null)
         {
             var text = sourceFileResolver.GetSourceFileText(sourceFilePath);
             if (text == null)
@@ -2924,7 +2927,7 @@ Recent (");
                 line = text.GetLineNumberFromPosition(startPosition);
             }
 
-            return DisplayFile(sourceFilePath, line + 1);
+            return DisplayFile(sourceFilePath, line + 1, evaluation: evaluation);
         }
 
         private static BaseNode GetNode(RoutedEventArgs args)
