@@ -251,16 +251,24 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return false;
         }
 
-        private void TryExplainSingleFileCopy(Project project, string filePath, IList<SearchResult> resultSet)
+        private void TryExplainSingleFileCopy(
+            Project project,
+            string filePath,
+            IList<SearchResult> resultSet,
+            HashSet<string> visitedProjects)
         {
+            if (!visitedProjects.Add(project.ProjectFile + filePath))
+            {
+                return;
+            }
+
             var fileName = Path.GetFileName(filePath);
             var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(filePath);
 
             var target = project.FindTarget("_GetCopyToOutputDirectoryItemsFromTransitiveProjectReferences");
             if (target != null)
             {
-                var task = target.FindChild<MSBuildTask>();
-                if (task != null)
+                foreach (var task in target.Children.OfType<MSBuildTask>())
                 {
                     var outputItems = task.FindLastChild<Folder>(static f => f.Name == "OutputItems");
                     if (outputItems != null)
@@ -268,8 +276,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         var addItem = outputItems.FindChild<AddItem>();
                         if (addItem != null)
                         {
-                            var item = addItem.FindChild<Item>(filePath);
-                            if (item != null)
+                            foreach (var item in addItem.Children.OfType<Item>().Where(i => Path.GetFileName(i.Name).Equals(fileName, StringComparison.OrdinalIgnoreCase)))
                             {
                                 var metadata = item.FindChild<Metadata>(static m => m.Name == "MSBuildSourceProjectFile");
                                 if (metadata != null)
@@ -289,7 +296,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                                 referencedProject = getCopyToOutputDirectoryItems.Project;
                                             }
 
-                                            TryExplainSingleFileCopy(referencedProject, filePath, resultSet);
+                                            TryExplainSingleFileCopy(referencedProject, filePath, resultSet, visitedProjects);
                                         }
                                     }
                                 }
@@ -411,7 +418,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 sourceFilePath = fileCopyInfo.FileCopyOperation.Source;
             }
 
-            TryExplainSingleFileCopy(project, sourceFilePath, resultSet);
+            var visitedProjects = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            TryExplainSingleFileCopy(project, sourceFilePath, resultSet, visitedProjects);
         }
 
         private static void FindCopyToOutputDirectoryItem(IList<SearchResult> resultSet, NamedNode itemsFolder, string fileName, string itemName)
