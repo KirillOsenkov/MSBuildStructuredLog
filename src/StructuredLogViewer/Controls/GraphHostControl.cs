@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -59,6 +60,7 @@ public class GraphHostControl : DockPanel
     private GraphControl graphControl;
     private Button searchButton;
     private Button showTextButton;
+    private Button showVerticesButton;
     private TextBox searchTextBox;
 
     public Digraph Graph
@@ -112,6 +114,7 @@ public class GraphHostControl : DockPanel
                 ? Visibility.Visible
                 : Visibility.Collapsed;
         showTextButton.Visibility = textVisibility;
+        showVerticesButton.Visibility = textVisibility;
         searchButton.Visibility = searchVisibility;
     }
 
@@ -123,7 +126,7 @@ public class GraphHostControl : DockPanel
             Orientation = Orientation.Horizontal,
             MinHeight = 26
         };
-        var toolbar = new StackPanel()
+        var toolbar = new WrapPanel()
         {
             Orientation = Orientation.Horizontal,
             MinHeight = 26
@@ -157,7 +160,16 @@ public class GraphHostControl : DockPanel
 
         showTextButton = new Button
         {
-            Content = "Show graph text",
+            Content = "Text",
+            VerticalAlignment = VerticalAlignment.Center,
+            Padding = new Thickness(0, 0, 8, 0),
+            Margin = new Thickness(0, 0, 8, 0),
+            BorderThickness = new Thickness()
+        };
+
+        showVerticesButton = new Button
+        {
+            Content = "Vertices",
             VerticalAlignment = VerticalAlignment.Center,
             Padding = new Thickness(0, 0, 8, 0),
             Margin = new Thickness(0, 0, 8, 0),
@@ -257,6 +269,16 @@ public class GraphHostControl : DockPanel
             DisplayText?.Invoke(text);
         };
 
+        showVerticesButton.Click += (s, e) =>
+        {
+            var text = string.Join(Environment.NewLine,
+                graphControl
+                .GetVerticesToDisplay()
+                .Select(v => v.Title)
+                .OrderBy(s => s));
+            DisplayText?.Invoke(text);
+        };
+
         depthCheckbox.Checked += (s, e) =>
         {
             graphControl.LayerByDepth = true;
@@ -285,6 +307,7 @@ public class GraphHostControl : DockPanel
         };
 
         toolbar.Children.Add(showTextButton);
+        toolbar.Children.Add(showVerticesButton);
         toolbar.Children.Add(transitiveReduceCheck);
         toolbar.Children.Add(allEdgesCheckbox);
         toolbar.Children.Add(filterModeComboBox);
