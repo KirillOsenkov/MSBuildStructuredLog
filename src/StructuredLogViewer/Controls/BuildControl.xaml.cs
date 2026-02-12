@@ -2970,6 +2970,32 @@ Recent (");
                 folder.AddChildAtBeginning(showAllButton);
             }
 
+            var projects = folder.Children
+                .OfType<ProxyNode>()
+                .Select(p => p.Original as Project)
+                .Where(p => p != null)
+                .ToArray();
+            if (projects.Length > 1 && projects.Length < 20)
+            {
+                var viewProjectGraphButton = new ButtonNode
+                {
+                    Text = $"View project graph"
+                };
+
+                viewProjectGraphButton.OnClick = () =>
+                {
+                    centralTabControl.SelectedItem = projectReferenceGraphTab;
+                    if (projectReferenceGraphTab.Content is GraphHostControl host)
+                    {
+                        var text = string.Join(";", projects.Select(p => Path.GetFileNameWithoutExtension(p.Name)).ToArray());
+                        host.SearchText = text;
+                        host.Locate(text);
+                    }
+                };
+
+                folder.AddChild(viewProjectGraphButton);
+            }
+
             return folder.Children;
         }
 

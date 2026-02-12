@@ -59,6 +59,7 @@ public class GraphHostControl : DockPanel
     private GraphControl graphControl;
     private Button searchButton;
     private Button showTextButton;
+    private TextBox searchTextBox;
 
     public Digraph Graph
     {
@@ -163,11 +164,12 @@ public class GraphHostControl : DockPanel
             BorderThickness = new Thickness()
         };
 
-        var searchTextBox = new TextBox
+        searchTextBox = new TextBox
         {
             VerticalAlignment = VerticalAlignment.Center,
             Margin = new Thickness(0, 0, 8, 0),
-            MinWidth = 200
+            MinWidth = 200,
+            MaxWidth = 400
         };
         var locateButton = new Button
         {
@@ -364,6 +366,12 @@ public class GraphHostControl : DockPanel
         }
 
         Children.Add(graphControl.Content);
+    }
+
+    public string SearchText
+    {
+        get => searchTextBox.Text;
+        set => searchTextBox.Text = value;
     }
 
     private void CopyImage()

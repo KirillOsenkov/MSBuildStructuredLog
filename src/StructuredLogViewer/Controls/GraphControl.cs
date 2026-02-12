@@ -583,7 +583,7 @@ public class GraphControl
 
         if (controls != null)
         {
-            var toSelect = controls.Take(2).ToArray();
+            var toSelect = controls.ToArray();
             selectedControls.UnionWith(controls);
             foreach (var control in toSelect)
             {
@@ -597,6 +597,10 @@ public class GraphControl
             else if (toSelect.Length == 2)
             {
                 SelectControls(toSelect[0], toSelect[1]);
+            }
+            else if (toSelect.Length > 2)
+            {
+                SelectManyControls(toSelect);
             }
         }
 
@@ -612,6 +616,25 @@ public class GraphControl
     private Vertex GetVertex(FrameworkElement control)
     {
         return (Vertex)control.Tag;
+    }
+
+    private void SelectManyControls(FrameworkElement[] controls)
+    {
+        var vertices = controls.Select(c => GetVertex(c)).ToHashSet();
+
+        foreach (var control in controls)
+        {
+            var vertex = GetVertex(control);
+            var sourceRect = GetRectOnCanvas(control, canvas);
+            AddOutgoingEdges(sourceRect, vertex, visibleVertices: vertices);
+            AddIncomingEdges(sourceRect, vertex, visibleVertices: vertices);
+        }
+
+        foreach (var control in controls)
+        {
+            var sourceRect = GetRectOnCanvas(control, canvas);
+            AddRectangle(sourceRect, new SolidColorBrush(border), Brushes.PaleGreen);
+        }
     }
 
     private void SelectControls(FrameworkElement fromControl, FrameworkElement toControl)
@@ -673,9 +696,12 @@ public class GraphControl
         AddRectangle(sourceRect, new SolidColorBrush(border), Brushes.PaleGreen);
     }
 
-    private void AddIncomingEdges(Rect destinationRect, Vertex destinationVertex)
+    private void AddIncomingEdges(Rect destinationRect, Vertex destinationVertex, HashSet<Vertex> visibleVertices = null)
     {
-        var visibleVertices = filterMode != GraphFilterMode.None ? GetVerticesToDisplay().ToHashSet() : null;
+        if (visibleVertices == null)
+        {
+            visibleVertices = filterMode != GraphFilterMode.None ? GetVerticesToDisplay().ToHashSet() : null;
+        }
 
         foreach (var incoming in destinationVertex.Incoming)
         {
@@ -687,7 +713,7 @@ public class GraphControl
             }
 
             // In filtering mode, only show edges to visible vertices
-            if (filterMode != GraphFilterMode.None && visibleVertices != null && !visibleVertices.Contains(incoming))
+            if (visibleVertices != null && !visibleVertices.Contains(incoming))
             {
                 continue;
             }
@@ -705,7 +731,7 @@ public class GraphControl
     {
         IEnumerable<Vertex> list = HideTransitiveEdges ? node.NonRedundantOutgoing : node.Outgoing;
 
-        if (!allEdges)
+        if (!allEdges && visibleVertices == null)
         {
             visibleVertices = filterMode != GraphFilterMode.None ? GetVerticesToDisplay().ToHashSet() : null;
         }
