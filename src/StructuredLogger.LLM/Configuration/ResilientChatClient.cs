@@ -309,6 +309,41 @@ namespace StructuredLogger.LLM
                 }
             }
 
+            // Check for GitHub Copilot-style error message
+            // Pattern: "prompt token count of 795491 exceeds the limit of 128000"
+            var copilotPattern = @"prompt token count of\s*(\d+)\s*exceeds the limit of\s*(\d+)";
+            match = Regex.Match(message, copilotPattern, RegexOptions.IgnoreCase);
+            if (match.Success)
+            {
+                if (int.TryParse(match.Groups[1].Value, out int currentCopilot) &&
+                    int.TryParse(match.Groups[2].Value, out int maxCopilot))
+                {
+                    return new ContextOverflowInfo
+                    {
+                        IsOverflow = true,
+                        CurrentTokens = currentCopilot,
+                        MaxTokens = maxCopilot
+                    };
+                }
+            }
+
+            // Check for model_max_prompt_tokens_exceeded code
+            if (message.ContainsIgnoreCase("model_max_prompt_tokens_exceeded"))
+            {
+                var limitPattern = @"limit of\s*(\d+)";
+                match = Regex.Match(message, limitPattern, RegexOptions.IgnoreCase);
+                int maxLimit = match.Success && int.TryParse(match.Groups[1].Value, out int parsedLimit) 
+                    ? parsedLimit 
+                    : (int)(EstimateTokens(messages) * 0.8);
+                
+                return new ContextOverflowInfo
+                {
+                    IsOverflow = true,
+                    CurrentTokens = EstimateTokens(messages),
+                    MaxTokens = maxLimit
+                };
+            }
+
             // Check for OpenAI-style error: "maximum context length"
             // Pattern: "maximum context length is 128000 tokens" or "context length of 150000 exceeds"
             var openAIPattern1 = @"maximum context length is\s*(\d+)\s*tokens?";
@@ -335,8 +370,8 @@ namespace StructuredLogger.LLM
                 };
             }
 
-            // Check for generic "context" and "token" keywords
-            if (message.ContainsIgnoreCase("context") &&
+            // Check for generic "context"/"prompt" and "token" keywords
+            if ((message.ContainsIgnoreCase("context") || message.ContainsIgnoreCase("prompt")) &&
                 message.ContainsIgnoreCase("token") &&
                 (message.ContainsIgnoreCase("too long") ||
                  message.ContainsIgnoreCase("exceeds") ||
