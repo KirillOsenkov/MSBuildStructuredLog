@@ -284,127 +284,133 @@ namespace StructuredLogger.LLM
         }
 
         /// <summary>
+        /// Pattern definition for extracting token overflow information from error messages.
+        /// </summary>
+        private readonly struct OverflowPattern
+        {
+            public string Regex { get; }
+            public int CurrentTokensGroup { get; }
+            public int MaxTokensGroup { get; }
+
+            public OverflowPattern(string regex, int currentTokensGroup, int maxTokensGroup)
+            {
+                Regex = regex;
+                CurrentTokensGroup = currentTokensGroup;
+                MaxTokensGroup = maxTokensGroup;
+            }
+        }
+
+        /// <summary>
+        /// Patterns for detecting context overflow errors from various LLM providers.
+        /// </summary>
+        private static readonly OverflowPattern[] OverflowPatterns =
+        {
+            // Anthropic: "prompt is too long: 216483 tokens > 200000 maximum"
+            new(@"prompt is too long:\s*(\d+)\s*tokens?\s*>\s*(\d+)\s*maximum", 1, 2),
+            // GitHub Copilot: "prompt token count of 795491 exceeds the limit of 128000"
+            new(@"prompt token count of\s*(\d+)\s*exceeds the limit of\s*(\d+)", 1, 2),
+            // OpenAI: "maximum context length is 128000 tokens"
+            new(@"maximum context length is\s*(\d+)\s*tokens?", -1, 1),
+            // OpenAI: "context length of 150000 exceeds"
+            new(@"context length of\s*(\d+)\s*exceeds", 1, -1),
+        };
+
+        /// <summary>
         /// Extracts context overflow information from an exception.
-        /// Detects patterns like "prompt is too long: 216483 tokens > 200000 maximum"
         /// </summary>
         private ContextOverflowInfo ExtractContextOverflowInfo(Exception ex, List<ChatMessage> messages)
         {
             var message = ex.Message;
 
-            // Check for Anthropic-style error message
-            // Pattern: "prompt is too long: 216483 tokens > 200000 maximum"
-            var anthropicPattern = @"prompt is too long:\s*(\d+)\s*tokens?\s*>\s*(\d+)\s*maximum";
-            var match = Regex.Match(message, anthropicPattern, RegexOptions.IgnoreCase);
-            if (match.Success)
+            // Try known patterns first
+            foreach (var pattern in OverflowPatterns)
             {
-                if (int.TryParse(match.Groups[1].Value, out int current) &&
-                    int.TryParse(match.Groups[2].Value, out int max))
+                var result = TryMatchOverflowPattern(message, pattern, messages);
+                if (result.IsOverflow)
                 {
-                    return new ContextOverflowInfo
-                    {
-                        IsOverflow = true,
-                        CurrentTokens = current,
-                        MaxTokens = max
-                    };
-                }
-            }
-
-            // Check for GitHub Copilot-style error message
-            // Pattern: "prompt token count of 795491 exceeds the limit of 128000"
-            var copilotPattern = @"prompt token count of\s*(\d+)\s*exceeds the limit of\s*(\d+)";
-            match = Regex.Match(message, copilotPattern, RegexOptions.IgnoreCase);
-            if (match.Success)
-            {
-                if (int.TryParse(match.Groups[1].Value, out int currentCopilot) &&
-                    int.TryParse(match.Groups[2].Value, out int maxCopilot))
-                {
-                    return new ContextOverflowInfo
-                    {
-                        IsOverflow = true,
-                        CurrentTokens = currentCopilot,
-                        MaxTokens = maxCopilot
-                    };
+                    return result;
                 }
             }
 
             // Check for model_max_prompt_tokens_exceeded code
             if (message.ContainsIgnoreCase("model_max_prompt_tokens_exceeded"))
             {
-                var limitPattern = @"limit of\s*(\d+)";
-                match = Regex.Match(message, limitPattern, RegexOptions.IgnoreCase);
-                int maxLimit = match.Success && int.TryParse(match.Groups[1].Value, out int parsedLimit) 
-                    ? parsedLimit 
-                    : (int)(EstimateTokens(messages) * 0.8);
-                
-                return new ContextOverflowInfo
-                {
-                    IsOverflow = true,
-                    CurrentTokens = EstimateTokens(messages),
-                    MaxTokens = maxLimit
-                };
+                return CreateOverflowInfo(messages, ExtractLimitFromMessage(message, messages));
             }
 
-            // Check for OpenAI-style error: "maximum context length"
-            // Pattern: "maximum context length is 128000 tokens" or "context length of 150000 exceeds"
-            var openAIPattern1 = @"maximum context length is\s*(\d+)\s*tokens?";
-            match = Regex.Match(message, openAIPattern1, RegexOptions.IgnoreCase);
-            if (match.Success && int.TryParse(match.Groups[1].Value, out int maxTokens))
+            // Check for generic context/prompt + token + overflow keywords
+            if (IsGenericOverflowMessage(message))
             {
-                return new ContextOverflowInfo
-                {
-                    IsOverflow = true,
-                    CurrentTokens = EstimateTokens(messages),
-                    MaxTokens = maxTokens
-                };
+                return CreateOverflowInfo(messages);
             }
 
-            var openAIPattern2 = @"context length of\s*(\d+)\s*exceeds";
-            match = Regex.Match(message, openAIPattern2, RegexOptions.IgnoreCase);
-            if (match.Success && int.TryParse(match.Groups[1].Value, out int currentTokens))
+            // Check for Anthropic BadRequest with token mention
+            if (ex is AnthropicBadRequestException && message.ContainsIgnoreCase("token"))
             {
-                return new ContextOverflowInfo
-                {
-                    IsOverflow = true,
-                    CurrentTokens = currentTokens,
-                    MaxTokens = (int)(currentTokens * 0.9) // Estimate max as 90% of current
-                };
-            }
-
-            // Check for generic "context"/"prompt" and "token" keywords
-            if ((message.ContainsIgnoreCase("context") || message.ContainsIgnoreCase("prompt")) &&
-                message.ContainsIgnoreCase("token") &&
-                (message.ContainsIgnoreCase("too long") ||
-                 message.ContainsIgnoreCase("exceeds") ||
-                 message.ContainsIgnoreCase("limit")))
-            {
-                // Generic context overflow without specific numbers
-                // Use conservative defaults
-                currentTokens = EstimateTokens(messages);
-                return new ContextOverflowInfo
-                {
-                    IsOverflow = true,
-                    CurrentTokens = currentTokens,
-                    MaxTokens = (int)(currentTokens * 0.8) // Assume 80% reduction needed
-                };
-            }
-
-            // Check for BadRequest exceptions from Anthropic
-            if (ex is AnthropicBadRequestException)
-            {
-                // If it's a bad request and mentions tokens, likely a context issue
-                if (message.ContainsIgnoreCase("token"))
-                {
-                    currentTokens = EstimateTokens(messages);
-                    return new ContextOverflowInfo
-                    {
-                        IsOverflow = true,
-                        CurrentTokens = currentTokens,
-                        MaxTokens = (int)(currentTokens * 0.8)
-                    };
-                }
+                return CreateOverflowInfo(messages);
             }
 
             return new ContextOverflowInfo { IsOverflow = false };
+        }
+
+        private ContextOverflowInfo TryMatchOverflowPattern(
+            string message,
+            OverflowPattern pattern,
+            List<ChatMessage> messages)
+        {
+            var match = Regex.Match(message, pattern.Regex, RegexOptions.IgnoreCase);
+            if (!match.Success)
+            {
+                return new ContextOverflowInfo { IsOverflow = false };
+            }
+
+            int currentTokens = pattern.CurrentTokensGroup > 0 && 
+                                int.TryParse(match.Groups[pattern.CurrentTokensGroup].Value, out int c)
+                ? c
+                : EstimateTokens(messages);
+
+            int maxTokens = pattern.MaxTokensGroup > 0 && 
+                            int.TryParse(match.Groups[pattern.MaxTokensGroup].Value, out int m)
+                ? m
+                : (int)(currentTokens * 0.9); // Estimate max as 90% of current
+
+            return new ContextOverflowInfo
+            {
+                IsOverflow = true,
+                CurrentTokens = currentTokens,
+                MaxTokens = maxTokens
+            };
+        }
+
+        private ContextOverflowInfo CreateOverflowInfo(List<ChatMessage> messages, int? maxTokens = null)
+        {
+            int currentTokens = EstimateTokens(messages);
+            return new ContextOverflowInfo
+            {
+                IsOverflow = true,
+                CurrentTokens = currentTokens,
+                MaxTokens = maxTokens ?? (int)(currentTokens * 0.8)
+            };
+        }
+
+        private int ExtractLimitFromMessage(string message, List<ChatMessage> messages)
+        {
+            var match = Regex.Match(message, @"limit of\s*(\d+)", RegexOptions.IgnoreCase);
+            return match.Success && int.TryParse(match.Groups[1].Value, out int limit)
+                ? limit
+                : (int)(EstimateTokens(messages) * 0.8);
+        }
+
+        private static bool IsGenericOverflowMessage(string message)
+        {
+            bool hasContextOrPrompt = message.ContainsIgnoreCase("context") || 
+                                      message.ContainsIgnoreCase("prompt");
+            bool hasToken = message.ContainsIgnoreCase("token");
+            bool hasOverflowKeyword = message.ContainsIgnoreCase("too long") ||
+                                      message.ContainsIgnoreCase("exceeds") ||
+                                      message.ContainsIgnoreCase("limit");
+
+            return hasContextOrPrompt && hasToken && hasOverflowKeyword;
         }
 
         /// <summary>
