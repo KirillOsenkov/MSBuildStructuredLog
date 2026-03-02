@@ -25,14 +25,17 @@ namespace StructuredLogger.LLM
         private BaseNode? currentSelectedNode;
         private readonly ILLMLogger? logger;
 
-        // Token management settings
+        // Context compaction settings
         private const int MaxChatHistoryMessages = 20; // Keep recent context
+        private const int CompactionThreshold = 16;    // Trigger compaction at this count
+        private const int RecentMessagesToKeep = 6;    // Keep this many recent messages after compaction
 
         public event EventHandler<ChatMessageViewModel>? MessageAdded;
         public event EventHandler? ConversationCleared;
         public event EventHandler<ToolCallInfo>? ToolCallExecuting;
         public event EventHandler<ToolCallInfo>? ToolCallExecuted;
         public event EventHandler<ResilienceEventArgs>? RequestRetrying;
+        public event EventHandler<string>? ConversationCompacted;
 
         public bool IsConfigured => configuration?.IsConfigured ?? false;
         public string ConfigurationStatus => configuration?.GetConfigurationStatus() ?? "Not initialized";
@@ -211,6 +214,19 @@ namespace StructuredLogger.LLM
             ConversationCleared?.Invoke(this, EventArgs.Empty);
         }
 
+        /// <summary>
+        /// Seeds the in-memory chat history from previously persisted entries.
+        /// This allows the LLM to have context from prior conversations.
+        /// </summary>
+        public void SeedChatHistory(IEnumerable<ChatHistoryEntry> entries)
+        {
+            foreach (var entry in entries)
+            {
+                var role = entry.Role == "User" ? ChatRole.User : ChatRole.Assistant;
+                chatHistory.Add(new ChatMessage(role, entry.Content));
+            }
+        }
+
         public LLMConfiguration GetConfiguration()
         {
             return configuration;
@@ -296,6 +312,7 @@ Use GUI tools to make your insights actionable and immediately explorable by the
 
         /// <summary>
         /// Trims chat history to stay within token limits by keeping only recent messages.
+        /// Used as a fallback when compaction hasn't run yet.
         /// </summary>
         private List<ChatMessage> GetTrimmedChatHistory()
         {
@@ -313,6 +330,73 @@ Use GUI tools to make your insights actionable and immediately explorable by the
                 $"Chat history trimmed from {chatHistory.Count} to {trimmedHistory.Count} messages");
 
             return trimmedHistory;
+        }
+
+        /// <summary>
+        /// Compacts the conversation by summarizing older messages into a single summary.
+        /// This preserves context while reducing token usage.
+        /// </summary>
+        private async System.Threading.Tasks.Task CompactChatHistoryAsync(CancellationToken cancellationToken)
+        {
+            if (llmClient == null || chatHistory.Count < CompactionThreshold)
+            {
+                return;
+            }
+
+            var messagesToSummarize = chatHistory.Count - RecentMessagesToKeep;
+            if (messagesToSummarize <= 2)
+            {
+                return;
+            }
+
+            logger?.LogVerbose($"Compacting chat history: summarizing {messagesToSummarize} older messages, keeping {RecentMessagesToKeep} recent.");
+
+            try
+            {
+                // Build the summarization request
+                var olderMessages = chatHistory.Take(messagesToSummarize).ToList();
+
+                var conversationText = string.Join("\n", olderMessages.Select(m =>
+                {
+                    var role = m.Role == ChatRole.User ? "User" : "Assistant";
+                    return $"{role}: {m.Text}";
+                }));
+
+                var summaryPrompt = new List<ChatMessage>
+                {
+                    new ChatMessage(ChatRole.System,
+                        "You are a conversation summarizer. Summarize the following conversation between a user and an assistant about MSBuild build logs. " +
+                        "Preserve key facts, findings, errors discussed, and any conclusions. Be concise but retain all important technical details. " +
+                        "Write the summary in third person (e.g., 'The user asked about..., The analysis found...')"),
+                    new ChatMessage(ChatRole.User,
+                        $"Please summarize this conversation:\n\n{conversationText}")
+                };
+
+                var options = new ChatOptions { Temperature = 0.3f };
+                var response = await llmClient.CompleteChatAsync(summaryPrompt, options, cancellationToken);
+                var summary = response.Text ?? string.Empty;
+
+                if (string.IsNullOrWhiteSpace(summary))
+                {
+                    return;
+                }
+
+                // Replace older messages with a single summary message
+                var recentMessages = chatHistory.Skip(messagesToSummarize).ToList();
+                chatHistory.Clear();
+                chatHistory.Add(new ChatMessage(ChatRole.Assistant,
+                    $"[Conversation Summary]\n{summary}"));
+                chatHistory.AddRange(recentMessages);
+
+                logger?.LogVerbose($"Chat history compacted to {chatHistory.Count} messages (1 summary + {recentMessages.Count} recent).");
+
+                ConversationCompacted?.Invoke(this, summary);
+            }
+            catch (Exception ex)
+            {
+                logger?.LogError($"Failed to compact chat history: {ex.Message}");
+                // Compaction failure is non-critical - fall back to simple trimming
+            }
         }
 
         private AIFunction[] GetAvailableTools(AgentPhase phase = AgentPhase.All)
@@ -403,6 +487,9 @@ Use GUI tools to make your insights actionable and immediately explorable by the
 
             try
             {
+                // Compact older messages into a summary if history is getting long
+                await CompactChatHistoryAsync(cancellationToken);
+
                 // Prepare messages with system prompt
                 var messages = new List<ChatMessage>();
 

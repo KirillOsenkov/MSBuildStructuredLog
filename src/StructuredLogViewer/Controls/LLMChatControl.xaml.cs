@@ -127,12 +127,78 @@ namespace StructuredLogViewer.Controls
         public string FullPath { get; set; }  // Full path for tooltip
     }
 
+    /// <summary>
+    /// Represents an independent chat session with its own conversation history and LLM context.
+    /// </summary>
+    public class ChatSession : INotifyPropertyChanged
+    {
+        private string displayName;
+
+        public string SessionId { get; }
+        public ObservableCollection<ChatMessageDisplay> Messages { get; }
+        public LLMChatService ChatService { get; set; }
+        public AgenticLLMChatService AgenticChatService { get; set; }
+        public ChatHistoryService HistoryService { get; set; }
+
+        /// <summary>
+        /// Whether the display name has been set from user content (vs. default "Chat N").
+        /// </summary>
+        public bool HasGeneratedTitle { get; set; }
+
+        public string DisplayName
+        {
+            get => displayName;
+            set
+            {
+                displayName = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DisplayName)));
+            }
+        }
+
+        public ChatSession(string sessionId, string name)
+        {
+            SessionId = sessionId;
+            displayName = name;
+            Messages = new ObservableCollection<ChatMessageDisplay>();
+        }
+
+        /// <summary>
+        /// Generates a short title from the first user message.
+        /// </summary>
+        public void GenerateTitleFromMessage(string userMessage)
+        {
+            if (HasGeneratedTitle || string.IsNullOrWhiteSpace(userMessage))
+            {
+                return;
+            }
+
+            // Clean up the message: collapse whitespace, trim
+            var title = userMessage.Replace('\n', ' ').Replace('\r', ' ').Trim();
+
+            // Truncate to a reasonable length for a dropdown
+            const int maxLength = 40;
+            if (title.Length > maxLength)
+            {
+                // Try to break at a word boundary
+                var truncated = title.Substring(0, maxLength);
+                var lastSpace = truncated.LastIndexOf(' ');
+                if (lastSpace > maxLength / 2)
+                {
+                    truncated = truncated.Substring(0, lastSpace);
+                }
+                title = truncated + "…";
+            }
+
+            DisplayName = title;
+            HasGeneratedTitle = true;
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+    }
+
     public partial class LLMChatControl : UserControl
     {
-        private LLMChatService chatService;
-        private AgenticLLMChatService agenticChatService;
         private CancellationTokenSource cancellationTokenSource;
-        private readonly ObservableCollection<ChatMessageDisplay> messages;
         private LLMConfiguration currentConfig;
         private bool isInitialized;
         private ChatWindowLogger chatLogger;
@@ -143,15 +209,27 @@ namespace StructuredLogViewer.Controls
         private MultiBuildContext buildContext;
         private readonly ObservableCollection<AttachedBinlogInfo> attachedBinlogs;
 
+        // Multi-chat session support
+        private readonly ObservableCollection<ChatSession> chatSessions;
+        private ChatSession activeSession;
+        private int nextSessionNumber = 1;
+        private bool isSwitchingSession;
+
         public Build Build { get; private set; }
         public BuildControl BuildControl { get; private set; }
+
+        // Convenience accessors for the active session's services
+        private LLMChatService chatService => activeSession?.ChatService;
+        private AgenticLLMChatService agenticChatService => activeSession?.AgenticChatService;
+        private ChatHistoryService chatHistoryService => activeSession?.HistoryService;
+        private ObservableCollection<ChatMessageDisplay> messages => activeSession?.Messages;
 
         public LLMChatControl()
         {
             InitializeComponent();
-            messages = new ObservableCollection<ChatMessageDisplay>();
+            chatSessions = new ObservableCollection<ChatSession>();
             attachedBinlogs = new ObservableCollection<AttachedBinlogInfo>();
-            messagesPanel.ItemsSource = messages;
+            sessionSelector.ItemsSource = chatSessions;
             attachedFilesList.ItemsSource = attachedBinlogs;
         }
 
@@ -190,41 +268,33 @@ namespace StructuredLogViewer.Controls
             currentConfig = LLMConfigurationDialog.LoadPersistedConfiguration();
             chatLogger.Level = currentConfig.LoggingLevel;
 
-            // Create and configure LLM services asynchronously
-            _ = CreateLLMServicesAsync().ContinueWith(t =>
+            // Discover existing sessions from persisted history, or create a default one
+            var binlogPath = build.LogFilePath;
+            var existingSessionIds = !string.IsNullOrEmpty(binlogPath)
+                ? ChatHistoryService.ListSessions(binlogPath)
+                : new System.Collections.Generic.List<string>();
+
+            if (existingSessionIds.Count == 0)
             {
-                if (t.IsFaulted)
+                // Create default first session
+                CreateNewSession("Chat 1");
+            }
+            else
+            {
+                // Restore existing sessions
+                foreach (var sessionId in existingSessionIds)
                 {
-                    var exception = t.Exception?.GetBaseException();
-
-                    Dispatcher.Invoke(() =>
-                    {
-                        // Check if it's an authentication error
-                        if (exception is UnauthorizedAccessException)
-                        {
-                            // Clear invalid persisted credentials
-                            SettingsService.ClearLLMConfiguration();
-
-                            AddMessage(new ChatMessageDisplay
-                            {
-                                Role = "System",
-                                Content = $"⚠️ Authentication Error\n\n{exception.Message}\n\n" +
-                                         "Your saved credentials have been cleared. Please click 'Configure' to re-authenticate.",
-                                IsError = true
-                            });
-                        }
-                        else
-                        {
-                            AddMessage(new ChatMessageDisplay
-                            {
-                                Role = "System",
-                                Content = $"Failed to initialize LLM services: {exception?.Message}",
-                                IsError = true
-                            });
-                        }
-                    });
+                    var session = CreateSessionObject(sessionId, sessionId);
+                    chatSessions.Add(session);
+                    nextSessionNumber = Math.Max(nextSessionNumber, ExtractSessionNumber(sessionId) + 1);
                 }
-            });
+            }
+
+            // Select first session
+            isSwitchingSession = true;
+            sessionSelector.SelectedIndex = 0;
+            isSwitchingSession = false;
+            ActivateSession(chatSessions[0]);
 
             isInitialized = true;
 
@@ -232,95 +302,95 @@ namespace StructuredLogViewer.Controls
             agentModeToggle.IsChecked = currentConfig.AgentMode;
             UpdateAgentModeUI();
 
-            // Show initial status
-            ShowStatus(chatService.ConfigurationStatus);
+            // Initialize model selector
+            PopulateModelSelector();
 
-            // Add welcome message
-            if (chatService.IsConfigured)
-            {
-                AddWelcomeMessage();
-            }
-            else
-            {
-                AddMessage(new ChatMessageDisplay
-                {
-                    Role = "System",
-                    Content = "LLM is not configured. Set these environment variables:\n\n" +
-                            "• LLM_ENDPOINT (e.g., https://your-resource.openai.azure.com/)\n" +
-                            "• LLM_API_KEY (your API key)\n" +
-                            "• LLM_MODEL (e.g., gpt-4, claude-sonnet-4-5-2)\n\n" +
-                            "Or use 'Configure' menu to configure/login.",
-                    IsError = true
-                });
-                sendButton.IsEnabled = false;
-                agentModeToggle.IsEnabled = false;
-            }
+            // The session's services are created asynchronously in ActivateSession.
+            // Welcome/restore messages and status are shown after services are ready.
         }
 
-        private async System.Threading.Tasks.Task CreateLLMServicesAsync()
+        private async System.Threading.Tasks.Task CreateLLMServicesAsync(ChatSession session = null)
         {
             if (Build == null || buildContext == null)
             {
                 return;
             }
 
+            var targetSession = session ?? activeSession;
+            if (targetSession == null)
+            {
+                return;
+            }
+
             // Dispose old services if they exist
-            LLMChatService? oldChatService = chatService;
-            AgenticLLMChatService? oldAgenticChatService = agenticChatService;
+            LLMChatService? oldChatService = targetSession.ChatService;
+            AgenticLLMChatService? oldAgenticChatService = targetSession.AgenticChatService;
 
             // Create new chat service with multi-build context
-            chatService = await LLMChatService.CreateAsync(buildContext, null, chatLogger);
-            chatService.MessageAdded += OnMessageAdded;
-            chatService.ConversationCleared += OnConversationCleared;
-            chatService.ToolCallExecuting += OnToolCallExecuting;
-            chatService.ToolCallExecuted += OnToolCallExecuted;
-            chatService.RequestRetrying += OnRequestRetrying;
+            var newChatService = await LLMChatService.CreateAsync(buildContext, null, chatLogger);
+            newChatService.MessageAdded += OnMessageAdded;
+            newChatService.ConversationCleared += OnConversationCleared;
+            newChatService.ConversationCompacted += OnConversationCompacted;
+            newChatService.ToolCallExecuting += OnToolCallExecuting;
+            newChatService.ToolCallExecuted += OnToolCallExecuted;
+            newChatService.RequestRetrying += OnRequestRetrying;
 
             // Register UI interaction tools if BuildControl is available
             // Note: UI tools operate on primary build only (the one open in viewer)
             if (BuildControl != null)
             {
                 var uiInteractionExecutor = new BinlogUIInteractionExecutor(Build, BuildControl);
-                chatService.RegisterToolContainer(uiInteractionExecutor);
+                newChatService.RegisterToolContainer(uiInteractionExecutor);
             }
 
             // Register AskUser tool if enabled
             if (SettingsService.LLMEnableAskUser)
             {
                 var askUserExecutor = new AskUserToolExecutor(new GuiUserInteraction(this));
-                chatService.RegisterToolContainer(askUserExecutor);
+                newChatService.RegisterToolContainer(askUserExecutor);
             }
 
             // Reconfigure with current config if available
             if (currentConfig != null)
             {
-                await chatService.ReconfigureAsync(currentConfig);
+                await newChatService.ReconfigureAsync(currentConfig);
+            }
+
+            targetSession.ChatService = newChatService;
+
+            // Seed in-memory chat history from persisted entries so the LLM has context
+            var persistedHistory = targetSession.HistoryService?.Load();
+            if (persistedHistory != null && persistedHistory.Count > 0)
+            {
+                newChatService.SeedChatHistory(persistedHistory);
             }
 
             // Create agentic service if configured
             if (currentConfig?.IsConfigured == true)
             {
-                agenticChatService = await AgenticLLMChatService.CreateAsync(buildContext, currentConfig, chatLogger);
+                var newAgenticService = await AgenticLLMChatService.CreateAsync(buildContext, currentConfig, chatLogger);
 
                 // Register UI interaction tools for agentic service
                 if (BuildControl != null)
                 {
                     var uiInteractionExecutor = new BinlogUIInteractionExecutor(Build, BuildControl);
-                    agenticChatService.RegisterToolContainer(uiInteractionExecutor);
+                    newAgenticService.RegisterToolContainer(uiInteractionExecutor);
                 }
 
                 // Register AskUser tool if enabled
                 if (SettingsService.LLMEnableAskUser)
                 {
                     var askUserExecutor = new AskUserToolExecutor(new GuiUserInteraction(this));
-                    agenticChatService.RegisterToolContainer(askUserExecutor);
+                    newAgenticService.RegisterToolContainer(askUserExecutor);
                 }
 
-                agenticChatService.ProgressUpdated += OnAgentProgressUpdated;
-                agenticChatService.MessageAdded += OnMessageAdded;
-                agenticChatService.ToolCallExecuting += OnToolCallExecuting;
-                agenticChatService.ToolCallExecuted += OnToolCallExecuted;
-                agenticChatService.RequestRetrying += OnRequestRetrying;
+                newAgenticService.ProgressUpdated += OnAgentProgressUpdated;
+                newAgenticService.MessageAdded += OnMessageAdded;
+                newAgenticService.ToolCallExecuting += OnToolCallExecuting;
+                newAgenticService.ToolCallExecuted += OnToolCallExecuted;
+                newAgenticService.RequestRetrying += OnRequestRetrying;
+
+                targetSession.AgenticChatService = newAgenticService;
             }
 
             _ = System.Threading.Tasks.Task.Delay(1000).ContinueWith(t => { oldChatService?.Dispose(); oldAgenticChatService?.Dispose(); });
@@ -356,6 +426,236 @@ namespace StructuredLogViewer.Controls
                 Content = welcomeMsg
             });
         }
+
+        /// <summary>
+        /// Restores chat history from persisted storage, or shows a welcome message if no history exists.
+        /// </summary>
+        private void RestoreChatHistory()
+        {
+            var history = chatHistoryService?.Load();
+            if (history == null || history.Count == 0)
+            {
+                AddWelcomeMessage();
+                return;
+            }
+
+            // Generate title from the first user message in history
+            var firstUserMessage = history.FirstOrDefault(h => h.Role == "User");
+            if (firstUserMessage != null)
+            {
+                activeSession?.GenerateTitleFromMessage(firstUserMessage.Content);
+            }
+
+            foreach (var entry in history)
+            {
+                AddMessage(new ChatMessageDisplay
+                {
+                    Role = entry.Role,
+                    Content = entry.Content
+                });
+            }
+        }
+
+        /// <summary>
+        /// Saves the current User and Assistant messages to persisted chat history.
+        /// </summary>
+        private void SaveChatHistory()
+        {
+            if (chatHistoryService == null)
+            {
+                return;
+            }
+
+            var entries = messages
+                .Where(m => m.Role == "User" || m.Role == "Assistant")
+                .Select(m => new ChatHistoryEntry
+                {
+                    Role = m.Role,
+                    Content = m.Content,
+                    Timestamp = DateTime.Now
+                })
+                .ToList();
+
+            chatHistoryService.Save(entries, activeSession?.DisplayName);
+        }
+
+        #region Session Management
+
+        private ChatSession CreateSessionObject(string sessionId, string displayName)
+        {
+            var session = new ChatSession(sessionId, displayName);
+            var binlogPath = Build?.LogFilePath;
+            if (!string.IsNullOrEmpty(binlogPath))
+            {
+                session.HistoryService = new ChatHistoryService(binlogPath, sessionId);
+
+                // Restore persisted display name if available
+                var persistedName = session.HistoryService.LoadDisplayName();
+                if (!string.IsNullOrEmpty(persistedName))
+                {
+                    session.DisplayName = persistedName;
+                    session.HasGeneratedTitle = true;
+                }
+            }
+            return session;
+        }
+
+        private ChatSession CreateNewSession(string displayName = null)
+        {
+            var sessionId = "Chat " + nextSessionNumber;
+            var name = displayName ?? sessionId;
+            nextSessionNumber++;
+
+            var session = CreateSessionObject(sessionId, name);
+            chatSessions.Add(session);
+            return session;
+        }
+
+        private void ActivateSession(ChatSession session)
+        {
+            if (session == null || session == activeSession)
+            {
+                return;
+            }
+
+            // Save current session's history before switching
+            SaveChatHistory();
+
+            activeSession = session;
+
+            // Bind the UI to this session's messages
+            messagesPanel.ItemsSource = session.Messages;
+
+            // Create LLM services for this session if not yet created
+            if (session.ChatService == null)
+            {
+                // Show loading overlay while services initialize
+                ShowLoadingOverlay("Loading chat…");
+
+                _ = CreateLLMServicesAsync(session).ContinueWith(t =>
+                {
+                    if (t.IsFaulted)
+                    {
+                        var exception = t.Exception?.GetBaseException();
+                        Dispatcher.Invoke(() =>
+                        {
+                            HideLoadingOverlay();
+                            if (exception is UnauthorizedAccessException)
+                            {
+                                SettingsService.ClearLLMConfiguration();
+                                AddMessage(new ChatMessageDisplay
+                                {
+                                    Role = "System",
+                                    Content = $"⚠️ Authentication Error\n\n{exception.Message}\n\n" +
+                                             "Your saved credentials have been cleared. Please click 'Configure' to re-authenticate.",
+                                    IsError = true
+                                });
+                            }
+                            else
+                            {
+                                AddMessage(new ChatMessageDisplay
+                                {
+                                    Role = "System",
+                                    Content = $"Failed to initialize LLM services: {exception?.Message}",
+                                    IsError = true
+                                });
+                            }
+                        });
+                    }
+                    else
+                    {
+                        Dispatcher.Invoke(() =>
+                        {
+                            // Restore or show welcome after services are ready
+                            if (session.Messages.Count == 0)
+                            {
+                                RestoreChatHistory();
+                            }
+                            HideLoadingOverlay();
+                        });
+                    }
+                });
+            }
+            else
+            {
+                // Services already created, hide loading immediately
+                HideLoadingOverlay();
+            }
+
+            // Clear agent progress for the newly activated session
+            agentProgressPanel.Clear();
+
+            // Update delete button state
+            deleteSessionButton.IsEnabled = chatSessions.Count > 1;
+        }
+
+        private void SessionSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (isSwitchingSession || sessionSelector.SelectedItem is not ChatSession selected)
+            {
+                return;
+            }
+
+            ActivateSession(selected);
+        }
+
+        private void NewSessionButton_Click(object sender, RoutedEventArgs e)
+        {
+            var session = CreateNewSession();
+
+            isSwitchingSession = true;
+            sessionSelector.SelectedItem = session;
+            isSwitchingSession = false;
+
+            ActivateSession(session);
+
+            // Show welcome for new session
+            if (chatService?.IsConfigured == true && session.Messages.Count == 0)
+            {
+                AddWelcomeMessage();
+            }
+        }
+
+        private void DeleteSessionButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (chatSessions.Count <= 1 || activeSession == null)
+            {
+                return;
+            }
+
+            var sessionToDelete = activeSession;
+            var index = chatSessions.IndexOf(sessionToDelete);
+
+            // Delete persisted history
+            sessionToDelete.HistoryService?.Delete();
+
+            // Dispose services
+            sessionToDelete.ChatService?.Dispose();
+            sessionToDelete.AgenticChatService?.Dispose();
+
+            // Remove and select another session
+            chatSessions.Remove(sessionToDelete);
+
+            var newIndex = Math.Min(index, chatSessions.Count - 1);
+            isSwitchingSession = true;
+            sessionSelector.SelectedIndex = newIndex;
+            isSwitchingSession = false;
+            ActivateSession(chatSessions[newIndex]);
+
+            deleteSessionButton.IsEnabled = chatSessions.Count > 1;
+        }
+
+        private static int ExtractSessionNumber(string sessionId)
+        {
+            // Try to extract number from "Chat N" pattern
+            if (sessionId.StartsWith("Chat ") && int.TryParse(sessionId.Substring(5), out var num))
+            {
+                return num;
+            }
+            return 0;
+        }
+
+        #endregion
 
         private void OnAgentProgressUpdated(object sender, AgentProgressEventArgs e)
         {
@@ -433,6 +733,15 @@ namespace StructuredLogViewer.Controls
             });
         }
 
+        private void OnConversationCompacted(object sender, string summary)
+        {
+            Dispatcher.InvokeAsync(() =>
+            {
+                ShowStatus("Context compacted — older messages summarized to save tokens.");
+                SaveChatHistory();
+            });
+        }
+
         private void OnRequestRetrying(object sender, ResilienceEventArgs e)
         {
             Dispatcher.InvokeAsync(() =>
@@ -443,6 +752,11 @@ namespace StructuredLogViewer.Controls
 
         private void AddMessage(ChatMessageDisplay message)
         {
+            if (messages == null)
+            {
+                return;
+            }
+
             messages.Add(message);
 
             // Scroll to bottom
@@ -536,6 +850,17 @@ namespace StructuredLogViewer.Controls
         private void HideStatus()
         {
             statusBar.Visibility = Visibility.Collapsed;
+        }
+
+        private void ShowLoadingOverlay(string text = "Loading chat…")
+        {
+            loadingText.Text = text;
+            loadingOverlay.Visibility = Visibility.Visible;
+        }
+
+        private void HideLoadingOverlay()
+        {
+            loadingOverlay.Visibility = Visibility.Collapsed;
         }
 
         private void OptionButton_Click(object sender, RoutedEventArgs e)
@@ -652,6 +977,9 @@ namespace StructuredLogViewer.Controls
             // Clear input
             inputTextBox.Text = string.Empty;
 
+            // Auto-generate session title from the first user message
+            activeSession?.GenerateTitleFromMessage(message);
+
             // Check if we're waiting for a response to a question
             if (waitingForUserResponse != null)
             {
@@ -696,6 +1024,7 @@ namespace StructuredLogViewer.Controls
                 }
 
                 HideStatus();
+                SaveChatHistory();
             }
             catch (OperationCanceledException)
             {
@@ -748,6 +1077,9 @@ namespace StructuredLogViewer.Controls
             // Clear the conversation
             chatService?.ClearConversation();
             messages.Clear();
+
+            // Delete persisted chat history
+            chatHistoryService?.Delete();
 
             // Clear agent progress
             agentProgressPanel.Clear();
@@ -894,6 +1226,96 @@ namespace StructuredLogViewer.Controls
                 : "Interactive Mode: Single-turn conversations (click to enable agent mode)";
         }
 
+        private bool isPopulatingModels;
+
+        private void PopulateModelSelector()
+        {
+            isPopulatingModels = true;
+            try
+            {
+                modelSelector.Items.Clear();
+
+                var models = currentConfig?.AvailableModels;
+                var currentModel = currentConfig?.ModelName ?? "";
+
+                if (models != null && models.Count > 0)
+                {
+                    foreach (var model in models)
+                    {
+                        modelSelector.Items.Add(model);
+                    }
+
+                    // Ensure current model is in the list
+                    if (!string.IsNullOrEmpty(currentModel) && !models.Contains(currentModel))
+                    {
+                        modelSelector.Items.Insert(0, currentModel);
+                    }
+                }
+                else if (!string.IsNullOrEmpty(currentModel))
+                {
+                    // No available models list, just show the current one
+                    modelSelector.Items.Add(currentModel);
+                }
+
+                // Select current model
+                if (!string.IsNullOrEmpty(currentModel))
+                {
+                    modelSelector.SelectedItem = currentModel;
+                }
+            }
+            finally
+            {
+                isPopulatingModels = false;
+            }
+        }
+
+        private async void ModelSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (isPopulatingModels || modelSelector.SelectedItem is not string selectedModel)
+            {
+                return;
+            }
+
+            if (currentConfig == null || selectedModel == currentConfig.ModelName)
+            {
+                return;
+            }
+
+            var oldModel = currentConfig.ModelName;
+            currentConfig.ModelName = selectedModel;
+            currentConfig.UpdateType();
+
+            try
+            {
+                // Reconfigure the chat service with the new model
+                if (chatService != null)
+                {
+                    await chatService.ReconfigureAsync(currentConfig);
+                }
+
+                // Persist the model change
+                SettingsService.LLMModel = selectedModel;
+
+                AddMessage(new ChatMessageDisplay
+                {
+                    Role = "System",
+                    Content = $"Model switched to **{selectedModel}**"
+                });
+            }
+            catch (Exception ex)
+            {
+                // Revert on failure
+                currentConfig.ModelName = oldModel;
+                currentConfig.UpdateType();
+
+                isPopulatingModels = true;
+                modelSelector.SelectedItem = oldModel;
+                isPopulatingModels = false;
+
+                ShowStatus($"Failed to switch model: {ex.Message}", isError: true);
+            }
+        }
+
         private void ConfigureButton_Click(object sender, RoutedEventArgs e)
         {
             // Get current configuration
@@ -985,6 +1407,9 @@ namespace StructuredLogViewer.Controls
                     // Update agent mode toggle UI to match new config
                     agentModeToggle.IsChecked = newConfig.AgentMode;
                     UpdateAgentModeUI();
+
+                    // Update model selector to reflect new config
+                    PopulateModelSelector();
 
                     // Notify about agent mode change if it changed
                     if (agentModeChanged && oldAgentMode != newConfig.AgentMode)

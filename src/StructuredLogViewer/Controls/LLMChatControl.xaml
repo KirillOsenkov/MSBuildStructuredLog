@@ -43,6 +43,42 @@
       </DockPanel>
     </Border>
 
+    <!-- Chat Session Selector -->
+    <Border DockPanel.Dock="Top"
+            Background="{DynamicResource Theme_Background}"
+            BorderBrush="Gray"
+            BorderThickness="0,0,0,1"
+            Padding="8,3">
+      <DockPanel>
+        <Button x:Name="deleteSessionButton"
+                DockPanel.Dock="Right"
+                Content="✕"
+                Padding="6,1"
+                Margin="4,0,0,0"
+                Click="DeleteSessionButton_Click"
+                ToolTip="Delete this chat session"
+                FontSize="10"
+                VerticalAlignment="Center" />
+        <Button x:Name="newSessionButton"
+                DockPanel.Dock="Right"
+                Content="＋ New"
+                Padding="6,2"
+                Margin="4,0,0,0"
+                Click="NewSessionButton_Click"
+                ToolTip="Create a new chat session" />
+        <ComboBox x:Name="sessionSelector"
+                  SelectionChanged="SessionSelector_SelectionChanged"
+                  ToolTip="Switch between chat sessions"
+                  VerticalAlignment="Center">
+          <ComboBox.ItemTemplate>
+            <DataTemplate>
+              <TextBlock Text="{Binding DisplayName}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+      </DockPanel>
+    </Border>
+
     <!-- Agent Progress Panel -->
     <local:AgentProgressPanel x:Name="agentProgressPanel"
                               DockPanel.Dock="Top" />
@@ -146,13 +182,49 @@
                    Foreground="{DynamicResource Theme_Foreground}"
                    ToolTip="Type your question. Press Enter to send (if auto-send enabled) or click Send button."/>
         </DockPanel>
+        <!-- Model Selector -->
+        <DockPanel Margin="0,4,0,0">
+          <TextBlock Text="Model:"
+                     DockPanel.Dock="Left"
+                     VerticalAlignment="Center"
+                     FontSize="11"
+                     Foreground="{DynamicResource Theme_Foreground}"
+                     Margin="0,0,6,0" />
+          <ComboBox x:Name="modelSelector"
+                    IsEditable="False"
+                    FontSize="11"
+                    VerticalAlignment="Center"
+                    SelectionChanged="ModelSelector_SelectionChanged"
+                    ToolTip="Switch the active LLM model" />
+        </DockPanel>
       </StackPanel>
     </Border>
 
     <!-- Chat Messages Area -->
-    <ScrollViewer x:Name="chatScrollViewer"
-                  VerticalScrollBarVisibility="Auto"
-                  Padding="8">
+    <Grid>
+      <!-- Loading Overlay -->
+      <Border x:Name="loadingOverlay"
+              Background="{DynamicResource Theme_Background}"
+              Visibility="Visible"
+              Panel.ZIndex="1">
+        <StackPanel VerticalAlignment="Center"
+                    HorizontalAlignment="Center">
+          <TextBlock Text="⏳"
+                     FontSize="28"
+                     HorizontalAlignment="Center"
+                     Margin="0,0,0,8" />
+          <TextBlock x:Name="loadingText"
+                     Text="Loading chat…"
+                     FontSize="13"
+                     HorizontalAlignment="Center"
+                     Foreground="{DynamicResource Theme_Foreground}"
+                     Opacity="0.7" />
+        </StackPanel>
+      </Border>
+
+      <ScrollViewer x:Name="chatScrollViewer"
+                    VerticalScrollBarVisibility="Auto"
+                    Padding="8">
       <ItemsControl x:Name="messagesPanel">
         <ItemsControl.Resources>
           <!-- Template for regular messages -->
@@ -304,5 +376,6 @@
         </ItemsControl.ItemTemplateSelector>
       </ItemsControl>
     </ScrollViewer>
+    </Grid>
   </DockPanel>
 </UserControl>
