@@ -70,22 +70,61 @@
             MinWidth="16"
             MinHeight="16">⨯</Button>
       </StackPanel>
-        <ToggleButton x:Name="llmButton"
+        <Button x:Name="attachBinlogButton"
+            Padding="6,2,6,2"
+            Margin="0,0,2,0"
+            Click="AttachBinlog_Click"
+            ToolTip="Attach additional binlog files to send to VS Code for comparison"
+            Background="{DynamicResource Theme_InfoBarBackground}"
+            Foreground="{DynamicResource Theme_Foreground}"
+            BorderThickness="1"
+            Visibility="Collapsed">
+          <TextBlock Text="📎" FontSize="14" />
+        </Button>
+        <Button x:Name="openInVSCodeButton"
             Padding="8,2,8,2"
             Margin="0,0,8,0"
-            Click="LLMButton_Click"
-            ToolTip="Toggle LLM Chat (AI-powered binlog assistant)"
+            Click="OpenInVSCode_Click"
+            ToolTip="Open in VS Code with Copilot Chat and binlog MCP tools"
             Background="{DynamicResource Theme_InfoBarBackground}"
             Foreground="{DynamicResource Theme_Foreground}"
             BorderThickness="1"
             Visibility="Collapsed">
           <StackPanel Orientation="Horizontal">
             <TextBlock Text="✨" FontSize="14" Margin="0,0,4,0" />
-            <TextBlock Text="LLM (Preview)" />
+            <TextBlock x:Name="openInVSCodeText" Text="Open in VS Code" />
           </StackPanel>
-        </ToggleButton>
+        </Button>
     </StackPanel>
     </Grid>
+    <!-- VS Code hint bar -->
+    <Border x:Name="vsCodeHintBar"
+            DockPanel.Dock="Top"
+            Background="#E8F4FD"
+            BorderBrush="#B3D9F2"
+            BorderThickness="0,0,0,1"
+            Padding="10,6"
+            Visibility="Collapsed">
+      <DockPanel>
+        <Button DockPanel.Dock="Right"
+                Content="✕"
+                Background="Transparent"
+                BorderThickness="0"
+                Padding="4,0"
+                Click="DismissVSCodeHint_Click"
+                Cursor="Hand"
+                FontSize="12"
+                VerticalAlignment="Center"/>
+        <TextBlock VerticalAlignment="Center"
+                   TextWrapping="Wrap"
+                   Foreground="#1A5276">
+          <Run FontWeight="Bold">💡 Tip:</Run>
+          <Run> Click</Run>
+          <Run FontWeight="Bold">✨ Open in VS Code</Run>
+          <Run> to analyze this build with Copilot Chat + MCP tools. Use 📎 to attach extra binlogs. Binlog from another machine? In VS Code, use "Binlog: Open Project Folder" to point to your local source.</Run>
+        </TextBlock>
+      </DockPanel>
+    </Border>
     <Grid>
       <ContentPresenter x:Name="mainContent" Margin="7"/>
     </Grid>

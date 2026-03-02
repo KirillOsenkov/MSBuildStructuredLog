@@ -29,8 +29,16 @@ namespace StructuredLogViewer.Controls
         public TreeViewItem SelectedTreeViewItem { get; private set; }
         public string LogFilePath => Build?.LogFilePath;
 
-        // Event fired when LLM chat initialization completes
-        public event EventHandler<bool> LLMChatInitialized;
+        private readonly List<string> attachedBinlogs = new List<string>();
+        public int AttachedBinlogCount => attachedBinlogs.Count;
+
+        public void AttachBinlog(string path)
+        {
+            if (!string.IsNullOrEmpty(path) && !attachedBinlogs.Contains(path, StringComparer.OrdinalIgnoreCase))
+            {
+                attachedBinlogs.Add(path);
+            }
+        }
 
         private SourceFileResolver sourceFileResolver;
         private ArchiveFileResolver archiveFile => sourceFileResolver.ArchiveFile;
@@ -436,71 +444,452 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             navigationHelper.OpenFileRequested += filePath => DisplayFile(filePath);
 
             centralTabControl.SelectionChanged += CentralTabControl_SelectionChanged;
-
-            // LLM chat will be initialized lazily when first shown via ToggleLLMChat
         }
 
-        private bool llmChatInitialized = false;
-
-        private async System.Threading.Tasks.Task InitializeLLMChatAsync()
+        /// <summary>
+        /// Extracts the common workspace directory from the build's project files.
+        /// Only considers paths that exist on the local filesystem.
+        /// Falls back to the binlog file's directory if no valid workspace is found.
+        /// </summary>
+        public string GetWorkspacePath()
         {
-            if (llmChatInitialized)
+            if (Build == null) return null;
+
+            var projectPaths = new List<string>();
+            Build.VisitAllChildren<Microsoft.Build.Logging.StructuredLogger.Project>(p =>
             {
-                return; // Already initialized
+                if (!string.IsNullOrEmpty(p.ProjectFile))
+                {
+                    var dir = Path.GetDirectoryName(p.ProjectFile);
+                    // Only include paths that actually exist on this machine
+                    // (filters out Linux/WSL paths, network paths that are unreachable, etc.)
+                    if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
+                        projectPaths.Add(dir);
+                }
+            });
+
+            if (projectPaths.Count == 0)
+            {
+                // Fallback: use the directory containing the binlog file
+                var binlogDir = Path.GetDirectoryName(Build.LogFilePath);
+                return !string.IsNullOrEmpty(binlogDir) && Directory.Exists(binlogDir) ? binlogDir : null;
+            }
+
+            // Deduplicate
+            projectPaths = projectPaths.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+
+            if (projectPaths.Count == 1) return projectPaths[0];
+
+            // Find common directory prefix
+            var first = projectPaths[0];
+            int commonLength = first.Length;
+            foreach (var path in projectPaths.Skip(1))
+            {
+                int len = Math.Min(commonLength, path.Length);
+                int lastSep = -1;
+                for (int i = 0; i < len; i++)
+                {
+                    if (char.ToLowerInvariant(first[i]) != char.ToLowerInvariant(path[i]))
+                        break;
+                    if (first[i] == Path.DirectorySeparatorChar || first[i] == Path.AltDirectorySeparatorChar)
+                        lastSep = i;
+                    if (i == len - 1)
+                        lastSep = len;
+                }
+                commonLength = lastSep >= 0 ? lastSep : 0;
+            }
+
+            if (commonLength <= 3)
+            {
+                // Common prefix is just a drive root (e.g. "C:\") — too broad, use binlog dir
+                var binlogDir = Path.GetDirectoryName(Build.LogFilePath);
+                return !string.IsNullOrEmpty(binlogDir) && Directory.Exists(binlogDir) ? binlogDir : projectPaths[0];
+            }
+
+            var common = first.Substring(0, commonLength);
+            if (common.EndsWith(Path.DirectorySeparatorChar.ToString()) || common.EndsWith(Path.AltDirectorySeparatorChar.ToString()))
+                common = common.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+            return common;
+        }
+
+        /// <summary>
+        /// Launches VS Code with the workspace folder and binlog URI handler.
+        /// Auto-installs the binlog-analyzer extension if not already installed.
+        /// </summary>
+        public void OpenInVSCode()
+        {
+            var workspacePath = GetWorkspacePath();
+            var binlogPath = Build?.LogFilePath;
+
+            if (string.IsNullOrEmpty(binlogPath))
+            {
+                MessageBox.Show("No binlog file path available.", "Open in VS Code", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Find Code.exe directly to avoid cmd window flash from code.cmd
+            var codeExe = FindVSCodeExecutable();
+            if (codeExe == null)
+            {
+                MessageBox.Show(
+                    "Could not find VS Code (Code.exe). Make sure VS Code is installed.",
+                    "Open in VS Code",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return;
             }
 
             try
             {
-                await System.Threading.Tasks.Task.Run(() =>
+                // Auto-install the extension if needed (silent, via code CLI)
+                EnsureExtensionInstalled(codeExe);
+
+                // Use the workspace path, falling back to the binlog's directory
+                var folder = workspacePath;
+                if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder))
                 {
-                    try
-                    {
-                        // Initialize LLM chat control on UI thread with BuildControl reference
-                        Dispatcher.Invoke(() => llmChatControl.Initialize(Build, this));
-                        
-                        // Notify success on UI thread
-                        Dispatcher.Invoke(() =>
-                        {
-                            llmChatInitialized = true;
-                            LLMChatInitialized?.Invoke(this, true);
-                        });
-                    }
-                    catch (Exception ex)
-                    {
-                        // Log initialization failure and notify on UI thread
-                        System.Diagnostics.Debug.WriteLine($"LLM chat initialization failed: {ex.Message}");
-                        Dispatcher.Invoke(() => LLMChatInitialized?.Invoke(this, false));
-                    }
-                });
+                    folder = Path.GetDirectoryName(binlogPath);
+                }
+
+                // Collect all binlog paths
+                var allBinlogPaths = new List<string> { binlogPath };
+                allBinlogPaths.AddRange(attachedBinlogs);
+
+                // Write binlog paths to .vscode/settings.json so the extension auto-loads them
+                if (!string.IsNullOrEmpty(folder) && Directory.Exists(folder))
+                {
+                    WriteBinlogSettings(folder, allBinlogPaths);
+                }
+
+                var args = new StringBuilder();
+                if (!string.IsNullOrEmpty(folder) && Directory.Exists(folder))
+                {
+                    args.Append($"\"{folder}\" ");
+                }
+
+                // Also pass URI as backup (works when extension is already active)
+                var uriBuilder = new StringBuilder("vscode://dotutils.binlog-analyzer/open?path=");
+                uriBuilder.Append(Uri.EscapeDataString(binlogPath));
+
+                foreach (var attached in attachedBinlogs)
+                {
+                    uriBuilder.Append("&path=");
+                    uriBuilder.Append(Uri.EscapeDataString(attached));
+                }
+
+                args.Append($"--open-url \"{uriBuilder}\"");
+
+                var psi = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = codeExe,
+                    Arguments = args.ToString(),
+                    UseShellExecute = true,
+                };
+
+                System.Diagnostics.Process.Start(psi);
             }
             catch (Exception ex)
             {
-                // Log failure to start LLM chat initialization task
-                System.Diagnostics.Debug.WriteLine($"Failed to start LLM chat initialization: {ex.Message}");
-                LLMChatInitialized?.Invoke(this, false);
+                MessageBox.Show(
+                    $"Failed to open VS Code. Make sure VS Code is installed.\n\n{ex.Message}",
+                    "Open in VS Code",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
         }
 
-        public void ToggleLLMChat(bool show)
+        /// <summary>
+        /// Writes binlog paths and MCP server config into .vscode/settings.json and .vscode/mcp.json
+        /// so the VS Code extension and MCP runtime find everything on startup.
+        /// </summary>
+        private void WriteBinlogSettings(string workspaceFolder, List<string> binlogPaths)
         {
-            if (show)
+            try
             {
-                // Initialize LLM chat control on first show (lazy initialization)
-                if (!llmChatInitialized)
+                var vscodeDir = Path.Combine(workspaceFolder, ".vscode");
+                if (!Directory.Exists(vscodeDir))
                 {
-                    _ = InitializeLLMChatAsync();
+                    Directory.CreateDirectory(vscodeDir);
                 }
-                
-                llmChatColumn.Width = new GridLength(400);
-                llmChatBorder.Visibility = Visibility.Visible;
-                llmSplitter.Visibility = Visibility.Visible;
+
+                // Find the MCP server executable
+                var mcpExe = FindBinlogMcpTool();
+
+                // Write .vscode/settings.json with active binlogs
+                WriteSettingsJson(vscodeDir, binlogPaths);
+
+                // Write .vscode/mcp.json with MCP server config (VS Code reads this on startup)
+                WriteMcpJson(vscodeDir, binlogPaths, mcpExe);
+            }
+            catch
+            {
+                // Non-fatal — the extension will configure MCP on activation
+            }
+        }
+
+        private static void WriteSettingsJson(string vscodeDir, List<string> binlogPaths)
+        {
+            var settingsPath = Path.Combine(vscodeDir, "settings.json");
+
+            string json = "{}";
+            if (File.Exists(settingsPath))
+            {
+                json = File.ReadAllText(settingsPath);
+            }
+
+            var doc = System.Text.Json.JsonDocument.Parse(json);
+            var dict = new Dictionary<string, System.Text.Json.JsonElement>();
+            foreach (var prop in doc.RootElement.EnumerateObject())
+            {
+                dict[prop.Name] = prop.Value;
+            }
+
+            using var ms = new System.IO.MemoryStream();
+            using (var writer = new System.Text.Json.Utf8JsonWriter(ms, new System.Text.Json.JsonWriterOptions { Indented = true }))
+            {
+                writer.WriteStartObject();
+                foreach (var kvp in dict)
+                {
+                    if (kvp.Key == "binlogAnalyzer.activeBinlogs")
+                        continue;
+                    writer.WritePropertyName(kvp.Key);
+                    kvp.Value.WriteTo(writer);
+                }
+
+                writer.WritePropertyName("binlogAnalyzer.activeBinlogs");
+                writer.WriteStartArray();
+                foreach (var p in binlogPaths)
+                {
+                    writer.WriteStringValue(p);
+                }
+                writer.WriteEndArray();
+
+                writer.WriteEndObject();
+            }
+
+            File.WriteAllText(settingsPath, System.Text.Encoding.UTF8.GetString(ms.ToArray()));
+        }
+
+        private static void WriteMcpJson(string vscodeDir, List<string> binlogPaths, string mcpExe)
+        {
+            var mcpJsonPath = Path.Combine(vscodeDir, "mcp.json");
+
+            // Read existing or start fresh
+            Dictionary<string, object> mcpData;
+            Dictionary<string, object> servers;
+
+            if (File.Exists(mcpJsonPath))
+            {
+                var existing = System.Text.Json.JsonDocument.Parse(File.ReadAllText(mcpJsonPath));
+                mcpData = new Dictionary<string, object>();
+                servers = new Dictionary<string, object>();
+
+                if (existing.RootElement.TryGetProperty("servers", out var serversEl))
+                {
+                    foreach (var prop in serversEl.EnumerateObject())
+                    {
+                        if (prop.Name != "baronfel_binlog_mcp" && prop.Name != "binlog-mcp")
+                        {
+                            servers[prop.Name] = prop.Value;
+                        }
+                    }
+                }
             }
             else
             {
-                llmChatColumn.Width = new GridLength(0);
-                llmChatBorder.Visibility = Visibility.Collapsed;
-                llmSplitter.Visibility = Visibility.Collapsed;
+                mcpData = new Dictionary<string, object>();
+                servers = new Dictionary<string, object>();
             }
+
+            // Build the MCP server entry
+            var binlogArgs = new List<string>();
+            foreach (var p in binlogPaths)
+            {
+                binlogArgs.Add("--binlog");
+                binlogArgs.Add(p);
+            }
+
+            using var ms = new System.IO.MemoryStream();
+            using (var writer = new System.Text.Json.Utf8JsonWriter(ms, new System.Text.Json.JsonWriterOptions { Indented = true }))
+            {
+                writer.WriteStartObject();
+                writer.WritePropertyName("servers");
+                writer.WriteStartObject();
+
+                // Write existing servers
+                foreach (var kvp in servers)
+                {
+                    writer.WritePropertyName(kvp.Key);
+                    ((System.Text.Json.JsonElement)kvp.Value).WriteTo(writer);
+                }
+
+                // Write our server
+                writer.WritePropertyName("baronfel_binlog_mcp");
+                writer.WriteStartObject();
+                writer.WriteString("type", "stdio");
+                writer.WriteString("command", mcpExe ?? "binlog.mcp");
+                writer.WritePropertyName("args");
+                writer.WriteStartArray();
+                foreach (var arg in binlogArgs)
+                {
+                    writer.WriteStringValue(arg);
+                }
+                writer.WriteEndArray();
+                writer.WriteEndObject();
+
+                writer.WriteEndObject(); // servers
+                writer.WriteEndObject(); // root
+            }
+
+            File.WriteAllText(mcpJsonPath, System.Text.Encoding.UTF8.GetString(ms.ToArray()));
+        }
+
+        /// <summary>
+        /// Finds the binlog.mcp global dotnet tool executable.
+        /// </summary>
+        private static string FindBinlogMcpTool()
+        {
+            var homeDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            var toolPath = Path.Combine(homeDir, ".dotnet", "tools", "binlog.mcp.exe");
+            if (File.Exists(toolPath))
+            {
+                return toolPath;
+            }
+
+            // Check PATH
+            var pathVar = Environment.GetEnvironmentVariable("PATH") ?? "";
+            foreach (var dir in pathVar.Split(Path.PathSeparator))
+            {
+                var candidate = Path.Combine(dir, "binlog.mcp.exe");
+                if (File.Exists(candidate))
+                {
+                    return candidate;
+                }
+            }
+
+            return null;
+        }
+
+        private static readonly string ExtensionId = "dotutils.binlog-analyzer";
+
+        private static void EnsureExtensionInstalled(string codeExe)
+        {
+            try
+            {
+                // Find the code CLI (code.cmd) from Code.exe path
+                var codeDir = Path.GetDirectoryName(codeExe);
+                var codeCli = Path.Combine(codeDir, "bin", "code.cmd");
+                if (!File.Exists(codeCli))
+                {
+                    codeCli = Path.Combine(codeDir, "bin", "code");
+                }
+
+                // Check if extension is installed
+                var checkPsi = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "cmd.exe",
+                    Arguments = $"/c \"{codeCli}\" --list-extensions",
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardOutput = true,
+                };
+
+                using var checkProc = System.Diagnostics.Process.Start(checkPsi);
+                var output = checkProc?.StandardOutput.ReadToEnd() ?? "";
+                checkProc?.WaitForExit(10000);
+
+                if (output.IndexOf(ExtensionId, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return; // Already installed
+                }
+
+                // Find the .vsix file bundled alongside the viewer
+                var vsixPath = FindBundledVsix();
+                if (vsixPath == null)
+                {
+                    return; // No bundled vsix — extension must be installed from marketplace
+                }
+
+                // Install silently
+                var installPsi = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "cmd.exe",
+                    Arguments = $"/c \"{codeCli}\" --install-extension \"{vsixPath}\" --force",
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                };
+
+                using var installProc = System.Diagnostics.Process.Start(installPsi);
+                installProc?.WaitForExit(30000);
+            }
+            catch
+            {
+                // Non-fatal — user can install manually
+            }
+        }
+
+        private static string FindBundledVsix()
+        {
+            // Look for the .vsix next to the viewer executable
+            var exeDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            if (exeDir == null) return null;
+
+            var vsixFiles = Directory.GetFiles(exeDir, "binlog-analyzer-*.vsix");
+            if (vsixFiles.Length > 0)
+            {
+                return vsixFiles.OrderByDescending(f => f).First();
+            }
+
+            // Also check a "extensions" subdirectory
+            var extDir = Path.Combine(exeDir, "extensions");
+            if (Directory.Exists(extDir))
+            {
+                vsixFiles = Directory.GetFiles(extDir, "binlog-analyzer-*.vsix");
+                if (vsixFiles.Length > 0)
+                {
+                    return vsixFiles.OrderByDescending(f => f).First();
+                }
+            }
+
+            return null;
+        }
+
+        private static string FindVSCodeExecutable()
+        {
+            // Check common install locations for Code.exe
+            string[] candidates =
+            {
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "Microsoft VS Code", "Code.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft VS Code", "Code.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Microsoft VS Code", "Code.exe"),
+            };
+
+            foreach (var candidate in candidates)
+            {
+                if (File.Exists(candidate))
+                    return candidate;
+            }
+
+            // Fallback: resolve from code.cmd in PATH
+            try
+            {
+                var pathDirs = Environment.GetEnvironmentVariable("PATH")?.Split(Path.PathSeparator) ?? Array.Empty<string>();
+                foreach (var dir in pathDirs)
+                {
+                    var codeCmdPath = Path.Combine(dir, "code.cmd");
+                    if (File.Exists(codeCmdPath))
+                    {
+                        // code.cmd is in <install>/bin/, Code.exe is in <install>/
+                        var codeExe = Path.Combine(Path.GetDirectoryName(dir) ?? dir, "Code.exe");
+                        if (File.Exists(codeExe))
+                            return codeExe;
+                    }
+                }
+            }
+            catch { }
+
+            return null;
         }
 
         public void Dispose()
@@ -1614,12 +2003,6 @@ Recent (");
                 UpdateBreadcrumb(item);
                 UpdateProjectContext(item);
                 UpdateFindContent();
-                
-                // Update LLM chat context
-                if (item is BaseNode node)
-                {
-                    llmChatControl.SetSelectedNode(node);
-                }
             }
         }
 

@@ -27,6 +27,7 @@ namespace StructuredLogViewer
         private BuildControl currentBuild;
         private string lastSearchText;
         private double scale = 1.0;
+        private bool vsCodeHintDismissed = false;
 
         public const string DefaultTitle = "MSBuild Structured Log Viewer";
 
@@ -476,7 +477,6 @@ namespace StructuredLogViewer
             if (mainContent.Content is BuildControl current)
             {
                 lastSearchText = current.searchLogControl.SearchText;
-                current.LLMChatInitialized -= OnLLMChatInitialized;
             }
 
             mainContent.Content = content;
@@ -486,7 +486,8 @@ namespace StructuredLogViewer
                 logFilePath = null;
                 projectFilePath = null;
                 currentBuild = null;
-                llmButton.Visibility = Visibility.Collapsed;
+                openInVSCodeButton.Visibility = Visibility.Collapsed;
+                attachBinlogButton.Visibility = Visibility.Collapsed;
             }
 
             if (content is BuildControl buildControl)
@@ -495,18 +496,25 @@ namespace StructuredLogViewer
                 SaveAsMenu.Visibility = Visibility.Visible;
                 RedactSecretsMenu.Visibility = Visibility.Visible;
 
-                // Show LLM button immediately - initialization will happen lazily when first opened
-                llmButton.Visibility = Visibility.Visible;
-                
-                // Subscribe to LLM chat initialization event (still used for error reporting)
-                buildControl.LLMChatInitialized += OnLLMChatInitialized;
+                openInVSCodeButton.Visibility = Visibility.Visible;
+                attachBinlogButton.Visibility = Visibility.Visible;
+                UpdateAttachmentLabel();
+                UpdateVSCodeTooltip(buildControl);
+
+                // Show hint bar on first build load (dismissible)
+                if (!vsCodeHintDismissed)
+                {
+                    vsCodeHintBar.Visibility = Visibility.Visible;
+                }
             }
             else
             {
                 ReloadMenu.Visibility = Visibility.Collapsed;
                 SaveAsMenu.Visibility = Visibility.Collapsed;
                 RedactSecretsMenu.Visibility = Visibility.Collapsed;
-                llmButton.Visibility = Visibility.Collapsed;
+                openInVSCodeButton.Visibility = Visibility.Collapsed;
+                attachBinlogButton.Visibility = Visibility.Collapsed;
+                vsCodeHintBar.Visibility = Visibility.Collapsed;
             }
 
             // If we had text inside search log control bring it back
@@ -1260,28 +1268,95 @@ that project." };
             }
         }
 
-        private void OnLLMChatInitialized(object sender, bool success)
-        {
-            // Event is now primarily used to report initialization errors
-            // Button is already visible since we use lazy initialization
-            if (!success)
-            {
-                // Could show an error message to the user here if needed
-            }
-        }
-
-        private void LLMButton_Click(object sender, RoutedEventArgs e)
+        private void OpenInVSCode_Click(object sender, RoutedEventArgs e)
         {
             var buildControl = CurrentBuildControl;
             if (buildControl != null)
             {
-                buildControl.ToggleLLMChat(llmButton.IsChecked == true);
+                buildControl.OpenInVSCode();
+            }
+        }
+
+        private void AttachBinlog_Click(object sender, RoutedEventArgs e)
+        {
+            var buildControl = CurrentBuildControl;
+            if (buildControl == null) return;
+
+            var dialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Binary Logs (*.binlog)|*.binlog",
+                Title = "Attach additional binlog files for comparison",
+                Multiselect = true
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                foreach (var file in dialog.FileNames)
+                {
+                    buildControl.AttachBinlog(file);
+                }
+
+                UpdateAttachmentLabel();
+            }
+        }
+
+        private void UpdateAttachmentLabel()
+        {
+            var buildControl = CurrentBuildControl;
+            int count = buildControl?.AttachedBinlogCount ?? 0;
+            if (count > 0)
+            {
+                openInVSCodeText.Text = $"Open in VS Code (+{count} binlog{(count > 1 ? "s" : "")})";
             }
             else
             {
-                // No build loaded
-                llmButton.IsChecked = false;
+                openInVSCodeText.Text = "Open in VS Code";
             }
+        }
+
+        private void UpdateVSCodeTooltip(BuildControl buildControl)
+        {
+            var workspace = buildControl.GetWorkspacePath();
+            var binlog = buildControl.Build?.LogFilePath ?? "unknown";
+
+            var isCrossMachine = workspace != null && binlog != null
+                && !string.IsNullOrEmpty(workspace)
+                && Path.GetDirectoryName(binlog) == workspace
+                && workspace == Path.GetDirectoryName(binlog);
+
+            // Check if workspace fell back to binlog directory (cross-machine hint)
+            var binlogDir = Path.GetDirectoryName(binlog);
+            var isWorkspaceFallback = workspace != null && binlogDir != null
+                && string.Equals(workspace.TrimEnd('\\', '/'), binlogDir.TrimEnd('\\', '/'), StringComparison.OrdinalIgnoreCase);
+
+            var tip = $"Open in VS Code with Copilot Chat + binlog MCP tools\n\n" +
+                      $"Binlog: {binlog}\n" +
+                      $"Workspace: {workspace ?? "(not detected)"}";
+
+            if (isWorkspaceFallback)
+            {
+                tip += "\n\n⚠️ This binlog may be from another machine.\n" +
+                       "In VS Code, use Ctrl+Shift+P → 'Binlog: Open Project Folder'\n" +
+                       "to point to your local checkout of the source code.";
+            }
+
+            if (buildControl.AttachedBinlogCount > 0)
+            {
+                tip += $"\n+ {buildControl.AttachedBinlogCount} attached binlog(s)";
+            }
+
+            tip += "\n\nIn VS Code:\n" +
+                   "• @binlog in Copilot Chat to analyze your build\n" +
+                   "• 'Binlog: Add File' to load additional binlogs\n" +
+                   "• Click the status bar to manage loaded binlogs";
+
+            openInVSCodeButton.ToolTip = tip;
+        }
+
+        private void DismissVSCodeHint_Click(object sender, RoutedEventArgs e)
+        {
+            vsCodeHintBar.Visibility = Visibility.Collapsed;
+            vsCodeHintDismissed = true;
         }
     }
 }
