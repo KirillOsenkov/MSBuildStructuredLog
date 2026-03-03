@@ -849,22 +849,34 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
                 // Find the .vsix file bundled alongside the viewer
                 var vsixPath = FindBundledVsix();
-                if (vsixPath == null)
+                if (vsixPath != null)
                 {
-                    return; // No bundled vsix — extension must be installed from marketplace
+                    // Install from bundled vsix
+                    var installPsi = new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = "cmd.exe",
+                        Arguments = $"/c \"{codeCli}\" --install-extension \"{vsixPath}\" --force",
+                        UseShellExecute = false,
+                        CreateNoWindow = true,
+                    };
+
+                    using var installProc = System.Diagnostics.Process.Start(installPsi);
+                    installProc?.WaitForExit(30000);
                 }
-
-                // Install silently
-                var installPsi = new System.Diagnostics.ProcessStartInfo
+                else
                 {
-                    FileName = "cmd.exe",
-                    Arguments = $"/c \"{codeCli}\" --install-extension \"{vsixPath}\" --force",
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                };
+                    // Install from VS Code Marketplace
+                    var installPsi = new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = "cmd.exe",
+                        Arguments = $"/c \"{codeCli}\" --install-extension {ExtensionId} --force",
+                        UseShellExecute = false,
+                        CreateNoWindow = true,
+                    };
 
-                using var installProc = System.Diagnostics.Process.Start(installPsi);
-                installProc?.WaitForExit(30000);
+                    using var installProc = System.Diagnostics.Process.Start(installPsi);
+                    installProc?.WaitForExit(60000);
+                }
             }
             catch
             {
