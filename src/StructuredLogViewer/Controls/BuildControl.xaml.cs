@@ -569,15 +569,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
                 if (string.IsNullOrEmpty(folder))
                 {
-                    // Cross-machine binlog — no local sources found
-                    // Show a brief info (non-blocking) so the user knows they can set the folder in VS Code
-                    MessageBox.Show(
-                        "This binlog was built on a different machine.\n\n" +
-                        "VS Code will open without a project folder.\n" +
-                        "Use \"Set workspace folder...\" in the Binlog Explorer to point to local sources.",
-                        "Cross-Machine Build",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
+                    // Cross-machine binlog — VS Code extension will show its own notification
                 }
 
                 // Collect all binlog paths
