@@ -470,9 +470,8 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
             if (projectPaths.Count == 0)
             {
-                // Fallback: use the directory containing the binlog file
-                var binlogDir = Path.GetDirectoryName(Build.LogFilePath);
-                return !string.IsNullOrEmpty(binlogDir) && Directory.Exists(binlogDir) ? binlogDir : null;
+                // No project paths exist locally — likely a cross-machine binlog
+                return null;
             }
 
             // Deduplicate
@@ -545,12 +544,8 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                 // Auto-install the extension if needed (silent, via code CLI)
                 EnsureExtensionInstalled(codeExe);
 
-                // Use the workspace path, falling back to the binlog's directory
+                // Use the workspace path if a local project was resolved
                 var folder = workspacePath;
-                if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder))
-                {
-                    folder = Path.GetDirectoryName(binlogPath);
-                }
 
                 // Collect all binlog paths
                 var allBinlogPaths = new List<string> { binlogPath };
@@ -566,6 +561,11 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                 if (!string.IsNullOrEmpty(folder) && Directory.Exists(folder))
                 {
                     args.Append($"\"{folder}\" ");
+                }
+                else
+                {
+                    // No local project resolved — open a clean VS Code window
+                    args.Append("--new-window ");
                 }
 
                 // Also pass URI as backup (works when extension is already active)
