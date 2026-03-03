@@ -558,14 +558,10 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                 }
 
                 var args = new StringBuilder();
+                args.Append("--new-window ");
                 if (!string.IsNullOrEmpty(folder) && Directory.Exists(folder))
                 {
                     args.Append($"\"{folder}\" ");
-                }
-                else
-                {
-                    // No local project resolved — open a clean VS Code window
-                    args.Append("--new-window ");
                 }
 
                 // Also pass URI as backup (works when extension is already active)
