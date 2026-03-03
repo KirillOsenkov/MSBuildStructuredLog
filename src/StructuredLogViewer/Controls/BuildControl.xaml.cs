@@ -470,16 +470,8 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
             if (projectPaths.Count == 0)
             {
-                // No project paths found via Project nodes — fall back to binlog's directory
-                // if it exists locally (indicates local build)
-                var binlogDir = Path.GetDirectoryName(Build.LogFilePath);
-                if (!string.IsNullOrEmpty(binlogDir) && Directory.Exists(binlogDir))
-                {
-                    // Look for a solution or project file in the binlog directory or ancestors
-                    // to find the actual repo root
-                    var repoRoot = FindRepoRoot(binlogDir);
-                    return repoRoot ?? binlogDir;
-                }
+                // No project paths exist locally — likely a cross-machine build.
+                // Return null so VS Code opens a clean window.
                 return null;
             }
 
@@ -574,6 +566,19 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
                 // Use the workspace path if a local project was resolved
                 var folder = workspacePath;
+
+                if (string.IsNullOrEmpty(folder))
+                {
+                    // Cross-machine binlog — no local sources found
+                    // Show a brief info (non-blocking) so the user knows they can set the folder in VS Code
+                    MessageBox.Show(
+                        "This binlog was built on a different machine.\n\n" +
+                        "VS Code will open without a project folder.\n" +
+                        "Use \"Set workspace folder...\" in the Binlog Explorer to point to local sources.",
+                        "Cross-Machine Build",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                }
 
                 // Collect all binlog paths
                 var allBinlogPaths = new List<string> { binlogPath };
