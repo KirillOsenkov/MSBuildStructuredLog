@@ -586,13 +586,18 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                 }
 
                 var args = new StringBuilder();
-                args.Append("--new-window ");
                 if (!string.IsNullOrEmpty(folder) && Directory.Exists(folder))
                 {
-                    args.Append($"\"{folder}\" ");
+                    // Open a new window with the project folder
+                    args.Append($"--new-window \"{folder}\" ");
+                }
+                else
+                {
+                    // No local project — open a clean new window
+                    args.Append("--new-window ");
                 }
 
-                // Also pass URI as backup (works when extension is already active)
+                // Pass URI to trigger the extension's binlog loading
                 var uriBuilder = new StringBuilder("vscode://dotutils.binlog-analyzer/open?path=");
                 uriBuilder.Append(Uri.EscapeDataString(binlogPath));
 
@@ -602,16 +607,33 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                     uriBuilder.Append(Uri.EscapeDataString(attached));
                 }
 
-                args.Append($"--open-url \"{uriBuilder}\"");
-
+                // Launch VS Code with folder first, then send URI after a delay.
+                // Combining --new-window + folder + --open-url in one call can cause
+                // VS Code to ignore the folder, so we split into two invocations.
                 var psi = new System.Diagnostics.ProcessStartInfo
                 {
                     FileName = codeExe,
-                    Arguments = args.ToString(),
+                    Arguments = args.ToString().Trim(),
                     UseShellExecute = true,
                 };
-
                 System.Diagnostics.Process.Start(psi);
+
+                // Send the URI after VS Code has opened the folder window
+                var uriArgs = $"--open-url \"{uriBuilder}\"";
+                System.Threading.Tasks.Task.Delay(2000).ContinueWith(_ =>
+                {
+                    try
+                    {
+                        var uriPsi = new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = codeExe,
+                            Arguments = uriArgs,
+                            UseShellExecute = true,
+                        };
+                        System.Diagnostics.Process.Start(uriPsi);
+                    }
+                    catch { /* non-fatal */ }
+                });
             }
             catch (Exception ex)
             {
