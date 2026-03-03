@@ -470,7 +470,16 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
             if (projectPaths.Count == 0)
             {
-                // No project paths exist locally — likely a cross-machine binlog
+                // No project paths found via Project nodes — fall back to binlog's directory
+                // if it exists locally (indicates local build)
+                var binlogDir = Path.GetDirectoryName(Build.LogFilePath);
+                if (!string.IsNullOrEmpty(binlogDir) && Directory.Exists(binlogDir))
+                {
+                    // Look for a solution or project file in the binlog directory or ancestors
+                    // to find the actual repo root
+                    var repoRoot = FindRepoRoot(binlogDir);
+                    return repoRoot ?? binlogDir;
+                }
                 return null;
             }
 
@@ -510,6 +519,25 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                 common = common.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 
             return common;
+        }
+
+        /// <summary>
+        /// Walks up from a directory to find a repository root (contains .git, .sln, or .csproj).
+        /// </summary>
+        private static string FindRepoRoot(string startDir)
+        {
+            var dir = startDir;
+            while (!string.IsNullOrEmpty(dir))
+            {
+                if (Directory.Exists(Path.Combine(dir, ".git")))
+                    return dir;
+                if (Directory.GetFiles(dir, "*.sln", SearchOption.TopDirectoryOnly).Length > 0)
+                    return dir;
+                var parent = Path.GetDirectoryName(dir);
+                if (parent == dir) break;
+                dir = parent;
+            }
+            return null;
         }
 
         /// <summary>
