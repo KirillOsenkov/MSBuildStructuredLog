@@ -121,7 +121,7 @@
           <Run FontWeight="Bold">💡 Tip:</Run>
           <Run> Click</Run>
           <Run FontWeight="Bold">✨ Open in VS Code</Run>
-          <Run> to analyze this build with Copilot Chat + MCP tools. Use 📎 to attach extra binlogs. Binlog from another machine? In VS Code, use "Binlog: Open Project Folder" to point to your local source.</Run>
+          <Run> to analyze with Copilot Chat. Use 📎 to attach extra binlogs.</Run>
         </TextBlock>
       </DockPanel>
     </Border>
