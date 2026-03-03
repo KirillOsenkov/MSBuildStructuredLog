@@ -29,6 +29,17 @@ namespace StructuredLogViewer.Controls
         public TreeViewItem SelectedTreeViewItem { get; private set; }
         public string LogFilePath => Build?.LogFilePath;
 
+        private readonly List<string> attachedBinlogs = new List<string>();
+        public int AttachedBinlogCount => attachedBinlogs.Count;
+
+        public void AttachBinlog(string path)
+        {
+            if (!string.IsNullOrEmpty(path) && !attachedBinlogs.Contains(path, StringComparer.OrdinalIgnoreCase))
+            {
+                attachedBinlogs.Add(path);
+            }
+        }
+
         private SourceFileResolver sourceFileResolver;
         private ArchiveFileResolver archiveFile => sourceFileResolver.ArchiveFile;
         private PreprocessedFileManager preprocessedFileManager;
@@ -45,7 +56,6 @@ namespace StructuredLogViewer.Controls
         private MenuItem searchInSubtreeItem;
         private MenuItem searchInNodeByNameItem;
         private MenuItem searchThisNode;
-        private MenuItem viewPropertyItem;
         private MenuItem excludeSubtreeFromSearchItem;
         private MenuItem excludeNodeByNameFromSearch;
         private MenuItem searchInclusiveWithinThisTimespan;  // Search with Start OR End time overlaps this duration.
@@ -148,7 +158,7 @@ namespace StructuredLogViewer.Controls
             propertiesAndItemsControl.RecentItemsCategory = "PropertiesAndItems";
 
             secretsSearch = (SecretsSearch)build.SearchExtensions.FirstOrDefault(se => se is SecretsSearch);
-            SetProjectContext(null, force: true);
+            SetProjectContext(null);
 
             VirtualizingPanel.SetIsVirtualizing(treeView, SettingsService.EnableTreeViewVirtualization);
 
@@ -223,9 +233,7 @@ namespace StructuredLogViewer.Controls
             searchInclusiveWithinThisTimespan = new MenuItem() { Header = "Search overlapping this duration" };
             searchExclusiveWithinThisTimespan = new MenuItem() { Header = "Search within this duration" };
             searchInNodeByNameItem = new MenuItem() { Header = "Search in this node." };
-            searchThisNode = new MenuItem() { Header = "Search this node" };
-            viewPropertyItem = new MenuItem { Header = "View property" };
-
+            searchThisNode = new MenuItem() { Header = "Search This Node" };
             goToTimeLineItem = new MenuItem() { Header = "Timeline" };
             goToTracingItem = new MenuItem() { Header = "Tracing" };
             copyChildrenItem = new MenuItem() { Header = "Copy children" };
@@ -243,10 +251,10 @@ namespace StructuredLogViewer.Controls
             copyFilePathItem = new MenuItem() { Header = "Copy file path" };
             showFileInExplorerItem = new MenuItem() { Header = "Show in Explorer" };
             preprocessItem = new MenuItem() { Header = "Preprocess" };
-            targetGraphItem = new MenuItem { Header = "Target graph" };
-            propertyGraphItem = new MenuItem { Header = "Property graph" };
-            viewInTargetGraphItem = new MenuItem { Header = "Target graph" };
-            nugetGraphItem = new MenuItem { Header = "NuGet graph" };
+            targetGraphItem = new MenuItem { Header = "Target Graph" };
+            propertyGraphItem = new MenuItem { Header = "Property Graph" };
+            viewInTargetGraphItem = new MenuItem { Header = "Target Graph" };
+            nugetGraphItem = new MenuItem { Header = "NuGet Graph" };
             var nugetImage = new System.Windows.Shapes.Path
             {
                 Data = (Geometry)Application.Current.FindResource("NuGetGeometry"),
@@ -271,7 +279,6 @@ namespace StructuredLogViewer.Controls
             searchExclusiveWithinThisTimespan.Click += (s, a) => SearchExclusiveWithinThisTimespan();
             searchInNodeByNameItem.Click += (s, a) => SearchInNodeByName();
             searchThisNode.Click += (s, a) => SearchThisNode();
-            viewPropertyItem.Click += (s, a) => ViewProperty();
             goToTimeLineItem.Click += (s, a) => GoToTimeLine();
             goToTracingItem.Click += (s, a) => GoToTracing();
             copyChildrenItem.Click += (s, a) => CopyChildren();
@@ -306,7 +313,6 @@ namespace StructuredLogViewer.Controls
             contextMenu.AddItem(debugItem);
             contextMenu.AddItem(viewSourceItem);
             contextMenu.AddItem(viewFullTextItem);
-            contextMenu.AddItem(viewPropertyItem);
             contextMenu.AddItem(openFileItem);
             contextMenu.AddItem(preprocessItem);
             contextMenu.AddItem(targetGraphItem);
@@ -440,6 +446,508 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             centralTabControl.SelectionChanged += CentralTabControl_SelectionChanged;
         }
 
+        /// <summary>
+        /// Extracts the common workspace directory from the build's project files.
+        /// Only considers paths that exist on the local filesystem.
+        /// Falls back to the binlog file's directory if no valid workspace is found.
+        /// </summary>
+        public string GetWorkspacePath()
+        {
+            if (Build == null) return null;
+
+            var projectPaths = new List<string>();
+            Build.VisitAllChildren<Microsoft.Build.Logging.StructuredLogger.Project>(p =>
+            {
+                if (!string.IsNullOrEmpty(p.ProjectFile))
+                {
+                    var dir = Path.GetDirectoryName(p.ProjectFile);
+                    // Only include paths that actually exist on this machine
+                    // (filters out Linux/WSL paths, network paths that are unreachable, etc.)
+                    if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
+                        projectPaths.Add(dir);
+                }
+            });
+
+            if (projectPaths.Count == 0)
+            {
+                // No project paths exist locally — likely a cross-machine build.
+                // Return null so VS Code opens a clean window.
+                return null;
+            }
+
+            // Deduplicate
+            projectPaths = projectPaths.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+
+            if (projectPaths.Count == 1) return projectPaths[0];
+
+            // Find common directory prefix
+            var first = projectPaths[0];
+            int commonLength = first.Length;
+            foreach (var path in projectPaths.Skip(1))
+            {
+                int len = Math.Min(commonLength, path.Length);
+                int lastSep = -1;
+                for (int i = 0; i < len; i++)
+                {
+                    if (char.ToLowerInvariant(first[i]) != char.ToLowerInvariant(path[i]))
+                        break;
+                    if (first[i] == Path.DirectorySeparatorChar || first[i] == Path.AltDirectorySeparatorChar)
+                        lastSep = i;
+                    if (i == len - 1)
+                        lastSep = len;
+                }
+                commonLength = lastSep >= 0 ? lastSep : 0;
+            }
+
+            if (commonLength <= 3)
+            {
+                // Common prefix is just a drive root (e.g. "C:\") — too broad, use binlog dir
+                var binlogDir = Path.GetDirectoryName(Build.LogFilePath);
+                return !string.IsNullOrEmpty(binlogDir) && Directory.Exists(binlogDir) ? binlogDir : projectPaths[0];
+            }
+
+            var common = first.Substring(0, commonLength);
+            if (common.EndsWith(Path.DirectorySeparatorChar.ToString()) || common.EndsWith(Path.AltDirectorySeparatorChar.ToString()))
+                common = common.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+            return common;
+        }
+
+        /// <summary>
+        /// Walks up from a directory to find a repository root (contains .git, .sln, or .csproj).
+        /// </summary>
+        private static string FindRepoRoot(string startDir)
+        {
+            var dir = startDir;
+            while (!string.IsNullOrEmpty(dir))
+            {
+                if (Directory.Exists(Path.Combine(dir, ".git")))
+                    return dir;
+                if (Directory.GetFiles(dir, "*.sln", SearchOption.TopDirectoryOnly).Length > 0)
+                    return dir;
+                var parent = Path.GetDirectoryName(dir);
+                if (parent == dir) break;
+                dir = parent;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Launches VS Code with the workspace folder and binlog URI handler.
+        /// Auto-installs the binlog-analyzer extension if not already installed.
+        /// </summary>
+        public void OpenInVSCode()
+        {
+            var workspacePath = GetWorkspacePath();
+            var binlogPath = Build?.LogFilePath;
+
+            if (string.IsNullOrEmpty(binlogPath))
+            {
+                MessageBox.Show("No binlog file path available.", "Open in VS Code", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Find Code.exe directly to avoid cmd window flash from code.cmd
+            var codeExe = FindVSCodeExecutable();
+            if (codeExe == null)
+            {
+                MessageBox.Show(
+                    "Could not find VS Code (Code.exe). Make sure VS Code is installed.",
+                    "Open in VS Code",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return;
+            }
+
+            try
+            {
+                // Auto-install the extension if needed (non-blocking, via code CLI)
+                TPLTask.Run(() => EnsureExtensionInstalled(codeExe));
+
+                // Use the workspace path if a local project was resolved
+                var folder = workspacePath;
+
+                if (string.IsNullOrEmpty(folder))
+                {
+                    // Cross-machine binlog — VS Code extension will show its own notification
+                }
+
+                // Collect all binlog paths
+                var allBinlogPaths = new List<string> { binlogPath };
+                allBinlogPaths.AddRange(attachedBinlogs);
+
+                // Write binlog paths to .vscode/settings.json so the extension auto-loads them
+                if (!string.IsNullOrEmpty(folder) && Directory.Exists(folder))
+                {
+                    WriteBinlogSettings(folder, allBinlogPaths);
+                }
+
+                var args = new StringBuilder();
+                if (!string.IsNullOrEmpty(folder) && Directory.Exists(folder))
+                {
+                    // Open a new window with the project folder
+                    args.Append($"--new-window \"{folder}\" ");
+                }
+                else
+                {
+                    // No local project — open a clean new window
+                    args.Append("--new-window ");
+                }
+
+                // Pass URI to trigger the extension's binlog loading
+                var uriBuilder = new StringBuilder("vscode://dotutils.binlog-analyzer/open?path=");
+                uriBuilder.Append(Uri.EscapeDataString(binlogPath));
+
+                foreach (var attached in attachedBinlogs)
+                {
+                    uriBuilder.Append("&path=");
+                    uriBuilder.Append(Uri.EscapeDataString(attached));
+                }
+
+                // Launch VS Code with folder first, then send URI after a delay.
+                // Combining --new-window + folder + --open-url in one call can cause
+                // VS Code to ignore the folder, so we split into two invocations.
+                var psi = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = codeExe,
+                    Arguments = args.ToString().Trim(),
+                    UseShellExecute = true,
+                };
+                System.Diagnostics.Process.Start(psi);
+
+                // Send the URI after VS Code has opened the folder window
+                var uriArgs = $"--open-url \"{uriBuilder}\"";
+                TPLTask.Run(async () =>
+                {
+                    try
+                    {
+                        await TPLTask.Delay(2000);
+                        var uriPsi = new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = codeExe,
+                            Arguments = uriArgs,
+                            UseShellExecute = true,
+                        };
+                        System.Diagnostics.Process.Start(uriPsi);
+                    }
+                    catch { /* non-fatal */ }
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Failed to open VS Code. Make sure VS Code is installed.\n\n{ex.Message}",
+                    "Open in VS Code",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>
+        /// Writes binlog paths and MCP server config into .vscode/settings.json and .vscode/mcp.json
+        /// so the VS Code extension and MCP runtime find everything on startup.
+        /// </summary>
+        private void WriteBinlogSettings(string workspaceFolder, List<string> binlogPaths)
+        {
+            try
+            {
+                var vscodeDir = Path.Combine(workspaceFolder, ".vscode");
+                if (!Directory.Exists(vscodeDir))
+                {
+                    Directory.CreateDirectory(vscodeDir);
+                }
+
+                // Find the MCP server executable
+                var mcpExe = FindBinlogMcpTool();
+
+                // Write .vscode/settings.json with active binlogs
+                WriteSettingsJson(vscodeDir, binlogPaths);
+
+                // Write .vscode/mcp.json with MCP server config (VS Code reads this on startup)
+                WriteMcpJson(vscodeDir, binlogPaths, mcpExe);
+            }
+            catch
+            {
+                // Non-fatal — the extension will configure MCP on activation
+            }
+        }
+
+        private static void WriteSettingsJson(string vscodeDir, List<string> binlogPaths)
+        {
+            var settingsPath = Path.Combine(vscodeDir, "settings.json");
+
+            string json = "{}";
+            if (File.Exists(settingsPath))
+            {
+                json = File.ReadAllText(settingsPath);
+            }
+
+            var doc = System.Text.Json.JsonDocument.Parse(json);
+            var dict = new Dictionary<string, System.Text.Json.JsonElement>();
+            foreach (var prop in doc.RootElement.EnumerateObject())
+            {
+                dict[prop.Name] = prop.Value;
+            }
+
+            using var ms = new System.IO.MemoryStream();
+            using (var writer = new System.Text.Json.Utf8JsonWriter(ms, new System.Text.Json.JsonWriterOptions { Indented = true }))
+            {
+                writer.WriteStartObject();
+                foreach (var kvp in dict)
+                {
+                    if (kvp.Key == "binlogAnalyzer.activeBinlogs")
+                        continue;
+                    writer.WritePropertyName(kvp.Key);
+                    kvp.Value.WriteTo(writer);
+                }
+
+                writer.WritePropertyName("binlogAnalyzer.activeBinlogs");
+                writer.WriteStartArray();
+                foreach (var p in binlogPaths)
+                {
+                    writer.WriteStringValue(p);
+                }
+                writer.WriteEndArray();
+
+                writer.WriteEndObject();
+            }
+
+            File.WriteAllText(settingsPath, System.Text.Encoding.UTF8.GetString(ms.ToArray()));
+        }
+
+        private static void WriteMcpJson(string vscodeDir, List<string> binlogPaths, string mcpExe)
+        {
+            var mcpJsonPath = Path.Combine(vscodeDir, "mcp.json");
+
+            // Read existing or start fresh
+            Dictionary<string, object> mcpData;
+            Dictionary<string, object> servers;
+
+            if (File.Exists(mcpJsonPath))
+            {
+                var existing = System.Text.Json.JsonDocument.Parse(File.ReadAllText(mcpJsonPath));
+                mcpData = new Dictionary<string, object>();
+                servers = new Dictionary<string, object>();
+
+                if (existing.RootElement.TryGetProperty("servers", out var serversEl))
+                {
+                    foreach (var prop in serversEl.EnumerateObject())
+                    {
+                        if (prop.Name != "baronfel_binlog_mcp" && prop.Name != "binlog-mcp")
+                        {
+                            servers[prop.Name] = prop.Value;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                mcpData = new Dictionary<string, object>();
+                servers = new Dictionary<string, object>();
+            }
+
+            // Build the MCP server entry
+            var binlogArgs = new List<string>();
+            foreach (var p in binlogPaths)
+            {
+                binlogArgs.Add("--binlog");
+                binlogArgs.Add(p);
+            }
+
+            using var ms = new System.IO.MemoryStream();
+            using (var writer = new System.Text.Json.Utf8JsonWriter(ms, new System.Text.Json.JsonWriterOptions { Indented = true }))
+            {
+                writer.WriteStartObject();
+                writer.WritePropertyName("servers");
+                writer.WriteStartObject();
+
+                // Write existing servers
+                foreach (var kvp in servers)
+                {
+                    writer.WritePropertyName(kvp.Key);
+                    ((System.Text.Json.JsonElement)kvp.Value).WriteTo(writer);
+                }
+
+                // Write our server
+                writer.WritePropertyName("baronfel_binlog_mcp");
+                writer.WriteStartObject();
+                writer.WriteString("type", "stdio");
+                writer.WriteString("command", mcpExe ?? "binlog.mcp");
+                writer.WritePropertyName("args");
+                writer.WriteStartArray();
+                foreach (var arg in binlogArgs)
+                {
+                    writer.WriteStringValue(arg);
+                }
+                writer.WriteEndArray();
+                writer.WriteEndObject();
+
+                writer.WriteEndObject(); // servers
+                writer.WriteEndObject(); // root
+            }
+
+            File.WriteAllText(mcpJsonPath, System.Text.Encoding.UTF8.GetString(ms.ToArray()));
+        }
+
+        /// <summary>
+        /// Finds the binlog.mcp global dotnet tool executable.
+        /// </summary>
+        private static string FindBinlogMcpTool()
+        {
+            var homeDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            var toolPath = Path.Combine(homeDir, ".dotnet", "tools", "binlog.mcp.exe");
+            if (File.Exists(toolPath))
+            {
+                return toolPath;
+            }
+
+            // Check PATH
+            var pathVar = Environment.GetEnvironmentVariable("PATH") ?? "";
+            foreach (var dir in pathVar.Split(Path.PathSeparator))
+            {
+                var candidate = Path.Combine(dir, "binlog.mcp.exe");
+                if (File.Exists(candidate))
+                {
+                    return candidate;
+                }
+            }
+
+            return null;
+        }
+
+        private static readonly string ExtensionId = "dotutils.binlog-analyzer";
+
+        private static void EnsureExtensionInstalled(string codeExe)
+        {
+            try
+            {
+                // Find the code CLI (code.cmd) from Code.exe path
+                var codeDir = Path.GetDirectoryName(codeExe);
+                var codeCli = Path.Combine(codeDir, "bin", "code.cmd");
+                if (!File.Exists(codeCli))
+                {
+                    codeCli = Path.Combine(codeDir, "bin", "code");
+                }
+
+                // Check if extension is installed
+                var checkPsi = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "cmd.exe",
+                    Arguments = $"/c \"{codeCli}\" --list-extensions",
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardOutput = true,
+                };
+
+                using var checkProc = System.Diagnostics.Process.Start(checkPsi);
+                var output = checkProc?.StandardOutput.ReadToEnd() ?? "";
+                checkProc?.WaitForExit(10000);
+
+                if (output.IndexOf(ExtensionId, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return; // Already installed
+                }
+
+                // Find the .vsix file bundled alongside the viewer
+                var vsixPath = FindBundledVsix();
+                if (vsixPath != null)
+                {
+                    // Install from bundled vsix
+                    var installPsi = new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = "cmd.exe",
+                        Arguments = $"/c \"{codeCli}\" --install-extension \"{vsixPath}\" --force",
+                        UseShellExecute = false,
+                        CreateNoWindow = true,
+                    };
+
+                    using var installProc = System.Diagnostics.Process.Start(installPsi);
+                    installProc?.WaitForExit(30000);
+                }
+                else
+                {
+                    // Install from VS Code Marketplace
+                    var installPsi = new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = "cmd.exe",
+                        Arguments = $"/c \"{codeCli}\" --install-extension {ExtensionId} --force",
+                        UseShellExecute = false,
+                        CreateNoWindow = true,
+                    };
+
+                    using var installProc = System.Diagnostics.Process.Start(installPsi);
+                    installProc?.WaitForExit(60000);
+                }
+            }
+            catch
+            {
+                // Non-fatal — user can install manually
+            }
+        }
+
+        private static string FindBundledVsix()
+        {
+            // Look for the .vsix next to the viewer executable
+            var exeDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            if (exeDir == null) return null;
+
+            var vsixFiles = Directory.GetFiles(exeDir, "binlog-analyzer-*.vsix");
+            if (vsixFiles.Length > 0)
+            {
+                return vsixFiles.OrderByDescending(f => f).First();
+            }
+
+            // Also check a "extensions" subdirectory
+            var extDir = Path.Combine(exeDir, "extensions");
+            if (Directory.Exists(extDir))
+            {
+                vsixFiles = Directory.GetFiles(extDir, "binlog-analyzer-*.vsix");
+                if (vsixFiles.Length > 0)
+                {
+                    return vsixFiles.OrderByDescending(f => f).First();
+                }
+            }
+
+            return null;
+        }
+
+        private static string FindVSCodeExecutable()
+        {
+            // Check common install locations for Code.exe
+            string[] candidates =
+            {
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "Microsoft VS Code", "Code.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft VS Code", "Code.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Microsoft VS Code", "Code.exe"),
+            };
+
+            foreach (var candidate in candidates)
+            {
+                if (File.Exists(candidate))
+                    return candidate;
+            }
+
+            // Fallback: resolve from code.cmd in PATH
+            try
+            {
+                var pathDirs = Environment.GetEnvironmentVariable("PATH")?.Split(Path.PathSeparator) ?? Array.Empty<string>();
+                foreach (var dir in pathDirs)
+                {
+                    var codeCmdPath = Path.Combine(dir, "code.cmd");
+                    if (File.Exists(codeCmdPath))
+                    {
+                        // code.cmd is in <install>/bin/, Code.exe is in <install>/
+                        var codeExe = Path.Combine(Path.GetDirectoryName(dir) ?? dir, "Code.exe");
+                        if (File.Exists(codeExe))
+                            return codeExe;
+                    }
+                }
+            }
+            catch { }
+
+            return null;
+        }
+
         public void Dispose()
         {
             // WPF controls
@@ -494,7 +1002,6 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             excludeNodeByNameFromSearch = null;
             searchInNodeByNameItem = null;
             searchThisNode = null;
-            viewPropertyItem = null;
             goToTimeLineItem = null;
             goToTracingItem = null;
             copyChildrenItem = null;
@@ -897,7 +1404,7 @@ Recent (");
 
             var host = new GraphHostControl();
             host.DisplayText += text => DisplayText(text, "Graph");
-            host.GoToSearch += text => SearchForProperty(text);
+            host.GoToSearch += text => SelectPropertiesAndItemsTab($"$property {text}");
             host.Graph = graph;
             propertyGraphTab.Content = host;
             propertyGraphTab.Visibility = Visibility.Visible;
@@ -1091,20 +1598,6 @@ Recent (");
             else
             {
                 searchThisNode.Visibility = Visibility.Collapsed;
-            }
-
-            if (node is Property ||
-                node?.Parent is { } parent &&
-                (parent.Title == Strings.PropertyReassignmentFolder ||
-                parent?.Parent?.Title == Strings.PropertyReassignmentFolder ||
-                parent.Title == Strings.PropertyAssignmentFolder ||
-                parent?.Parent?.Title == Strings.PropertyAssignmentFolder))
-            {
-                viewPropertyItem.Visibility = Visibility.Visible;
-            }
-            else
-            {
-                viewPropertyItem.Visibility = Visibility.Collapsed;
             }
 
             bool isFavorite = IsFavorite(node);
@@ -1626,21 +2119,17 @@ Recent (");
 
         private object projectContext;
 
-        public void SetProjectContext(object contents, bool force = false)
+        public void SetProjectContext(object contents)
         {
-            if (projectContext == contents && !force)
+            if (projectContext == contents)
             {
                 return;
             }
 
-            var visibility = contents != null ? Visibility.Visible : Visibility.Collapsed;
-
-            contents ??= "A project or evaluation must be selected.";
-
             projectContext = contents;
             propertiesAndItemsContext.Content = contents;
-            projectContextBorder.Visibility = Visibility.Visible;
-            projectContextLabel.Visibility = visibility;
+            var visibility = contents != null ? Visibility.Visible : Visibility.Collapsed;
+            projectContextBorder.Visibility = visibility;
             propertiesAndItemsControl.TopPanel.Visibility = visibility;
             if (contents != null &&
                 !string.IsNullOrEmpty(propertiesAndItemsControl.SearchText) &&
@@ -2236,25 +2725,6 @@ Recent (");
             return FileExplorerHelper.GetFilePathFromNode(treeView.SelectedItem as BaseNode) is not null;
         }
 
-        public void ViewProperty()
-        {
-            var selectedItem = treeView.SelectedItem;
-            if (selectedItem is Property property)
-            {
-                SearchForProperty(property.Name);
-            }
-            else if (selectedItem is PropertyAssignmentMessage assignment)
-            {
-                SearchForProperty(assignment.Parent.Title);
-            }
-            else if (selectedItem is Folder reassignmentFolder
-                && reassignmentFolder.Parent is TimedNode parent
-                && (parent.Name == Strings.PropertyReassignmentFolder || parent.Name == Strings.PropertyAssignmentFolder))
-            {
-                SearchForProperty(reassignmentFolder.Name);
-            }
-        }
-
         public void SearchInSubtree()
         {
             if (treeView.SelectedItem is TimedNode treeNode)
@@ -2651,10 +3121,7 @@ Recent (");
                     case Target target when target.Parent is Folder:
                         return SearchForTarget(target.Name);
                     case Target target:
-                        return DisplayTarget(
-                            target.SourceFilePath,
-                            target.Name,
-                            evaluation: target.Project.GetEvaluation());
+                        return DisplayTarget(target.SourceFilePath, target.Name);
                     case Task task:
                         return DisplayTask(task);
                     case AddItem addItem:
@@ -2704,8 +3171,7 @@ Recent (");
 
                             if (documentWell.tabControl.SelectedItem is TabItem current &&
                                 current.Content is TextViewerControl currentTextViewer &&
-                                currentTextViewer.EditorExtension is { } extension &&
-                                extension.PreprocessContext != null)
+                                currentTextViewer.EditorExtension is { } extension)
                             {
                                 int offset = extension.PreprocessContext.FindFileOffset(sourceFilePath);
                                 if (offset > 0)
@@ -2720,11 +3186,6 @@ Recent (");
                         return DisplayFile(hasSourceFile.SourceFilePath, line, evaluation: evaluation);
                     case SourceFileLine sourceFileLine when sourceFileLine.Parent is SourceFile sourceFile && sourceFile.SourceFilePath != null:
                         return DisplayFile(sourceFile.SourceFilePath, sourceFileLine.LineNumber);
-                    case Property property:
-                        return SearchForProperty(property.Name);
-                    case Folder folder when folder.Parent is TimedNode parent &&
-                        (parent.Name == Strings.PropertyReassignmentFolder || parent.Name == Strings.PropertyAssignmentFolder):
-                        return SearchForProperty(folder.Name);
                     default:
                         return false;
                 }
@@ -2781,12 +3242,6 @@ Recent (");
             return true;
         }
 
-        private bool SearchForProperty(string name)
-        {
-            SelectPropertiesAndItemsTab($"$property \"{name}\"");
-            return true;
-        }
-
         private bool DisplayEmbeddedFile(Item item)
         {
             string path = item.Text;
@@ -2816,28 +3271,27 @@ Recent (");
                 preprocess = preprocessedFileManager.GetPreprocessAction(preprocessableFilePath, PreprocessedFileManager.GetEvaluationKey(evaluation));
             }
 
+            EditorExtension editorExtension = null;
             var context = preprocessedFileManager.TryGetContext(sourceFilePath);
-            evaluation ??= context?.Evaluation;
-
-            var editorExtension = new EditorExtension();
-            editorExtension.PreprocessContext = context;
-            editorExtension.Evaluation = evaluation;
-
-            editorExtension.ImportSelected += import =>
+            if (context != null)
             {
-                if (import != null)
+                editorExtension = new EditorExtension();
+                editorExtension.PreprocessContext = context;
+
+                evaluation ??= context.Evaluation;
+
+                editorExtension.ImportSelected += import =>
                 {
-                    UpdateBreadcrumb(import);
-                }
-                else if (evaluation != null)
-                {
-                    UpdateBreadcrumb(evaluation);
-                }
-            };
-            editorExtension.GoToProperty += propertyName =>
-            {
-                SearchForProperty(propertyName);
-            };
+                    if (import != null)
+                    {
+                        UpdateBreadcrumb(import);
+                    }
+                    else if (evaluation != null)
+                    {
+                        UpdateBreadcrumb(evaluation);
+                    }
+                };
+            }
 
             documentWell.DisplaySource(
                 preprocessableFilePath,
@@ -2886,7 +3340,7 @@ Recent (");
             return DisplayTarget(sourceFilePath, target.Name, name);
         }
 
-        public bool DisplayTarget(string sourceFilePath, string targetName, string taskName = null, ProjectEvaluation evaluation = null)
+        public bool DisplayTarget(string sourceFilePath, string targetName, string taskName = null)
         {
             var text = sourceFileResolver.GetSourceFileText(sourceFilePath);
             if (text == null)
@@ -2927,7 +3381,7 @@ Recent (");
                 line = text.GetLineNumberFromPosition(startPosition);
             }
 
-            return DisplayFile(sourceFilePath, line + 1, evaluation: evaluation);
+            return DisplayFile(sourceFilePath, line + 1);
         }
 
         private static BaseNode GetNode(RoutedEventArgs args)
@@ -2968,32 +3422,6 @@ Recent (");
                 };
 
                 folder.AddChildAtBeginning(showAllButton);
-            }
-
-            var projects = folder.Children
-                .OfType<ProxyNode>()
-                .Select(p => p.Original as Project)
-                .Where(p => p != null)
-                .ToArray();
-            if (projects.Length > 1 && projects.Length < 20)
-            {
-                var viewProjectGraphButton = new ButtonNode
-                {
-                    Text = $"View project graph"
-                };
-
-                viewProjectGraphButton.OnClick = () =>
-                {
-                    centralTabControl.SelectedItem = projectReferenceGraphTab;
-                    if (projectReferenceGraphTab.Content is GraphHostControl host)
-                    {
-                        var text = string.Join(";", projects.Select(p => Path.GetFileNameWithoutExtension(p.Name)).ToArray());
-                        host.SearchText = text;
-                        host.Locate(text);
-                    }
-                };
-
-                folder.AddChild(viewProjectGraphButton);
             }
 
             return folder.Children;
