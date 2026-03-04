@@ -621,7 +621,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                 {
                     try
                     {
-                        await TPLTask.Delay(2000);
+                        await TPLTask.Delay(1000);
                         var uriPsi = new System.Diagnostics.ProcessStartInfo
                         {
                             FileName = codeExe,
