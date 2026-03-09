@@ -56,6 +56,7 @@ namespace StructuredLogViewer.Controls
         private MenuItem searchInSubtreeItem;
         private MenuItem searchInNodeByNameItem;
         private MenuItem searchThisNode;
+        private MenuItem viewPropertyItem;
         private MenuItem excludeSubtreeFromSearchItem;
         private MenuItem excludeNodeByNameFromSearch;
         private MenuItem searchInclusiveWithinThisTimespan;  // Search with Start OR End time overlaps this duration.
@@ -158,7 +159,7 @@ namespace StructuredLogViewer.Controls
             propertiesAndItemsControl.RecentItemsCategory = "PropertiesAndItems";
 
             secretsSearch = (SecretsSearch)build.SearchExtensions.FirstOrDefault(se => se is SecretsSearch);
-            SetProjectContext(null);
+            SetProjectContext(null, force: true);
 
             VirtualizingPanel.SetIsVirtualizing(treeView, SettingsService.EnableTreeViewVirtualization);
 
@@ -233,7 +234,8 @@ namespace StructuredLogViewer.Controls
             searchInclusiveWithinThisTimespan = new MenuItem() { Header = "Search overlapping this duration" };
             searchExclusiveWithinThisTimespan = new MenuItem() { Header = "Search within this duration" };
             searchInNodeByNameItem = new MenuItem() { Header = "Search in this node." };
-            searchThisNode = new MenuItem() { Header = "Search This Node" };
+            searchThisNode = new MenuItem() { Header = "Search this node" };
+            viewPropertyItem = new MenuItem { Header = "View property" };
             goToTimeLineItem = new MenuItem() { Header = "Timeline" };
             goToTracingItem = new MenuItem() { Header = "Tracing" };
             copyChildrenItem = new MenuItem() { Header = "Copy children" };
@@ -251,10 +253,10 @@ namespace StructuredLogViewer.Controls
             copyFilePathItem = new MenuItem() { Header = "Copy file path" };
             showFileInExplorerItem = new MenuItem() { Header = "Show in Explorer" };
             preprocessItem = new MenuItem() { Header = "Preprocess" };
-            targetGraphItem = new MenuItem { Header = "Target Graph" };
-            propertyGraphItem = new MenuItem { Header = "Property Graph" };
-            viewInTargetGraphItem = new MenuItem { Header = "Target Graph" };
-            nugetGraphItem = new MenuItem { Header = "NuGet Graph" };
+            targetGraphItem = new MenuItem { Header = "Target graph" };
+            propertyGraphItem = new MenuItem { Header = "Property graph" };
+            viewInTargetGraphItem = new MenuItem { Header = "Target graph" };
+            nugetGraphItem = new MenuItem { Header = "NuGet graph" };
             var nugetImage = new System.Windows.Shapes.Path
             {
                 Data = (Geometry)Application.Current.FindResource("NuGetGeometry"),
@@ -279,6 +281,7 @@ namespace StructuredLogViewer.Controls
             searchExclusiveWithinThisTimespan.Click += (s, a) => SearchExclusiveWithinThisTimespan();
             searchInNodeByNameItem.Click += (s, a) => SearchInNodeByName();
             searchThisNode.Click += (s, a) => SearchThisNode();
+            viewPropertyItem.Click += (s, a) => ViewProperty();
             goToTimeLineItem.Click += (s, a) => GoToTimeLine();
             goToTracingItem.Click += (s, a) => GoToTracing();
             copyChildrenItem.Click += (s, a) => CopyChildren();
@@ -313,6 +316,7 @@ namespace StructuredLogViewer.Controls
             contextMenu.AddItem(debugItem);
             contextMenu.AddItem(viewSourceItem);
             contextMenu.AddItem(viewFullTextItem);
+            contextMenu.AddItem(viewPropertyItem);
             contextMenu.AddItem(openFileItem);
             contextMenu.AddItem(preprocessItem);
             contextMenu.AddItem(targetGraphItem);
@@ -1002,6 +1006,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             excludeNodeByNameFromSearch = null;
             searchInNodeByNameItem = null;
             searchThisNode = null;
+            viewPropertyItem = null;
             goToTimeLineItem = null;
             goToTracingItem = null;
             copyChildrenItem = null;
@@ -1404,11 +1409,30 @@ Recent (");
 
             var host = new GraphHostControl();
             host.DisplayText += text => DisplayText(text, "Graph");
-            host.GoToSearch += text => SelectPropertiesAndItemsTab($"$property {text}");
+            host.GoToSearch += text => SearchForProperty(text);
             host.Graph = graph;
             propertyGraphTab.Content = host;
             propertyGraphTab.Visibility = Visibility.Visible;
             centralTabControl.SelectedItem = propertyGraphTab;
+        }
+
+        public void ViewProperty()
+        {
+            var selectedItem = treeView.SelectedItem;
+            if (selectedItem is Property property)
+            {
+                SearchForProperty(property.Name);
+            }
+            else if (selectedItem is PropertyAssignmentMessage assignment)
+            {
+                SearchForProperty(assignment.Parent.Title);
+            }
+            else if (selectedItem is Folder reassignmentFolder
+                && reassignmentFolder.Parent is TimedNode parent
+                && (parent.Name == Strings.PropertyReassignmentFolder || parent.Name == Strings.PropertyAssignmentFolder))
+            {
+                SearchForProperty(reassignmentFolder.Name);
+            }
         }
 
         private void ViewTargetGraph(IProjectOrEvaluation projectOrEvaluation)
@@ -1598,6 +1622,20 @@ Recent (");
             else
             {
                 searchThisNode.Visibility = Visibility.Collapsed;
+            }
+
+            if (node is Property ||
+                node?.Parent is { } parent &&
+                (parent.Title == Strings.PropertyReassignmentFolder ||
+                parent?.Parent?.Title == Strings.PropertyReassignmentFolder ||
+                parent.Title == Strings.PropertyAssignmentFolder ||
+                parent?.Parent?.Title == Strings.PropertyAssignmentFolder))
+            {
+                viewPropertyItem.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                viewPropertyItem.Visibility = Visibility.Collapsed;
             }
 
             bool isFavorite = IsFavorite(node);
@@ -2119,9 +2157,9 @@ Recent (");
 
         private object projectContext;
 
-        public void SetProjectContext(object contents)
+        public void SetProjectContext(object contents, bool force = false)
         {
-            if (projectContext == contents)
+            if (!force && projectContext == contents)
             {
                 return;
             }
@@ -3186,6 +3224,11 @@ Recent (");
                         return DisplayFile(hasSourceFile.SourceFilePath, line, evaluation: evaluation);
                     case SourceFileLine sourceFileLine when sourceFileLine.Parent is SourceFile sourceFile && sourceFile.SourceFilePath != null:
                         return DisplayFile(sourceFile.SourceFilePath, sourceFileLine.LineNumber);
+                    case Property property:
+                        return SearchForProperty(property.Name);
+                    case Folder folder when folder.Parent is TimedNode parent &&
+                        (parent.Name == Strings.PropertyReassignmentFolder || parent.Name == Strings.PropertyAssignmentFolder):
+                        return SearchForProperty(folder.Name);
                     default:
                         return false;
                 }
@@ -3224,6 +3267,12 @@ Recent (");
         {
             var text = $"$projectreference project({name})";
             searchLogControl.SearchText = text;
+            return true;
+        }
+
+        private bool SearchForProperty(string name)
+        {
+            SelectPropertiesAndItemsTab($"$property \"{name}\"");
             return true;
         }
 
@@ -3290,6 +3339,10 @@ Recent (");
                     {
                         UpdateBreadcrumb(evaluation);
                     }
+                };
+                editorExtension.GoToProperty += propertyName =>
+                {
+                    SearchForProperty(propertyName);
                 };
             }
 

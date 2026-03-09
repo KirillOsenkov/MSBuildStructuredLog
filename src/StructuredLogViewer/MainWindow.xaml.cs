@@ -11,6 +11,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Documents;
 using System.Windows.Threading;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Win32;
@@ -27,7 +28,6 @@ namespace StructuredLogViewer
         private BuildControl currentBuild;
         private string lastSearchText;
         private double scale = 1.0;
-        private bool vsCodeHintDismissed = false;
 
         public const string DefaultTitle = "MSBuild Structured Log Viewer";
 
@@ -502,9 +502,14 @@ namespace StructuredLogViewer
                 UpdateVSCodeTooltip(buildControl);
 
                 // Show hint bar on first build load (dismissible)
-                if (!vsCodeHintDismissed)
+                if (!SettingsService.VSCodeHintDismissed)
                 {
                     vsCodeHintBar.Visibility = Visibility.Visible;
+                    // Set text color based on theme — XAML resource bindings are unreliable for custom keys
+                    var hintForeground = ThemeManager.UseDarkTheme
+                        ? ThemeManager.ControlTextBrush
+                        : SystemColors.InfoTextBrush;
+                    vsCodeHintBar.SetValue(TextElement.ForegroundProperty, hintForeground);
                 }
             }
             else
@@ -1356,7 +1361,7 @@ that project." };
         private void DismissVSCodeHint_Click(object sender, RoutedEventArgs e)
         {
             vsCodeHintBar.Visibility = Visibility.Collapsed;
-            vsCodeHintDismissed = true;
+            SettingsService.VSCodeHintDismissed = true;
         }
     }
 }

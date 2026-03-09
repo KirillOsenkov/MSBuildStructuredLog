@@ -374,6 +374,14 @@ namespace StructuredLogViewer
             set => Set(ref useDarkTheme, value);
         }
 
+        private static bool vsCodeHintDismissed = false;
+        public static bool VSCodeHintDismissed
+        {
+            get => Get(ref vsCodeHintDismissed);
+
+            set => Set(ref vsCodeHintDismissed, value);
+        }
+
         private static string? windowPosition;
         public static string? WindowPosition
         {
@@ -403,6 +411,7 @@ namespace StructuredLogViewer
         const string MarkResultsInTreeSetting = "MarkResultsInTree=";
         const string ShowConfigurationAndPlatformSetting = "ShowConfigurationAndPlatform=";
         const string UseDarkThemeSetting = "UseDarkTheme=";
+        const string VSCodeHintDismissedSetting = "VSCodeHintDismissed=";
         const string WindowPositionSetting = "WindowPosition=";
         const string IgnoreEmbeddedFilesSetting = "IgnoreEmbeddedFiles=";
 
@@ -414,6 +423,7 @@ namespace StructuredLogViewer
             sb.AppendLine(MarkResultsInTreeSetting + markResultsInTree.ToString());
             sb.AppendLine(ShowConfigurationAndPlatformSetting + ShowConfigurationAndPlatform.ToString());
             sb.AppendLine(UseDarkThemeSetting + useDarkTheme.ToString());
+            sb.AppendLine(VSCodeHintDismissedSetting + vsCodeHintDismissed.ToString());
             sb.AppendLine(WindowPositionSetting + windowPosition);
             sb.AppendLine(IgnoreEmbeddedFilesSetting + IgnoreEmbeddedFiles);
 
@@ -442,6 +452,7 @@ namespace StructuredLogViewer
                     ProcessLine(MarkResultsInTreeSetting, line, ref markResultsInTree);
                     ProcessLine(ShowConfigurationAndPlatformSetting, line, ref ProjectOrEvaluationHelper.ShowConfigurationAndPlatform);
                     ProcessLine(UseDarkThemeSetting, line, ref useDarkTheme);
+                    ProcessLine(VSCodeHintDismissedSetting, line, ref vsCodeHintDismissed);
                     ProcessString(WindowPositionSetting, line, ref windowPosition);
                     ProcessString(IgnoreEmbeddedFilesSetting, line, ref ignoreEmbeddedFiles);
 
