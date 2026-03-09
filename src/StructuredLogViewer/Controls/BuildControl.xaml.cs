@@ -29,6 +29,17 @@ namespace StructuredLogViewer.Controls
         public TreeViewItem SelectedTreeViewItem { get; private set; }
         public string LogFilePath => Build?.LogFilePath;
 
+        private readonly List<string> attachedBinlogs = new List<string>();
+        public int AttachedBinlogCount => attachedBinlogs.Count;
+
+        public void AttachBinlog(string path)
+        {
+            if (!string.IsNullOrEmpty(path) && !attachedBinlogs.Contains(path, StringComparer.OrdinalIgnoreCase))
+            {
+                attachedBinlogs.Add(path);
+            }
+        }
+
         private SourceFileResolver sourceFileResolver;
         private ArchiveFileResolver archiveFile => sourceFileResolver.ArchiveFile;
         private PreprocessedFileManager preprocessedFileManager;
@@ -438,6 +449,192 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             navigationHelper.OpenFileRequested += filePath => DisplayFile(filePath);
 
             centralTabControl.SelectionChanged += CentralTabControl_SelectionChanged;
+        }
+
+        /// <summary>
+        /// Returns the workspace directory for VS Code.
+        /// Uses the binlog file's directory, or null if the path doesn't exist locally.
+        /// </summary>
+        public string GetWorkspacePath()
+        {
+            if (Build == null) return null;
+
+            var binlogDir = Path.GetDirectoryName(Build.LogFilePath);
+            if (!string.IsNullOrEmpty(binlogDir) && Directory.Exists(binlogDir))
+            {
+                return FindRepoRoot(binlogDir) ?? binlogDir;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Walks up from a directory to find a repository root (contains .git, .sln, or .csproj).
+        /// </summary>
+        private static string FindRepoRoot(string startDir)
+        {
+            var dir = startDir;
+            while (!string.IsNullOrEmpty(dir))
+            {
+                if (Directory.Exists(Path.Combine(dir, ".git")))
+                    return dir;
+                if (Directory.GetFiles(dir, "*.sln", SearchOption.TopDirectoryOnly).Length > 0)
+                    return dir;
+                var parent = Path.GetDirectoryName(dir);
+                if (parent == dir) break;
+                dir = parent;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Launches VS Code with the workspace folder and binlog URI handler.
+        /// Auto-installs the binlog-analyzer extension if not already installed.
+        /// </summary>
+        public void OpenInVSCode()
+        {
+            var binlogPath = Build?.LogFilePath;
+            if (string.IsNullOrEmpty(binlogPath))
+            {
+                MessageBox.Show("No binlog file path available.", "Open in VS Code", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var codeExe = FindVSCodeExecutable();
+            if (codeExe == null)
+            {
+                MessageBox.Show(
+                    "Could not find VS Code (Code.exe). Make sure VS Code is installed.",
+                    "Open in VS Code",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+                return;
+            }
+
+            try
+            {
+                TPLTask.Run(() => EnsureExtensionInstalled(codeExe));
+
+                var folder = GetWorkspacePath();
+
+                // Build the URI to trigger the extension's binlog loading
+                var uri = "vscode://dotutils.binlog-analyzer/open?path=" + Uri.EscapeDataString(binlogPath);
+                foreach (var attached in attachedBinlogs)
+                {
+                    uri += "&path=" + Uri.EscapeDataString(attached);
+                }
+
+                // Launch VS Code with folder, then send URI after a short delay.
+                // Combining --new-window + --open-url in one call can cause VS Code to ignore the folder.
+                var folderArg = !string.IsNullOrEmpty(folder) ? $"\"{folder}\"" : "";
+                Process.Start(new ProcessStartInfo { FileName = codeExe, Arguments = $"--new-window {folderArg}".Trim(), UseShellExecute = true });
+
+                var capturedUri = uri;
+                TPLTask.Run(async () =>
+                {
+                    try
+                    {
+                        await TPLTask.Delay(1000);
+                        Process.Start(new ProcessStartInfo { FileName = codeExe, Arguments = $"--open-url \"{capturedUri}\"", UseShellExecute = true });
+                    }
+                    catch { }
+                });
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Failed to open VS Code.\n\n{ex.Message}",
+                    "Open in VS Code",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+        }
+
+        private static readonly string ExtensionId = "dotutils.binlog-analyzer";
+
+        private static void EnsureExtensionInstalled(string codeExe)
+        {
+            try
+            {
+                var codeDir = Path.GetDirectoryName(codeExe);
+                var codeCli = Path.Combine(codeDir, "bin", "code.cmd");
+                if (!File.Exists(codeCli))
+                {
+                    codeCli = Path.Combine(codeDir, "bin", "code");
+                }
+
+                // Check if extension is already installed
+                var checkPsi = new ProcessStartInfo
+                {
+                    FileName = "cmd.exe",
+                    Arguments = $"/c \"{codeCli}\" --list-extensions",
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardOutput = true,
+                };
+
+                using var checkProc = Process.Start(checkPsi);
+                var output = checkProc?.StandardOutput.ReadToEnd() ?? "";
+                checkProc?.WaitForExit(10000);
+
+                if (output.IndexOf(ExtensionId, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return;
+                }
+
+                // Install from VS Code Marketplace
+                var installPsi = new ProcessStartInfo
+                {
+                    FileName = "cmd.exe",
+                    Arguments = $"/c \"{codeCli}\" --install-extension {ExtensionId} --force",
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                };
+
+                using var installProc = Process.Start(installPsi);
+                installProc?.WaitForExit(60000);
+            }
+            catch
+            {
+                // Non-fatal — user can install manually
+            }
+        }
+
+        private static string FindVSCodeExecutable()
+        {
+            // Check common install locations for Code.exe
+            string[] candidates =
+            {
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "Microsoft VS Code", "Code.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft VS Code", "Code.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Microsoft VS Code", "Code.exe"),
+            };
+
+            foreach (var candidate in candidates)
+            {
+                if (File.Exists(candidate))
+                    return candidate;
+            }
+
+            // Fallback: resolve from code.cmd in PATH
+            try
+            {
+                var pathDirs = Environment.GetEnvironmentVariable("PATH")?.Split(Path.PathSeparator) ?? Array.Empty<string>();
+                foreach (var dir in pathDirs)
+                {
+                    var codeCmdPath = Path.Combine(dir, "code.cmd");
+                    if (File.Exists(codeCmdPath))
+                    {
+                        // code.cmd is in <install>/bin/, Code.exe is in <install>/
+                        var codeExe = Path.Combine(Path.GetDirectoryName(dir) ?? dir, "Code.exe");
+                        if (File.Exists(codeExe))
+                            return codeExe;
+                    }
+                }
+            }
+            catch { }
+
+            return null;
         }
 
         public void Dispose()

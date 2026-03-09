@@ -231,6 +231,7 @@ namespace StructuredLogViewer
                 SetResource("Theme_WhiteBackground", BackgroundBrush);
                 SetResource("Theme_ToolWindowBackground", BackgroundBrush);
                 SetResource("Theme_InfoBarBackground", GetBrush("#202040"));
+                SetResource("Theme_InfoBarForeground", ControlTextBrush);
 
                 UseAdonisDarkTheme = false;
 
@@ -544,6 +545,7 @@ namespace StructuredLogViewer
             SetResource(SystemColors.MenuTextColorKey, SystemColors.MenuTextColor);
             SetResource(SystemColors.MenuColorKey, SystemColors.MenuColor);
             SetResource("Theme_InfoBarBackground", SystemColors.InfoBrush);
+            SetResource("Theme_InfoBarForeground", SystemColors.InfoTextBrush);
         }
 
         private static void SetResource(object key, object value)
