@@ -236,6 +236,7 @@ namespace StructuredLogViewer.Controls
             searchInNodeByNameItem = new MenuItem() { Header = "Search in this node." };
             searchThisNode = new MenuItem() { Header = "Search this node" };
             viewPropertyItem = new MenuItem { Header = "View property" };
+
             goToTimeLineItem = new MenuItem() { Header = "Timeline" };
             goToTracingItem = new MenuItem() { Header = "Tracing" };
             copyChildrenItem = new MenuItem() { Header = "Copy children" };
@@ -1414,25 +1415,6 @@ Recent (");
             propertyGraphTab.Content = host;
             propertyGraphTab.Visibility = Visibility.Visible;
             centralTabControl.SelectedItem = propertyGraphTab;
-        }
-
-        public void ViewProperty()
-        {
-            var selectedItem = treeView.SelectedItem;
-            if (selectedItem is Property property)
-            {
-                SearchForProperty(property.Name);
-            }
-            else if (selectedItem is PropertyAssignmentMessage assignment)
-            {
-                SearchForProperty(assignment.Parent.Title);
-            }
-            else if (selectedItem is Folder reassignmentFolder
-                && reassignmentFolder.Parent is TimedNode parent
-                && (parent.Name == Strings.PropertyReassignmentFolder || parent.Name == Strings.PropertyAssignmentFolder))
-            {
-                SearchForProperty(reassignmentFolder.Name);
-            }
         }
 
         private void ViewTargetGraph(IProjectOrEvaluation projectOrEvaluation)
@@ -2767,6 +2749,25 @@ Recent (");
             return FileExplorerHelper.GetFilePathFromNode(treeView.SelectedItem as BaseNode) is not null;
         }
 
+        public void ViewProperty()
+        {
+            var selectedItem = treeView.SelectedItem;
+            if (selectedItem is Property property)
+            {
+                SearchForProperty(property.Name);
+            }
+            else if (selectedItem is PropertyAssignmentMessage assignment)
+            {
+                SearchForProperty(assignment.Parent.Title);
+            }
+            else if (selectedItem is Folder reassignmentFolder
+                && reassignmentFolder.Parent is TimedNode parent
+                && (parent.Name == Strings.PropertyReassignmentFolder || parent.Name == Strings.PropertyAssignmentFolder))
+            {
+                SearchForProperty(reassignmentFolder.Name);
+            }
+        }
+
         public void SearchInSubtree()
         {
             if (treeView.SelectedItem is TimedNode treeNode)
@@ -3163,7 +3164,10 @@ Recent (");
                     case Target target when target.Parent is Folder:
                         return SearchForTarget(target.Name);
                     case Target target:
-                        return DisplayTarget(target.SourceFilePath, target.Name);
+                        return DisplayTarget(
+                            target.SourceFilePath,
+                            target.Name,
+                            evaluation: target.Project.GetEvaluation());
                     case Task task:
                         return DisplayTask(task);
                     case AddItem addItem:
@@ -3213,7 +3217,8 @@ Recent (");
 
                             if (documentWell.tabControl.SelectedItem is TabItem current &&
                                 current.Content is TextViewerControl currentTextViewer &&
-                                currentTextViewer.EditorExtension is { } extension)
+                                currentTextViewer.EditorExtension is { } extension &&
+                                extension.PreprocessContext != null)
                             {
                                 int offset = extension.PreprocessContext.FindFileOffset(sourceFilePath);
                                 if (offset > 0)
@@ -3274,12 +3279,6 @@ Recent (");
             return true;
         }
 
-        private bool SearchForProperty(string name)
-        {
-            SelectPropertiesAndItemsTab($"$property \"{name}\"");
-            return true;
-        }
-
         private bool SearchForTarget(string name)
         {
             string text = searchLogControl.SearchText;
@@ -3292,6 +3291,12 @@ Recent (");
 
             text = $"$target \"{name}\"{project}";
             searchLogControl.SearchText = text;
+            return true;
+        }
+
+        private bool SearchForProperty(string name)
+        {
+            SelectPropertiesAndItemsTab($"$property \"{name}\"");
             return true;
         }
 
@@ -3324,31 +3329,28 @@ Recent (");
                 preprocess = preprocessedFileManager.GetPreprocessAction(preprocessableFilePath, PreprocessedFileManager.GetEvaluationKey(evaluation));
             }
 
-            EditorExtension editorExtension = null;
             var context = preprocessedFileManager.TryGetContext(sourceFilePath);
-            if (context != null)
+            evaluation ??= context?.Evaluation;
+
+            var editorExtension = new EditorExtension();
+            editorExtension.PreprocessContext = context;
+            editorExtension.Evaluation = evaluation;
+
+            editorExtension.ImportSelected += import =>
             {
-                editorExtension = new EditorExtension();
-                editorExtension.PreprocessContext = context;
-
-                evaluation ??= context.Evaluation;
-
-                editorExtension.ImportSelected += import =>
+                if (import != null)
                 {
-                    if (import != null)
-                    {
-                        UpdateBreadcrumb(import);
-                    }
-                    else if (evaluation != null)
-                    {
-                        UpdateBreadcrumb(evaluation);
-                    }
-                };
-                editorExtension.GoToProperty += propertyName =>
+                    UpdateBreadcrumb(import);
+                }
+                else if (evaluation != null)
                 {
-                    SearchForProperty(propertyName);
-                };
-            }
+                    UpdateBreadcrumb(evaluation);
+                }
+            };
+            editorExtension.GoToProperty += propertyName =>
+            {
+                SearchForProperty(propertyName);
+            };
 
             documentWell.DisplaySource(
                 preprocessableFilePath,
@@ -3397,7 +3399,7 @@ Recent (");
             return DisplayTarget(sourceFilePath, target.Name, name);
         }
 
-        public bool DisplayTarget(string sourceFilePath, string targetName, string taskName = null)
+        public bool DisplayTarget(string sourceFilePath, string targetName, string taskName = null, ProjectEvaluation evaluation = null)
         {
             var text = sourceFileResolver.GetSourceFileText(sourceFilePath);
             if (text == null)
@@ -3438,7 +3440,7 @@ Recent (");
                 line = text.GetLineNumberFromPosition(startPosition);
             }
 
-            return DisplayFile(sourceFilePath, line + 1);
+            return DisplayFile(sourceFilePath, line + 1, evaluation: evaluation);
         }
 
         private static BaseNode GetNode(RoutedEventArgs args)
@@ -3479,6 +3481,32 @@ Recent (");
                 };
 
                 folder.AddChildAtBeginning(showAllButton);
+            }
+
+            var projects = folder.Children
+                .OfType<ProxyNode>()
+                .Select(p => p.Original as Project)
+                .Where(p => p != null)
+                .ToArray();
+            if (projects.Length > 1 && projects.Length < 20)
+            {
+                var viewProjectGraphButton = new ButtonNode
+                {
+                    Text = $"View project graph"
+                };
+
+                viewProjectGraphButton.OnClick = () =>
+                {
+                    centralTabControl.SelectedItem = projectReferenceGraphTab;
+                    if (projectReferenceGraphTab.Content is GraphHostControl host)
+                    {
+                        var text = string.Join(";", projects.Select(p => Path.GetFileNameWithoutExtension(p.Name)).ToArray());
+                        host.SearchText = text;
+                        host.Locate(text);
+                    }
+                };
+
+                folder.AddChild(viewProjectGraphButton);
             }
 
             return folder.Children;
