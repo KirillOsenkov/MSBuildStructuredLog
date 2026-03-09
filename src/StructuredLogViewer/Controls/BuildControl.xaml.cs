@@ -452,70 +452,20 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
         }
 
         /// <summary>
-        /// Extracts the common workspace directory from the build's project files.
-        /// Only considers paths that exist on the local filesystem.
-        /// Falls back to the binlog file's directory if no valid workspace is found.
+        /// Returns the workspace directory for VS Code.
+        /// Uses the binlog file's directory, or null if the path doesn't exist locally.
         /// </summary>
         public string GetWorkspacePath()
         {
             if (Build == null) return null;
 
-            var projectPaths = new List<string>();
-            Build.VisitAllChildren<Microsoft.Build.Logging.StructuredLogger.Project>(p =>
+            var binlogDir = Path.GetDirectoryName(Build.LogFilePath);
+            if (!string.IsNullOrEmpty(binlogDir) && Directory.Exists(binlogDir))
             {
-                if (!string.IsNullOrEmpty(p.ProjectFile))
-                {
-                    var dir = Path.GetDirectoryName(p.ProjectFile);
-                    // Only include paths that actually exist on this machine
-                    // (filters out Linux/WSL paths, network paths that are unreachable, etc.)
-                    if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir))
-                        projectPaths.Add(dir);
-                }
-            });
-
-            if (projectPaths.Count == 0)
-            {
-                // No project paths exist locally — likely a cross-machine build.
-                // Return null so VS Code opens a clean window.
-                return null;
+                return FindRepoRoot(binlogDir) ?? binlogDir;
             }
 
-            // Deduplicate
-            projectPaths = projectPaths.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-
-            if (projectPaths.Count == 1) return projectPaths[0];
-
-            // Find common directory prefix
-            var first = projectPaths[0];
-            int commonLength = first.Length;
-            foreach (var path in projectPaths.Skip(1))
-            {
-                int len = Math.Min(commonLength, path.Length);
-                int lastSep = -1;
-                for (int i = 0; i < len; i++)
-                {
-                    if (char.ToLowerInvariant(first[i]) != char.ToLowerInvariant(path[i]))
-                        break;
-                    if (first[i] == Path.DirectorySeparatorChar || first[i] == Path.AltDirectorySeparatorChar)
-                        lastSep = i;
-                    if (i == len - 1)
-                        lastSep = len;
-                }
-                commonLength = lastSep >= 0 ? lastSep : 0;
-            }
-
-            if (commonLength <= 3)
-            {
-                // Common prefix is just a drive root (e.g. "C:\") — too broad, use binlog dir
-                var binlogDir = Path.GetDirectoryName(Build.LogFilePath);
-                return !string.IsNullOrEmpty(binlogDir) && Directory.Exists(binlogDir) ? binlogDir : projectPaths[0];
-            }
-
-            var common = first.Substring(0, commonLength);
-            if (common.EndsWith(Path.DirectorySeparatorChar.ToString()) || common.EndsWith(Path.AltDirectorySeparatorChar.ToString()))
-                common = common.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-
-            return common;
+            return null;
         }
 
         /// <summary>
@@ -543,16 +493,13 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
         /// </summary>
         public void OpenInVSCode()
         {
-            var workspacePath = GetWorkspacePath();
             var binlogPath = Build?.LogFilePath;
-
             if (string.IsNullOrEmpty(binlogPath))
             {
                 MessageBox.Show("No binlog file path available.", "Open in VS Code", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            // Find Code.exe directly to avoid cmd window flash from code.cmd
             var codeExe = FindVSCodeExecutable();
             if (codeExe == null)
             {
@@ -566,258 +513,41 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
             try
             {
-                // Auto-install the extension if needed (non-blocking, via code CLI)
                 TPLTask.Run(() => EnsureExtensionInstalled(codeExe));
 
-                // Use the workspace path if a local project was resolved
-                var folder = workspacePath;
+                var folder = GetWorkspacePath();
 
-                if (string.IsNullOrEmpty(folder))
-                {
-                    // Cross-machine binlog — VS Code extension will show its own notification
-                }
-
-                // Collect all binlog paths
-                var allBinlogPaths = new List<string> { binlogPath };
-                allBinlogPaths.AddRange(attachedBinlogs);
-
-                // Write binlog paths to .vscode/settings.json so the extension auto-loads them
-                if (!string.IsNullOrEmpty(folder) && Directory.Exists(folder))
-                {
-                    WriteBinlogSettings(folder, allBinlogPaths);
-                }
-
-                var args = new StringBuilder();
-                if (!string.IsNullOrEmpty(folder) && Directory.Exists(folder))
-                {
-                    // Open a new window with the project folder
-                    args.Append($"--new-window \"{folder}\" ");
-                }
-                else
-                {
-                    // No local project — open a clean new window
-                    args.Append("--new-window ");
-                }
-
-                // Pass URI to trigger the extension's binlog loading
-                var uriBuilder = new StringBuilder("vscode://dotutils.binlog-analyzer/open?path=");
-                uriBuilder.Append(Uri.EscapeDataString(binlogPath));
-
+                // Build the URI to trigger the extension's binlog loading
+                var uri = "vscode://dotutils.binlog-analyzer/open?path=" + Uri.EscapeDataString(binlogPath);
                 foreach (var attached in attachedBinlogs)
                 {
-                    uriBuilder.Append("&path=");
-                    uriBuilder.Append(Uri.EscapeDataString(attached));
+                    uri += "&path=" + Uri.EscapeDataString(attached);
                 }
 
-                // Launch VS Code with folder first, then send URI after a delay.
-                // Combining --new-window + folder + --open-url in one call can cause
-                // VS Code to ignore the folder, so we split into two invocations.
-                var psi = new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = codeExe,
-                    Arguments = args.ToString().Trim(),
-                    UseShellExecute = true,
-                };
-                System.Diagnostics.Process.Start(psi);
+                // Launch VS Code with folder, then send URI after a short delay.
+                // Combining --new-window + --open-url in one call can cause VS Code to ignore the folder.
+                var folderArg = !string.IsNullOrEmpty(folder) ? $"\"{folder}\"" : "";
+                Process.Start(new ProcessStartInfo { FileName = codeExe, Arguments = $"--new-window {folderArg}".Trim(), UseShellExecute = true });
 
-                // Send the URI after VS Code has opened the folder window
-                var uriArgs = $"--open-url \"{uriBuilder}\"";
+                var capturedUri = uri;
                 TPLTask.Run(async () =>
                 {
                     try
                     {
                         await TPLTask.Delay(1000);
-                        var uriPsi = new System.Diagnostics.ProcessStartInfo
-                        {
-                            FileName = codeExe,
-                            Arguments = uriArgs,
-                            UseShellExecute = true,
-                        };
-                        System.Diagnostics.Process.Start(uriPsi);
+                        Process.Start(new ProcessStartInfo { FileName = codeExe, Arguments = $"--open-url \"{capturedUri}\"", UseShellExecute = true });
                     }
-                    catch { /* non-fatal */ }
+                    catch { }
                 });
             }
             catch (Exception ex)
             {
                 MessageBox.Show(
-                    $"Failed to open VS Code. Make sure VS Code is installed.\n\n{ex.Message}",
+                    $"Failed to open VS Code.\n\n{ex.Message}",
                     "Open in VS Code",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
             }
-        }
-
-        /// <summary>
-        /// Writes binlog paths and MCP server config into .vscode/settings.json and .vscode/mcp.json
-        /// so the VS Code extension and MCP runtime find everything on startup.
-        /// </summary>
-        private void WriteBinlogSettings(string workspaceFolder, List<string> binlogPaths)
-        {
-            try
-            {
-                var vscodeDir = Path.Combine(workspaceFolder, ".vscode");
-                if (!Directory.Exists(vscodeDir))
-                {
-                    Directory.CreateDirectory(vscodeDir);
-                }
-
-                // Find the MCP server executable
-                var mcpExe = FindBinlogMcpTool();
-
-                // Write .vscode/settings.json with active binlogs
-                WriteSettingsJson(vscodeDir, binlogPaths);
-
-                // Write .vscode/mcp.json with MCP server config (VS Code reads this on startup)
-                WriteMcpJson(vscodeDir, binlogPaths, mcpExe);
-            }
-            catch
-            {
-                // Non-fatal — the extension will configure MCP on activation
-            }
-        }
-
-        private static void WriteSettingsJson(string vscodeDir, List<string> binlogPaths)
-        {
-            var settingsPath = Path.Combine(vscodeDir, "settings.json");
-
-            string json = "{}";
-            if (File.Exists(settingsPath))
-            {
-                json = File.ReadAllText(settingsPath);
-            }
-
-            var doc = System.Text.Json.JsonDocument.Parse(json);
-            var dict = new Dictionary<string, System.Text.Json.JsonElement>();
-            foreach (var prop in doc.RootElement.EnumerateObject())
-            {
-                dict[prop.Name] = prop.Value;
-            }
-
-            using var ms = new System.IO.MemoryStream();
-            using (var writer = new System.Text.Json.Utf8JsonWriter(ms, new System.Text.Json.JsonWriterOptions { Indented = true }))
-            {
-                writer.WriteStartObject();
-                foreach (var kvp in dict)
-                {
-                    if (kvp.Key == "binlogAnalyzer.activeBinlogs")
-                        continue;
-                    writer.WritePropertyName(kvp.Key);
-                    kvp.Value.WriteTo(writer);
-                }
-
-                writer.WritePropertyName("binlogAnalyzer.activeBinlogs");
-                writer.WriteStartArray();
-                foreach (var p in binlogPaths)
-                {
-                    writer.WriteStringValue(p);
-                }
-                writer.WriteEndArray();
-
-                writer.WriteEndObject();
-            }
-
-            File.WriteAllText(settingsPath, System.Text.Encoding.UTF8.GetString(ms.ToArray()));
-        }
-
-        private static void WriteMcpJson(string vscodeDir, List<string> binlogPaths, string mcpExe)
-        {
-            var mcpJsonPath = Path.Combine(vscodeDir, "mcp.json");
-
-            // Read existing or start fresh
-            Dictionary<string, object> mcpData;
-            Dictionary<string, object> servers;
-
-            if (File.Exists(mcpJsonPath))
-            {
-                var existing = System.Text.Json.JsonDocument.Parse(File.ReadAllText(mcpJsonPath));
-                mcpData = new Dictionary<string, object>();
-                servers = new Dictionary<string, object>();
-
-                if (existing.RootElement.TryGetProperty("servers", out var serversEl))
-                {
-                    foreach (var prop in serversEl.EnumerateObject())
-                    {
-                        if (prop.Name != "baronfel_binlog_mcp" && prop.Name != "binlog-mcp")
-                        {
-                            servers[prop.Name] = prop.Value;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                mcpData = new Dictionary<string, object>();
-                servers = new Dictionary<string, object>();
-            }
-
-            // Build the MCP server entry
-            var binlogArgs = new List<string>();
-            foreach (var p in binlogPaths)
-            {
-                binlogArgs.Add("--binlog");
-                binlogArgs.Add(p);
-            }
-
-            using var ms = new System.IO.MemoryStream();
-            using (var writer = new System.Text.Json.Utf8JsonWriter(ms, new System.Text.Json.JsonWriterOptions { Indented = true }))
-            {
-                writer.WriteStartObject();
-                writer.WritePropertyName("servers");
-                writer.WriteStartObject();
-
-                // Write existing servers
-                foreach (var kvp in servers)
-                {
-                    writer.WritePropertyName(kvp.Key);
-                    ((System.Text.Json.JsonElement)kvp.Value).WriteTo(writer);
-                }
-
-                // Write our server
-                writer.WritePropertyName("baronfel_binlog_mcp");
-                writer.WriteStartObject();
-                writer.WriteString("type", "stdio");
-                writer.WriteString("command", mcpExe ?? "binlog.mcp");
-                writer.WritePropertyName("args");
-                writer.WriteStartArray();
-                foreach (var arg in binlogArgs)
-                {
-                    writer.WriteStringValue(arg);
-                }
-                writer.WriteEndArray();
-                writer.WriteEndObject();
-
-                writer.WriteEndObject(); // servers
-                writer.WriteEndObject(); // root
-            }
-
-            File.WriteAllText(mcpJsonPath, System.Text.Encoding.UTF8.GetString(ms.ToArray()));
-        }
-
-        /// <summary>
-        /// Finds the binlog.mcp global dotnet tool executable.
-        /// </summary>
-        private static string FindBinlogMcpTool()
-        {
-            var homeDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            var toolPath = Path.Combine(homeDir, ".dotnet", "tools", "binlog.mcp.exe");
-            if (File.Exists(toolPath))
-            {
-                return toolPath;
-            }
-
-            // Check PATH
-            var pathVar = Environment.GetEnvironmentVariable("PATH") ?? "";
-            foreach (var dir in pathVar.Split(Path.PathSeparator))
-            {
-                var candidate = Path.Combine(dir, "binlog.mcp.exe");
-                if (File.Exists(candidate))
-                {
-                    return candidate;
-                }
-            }
-
-            return null;
         }
 
         private static readonly string ExtensionId = "dotutils.binlog-analyzer";
@@ -826,7 +556,6 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
         {
             try
             {
-                // Find the code CLI (code.cmd) from Code.exe path
                 var codeDir = Path.GetDirectoryName(codeExe);
                 var codeCli = Path.Combine(codeDir, "bin", "code.cmd");
                 if (!File.Exists(codeCli))
@@ -834,8 +563,8 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                     codeCli = Path.Combine(codeDir, "bin", "code");
                 }
 
-                // Check if extension is installed
-                var checkPsi = new System.Diagnostics.ProcessStartInfo
+                // Check if extension is already installed
+                var checkPsi = new ProcessStartInfo
                 {
                     FileName = "cmd.exe",
                     Arguments = $"/c \"{codeCli}\" --list-extensions",
@@ -844,76 +573,31 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                     RedirectStandardOutput = true,
                 };
 
-                using var checkProc = System.Diagnostics.Process.Start(checkPsi);
+                using var checkProc = Process.Start(checkPsi);
                 var output = checkProc?.StandardOutput.ReadToEnd() ?? "";
                 checkProc?.WaitForExit(10000);
 
                 if (output.IndexOf(ExtensionId, StringComparison.OrdinalIgnoreCase) >= 0)
                 {
-                    return; // Already installed
+                    return;
                 }
 
-                // Find the .vsix file bundled alongside the viewer
-                var vsixPath = FindBundledVsix();
-                if (vsixPath != null)
+                // Install from VS Code Marketplace
+                var installPsi = new ProcessStartInfo
                 {
-                    // Install from bundled vsix
-                    var installPsi = new System.Diagnostics.ProcessStartInfo
-                    {
-                        FileName = "cmd.exe",
-                        Arguments = $"/c \"{codeCli}\" --install-extension \"{vsixPath}\" --force",
-                        UseShellExecute = false,
-                        CreateNoWindow = true,
-                    };
+                    FileName = "cmd.exe",
+                    Arguments = $"/c \"{codeCli}\" --install-extension {ExtensionId} --force",
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                };
 
-                    using var installProc = System.Diagnostics.Process.Start(installPsi);
-                    installProc?.WaitForExit(30000);
-                }
-                else
-                {
-                    // Install from VS Code Marketplace
-                    var installPsi = new System.Diagnostics.ProcessStartInfo
-                    {
-                        FileName = "cmd.exe",
-                        Arguments = $"/c \"{codeCli}\" --install-extension {ExtensionId} --force",
-                        UseShellExecute = false,
-                        CreateNoWindow = true,
-                    };
-
-                    using var installProc = System.Diagnostics.Process.Start(installPsi);
-                    installProc?.WaitForExit(60000);
-                }
+                using var installProc = Process.Start(installPsi);
+                installProc?.WaitForExit(60000);
             }
             catch
             {
                 // Non-fatal — user can install manually
             }
-        }
-
-        private static string FindBundledVsix()
-        {
-            // Look for the .vsix next to the viewer executable
-            var exeDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-            if (exeDir == null) return null;
-
-            var vsixFiles = Directory.GetFiles(exeDir, "binlog-analyzer-*.vsix");
-            if (vsixFiles.Length > 0)
-            {
-                return vsixFiles.OrderByDescending(f => f).First();
-            }
-
-            // Also check a "extensions" subdirectory
-            var extDir = Path.Combine(exeDir, "extensions");
-            if (Directory.Exists(extDir))
-            {
-                vsixFiles = Directory.GetFiles(extDir, "binlog-analyzer-*.vsix");
-                if (vsixFiles.Length > 0)
-                {
-                    return vsixFiles.OrderByDescending(f => f).First();
-                }
-            }
-
-            return null;
         }
 
         private static string FindVSCodeExecutable()
