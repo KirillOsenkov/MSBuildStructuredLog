@@ -23,6 +23,22 @@ using TPLTask = System.Threading.Tasks.Task;
 
 namespace StructuredLogViewer.Controls
 {
+    public class VSCodeInstallation
+    {
+        public string Name { get; }
+        public string ExePath { get; }
+        public string UriScheme { get; }
+        public string CliName { get; }
+
+        public VSCodeInstallation(string name, string exePath, string uriScheme, string cliName)
+        {
+            Name = name;
+            ExePath = exePath;
+            UriScheme = uriScheme;
+            CliName = cliName;
+        }
+    }
+
     public partial class BuildControl : UserControl
     {
         public Build Build { get; set; }
@@ -491,7 +507,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
         /// Launches VS Code with the workspace folder and binlog URI handler.
         /// Auto-installs the binlog-analyzer extension if not already installed.
         /// </summary>
-        public void OpenInVSCode()
+        public void OpenInVSCode(VSCodeInstallation installation = null)
         {
             var binlogPath = Build?.LogFilePath;
             if (string.IsNullOrEmpty(binlogPath))
@@ -500,11 +516,16 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                 return;
             }
 
-            var codeExe = FindVSCodeExecutable();
-            if (codeExe == null)
+            if (installation == null)
+            {
+                var installations = FindVSCodeInstallations();
+                installation = installations.FirstOrDefault();
+            }
+
+            if (installation == null)
             {
                 MessageBox.Show(
-                    "Could not find VS Code (Code.exe). Make sure VS Code is installed.",
+                    "Could not find VS Code or VS Code Insiders.\nMake sure one of them is installed.",
                     "Open in VS Code",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
@@ -513,12 +534,12 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
             try
             {
-                TPLTask.Run(() => EnsureExtensionInstalled(codeExe));
+                TPLTask.Run(() => EnsureExtensionInstalled(installation));
 
                 var folder = GetWorkspacePath();
 
-                // Build the URI to trigger the extension's binlog loading
-                var uri = "vscode://dotutils.binlog-analyzer/open?path=" + Uri.EscapeDataString(binlogPath);
+                // Build the URI using the correct scheme for this variant
+                var uri = $"{installation.UriScheme}://dotutils.binlog-analyzer/open?path=" + Uri.EscapeDataString(binlogPath);
                 foreach (var attached in attachedBinlogs)
                 {
                     uri += "&path=" + Uri.EscapeDataString(attached);
@@ -526,6 +547,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
                 // Launch VS Code with folder, then send URI after a short delay.
                 // Combining --new-window + --open-url in one call can cause VS Code to ignore the folder.
+                var codeExe = installation.ExePath;
                 var folderArg = !string.IsNullOrEmpty(folder) ? $"\"{folder}\"" : "";
                 Process.Start(new ProcessStartInfo { FileName = codeExe, Arguments = $"--new-window {folderArg}".Trim(), UseShellExecute = true });
 
@@ -543,8 +565,8 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             catch (Exception ex)
             {
                 MessageBox.Show(
-                    $"Failed to open VS Code.\n\n{ex.Message}",
-                    "Open in VS Code",
+                    $"Failed to open {installation.Name}.\n\n{ex.Message}",
+                    $"Open in {installation.Name}",
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
             }
@@ -552,15 +574,15 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
         private static readonly string ExtensionId = "dotutils.binlog-analyzer";
 
-        private static void EnsureExtensionInstalled(string codeExe)
+        private static void EnsureExtensionInstalled(VSCodeInstallation installation)
         {
             try
             {
-                var codeDir = Path.GetDirectoryName(codeExe);
-                var codeCli = Path.Combine(codeDir, "bin", "code.cmd");
+                var codeDir = Path.GetDirectoryName(installation.ExePath);
+                var codeCli = Path.Combine(codeDir, "bin", installation.CliName + ".cmd");
                 if (!File.Exists(codeCli))
                 {
-                    codeCli = Path.Combine(codeDir, "bin", "code");
+                    codeCli = Path.Combine(codeDir, "bin", installation.CliName);
                 }
 
                 // Check if extension is already installed
@@ -600,41 +622,64 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             }
         }
 
-        private static string FindVSCodeExecutable()
+        public static List<VSCodeInstallation> FindVSCodeInstallations()
         {
-            // Check common install locations for Code.exe
-            string[] candidates =
+            var installations = new List<VSCodeInstallation>();
+
+            var variants = new[]
             {
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "Microsoft VS Code", "Code.exe"),
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft VS Code", "Code.exe"),
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Microsoft VS Code", "Code.exe"),
+                new { Name = "VS Code", FolderName = "Microsoft VS Code", ExeName = "Code.exe", UriScheme = "vscode", CliName = "code" },
+                new { Name = "VS Code Insiders", FolderName = "Microsoft VS Code Insiders", ExeName = "Code - Insiders.exe", UriScheme = "vscode-insiders", CliName = "code-insiders" },
             };
 
-            foreach (var candidate in candidates)
+            foreach (var variant in variants)
             {
-                if (File.Exists(candidate))
-                    return candidate;
+                string[] candidates =
+                {
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", variant.FolderName, variant.ExeName),
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), variant.FolderName, variant.ExeName),
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), variant.FolderName, variant.ExeName),
+                };
+
+                foreach (var candidate in candidates)
+                {
+                    if (File.Exists(candidate))
+                    {
+                        installations.Add(new VSCodeInstallation(variant.Name, candidate, variant.UriScheme, variant.CliName));
+                        break;
+                    }
+                }
             }
 
-            // Fallback: resolve from code.cmd in PATH
+            // Fallback: resolve from code.cmd / code-insiders.cmd in PATH
             try
             {
                 var pathDirs = Environment.GetEnvironmentVariable("PATH")?.Split(Path.PathSeparator) ?? Array.Empty<string>();
-                foreach (var dir in pathDirs)
+                foreach (var variant in variants)
                 {
-                    var codeCmdPath = Path.Combine(dir, "code.cmd");
-                    if (File.Exists(codeCmdPath))
+                    if (installations.Any(i => i.CliName == variant.CliName))
+                        continue;
+
+                    var cmdName = variant.CliName + ".cmd";
+                    foreach (var dir in pathDirs)
                     {
-                        // code.cmd is in <install>/bin/, Code.exe is in <install>/
-                        var codeExe = Path.Combine(Path.GetDirectoryName(dir) ?? dir, "Code.exe");
-                        if (File.Exists(codeExe))
-                            return codeExe;
+                        var codeCmdPath = Path.Combine(dir, cmdName);
+                        if (File.Exists(codeCmdPath))
+                        {
+                            // code.cmd is in <install>/bin/, Code.exe is in <install>/
+                            var codeExe = Path.Combine(Path.GetDirectoryName(dir) ?? dir, variant.ExeName);
+                            if (File.Exists(codeExe))
+                            {
+                                installations.Add(new VSCodeInstallation(variant.Name, codeExe, variant.UriScheme, variant.CliName));
+                                break;
+                            }
+                        }
                     }
                 }
             }
             catch { }
 
-            return null;
+            return installations;
         }
 
         public void Dispose()

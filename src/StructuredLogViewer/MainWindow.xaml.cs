@@ -29,6 +29,9 @@ namespace StructuredLogViewer
         private string lastSearchText;
         private double scale = 1.0;
 
+        private List<VSCodeInstallation> vsCodeInstallations;
+        private VSCodeInstallation selectedVSCodeInstallation;
+
         public const string DefaultTitle = "MSBuild Structured Log Viewer";
 
         public string VersionMessage { get; set; } = "Locally built version";
@@ -487,6 +490,7 @@ namespace StructuredLogViewer
                 projectFilePath = null;
                 currentBuild = null;
                 openInVSCodeButton.Visibility = Visibility.Collapsed;
+                vsCodeDropdownButton.Visibility = Visibility.Collapsed;
                 attachBinlogButton.Visibility = Visibility.Collapsed;
             }
 
@@ -496,7 +500,15 @@ namespace StructuredLogViewer
                 SaveAsMenu.Visibility = Visibility.Visible;
                 RedactSecretsMenu.Visibility = Visibility.Visible;
 
+                if (vsCodeInstallations == null)
+                {
+                    DetectVSCodeInstallations();
+                }
+
                 openInVSCodeButton.Visibility = Visibility.Visible;
+                vsCodeDropdownButton.Visibility = vsCodeInstallations.Count > 1
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
                 attachBinlogButton.Visibility = Visibility.Visible;
                 UpdateAttachmentLabel();
                 UpdateVSCodeTooltip(buildControl);
@@ -518,6 +530,7 @@ namespace StructuredLogViewer
                 SaveAsMenu.Visibility = Visibility.Collapsed;
                 RedactSecretsMenu.Visibility = Visibility.Collapsed;
                 openInVSCodeButton.Visibility = Visibility.Collapsed;
+                vsCodeDropdownButton.Visibility = Visibility.Collapsed;
                 attachBinlogButton.Visibility = Visibility.Collapsed;
                 vsCodeHintBar.Visibility = Visibility.Collapsed;
             }
@@ -1278,7 +1291,7 @@ that project." };
             var buildControl = CurrentBuildControl;
             if (buildControl != null)
             {
-                buildControl.OpenInVSCode();
+                buildControl.OpenInVSCode(selectedVSCodeInstallation);
             }
         }
 
@@ -1309,13 +1322,14 @@ that project." };
         {
             var buildControl = CurrentBuildControl;
             int count = buildControl?.AttachedBinlogCount ?? 0;
+            var variantName = selectedVSCodeInstallation?.Name ?? "VS Code";
             if (count > 0)
             {
-                openInVSCodeText.Text = $"Open in VS Code (+{count} binlog{(count > 1 ? "s" : "")})";
+                openInVSCodeText.Text = $"Open in {variantName} (+{count} binlog{(count > 1 ? "s" : "")})";
             }
             else
             {
-                openInVSCodeText.Text = "Open in VS Code";
+                openInVSCodeText.Text = $"Open in {variantName}";
             }
         }
 
@@ -1356,6 +1370,60 @@ that project." };
                    "• Click the status bar to manage loaded binlogs";
 
             openInVSCodeButton.ToolTip = tip;
+        }
+
+        private void DetectVSCodeInstallations()
+        {
+            vsCodeInstallations = BuildControl.FindVSCodeInstallations();
+
+            // Restore preferred variant from settings, or default to first detected
+            var preferred = SettingsService.PreferredVSCodeVariant;
+            selectedVSCodeInstallation = vsCodeInstallations.FirstOrDefault(i => i.Name == preferred)
+                ?? vsCodeInstallations.FirstOrDefault();
+
+            // Populate the dropdown context menu
+            vsCodeVariantMenu.Items.Clear();
+            foreach (var installation in vsCodeInstallations)
+            {
+                var item = new MenuItem
+                {
+                    Header = installation.Name,
+                    IsChecked = installation == selectedVSCodeInstallation,
+                    Tag = installation
+                };
+                item.Click += VSCodeVariant_Selected;
+                vsCodeVariantMenu.Items.Add(item);
+            }
+        }
+
+        private void VSCodeDropdown_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button button && button.ContextMenu != null)
+            {
+                button.ContextMenu.PlacementTarget = button;
+                button.ContextMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
+                button.ContextMenu.IsOpen = true;
+            }
+        }
+
+        private void VSCodeVariant_Selected(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem menuItem && menuItem.Tag is VSCodeInstallation installation)
+            {
+                selectedVSCodeInstallation = installation;
+                SettingsService.PreferredVSCodeVariant = installation.Name;
+
+                // Update checkmarks
+                foreach (var item in vsCodeVariantMenu.Items)
+                {
+                    if (item is MenuItem mi)
+                    {
+                        mi.IsChecked = mi.Tag == installation;
+                    }
+                }
+
+                UpdateAttachmentLabel();
+            }
         }
 
         private void DismissVSCodeHint_Click(object sender, RoutedEventArgs e)
