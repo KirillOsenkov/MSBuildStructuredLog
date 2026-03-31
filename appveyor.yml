@@ -9,7 +9,7 @@ environment:
     - job_name: Windows build
       appveyor_build_worker_image: Visual Studio 2022
     - job_name: macOS build
-      appveyor_build_worker_image: macOS
+      appveyor_build_worker_image: macos-sonoma
 
 matrix:
   fast_finish: true
