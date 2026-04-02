@@ -9,6 +9,7 @@ namespace StructuredLogViewer.Avalonia
         public override void Initialize()
         {
             AvaloniaXamlLoader.Load(this);
+            MacOsEnvironmentExporter.InheritUserPath();
         }
 
         public override void OnFrameworkInitializationCompleted()
