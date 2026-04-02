@@ -36,7 +36,7 @@ namespace StructuredLogViewer.Core
                 return (null, null!);
             }
 
-            if (process is null || process.HasExited)
+            if (process is null)
             {
                 return (null, null!);
             }
