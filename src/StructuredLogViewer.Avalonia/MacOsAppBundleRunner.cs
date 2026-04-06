@@ -74,6 +74,20 @@ public static class MacOsAppBundleRunner
         var appBundlePath = GetMacOsAppBundlePath(processPath);
         if (appBundlePath is null)
         {
+            // Not running inside an .app bundle – launch as a plain executable.
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = processPath,
+                    UseShellExecute = false,
+                });
+            }
+            catch
+            {
+                // Ignore failures – launching a new instance is best-effort.
+            }
+
             return;
         }
 
