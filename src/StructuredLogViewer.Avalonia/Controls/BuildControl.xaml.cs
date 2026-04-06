@@ -887,6 +887,8 @@ Recent:
 
         public string InitialSearchText { get; set; }
 
+        public string SearchText => searchLogControl?.SearchText;
+
         public void SelectItem(BaseNode item)
         {
             var parentChain = item.GetParentChainExcludingThis();
