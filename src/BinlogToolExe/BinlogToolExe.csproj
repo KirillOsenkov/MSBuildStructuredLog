@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <AssemblyName>binlogtool</AssemblyName>
     <OutputType>Exe</OutputType>
     <Version>$(BinlogToolVersion)</Version>
     <TargetFramework>net10.0</TargetFramework>
@@ -12,7 +13,7 @@
   <PropertyGroup>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <PublishSingleFile>True</PublishSingleFile>
-    <SelfContained>false</SelfContained>
+    <SelfContained>true</SelfContained>
     <PublishTrimmed>true</PublishTrimmed>
   </PropertyGroup>
 
