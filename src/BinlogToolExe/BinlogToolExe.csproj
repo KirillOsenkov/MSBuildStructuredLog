@@ -27,7 +27,7 @@
   </ItemGroup>
 
   <Target Name="PublishBinlogToolExe"
-          AfterTargets="AfterBuild"
+          DependsOnTargets="Publish"
           Condition="$(Configuration) == 'Release' AND $([MSBuild]::IsOSPlatform(`Windows`))">
     <PropertyGroup>
       <RootDir>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'MSBuildStructuredLog.sln'))</RootDir>
