@@ -112,6 +112,11 @@ public class PropertyGraph
     public SearchResult GetPropertyGraph(GraphWalkContext context)
     {
         var evaluation = context.Evaluation;
+        if (evaluation == null)
+        {
+            return null;
+        }
+
         var importsFolder = evaluation.ImportsFolder;
 
         if (importsFolder == null)
