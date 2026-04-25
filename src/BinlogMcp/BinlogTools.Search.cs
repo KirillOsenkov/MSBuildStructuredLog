@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -185,5 +186,27 @@ Each result line is: [id]<TAB>kind<TAB>summary")]
 
     [McpServerTool(Name = "get_search_syntax_help", ReadOnly = true, Idempotent = true)]
     [Description("Returns the full reference for the MSBuild Structured Log Viewer search query syntax used by the search tool. Call this once at the start of a session to learn what the search tool can do.")]
-    public static string GetSearchSyntaxHelp() => SearchSyntaxHelp.Text;
+    public static string GetSearchSyntaxHelp() => SearchSyntaxHelpText;
+
+    private const string ResourceName = "SearchSyntax.md";
+
+    private static string searchSyntaxHelpText;
+    public static string SearchSyntaxHelpText
+    {
+        get
+        {
+            if (searchSyntaxHelpText != null)
+            {
+                return searchSyntaxHelpText;
+            }
+
+            var assembly = typeof(BinlogTools).Assembly;
+            using var stream = assembly.GetManifestResourceStream(ResourceName)
+                ?? throw new InvalidOperationException(
+                    $"Embedded resource '{ResourceName}' not found in {assembly.FullName}.");
+            using var reader = new StreamReader(stream);
+            searchSyntaxHelpText = reader.ReadToEnd();
+            return searchSyntaxHelpText;
+        }
+    }
 }
