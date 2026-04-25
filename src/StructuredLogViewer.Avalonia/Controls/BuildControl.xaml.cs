@@ -66,6 +66,12 @@ namespace StructuredLogViewer.Avalonia.Controls
 
         private PropertiesAndItemsSearch propertiesAndItemsSearch;
 
+        static BuildControl()
+        {
+            PreprocessedFileManager.GetPreprocessedFilePath = SettingsService.GetPreprocessedFilePath;
+            PreprocessedFileManager.WriteContentToTempFileAndGetPath = SettingsService.WriteContentToTempFileAndGetPath;
+        }
+
         public BuildControl()
         {
         }

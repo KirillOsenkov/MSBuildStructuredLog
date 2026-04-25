@@ -10,6 +10,44 @@ namespace StructuredLogViewer
 {
     public class PreprocessedFileManager
     {
+        // Hooks injected by hosts (e.g. the viewer wires these to SettingsService).
+        // Defaults use Path.GetTempPath() so callers without a host (BinlogMcp,
+        // BinlogTool, tests) still work. Override before constructing the manager.
+        public static Func<string, string, string> GetPreprocessedFilePath { get; set; } = DefaultGetPreprocessedFilePath;
+        public static Func<string, string, string> WriteContentToTempFileAndGetPath { get; set; } = DefaultWriteContentToTempFileAndGetPath;
+
+        private static string DefaultGetPreprocessedFilePath(string content, string fileExtension)
+        {
+            var folder = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "MSBuildStructuredLog");
+            return System.IO.Path.Combine(folder, ComputeShortHash(content) + fileExtension);
+        }
+
+        private static string ComputeShortHash(string content)
+        {
+            using var md5 = System.Security.Cryptography.MD5.Create();
+            var bytes = md5.ComputeHash(System.Text.Encoding.UTF8.GetBytes(content ?? string.Empty));
+            var sb = new System.Text.StringBuilder(16);
+            for (int i = 0; i < 8; i++)
+            {
+                sb.Append(bytes[i].ToString("x2"));
+            }
+
+            return sb.ToString();
+        }
+
+        private static string DefaultWriteContentToTempFileAndGetPath(string content, string fileExtension)
+        {
+            var filePath = DefaultGetPreprocessedFilePath(content, fileExtension);
+            var folder = System.IO.Path.GetDirectoryName(filePath);
+            System.IO.Directory.CreateDirectory(folder);
+            if (!System.IO.File.Exists(filePath))
+            {
+                System.IO.File.WriteAllText(filePath, content);
+            }
+
+            return filePath;
+        }
+
         private readonly Build build;
         private readonly SourceFileResolver sourceFileResolver;
         private readonly Dictionary<string, Dictionary<string, Bucket>> importMapsPerEvaluation = new Dictionary<string, Dictionary<string, Bucket>>(StringComparer.OrdinalIgnoreCase);
@@ -286,7 +324,7 @@ namespace StructuredLogViewer
 
                 if (createdContext)
                 {
-                    var preprocessedFilePath = SettingsService.GetPreprocessedFilePath(result);
+                    var preprocessedFilePath = GetPreprocessedFilePath(result, ".xml");
                     preprocessContexts[preprocessedFilePath] = context;
                 }
             }
@@ -501,7 +539,7 @@ namespace StructuredLogViewer
                 return;
             }
 
-            var filePath = SettingsService.WriteContentToTempFileAndGetPath(preprocessedText, ".xml");
+            var filePath = WriteContentToTempFileAndGetPath(preprocessedText, ".xml");
             DisplayFile?.Invoke(filePath);
         }
 

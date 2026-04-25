@@ -116,6 +116,12 @@ namespace StructuredLogViewer.Controls
 
         private SecretsSearch secretsSearch;
 
+        static BuildControl()
+        {
+            PreprocessedFileManager.GetPreprocessedFilePath = SettingsService.GetPreprocessedFilePath;
+            PreprocessedFileManager.WriteContentToTempFileAndGetPath = SettingsService.WriteContentToTempFileAndGetPath;
+        }
+
         public BuildControl(Build build, string logFilePath)
         {
             InitializeComponent();
