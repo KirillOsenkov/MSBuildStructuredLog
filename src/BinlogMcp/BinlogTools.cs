@@ -1,6 +1,12 @@
+using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Text;
+using System.Threading;
+using Microsoft.Build.Logging.StructuredLogger;
 using ModelContextProtocol.Server;
+using StructuredLogViewer;
 
 namespace BinlogMcp
 {
@@ -9,8 +15,11 @@ namespace BinlogMcp
     {
         private static readonly BinlogCache Cache = new();
 
+        public const int DefaultMaxResults = 200;
+        public const int MaxAllowedResults = 5000;
+
         [McpServerTool(Name = "load_binlog", ReadOnly = true, Idempotent = true)]
-        [Description("Loads an MSBuild .binlog file into memory. Subsequent calls with the same path return the cached build unless the file has changed on disk. Must be called before any other tool that operates on the binlog.")]
+        [Description("Loads an MSBuild .binlog file into memory and returns a summary. Optional: any tool that takes a binlog path will load it implicitly if not already cached. Use this to warm the cache or to inspect the build summary up front.")]
         public static string LoadBinlog(
             [Description("Absolute path to a .binlog file")] string path)
         {
@@ -71,6 +80,99 @@ namespace BinlogMcp
                 $"duration: {build.Duration}",
                 $"msbuildVersion: {build.MSBuildVersion}",
             });
+        }
+
+        [McpServerTool(Name = "search", ReadOnly = true, Idempotent = true)]
+        [Description(@"Searches a binlog using the MSBuild Structured Log Viewer query syntax and returns matching node ids. The binlog is loaded implicitly if not already cached.
+
+Each result line is: [id]<TAB>kind<TAB>summary
+
+Use the returned ids with get_node, get_children, get_ancestors, print_subtree.
+
+Query syntax cheat sheet (call get_search_syntax_help for the full reference):
+  $error                       all errors
+  $warning                     all warnings
+  $task Csc                    all Csc task invocations
+  $target Build                all Build targets
+  $project MyProj              all projects whose name contains MyProj
+  under($project MyProj) CS1234   nodes containing CS1234 under MyProj
+  notunder($task Csc) error    errors not under a Csc task
+  $time>500ms                  timed nodes longer than 500ms
+  ""exact phrase""             literal substring match
+  name=Configuration value=Debug   precise field match
+  $42                          node with Index 42")]
+        public static string Search(
+            [Description("Absolute path to a loaded .binlog file")] string path,
+            [Description("Search query in MSBuild Structured Log Viewer syntax")] string query,
+            [Description("Maximum number of results to return (default 200, max 5000)")] int? maxResults = null,
+            [Description("Number of leading results to skip for paging (default 0)")] int? skip = null)
+        {
+            int take = Math.Clamp(maxResults ?? DefaultMaxResults, 1, MaxAllowedResults);
+            int offset = Math.Max(skip ?? 0, 0);
+
+            var entry = Cache.Load(path);
+
+            var index = entry.Build.SearchIndex;
+            if (index == null)
+            {
+                throw new InvalidOperationException(
+                    $"Binlog has no SearchIndex: {path}. Try reload_binlog.");
+            }
+
+            // SearchIndex.FindNodes is not thread-safe (mutates typeKeyword,
+            // bit vector). Serialize calls per build.
+            IReadOnlyList<SearchResult> results;
+            lock (index)
+            {
+                index.MaxResults = offset + take;
+                results = index.FindNodes(query, CancellationToken.None).ToArray();
+            }
+
+            int total = results.Count;
+            var page = results.Skip(offset).Take(take).ToArray();
+
+            var sb = new StringBuilder();
+            sb.Append("query: ").AppendLine(query);
+            sb.Append("returned: ").Append(page.Length)
+              .Append(" (skip=").Append(offset)
+              .Append(", take=").Append(take)
+              .Append(", matched=").Append(total);
+            if (total >= offset + take)
+            {
+                sb.Append("+");
+            }
+
+            sb.AppendLine(")");
+
+            if (page.Length == 0)
+            {
+                sb.AppendLine("(no results)");
+                return sb.ToString();
+            }
+
+            foreach (var result in page)
+            {
+                var node = result.Node;
+                if (node == null)
+                {
+                    continue;
+                }
+
+                string id = NodeId.Get(node) ?? "?";
+                string kind = node.TypeName ?? node.GetType().Name;
+                string summary = Summarize(node);
+                sb.Append('[').Append(id).Append("]\t")
+                  .Append(kind).Append('\t')
+                  .AppendLine(summary);
+            }
+
+            return sb.ToString();
+        }
+
+        private static string Summarize(BaseNode node)
+        {
+            string text = node.Title ?? node.ToString() ?? string.Empty;
+            return TextUtilities.ShortenValue(text, "...", maxChars: 300);
         }
     }
 }
