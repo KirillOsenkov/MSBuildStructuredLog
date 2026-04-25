@@ -27,6 +27,8 @@
     <PackageVersion Include="Microsoft.Build.Locator" Version="1.9.1" />
     <PackageVersion Include="Microsoft.Build.Tasks.Core" Version="$(MSBuildPackageVersion)" />
     <PackageVersion Include="Microsoft.Build.Utilities.Core" Version="$(MSBuildPackageVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
+    <PackageVersion Include="ModelContextProtocol" Version="1.2.0" />
     <PackageVersion Include="Microsoft.IO.Redist" Version="6.1.0" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
     <!-- never update Cecil as this is the version required by Squirrel -->
