@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\StructuredLogger\StructuredLogger.csproj" />
+    <ProjectReference Include="..\StructuredLogger.Utils\StructuredLogger.Utils.csproj" />
   </ItemGroup>
 
   <ItemGroup>
