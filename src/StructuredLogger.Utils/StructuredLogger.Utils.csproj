@@ -15,6 +15,7 @@
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="all" />
     <PackageReference Include="DotUtils.MsBuild.BinlogRedactor.SensitiveDataDetector" />
     <PackageReference Include="NuGet.ProjectModel" />
+    <PackageReference Include="GuiLabs.Language.Xml" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\StructuredLogger\StructuredLogger.csproj" />
