@@ -10,6 +10,11 @@ namespace BinlogMcp
     public sealed class LoadedBinlog
     {
         private TimedNode[] indexMap;
+        private SourceFileResolver sourceFileResolver;
+        private PreprocessedFileManager preprocessedFileManager;
+        private PropertiesAndItemsSearch propertiesAndItemsSearch;
+        private PropertyGraph propertyGraph;
+        private readonly object preprocessSync = new();
 
         public string Path { get; init; }
         public Build Build { get; init; }
@@ -49,6 +54,77 @@ namespace BinlogMcp
                 local = list.ToArray();
                 indexMap = local;
                 return local;
+            }
+        }
+
+        // Lazily constructed source-file pipeline matching the viewer's wiring:
+        // SourceFileResolver → PreprocessedFileManager → PropertyGraph subscribes
+        // to PropertiesAndItemsSearch.AugmentResults so that scoped searches over
+        // properties also surface the cross-import property graph as a result.
+        public SourceFileResolver SourceFileResolver
+        {
+            get
+            {
+                EnsurePropertiesPipeline();
+                return sourceFileResolver;
+            }
+        }
+
+        public PreprocessedFileManager PreprocessedFileManager
+        {
+            get
+            {
+                EnsurePropertiesPipeline();
+                return preprocessedFileManager;
+            }
+        }
+
+        public PropertiesAndItemsSearch PropertiesAndItemsSearch
+        {
+            get
+            {
+                EnsurePropertiesPipeline();
+                return propertiesAndItemsSearch;
+            }
+        }
+
+        public PropertyGraph PropertyGraph
+        {
+            get
+            {
+                EnsurePropertiesPipeline();
+                return propertyGraph;
+            }
+        }
+
+        private void EnsurePropertiesPipeline()
+        {
+            if (propertyGraph != null)
+            {
+                return;
+            }
+
+            lock (preprocessSync)
+            {
+                if (propertyGraph != null)
+                {
+                    return;
+                }
+
+                var resolver = new SourceFileResolver(Build.SourceFiles ?? Array.Empty<ArchiveFile>());
+                var preprocessed = new PreprocessedFileManager(Build, resolver);
+                Build.TextProvider = evaluation => preprocessed.GetPreprocessedText(evaluation);
+
+                var search = new PropertiesAndItemsSearch();
+                // Constructor subscribes to search.AugmentResults; leave
+                // AppendDependencyReferences null since the MCP doesn't render
+                // clickable buttons.
+                var graph = new PropertyGraph(preprocessed, search);
+
+                sourceFileResolver = resolver;
+                preprocessedFileManager = preprocessed;
+                propertiesAndItemsSearch = search;
+                propertyGraph = graph;
             }
         }
     }
@@ -132,6 +208,11 @@ namespace BinlogMcp
             var build = Serialization.Read(path);
             BuildAnalyzer.AnalyzeBuild(build);
             build.SearchIndex = new SearchIndex(build);
+
+            // Match the viewer: register the optional search extensions so
+            // queries like `$secret` and `$nuget` work out of the box.
+            build.SearchExtensions.Add(new SecretsSearch(build));
+            build.SearchExtensions.Add(new NuGetSearch(build));
 
             var entry = new LoadedBinlog
             {
