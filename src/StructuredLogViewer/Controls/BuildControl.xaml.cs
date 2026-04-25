@@ -462,9 +462,19 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             Build.TextProvider = evaluation => preprocessedFileManager.GetPreprocessedText(evaluation);
 
             propertyGraph = new PropertyGraph(preprocessedFileManager, propertiesAndItemsSearch);
-            propertyGraph.PropertySearchRequested += propertyName =>
+            propertyGraph.AppendDependencyReferences = (parent, propertyNames) =>
             {
-                propertiesAndItemsControl.SearchText += $" \"{propertyName}\"";
+                var folder = new Folder { Name = "These properties also depend on:", IsExpanded = true };
+                foreach (var propertyName in propertyNames)
+                {
+                    folder.AddChild(new ButtonNode
+                    {
+                        Text = propertyName,
+                        OnClick = () => propertiesAndItemsControl.SearchText += $" \"{propertyName}\""
+                    });
+                }
+
+                parent.AddChild(folder);
             };
 
             navigationHelper = new NavigationHelper(Build, sourceFileResolver);

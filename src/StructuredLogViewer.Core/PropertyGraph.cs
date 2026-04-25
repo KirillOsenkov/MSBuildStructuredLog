@@ -75,7 +75,12 @@ public class PropertyGraph
     public PreprocessedFileManager PreprocessedFileManager { get; }
     public PropertiesAndItemsSearch Search { get; }
 
-    public event Action<string> PropertySearchRequested;
+    // Optional. When set, called once after the graph result is computed but
+    // before the graph is returned, to let the host append a folder of
+    // clickable references to other properties this set depends on.
+    // When null, no such folder is added — the result contains only the
+    // source-line tree. MCP/CLI consumers can leave this null.
+    public Action<TreeNode, IReadOnlyCollection<string>> AppendDependencyReferences { get; set; }
 
     public PropertyGraph(PreprocessedFileManager preprocessedFileManager, PropertiesAndItemsSearch search)
     {
@@ -97,11 +102,6 @@ public class PropertyGraph
             var graphNode = GetPropertyGraph(context);
             if (graphNode != null)
             {
-                foreach (var button in ((TreeNode)graphNode.Node).FindChildrenRecursive<ButtonNode>())
-                {
-                    button.OnClick = () => PropertySearchRequested?.Invoke(button.Text);
-                }
-
                 results = results.Append(graphNode).ToArray();
             }
         }
@@ -199,23 +199,9 @@ public class PropertyGraph
                 }
             }
 
-            if (otherPropertyReads.Count > 0)
+            if (otherPropertyReads.Count > 0 && AppendDependencyReferences != null)
             {
-                var additional = new Folder
-                {
-                    Name = "These properties also depend on:",
-                    IsExpanded = true
-                };
-                foreach (var readProperty in otherPropertyReads)
-                {
-                    var button = new ButtonNode
-                    {
-                        Text = readProperty
-                    };
-                    additional.AddChild(button);
-                }
-
-                resultFolder.AddChild(additional);
+                AppendDependencyReferences(resultFolder, otherPropertyReads);
             }
 
             return new SearchResult(resultFolder);
