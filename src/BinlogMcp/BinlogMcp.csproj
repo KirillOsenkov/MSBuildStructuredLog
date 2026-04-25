@@ -37,4 +37,10 @@
     <None Include="$(IconFilePath)" Pack="true" PackagePath="" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="SearchSyntax.md">
+      <LogicalName>SearchSyntax.md</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
 </Project>
