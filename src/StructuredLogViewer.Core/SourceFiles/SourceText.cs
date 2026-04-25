@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Build.Logging.StructuredLogger;
 using Microsoft.Language.Xml;
 
@@ -29,36 +28,10 @@ namespace StructuredLogViewer
             }
         }
 
-        private XmlDocumentSyntax xmlRoot;
-        public XmlDocumentSyntax XmlRoot
-        {
-            get
-            {
-                if (xmlRoot == null)
-                {
-                    xmlRoot = Parser.ParseText(Text);
-                }
-
-                return xmlRoot;
-            }
-        }
-
-        public IXmlElement RootElement
-        {
-            get
-            {
-                var root = XmlRoot.Root;
-
-                // work around a bug in Xml Parser where a virtual parent is created around the root element
-                // when the root element is preceded by trivia (comment)
-                if (root.Name == null && root.Elements.FirstOrDefault() is IXmlElement firstElement && firstElement.Name == "Project")
-                {
-                    root = firstElement;
-                }
-
-                return root;
-            }
-        }
+        // Opaque slot for a lazily-computed parse tree (e.g. an XML root
+        // produced by SourceTextXml.TryGetXml). Held as object so the core
+        // SourceText type does not need to depend on a particular parser.
+        public object SyntaxTree { get; set; }
 
         public IReadOnlyList<int> Find(string searchText)
         {

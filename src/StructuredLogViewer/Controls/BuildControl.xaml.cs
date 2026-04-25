@@ -3136,7 +3136,7 @@ Recent (");
                 return false;
             }
 
-            IXmlElement root = text.RootElement;
+            SourceTextXml.TryGetXml(text, out var root);
 
             int startPosition = 0;
             int line = 0;

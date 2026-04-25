@@ -239,7 +239,7 @@ public class PropertyGraph
             return false;
         }
 
-        var root = text.RootElement;
+        SourceTextXml.TryGetXml(text, out var root);
 
         var importsBefore = imports.Where(i => i.Line == 0 && Import.IsImportBefore(i.ImportedProjectFilePath)).ToArray();
         var importsAfter = imports.Where(i => i.Line == 0 && Import.IsImportAfter(i.ImportedProjectFilePath)).ToArray();
