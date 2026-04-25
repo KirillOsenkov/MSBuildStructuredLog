@@ -371,7 +371,7 @@ public class PropertyGraph
                                 resultParent,
                                 filePath,
                                 startLine,
-                                text.GetText(propertySpan));
+                                text.GetText(propertySpan.Start, propertySpan.Length));
                             foreach (var usage in usages)
                             {
                                 usage.Position = usage.Position - propertyStart;
@@ -531,7 +531,7 @@ public class PropertyGraph
         SyntaxNode node)
     {
         var startLine = text.GetLineNumberFromPosition(node.Span.Start) + 1;
-        var lineText = text.GetText(node.Span);
+        var lineText = text.GetText(node.Span.Start, node.Span.Length);
         return GetOrAddLine(parent, filePath, startLine, lineText);
     }
 
