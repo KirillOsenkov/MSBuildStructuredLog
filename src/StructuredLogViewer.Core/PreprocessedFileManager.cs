@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Logging.StructuredLogger;
-using Bucket = System.Collections.Generic.List<StructuredLogViewer.ProjectImport>;
+using Bucket = System.Collections.Generic.List<Microsoft.Build.Logging.StructuredLogger.ProjectImport>;
 
 namespace StructuredLogViewer
 {
