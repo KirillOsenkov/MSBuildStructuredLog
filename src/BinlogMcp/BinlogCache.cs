@@ -9,6 +9,8 @@ namespace BinlogMcp
 {
     public sealed class LoadedBinlog
     {
+        private TimedNode[] indexMap;
+
         public string Path { get; init; }
         public Build Build { get; init; }
         public long FileSize { get; init; }
@@ -16,6 +18,39 @@ namespace BinlogMcp
         public long EstimatedMemoryBytes { get; init; }
         public DateTime LoadedAtUtc { get; init; }
         public DateTime LastAccessedUtc { get; set; }
+
+        /// <summary>
+        /// Lazily-built lookup from <see cref="TimedNode.Index"/> to node.
+        /// Indices are assigned densely from 0 by <c>BuildAnalyzer</c>, so a
+        /// flat array is the natural representation.
+        /// </summary>
+        public TimedNode[] IndexMap
+        {
+            get
+            {
+                var local = indexMap;
+                if (local != null)
+                {
+                    return local;
+                }
+
+                var list = new List<TimedNode>();
+                Build.VisitAllChildren<TimedNode>(node =>
+                {
+                    int i = node.Index;
+                    while (list.Count <= i)
+                    {
+                        list.Add(null);
+                    }
+
+                    list[i] = node;
+                });
+
+                local = list.ToArray();
+                indexMap = local;
+                return local;
+            }
+        }
     }
 
     /// <summary>
