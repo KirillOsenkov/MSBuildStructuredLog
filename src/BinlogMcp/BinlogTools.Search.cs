@@ -39,7 +39,9 @@ Query syntax cheat sheet (call get_search_syntax_help for the full reference):
   $task $time                  tasks, with durations, sorted slowest first
   ""exact phrase""             literal substring match
   name=Configuration value=Debug   precise field match
-  $42                          node with Index 42")]
+  $42                          node with Index 42
+
+Paging: results are computed up to skip + maxResults, then sliced. The matched count in the header is therefore an at-least value when followed by '+' (the search stopped at the cap). To get a true total count, use the count tool.")]
     public static string Search(
         [Description("Absolute path to a loaded .binlog file")] string path,
         [Description("Search query in MSBuild Structured Log Viewer syntax")] string query,
@@ -202,6 +204,43 @@ Query syntax cheat sheet (call get_search_syntax_help for the full reference):
             }
         }
     }
+
+    [McpServerTool(Name = "count", ReadOnly = true, Idempotent = true)]
+    [Description(@"Counts the total number of nodes matching a search query, with no result cap. Returns a single line: 'matched: N' (or 'matched: 0').
+
+Use this when search returns 'matched=N+' (capped) and you actually need the true total — e.g. to decide between ""show all 5"" vs ""summarize 5000"". Cheaper than calling search with a huge maxResults because no tree formatting is done.
+
+Same query DSL as search (call get_search_syntax_help).")]
+    public static string Count(
+        [Description("Absolute path to a loaded .binlog file")] string path,
+        [Description("Search query in MSBuild Structured Log Viewer syntax")] string query) => Run(() =>
+    {
+        var entry = Cache.Load(path);
+
+        var index = entry.Build.SearchIndex;
+        if (index == null)
+        {
+            throw new InvalidOperationException(
+                $"Binlog has no SearchIndex: {path}. Try reload_binlog.");
+        }
+
+        IReadOnlyList<SearchResult> results;
+        lock (index)
+        {
+            int saved = index.MaxResults;
+            try
+            {
+                index.MaxResults = int.MaxValue;
+                results = index.FindNodes(query, CancellationToken.None).ToArray();
+            }
+            finally
+            {
+                index.MaxResults = saved;
+            }
+        }
+
+        return "matched: " + results.Count;
+    });
 
     [McpServerTool(Name = "search_properties_and_items", ReadOnly = true, Idempotent = true)]
     [Description(@"Searches the Properties, Items, property assignments, and property reassignments folders scoped to a single Project or ProjectEvaluation node. Mirrors the viewer's ""Properties and Items"" tab.
