@@ -203,7 +203,7 @@ public static partial class BinlogTools
 
     private static string Summarize(BaseNode node)
     {
-        string text = node.Title ?? node.ToString() ?? string.Empty;
+        string text = node.GetFullText() ?? node.Title ?? node.ToString() ?? string.Empty;
         return TextUtilities.ShortenValue(text, "...", maxChars: 300);
     }
 
@@ -231,6 +231,13 @@ public static partial class BinlogTools
 
         string kind = node.TypeName ?? node.GetType().Name;
         string summary = Summarize(node);
+        // Some nodes (Import, NoImport) include their kind in GetFullText
+        // already (e.g. "Import Foo.targets at (1;1)"). Don't double it up.
+        if (summary.StartsWith(kind + " ", StringComparison.Ordinal))
+        {
+            return $"{summary} [{id}]";
+        }
+
         return $"{kind} {summary} [{id}]";
     }
 
@@ -240,9 +247,16 @@ public static partial class BinlogTools
         // Unlike FormatNode, do not truncate: get_node is the one tool the
         // caller uses precisely to see the full untruncated text of a node.
         string kind = node.TypeName ?? node.GetType().Name;
-        string fullText = node.Title ?? node.ToString() ?? string.Empty;
+        string fullText = node.GetFullText() ?? node.Title ?? node.ToString() ?? string.Empty;
         string id = NodeId.Get(node) ?? "?";
-        sb.Append(kind).Append(' ').Append(fullText).Append(" [").Append(id).Append(']').AppendLine();
+        if (fullText.StartsWith(kind + " ", StringComparison.Ordinal))
+        {
+            sb.Append(fullText).Append(" [").Append(id).Append(']').AppendLine();
+        }
+        else
+        {
+            sb.Append(kind).Append(' ').Append(fullText).Append(" [").Append(id).Append(']').AppendLine();
+        }
 
         if (node is NameValueNode nv)
         {
