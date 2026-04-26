@@ -210,15 +210,10 @@ Each result line is: 'kind summary [id]'")]
             return sb.ToString();
         }
 
-        foreach (var result in page)
+        var tree = ResultTree.BuildResultTree(page, addDuration: false);
+        foreach (var child in tree.Children)
         {
-            var node = result.Node;
-            if (node == null)
-            {
-                continue;
-            }
-
-            sb.AppendLine(FormatNode(node));
+            AppendNode(sb, child, depth: 0);
         }
 
         return sb.ToString();
