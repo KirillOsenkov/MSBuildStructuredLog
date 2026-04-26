@@ -14,6 +14,8 @@
 
         public override string TypeName => nameof(NoImport);
 
+        public override string GetFullText() => $"NoImport {Text}{Location} {Reason}";
+
         public NoImport(
             string projectFilePath,
             string importedFileSpec,
