@@ -76,6 +76,14 @@ Decision rule:
 4. If succeeded but slow: `search $task $time maxResults=20` and `search $target $time maxResults=20` to find hotspots, then drill in.
 5. `search $project` (or `count $project`) to gauge build shape — many repeats per project usually means multi-targeting or `MSBuild` task fan-out, not a problem in itself.
 
+### Which .NET SDK built this? (do this very early — often the answer)
+**Knowing the SDK version is critical.** The same source frequently builds clean on one SDK and fails on another (new analyzers, retargeted defaults, changed `Sdk.props`/`Sdk.targets`, NuGet resolver changes). Whenever a build "started failing" or behaves differently between two machines / CI legs, pin down the SDK version *before* anything else.
+
+1. `search_files Sdk.props` — the embedded files archive contains every file MSBuild read during the build. The SDK version is encoded **in the path itself**: e.g. `C:\Program Files\dotnet\sdk\10.0.202\Sdks\Microsoft.NET.Sdk\Sdk\Sdk.props` → SDK `10.0.202`. On Linux/macOS the prefix is `/usr/share/dotnet/sdk/<version>/...` or `/usr/local/share/dotnet/sdk/<version>/...`.
+2. Multiple SDK paths in the results → multiple SDKs were resolved (e.g. `Microsoft.NET.Sdk`, `Microsoft.NET.Sdk.Web`, `Microsoft.Build.NoTargets`). All ship inside the same `dotnet/sdk/<version>` folder, so the version segment should match across them — a mismatch points at a `global.json` / SDK-resolver oddity.
+3. Cross-check with `msbuildVersion` from `load_binlog` — the .NET SDK bundles a specific MSBuild build, so the two should be consistent.
+4. To compare two binlogs: run the same `search_files Sdk.props` on each; differing version segments alone often explain "works here, breaks there" without any further digging.
+
 ### Why was `Foo.dll` copied to OutputDir?
 1. `search $copy Foo.dll` → see candidate copy results.
 2. Pick the full source path from the result and `search $copy <full-path>`. The expanded result tree shows the project / target / task path responsible (Build outputs, RAR `Resolved file path`, `_CopyFilesMarkedCopyLocal`, NuGet content files, `None Include="…" CopyToOutputDirectory=…`, project reference outputs, …).
