@@ -117,18 +117,34 @@ Query syntax cheat sheet (call get_search_syntax_help for the full reference):
 
         if (node is ProxyNode proxy)
         {
-            string text = (proxy.Text ?? string.Empty).TrimEnd();
-            sb.Append(text);
-            if (proxy.Original is { } original)
+            if (proxy.Original is NameValueNode nv)
             {
-                string id = NodeId.Get(original);
+                string name = TextUtilities.ShortenValue(nv.Name ?? string.Empty, "...", maxChars: 300);
+                string value = TextUtilities.ShortenValue(nv.Value ?? string.Empty, "...", maxChars: 300);
+                sb.Append(name).Append('=').Append(value);
+                string id = NodeId.Get(nv);
                 if (id != null)
                 {
                     sb.Append(" [").Append(id).Append(']');
                 }
-            }
 
-            sb.AppendLine();
+                sb.AppendLine();
+            }
+            else
+            {
+                string text = (proxy.Text ?? string.Empty).TrimEnd();
+                sb.Append(text);
+                if (proxy.Original is { } original)
+                {
+                    string id = NodeId.Get(original);
+                    if (id != null)
+                    {
+                        sb.Append(" [").Append(id).Append(']');
+                    }
+                }
+
+                sb.AppendLine();
+            }
         }
         else
         {
