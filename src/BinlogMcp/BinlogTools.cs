@@ -179,7 +179,12 @@ Returns nothing if the node has no children matching the filter.")]
     public const int MaxAllowedPrintNodes = 10000;
 
     [McpServerTool(Name = "print_subtree", ReadOnly = true, Idempotent = true)]
-    [Description("Renders a node and its descendants as indented text, viewer-style. Each line is: 'kind summary [id]'. Truncated when either maxDepth or maxNodes is hit; the trailing line says how to continue (e.g. call get_children on a deeper node).")]
+    [Description(@"Renders a node and its descendants as indented text, viewer-style. Each line is: 'kind summary [id]'.
+
+When maxNodes is hit, the trailing hint suggests two ways to continue:
+  - drill in: get_children on the truncation point (deeper)
+  - continue level: get_children on its parent with skip=N (more siblings at the same level)
+When maxDepth is hit, an inline '... N more' marker shows the suppressed children with a get_children hint.")]
     public static string PrintSubtree(
         [Description("Absolute path to a .binlog file")] string path,
         [Description("Node id as returned by search")] string id,
@@ -197,7 +202,7 @@ Returns nothing if the node has no children matching the filter.")]
         bool truncated = false;
         string truncationHint = null;
 
-        void Write(BaseNode n, int depth)
+        void Write(BaseNode n, int depth, BaseNode parent, int indexInParent)
         {
             if (truncated)
             {
@@ -208,7 +213,20 @@ Returns nothing if the node has no children matching the filter.")]
             {
                 truncated = true;
                 string nId = NodeId.Get(n) ?? "?";
-                truncationHint = $"truncated at maxNodes={nodeBudget}; resume with get_children(path, \"{nId}\") or print_subtree(path, \"{nId}\")";
+                var hintBuilder = new StringBuilder();
+                hintBuilder.Append("truncated at maxNodes=").Append(nodeBudget).AppendLine(".");
+                hintBuilder.Append("  to drill in:        get_children(path, \"").Append(nId).AppendLine("\")");
+                if (parent != null && indexInParent >= 0)
+                {
+                    string parentId = NodeId.Get(parent);
+                    if (parentId != null)
+                    {
+                        hintBuilder.Append("  to continue level:  get_children(path, \"")
+                            .Append(parentId).Append("\", skip=").Append(indexInParent).AppendLine(")");
+                    }
+                }
+
+                truncationHint = hintBuilder.ToString().TrimEnd();
                 return;
             }
 
@@ -231,9 +249,9 @@ Returns nothing if the node has no children matching the filter.")]
 
             if (n is TreeNode { HasChildren: true } tree)
             {
-                foreach (var child in tree.Children)
+                for (int i = 0; i < tree.Children.Count; i++)
                 {
-                    Write(child, depth + 1);
+                    Write(tree.Children[i], depth + 1, n, i);
                     if (truncated)
                     {
                         return;
@@ -242,7 +260,7 @@ Returns nothing if the node has no children matching the filter.")]
             }
         }
 
-        Write(node, 0);
+        Write(node, 0, parent: null, indexInParent: -1);
 
         if (truncationHint != null)
         {
