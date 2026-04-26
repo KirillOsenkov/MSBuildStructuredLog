@@ -178,6 +178,21 @@ Paging: results are computed up to skip + maxResults, then sliced. The matched c
             }
             else
             {
+                // FileCopy results carry a Kind ("Source" / "Destination" /
+                // "SourceAndDestination") that the viewer renders as an icon.
+                // Prepend it as a tag so the LLM gets the same signal.
+                if (proxy.Original is FileCopy fileCopy && !string.IsNullOrEmpty(fileCopy.Kind))
+                {
+                    string tag = fileCopy.Kind switch
+                    {
+                        "Source" => "[Source]",
+                        "Destination" => "[Destination]",
+                        "SourceAndDestination" => "[Source+Destination]",
+                        _ => "[" + fileCopy.Kind + "]"
+                    };
+                    sb.Append(tag).Append(' ');
+                }
+
                 string text = (proxy.Text ?? string.Empty).TrimEnd();
                 sb.Append(text);
                 if (proxy.Original is { } original)

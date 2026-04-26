@@ -19,12 +19,7 @@ The same `Project` can appear many times — once per target framework, target l
 
 ## Ids
 
-Every addressable node has an id printed as `[123]` or `[42/3.7]`.
-
-- `42` → the `TimedNode` whose `Index == 42`
-- `42/3.7` → child 7 of child 3 of node 42
-
-Ids are stable for the same binlog file bytes (so survive `reload_binlog` of an unchanged file). They are **not** portable across different binlogs and become invalid once the file is overwritten by a new build.
+Node ids print as `[123]` (the `TimedNode` with `Index == 123`) or `[42/3.7]` (child 7 of child 3 of node 42). Stable for the same binlog file bytes; invalid once the file is overwritten by a new build.
 
 On `Project` lines the ` → <name>` shows the entry target; the `[id]` is still the `Project` node, not the target.
 
@@ -71,19 +66,6 @@ Compose freely: `$additem under($target CoreCompile project(Foo.csproj))`.
 Decision rule:
 - "show me a few" → `search`
 - "is it 5 or 5 000?" → `count`
-
-## Source text vs node text
-
-Two different worlds:
-
-- **Node text** (`get_node`, `print_subtree`, search results) is what MSBuild logged for a node. Truncated to ~300 chars in summaries; `get_node` returns the full untruncated text.
-- **Source text** is the actual file contents the binlog *embeds* (project files, props, targets, response files):
-  - `list_files` — what's available
-  - `read_file <fullPath> [startLine] [endLine]` — read embedded text (1-based, inclusive)
-  - `search_files <pattern>` — full-text grep across embedded files
-- **`preprocess <evaluationId>`** flattens all `<Import>`s into one virtual file, identical to the viewer's "Preprocess" — the only way to see the fully-expanded targets/props for an evaluation. Cached after first call. Supports `startLine`/`endLine`.
-
-When the binlog doesn't record what you need (e.g. evaluated item provenance), fall back to source text search.
 
 ## Recipes
 
@@ -176,13 +158,3 @@ Ids are not portable between the two — re-issue searches per binlog.
 - **Source text is what the binlog embedded**, not the current state of disk. `read_file` reads embedded snapshots.
 - **Evaluation ≠ Execution.** Property/Item folders under `ProjectEvaluation` are post-evaluation snapshots; mutations in targets are separate `AddItem` / `Property` log entries under `Project` nodes.
 - **`reload_binlog` against a changed file** invalidates ids you already returned; discard them.
-
-## Quick reference
-
-```
-load_binlog       reload_binlog       list_loaded_binlogs       unload_binlog       unload_all_binlogs
-search            count               get_search_syntax_help
-get_node          get_children        get_ancestors             print_subtree
-search_properties_and_items
-list_files        read_file           search_files              preprocess
-```

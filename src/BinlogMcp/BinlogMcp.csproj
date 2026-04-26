@@ -14,6 +14,7 @@
     <PackageId>BinlogMcp</PackageId>
     <Authors>Kirill Osenkov</Authors>
     <Company>Microsoft</Company>
+    <PackageReadmeFile>LlmGuide.md</PackageReadmeFile>
     <Description>A Model Context Protocol (MCP) server that exposes MSBuild .binlog files to LLMs. Read more at https://msbuildlog.com.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/KirillOsenkov/MSBuildStructuredLog</PackageProjectUrl>
@@ -35,11 +36,15 @@
 
   <ItemGroup>
     <None Include="$(IconFilePath)" Pack="true" PackagePath="" />
+    <None Include="LlmGuide.md" Pack="true" PackagePath="" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="SearchSyntax.md">
       <LogicalName>SearchSyntax.md</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="LlmGuide.md">
+      <LogicalName>LlmGuide.md</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
 
