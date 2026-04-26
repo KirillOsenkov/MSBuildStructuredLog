@@ -113,6 +113,7 @@ namespace BinlogMcp
 
                 var resolver = new SourceFileResolver(Build.SourceFiles ?? Array.Empty<ArchiveFile>());
                 var preprocessed = new PreprocessedFileManager(Build, resolver);
+                Build.WaitForBackgroundTasks();
                 Build.TextProvider = evaluation => preprocessed.GetPreprocessedText(evaluation);
 
                 var search = new PropertiesAndItemsSearch();
