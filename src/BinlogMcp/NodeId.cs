@@ -7,15 +7,21 @@ using Microsoft.Build.Logging.StructuredLogger;
 namespace BinlogMcp
 {
     /// <summary>
-    /// Stable, round-trippable identifier for any <see cref="BaseNode"/> in a
-    /// loaded build.
+    /// Round-trippable identifier for any <see cref="BaseNode"/> in a loaded
+    /// build.
     /// <para>
-    /// For a <see cref="TimedNode"/> the id is simply its <see cref="TimedNode.Index"/>,
+    /// For a <see cref="TimedNode"/> the id is its <see cref="TimedNode.Index"/>,
     /// e.g. <c>"42"</c>. For any other node the id is
-    /// <c>"&lt;nearestTimedNodeAncestorIndex&gt;/&lt;ordinal&gt;.&lt;ordinal&gt;..."</c>,
-    /// where each ordinal is the index of the next child to follow walking down
-    /// from that ancestor. E.g. <c>"42/3.7"</c> means child 7 of child 3 of the
-    /// <see cref="TimedNode"/> with <c>Index == 42</c>.
+    /// <c>"&lt;nearestTimedNodeAncestorIndex&gt;/&lt;ord&gt;.&lt;ord&gt;..."</c>,
+    /// where each ordinal is the child index walking down from that ancestor.
+    /// E.g. <c>"42/3.7"</c> = child 7 of child 3 of <c>Index == 42</c>.
+    /// </para>
+    /// <para>
+    /// <b>Scope:</b> ids are derived from deserialization order, so they are
+    /// stable for the same binlog file bytes (including across
+    /// <c>reload_binlog</c> against the same file) but are NOT portable across
+    /// different binlog files. Once a binlog is overwritten by a new build,
+    /// discard previously returned ids.
     /// </para>
     /// </summary>
     public static class NodeId

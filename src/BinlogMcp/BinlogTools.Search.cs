@@ -26,6 +26,8 @@ Real (addressable) nodes have their id appended in square brackets, e.g.
       Task Csc [125]
 Use ids with get_node, get_children, get_ancestors, print_subtree.
 
+Ids are scoped to one binlog file's bytes: stable across reload_binlog of the same file, but not portable to other binlogs and invalidated when the file is overwritten by a new build.
+
 Synthetic nodes (notes, totals, NuGet/$copy result groupings, etc.) print verbatim with no id.
 
 Query syntax cheat sheet (call get_search_syntax_help for the full reference):

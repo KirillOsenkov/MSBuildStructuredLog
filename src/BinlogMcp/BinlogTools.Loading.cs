@@ -14,7 +14,7 @@ public static partial class BinlogTools
         => Run(() => Describe(Cache.Load(path)));
 
     [McpServerTool(Name = "reload_binlog", ReadOnly = true, Idempotent = true)]
-    [Description("Re-reads a binlog from disk, replacing the cached version. Use this after a rebuild has overwritten the binlog file.")]
+    [Description("Re-reads a binlog from disk, replacing the cached version. Use this after a rebuild has overwritten the file. Ids stay valid if the file bytes are unchanged; if the rebuild produced different content, discard previously returned ids.")]
     public static string ReloadBinlog(
         [Description("Absolute path to a .binlog file")] string path)
         => Run(() => Describe(Cache.Load(path, forceReload: true)));
