@@ -296,16 +296,31 @@ When maxDepth is hit, an inline '... N more' marker shows the suppressed childre
             return $"{nv.Name}={value} [{id}]";
         }
 
+        // FileCopy results carry a Kind that the viewer renders as a
+        // colored icon (Source / Destination / both). Prepend it as a
+        // tag so the LLM sees the same signal.
+        string copyTag = string.Empty;
+        if (node is FileCopy fileCopy && !string.IsNullOrEmpty(fileCopy.Kind))
+        {
+            copyTag = fileCopy.Kind switch
+            {
+                "Source" => "[Source] ",
+                "Destination" => "[Destination] ",
+                "SourceAndDestination" => "[Source+Destination] ",
+                _ => "[" + fileCopy.Kind + "] "
+            };
+        }
+
         string kind = node.TypeName ?? node.GetType().Name;
         string summary = Summarize(node);
         // Some nodes (Import, NoImport) include their kind in GetFullText
         // already (e.g. "Import Foo.targets at (1;1)"). Don't double it up.
         if (summary.StartsWith(kind + " ", StringComparison.Ordinal))
         {
-            return $"{summary} [{id}]";
+            return $"{copyTag}{summary} [{id}]";
         }
 
-        return $"{kind} {summary} [{id}]";
+        return $"{copyTag}{kind} {summary} [{id}]";
     }
 
     private static string DescribeNode(BaseNode node)
