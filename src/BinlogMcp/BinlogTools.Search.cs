@@ -119,9 +119,13 @@ Query syntax cheat sheet (call get_search_syntax_help for the full reference):
         {
             string text = (proxy.Text ?? string.Empty).TrimEnd();
             sb.Append(text);
-            if (proxy.Original is TimedNode timed)
+            if (proxy.Original is { } original)
             {
-                sb.Append(" [").Append(timed.Index).Append(']');
+                string id = NodeId.Get(original);
+                if (id != null)
+                {
+                    sb.Append(" [").Append(id).Append(']');
+                }
             }
 
             sb.AppendLine();

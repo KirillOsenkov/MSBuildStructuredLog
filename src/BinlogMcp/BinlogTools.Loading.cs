@@ -53,7 +53,6 @@ public static partial class BinlogTools
         {
             $"path: {entry.Path}",
             $"fileSize: {entry.FileSize:n0} bytes",
-            $"estimatedMemory: {entry.EstimatedMemoryBytes:n0} bytes",
             $"succeeded: {build.Succeeded}",
             $"duration: {build.Duration}",
             $"msbuildVersion: {build.MSBuildVersion}",
