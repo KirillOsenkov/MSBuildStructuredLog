@@ -79,13 +79,20 @@ Two different worlds:
 - **Node text** (`get_node`, `print_subtree`, search results) is what MSBuild logged for a node. Truncated to ~300 chars in summaries; `get_node` returns the full untruncated text.
 - **Source text** is the actual file contents the binlog *embeds* (project files, props, targets, response files):
   - `list_files` — what's available
-  - `read_file <fullPath> [startLine] [lineCount]` — read embedded text
+  - `read_file <fullPath> [startLine] [endLine]` — read embedded text (1-based, inclusive)
   - `search_files <pattern>` — full-text grep across embedded files
-- **`preprocess <evaluationId>`** flattens all `<Import>`s into one virtual file, identical to the viewer's "Preprocess" — the only way to see the fully-expanded targets/props for an evaluation. Cached after first call. Supports `startLine`/`lineCount`.
+- **`preprocess <evaluationId>`** flattens all `<Import>`s into one virtual file, identical to the viewer's "Preprocess" — the only way to see the fully-expanded targets/props for an evaluation. Cached after first call. Supports `startLine`/`endLine`.
 
 When the binlog doesn't record what you need (e.g. evaluated item provenance), fall back to source text search.
 
 ## Recipes
+
+### Cold-start triage (do this first on any unfamiliar binlog)
+1. `load_binlog <path>` — note `succeeded`, `duration`, `msbuildVersion`.
+2. `count $error` and `count $warning` — decide if this is a failure investigation or a perf one.
+3. If failed: `search $error` (default 200 is enough for almost any build); for each unfamiliar one `get_ancestors <id>` to see *which project / target / task* produced it.
+4. If succeeded but slow: `search $task $time maxResults=20` and `search $target $time maxResults=20` to find hotspots, then drill in.
+5. `search $project` (or `count $project`) to gauge build shape — many repeats per project usually means multi-targeting or `MSBuild` task fan-out, not a problem in itself.
 
 ### Why was `Foo.dll` copied to OutputDir?
 1. `search $copy Foo.dll` → see candidate copy results.
@@ -124,8 +131,28 @@ Items added at evaluation time are not individually attributed in the binlog —
 
 ### Inspect a Csc command line
 1. `search $csc project(Foo.csproj)` → pick the Csc task id.
-2. `print_subtree <id> maxDepth=2` shows the `CommandLineArguments` parameter (often huge — `get_node` returns the full string).
-3. To see what the Csc actually compiled: `get_children <id> kind=parameter nameContains=Sources`.
+2. `print_subtree <id> maxDepth=3` shows `Parameters` and `CommandLineArguments` folders (often huge — `get_node` on the `CommandLineArguments` child returns the full string).
+3. To see what was compiled: `get_children <id> nameContains=Sources` then drill into the matching parameter folder.
+
+### Why is the *incremental* build doing work? (the up-to-date check)
+Goal: find targets that re-ran on a no-change rebuild and shouldn't have.
+
+1. Produce two binlogs:
+   - Clean build: `dotnet build /bl:1.binlog` (or `msbuild /bl:1.binlog`).
+   - **Immediate** repeat with no source edits: `dotnet build /bl:2.binlog`. The second is the interesting one — it represents the steady-state incremental cost.
+2. `load_binlog 2.binlog` then `search "Building target" "completely"`. MSBuild logs `Building target "X" completely.` whenever it runs a target whose up-to-date check failed; the very next message under the target usually explains *why* (e.g. `Input file ".../Foo.cs" is newer than output file ".../Foo.dll"`, or `Output file ".../X" does not exist`).
+3. For each hit, get the surrounding context:
+   - `get_ancestors <id>` to see project / TFM.
+   - `get_node <parentTargetId>` for full timing — use this to gauge how *expensive* the rerun was.
+4. **Filter the noise.** Many targets have no `Inputs`/`Outputs` declared and are always considered out-of-date by design (`GenerateTargetFrameworkMonikerAttribute`, `GetCopyToOutputDirectoryItems`, `_CheckForInvalidConfigurationAndPlatform`, `GetTargetFrameworks*`, most `_*` housekeeping targets, anything in `Restore`). They show up but they're cheap and expected.
+5. **Focus on heavy targets** where reruns actually cost: `CoreCompile` (Csc), `ResolveAssemblyReferences` (RAR), `_CopyOutOfDateSourceItemsToOutputDirectory`, `GenerateDepsFile`, `GenerateRuntimeConfigurationFiles`, `_CopyFilesMarkedCopyLocal`, anything Roslyn-source-generator-related. A useful filter:
+   - `search "Building target" "completely" under($target CoreCompile)` — Csc reruns specifically.
+   - Cross-check with `search $task $time maxResults=20` — if `Csc` shows up high here on the second binlog, you've confirmed real incremental cost.
+6. Common root causes you'll see in the "why" message:
+   - An *output* path that points outside the project's `obj/`/`bin/` (so it never exists on the first run after clean of just *this* project).
+   - A timestamp inversion from a `Touch` / generated-file step earlier in the same build.
+   - `Inputs` glob picking up files that change every build (e.g. logs, generated `.g.cs` with timestamps).
+   - Missing `Outputs` declaration (the target opted out of incrementality entirely — fix the target).
 
 ### Compare two builds (fast vs slow, succeeded vs failed)
 Load both with `load_binlog`, then run the *same* query against each path. Useful staples:
@@ -153,9 +180,9 @@ Ids are not portable between the two — re-issue searches per binlog.
 ## Quick reference
 
 ```
-load_binlog                      list_loaded_binlogs    unload_binlog
-search                           count                  get_search_syntax_help
-get_node                         get_children           get_ancestors            print_subtree
+load_binlog       reload_binlog       list_loaded_binlogs       unload_binlog       unload_all_binlogs
+search            count               get_search_syntax_help
+get_node          get_children        get_ancestors             print_subtree
 search_properties_and_items
-list_files                       read_file              search_files            preprocess
+list_files        read_file           search_files              preprocess
 ```
