@@ -111,7 +111,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     return string.Empty;
                 }
 
-                return $" → {TargetsText}";
+                return $"→ {TargetsText}";
             }
         }
 

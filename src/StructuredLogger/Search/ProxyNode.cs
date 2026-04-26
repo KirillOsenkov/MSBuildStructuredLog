@@ -68,18 +68,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 if (node is Project project)
                 {
-                    return $"{project.Name} {project.AdornmentString} {project.TargetsDisplayText}";
+                    return TextUtilities.Separate(" ", project.Name, project.AdornmentString, project.TargetsDisplayText);
                 }
                 else if (node is ProjectEvaluation evaluation)
                 {
-                    return $"{evaluation.Name} {evaluation.AdornmentString} {evaluation.EvaluationText}";
+                    return TextUtilities.Separate(" ", evaluation.Name, evaluation.AdornmentString, evaluation.EvaluationText);
                 }
 
                 string text = namedNode.Name;
 
                 if (node is not Folder and not Item && includeType && node.GetType() != typeof(TimedNode))
                 {
-                    text = $"{node.TypeName} {text}";
+                    text = TextUtilities.Separate(" ", node.TypeName, text);
                 }
 
                 return text;

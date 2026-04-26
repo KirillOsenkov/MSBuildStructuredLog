@@ -8,20 +8,8 @@
 
         public string VersionSpec { get; set; }
 
-        public override string ToString()
-        {
-            string result = Name;
-            if (!string.IsNullOrEmpty(Version))
-            {
-                result = $"{result} {Version}";
-            }
+        public override string ToString() => TextUtilities.Separate(" ", Name, Version, VersionSpec);
 
-            if (!string.IsNullOrEmpty(VersionSpec))
-            {
-                result = $"{result} {VersionSpec}";
-            }
-
-            return result;
-        }
+        public override string GetFullText() => TextUtilities.Separate(" ", "Package", Name, Version, VersionSpec);
     }
 }

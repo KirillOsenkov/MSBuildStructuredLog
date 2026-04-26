@@ -116,6 +116,12 @@ namespace StructuredLogViewer.Controls
 
         private SecretsSearch secretsSearch;
 
+        static BuildControl()
+        {
+            PreprocessedFileManager.GetPreprocessedFilePath = SettingsService.GetPreprocessedFilePath;
+            PreprocessedFileManager.WriteContentToTempFileAndGetPath = SettingsService.WriteContentToTempFileAndGetPath;
+        }
+
         public BuildControl(Build build, string logFilePath)
         {
             InitializeComponent();
@@ -456,9 +462,19 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             Build.TextProvider = evaluation => preprocessedFileManager.GetPreprocessedText(evaluation);
 
             propertyGraph = new PropertyGraph(preprocessedFileManager, propertiesAndItemsSearch);
-            propertyGraph.PropertySearchRequested += propertyName =>
+            propertyGraph.AppendDependencyReferences = (parent, propertyNames) =>
             {
-                propertiesAndItemsControl.SearchText += $" \"{propertyName}\"";
+                var folder = new Folder { Name = "These properties also depend on:", IsExpanded = true };
+                foreach (var propertyName in propertyNames)
+                {
+                    folder.AddChild(new ButtonNode
+                    {
+                        Text = propertyName,
+                        OnClick = () => propertiesAndItemsControl.SearchText += $" \"{propertyName}\""
+                    });
+                }
+
+                parent.AddChild(folder);
             };
 
             navigationHelper = new NavigationHelper(Build, sourceFileResolver);
@@ -3136,7 +3152,7 @@ Recent (");
                 return false;
             }
 
-            IXmlElement root = text.RootElement;
+            SourceTextXml.TryGetXml(text, out var root);
 
             int startPosition = 0;
             int line = 0;
