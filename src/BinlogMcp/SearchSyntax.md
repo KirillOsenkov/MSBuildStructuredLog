@@ -37,6 +37,21 @@ Aliases (expanded internally):
 Find a node by its index (TimedNode.Index):
   $42               the node with Index 42
 
+Find by build context id (ProjectContextId / EvaluationId)
+----------------------------------------------------------
+ProjectEvaluation titles end with `id:N`, where N is the evaluation id.
+Project execution nodes cross-reference their evaluation in a message that
+contains `id:N`. So you can correlate a Project execution with its
+ProjectEvaluation (and vice versa) by searching for the literal `id:N`:
+
+  id:29              every node whose text contains 'id:29' — finds both
+                     the ProjectEvaluation with that id AND the Project
+                     execution(s) that reference it.
+
+Combine with `$projectevaluation` to get just the evaluation node:
+
+  $projectevaluation id:29
+
 Field filters
 -------------
 For NameValue-style nodes (Property, Metadata, Item):
