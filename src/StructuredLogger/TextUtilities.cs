@@ -783,5 +783,27 @@ namespace Microsoft.Build.Logging.StructuredLogger
             Add(previous, text.Length);
             return list;
         }
+
+        public static string Separate(string separator, params string[] arguments)
+        {
+            var sb = new StringBuilder();
+
+            foreach (var arg in arguments)
+            {
+                if (string.IsNullOrEmpty(arg))
+                {
+                    continue;
+                }
+
+                if (sb.Length > 0)
+                {
+                    sb.Append(separator);
+                }
+
+                sb.Append(arg);
+            }
+
+            return sb.ToString();
+        }
     }
 }
