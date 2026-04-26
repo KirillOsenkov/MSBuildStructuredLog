@@ -103,6 +103,46 @@ Query syntax cheat sheet (call get_search_syntax_help for the full reference):
     private const int IndentSpaces = 2;
 
     /// <summary>
+    /// Appends start/end/duration fields when the search query opted into them
+    /// via $start, $end, or $time/$duration. Mirrors the viewer's
+    /// <c>ProxyNode.AddDuration</c> output.
+    /// </summary>
+    private static void AppendTimeFields(StringBuilder sb, SearchResult result)
+    {
+        if (result == null)
+        {
+            return;
+        }
+
+        if (result.StartTime != default)
+        {
+            string text = TextUtilities.Display(result.StartTime, fullPrecision: true);
+            if (!string.IsNullOrEmpty(text))
+            {
+                sb.Append(" start=").Append(text);
+            }
+        }
+
+        if (result.EndTime != default)
+        {
+            string text = TextUtilities.Display(result.EndTime, fullPrecision: true);
+            if (!string.IsNullOrEmpty(text))
+            {
+                sb.Append(" end=").Append(text);
+            }
+        }
+
+        if (result.Duration != default)
+        {
+            string text = TextUtilities.DisplayDuration(result.Duration);
+            if (!string.IsNullOrEmpty(text))
+            {
+                sb.Append(" duration=").Append(text);
+            }
+        }
+    }
+
+    /// <summary>
     /// Pretty-prints a search result subtree. <see cref="ProxyNode"/> wrappers
     /// (created by <see cref="ResultTree.BuildResultTree"/>) are unwrapped so
     /// real nodes get their <c>[id]</c> appended; everything else prints
@@ -128,6 +168,7 @@ Query syntax cheat sheet (call get_search_syntax_help for the full reference):
                     sb.Append(" [").Append(id).Append(']');
                 }
 
+                AppendTimeFields(sb, proxy.SearchResult);
                 sb.AppendLine();
             }
             else
@@ -143,6 +184,7 @@ Query syntax cheat sheet (call get_search_syntax_help for the full reference):
                     }
                 }
 
+                AppendTimeFields(sb, proxy.SearchResult);
                 sb.AppendLine();
             }
         }
