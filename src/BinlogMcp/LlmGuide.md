@@ -136,6 +136,15 @@ Goal: find targets that re-ran on a no-change rebuild and shouldn't have.
    - `Inputs` glob picking up files that change every build (e.g. logs, generated `.g.cs` with timestamps).
    - Missing `Outputs` declaration (the target opted out of incrementality entirely — fix the target).
 
+### Find files written more than once (double writes)
+The StructuredLogger analyzer pre-computes these into a top-level `Folder` named exactly `DoubleWrites` (no DSL token, no separate tool needed).
+
+1. `search $folder DoubleWrites` (or just `search DoubleWrites`) → one match if any double writes exist; the result id is the folder.
+2. `get_children <id>` → one entry per offending file (each child is itself a folder named after the path); `count $folder under(<id>)` if you want the total quickly.
+3. `get_children <fileId>` → list of source nodes (tasks / targets) that wrote it. Use `get_ancestors` on each to attribute it to a project.
+
+Empty result = no double writes (folder is only created when at least one is detected).
+
 ### Compare two builds (fast vs slow, succeeded vs failed)
 Load both with `load_binlog`, then run the *same* query against each path. Useful staples:
 
