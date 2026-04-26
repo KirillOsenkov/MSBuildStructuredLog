@@ -31,7 +31,7 @@ public static partial class BinlogTools
         => Run(() => $"unloaded {Cache.UnloadAll()} binlog(s)");
 
     [McpServerTool(Name = "list_loaded_binlogs", ReadOnly = true, Idempotent = true)]
-    [Description("Lists all binlogs currently loaded in the cache, with file sizes and estimated memory usage.")]
+    [Description("Lists all binlogs currently loaded in the cache, with file size.")]
     public static string ListLoadedBinlogs() => Run(() =>
     {
         var entries = Cache.List();
@@ -42,7 +42,7 @@ public static partial class BinlogTools
 
         var lines = entries
             .OrderByDescending(e => e.LastAccessedUtc)
-            .Select(e => $"{e.Path}\tfileSize={e.FileSize:n0}\testMem={e.EstimatedMemoryBytes:n0}\tlastAccessed={e.LastAccessedUtc:o}");
+            .Select(e => $"{e.Path}\tfileSize={e.FileSize:n0}\tlastAccessed={e.LastAccessedUtc:o}");
         return string.Join("\n", lines);
     });
 
