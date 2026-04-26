@@ -123,9 +123,13 @@ $nuget   — NuGet / project.assets.json
   $nuget project(MyProject.csproj) File.dll   find a file from a NuGet package
 
 $projectreference   — project reference graph
-  $projectreference project(App.csproj)       transitive closure referenced by App.csproj
-  $projectreference project(App.csproj) Core  filter to references whose name contains Core
-  $project height=N                           projects at a given level in the reference graph
+  $projectreference project(MyProject.csproj) RefProj   projects referenced by MyProject.csproj directly
+                                                        or indirectly (and matching RefProj). When the
+                                                        scope narrows to a single project, the projects
+                                                        REFERENCING it are also shown — bidirectional.
+  $projectreference project(App.csproj)                 transitive closure referenced by App.csproj
+  $projectreference project(App.csproj) Core            filter to references whose name contains Core
+  $project height=N                                     projects at a given level in the reference graph
 
 Tips
 ----

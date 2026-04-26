@@ -101,6 +101,33 @@ Items added at evaluation time are not individually attributed in the binlog —
 3. `get_ancestors <id>` to see who invoked it.
 4. `get_children <id> kind=message` for "Target X was skipped because…" messages.
 
+### Where (and how) was `Foo.targets` imported?
+1. `search $import Foo.targets project(Bar.csproj)` — every successful import of that file in Bar's evaluation. The result tree shows the importing file/line and the resolved target.
+2. If nothing comes back, try `search $noimport Foo.targets project(Bar.csproj)` — `NoImport` nodes capture imports that *were attempted but skipped*. The reason is in the node text: false `Condition`, file not found at the resolved path, MSBuild SDK not resolved, etc.
+3. Drop the `project(...)` clause to see imports across all evaluations (useful when you don't yet know which project pulled it in, or when chasing SDK-level imports).
+
+### Read the preprocessed XML for an evaluation
+`preprocess_file` returns the full effective MSBuild XML for a project (all `<Import>`s recursively inlined — same as `msbuild /pp` and the viewer's "Preprocess" command). Scoped to one `ProjectEvaluation`.
+
+1. `search $projectevaluation Foo` → take the evaluation id.
+2. `preprocess_file <binlog> <evalId>` → defaults to the project file itself; pass `file=<path-or-suffix>` to preprocess a specific imported `.props`/`.targets` instead. Pages 500 lines at a time (`startLine`/`endLine`).
+
+What it shows you, all from one place:
+- The exact order of `<PropertyGroup>` elements (so you can see the *last* assignment that wins) and `<ItemGroup>` elements (so you can see what the item list looked like at end of evaluation).
+- Which targets are actually in scope for this evaluation (anything not in the preprocessed text was filtered out by an unmet `Condition` or simply not imported).
+- Which `.props`/`.targets` files were imported (each inlined block is preceded by a comment with the source path) and which were skipped.
+
+### Why did target `T` not run in project `Foo`?
+The execution log only tells you what *did* run. Combine preprocess + import searches to figure out what *should have* run and where the chain broke.
+
+1. **Did the target even reach this evaluation?** `search $projectevaluation Foo` → take id, `preprocess_file <binlog> <evalId>` → grep (e.g. `search_files "<Target Name=\"T\""`) the preprocessed text. If `T` is absent, it was excluded by a `Condition` somewhere upstream, or its declaring file wasn't imported.
+2. **If absent, find where it's declared and check the import chain.** Identify the file declaring `T` (often a `.targets` from an SDK or NuGet package). Then `search $noimport <file>.targets project(Foo.csproj)` — a hit gives you the reason (false Condition, missing file, etc.). If `$noimport` finds nothing either, walk further up: `search $import <parent>.targets project(Foo.csproj)` to see whether the parent that should pull it in even loaded.
+3. **If present in the preprocessed text but still didn't run**, it was in scope but never invoked. Walk these in order:
+   - **Own `Condition`**: read the `<Target ... Condition="...">` line in the preprocessed XML; check the values of the referenced properties via `search_properties_and_items <evalId> $property name=<P>`.
+   - **Listed in another target's `DependsOnTargets`**: `search_files "DependsOnTargets" T` (or grep the preprocessed text). Then `search $target <Caller> project(Foo.csproj)` to see whether the caller actually ran (it may itself be skipped).
+   - **Hooked via `BeforeTargets` / `AfterTargets`**: read the target's `BeforeTargets="..."`/`AfterTargets="..."` attributes from the preprocessed XML, then verify each anchor target ran: `search $target <Anchor> project(Foo.csproj)`. If none ran, neither does `T`.
+   - **Entry-target reachability**: confirm the build actually asked for something that transitively depends on `T`. `get_children <ProjectId> kind=target` lists everything that did execute under this project.
+
 ### Slowest tasks / longest targets
 - `search $task $time` — tasks sorted by duration descending, with a `Total duration` header.
 - `search $target $time project(Foo.csproj)` — same, scoped to one project.
@@ -144,6 +171,23 @@ The StructuredLogger analyzer pre-computes these into a top-level `Folder` named
 3. `get_children <fileId>` → list of source nodes (tasks / targets) that wrote it. Use `get_ancestors` on each to attribute it to a project.
 
 Empty result = no double writes (folder is only created when at least one is detected).
+
+### Who pulls in NuGet package `Foo` (and which version)?
+The `$nuget` token traverses the synthetic NuGet dependency graph the StructuredLogger builds from `project.assets.json`. Each match shows the chain from a project, through any project references, down to the direct `<PackageReference>`, and on through transitive dependencies.
+
+- `search $nuget Newtonsoft.Json` — every project that ends up with Newtonsoft.Json on its closure, with the version actually resolved.
+- `search $nuget Newtonsoft.Json 13.0.3` — narrow to a specific version (useful when chasing a version conflict).
+- `search $nuget project(Foo.csproj) Newtonsoft.Json` — restrict to one project's graph.
+- `search $nuget project(.) Newtonsoft.Json 13.0.3` — `project(.)` matches any project; combined with a version it answers "who is forcing 13.0.3 onto someone?"
+
+The result tree is the chain itself: `Project → ProjectReference(s) → PackageReference → transitive dependency → ... → Newtonsoft.Json 13.0.3`. Read top-to-bottom to see *why* the package landed in that project.
+
+### Traverse the project reference graph
+The `$projectreference` token surfaces the synthetic project-to-project dependency graph the StructuredLogger builds.
+
+- `search $projectreference` — every project, with the projects it references underneath. Useful for an overall topology view.
+- `search $projectreference project(Foo.csproj)` — **bidirectional**: shows both projects `Foo` references *and* projects that reference `Foo`. Answers "what touches Foo?" / "what does Foo touch?" in a single query.
+- Combine with the NuGet recipe above when a transitive package shows up unexpectedly: trace the project-reference path first, then run `$nuget project(<each project on the path>) <package>` to find where it enters.
 
 ### Compare two builds (fast vs slow, succeeded vs failed)
 Load both with `load_binlog`, then run the *same* query against each path. Useful staples:
