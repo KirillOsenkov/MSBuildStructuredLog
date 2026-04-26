@@ -52,11 +52,21 @@ public static partial class BinlogTools
     });
 
     [McpServerTool(Name = "get_children", ReadOnly = true, Idempotent = true)]
-    [Description("Returns the immediate children of a node, paginated. Each line is: 'kind summary [id]'. Returns nothing if the node has no children.")]
+    [Description(@"Returns the immediate children of a node, optionally filtered by kind and/or a name substring, paginated. Each line is: 'kind summary [id]'.
+
+Filtering avoids paging through thousands of children just to find a few interesting ones (e.g. a Project with 10,000 Properties + 200 Targets).
+
+kind: any $-token from the search DSL minus the leading '$' (e.g. ""target"", ""task"", ""property"", ""item"", ""metadata"", ""message"", ""error"", ""warning"", ""csc"", ""rar""). Same matching rules as `search $kind`: '$task' matches all task subtypes; '$csc' matches Task instances named Csc.
+
+nameContains: case-insensitive substring matched against the child's name/text fields (same fields the search tool searches by default).
+
+Returns nothing if the node has no children matching the filter.")]
     public static string GetChildren(
         [Description("Absolute path to a .binlog file")] string path,
         [Description("Node id as returned by search")] string id,
-        [Description("Number of leading children to skip (default 0)")] int? skip = null,
+        [Description("Optional node-kind filter, e.g. \"target\", \"task\", \"property\", \"csc\". Mirrors the search DSL's $kind tokens (without the $).")] string kind = null,
+        [Description("Optional case-insensitive substring matched against the child's name/text.")] string nameContains = null,
+        [Description("Number of leading children (after filtering) to skip (default 0)")] int? skip = null,
         [Description("Maximum number of children to return (default 200, max 5000)")] int? maxResults = null) => Run(() =>
     {
         int offset = Math.Max(skip ?? 0, 0);
@@ -70,21 +80,62 @@ public static partial class BinlogTools
             return $"node [{id}] has no children";
         }
 
-        var children = tree.Children;
-        int total = children.Count;
+        // Build a NodeQueryMatcher from the (kind, nameContains) pair so we
+        // get exactly the same matching semantics as the search tool.
+        StructuredLogViewer.NodeQueryMatcher matcher = null;
+        string filterDescription = null;
+        kind = string.IsNullOrWhiteSpace(kind) ? null : kind.Trim().TrimStart('$');
+        nameContains = string.IsNullOrWhiteSpace(nameContains) ? null : nameContains.Trim();
+        if (kind != null || nameContains != null)
+        {
+            var queryParts = new List<string>(2);
+            if (kind != null)
+            {
+                queryParts.Add("$" + kind);
+            }
+
+            if (nameContains != null)
+            {
+                // Quote so multi-word substrings are treated as one term.
+                queryParts.Add("\"" + nameContains.Replace("\"", "\\\"") + "\"");
+            }
+
+            string query = string.Join(" ", queryParts);
+            matcher = new StructuredLogViewer.NodeQueryMatcher(query);
+            filterDescription = query;
+        }
+
+        IEnumerable<BaseNode> source = tree.Children;
+        if (matcher != null)
+        {
+            source = source.Where(c => matcher.IsMatch(c) != null);
+        }
+
+        var filtered = source.ToList();
+        int total = filtered.Count;
 
         var sb = new StringBuilder();
         sb.Append("parent: ").AppendLine(FormatNode(node));
+        if (filterDescription != null)
+        {
+            sb.Append("filter: ").AppendLine(filterDescription);
+        }
+
         sb.Append("children: ").Append(Math.Min(take, Math.Max(0, total - offset)))
           .Append(" (skip=").Append(offset)
           .Append(", take=").Append(take)
-          .Append(", total=").Append(total)
-          .AppendLine(")");
+          .Append(", total=").Append(total);
+        if (matcher != null)
+        {
+            sb.Append(", unfiltered=").Append(tree.Children.Count);
+        }
+
+        sb.AppendLine(")");
 
         int end = Math.Min(total, offset + take);
         for (int i = offset; i < end; i++)
         {
-            sb.AppendLine(FormatNode(children[i]));
+            sb.AppendLine(FormatNode(filtered[i]));
         }
 
         return sb.ToString();
