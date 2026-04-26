@@ -24,6 +24,7 @@ Real (addressable) nodes have their id appended in square brackets, e.g.
   Project StructuredLogger.csproj net10.0 → Build [123]
     Target CoreCompile [124]
       Task Csc [125]
+On a Project line the ' → <name>' shows its entry target; [id] still refers to the Project node itself, not the target.
 Use ids with get_node, get_children, get_ancestors, print_subtree.
 
 Ids are scoped to one binlog file's bytes: stable across reload_binlog of the same file, but not portable to other binlogs and invalidated when the file is overwritten by a new build.
