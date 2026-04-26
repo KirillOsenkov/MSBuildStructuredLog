@@ -258,12 +258,6 @@ public static partial class BinlogTools
             sb.Append(kind).Append(' ').Append(fullText).Append(" [").Append(id).Append(']').AppendLine();
         }
 
-        if (node is NameValueNode nv)
-        {
-            sb.Append("name: ").AppendLine(nv.Name);
-            sb.Append("value: ").AppendLine(TextUtilities.ShortenValue(nv.Value, "...", maxChars: 1000));
-        }
-
         if (node is TimedNode timed)
         {
             sb.Append("start: ").AppendLine(timed.StartTime.ToString("o"));
