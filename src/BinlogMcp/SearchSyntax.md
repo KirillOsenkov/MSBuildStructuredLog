@@ -37,7 +37,7 @@ Aliases (expanded internally):
 Find a node by its index (TimedNode.Index):
   $42               the node with Index 42
 
-Find by build context id (ProjectContextId / EvaluationId)
+Find by evaluation id
 ----------------------------------------------------------
 ProjectEvaluation titles end with `id:N`, where N is the evaluation id.
 Project execution nodes cross-reference their evaluation in a message that
