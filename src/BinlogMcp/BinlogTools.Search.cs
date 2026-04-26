@@ -152,7 +152,7 @@ Use this to answer focused questions like ""what's the value of OutputPath in th
 
 Accepts the same query DSL as the search tool (call get_search_syntax_help). The context is the node id of a Project or ProjectEvaluation (find one with `search $project Foo` or `search $projectevaluation Foo`).
 
-Each result line is: [id]<TAB>kind<TAB>summary")]
+Each result line is: 'kind summary [id]'")]
     public static string SearchPropertiesAndItems(
         [Description("Absolute path to a loaded .binlog file")] string path,
         [Description("Node id of a Project or ProjectEvaluation to scope the search to")] string contextId,
@@ -192,7 +192,7 @@ Each result line is: [id]<TAB>kind<TAB>summary")]
 
         var sb = new StringBuilder();
         sb.Append("query: ").AppendLine(query);
-        sb.Append("context: [").Append(contextId).Append("] ").AppendLine(contextNode.TypeName ?? contextNode.GetType().Name);
+        sb.Append("context: ").AppendLine(FormatNode(contextNode));
         sb.Append("returned: ").Append(page.Length)
           .Append(" (skip=").Append(offset)
           .Append(", take=").Append(take)
@@ -218,12 +218,7 @@ Each result line is: [id]<TAB>kind<TAB>summary")]
                 continue;
             }
 
-            string id = NodeId.Get(node) ?? "?";
-            string kind = node.TypeName ?? node.GetType().Name;
-            string summary = Summarize(node);
-            sb.Append('[').Append(id).Append("]\t")
-              .Append(kind).Append('\t')
-              .AppendLine(summary);
+            sb.AppendLine(FormatNode(node));
         }
 
         return sb.ToString();

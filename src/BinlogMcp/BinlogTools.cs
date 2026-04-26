@@ -52,7 +52,7 @@ public static partial class BinlogTools
     });
 
     [McpServerTool(Name = "get_children", ReadOnly = true, Idempotent = true)]
-    [Description("Returns the immediate children of a node, paginated. Each line is: [id]<TAB>kind<TAB>summary. Returns nothing if the node has no children.")]
+    [Description("Returns the immediate children of a node, paginated. Each line is: 'kind summary [id]'. Returns nothing if the node has no children.")]
     public static string GetChildren(
         [Description("Absolute path to a .binlog file")] string path,
         [Description("Node id as returned by search")] string id,
@@ -74,7 +74,7 @@ public static partial class BinlogTools
         int total = children.Count;
 
         var sb = new StringBuilder();
-        sb.Append("parent: [").Append(id).Append("] ").AppendLine(node.TypeName ?? node.GetType().Name);
+        sb.Append("parent: ").AppendLine(FormatNode(node));
         sb.Append("children: ").Append(Math.Min(take, Math.Max(0, total - offset)))
           .Append(" (skip=").Append(offset)
           .Append(", take=").Append(take)
@@ -84,19 +84,14 @@ public static partial class BinlogTools
         int end = Math.Min(total, offset + take);
         for (int i = offset; i < end; i++)
         {
-            var child = children[i];
-            string childId = NodeId.Get(child) ?? "?";
-            string kind = child.TypeName ?? child.GetType().Name;
-            sb.Append('[').Append(childId).Append("]\t")
-              .Append(kind).Append('\t')
-              .AppendLine(Summarize(child));
+            sb.AppendLine(FormatNode(children[i]));
         }
 
         return sb.ToString();
     });
 
     [McpServerTool(Name = "get_ancestors", ReadOnly = true, Idempotent = true)]
-    [Description("Returns the chain of ancestors of a node from the root down to (but not including) the node itself. Each line is: [id]<TAB>kind<TAB>summary. Useful for answering 'where did this happen?'")]
+    [Description("Returns the chain of ancestors of a node from the root down to (but not including) the node itself. Each line is: 'kind summary [id]'. Useful for answering 'where did this happen?'")]
     public static string GetAncestors(
         [Description("Absolute path to a .binlog file")] string path,
         [Description("Node id as returned by search")] string id) => Run(() =>
@@ -120,14 +115,10 @@ public static partial class BinlogTools
         }
 
         var sb = new StringBuilder();
-        sb.Append("ancestors of [").Append(id).Append("]: ").Append(chain.Count).AppendLine();
+        sb.Append("ancestors of ").Append(FormatNode(node)).Append(": ").Append(chain.Count).AppendLine();
         foreach (var ancestor in chain)
         {
-            string ancestorId = NodeId.Get(ancestor) ?? "?";
-            string kind = ancestor.TypeName ?? ancestor.GetType().Name;
-            sb.Append('[').Append(ancestorId).Append("]\t")
-              .Append(kind).Append('\t')
-              .AppendLine(Summarize(ancestor));
+            sb.AppendLine(FormatNode(ancestor));
         }
 
         return sb.ToString();
@@ -137,7 +128,7 @@ public static partial class BinlogTools
     public const int MaxAllowedPrintNodes = 10000;
 
     [McpServerTool(Name = "print_subtree", ReadOnly = true, Idempotent = true)]
-    [Description("Renders a node and its descendants as indented text, viewer-style. Each printed node is prefixed with its [id]. Truncated when either maxDepth or maxNodes is hit; the trailing line says how to continue (e.g. call get_children on a deeper node).")]
+    [Description("Renders a node and its descendants as indented text, viewer-style. Each line is: 'kind summary [id]'. Truncated when either maxDepth or maxNodes is hit; the trailing line says how to continue (e.g. call get_children on a deeper node).")]
     public static string PrintSubtree(
         [Description("Absolute path to a .binlog file")] string path,
         [Description("Node id as returned by search")] string id,
@@ -172,13 +163,13 @@ public static partial class BinlogTools
 
             rendered++;
             sb.Append(' ', depth * 2);
-            string nodeIdText = NodeId.Get(n) ?? "?";
-            sb.Append('[').Append(nodeIdText).Append("] ").AppendLine(Summarize(n));
+            sb.AppendLine(FormatNode(n));
 
             if (depth >= depthLimit)
             {
                 if (n is TreeNode { HasChildren: true } tn && !truncated)
                 {
+                    string nodeIdText = NodeId.Get(n) ?? "?";
                     sb.Append(' ', (depth + 1) * 2);
                     sb.Append("... ").Append(tn.Children.Count).Append(" more (depth limit; call get_children(path, \"")
                       .Append(nodeIdText).AppendLine("\") to drill in)");
@@ -216,13 +207,42 @@ public static partial class BinlogTools
         return TextUtilities.ShortenValue(text, "...", maxChars: 300);
     }
 
+    /// <summary>
+    /// The canonical one-line representation of a real node:
+    /// <c>"Kind Summary [id]"</c>. Use this everywhere a node row is
+    /// printed (search results, get_children, get_ancestors,
+    /// print_subtree, search_properties_and_items) so the format is
+    /// uniform and the trailing <c>[id]</c> is always round-trippable.
+    /// <para>
+    /// <see cref="Property"/> and <see cref="Metadata"/> nodes drop the
+    /// kind prefix and use <c>Name=Value [id]</c> instead, since their
+    /// kind is implied by context and the value is the interesting part.
+    /// </para>
+    /// </summary>
+    private static string FormatNode(BaseNode node)
+    {
+        string id = NodeId.Get(node) ?? "?";
+        if (node is Property or Metadata)
+        {
+            var nv = (NameValueNode)node;
+            string value = TextUtilities.ShortenValue(nv.Value ?? string.Empty, "...", maxChars: 300);
+            return $"{nv.Name}={value} [{id}]";
+        }
+
+        string kind = node.TypeName ?? node.GetType().Name;
+        string summary = Summarize(node);
+        return $"{kind} {summary} [{id}]";
+    }
+
     private static string DescribeNode(BaseNode node)
     {
         var sb = new StringBuilder();
+        // Unlike FormatNode, do not truncate: get_node is the one tool the
+        // caller uses precisely to see the full untruncated text of a node.
+        string kind = node.TypeName ?? node.GetType().Name;
+        string fullText = node.Title ?? node.ToString() ?? string.Empty;
         string id = NodeId.Get(node) ?? "?";
-        sb.Append("id: ").AppendLine(id);
-        sb.Append("kind: ").AppendLine(node.TypeName ?? node.GetType().Name);
-        sb.Append("summary: ").AppendLine(Summarize(node));
+        sb.Append(kind).Append(' ').Append(fullText).Append(" [").Append(id).Append(']').AppendLine();
 
         if (node is NameValueNode nv)
         {
@@ -232,7 +252,6 @@ public static partial class BinlogTools
 
         if (node is TimedNode timed)
         {
-            sb.Append("index: ").AppendLine(timed.Index.ToString());
             sb.Append("start: ").AppendLine(timed.StartTime.ToString("o"));
             sb.Append("end: ").AppendLine(timed.EndTime.ToString("o"));
             sb.Append("duration: ").AppendLine(timed.Duration.ToString());
@@ -250,8 +269,7 @@ public static partial class BinlogTools
 
         if (node.Parent is BaseNode parent)
         {
-            string parentId = NodeId.Get(parent) ?? "?";
-            sb.Append("parent: [").Append(parentId).Append("] ").AppendLine(parent.TypeName ?? parent.GetType().Name);
+            sb.Append("parent: ").AppendLine(FormatNode(parent));
         }
 
         if (node is TreeNode tree)
