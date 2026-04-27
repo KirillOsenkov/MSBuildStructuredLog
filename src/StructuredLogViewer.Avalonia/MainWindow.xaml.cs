@@ -47,10 +47,6 @@ namespace StructuredLogViewer.Avalonia
         public MainWindow()
         {
             InitializeComponent();
-#if DEBUG
-            this.AttachDevTools();
-#endif
-
             TemplateApplied += MainWindow_Loaded;
         }
 
@@ -435,7 +431,7 @@ namespace StructuredLogViewer.Avalonia
             var files = await TopLevel.GetTopLevel(this)!.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
                 Title = "Build Log",
-                FileTypeFilter = new[] { FilePickerFileTypes.All, FileTypes.Binlog, FileTypes.Xml }
+                FileTypeFilter = new[] { FilePickerFileTypes.All, FileTypes.Binlog, FilePickerFileTypes.Xml }
             });
 
             var firstFile = files.FirstOrDefault();
@@ -496,7 +492,7 @@ namespace StructuredLogViewer.Avalonia
                 var result = await TopLevel.GetTopLevel(this)!.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions()
                 {
                     Title = "Save log file as",
-                    FileTypeChoices = new[] { FileTypes.Binlog, FileTypes.Xml },
+                    FileTypeChoices = new[] { FileTypes.Binlog, FilePickerFileTypes.Xml },
                     DefaultExtension = FileTypes.BinlogDefaultExtension,
                 });
 

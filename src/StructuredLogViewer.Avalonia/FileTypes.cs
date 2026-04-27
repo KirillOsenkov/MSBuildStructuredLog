@@ -14,14 +14,6 @@ public class FileTypes
             AppleUniformTypeIdentifiers = new []{ "public.data" }
         };
 
-    public static FilePickerFileType Xml { get; } =
-        new("XML")
-        {
-            Patterns = new[] { "*.xml" },
-            MimeTypes = new[] { "application/xml", "text/xml" },
-            AppleUniformTypeIdentifiers = new[] { "public.xml" }
-        };
-
     public static FilePickerFileType MsBuildProj { get; } =
         new("MsBuild project file")
         {

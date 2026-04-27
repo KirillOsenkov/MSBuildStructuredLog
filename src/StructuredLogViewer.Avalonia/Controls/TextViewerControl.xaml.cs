@@ -17,6 +17,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using AvaloniaEdit.Highlighting.Xshd;
 using System.Text;
+using Avalonia.Input.Platform;
 using Avalonia.VisualTree;
 using Avalonia.Platform.Storage;
 

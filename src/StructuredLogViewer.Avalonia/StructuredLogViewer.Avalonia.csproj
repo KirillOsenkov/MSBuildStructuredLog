@@ -4,7 +4,6 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
     <ApplicationIcon>StructuredLogger.ico</ApplicationIcon>
-    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -32,7 +31,7 @@
   <ItemGroup>
     <PackageReference Include="Avalonia.AvaloniaEdit" />
     <PackageReference Include="Avalonia.Desktop" />
-    <PackageReference Include="Avalonia.Diagnostics" Condition=" '$(Configuration)' == 'Debug' " />
+    <PackageReference Include="AvaloniaUI.DiagnosticsSupport" Condition=" '$(Configuration)' == 'Debug' " />
     <PackageReference Include="Avalonia.Themes.Fluent" />
   </ItemGroup>
 
