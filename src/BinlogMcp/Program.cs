@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -22,6 +23,13 @@ class Program
             .AddMcpServer(options =>
             {
                 options.ServerInstructions = ServerInstructions;
+                options.ServerInfo = new()
+                {
+                    Name = "binlogmcp",
+                    Version = Assembly.GetExecutingAssembly()
+                        .GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ?? "0.0.0",
+                    WebsiteUrl = "https://github.com/KirillOsenkov/MSBuildStructuredLog"
+                };
             })
             .WithStdioServerTransport()
             .WithToolsFromAssembly();
