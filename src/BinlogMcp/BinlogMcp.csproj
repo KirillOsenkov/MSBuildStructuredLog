@@ -2,34 +2,50 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <Version>$(BinlogToolVersion)</Version>
+    <Version>$(BinlogMcpVersion)</Version>
     <TargetFramework>net10.0</TargetFramework>
     <RollForward>major</RollForward>
     <LangVersion>latest</LangVersion>
     <DebugType>embedded</DebugType>
     <Prefer32Bit>false</Prefer32Bit>
     <PackAsTool>true</PackAsTool>
-    <ToolCommandName>binlogtool</ToolCommandName>
+    <ToolCommandName>binlogmcp</ToolCommandName>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <PackageId>binlogtool</PackageId>
+    <PackageId>BinlogMcp</PackageId>
     <Authors>Kirill Osenkov</Authors>
     <Company>Microsoft</Company>
-    <Description>A tool to read, process and analyze MSBuild .binlog files. Read more at https://msbuildlog.com.</Description>
+    <PackageReadmeFile>LlmGuide.md</PackageReadmeFile>
+    <Description>A Model Context Protocol (MCP) server that exposes MSBuild .binlog files to LLMs. Read more at https://msbuildlog.com.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/KirillOsenkov/MSBuildStructuredLog</PackageProjectUrl>
     <IconFilePath>$(MSBuildThisFileDirectory)..\StructuredLogViewer\icons\msbuild-structured-log-viewer.png</IconFilePath>
     <PackageIcon>msbuild-structured-log-viewer.png</PackageIcon>
     <RepositoryUrl>https://github.com/KirillOsenkov/MSBuildStructuredLog</RepositoryUrl>
-    <PackageTags>MSBuild Log Logger Structure Structured Binlog BinlogTool</PackageTags>
+    <PackageTags>MSBuild Log Logger Structure Structured Binlog MCP</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\StructuredLogger.Utils\StructuredLogger.Utils.csproj" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="ModelContextProtocol" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\StructuredLogger\StructuredLogger.csproj" />
+    <ProjectReference Include="..\StructuredLogger.Utils\StructuredLogger.Utils.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="$(IconFilePath)" Pack="true" PackagePath="" />
+    <None Include="LlmGuide.md" Pack="true" PackagePath="" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="SearchSyntax.md">
+      <LogicalName>SearchSyntax.md</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="LlmGuide.md">
+      <LogicalName>LlmGuide.md</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>

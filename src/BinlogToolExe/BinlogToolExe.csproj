@@ -1,9 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <AssemblyName>binlogtool</AssemblyName>
     <OutputType>Exe</OutputType>
     <Version>$(BinlogToolVersion)</Version>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <RollForward>major</RollForward>
     <LangVersion>latest</LangVersion>
     <DebugType>embedded</DebugType>
@@ -12,7 +13,7 @@
   <PropertyGroup>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <PublishSingleFile>True</PublishSingleFile>
-    <SelfContained>false</SelfContained>
+    <SelfContained>true</SelfContained>
     <PublishTrimmed>true</PublishTrimmed>
   </PropertyGroup>
 
@@ -26,7 +27,7 @@
   </ItemGroup>
 
   <Target Name="PublishBinlogToolExe"
-          AfterTargets="AfterBuild"
+          DependsOnTargets="Publish"
           Condition="$(Configuration) == 'Release' AND $([MSBuild]::IsOSPlatform(`Windows`))">
     <PropertyGroup>
       <RootDir>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'MSBuildStructuredLog.sln'))</RootDir>

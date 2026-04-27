@@ -67,6 +67,12 @@ namespace StructuredLogViewer.Avalonia.Controls
 
         private PropertiesAndItemsSearch propertiesAndItemsSearch;
 
+        static BuildControl()
+        {
+            PreprocessedFileManager.GetPreprocessedFilePath = SettingsService.GetPreprocessedFilePath;
+            PreprocessedFileManager.WriteContentToTempFileAndGetPath = SettingsService.WriteContentToTempFileAndGetPath;
+        }
+
         public BuildControl()
         {
         }
@@ -888,6 +894,8 @@ Recent:
 
         public string InitialSearchText { get; set; }
 
+        public string SearchText => searchLogControl?.SearchText;
+
         public void SelectItem(BaseNode item)
         {
             var parentChain = item.GetParentChainExcludingThis();
@@ -1334,17 +1342,9 @@ Recent:
                 return false;
             }
 
-            var xml = text.XmlRoot.Root;
-            IXmlElement root = xml;
+            SourceTextXml.TryGetXml(text, out var root);
             int startPosition = 0;
             int line = 0;
-
-            // work around a bug in Xml Parser where a virtual parent is created around the root element
-            // when the root element is preceded by trivia (comment)
-            if (root.Name == null && root.Elements.FirstOrDefault() is IXmlElement firstElement && firstElement.Name == "Project")
-            {
-                root = firstElement;
-            }
 
             foreach (var element in root.Elements)
             {

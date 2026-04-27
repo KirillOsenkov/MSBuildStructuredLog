@@ -605,7 +605,7 @@ namespace StructuredLogViewer.Controls
         private FastCanvas HeatGraph;
 
         /// <summary>
-        /// Draw Graph 
+        /// Draw Graph
         /// </summary>
         private void Draw()
         {
@@ -1172,8 +1172,8 @@ namespace StructuredLogViewer.Controls
             scrollViewer.ScrollToVerticalOffset(verticalOffset);
         }
 
-        private bool isMouseMoving;
-        private Point lastMousePos;
+        private bool isMouseMoving = false;
+        private Point lastMousePos = PointZero;
 
         #region XAML Events
         private void ResetZoom_Click(object sender, RoutedEventArgs e)
@@ -1212,35 +1212,49 @@ namespace StructuredLogViewer.Controls
 
         private void Grid_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            lastMousePos = Mouse.GetPosition(this);
+            lastMousePos = e.GetPosition(this);
+            e.Handled = true;
+        }
+
+        private void Grid_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            lastMousePos = PointZero;
+            isMouseMoving = false;
+            e.Handled = true;
         }
 
         private void Grid_MouseMove(object sender, MouseEventArgs e)
         {
             var currentMousePos = e.GetPosition(this);
 
-            // Handle the case where mouse up isn't sent when released outside of client space.
             if (e.LeftButton == MouseButtonState.Released)
             {
+                // Handle the case where mouse up isn't sent when released outside of client space.
                 if (isMouseMoving)
                 {
                     isMouseMoving = false;
+                    lastMousePos = PointZero;
                 }
                 else
                 {
                     UpdateToolTips(currentMousePos);
                 }
 
+                e.Handled = true;
                 return;
             }
-
-            var vector = Point.Subtract(lastMousePos, currentMousePos);
-            if (isMouseMoving || vector.Length > 5)
+            else if (e.LeftButton == MouseButtonState.Pressed && lastMousePos != PointZero)
             {
-                isMouseMoving = true;
-                scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset + vector.X);
-                scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset + vector.Y);
-                lastMousePos = currentMousePos;
+                var vector = Point.Subtract(lastMousePos, currentMousePos);
+                if (isMouseMoving || vector.Length > 5)
+                {
+                    scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset + vector.Y);
+                    scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset + vector.X);
+                    isMouseMoving = true;
+                    lastMousePos = currentMousePos;
+                }
+                e.Handled = true;
+                return;
             }
         }
 

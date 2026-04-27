@@ -384,7 +384,7 @@ namespace StructuredLogViewer.Avalonia
             SetContent(parametersScreen);
         }
 
-        private async void BuildCore(string projectFilePath, string customArguments)
+        private async void BuildCore(string projectFilePath, string customArguments, string searchText = null)
         {
             var progress = new BuildProgress() { IsIndeterminate = true };
             progress.ProgressText = $"Building {projectFilePath}...";
@@ -394,6 +394,10 @@ namespace StructuredLogViewer.Avalonia
             progress.ProgressText = "Analyzing build...";
             await QueueAnalyzeBuild(result);
             DisplayBuild(result);
+            if (!string.IsNullOrWhiteSpace(searchText) && CurrentBuildControl != null)
+            {
+                CurrentBuildControl.InitialSearchText = searchText;
+            }
         }
 
         private async Task QueueAnalyzeBuild(Build build)
@@ -462,8 +466,9 @@ namespace StructuredLogViewer.Avalonia
         {
             if (!string.IsNullOrEmpty(projectFilePath))
             {
+                var searchText = CurrentBuildControl?.SearchText;
                 var args = SettingsService.GetCustomArguments(projectFilePath);
-                BuildCore(projectFilePath, args);
+                BuildCore(projectFilePath, args, searchText);
             }
         }
 

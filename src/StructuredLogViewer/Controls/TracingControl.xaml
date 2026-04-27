@@ -38,6 +38,7 @@
                 <Grid x:Name="grid"
                       Background="Transparent"
                       MouseLeftButtonDown="Grid_MouseLeftButtonDown"
+                      MouseLeftButtonUp="Grid_MouseLeftButtonUp"
                       MouseMove="Grid_MouseMove" />
             </Grid>
         </ScrollViewer>

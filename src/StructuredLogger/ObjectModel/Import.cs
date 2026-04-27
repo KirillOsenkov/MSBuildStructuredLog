@@ -43,6 +43,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public override string TypeName => nameof(Import);
 
+        public override string GetFullText() => $"Import {Text}{Location}";
+
         public bool IsLowRelevance
         {
             get => HasFlag(NodeFlags.LowRelevance) && !IsSelected;

@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net10.0</TargetFrameworks>
     <NBGV_DoNotEmitNonVersionCustomAttributes>true</NBGV_DoNotEmitNonVersionCustomAttributes>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
@@ -15,6 +15,7 @@
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="all" />
     <PackageReference Include="DotUtils.MsBuild.BinlogRedactor.SensitiveDataDetector" />
     <PackageReference Include="NuGet.ProjectModel" />
+    <PackageReference Include="GuiLabs.Language.Xml" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\StructuredLogger\StructuredLogger.csproj" />

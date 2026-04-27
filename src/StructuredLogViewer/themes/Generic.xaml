@@ -774,7 +774,7 @@
     </DataTemplate.Triggers>
   </DataTemplate>
 
-  <HierarchicalDataTemplate DataType="{x:Type core:SourceFileLineWithHighlights}" ItemsSource="{Binding Children}">
+  <HierarchicalDataTemplate DataType="{x:Type l:SourceFileLineWithHighlights}" ItemsSource="{Binding Children}">
     <StackPanel x:Name="rootPanel" Orientation="Horizontal" ToolTip="{Binding ToolTip}">
       <TextBlock x:Name="lineNumber"
                  Text="{Binding LineNumber}"

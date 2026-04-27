@@ -44,15 +44,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
             else if (task is CscTask cscTask && cscTask.CompilationWrites.HasValue)
             {
-                AnalyzeCompilationWrites(cscTask.CompilationWrites.Value);
+                AnalyzeCompilationWrites("Csc", cscTask.CompilationWrites.Value);
             }
             else if (task is VbcTask vbcTask && vbcTask.CompilationWrites.HasValue)
             {
-                AnalyzeCompilationWrites(vbcTask.CompilationWrites.Value);
+                AnalyzeCompilationWrites("Vbc", vbcTask.CompilationWrites.Value);
             }
             else if (task is FscTask fscTask && fscTask.CompilationWrites.HasValue)
             {
-                AnalyzeCompilationWrites(fscTask.CompilationWrites.Value);
+                AnalyzeCompilationWrites("Fsc", fscTask.CompilationWrites.Value);
             }
         }
 
@@ -67,9 +67,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        private void AnalyzeCompilationWrites(CompilationWrites writes)
+        private void AnalyzeCompilationWrites(string compiler, CompilationWrites writes)
         {
-            var source = writes.AssemblyOrRefAssembly;
+            var fullPath = writes.AssemblyOrRefAssembly;
+            var source = $"{compiler} invocation for {fullPath}";
             process(writes.Assembly);
             process(writes.RefAssembly);
             process(writes.Pdb);
@@ -100,6 +101,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private static string GetFullPath(string filePath)
         {
+            if (string.IsNullOrEmpty(filePath) || filePath.Contains(" invocation for "))
+            {
+                return filePath;
+            }
+
             try
             {
                 filePath = new FileInfo(filePath).FullName;
