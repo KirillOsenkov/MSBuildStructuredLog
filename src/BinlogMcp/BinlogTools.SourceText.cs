@@ -37,8 +37,9 @@ Use this first to discover what's available; then read_file or search_files to i
         IEnumerable<KeyValuePair<string, SourceText>> filtered = files;
         if (!string.IsNullOrEmpty(pathFilter))
         {
+            string normalizedFilter = NormalizePathForLookup(pathFilter);
             filtered = filtered.Where(kvp =>
-                kvp.Key.IndexOf(pathFilter, StringComparison.OrdinalIgnoreCase) >= 0);
+                NormalizePathForLookup(kvp.Key).IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0);
         }
 
         var ordered = filtered
@@ -209,8 +210,9 @@ Each match line: <lineNumber>: <text>. With contextLines > 0, surrounding lines 
         }
         else if (!string.IsNullOrEmpty(pathFilter))
         {
+            string normalizedFilter = NormalizePathForLookup(pathFilter);
             candidates = allFiles.Where(kvp =>
-                kvp.Key.IndexOf(pathFilter, StringComparison.OrdinalIgnoreCase) >= 0);
+                NormalizePathForLookup(kvp.Key).IndexOf(normalizedFilter, StringComparison.OrdinalIgnoreCase) >= 0);
         }
         else
         {
@@ -359,18 +361,18 @@ Each match line: <lineNumber>: <text>. With contextLines > 0, surrounding lines 
         // 2) unique suffix (case-insensitive). Match on '/'+suffix or full path
         //    so 'Common.props' doesn't accidentally match 'UnCommon.props'.
         var suffixMatches = new List<string>();
-        string lookupSuffix = file.Replace('\\', '/');
+        string lookupSuffix = NormalizePathForLookup(file);
         foreach (var key in files.Keys)
         {
-            if (key.Equals(lookupSuffix, StringComparison.OrdinalIgnoreCase))
+            string lookupKey = NormalizePathForLookup(key);
+            if (lookupKey.Equals(lookupSuffix, StringComparison.OrdinalIgnoreCase))
             {
                 return (key, files[key]);
             }
 
-            if (key.Length > lookupSuffix.Length &&
-                key.EndsWith(lookupSuffix, StringComparison.OrdinalIgnoreCase) &&
-                (key[key.Length - lookupSuffix.Length - 1] == '/' ||
-                 key[key.Length - lookupSuffix.Length - 1] == '\\'))
+            if (lookupKey.Length > lookupSuffix.Length &&
+                lookupKey.EndsWith(lookupSuffix, StringComparison.OrdinalIgnoreCase) &&
+                lookupKey[lookupKey.Length - lookupSuffix.Length - 1] == '/')
             {
                 suffixMatches.Add(key);
             }
@@ -386,7 +388,7 @@ Each match line: <lineNumber>: <text>. With contextLines > 0, surrounding lines 
         {
             // 3) last resort: any key containing the substring
             var contains = files.Keys
-                .Where(k => k.IndexOf(lookupSuffix, StringComparison.OrdinalIgnoreCase) >= 0)
+                .Where(k => NormalizePathForLookup(k).IndexOf(lookupSuffix, StringComparison.OrdinalIgnoreCase) >= 0)
                 .Take(20)
                 .ToArray();
 
@@ -419,6 +421,11 @@ Each match line: <lineNumber>: <text>. With contextLines > 0, surrounding lines 
         }
 
         throw new InvalidOperationException(ambiguous.ToString());
+    }
+
+    private static string NormalizePathForLookup(string path)
+    {
+        return path.Replace('\\', '/');
     }
 
     private static Func<string, bool> ParseQuery(string query, bool ignoreCase)
