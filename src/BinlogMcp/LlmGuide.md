@@ -191,12 +191,15 @@ The StructuredLogger analyzer pre-computes these into a top-level `Folder` named
 Empty result = no double writes (folder is only created when at least one is detected).
 
 ### Who pulls in NuGet package `Foo` (and which version)?
-The `$nuget` token traverses the synthetic NuGet dependency graph the StructuredLogger builds from `project.assets.json`. Each match shows the chain from a project, through any project references, down to the direct `<PackageReference>`, and on through transitive dependencies.
+The `$nuget` token traverses the synthetic NuGet dependency graph the StructuredLogger builds from embedded `project.assets.json` files. Search it for package names, versions/version ranges, direct or transitive dependencies, and files that came from NuGet packages. Each match shows the chain from a project, through any project references, down to the direct `<PackageReference>`, and on through transitive dependencies.
 
+- `search $nuget project(Foo.csproj)` — list Foo's NuGet dependencies.
 - `search $nuget Newtonsoft.Json` — every project that ends up with Newtonsoft.Json on its closure, with the version actually resolved.
 - `search $nuget Newtonsoft.Json 13.0.3` — narrow to a specific version (useful when chasing a version conflict).
-- `search $nuget project(Foo.csproj) Newtonsoft.Json` — restrict to one project's graph.
-- `search $nuget project(.) Newtonsoft.Json 13.0.3` — `project(.)` matches any project; combined with a version it answers "who is forcing 13.0.3 onto someone?"
+- `search $nuget project(Foo.csproj) Newtonsoft.Json` — restrict to one project's graph and search both dependencies and resolved packages.
+- `search $nuget project(Foo.csproj) File.dll` — find a file that came from a NuGet package in one project's graph.
+- `search $nuget project(.csproj) 13.0.3` — search all projects for a specific version or version range.
+- `search $nuget project(.) Newtonsoft.Json 13.0.3` — `project(.)` / `project(.csproj)` matches any project; combined with a version it answers "who is forcing 13.0.3 onto someone?"
 
 The result tree is the chain itself: `Project → ProjectReference(s) → PackageReference → transitive dependency → ... → Newtonsoft.Json 13.0.3`. Read top-to-bottom to see *why* the package landed in that project.
 
