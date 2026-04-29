@@ -96,7 +96,7 @@ Decision rule:
 ### Where was item `@(X)` added?
 Items added at evaluation time are not individually attributed in the binlog — only the final list survives. Strategy:
 
-1. `search_files "<X Include="` to find every static `ItemGroup` that could contribute. Reason about conditions.
+1. `search_files "<X Include="` where `X` is the item name (for example `search_files "<Compile Include="` or `search_files "<None Include="`). This is the fastest way to find static `ItemGroup` entries that add items during evaluation. Reason about surrounding `Condition`s and imports.
 2. For items added during execution, those *are* logged: `search $additem` (optionally `under($target Foo project(Bar.csproj))`).
 3. To inspect the final value: `search $projectevaluation Bar`, take its id, then `search_properties_and_items <id> $item X`.
 
