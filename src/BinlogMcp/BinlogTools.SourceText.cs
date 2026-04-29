@@ -284,45 +284,61 @@ Each match line: <lineNumber>: <text>. With contextLines > 0, surrounding lines 
         }
 
         int currentFile = -1;
-        int width = 1;
-        foreach (var (fileIdx, lineIdx) in page)
+        for (int pageIndex = 0; pageIndex < page.Length;)
         {
-            if (fileIdx != currentFile)
+            int fileIdx = page[pageIndex].FileIdx;
+            if (currentFile != -1)
             {
-                if (currentFile != -1)
-                {
-                    sb.AppendLine();
-                }
-
-                currentFile = fileIdx;
-                var entry = perFileMatches[fileIdx];
-                sb.AppendLine(entry.FullPath);
-                int maxLine = entry.LineIndices[^1] + 1 + context;
-                width = maxLine.ToString().Length;
+                sb.AppendLine();
             }
 
+            currentFile = fileIdx;
             var fileEntry = perFileMatches[fileIdx];
             int total = fileEntry.Text.Lines.Count;
+            sb.AppendLine(fileEntry.FullPath);
 
-            if (context > 0)
+            var hitLines = new HashSet<int>();
+            var ranges = new List<(int Start, int End)>();
+            while (pageIndex < page.Length && page[pageIndex].FileIdx == fileIdx)
             {
-                int from = Math.Max(0, lineIdx - context);
-                int to = Math.Min(total - 1, lineIdx + context);
-                for (int i = from; i <= to; i++)
+                int lineIdx = page[pageIndex].LineIdx;
+                hitLines.Add(lineIdx);
+                ranges.Add((
+                    Math.Max(0, lineIdx - context),
+                    Math.Min(total - 1, lineIdx + context)));
+                pageIndex++;
+            }
+
+            ranges.Sort((left, right) => left.Start != right.Start
+                ? left.Start.CompareTo(right.Start)
+                : left.End.CompareTo(right.End));
+
+            var merged = new List<(int Start, int End)>();
+            foreach (var range in ranges)
+            {
+                if (merged.Count == 0 || range.Start > merged[^1].End + 1)
                 {
-                    char sep = i == lineIdx ? ':' : '-';
+                    merged.Add(range);
+                }
+                else if (range.End > merged[^1].End)
+                {
+                    var previous = merged[^1];
+                    merged[^1] = (previous.Start, range.End);
+                }
+            }
+
+            int maxLine = merged[^1].End + 1;
+            int width = maxLine.ToString().Length;
+            foreach (var range in merged)
+            {
+                for (int i = range.Start; i <= range.End; i++)
+                {
+                    char sep = hitLines.Contains(i) ? ':' : '-';
                     sb.Append(' ', 2)
                       .Append((i + 1).ToString().PadLeft(width))
                       .Append(sep).Append(' ')
                       .AppendLine(fileEntry.Text.GetLineText(i));
                 }
-            }
-            else
-            {
-                sb.Append(' ', 2)
-                  .Append((lineIdx + 1).ToString().PadLeft(width))
-                  .Append(": ")
-                  .AppendLine(fileEntry.Text.GetLineText(lineIdx));
             }
         }
 
