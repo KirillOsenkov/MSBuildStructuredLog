@@ -56,14 +56,14 @@ Filtering avoids paging through thousands of children just to find a few interes
 
 kind: any $-token from the search DSL minus the leading '$' (e.g. ""target"", ""task"", ""property"", ""item"", ""metadata"", ""message"", ""error"", ""warning"", ""csc"", ""rar""). Same matching rules as `search $kind`: '$task' matches all task subtypes; '$csc' matches Task instances named Csc.
 
-nameContains: case-insensitive substring matched against the child's name/text fields (same fields the search tool searches by default).
+nameContains: raw search text matched against the child's name/text fields with the same semantics as search. Pass plain text for substring search (e.g. Sources); include quotes yourself for exact phrase/exact single-word matching inside those fields. Use kind=... for node type filtering (e.g. kind=parameter), not nameContains.
 
 Returns nothing if the node has no children matching the filter.")]
     public static string GetChildren(
         [Description("Absolute path to a .binlog file")] string path,
         [Description("Node id as returned by search")] string id,
         [Description("Optional node-kind filter, e.g. \"target\", \"task\", \"property\", \"csc\". Mirrors the search DSL's $kind tokens (without the $).")] string kind = null,
-        [Description("Optional case-insensitive substring matched against the child's name/text.")] string nameContains = null,
+        [Description("Optional raw search text matched against the child's name/text. Plain text is substring search; include quotes yourself for exact phrase/exact single-word search. Use kind for node type filtering.")] string nameContains = null,
         [Description("Number of leading children (after filtering) to skip (default 0)")] int? skip = null,
         [Description("Maximum number of children to return (default 200, max 5000)")] int? maxResults = null) => Run(() =>
     {
@@ -78,8 +78,6 @@ Returns nothing if the node has no children matching the filter.")]
             return $"node [{id}] has no children";
         }
 
-        // Build a NodeQueryMatcher from the (kind, nameContains) pair so we
-        // get exactly the same matching semantics as the search tool.
         StructuredLogViewer.NodeQueryMatcher matcher = null;
         string filterDescription = null;
         kind = string.IsNullOrWhiteSpace(kind) ? null : kind.Trim().TrimStart('$');
@@ -94,8 +92,7 @@ Returns nothing if the node has no children matching the filter.")]
 
             if (nameContains != null)
             {
-                // Quote so multi-word substrings are treated as one term.
-                queryParts.Add("\"" + nameContains.Replace("\"", "\\\"") + "\"");
+                queryParts.Add(nameContains);
             }
 
             string query = string.Join(" ", queryParts);
