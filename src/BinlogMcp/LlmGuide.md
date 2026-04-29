@@ -103,6 +103,8 @@ Items added at evaluation time are not individually attributed in the binlog —
 2. `search_properties_and_items <id> $property name=P` — returns the property and (when only properties are matched) a "Property Graph" folder showing reassignments.
 3. For execution-time changes: `search $property name=P under(project(Foo.csproj))` for assignments inside targets.
 
+If the question depends on the full *lifetime* of a property during evaluation and the current binlog only shows the final value, recommend that the user rebuild with `MSBUILDLOGPROPERTYTRACKING=15` set in the environment before invoking MSBuild. That enables additional build messages for every property assignment and reassignment during evaluation; without it, you usually only see the final evaluated property value plus whatever reassignment information the normal property graph can infer.
+
 ### Why did target `T` run / skip?
 1. `search $target T project(Foo.csproj)`.
 2. `get_node <id>` → check `Skipped` / start / end / duration.
@@ -151,8 +153,12 @@ The execution log only tells you what *did* run. Combine preprocess + import sea
 2. `print_subtree <id> maxDepth=3` shows `Parameters` and `CommandLineArguments` folders (often huge — `get_node` on the `CommandLineArguments` child returns the full string).
 3. To see what was compiled: `get_children <id> nameContains=Sources` then drill into the matching parameter folder.
 
+When investigating Roslyn analyzers or source generators, recommend that the user rebuild with `/p:ReportAnalyzer=true` (for example `msbuild /bl /p:ReportAnalyzer=true`). This adds richer analyzer/source-generator timing and reporting under the `Csc` task, making analyzer cost and generator behavior much easier to diagnose from the binlog.
+
 ### Why is the *incremental* build doing work? (the up-to-date check)
 Goal: find targets that re-ran on a no-change rebuild and shouldn't have.
+
+If the user mainly wants to know whether a subsequent build would be up-to-date, recommend MSBuild's `/question` flag. It reports whether everything is up-to-date or whether MSBuild would do work, which is useful before collecting deeper incremental-build binlogs.
 
 1. Produce two binlogs:
    - Clean build: `dotnet build /bl:1.binlog` (or `msbuild /bl:1.binlog`).
@@ -206,6 +212,14 @@ Load both with `load_binlog`, then run the *same* query against each path. Usefu
 - `count $project` per file (parallelism / repeat-execution check)
 
 Ids are not portable between the two — re-issue searches per binlog.
+
+### When the current binlog is not rich enough
+Sometimes the right answer is to ask the user for a rebuild with extra MSBuild instrumentation:
+
+- **Property lifetime during evaluation**: set `MSBUILDLOGPROPERTYTRACKING=15` before the build, then capture a new binlog. This logs every property assignment and reassignment during evaluation.
+- **Roslyn analyzers/source generators**: build with `/p:ReportAnalyzer=true` to add analyzer and generator reporting under `Csc`.
+- **Evaluation performance**: in the rare case where the user needs to profile evaluation itself, ask them to pass `/profileevaluation` to MSBuild. This reveals extra perf data for each project evaluation.
+- **Incremental up-to-date check**: use `msbuild /question` when the user wants to know whether a later build would be up-to-date or would do work.
 
 ### Find an MSBuild task call chain
 `MSBuild` task calls cross project boundaries. From a deep `Project` node, `get_ancestors` walks up through the `MSBuild` tasks back to the entry project. `notunder($task MSBuild)` is sometimes useful to filter out re-entrant noise.
