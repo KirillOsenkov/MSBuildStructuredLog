@@ -36,6 +36,8 @@ On `Project` lines the ` → <name>` shows the entry target; the `[id]` is still
 
 Avoid raw paging through huge child lists. Filter with `kind` (any `$kind` token without the `$`) and/or `nameContains`.
 
+Use `preprocess_file` when the question is about the effective MSBuild XML for one evaluation after imports and conditions: whether a target/property/item definition was actually imported, which assignment appears later and wins, what `DependsOnTargets` / `BeforeTargets` / `AfterTargets` says in this evaluation, or whether a target is absent because its declaring file was not imported. Prefer raw `search_files` when you are looking for text anywhere in embedded source files regardless of evaluation context.
+
 ## DSL essentials
 
 | Token | Meaning |
@@ -101,7 +103,8 @@ Items added at evaluation time are not individually attributed in the binlog —
 ### Why is property `P` set to this value?
 1. `search $projectevaluation Foo` → take evaluation id.
 2. `search_properties_and_items <id> $property name=P` — returns the property and (when only properties are matched) a "Property Graph" folder showing reassignments.
-3. For execution-time changes: `search $property name=P under(project(Foo.csproj))` for assignments inside targets.
+3. If multiple imported files could set the property, use `preprocess_file` to inspect the actual import order and nearby conditions for this evaluation.
+4. For execution-time changes: `search $property name=P under(project(Foo.csproj))` for assignments inside targets.
 
 If the question depends on the full *lifetime* of a property during evaluation and the current binlog only shows the final value, recommend that the user rebuild with `MSBUILDLOGPROPERTYTRACKING=15` set in the environment before invoking MSBuild. That enables additional build messages for every property assignment and reassignment during evaluation; without it, you usually only see the final evaluated property value plus whatever reassignment information the normal property graph can infer.
 
@@ -115,6 +118,7 @@ If the question depends on the full *lifetime* of a property during evaluation a
 1. `search $import Foo.targets project(Bar.csproj)` — every successful import of that file in Bar's evaluation. The result tree shows the importing file/line and the resolved target.
 2. If nothing comes back, try `search $noimport Foo.targets project(Bar.csproj)` — `NoImport` nodes capture imports that *were attempted but skipped*. The reason is in the node text: false `Condition`, file not found at the resolved path, MSBuild SDK not resolved, etc.
 3. Drop the `project(...)` clause to see imports across all evaluations (useful when you don't yet know which project pulled it in, or when chasing SDK-level imports).
+4. When import search shows that a file was imported but you need to understand what it contributed, use `preprocess_file` on the project evaluation and search/read the preprocessed XML.
 
 ### Read the preprocessed XML for an evaluation
 `preprocess_file` returns the full effective MSBuild XML for a project (all `<Import>`s recursively inlined — same as `msbuild /pp` and the viewer's "Preprocess" command). Scoped to one `ProjectEvaluation`.
