@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime;
+using System.Runtime.InteropServices;
 using Microsoft.Build.Logging.StructuredLogger;
 using StructuredLogViewer;
 
@@ -331,11 +334,33 @@ public sealed class BinlogCache
     private static void ForceCollect()
     {
         // Help large binlog object graphs get reclaimed promptly so the
-        // working set tracks the cache state instead of trailing it.
-        GC.Collect();
+        // working set tracks the cache state instead of trailing it. Binlogs
+        // allocate many large arrays/strings, so ask the next full blocking GC
+        // to compact the LOH as well; this matters especially under Server GC.
+        GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+        GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, blocking: true, compacting: true);
         GC.WaitForPendingFinalizers();
-        GC.Collect();
+        GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+        GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, blocking: true, compacting: true);
+        TrimWorkingSet();
     }
+
+    private static void TrimWorkingSet()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        using var process = Process.GetCurrentProcess();
+        SetProcessWorkingSetSize(process.Handle, new IntPtr(-1), new IntPtr(-1));
+    }
+
+    [DllImport("kernel32.dll")]
+    private static extern bool SetProcessWorkingSetSize(
+        IntPtr process,
+        IntPtr minimumWorkingSetSize,
+        IntPtr maximumWorkingSetSize);
 
     private static long EstimateMemory(long fileSize) => fileSize * MemoryMultiplier;
 
