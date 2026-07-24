@@ -555,7 +555,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                 var folder = GetWorkspacePath();
 
                 // Build the URI using the correct scheme for this variant
-                var uri = $"{installation.UriScheme}://dotutils.binlog-analyzer/open?path=" + Uri.EscapeDataString(binlogPath);
+                var uri = $"{installation.UriScheme}://ms-dotnettools.msbuild-binlog-analyzer/open?path=" + Uri.EscapeDataString(binlogPath);
                 foreach (var attached in attachedBinlogs)
                 {
                     uri += "&path=" + Uri.EscapeDataString(attached);
@@ -588,7 +588,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             }
         }
 
-        private static readonly string ExtensionId = "dotutils.binlog-analyzer";
+        private static readonly string ExtensionId = "ms-dotnettools.msbuild-binlog-analyzer";
 
         private static void EnsureExtensionInstalled(VSCodeInstallation installation)
         {
