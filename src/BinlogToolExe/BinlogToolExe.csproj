@@ -26,6 +26,10 @@
     <ProjectReference Include="..\StructuredLogger\StructuredLogger.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine" />
+  </ItemGroup>
+
   <Target Name="PublishBinlogToolExe"
           DependsOnTargets="Publish"
           Condition="$(Configuration) == 'Release' AND $([MSBuild]::IsOSPlatform(`Windows`))">

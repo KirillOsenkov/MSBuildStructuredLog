@@ -29,6 +29,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.CommandLine" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="$(IconFilePath)" Pack="true" PackagePath="" />
   </ItemGroup>
 
