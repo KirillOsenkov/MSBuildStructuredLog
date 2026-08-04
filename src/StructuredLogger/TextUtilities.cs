@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+
+using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -531,6 +534,23 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             return span.Milliseconds + " ms";
+        }
+
+        public static string DisplayNodeId(int nodeId)
+        {
+            if (nodeId == BuildEventContext.InvalidNodeId)
+            {
+                return "Invalid";
+            }
+            else if (nodeId == 0)
+            {
+                return "N/A";
+            }
+            else
+            {
+                // Use the invariant culture so there are never any digit seperators
+                return nodeId.ToString("D", CultureInfo.InvariantCulture);
+            }
         }
 
         public static string Display(this DateTime time, bool displayDate = false, bool fullPrecision = false)
