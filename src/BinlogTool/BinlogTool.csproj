@@ -17,6 +17,7 @@
     <Description>A tool to read, process and analyze MSBuild .binlog files. Read more at https://msbuildlog.com.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/KirillOsenkov/MSBuildStructuredLog</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <IconFilePath>$(MSBuildThisFileDirectory)..\StructuredLogViewer\icons\msbuild-structured-log-viewer.png</IconFilePath>
     <PackageIcon>msbuild-structured-log-viewer.png</PackageIcon>
     <RepositoryUrl>https://github.com/KirillOsenkov/MSBuildStructuredLog</RepositoryUrl>
@@ -34,6 +35,7 @@
 
   <ItemGroup>
     <None Include="$(IconFilePath)" Pack="true" PackagePath="" />
+    <None Include="README.md" Pack="true" PackagePath="" />
   </ItemGroup>
 
 </Project>
