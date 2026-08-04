@@ -13,14 +13,24 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static BinlogStats Calculate(string binlogFilePath)
         {
+            return Calculate(binlogFilePath, trackStrings: null, sort: null);
+        }
+
+        /// <param name="trackStrings">Force collecting all strings on or off; null decides based on file size.</param>
+        /// <param name="sort">Force sorting records in each bucket by size on or off; null decides based on file size.</param>
+        public static BinlogStats Calculate(string binlogFilePath, bool? trackStrings, bool? sort)
+        {
             var stats = new BinlogStats();
             stats.FileSize = new FileInfo(binlogFilePath).Length;
 
             bool expensive = stats.FileSize > 20_000_000;
-            TrackStrings = !expensive;
-            Sort = !expensive;
+            TrackStrings = trackStrings ?? !expensive;
+            Sort = sort ?? !expensive;
+            stats.StringsTracked = TrackStrings;
+            stats.RecordsSorted = Sort;
 
             var reader = new BinLogReader();
+            reader.OnFileFormatVersionRead += version => stats.FileFormatVersion = version;
             reader.OnBlobRead += (kind, bytes) => stats.OnBlobRead(kind, bytes);
             reader.OnStringRead += (text, lengthBytes) => stats.OnStringRead(text, lengthBytes);
             reader.OnNameValueListRead += (list, recordLengthBytes) => stats.OnNameValueListRead(list, recordLengthBytes);
@@ -33,6 +43,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public long FileSize;
         public long UncompressedStreamSize;
         public long RecordCount;
+        public int FileFormatVersion;
+
+        public bool StringsTracked { get; private set; }
+        public bool RecordsSorted { get; private set; }
 
         public int NameValueListCount;
         public long NameValueListTotalSize;

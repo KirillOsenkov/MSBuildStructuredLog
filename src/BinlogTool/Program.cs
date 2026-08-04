@@ -23,6 +23,7 @@ root.Subcommands.Add(CreateSaveStrings());
 root.Subcommands.Add(CreateSearch());
 root.Subcommands.Add(CreateRedact());
 root.Subcommands.Add(CreateDumpRecords());
+root.Subcommands.Add(CreateStats());
 
 return root.Parse(args).Invoke();
 
@@ -210,6 +211,49 @@ Command CreateRedact()
         return 0;
     });
     return command;
+}
+
+// binlogtool stats input.binlog [--html [report.html]] [--text [report.txt]] [--strings]
+Command CreateStats()
+{
+    var binlog = new Argument<string>("input.binlog") { Description = "Path to the binlog to analyze." };
+    var html = new Option<string>("--html")
+    {
+        Description = "Write a standalone HTML report with charts and drill-down. Optional path, defaults to <input>.stats.html.",
+        Arity = ArgumentArity.ZeroOrOne
+    };
+    var text = new Option<string>("--text")
+    {
+        Description = "Write an LLM-friendly plain text report. Optional path, defaults to <input>.stats.txt.",
+        Arity = ArgumentArity.ZeroOrOne
+    };
+    var strings = new Option<bool>("--strings") { Description = "Include the largest strings from the string table in the report (uses more memory)." };
+
+    var command = new Command("stats", "Break down what takes up space in a binlog. Prints text to stdout unless --html/--text are specified.")
+    {
+        binlog, html, text, strings
+    };
+    command.SetAction(parseResult =>
+    {
+        var input = parseResult.GetValue(binlog);
+        return new Stats().Run(
+            input,
+            GetOutputPath(parseResult, html, input, ".stats.html"),
+            GetOutputPath(parseResult, text, input, ".stats.txt"),
+            parseResult.GetValue(strings));
+    });
+    return command;
+
+    static string GetOutputPath(ParseResult parseResult, Option<string> option, string input, string suffix)
+    {
+        if (parseResult.GetResult(option) is null)
+        {
+            return null;
+        }
+
+        var value = parseResult.GetValue(option);
+        return !string.IsNullOrEmpty(value) ? value : input + suffix;
+    }
 }
 
 // binlogtool dumprecords [[--input:]path] [--include-total] [--include-rollup] [--exclude-details]
