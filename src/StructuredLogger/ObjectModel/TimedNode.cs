@@ -52,7 +52,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             return $@"Start: {TextUtilities.Display(StartTime, displayDate: true, fullPrecision)}
 End: {TextUtilities.Display(EndTime, displayDate: true, fullPrecision)}
-Duration: {duration}";
+Duration: {duration}
+Node: {TextUtilities.DisplayNodeId(NodeId)}";
         }
 
         public override string ToolTip => GetTimeAndDurationText();
