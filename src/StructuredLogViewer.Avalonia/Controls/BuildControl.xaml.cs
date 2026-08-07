@@ -131,6 +131,13 @@ namespace StructuredLogViewer.Avalonia.Controls
         {
             PreprocessedFileManager.GetPreprocessedFilePath = SettingsService.GetPreprocessedFilePath;
             PreprocessedFileManager.WriteContentToTempFileAndGetPath = SettingsService.WriteContentToTempFileAndGetPath;
+
+            // ScrollContentPresenter handles RequestBringIntoView before any handler on the
+            // TreeView can (it's closer to the item in the bubble route) and scrolls
+            // horizontally too, shifting the whole tree left when a wide item is expanded
+            // or selected. A class handler on TreeViewItem runs at the event source, before
+            // the presenter, so we can take over and scroll vertically only.
+            RequestBringIntoViewEvent.AddClassHandler<TreeViewItem>(TreeViewItem_RequestBringIntoView);
         }
 
         // required by the Avalonia XAML loader (AVLN3001); not used directly
@@ -797,8 +804,6 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                     }
                 }
             }, RoutingStrategies.Tunnel);
-
-            treeView.AddHandler(Control.RequestBringIntoViewEvent, TreeViewItem_RequestBringIntoView);
 
             treeView.DoubleTapped += (o, e) =>
             {
@@ -3017,14 +3022,14 @@ Recent ("));
             return folder.Children;
         }
 
-        private void TreeViewItem_RequestBringIntoView(object sender, RequestBringIntoViewEventArgs e)
+        private static void TreeViewItem_RequestBringIntoView(TreeViewItem treeViewItem, RequestBringIntoViewEventArgs e)
         {
-            if (sender is not TreeView tree || e.TargetObject is not Control item)
+            if (e.Handled || e.TargetObject is not Control item)
             {
                 return;
             }
 
-            var viewer = tree.FindDescendantOfType<ScrollViewer>();
+            var viewer = treeViewItem.FindAncestorOfType<ScrollViewer>();
             if (viewer == null)
             {
                 return;
@@ -3036,17 +3041,34 @@ Recent ("));
                 : item.Bounds.Height;
 
             Point? topLeftInViewerCoordinates = item.TranslatePoint(new Point(), viewer);
-            var itemTop = topLeftInViewerCoordinates?.Y ?? 0;
-            if (itemTop < 0
-                || itemTop + itemHeight > viewer.Viewport.Height
-                || itemHeight > viewer.Viewport.Height)
+            if (topLeftInViewerCoordinates == null)
             {
-                // if the item is not visible or too "tall", don't do anything; let them scroll it into view
                 return;
             }
 
-            // if the item is already fully within the viewport vertically, disallow horizontal scrolling
+            var itemTop = topLeftInViewerCoordinates.Value.Y;
+
+            // take over from ScrollContentPresenter entirely; scroll vertically
+            // when needed but never touch the horizontal offset
             e.Handled = true;
+
+            double newY = viewer.Offset.Y;
+            if (itemTop < 0)
+            {
+                // scrolled off the top: align the row with the top of the viewport
+                newY += itemTop;
+            }
+            else if (itemTop + itemHeight > viewer.Viewport.Height)
+            {
+                // below the viewport: align with the bottom edge, but for rows taller
+                // than the viewport fall back to aligning the top
+                newY += Math.Min(itemTop, itemTop + itemHeight - viewer.Viewport.Height);
+            }
+
+            if (newY != viewer.Offset.Y)
+            {
+                viewer.Offset = new Vector(viewer.Offset.X, newY);
+            }
         }
 
         public void DisplayStats()

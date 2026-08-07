@@ -378,6 +378,8 @@
         <Setter Property="MinHeight" Value="0" />
         <Setter Property="BorderThickness" Value="0" />
         <Setter Property="FontSize" Value="12" />
+        <!-- no keyboard-focus rectangle around the focused row; selection color is enough (like WPF) -->
+        <Setter Property="FocusAdorner" Value="{x:Null}" />
     </Style>
     
     <Style Selector="TreeView.searchable TreeViewItem">
