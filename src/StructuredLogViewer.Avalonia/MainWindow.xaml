@@ -1,6 +1,8 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:StructuredLogViewer.Avalonia"
         x:Class="StructuredLogViewer.Avalonia.MainWindow"
+        Title="{x:Static local:MainWindow.DefaultTitle}"
         WindowState="Maximized"
         WindowStartupLocation="CenterScreen"
         DragDrop.AllowDrop="True"

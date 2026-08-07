@@ -63,7 +63,6 @@ namespace StructuredLogViewer.Controls
         private PropertyGraph propertyGraph;
 
         private MenuItem searchMenuGroup;
-        private MenuItem copyMenuGroup;
         private MenuItem gotoMenuGroup;
         private MenuItem copyItem;
         private MenuItem copySubtreeItem;
@@ -243,7 +242,6 @@ namespace StructuredLogViewer.Controls
             var contextMenu = new ContextMenu();
             contextMenu.Opened += ContextMenu_Opened;
             searchMenuGroup = new() { Header = "Search" };
-            copyMenuGroup = new() { Header = "Copy" };
             gotoMenuGroup = new() { Header = "Go to" };
 
             copyItem = new MenuItem() { Header = "Copy" };
@@ -1132,6 +1130,11 @@ Recent (");
 
         private void SearchNuGet(IProjectOrEvaluation node)
         {
+            if (node == null)
+            {
+                return;
+            }
+
             string projectName = Path.GetFileName(node.ProjectFile);
             SelectSearchTab($"$nuget project({projectName})");
         }
@@ -1413,22 +1416,16 @@ Recent (");
             searchMenuGroup.Visibility = searchMenuGroup.Items.Cast<MenuItem>().Any(p => p.Visibility != Visibility.Collapsed) ?
                 Visibility.Visible : Visibility.Collapsed;
 
-            copyMenuGroup.Visibility = copyMenuGroup.Items.Cast<MenuItem>().Any(p => p.Visibility != Visibility.Collapsed) ?
-                Visibility.Visible : Visibility.Collapsed;
-
             gotoMenuGroup.Visibility = gotoMenuGroup.Items.Cast<MenuItem>().Any(p => p.Visibility != Visibility.Collapsed) ?
                 Visibility.Visible : Visibility.Collapsed;
         }
 
         private void SharedTreeContextMenu_Opened(object sender, RoutedEventArgs e)
         {
-            var node = ActiveTreeView.SelectedItem as BaseNode;
-            if (node == null)
-            {
-                return;
-            }
-
-            bool isFavorite = IsFavorite(node);
+            // update favorite/unfavorite even with no selection so the menu
+            // doesn't show stale visibility from the previously selected node
+            var node = ActiveTreeView?.SelectedItem as BaseNode;
+            bool isFavorite = node != null && IsFavorite(node);
             favoriteSharedItem.Visibility = !isFavorite ? Visibility.Visible : Visibility.Collapsed;
             unfavoriteSharedItem.Visibility = isFavorite ? Visibility.Visible : Visibility.Collapsed;
         }
@@ -1451,10 +1448,13 @@ Recent (");
 
                 if (isSecretsSearch)
                 {
-                    var searchResults = secretsSearch.SearchSecrets(file.Value.Text, nodeQueryMatcher.NotMatchers, maxResults);
-                    if (searchResults.Count > 0)
+                    if (secretsSearch != null)
                     {
-                        results.Add((file.Key, searchResults.Select(sr => (sr.Line - 1, sr.Secret))));
+                        var searchResults = secretsSearch.SearchSecrets(file.Value.Text, nodeQueryMatcher.NotMatchers, maxResults);
+                        if (searchResults.Count > 0)
+                        {
+                            results.Add((file.Key, searchResults.Select(sr => (sr.Line - 1, sr.Secret))));
+                        }
                     }
                 }
                 else
@@ -2018,7 +2018,7 @@ Recent (");
                 }
                 else
                 {
-                    ActiveTreeView.Focus();
+                    ActiveTreeView?.Focus();
                 }
             }
         }
@@ -2076,7 +2076,7 @@ Recent (");
             {
                 if (string.IsNullOrEmpty(searchLogControl.SearchText))
                 {
-                    ActiveTreeView.Focus();
+                    ActiveTreeView?.Focus();
                     e.Handled = true;
                 }
                 else

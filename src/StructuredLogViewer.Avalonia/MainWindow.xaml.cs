@@ -69,10 +69,17 @@ namespace StructuredLogViewer.Avalonia
             RestoreWindowPosition();
             Closing += (s, e) => SaveWindowPosition();
 
+            // track the last non-maximized bounds so closing a maximized window
+            // still remembers the size/position to un-maximize to after restart
+            PositionChanged += (s, e) => TrackNormalBounds();
+            SizeChanged += (s, e) => TrackNormalBounds();
+
             AddHandler(DragDrop.DropEvent, MainWindow_Drop);
             AddHandler(PointerWheelChangedEvent, MainWindow_PointerWheelChanged, global::Avalonia.Interactivity.RoutingStrategies.Tunnel);
 
-            TemplateApplied += MainWindow_Loaded;
+            // Opened fires exactly once; TemplateApplied can re-fire (e.g. on a theme
+            // change) and would re-run the command-line/clipboard startup logic
+            Opened += MainWindow_Loaded;
         }
 
         private void InitializeComponent()
@@ -166,10 +173,7 @@ namespace StructuredLogViewer.Avalonia
         {
             if (exception is OperationCanceledException
                 or AggregateException
-                or TargetInvocationException
-                or FileNotFoundException
-                or IOException
-                or UnauthorizedAccessException)
+                or TargetInvocationException)
             {
                 return true;
             }
@@ -296,7 +300,7 @@ namespace StructuredLogViewer.Avalonia
             }
         }
 
-        private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        private async void MainWindow_Loaded(object sender, EventArgs e)
         {
             try
             {
@@ -712,7 +716,7 @@ Use project(.) or project(.csproj) to search all projects (slow)." };
             string customArguments = SettingsService.GetCustomArguments(filePath);
             IClipboard clipboardService = GetTopLevel(this)?.Clipboard;
             var parametersScreen = new BuildParametersScreen(clipboardService);
-            parametersScreen.BrowseForMSBuildRequsted += BrowseForMSBuildExe;
+            parametersScreen.BrowseForMSBuildRequested += BrowseForMSBuildExe;
             parametersScreen.PrefixArguments = filePath.QuoteIfNeeded();
             parametersScreen.MSBuildArguments = customArguments;
             parametersScreen.PostfixArguments = HostedBuild.GetPostfixArguments();
@@ -1292,20 +1296,30 @@ Use project(.) or project(.csproj) to search all projects (slow)." };
 
                 WindowStartupLocation = WindowStartupLocation.Manual;
                 Position = new PixelPoint(x, y);
-                if (maximized)
-                {
-                    WindowState = WindowState.Maximized;
-                }
-                else
-                {
-                    WindowState = WindowState.Normal;
-                    Width = width;
-                    Height = height;
-                }
+                Width = width;
+                Height = height;
+                lastNormalPosition = Position;
+                lastNormalWidth = width;
+                lastNormalHeight = height;
+                WindowState = maximized ? WindowState.Maximized : WindowState.Normal;
             }
             catch
             {
                 // fall back to the defaults from XAML (centered, maximized)
+            }
+        }
+
+        private PixelPoint lastNormalPosition;
+        private double lastNormalWidth;
+        private double lastNormalHeight;
+
+        private void TrackNormalBounds()
+        {
+            if (WindowState == WindowState.Normal)
+            {
+                lastNormalPosition = Position;
+                lastNormalWidth = Bounds.Width;
+                lastNormalHeight = Bounds.Height;
             }
         }
 
@@ -1314,7 +1328,14 @@ Use project(.) or project(.csproj) to search all projects (slow)." };
             try
             {
                 var maximized = WindowState == WindowState.Maximized;
-                SettingsService.AvaloniaWindowPosition = $"{Position.X},{Position.Y},{(int)Width},{(int)Height},{(maximized ? 1 : 0)}";
+
+                // when closing maximized, persist the last normal bounds instead of the
+                // maximized ones so un-maximizing after restart restores the right rect
+                var position = maximized ? lastNormalPosition : Position;
+                var width = maximized ? lastNormalWidth : Bounds.Width;
+                var height = maximized ? lastNormalHeight : Bounds.Height;
+
+                SettingsService.AvaloniaWindowPosition = $"{position.X},{position.Y},{(int)width},{(int)height},{(maximized ? 1 : 0)}";
             }
             catch
             {

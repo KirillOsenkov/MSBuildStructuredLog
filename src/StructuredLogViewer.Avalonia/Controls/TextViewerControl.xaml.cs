@@ -153,6 +153,14 @@ namespace StructuredLogViewer.Avalonia.Controls
 
         private void TextAreaMouseRightButtonDown(object sender, PointerEventArgs e)
         {
+            // move the caret to the click point so the context menu acts on it,
+            // but only for right-clicks - left clicks/selections manage the caret themselves
+            if (e is PointerPressedEventArgs pressed &&
+                !pressed.GetCurrentPoint(textEditor).Properties.IsRightButtonPressed)
+            {
+                return;
+            }
+
             var position = textEditor.GetPositionFromPoint(e.GetPosition(textEditor));
             if (position.HasValue)
             {

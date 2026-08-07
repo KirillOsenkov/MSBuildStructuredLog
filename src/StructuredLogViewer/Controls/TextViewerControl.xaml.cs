@@ -61,11 +61,14 @@ namespace StructuredLogViewer.Controls
                 textView.CurrentLineBackground = (Brush)new BrushConverter().ConvertFromString("#505050");
                 textArea.SelectionBrush = (Brush)new BrushConverter().ConvertFromString("#264F78");
                 textArea.SelectionForeground = (Brush)new BrushConverter().ConvertFromString("#C8C8C8");
-                var foldingMargin = textArea.LeftMargins.OfType<FoldingMargin>().First();
-                foldingMargin.FoldingMarkerBackgroundBrush = ThemeManager.BackgroundBrush;
-                foldingMargin.FoldingMarkerBrush = ThemeManager.ControlTextBrush;
-                foldingMargin.SelectedFoldingMarkerBackgroundBrush = ThemeManager.BackgroundBrush;
-                foldingMargin.SelectedFoldingMarkerBrush = ThemeManager.ControlTextBrush;
+                var foldingMargin = textArea.LeftMargins.OfType<FoldingMargin>().FirstOrDefault();
+                if (foldingMargin != null)
+                {
+                    foldingMargin.FoldingMarkerBackgroundBrush = ThemeManager.BackgroundBrush;
+                    foldingMargin.FoldingMarkerBrush = ThemeManager.ControlTextBrush;
+                    foldingMargin.SelectedFoldingMarkerBackgroundBrush = ThemeManager.BackgroundBrush;
+                    foldingMargin.SelectedFoldingMarkerBrush = ThemeManager.ControlTextBrush;
+                }
             }
             else
             {
@@ -172,60 +175,66 @@ namespace StructuredLogViewer.Controls
             }
 
             bool looksLikeXml = Utilities.LooksLikeXml(text);
-            if (looksLikeXml && !IsXml)
+            if (looksLikeXml)
             {
-                IsXml = true;
-
-                var highlighting = HighlightingManager.Instance.GetDefinition("XML");
-                if (SettingsService.UseDarkTheme)
+                if (!IsXml)
                 {
-                    SetColor("Comment", "#57A64A");
-                    SetColor("CData", "#E9D585");
-                    SetColor("DocType", "#92CAF4");
-                    SetColor("XmlDeclaration", "#92CAF4");
-                    SetColor("XmlTag", "#569CD6");
-                    SetColor("AttributeName", "#92CAF4");
-                    SetColor("AttributeValue", "#C8C8C8");
-                    SetColor("Entity", "#92CAF4");
-                    SetColor("BrokenEntity", "#92CAF4");
-                }
-                else
-                {
-                    SetColor("Comment", "#008000");
-                    SetColor("CData", "#808080");
-                    SetColor("DocType", "#0000FF");
-                    SetColor("XmlDeclaration", "#0000FF");
-                    SetColorRgb("XmlTag", 163, 21, 21);
-                    SetColor("AttributeName", "#FF0000");
-                    SetColor("AttributeValue", "#0000FF");
-                    SetColor("Entity", "#FF0000");
-                    SetColor("BrokenEntity", "#FF0000");
+                    IsXml = true;
+
+                    var highlighting = HighlightingManager.Instance.GetDefinition("XML");
+                    if (SettingsService.UseDarkTheme)
+                    {
+                        SetColor("Comment", "#57A64A");
+                        SetColor("CData", "#E9D585");
+                        SetColor("DocType", "#92CAF4");
+                        SetColor("XmlDeclaration", "#92CAF4");
+                        SetColor("XmlTag", "#569CD6");
+                        SetColor("AttributeName", "#92CAF4");
+                        SetColor("AttributeValue", "#C8C8C8");
+                        SetColor("Entity", "#92CAF4");
+                        SetColor("BrokenEntity", "#92CAF4");
+                    }
+                    else
+                    {
+                        SetColor("Comment", "#008000");
+                        SetColor("CData", "#808080");
+                        SetColor("DocType", "#0000FF");
+                        SetColor("XmlDeclaration", "#0000FF");
+                        SetColorRgb("XmlTag", 163, 21, 21);
+                        SetColor("AttributeName", "#FF0000");
+                        SetColor("AttributeValue", "#0000FF");
+                        SetColor("Entity", "#FF0000");
+                        SetColor("BrokenEntity", "#FF0000");
+                    }
+
+                    void SetColorRgb(string name, byte r, byte g, byte b)
+                    {
+                        highlighting.GetNamedColor(name).Foreground = new SimpleHighlightingBrush(Color.FromRgb(r, g, b));
+                    }
+
+                    void SetColor(string name, string hex)
+                    {
+                        var color = (Color)ColorConverter.ConvertFromString(hex);
+                        SetColorRgb(name, color.R, color.G, color.B);
+                    }
+
+                    textEditor.SyntaxHighlighting = highlighting;
+
+                    gotoProjectMenu.Visibility = Visibility.Visible;
+                    gotoPropertyMenu.Visibility = Visibility.Visible;
                 }
 
-                void SetColorRgb(string name, byte r, byte g, byte b)
-                {
-                    highlighting.GetNamedColor(name).Foreground = new SimpleHighlightingBrush(Color.FromRgb(r, g, b));
-                }
-
-                void SetColor(string name, string hex)
-                {
-                    var color = (Color)ColorConverter.ConvertFromString(hex);
-                    SetColorRgb(name, color.R, color.G, color.B);
-                }
-
-                textEditor.SyntaxHighlighting = highlighting;
-
+                // update foldings on every SetText, not just the first transition to XML -
+                // an already-open tab can have its text replaced (DocumentWell.DisplaySource)
                 var foldingStrategy = new XmlFoldingStrategy();
                 foldingStrategy.UpdateFoldings(this.FoldingManager, textEditor.Document);
-
-                gotoProjectMenu.Visibility = Visibility.Visible;
-                gotoPropertyMenu.Visibility = Visibility.Visible;
             }
             else if (!looksLikeXml && IsXml)
             {
                 IsXml = false;
 
                 textEditor.SyntaxHighlighting = null;
+                this.FoldingManager.Clear();
             }
         }
 
@@ -423,7 +432,8 @@ async
         {
             if (CurrentProperty != null)
             {
-                EditorExtension.RaiseGoToProperty(CurrentProperty);
+                // EditorExtension is null on the DisplayText path (DocumentWell)
+                EditorExtension?.RaiseGoToProperty(CurrentProperty);
             }
         }
     }

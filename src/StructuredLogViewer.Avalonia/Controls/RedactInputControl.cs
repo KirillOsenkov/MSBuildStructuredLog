@@ -34,6 +34,7 @@ namespace StructuredLogViewer.Avalonia.Controls
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
             ShowInTaskbar = false;
             FontSize = 12;
+            this.Bind(BackgroundProperty, this.GetResourceObservable("Theme_Background"));
 
             chckbxEmbeddedFiles = new CheckBox { Content = "Process embedded files", Margin = new Thickness(0, 5), IsChecked = true };
             chckbxDistinguishReplacements = new CheckBox { Content = "Use distinct replacements per secret type", Margin = new Thickness(0, 5), IsChecked = true };
@@ -106,6 +107,7 @@ namespace StructuredLogViewer.Avalonia.Controls
                     TextWrapping = TextWrapping.Wrap
                 }
             };
+            warning.Bind(Border.BackgroundProperty, this.GetResourceObservable("Theme_InfoBarBackground"));
 
             var grid = new Grid
             {
@@ -119,6 +121,12 @@ namespace StructuredLogViewer.Avalonia.Controls
             grid.Children.Add(warning);
 
             Content = grid;
+
+            Opened += (s, e) =>
+            {
+                txtSecrets.SelectAll();
+                txtSecrets.Focus();
+            };
         }
     }
 }

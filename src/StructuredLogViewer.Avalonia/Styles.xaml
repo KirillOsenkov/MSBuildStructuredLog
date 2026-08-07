@@ -233,17 +233,11 @@
                           Stretch="Uniform"
                           Data="F1 M 0,0L 2,0L 5,3L 8,0L 10,0L 6,4L 10,8L 8,8L 5,5L 2,8L 0,8L 4,4L 0,0 Z" />
                 </Border>
-                <!--<ControlTemplate.Triggers>
-                    <Trigger SourceName="border"
-                             Property="IsMouseOver"
-                             Value="true">
-                        <Setter TargetName="border"
-                                Property="Background"
-                                Value="LightBlue" />
-                    </Trigger>
-                </ControlTemplate.Triggers>-->
             </ControlTemplate>
         </Setter>
+    </Style>
+    <Style Selector="Button.close:pointerover /template/ Border#border">
+        <Setter Property="Background" Value="LightBlue" />
     </Style>
     
     <!-- Fluent control themes set FontSize=14 explicitly; match WPF's 12 -->

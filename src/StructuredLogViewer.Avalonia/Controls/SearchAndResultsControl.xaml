@@ -25,6 +25,7 @@
 
     <Grid>
       <TreeView Name="resultsList"
+                Classes="searchable"
                 BorderThickness="0"
                 Background="{DynamicResource Theme_ToolWindowBackground}" />
       <ScrollViewer Name="watermarkScrollViewer"
@@ -33,7 +34,6 @@
         <ContentPresenter Name="watermark"
                    Margin="40"
                    HorizontalAlignment="Center"
-                   Content="WatermarkText"
                    VerticalAlignment="Center">
           <ContentPresenter.Styles>
             <Style Selector="TextBlock">

@@ -97,6 +97,8 @@ namespace StructuredLogViewer.Avalonia.Controls
         private MenuItem unfavoriteItem;
         private MenuItem favoriteSharedItem;
         private MenuItem unfavoriteSharedItem;
+        private Separator separator1;
+        private Separator separator2;
         private ContextMenu sharedTreeContextMenu;
         private ContextMenu filesTreeContextMenu;
         private TreeView treeView;
@@ -131,6 +133,7 @@ namespace StructuredLogViewer.Avalonia.Controls
             PreprocessedFileManager.WriteContentToTempFileAndGetPath = SettingsService.WriteContentToTempFileAndGetPath;
         }
 
+        // required by the Avalonia XAML loader (AVLN3001); not used directly
         public BuildControl()
         {
         }
@@ -164,11 +167,7 @@ namespace StructuredLogViewer.Avalonia.Controls
                 return results;
             };
             searchLogControl.ResultsTreeBuilder = BuildResultTree;
-            searchLogControl.WatermarkDisplayed += () =>
-            {
-                Search.ClearSearchResults(Build, SettingsService.MarkResultsInTree);
-                UpdateWatermark();
-            };
+            searchLogControl.WatermarkDisplayed += SearchLogControl_WatermarkDisplayed;
 
             propertiesAndItemsSearch = new PropertiesAndItemsSearch();
 
@@ -192,13 +191,10 @@ namespace StructuredLogViewer.Avalonia.Controls
             propertiesAndItemsControl.ResultsTreeBuilder = BuildResultTree;
 
             UpdatePropertiesAndItemsWatermark();
-            propertiesAndItemsControl.WatermarkDisplayed += () =>
-            {
-                UpdatePropertiesAndItemsWatermark();
-            };
+            propertiesAndItemsControl.WatermarkDisplayed += UpdatePropertiesAndItemsWatermark;
             propertiesAndItemsControl.RecentItemsCategory = "PropertiesAndItems";
 
-            SetProjectContext(null);
+            SetProjectContext(null, force: true);
 
             Build = build;
 
@@ -317,6 +313,9 @@ namespace StructuredLogViewer.Avalonia.Controls
             showFileInExplorerItem.Click += (s, a) => ShowFileInExplorer();
             preprocessItem.Click += (s, a) => Preprocess(treeView.SelectedItem as IPreprocessable);
             hideItem.Click += (s, a) => Delete();
+            separator1 = new Separator();
+            separator2 = new Separator();
+
             contextMenu.AddItem(favoriteItem);
             contextMenu.AddItem(unfavoriteItem);
             contextMenu.AddItem(viewSourceItem);
@@ -324,16 +323,19 @@ namespace StructuredLogViewer.Avalonia.Controls
             contextMenu.AddItem(viewPropertyItem);
             contextMenu.AddItem(openFileItem);
             contextMenu.AddItem(preprocessItem);
+
             contextMenu.AddItem(searchMenuGroup);
             searchMenuGroup.AddItem(searchNuGetItem);
-            searchMenuGroup.AddItem(searchThisNode);
             searchMenuGroup.AddItem(searchInSubtreeItem);
             searchMenuGroup.AddItem(searchInNodeByNameItem);
+            searchMenuGroup.AddItem(searchThisNode);
             searchMenuGroup.AddItem(excludeSubtreeFromSearchItem);
             searchMenuGroup.AddItem(excludeNodeByNameFromSearch);
             searchMenuGroup.AddItem(searchInclusiveWithinThisTimespan);
             searchMenuGroup.AddItem(searchExclusiveWithinThisTimespan);
+
             contextMenu.AddItem(new Separator());
+
             contextMenu.AddItem(copyItem);
             contextMenu.AddItem(copySubtreeItem);
             contextMenu.AddItem(copyVisibleSubtreeItem);
@@ -341,10 +343,17 @@ namespace StructuredLogViewer.Avalonia.Controls
             contextMenu.AddItem(copyChildrenItem);
             contextMenu.AddItem(copyNameItem);
             contextMenu.AddItem(copyValueItem);
+
             contextMenu.AddItem(new Separator());
             contextMenu.AddItem(showFileInExplorerItem);
+
+            contextMenu.AddItem(separator2);
+
             contextMenu.AddItem(viewSubtreeTextItem);
             contextMenu.AddItem(showTimeItem);
+
+            contextMenu.AddItem(separator1);
+
             contextMenu.AddItem(sortChildrenByNameItem);
             contextMenu.AddItem(sortChildrenByDurationItem);
             contextMenu.AddItem(filterChildrenItem);
@@ -367,7 +376,7 @@ namespace StructuredLogViewer.Avalonia.Controls
             RegisterTreeViewHandlers(treeView);
             treeView.KeyDown += TreeView_KeyDown;
             treeView.PropertyChanged += TreeView_SelectedItemChanged;
-            treeView.GotFocus += (s, a) => ActiveTreeView = treeView;
+            treeView.GotFocus += TreeView_GotFocus;
 
             ActiveTreeView = treeView;
 
@@ -379,19 +388,19 @@ namespace StructuredLogViewer.Avalonia.Controls
             searchLogControl.ResultsList.Styles.Add(GetTreeViewItemStyle());
             RegisterTreeViewHandlers(searchLogControl.ResultsList);
             searchLogControl.ResultsList.SelectionChanged += ResultsList_SelectionChanged;
-            searchLogControl.ResultsList.GotFocus += (s, a) => ActiveTreeView = searchLogControl.ResultsList;
+            searchLogControl.ResultsList.GotFocus += TreeView_GotFocus;
             searchLogControl.ResultsList.ContextMenu = sharedTreeContextMenu;
 
             propertiesAndItemsControl.ResultsList.Styles.Add(GetTreeViewItemStyle());
             RegisterTreeViewHandlers(propertiesAndItemsControl.ResultsList);
             propertiesAndItemsControl.ResultsList.SelectionChanged += ResultsList_SelectionChanged;
-            propertiesAndItemsControl.ResultsList.GotFocus += (s, a) => ActiveTreeView = propertiesAndItemsControl.ResultsList;
+            propertiesAndItemsControl.ResultsList.GotFocus += TreeView_GotFocus;
             propertiesAndItemsControl.ResultsList.ContextMenu = sharedTreeContextMenu;
 
-            findInFilesControl.GotFocus += (s, a) => ActiveTreeView = findInFilesControl.ResultsList;
+            findInFilesControl.GotFocus += FindInFilesControl_GotFocus;
             findInFilesControl.ResultsList.Styles.Add(GetTreeViewItemStyle());
             RegisterTreeViewHandlers(findInFilesControl.ResultsList);
-            findInFilesControl.ResultsList.GotFocus += (s, a) => ActiveTreeView = findInFilesControl.ResultsList;
+            findInFilesControl.ResultsList.GotFocus += TreeView_GotFocus;
             findInFilesControl.ResultsList.ContextMenu = sharedTreeContextMenu;
 
             if (archiveFile != null)
@@ -429,7 +438,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             favoritesTree.ResultsList.SelectionChanged += ResultsList_SelectionChanged;
             favoritesTree.ResultsList.ContextMenu = sharedTreeContextMenu;
             favoritesTree.DisplayItems(new[] { new Note { Text = "Right-click any node and Favorite it to add it here" } });
-            favoritesTree.ResultsList.GotFocus += (s, a) => ActiveTreeView = favoritesTree.ResultsList;
+            favoritesTree.ResultsList.GotFocus += TreeView_GotFocus;
 
             breadCrumb.SelectionChanged += BreadCrumb_SelectionChanged;
 
@@ -441,8 +450,6 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
             navigationHelper = new NavigationHelper(Build, sourceFileResolver);
             navigationHelper.OpenFileRequested += filePath => DisplayFile(filePath);
-
-            centralTabControl.SelectionChanged += CentralTabControl_SelectionChanged;
         }
 
         /// <summary>
@@ -654,20 +661,38 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             documentWell.Dispose();
 
             searchLogControl.ResultsList.SelectionChanged -= ResultsList_SelectionChanged;
+            searchLogControl.ResultsList.GotFocus -= TreeView_GotFocus;
             searchLogControl.searchTextBox.KeyUp -= SearchTextBox_KeyUp;
+            searchLogControl.WatermarkDisplayed -= SearchLogControl_WatermarkDisplayed;
+            searchLogControl.ExecuteSearch = null;
+            searchLogControl.ResultsTreeBuilder = null;
             searchLogControl.WatermarkContent = null;
             searchLogControl.Dispose();
 
             propertiesAndItemsControl.ResultsList.SelectionChanged -= ResultsList_SelectionChanged;
+            propertiesAndItemsControl.ResultsList.GotFocus -= TreeView_GotFocus;
+            propertiesAndItemsControl.WatermarkDisplayed -= UpdatePropertiesAndItemsWatermark;
+            propertiesAndItemsControl.ExecuteSearch = null;
+            propertiesAndItemsControl.ResultsTreeBuilder = null;
             propertiesAndItemsControl.WatermarkContent = null;
             propertiesAndItemsControl.Dispose();
             propertiesAndItemsContext.Content = null;
             propertiesAndItemsSearch = null;
 
-            favoritesTree.ResultsList.SelectionChanged -= ResultsList_SelectionChanged;
-            favoritesTree.Dispose();
-            filesTree.Dispose();
+            findInFilesControl.GotFocus -= FindInFilesControl_GotFocus;
+            findInFilesControl.ResultsList.GotFocus -= TreeView_GotFocus;
+            findInFilesControl.ExecuteSearch = null;
+            findInFilesControl.ResultsTreeBuilder = null;
             findInFilesControl.Dispose();
+
+            favoritesTree.ResultsList.SelectionChanged -= ResultsList_SelectionChanged;
+            favoritesTree.ResultsList.GotFocus -= TreeView_GotFocus;
+            favoritesTree.Dispose();
+
+            filesTree.ResultsList.GotFocus -= TreeView_GotFocus;
+            filesTree.ContextMenu = null;
+            filesTree.DisplayItems(null);
+            filesTree.Dispose();
 
             breadCrumb.SelectionChanged -= BreadCrumb_SelectionChanged;
             breadCrumb.ItemsSource = null;
@@ -677,9 +702,47 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
             treeView.PropertyChanged -= TreeView_SelectedItemChanged;
             treeView.KeyDown -= TreeView_KeyDown;
+            treeView.GotFocus -= TreeView_GotFocus;
             treeView.ItemsSource = null;
             treeView.ContextMenu = null;
-            centralTabControl.SelectionChanged -= CentralTabControl_SelectionChanged;
+
+            TemplateApplied -= BuildControl_Loaded;
+
+            // member variables
+            searchMenuGroup = null;
+            copyItem = null;
+            copySubtreeItem = null;
+            copyVisibleSubtreeItem = null;
+            viewSubtreeTextItem = null;
+            searchInSubtreeItem = null;
+            searchInNodeByNameItem = null;
+            searchThisNode = null;
+            viewPropertyItem = null;
+            excludeSubtreeFromSearchItem = null;
+            excludeNodeByNameFromSearch = null;
+            searchInclusiveWithinThisTimespan = null;
+            searchExclusiveWithinThisTimespan = null;
+            copyChildrenItem = null;
+            sortChildrenByNameItem = null;
+            sortChildrenByDurationItem = null;
+            filterChildrenItem = null;
+            copyNameItem = null;
+            copyValueItem = null;
+            viewSourceItem = null;
+            viewFullTextItem = null;
+            openFileItem = null;
+            copyFilePathItem = null;
+            showFileInExplorerItem = null;
+            preprocessItem = null;
+            searchNuGetItem = null;
+            hideItem = null;
+            showTimeItem = null;
+            favoriteItem = null;
+            unfavoriteItem = null;
+            favoriteSharedItem = null;
+            unfavoriteSharedItem = null;
+            separator1 = null;
+            separator2 = null;
 
             sharedTreeContextMenu = null;
             filesTreeContextMenu = null;
@@ -694,13 +757,23 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             Build = null;
         }
 
-        private void CentralTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void SearchLogControl_WatermarkDisplayed()
         {
-            var selectedItem = centralTabControl.SelectedItem as TabItem;
-            if (selectedItem == null)
+            Search.ClearSearchResults(Build, SettingsService.MarkResultsInTree);
+            UpdateWatermark();
+        }
+
+        private void TreeView_GotFocus(object sender, FocusChangedEventArgs e)
+        {
+            if (sender is TreeView focusedTree)
             {
-                return;
+                ActiveTreeView = focusedTree;
             }
+        }
+
+        private void FindInFilesControl_GotFocus(object sender, FocusChangedEventArgs e)
+        {
+            ActiveTreeView = findInFilesControl.ResultsList;
         }
 
         private void RegisterTreeViewHandlers(TreeView treeView)
@@ -742,35 +815,57 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                     return;
                 }
 
-                if (treeView.SelectedItem is BaseNode node)
+                if (e.KeyModifiers == KeyModifiers.None)
                 {
-                    if (e.Key == Key.Space || e.Key == Key.Return)
+                    if (e.Key == Key.Delete)
                     {
-                        e.Handled = Invoke(node) || ViewFullText(node);
-                    }
-                }
-
-                if (e.Key == Key.Delete && e.KeyModifiers == KeyModifiers.None)
-                {
-                    Delete();
-                    e.Handled = true;
-                }
-                else if (e.Key == Key.C && e.KeyModifiers == KeyModifiers.Control)
-                {
-                    Copy();
-                    e.Handled = true;
-                }
-
-                if (e.Key == Key.Escape)
-                {
-                    if (IsFindVisible)
-                    {
-                        IsFindVisible = false;
+                        Delete();
                         e.Handled = true;
                     }
-                    else if (documentWell.IsVisible)
+
+                    if (e.Key == Key.Space || e.Key == Key.Return)
                     {
-                        documentWell.Hide();
+                        if (treeView.SelectedItem is BaseNode node)
+                        {
+                            e.Handled = Invoke(node) || ViewFullText(node);
+                        }
+                    }
+
+                    if (e.Key == Key.Escape)
+                    {
+                        if (IsFindVisible)
+                        {
+                            IsFindVisible = false;
+                            e.Handled = true;
+                        }
+                        else if (documentWell.IsVisible)
+                        {
+                            documentWell.Hide();
+                            e.Handled = true;
+                        }
+                    }
+                }
+
+                if (e.KeyModifiers == KeyModifiers.Control)
+                {
+                    if (e.Key == Key.C)
+                    {
+                        Copy();
+                        e.Handled = true;
+                    }
+
+                    if (e.Key == Key.F)
+                    {
+                        if (IsFindVisible)
+                        {
+                            IsFindVisible = false;
+                            e.Handled = true;
+                        }
+                        else if (TryGetTreeNodeForFind() != null)
+                        {
+                            IsFindVisible = true;
+                            e.Handled = true;
+                        }
                     }
                 }
             };
@@ -1144,6 +1239,7 @@ Recent ("));
             filterChildrenItem.IsVisible = hasChildren;
             preprocessItem.IsVisible = node is IPreprocessable p && preprocessedFileManager.CanPreprocess(p);
             hideItem.IsVisible = node is TreeNode;
+            separator2.IsVisible = true;
 
             if (node is SearchableItem searchItem)
             {
@@ -1176,6 +1272,7 @@ Recent ("));
             if (node is TimedNode timedNode)
             {
                 showTimeItem.IsVisible = true;
+                separator1.IsVisible = true;
                 searchInSubtreeItem.IsVisible = hasChildren;
                 excludeSubtreeFromSearchItem.IsVisible = hasChildren;
                 excludeNodeByNameFromSearch.IsVisible = hasChildren;
@@ -1195,6 +1292,7 @@ Recent ("));
             }
             else
             {
+                separator1.IsVisible = false;
                 showTimeItem.IsVisible = false;
                 searchInSubtreeItem.IsVisible = false;
                 excludeSubtreeFromSearchItem.IsVisible = false;
@@ -1202,6 +1300,10 @@ Recent ("));
                 searchInclusiveWithinThisTimespan.IsVisible = false;
                 searchExclusiveWithinThisTimespan.IsVisible = false;
                 searchInNodeByNameItem.IsVisible = false;
+                if (!hasChildren)
+                {
+                    separator2.IsVisible = false;
+                }
             }
 
             searchMenuGroup.IsVisible = searchMenuGroup.Items.OfType<MenuItem>().Any(p => p.IsVisible);
@@ -1344,7 +1446,7 @@ Recent ("));
             }
 
             filesTree.DisplayItems(root.Children);
-            filesTree.ResultsList.GotFocus += (s, a) => ActiveTreeView = filesTree.ResultsList;
+            filesTree.ResultsList.GotFocus += TreeView_GotFocus;
             filesTree.ResultsList.ContextMenu = filesTreeContextMenu;
         }
 
@@ -1594,6 +1696,7 @@ Recent ("));
             var item = treeView.SelectedItem;
             if (item != null)
             {
+                SelectedTreeViewItem = treeView.TreeContainerFromItem(item) as TreeViewItem;
                 UpdateBreadcrumb(item);
                 UpdateProjectContext(item);
                 UpdateFindContent();
@@ -1727,7 +1830,8 @@ Recent ("));
 
         private void BuildControl_Loaded(object sender, RoutedEventArgs e)
         {
-            //scrollViewer = treeView.Template.FindName("_tv_scrollviewer_", treeView) as ScrollViewer;
+            // TemplateApplied can re-fire (e.g. on a theme change); initialize only once
+            TemplateApplied -= BuildControl_Loaded;
 
             if (!Build.Succeeded)
             {
@@ -2000,6 +2104,11 @@ Recent ("));
             foreach (var item in items)
             {
                 var text = GetText(item);
+                if (text == null)
+                {
+                    continue;
+                }
+
                 if (characterMatchPrefixLength < text.Length && text.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
                 {
                     var character = text[characterMatchPrefixLength];
@@ -2076,6 +2185,7 @@ Recent ("));
 
             leftPaneTabControl.SelectedItem = findInFilesTab;
             findInFilesControl.searchTextBox.Focus();
+            findInFilesControl.searchTextBox.SelectAll();
         }
 
         public void Delete()
@@ -2463,7 +2573,15 @@ Recent ("));
 
         private void CopyToClipboard(string text)
         {
-            TopLevel.GetTopLevel(this).Clipboard.SetTextAsync(text);
+            try
+            {
+                text = text.Replace("\0", "");
+                TopLevel.GetTopLevel(this)?.Clipboard?.SetTextAsync(text);
+            }
+            catch (Exception)
+            {
+                // clipboard API is notoriously flaky
+            }
         }
 
         public void CopyName()
@@ -2519,10 +2637,7 @@ Recent ("));
                 || node is Project
                 || (node is Target t && t.SourceFilePath != null && sourceFileResolver.HasFile(t.SourceFilePath))
                 || (node is Task task && task.Parent is Target parentTarget && sourceFileResolver.HasFile(parentTarget.SourceFilePath))
-                || (node is IHasSourceFile ihsf && ihsf.SourceFilePath != null && sourceFileResolver.HasFile(ihsf.SourceFilePath))
-                || (node is NameValueNode nvn && nvn.IsValueShortened)
-                || (node is NamedNode nn && nn.IsNameShortened)
-                || (node is TextNode tn && tn.IsTextShortened);
+                || (node is IHasSourceFile ihsf && ihsf.SourceFilePath != null && sourceFileResolver.HasFile(ihsf.SourceFilePath));
         }
 
         private bool HasFullText(BaseNode node)
@@ -2663,12 +2778,6 @@ Recent ("));
                     case Folder reassignmentFolder when reassignmentFolder.Parent is TimedNode reassignmentParent &&
                         (reassignmentParent.Name == Strings.PropertyReassignmentFolder || reassignmentParent.Name == Strings.PropertyAssignmentFolder):
                         return SearchForProperty(reassignmentFolder.Name);
-                    case NameValueNode nameValueNode when nameValueNode.IsValueShortened:
-                        return DisplayText(nameValueNode.Value, nameValueNode.Name);
-                    case NamedNode namedNode when namedNode.IsNameShortened:
-                        return DisplayText(namedNode.Name, namedNode.ShortenedName ?? namedNode.TypeName);
-                    case TextNode textNode when textNode.IsTextShortened:
-                        return DisplayText(textNode.Text, textNode.ShortenedText ?? textNode.TypeName);
                     default:
                         return false;
                 }
@@ -2872,13 +2981,6 @@ Recent ("));
             return DisplayFile(sourceFilePath, line + 1, evaluation: evaluation);
         }
 
-        private static BaseNode GetNode(RoutedEventArgs args)
-        {
-            var treeViewItem = args.Source as TreeViewItem;
-            var node = treeViewItem?.DataContext as BaseNode;
-            return node;
-        }
-
         public IEnumerable BuildResultTree(object resultsObject, bool moreAvailable = false)
         {
             return BuildResultTree(resultsObject, moreAvailable, addDuration: true);
@@ -2945,11 +3047,6 @@ Recent ("));
 
             // if the item is already fully within the viewport vertically, disallow horizontal scrolling
             e.Handled = true;
-        }
-
-        private void TreeViewItem_Selected(object sender, RoutedEventArgs e)
-        {
-            SelectedTreeViewItem = e.Source as TreeViewItem;
         }
 
         public void DisplayStats()

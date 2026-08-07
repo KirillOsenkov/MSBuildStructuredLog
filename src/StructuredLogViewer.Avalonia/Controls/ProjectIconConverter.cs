@@ -26,7 +26,10 @@ namespace StructuredLogViewer.Avalonia.Controls
                     
                 case ".fsproj":
                     return GetIcon("FSProjIcon");
-                    
+
+                case ".vcxproj":
+                    return GetIcon("CppProjIcon");
+
                 default:
                     return GetIcon("GenericProjectIcon");
             }

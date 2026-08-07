@@ -14,6 +14,11 @@
             <s:ProjectIconConverter x:Key="ProjectIconConverter" />
             <s:NodeLowRelevanceToOpacityConverter x:Key="RelevanceConverter" />
             <s:NodeIsSelectedToColorConverter x:Key="LabelColorConverter" />
+            <s:FolderForegroundConverter x:Key="FolderForegroundConverter" />
+            <s:FolderIconFillConverter x:Key="FolderIconFillConverter" />
+            <s:HighlightedTextBackgroundConverter x:Key="HighlightBackgroundConverter" />
+            <s:FileCopyKindToIconConverter x:Key="FileCopyIconConverter" />
+            <s:NoImportReasonBackgroundConverter x:Key="NoImportReasonBackgroundConverter" />
 
             <!-- Fluent defaults to 14; WPF uses 12 - controls read this resource directly -->
             <x:Double x:Key="ControlContentThemeFontSize">12</x:Double>
@@ -54,6 +59,10 @@
                     <SolidColorBrush x:Key="Theme_TextSelection">#99C9EF</SolidColorBrush>
                     <SolidColorBrush x:Key="Theme_EditorSelection">#4CA0E3</SolidColorBrush>
 
+                    <!-- node adornments (same values as WPF ThemeManager light theme) -->
+                    <SolidColorBrush x:Key="NuGet">#004880</SolidColorBrush>
+                    <SolidColorBrush x:Key="NoImportFill">BlanchedAlmond</SolidColorBrush>
+
                     <!-- match WPF: no hover background, LightSkyBlue selection with dark text -->
                     <SolidColorBrush x:Key="TreeViewItemBackgroundPointerOver">Transparent</SolidColorBrush>
                     <SolidColorBrush x:Key="TreeViewItemBackgroundPressed">Transparent</SolidColorBrush>
@@ -93,6 +102,10 @@
                     <SolidColorBrush x:Key="TextControlBackgroundFocused">#303030</SolidColorBrush>
                     <SolidColorBrush x:Key="Theme_TextSelection">#264F78</SolidColorBrush>
                     <SolidColorBrush x:Key="Theme_EditorSelection">#264F78</SolidColorBrush>
+
+                    <!-- node adornments (same values as WPF ThemeManager dark theme) -->
+                    <SolidColorBrush x:Key="NuGet">DeepSkyBlue</SolidColorBrush>
+                    <SolidColorBrush x:Key="NoImportFill">#474138</SolidColorBrush>
 
                     <!-- match WPF dark theme: SlateBlue selection, no hover background -->
                     <SolidColorBrush x:Key="TreeViewItemBackgroundPointerOver">Transparent</SolidColorBrush>
@@ -150,26 +163,24 @@
 
         <TreeDataTemplate DataType="{x:Type l:Folder}"
                           ItemsSource="{Binding Children}">
-            <StackPanel Orientation="Horizontal">
+            <StackPanel Orientation="Horizontal"
+                        Name="folderRoot"
+                        Opacity="{Binding IsLowRelevance, Converter={StaticResource RelevanceConverter}}">
                 <Rectangle Name="icon"
                            Classes="nodeIcon"
                            Stroke="{StaticResource FolderStroke}"
-                           Fill="{StaticResource ClosedFolderBrush}" />
+                           Fill="{Binding Name, Converter={StaticResource FolderIconFillConverter}}" />
                 <TextBlock Name="nameText"
                            Classes="nodeText"
-                           Text="{Binding Name}"
-                           Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={x:Static Brushes.DarkGoldenrod}}" />
+                           Text="{Binding Name}">
+                    <TextBlock.Foreground>
+                        <MultiBinding Converter="{StaticResource FolderForegroundConverter}">
+                            <Binding Path="IsSelected" />
+                            <Binding Path="Name" />
+                        </MultiBinding>
+                    </TextBlock.Foreground>
+                </TextBlock>
             </StackPanel>
-            <!--<DataTrigger Binding="{Binding Name}"
-                             Value="DoubleWrites">
-                    <Setter TargetName="nameText"
-                            Property="Foreground"
-                            Value="Red" />
-                    <Setter TargetName="icon"
-                            Property="Fill"
-                            Value="{StaticResource ErrorBrush}" />
-                </DataTrigger>
-            </TreeDataTemplate.Triggers>-->
         </TreeDataTemplate>
 
         <TreeDataTemplate DataType="{x:Type l:Project}"
@@ -183,7 +194,8 @@
                     </Image.Source>
                 </Image>
                 <TextBlock Classes="nodeText"
-                           Text="{Binding Name}" />
+                           Text="{Binding Name}"
+                           ToolTip.Tip="{Binding ToolTip}" />
                 <TextBlock Text="{Binding AdornmentString}"
                            Margin="6,0,0,0"
                            Padding="2,0,2,0"
@@ -220,7 +232,8 @@
                     </Image.Source>
                 </Image>
                 <TextBlock Classes="nodeText"
-                           Text="{Binding Name}" />
+                           Text="{Binding Name}"
+                           ToolTip.Tip="{Binding ToolTip}" />
                 <TextBlock Text="{Binding AdornmentString}"
                            Margin="6,0,0,0"
                            Padding="2,0,2,0"
@@ -230,6 +243,11 @@
                            Foreground="{DynamicResource TargetFrameworkForeground}"
                            Background="{DynamicResource TargetFrameworkBackground}"
                            IsVisible="{Binding AdornmentString, Converter={StaticResource StringEmptinessToVisibilityConverter}, ConverterParameter=Invert}" />
+                <TextBlock Text="{Binding EvaluationText}"
+                           Margin="6,0,0,0"
+                           Opacity="0.5"
+                           ToolTip.Tip="Evaluation Id"
+                           IsVisible="{Binding EvaluationText, Converter={StaticResource StringEmptinessToVisibilityConverter}, ConverterParameter=Invert}" />
             </StackPanel>
         </TreeDataTemplate>
 
@@ -248,6 +266,11 @@
                            Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={StaticResource TargetStroke}}" />
                 <TextBlock Classes="nodeText"
                            Text="{Binding Name}" />
+                <TextBlock Name="duration"
+                           Classes="nodeText"
+                           Text="{Binding DurationText}"
+                           ToolTip.Tip="{Binding ToolTip}"
+                           Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={x:Static Brushes.LightGray}}" />
                 <s:NodeHyperlinkControl Name="hyperlink"
                                         Classes="nodeText"
                                         Text="{Binding ParentTargetText}"
@@ -264,6 +287,11 @@
                            Fill="{StaticResource TargetBrush}" />
                 <TextBlock Classes="nodeText"
                            Text="{Binding Name}" />
+                <TextBlock Name="duration"
+                           Classes="nodeText"
+                           Text="{Binding DurationText}"
+                           ToolTip.Tip="{Binding ToolTip}"
+                           Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={x:Static Brushes.LightGray}}" />
                 <s:NodeHyperlinkControl Classes="nodeText"
                                         Text=" → Show"
                                         Foreground="LightBlue" />
@@ -286,21 +314,52 @@
                 <TextBlock Name="duration"
                            Classes="nodeText"
                            Text="{Binding DurationText}"
+                           ToolTip.Tip="{Binding ToolTip}"
                            Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={x:Static Brushes.LightGray}}" />
+            </StackPanel>
+        </TreeDataTemplate>
+
+        <TreeDataTemplate DataType="{x:Type l:TaskParameterItem}"
+                          ItemsSource="{Binding Children}">
+            <StackPanel Orientation="Horizontal">
+                <Path Name="icon"
+                      Data="{StaticResource AddItemGeometry}"
+                      VerticalAlignment="Center"
+                      Width="14"
+                      Height="11"
+                      Margin="3,3,6,3"
+                      StrokeThickness="1"
+                      Stroke="{StaticResource ItemStroke}"
+                      Fill="{StaticResource ItemBrush}" />
+                <TextBlock Name="label"
+                           Classes="nodeBeforeText"
+                           Text="Add Item "
+                           Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={StaticResource AddItemStroke}}" />
+                <TextBlock Text="{Binding Name}"
+                           Classes="nodeText" />
+                <TextBlock Name="parameterName"
+                           Text="{Binding ParameterName}"
+                           Foreground="Gray"
+                           Margin="16,0,0,0" />
             </StackPanel>
         </TreeDataTemplate>
 
         <TreeDataTemplate DataType="{x:Type l:AddItem}"
                           ItemsSource="{Binding Children}">
             <StackPanel Orientation="Horizontal">
-                <Rectangle Name="icon"
-                           Classes="nodeIcon"
-                           Stroke="{StaticResource ItemStroke}"
-                           Fill="{StaticResource ItemBrush}" />
+                <Path Name="icon"
+                      Data="{StaticResource AddItemGeometry}"
+                      VerticalAlignment="Center"
+                      Width="14"
+                      Height="11"
+                      Margin="3,3,6,3"
+                      StrokeThickness="1"
+                      Stroke="{StaticResource ItemStroke}"
+                      Fill="{StaticResource ItemBrush}" />
                 <TextBlock Name="label"
                            Classes="nodeBeforeText"
                            Text="Add Item "
-                           Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={x:Static Brushes.Teal}}" />
+                           Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={StaticResource AddItemStroke}}" />
                 <TextBlock Text="{Binding Name}"
                            Classes="nodeText" />
             </StackPanel>
@@ -309,15 +368,29 @@
         <TreeDataTemplate DataType="{x:Type l:RemoveItem}"
                           ItemsSource="{Binding Children}">
             <StackPanel Orientation="Horizontal">
-                <Rectangle Name="icon"
-                           Classes="nodeIcon"
-                           Stroke="{StaticResource ItemStroke}"
-                           Fill="{StaticResource ItemBrush}" />
+                <Path Name="icon"
+                      Data="{StaticResource RemoveItemGeometry}"
+                      VerticalAlignment="Center"
+                      Width="14"
+                      Height="11"
+                      Margin="3,3,6,3"
+                      StrokeThickness="1"
+                      Stroke="{StaticResource ItemStroke}"
+                      Fill="{StaticResource ItemBrush}" />
                 <TextBlock Name="label"
                            Classes="nodeBeforeText"
                            Text="Remove Item "
-                           Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={x:Static Brushes.Teal}}"/>
+                           Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={StaticResource AddItemStroke}}"/>
                 <TextBlock Text="{Binding Name}"
+                           Classes="nodeText" />
+            </StackPanel>
+        </TreeDataTemplate>
+
+        <TreeDataTemplate DataType="{x:Type l:FileCopy}"
+                          ItemsSource="{Binding Children}">
+            <StackPanel Orientation="Horizontal">
+                <ContentPresenter Content="{Binding Kind, Converter={StaticResource FileCopyIconConverter}}" />
+                <TextBlock Text="{Binding ShortenedName}"
                            Classes="nodeText" />
             </StackPanel>
         </TreeDataTemplate>
@@ -337,16 +410,25 @@
         <TreeDataTemplate DataType="{x:Type l:Package}"
                           ItemsSource="{Binding Children}">
             <StackPanel Orientation="Horizontal">
-                <Rectangle Name="icon"
-                           Classes="nodeIcon"
-                           Stroke="{StaticResource ItemStroke}"
-                           Fill="{StaticResource ItemBrush}" />
+                <Path Data="{StaticResource NuGetGeometry}"
+                      Stroke="{DynamicResource NuGet}"
+                      VerticalAlignment="Center"
+                      StrokeThickness="1"
+                      Width="16"
+                      Height="16"
+                      Margin="1,2,0,2"
+                      Fill="{DynamicResource NuGet}" />
                 <TextBlock Text="{Binding ShortenedName}"
-                           Classes="nodeText" />
+                           Margin="6,0,0,0"
+                           VerticalAlignment="Center" />
                 <TextBlock Text="{Binding Version}"
-                           Classes="nodeText" />
+                           Margin="6,0,0,0"
+                           Foreground="{StaticResource PropertyStroke}"
+                           VerticalAlignment="Center" />
                 <TextBlock Text="{Binding VersionSpec}"
-                           Classes="nodeText" />
+                           Margin="6,0,0,0"
+                           Foreground="{StaticResource ImportStroke}"
+                           VerticalAlignment="Center" />
             </StackPanel>
         </TreeDataTemplate>
 
@@ -355,7 +437,7 @@
                 <Rectangle Name="icon"
                            Classes="nodeIcon"
                            Stroke="{StaticResource MetadataStroke}"
-                           Fill="{StaticResource ItemBrush}" />
+                           Fill="{StaticResource MetadataBrush}" />
                 <TextBlock Name="label"
                            Classes="nodeBeforeText"
                            Text="{Binding NameAndEquals, Mode=OneTime}"
@@ -392,6 +474,25 @@
             </StackPanel>
         </TreeDataTemplate>
 
+        <DataTemplate DataType="{x:Type l:TaskParameterProperty}">
+            <StackPanel Orientation="Horizontal">
+                <Rectangle Name="icon"
+                           Classes="nodeIcon"
+                           Stroke="{StaticResource PropertyStroke}"
+                           Fill="{StaticResource PropertyBrush}" />
+                <TextBlock Name="label"
+                           Classes="nodeBeforeText"
+                           Text="{Binding NameAndEquals, Mode=OneTime}"
+                           Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={StaticResource PropertyStroke}}" />
+                <TextBlock Text="{Binding ShortenedValue}"
+                           Classes="nodeText" />
+                <TextBlock Name="parameterName"
+                           Text="{Binding ParameterName}"
+                           Foreground="Gray"
+                           Margin="16,0,0,0" />
+            </StackPanel>
+        </DataTemplate>
+
         <DataTemplate DataType="{x:Type l:Property}">
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
@@ -421,7 +522,26 @@
             </StackPanel>
         </TreeDataTemplate>
 
-        <DataTemplate DataType="{x:Type l:Message}">
+        <TreeDataTemplate DataType="{x:Type l:TimedMessage}"
+                          ItemsSource="{Binding Children}">
+            <StackPanel Orientation="Horizontal">
+                <Rectangle Name="icon"
+                           Classes="nodeIcon"
+                           Stroke="{StaticResource MessageStroke}"
+                           Fill="{StaticResource MessageBrush}" />
+                <TextBlock Name="timeStamp"
+                           Text="{Binding TimestampText}"
+                           Opacity="0.3"
+                           Margin="0,0,8,0" />
+                <TextBlock Name="messageText"
+                           Classes="nodeText"
+                           Text="{Binding ShortenedText}"
+                           Opacity="{Binding IsLowRelevance, Converter={StaticResource RelevanceConverter}}" />
+            </StackPanel>
+        </TreeDataTemplate>
+
+        <TreeDataTemplate DataType="{x:Type l:Message}"
+                          ItemsSource="{Binding Children}">
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
                            Classes="nodeIcon"
@@ -432,9 +552,10 @@
                            Text="{Binding ShortenedText}"
                            Opacity="{Binding IsLowRelevance, Converter={StaticResource RelevanceConverter}}" />
             </StackPanel>
-        </DataTemplate>
+        </TreeDataTemplate>
 
-        <DataTemplate DataType="{x:Type l:MSBuildServerNode}">
+        <TreeDataTemplate DataType="{x:Type l:MSBuildServerNode}"
+                          ItemsSource="{Binding Children}">
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
                            Classes="nodeIcon"
@@ -445,7 +566,7 @@
                            Text="{Binding ShortenedText}"
                            Opacity="{Binding IsLowRelevance, Converter={StaticResource RelevanceConverter}}" />
             </StackPanel>
-        </DataTemplate>
+        </TreeDataTemplate>
         
         <TreeDataTemplate DataType="{x:Type l:Import}"
                           ItemsSource="{Binding Children}">
@@ -488,7 +609,8 @@
                            Text="{Binding Location}" />
                 <TextBlock x:Name="reason"
                            Classes="nodeText"
-                           Text="{Binding Reason}" />
+                           Text="{Binding Reason}"
+                           Background="{Binding IsSelected, Converter={StaticResource NoImportReasonBackgroundConverter}}" />
             </StackPanel>
         </TreeDataTemplate>
 
@@ -516,7 +638,8 @@
             </StackPanel>
         </DataTemplate>
         
-        <DataTemplate DataType="{x:Type l:Error}">
+        <TreeDataTemplate DataType="{x:Type l:Error}"
+                          ItemsSource="{Binding Children}">
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
                            Classes="nodeIcon"
@@ -527,9 +650,23 @@
                            Text="{Binding}"
                            Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={StaticResource ErrorStroke}}" />
             </StackPanel>
-        </DataTemplate>
+        </TreeDataTemplate>
 
-        <DataTemplate DataType="{x:Type l:Warning}">
+        <TreeDataTemplate DataType="{x:Type l:CriticalBuildMessage}"
+                          ItemsSource="{Binding Children}">
+            <StackPanel Orientation="Horizontal">
+                <Rectangle Name="icon"
+                           Classes="nodeIcon"
+                           Stroke="{StaticResource WarningStroke}"
+                           Fill="{StaticResource WarningBrush}" />
+                <TextBlock Name="text"
+                           Classes="nodeText"
+                           Text="{Binding}" />
+            </StackPanel>
+        </TreeDataTemplate>
+
+        <TreeDataTemplate DataType="{x:Type l:Warning}"
+                          ItemsSource="{Binding Children}">
             <StackPanel Orientation="Horizontal">
                 <Rectangle Name="icon"
                            Classes="nodeIcon"
@@ -538,14 +675,14 @@
                 <TextBlock Classes="nodeText"
                            Text="{Binding}" />
             </StackPanel>
-        </DataTemplate>
+        </TreeDataTemplate>
 
         <DataTemplate DataType="{x:Type l:Note}">
             <StackPanel Orientation="Horizontal">
                 <Border BorderBrush="LightGray"
                         BorderThickness="1"
-                        Margin="4"
-                        Background="LightYellow"
+                        Margin="3"
+                        Background="{DynamicResource Theme_InfoBarBackground}"
                         Padding="6">
                     <TextBlock Text="{Binding Text}"
                                Foreground="Gray"
@@ -563,6 +700,9 @@
                            Fill="{StaticResource MessageBrush}" />
                 <TextBlock Name="messageText"
                            Text="{Binding Name}" />
+                <TextBlock Text="{Binding SourceFilePath}"
+                           Opacity="0.4"
+                           Margin="8,0,0,0" />
             </StackPanel>
         </TreeDataTemplate>
 
@@ -591,7 +731,7 @@
                         <DataTemplate DataType="{x:Type l:HighlightedText}">
                             <TextBlock Classes="nodeBeforeText"
                                        Foreground="Black"
-                                       Background="Yellow"
+                                       Background="{Binding Style, Converter={StaticResource HighlightBackgroundConverter}}"
                                        Text="{Binding Text}" />
                         </DataTemplate>
                         <DataTemplate DataType="x:Object">
@@ -609,6 +749,8 @@
         </TreeDataTemplate>
 
         <DataTemplate DataType="{x:Type common:WelcomeScreen}">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Auto">
             <DockPanel Name="welcomeScreen">
                 <TextBlock DockPanel.Dock="Top"
                            Text="{Binding Version}"
@@ -619,7 +761,6 @@
                            VerticalAlignment="Top" />
                 <Grid HorizontalAlignment="Center"
                       VerticalAlignment="Center">
-                    <Rectangle Fill="Black" />
                     <Grid Background="{DynamicResource Theme_WhiteBackground}"
                           RowDefinitions="Auto,Auto,Auto,Auto,Auto">
                         <TextBlock Name="customMessage"
@@ -741,13 +882,11 @@
                             </Expander>
                         </Grid>
                         <StackPanel Grid.Row="4">
-                            <CheckBox Content="Enable tree virtualization (faster, but may cause hangs)"
-                                      Margin="10,0,10,10"
-                                      IsChecked="{Binding EnableVirtualization}"
-                                      ToolTip.Tip="Disable virtualization if you're experiencing hangs or deadlocks when scrolling the tree" />
+                            <!-- WPF has an "Enable tree virtualization" checkbox here;
+                                 Avalonia's TreeView has no virtualization to toggle -->
                             <!--<CheckBox Content="Display all targets directly under the project (flattened in temporal order)"
                                       Margin="10,0,10,10"
-                                      IsChecked="{Binding ParentAllTargetsUnderProject}" 
+                                      IsChecked="{Binding ParentAllTargetsUnderProject}"
                                       ToolTip.Tip="Linearize/flatten all targets under the project instead of parenting targets under their dependency target"/>-->
                             <CheckBox Content="Mark search results with a dot in the main tree"
                                       Margin="10,0,10,10"
@@ -756,14 +895,16 @@
                             <CheckBox Content="Show project configuration and platform"
                                       Margin="10,0,10,10"
                                       IsChecked="{Binding ShowConfigurationAndPlatform}"
-                                      ToolTip.Tip="Show the configuration and platform (such as Debug|AnyCPU) next to project names" />
-                            <CheckBox Content="Dark theme"
+                                      ToolTip.Tip="Show project Configuration and Platform property values if available" />
+                            <CheckBox Content="Dark Theme"
                                       Margin="10,0,10,10"
-                                      IsChecked="{Binding UseDarkTheme}" />
+                                      IsChecked="{Binding UseDarkTheme}"
+                                      ToolTip.Tip="Use dark theme" />
                         </StackPanel>
                     </Grid>
                 </Grid>
             </DockPanel>
+            </ScrollViewer>
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type s:BuildParametersScreen}">
@@ -782,7 +923,7 @@
                                   ToolTip.Tip="Select MSBuild toolset to use for building"
                                   Height="28"
                                   Margin="4,4,0,4"/>
-                        <Button Command="{Binding BrowseForMSBuildAsync}"
+                        <Button Command="{Binding BrowseForMSBuildCommand}"
                                 Width="28"
                                 Height="28"
                                 ToolTip.Tip="Browse for custom MSBuild file location..."
@@ -791,15 +932,15 @@
                                 <Rectangle Width="2"
                                            Height="2"
                                            Margin="2"
-                                           Fill="Black" />
+                                           Fill="{DynamicResource Theme_InfoBarForeground}" />
                                 <Rectangle Width="2"
                                            Height="2"
                                            Margin="0,2,2,2"
-                                           Fill="Black" />
+                                           Fill="{DynamicResource Theme_InfoBarForeground}" />
                                 <Rectangle Width="2"
                                            Height="2"
                                            Margin="0,2,2,2"
-                                           Fill="Black" />
+                                           Fill="{DynamicResource Theme_InfoBarForeground}" />
                             </StackPanel>
                         </Button>
                         <TextBlock Text="{Binding PrefixArguments}"
@@ -882,7 +1023,7 @@
                              IsReadOnly="True"
                              TextWrapping="Wrap"
                              AcceptsReturn="True"
-                             Background="#E0E0E0"
+                             Background="{DynamicResource Theme_ControlBackground}"
                              MinHeight="23" />
                 </StackPanel>
             </Grid>

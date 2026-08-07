@@ -5,6 +5,10 @@
     
     <Geometry x:Key="SearchGeometry">F1 M 8.5,7.0 C 7.12,7.00 6.0,5.88 6.0,4.5 C 6.0,3.12 7.12,2.0 8.5,2.0 C 9.88,2.0 11.0,3.12 11.0,4.5 C 11.0,5.88 9.88,7.0 8.5,7.0 Z M 8.5,0.0 C 6.02,0.0 4.0,2.02 4.0,4.500 C 4.0,5.23 4.19,5.9 4.49,6.5 L 0.0,11.0 L 2.0,13.0 L 6.49,8.51 C 7.1,8.81 7.77,9.0 8.5,9.0 C 11.0,9.0 13.0,7.0 13.0,4.5 C 13.0,2.02 11.0,0.0 8.5,0.0 Z</Geometry>
 
+    <Geometry x:Key="AddItemGeometry">M 2 4 L 5 4 L 5 1 L 8 1 L 8 4 L 11 4 L 11 7 L 8 7 L 8 10 L 5 10 L 5 7 L 2 7 Z</Geometry>
+    <Geometry x:Key="RemoveItemGeometry">M 2 4 L 11 4 L 11 7 L 2 7 Z</Geometry>
+    <Geometry x:Key="NuGetGeometry">F1 M11.433,4 L7.568,4 A3.569,3.569 0 0 0 4,7.568L4,11.433 A3.568,3.568 0 0 0 7.568,15L11.433,15 A3.567,3.567 0 0 0 15,11.433L15,7.568 A3.568,3.568 0 0 0 11.433,4M7,8.447 A1.447,1.447 0 1 1 8.447,7A1.447,1.447 0 0 1 7,8.447M11.484,13.8 A2.316,2.316 0 1 1 13.8,11.484A2.316,2.316 0 0 1 11.484,13.8M3.665,2.5 A1.165,1.165 0 1 1 2.5,1.335A1.165,1.165 0 0 1 3.665,2.5</Geometry>
+
     <SolidColorBrush x:Key="WindowBackgroundStroke" Color="#F0F0F0" />
     <SolidColorBrush x:Key="FolderStroke" Color="Goldenrod" />
     <SolidColorBrush x:Key="TargetStroke" Color="MediumPurple" />
@@ -12,7 +16,8 @@
     <SolidColorBrush x:Key="ParameterStroke" Color="DodgerBlue" />
     <SolidColorBrush x:Key="PropertyStroke" Color="DodgerBlue" />
     <SolidColorBrush x:Key="ItemStroke" Color="MediumAquamarine" />
-    <SolidColorBrush x:Key="MetadataStroke" Color="MediumAquamarine" />
+    <SolidColorBrush x:Key="AddItemStroke" Color="Teal" />
+    <SolidColorBrush x:Key="MetadataStroke" Color="Teal" />
     <SolidColorBrush x:Key="MessageStroke" Color="LightGray" />
     <SolidColorBrush x:Key="MSBuildServerStroke" Color="CornflowerBlue" />
     <SolidColorBrush x:Key="ImportStroke" Color="Sienna" />
@@ -43,6 +48,11 @@
     <LinearGradientBrush x:Key="ItemBrush" StartPoint="0%,0%" EndPoint="100%,100%">
         <GradientStop Color="Honeydew" Offset="0" />
         <GradientStop Color="LightGreen" Offset="1" />
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="MetadataBrush" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Color="PaleTurquoise" Offset="0" />
+        <GradientStop Color="LightSeaGreen" Offset="1" />
     </LinearGradientBrush>
 
     <LinearGradientBrush x:Key="PropertyBrush" StartPoint="0%,0%" EndPoint="100%,100%">
@@ -100,6 +110,14 @@
         <GeometryDrawing Brush="#FF378A33" Geometry="F1M14,13L2,13 2,3 14,3z M1,14L15,14 15,2 1,2z" />
     </DrawingGroup>
     
+    <DrawingGroup x:Key="CppProjIcon">
+        <GeometryDrawing Brush="#00FFFFFF" Geometry="F1M16,16L0,16 0,0 16,0z" />
+        <GeometryDrawing Brush="#FFF6F6F6" Geometry="F1M0,15L16,15 16,1 0,1z" />
+        <GeometryDrawing Brush="#FFA43FB1" Geometry="F1M14,13L2,13 2,3 14,3z M1,14L15,14 15,2 1,2z" />
+        <GeometryDrawing Brush="#FFA43FB1" Geometry="F1M8,6V7H6V9H5V7H3V6H5V4H6V6Z" />
+        <GeometryDrawing Brush="#FFA43FB1" Geometry="F1M13,9v1H11v2H10V10H8V9h2V7h1V9Z" />
+    </DrawingGroup>
+
     <DrawingGroup x:Key="FSProjIcon">
         <GeometryDrawing Brush="#00FFFFFF" Geometry="F1M16,16L0,16 0,0 16,0z" />
         <GeometryDrawing Brush="#FFF6F6F6" Geometry="F1M0,15L16,15 16,1 0,1z" />
