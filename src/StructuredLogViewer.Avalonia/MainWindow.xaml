@@ -6,6 +6,7 @@
         DragDrop.AllowDrop="True"
         Classes="mainWindow"
         FontSize="12"
+        RenderOptions.TextRenderingMode="SubpixelAntialias"
         Icon="StructuredLogger.ico">
 
     <LayoutTransformControl Name="layoutTransform">

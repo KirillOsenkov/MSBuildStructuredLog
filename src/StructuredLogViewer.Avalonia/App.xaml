@@ -17,6 +17,10 @@
 
             <!-- Fluent defaults to 14; WPF uses 12 - controls read this resource directly -->
             <x:Double x:Key="ControlContentThemeFontSize">12</x:Double>
+
+            <!-- target framework chip, same values as WPF Generic.xaml -->
+            <SolidColorBrush x:Key="TargetFrameworkBackground">#E5F0E5</SolidColorBrush>
+            <SolidColorBrush x:Key="TargetFrameworkForeground">#274E13</SolidColorBrush>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="/Resources.xaml" />
             </ResourceDictionary.MergedDictionaries>
@@ -159,6 +163,15 @@
                 </Image>
                 <TextBlock Classes="nodeText"
                            Text="{Binding Name}" />
+                <TextBlock Text="{Binding AdornmentString}"
+                           Margin="6,0,0,0"
+                           Padding="2,0,2,0"
+                           FontSize="10"
+                           LineHeight="14"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource TargetFrameworkForeground}"
+                           Background="{DynamicResource TargetFrameworkBackground}"
+                           IsVisible="{Binding AdornmentString, Converter={StaticResource StringEmptinessToVisibilityConverter}, ConverterParameter=Invert}" />
                 <s:NodeHyperlinkControl Classes="nodeText"
                                         Margin="6,0,0,0"
                                         Text="{Binding TargetsDisplayText}"
@@ -187,6 +200,15 @@
                 </Image>
                 <TextBlock Classes="nodeText"
                            Text="{Binding Name}" />
+                <TextBlock Text="{Binding AdornmentString}"
+                           Margin="6,0,0,0"
+                           Padding="2,0,2,0"
+                           FontSize="10"
+                           LineHeight="14"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource TargetFrameworkForeground}"
+                           Background="{DynamicResource TargetFrameworkBackground}"
+                           IsVisible="{Binding AdornmentString, Converter={StaticResource StringEmptinessToVisibilityConverter}, ConverterParameter=Invert}" />
             </StackPanel>
         </TreeDataTemplate>
 

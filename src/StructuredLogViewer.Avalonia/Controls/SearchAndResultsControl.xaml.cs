@@ -159,10 +159,13 @@ namespace StructuredLogViewer.Avalonia.Controls
 
         public string SearchText
         {
-            get => searchTextBox.Text;
+            // WPF's TextBox.Text is never null, Avalonia's is; normalize so callers can
+            // use Contains etc. without null checks
+            get => searchTextBox.Text ?? "";
 
             set
             {
+                value ??= "";
                 searchTextBox.Text = value;
                 searchTextBox.CaretIndex = value.Length;
                 searchTextBox.Focus();

@@ -19,15 +19,21 @@
         <Setter Property="Background" Value="{DynamicResource Theme_ScrollBarBackground}"/>
     </Style>
 
-    <!-- square corners on text boxes, matching WPF chrome -->
+    <!-- square corners and compact padding on text boxes, matching WPF chrome -->
     <Style Selector="TextBox">
         <Setter Property="CornerRadius" Value="0"/>
         <Setter Property="MinHeight" Value="0"/>
+        <Setter Property="Padding" Value="4,2"/>
     </Style>
 
     <!-- WPF's main tree is opaque window-white, not the window chrome color -->
     <Style Selector="TreeView.searchable">
         <Setter Property="Background" Value="{DynamicResource Theme_WhiteBackground}"/>
+    </Style>
+
+    <!-- small left inset before the expander column, like WPF -->
+    <Style Selector="TreeView">
+        <Setter Property="Padding" Value="4,0,0,0"/>
     </Style>
 
     <!-- Avalonia's Segoe UI line metrics are taller than WPF's; pin tree text to
@@ -82,6 +88,12 @@
                 </Grid>
             </ControlTemplate>
         </Setter>
+    </Style>
+
+    <!-- always reserve the expander column (WPF reserves 19px) so icons on leaf
+         items line up with icons on expandable items -->
+    <Style Selector="TreeViewItem /template/ Panel#PART_ExpandCollapseChevronContainer">
+        <Setter Property="MinWidth" Value="19"/>
     </Style>
 
     <!-- WPF-style expander triangle: hollow right-pointing triangle when collapsed,
@@ -154,9 +166,10 @@
     <Style Selector="TabItem">
         <Setter Property="FontSize" Value="12" />
         <Setter Property="MinHeight" Value="0" />
-        <Setter Property="Padding" Value="8,3" />
+        <Setter Property="Padding" Value="12,3" />
         <Setter Property="Margin" Value="0,0,-1,0" />
         <Setter Property="Background" Value="{DynamicResource Theme_TabBackground}" />
+        <Setter Property="Foreground" Value="{DynamicResource Theme_InfoBarForeground}" />
         <Setter Property="BorderBrush" Value="{DynamicResource Theme_ControlBorder}" />
         <!-- bottom-placed tabs: the edge facing the content pane stays open, like WPF -->
         <Setter Property="BorderThickness" Value="1,0,1,1" />
@@ -197,16 +210,40 @@
         <Setter Property="Margin" Value="0,0,-1,-1" />
     </Style>
 
+    <!-- Fluent styles the header presenter directly (gray unselected, accent selected);
+         WPF tab text is plain black in all states -->
+    <Style Selector="TabItem /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Foreground" Value="{DynamicResource Theme_InfoBarForeground}" />
+    </Style>
+    <Style Selector="TabItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Foreground" Value="{DynamicResource Theme_InfoBarForeground}" />
+    </Style>
+    <Style Selector="TabItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Foreground" Value="{DynamicResource Theme_InfoBarForeground}" />
+    </Style>
+    <Style Selector="TabItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Foreground" Value="{DynamicResource Theme_InfoBarForeground}" />
+    </Style>
+
     <Style Selector="MenuItem">
         <Setter Property="FontSize" Value="12" />
     </Style>
+    <Style Selector="Menu">
+        <Setter Property="Padding" Value="0" />
+        <!-- Fluent pins the menu bar to a fixed height; size to content like WPF -->
+        <Setter Property="Height" Value="NaN" />
+        <Setter Property="MinHeight" Value="0" />
+    </Style>
     <Style Selector="Menu > MenuItem">
-        <Setter Property="Padding" Value="8,4" />
+        <Setter Property="Padding" Value="6,1" />
+        <Setter Property="MinHeight" Value="0" />
+        <!-- Fluent pins top-level menu items to a fixed height; let them hug the text -->
+        <Setter Property="Height" Value="NaN" />
     </Style>
 
     <!-- compact breadcrumb items with no hover/selection chrome, like WPF -->
     <Style Selector="ListBox#breadCrumb">
-        <Setter Property="Padding" Value="0" />
+        <Setter Property="Padding" Value="6,3" />
     </Style>
     <Style Selector="ListBox#breadCrumb ListBoxItem">
         <Setter Property="Padding" Value="2,0" />
@@ -238,7 +275,7 @@
     
     <Style Selector="TreeView.searchable TreeViewItem">
         <Style.Resources>
-            <converters:MarginMultiplierConverter Indent="16" Left="True" x:Key="LeftMarginConverter" />
+            <converters:MarginMultiplierConverter Indent="19" Left="True" x:Key="LeftMarginConverter" />
             <SolidColorBrush x:Key="SearchResultStroke"
                              Color="OrangeRed" />
             <SolidColorBrush x:Key="ContainsSearchResultStroke"
