@@ -9,11 +9,58 @@
     </Design.DataContext>
 
     <Style Selector="Window.mainWindow">
-        <Setter Property="Background" Value="{DynamicResource WindowBackgroundStroke}"/>
+        <Setter Property="Background" Value="{DynamicResource Theme_Background}"/>
+        <Setter Property="FontSize" Value="12"/>
     </Style>
 
-    <Style Selector="ContentPresenter.mainContent">
-        <Setter Property="Background" Value="{DynamicResource ThemeBackgroundBrush}"/>
+    <!-- classic always-visible scrollbars like WPF -->
+    <Style Selector="ScrollBar">
+        <Setter Property="AllowAutoHide" Value="False"/>
+        <Setter Property="Background" Value="{DynamicResource Theme_ScrollBarBackground}"/>
+    </Style>
+
+    <!-- square corners on text boxes, matching WPF chrome -->
+    <Style Selector="TextBox">
+        <Setter Property="CornerRadius" Value="0"/>
+        <Setter Property="MinHeight" Value="0"/>
+    </Style>
+
+    <!-- WPF-style expander triangle: hollow right-pointing triangle when collapsed,
+         dark filled triangle when expanded, light blue on hover -->
+    <Style Selector="TreeViewItem /template/ ToggleButton#PART_ExpandCollapseChevron">
+        <Setter Property="Width" Value="16"/>
+        <Setter Property="Height" Value="16"/>
+        <Setter Property="Margin" Value="0"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Width="16"
+                        Height="16"
+                        Background="Transparent">
+                    <Path Name="ExpandPath"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"
+                          StrokeThickness="1" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="TreeViewItem /template/ ToggleButton#PART_ExpandCollapseChevron /template/ Path#ExpandPath">
+        <Setter Property="Data" Value="M 0,0 L 4,4 L 0,8 Z"/>
+        <Setter Property="Fill" Value="White"/>
+        <Setter Property="Stroke" Value="#FF818181"/>
+    </Style>
+    <Style Selector="TreeViewItem /template/ ToggleButton#PART_ExpandCollapseChevron:pointerover /template/ Path#ExpandPath">
+        <Setter Property="Stroke" Value="#FF27C7F7"/>
+        <Setter Property="Fill" Value="#FFCCEEFB"/>
+    </Style>
+    <Style Selector="TreeViewItem /template/ ToggleButton#PART_ExpandCollapseChevron:checked /template/ Path#ExpandPath">
+        <Setter Property="Data" Value="M 6,0 L 6,6 L 0,6 Z"/>
+        <Setter Property="Fill" Value="#FF595959"/>
+        <Setter Property="Stroke" Value="#FF262626"/>
+    </Style>
+    <Style Selector="TreeViewItem /template/ ToggleButton#PART_ExpandCollapseChevron:checked:pointerover /template/ Path#ExpandPath">
+        <Setter Property="Stroke" Value="#FF1CC4F7"/>
+        <Setter Property="Fill" Value="#FF82DFFB"/>
     </Style>
 
     <Style Selector="Button.close">
@@ -43,13 +90,74 @@
         </Setter>
     </Style>
     
+    <!-- Fluent control themes set FontSize=14 explicitly; match WPF's 12 -->
+    <!-- classic WPF-style tabs: bordered boxes, selected tab lighter -->
     <Style Selector="TabItem">
-        <Setter Property="FontSize" Value="{DynamicResource FontSizeNormal}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Padding" Value="8,3" />
+        <Setter Property="Margin" Value="0,0,-1,0" />
+        <Setter Property="Background" Value="{DynamicResource Theme_TabBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Theme_ControlBorder}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}">
+                    <ContentPresenter Name="PART_ContentPresenter"
+                                      Content="{TemplateBinding Header}"
+                                      ContentTemplate="{TemplateBinding HeaderTemplate}"
+                                      Padding="{TemplateBinding Padding}"
+                                      HorizontalContentAlignment="Center"
+                                      VerticalContentAlignment="Center" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
     </Style>
-    
+    <Style Selector="TabItem:selected">
+        <Setter Property="Background" Value="{DynamicResource Theme_TabSelectedBackground}" />
+    </Style>
+    <Style Selector="TabItem:pointerover">
+        <Setter Property="Background" Value="{DynamicResource Theme_TabHoverBackground}" />
+    </Style>
+    <Style Selector="TabItem:selected:pointerover">
+        <Setter Property="Background" Value="{DynamicResource Theme_TabSelectedBackground}" />
+    </Style>
+
+    <Style Selector="MenuItem">
+        <Setter Property="FontSize" Value="12" />
+    </Style>
+    <Style Selector="Menu > MenuItem">
+        <Setter Property="Padding" Value="8,4" />
+    </Style>
+
+    <!-- compact breadcrumb items with no hover/selection chrome, like WPF -->
+    <Style Selector="ListBox#breadCrumb ListBoxItem">
+        <Setter Property="Padding" Value="2,0" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <ContentPresenter Name="PART_ContentPresenter"
+                                  Content="{TemplateBinding Content}"
+                                  ContentTemplate="{TemplateBinding ContentTemplate}"
+                                  Padding="{TemplateBinding Padding}"
+                                  VerticalContentAlignment="Center" />
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="ContextMenu">
+        <Setter Property="FontSize" Value="12" />
+    </Style>
+    <Style Selector="ToolTip">
+        <Setter Property="FontSize" Value="12" />
+    </Style>
+
     <Style Selector="TreeViewItem">
         <Setter Property="Padding" Value="0" />
         <Setter Property="MinHeight" Value="0" />
+        <Setter Property="FontSize" Value="12" />
     </Style>
     
     <Style Selector="TreeView.searchable TreeViewItem">
@@ -78,8 +186,7 @@
                               ColumnDefinitions="Auto, *"
                               HorizontalAlignment="Left"
                               Margin="{TemplateBinding Level, Mode=OneWay, Converter={StaticResource LeftMarginConverter}}" >
-                            <Panel Name="PART_ExpandCollapseChevronContainer"
-                                   Margin="{StaticResource TreeViewItemExpandCollapseChevronMargin}">
+                            <Panel Name="PART_ExpandCollapseChevronContainer">
                                 <ToggleButton Name="PART_ExpandCollapseChevron"
                                               Theme="{StaticResource FluentTreeViewExpandCollapseChevron}"
                                               Focusable="False"

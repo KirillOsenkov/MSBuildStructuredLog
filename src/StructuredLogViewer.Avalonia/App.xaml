@@ -14,6 +14,9 @@
             <s:ProjectIconConverter x:Key="ProjectIconConverter" />
             <s:NodeLowRelevanceToOpacityConverter x:Key="RelevanceConverter" />
             <s:NodeIsSelectedToColorConverter x:Key="LabelColorConverter" />
+
+            <!-- Fluent defaults to 14; WPF uses 12 - controls read this resource directly -->
+            <x:Double x:Key="ControlContentThemeFontSize">12</x:Double>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="/Resources.xaml" />
             </ResourceDictionary.MergedDictionaries>
@@ -25,6 +28,23 @@
                     <SolidColorBrush x:Key="Theme_InfoBarBackground">#FFFFE1</SolidColorBrush>
                     <SolidColorBrush x:Key="Theme_InfoBarForeground">Black</SolidColorBrush>
                     <SolidColorBrush x:Key="Theme_GrayText">Gray</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_ControlBorder">#ACACAC</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_TabBackground">#F0F0F0</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_TabHoverBackground">#D8EAF9</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_TabSelectedBackground">White</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_ScrollBarBackground">#F0F0F0</SolidColorBrush>
+
+                    <!-- match WPF: no hover background, LightSkyBlue selection with dark text -->
+                    <SolidColorBrush x:Key="TreeViewItemBackgroundPointerOver">Transparent</SolidColorBrush>
+                    <SolidColorBrush x:Key="TreeViewItemBackgroundPressed">Transparent</SolidColorBrush>
+                    <SolidColorBrush x:Key="TreeViewItemBackgroundSelected">LightSkyBlue</SolidColorBrush>
+                    <SolidColorBrush x:Key="TreeViewItemBackgroundSelectedPointerOver">LightSkyBlue</SolidColorBrush>
+                    <SolidColorBrush x:Key="TreeViewItemBackgroundSelectedPressed">LightSkyBlue</SolidColorBrush>
+                    <SolidColorBrush x:Key="TreeViewItemForegroundPointerOver">Black</SolidColorBrush>
+                    <SolidColorBrush x:Key="TreeViewItemForegroundPressed">Black</SolidColorBrush>
+                    <SolidColorBrush x:Key="TreeViewItemForegroundSelected">Black</SolidColorBrush>
+                    <SolidColorBrush x:Key="TreeViewItemForegroundSelectedPointerOver">Black</SolidColorBrush>
+                    <SolidColorBrush x:Key="TreeViewItemForegroundSelectedPressed">Black</SolidColorBrush>
                 </ResourceDictionary>
                 <ResourceDictionary x:Key="Dark">
                     <SolidColorBrush x:Key="Theme_Background">#454545</SolidColorBrush>
@@ -33,6 +53,23 @@
                     <SolidColorBrush x:Key="Theme_InfoBarBackground">#202040</SolidColorBrush>
                     <SolidColorBrush x:Key="Theme_InfoBarForeground">#E0E0E0</SolidColorBrush>
                     <SolidColorBrush x:Key="Theme_GrayText">LightGray</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_ControlBorder">#555555</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_TabBackground">#3F3F46</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_TabHoverBackground">#3B5464</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_TabSelectedBackground">#303030</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_ScrollBarBackground">#3E3E42</SolidColorBrush>
+
+                    <!-- match WPF dark theme: SlateBlue selection, no hover background -->
+                    <SolidColorBrush x:Key="TreeViewItemBackgroundPointerOver">Transparent</SolidColorBrush>
+                    <SolidColorBrush x:Key="TreeViewItemBackgroundPressed">Transparent</SolidColorBrush>
+                    <SolidColorBrush x:Key="TreeViewItemBackgroundSelected">SlateBlue</SolidColorBrush>
+                    <SolidColorBrush x:Key="TreeViewItemBackgroundSelectedPointerOver">SlateBlue</SolidColorBrush>
+                    <SolidColorBrush x:Key="TreeViewItemBackgroundSelectedPressed">SlateBlue</SolidColorBrush>
+                    <SolidColorBrush x:Key="TreeViewItemForegroundPointerOver">#E0E0E0</SolidColorBrush>
+                    <SolidColorBrush x:Key="TreeViewItemForegroundPressed">#E0E0E0</SolidColorBrush>
+                    <SolidColorBrush x:Key="TreeViewItemForegroundSelected">White</SolidColorBrush>
+                    <SolidColorBrush x:Key="TreeViewItemForegroundSelectedPointerOver">White</SolidColorBrush>
+                    <SolidColorBrush x:Key="TreeViewItemForegroundSelectedPressed">White</SolidColorBrush>
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
         </ResourceDictionary>
@@ -46,7 +83,7 @@
         <Style Selector="Rectangle.nodeIcon">
             <Setter Property="Width" Value="14" />
             <Setter Property="Height" Value="12" />
-            <Setter Property="Margin" Value="4,1,6,1" />
+            <Setter Property="Margin" Value="4,0,6,0" />
             <Setter Property="StrokeThickness" Value="1" />
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
@@ -54,16 +91,16 @@
         <Style Selector="Image.projectNodeIcon">
             <Setter Property="Width" Value="16" />
             <Setter Property="Height" Value="16" />
-            <Setter Property="Margin" Value="3,1,6,1" />
+            <Setter Property="Margin" Value="3,0,6,0" />
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
 
         <Style Selector="TextBlock.nodeBeforeText">
-            <Setter Property="Margin" Value="0,1,0,1" />
+            <Setter Property="Margin" Value="0" />
         </Style>
 
         <Style Selector="TextBlock.nodeText">
-            <Setter Property="Margin" Value="0,1,8,1" />
+            <Setter Property="Margin" Value="0,0,8,0" />
         </Style>
     </Application.Styles>
 

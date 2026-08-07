@@ -926,7 +926,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                 span.Inlines.Add(new Run(before));
             }
 
-            span.Inlines.Add(new InlineUIContainer(linkText));
+            span.Inlines.Add(new InlineUIContainer(linkText) { BaselineAlignment = BaselineAlignment.TextBottom });
 
             if (after != null)
             {
@@ -958,7 +958,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                 e.Handled = true;
             };
 
-            return new InlineUIContainer(linkText);
+            return new InlineUIContainer(linkText) { BaselineAlignment = BaselineAlignment.TextBottom };
         }
 
         private void UpdateWatermark()

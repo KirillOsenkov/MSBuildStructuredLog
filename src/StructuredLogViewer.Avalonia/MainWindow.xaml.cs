@@ -1247,7 +1247,8 @@ Use project(.) or project(.csproj) to search all projects (slow)." };
                     MaxWidth = 800,
                     MaxHeight = 600,
                     WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                    ShowInTaskbar = false
+                    ShowInTaskbar = false,
+                    FontSize = 12
                 };
                 okButton.Click += (s, e) => window.Close();
 

@@ -33,6 +33,7 @@ namespace StructuredLogViewer.Avalonia.Controls
             SizeToContent = SizeToContent.WidthAndHeight;
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
             ShowInTaskbar = false;
+            FontSize = 12;
 
             chckbxEmbeddedFiles = new CheckBox { Content = "Process embedded files", Margin = new Thickness(0, 5), IsChecked = true };
             chckbxDistinguishReplacements = new CheckBox { Content = "Use distinct replacements per secret type", Margin = new Thickness(0, 5), IsChecked = true };

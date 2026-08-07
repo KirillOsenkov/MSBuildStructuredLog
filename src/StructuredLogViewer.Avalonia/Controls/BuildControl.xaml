@@ -10,6 +10,7 @@
     <local:SplitterPanel.FirstChild>
       <local:SplitterPanel FirstChildRelativeSize="1*" SecondChildRelativeSize="3*">
         <local:SplitterPanel.FirstChild>
+          <Border BorderBrush="{DynamicResource Theme_ControlBorder}" BorderThickness="1">
           <TabControl Name="leftPaneTabControl" TabStripPlacement="Bottom" SelectedIndex="0" Margin="0" Padding="0">
             <TabItem Name="searchLogTab" Header="Search Log">
               <local:SearchAndResultsControl Name="searchLogControl"></local:SearchAndResultsControl>
@@ -46,11 +47,13 @@
               <local:SearchAndResultsControl Name="favoritesTree"></local:SearchAndResultsControl>
             </TabItem>
           </TabControl>
+          </Border>
         </local:SplitterPanel.FirstChild>
         <local:SplitterPanel.SecondChild>
 
           <local:SplitterPanel Name="tabs">
             <local:SplitterPanel.FirstChild>
+              <Border BorderBrush="{DynamicResource Theme_ControlBorder}" BorderThickness="1">
               <TabControl Name="centralTabControl"
                           TabStripPlacement="Bottom"
                           SelectedIndex="0"
@@ -88,6 +91,7 @@
                       <local:TimelineControl Name="timeline" />
                   </TabItem>-->
               </TabControl>
+              </Border>
             </local:SplitterPanel.FirstChild>
 
             <local:SplitterPanel.SecondChild>
