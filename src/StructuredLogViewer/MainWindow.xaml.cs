@@ -1214,7 +1214,7 @@ that project." };
 
         private void HelpLink3_Click(object sender, RoutedEventArgs e)
         {
-            Process.Start(new ProcessStartInfo("https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/Search-Syntax") { UseShellExecute = true });
+            Process.Start(new ProcessStartInfo("https://msbuildlog.com/syntax/") { UseShellExecute = true });
         }
 
         private void HelpAbout_Click(object sender, RoutedEventArgs e)

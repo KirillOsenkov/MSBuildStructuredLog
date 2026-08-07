@@ -21,6 +21,13 @@ namespace StructuredLogViewer.Avalonia.Controls
             if (node == null)
                 return null;
 
+            // Project and ProjectEvaluation both carry a project file extension;
+            // key off it like the WPF proxy template does
+            if (!string.IsNullOrEmpty(node.ProjectExtension))
+            {
+                return ProjectIcon(node.ProjectExtension);
+            }
+
             switch (node.OriginalType)
             {
                 case nameof(Build):
@@ -57,7 +64,8 @@ namespace StructuredLogViewer.Avalonia.Controls
                 case nameof(Project):
                     return ProjectIcon(node.ProjectExtension);
                 default:
-                    return NodeIcon(null, null);
+                    // same default as the WPF proxy template's untriggered icon
+                    return NodeIcon("ParameterStroke", "ParameterBrush");
             }
         }
 

@@ -32,7 +32,16 @@
                     <SolidColorBrush x:Key="Theme_InfoBarBackground">#FFFFE1</SolidColorBrush>
                     <SolidColorBrush x:Key="Theme_InfoBarForeground">Black</SolidColorBrush>
                     <SolidColorBrush x:Key="Theme_GrayText">Gray</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_ControlBackground">#F0F0F0</SolidColorBrush>
                     <SolidColorBrush x:Key="Theme_ControlBorder">#ACACAC</SolidColorBrush>
+
+                    <!-- classic WPF button colors (see WPF ThemeManager.UpdateTheme) -->
+                    <SolidColorBrush x:Key="Theme_ButtonBackground">#F0F0F0</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_ButtonBorder">#707070</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_ButtonHoverBackground">#BEE6FD</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_ButtonHoverBorder">#3C7FB1</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_ButtonPressedBackground">#C4E5F6</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_ButtonPressedBorder">#2C628B</SolidColorBrush>
                     <SolidColorBrush x:Key="Theme_TabBackground">#F0F0F0</SolidColorBrush>
                     <SolidColorBrush x:Key="Theme_TabHoverBackground">#D8EAF9</SolidColorBrush>
                     <SolidColorBrush x:Key="Theme_TabSelectedBackground">White</SolidColorBrush>
@@ -42,6 +51,8 @@
                     <SolidColorBrush x:Key="TextControlBackground">White</SolidColorBrush>
                     <SolidColorBrush x:Key="TextControlBackgroundPointerOver">White</SolidColorBrush>
                     <SolidColorBrush x:Key="TextControlBackgroundFocused">White</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_TextSelection">#99C9EF</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_EditorSelection">#4CA0E3</SolidColorBrush>
 
                     <!-- match WPF: no hover background, LightSkyBlue selection with dark text -->
                     <SolidColorBrush x:Key="TreeViewItemBackgroundPointerOver">Transparent</SolidColorBrush>
@@ -62,7 +73,15 @@
                     <SolidColorBrush x:Key="Theme_InfoBarBackground">#202040</SolidColorBrush>
                     <SolidColorBrush x:Key="Theme_InfoBarForeground">#E0E0E0</SolidColorBrush>
                     <SolidColorBrush x:Key="Theme_GrayText">LightGray</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_ControlBackground">#454545</SolidColorBrush>
                     <SolidColorBrush x:Key="Theme_ControlBorder">#555555</SolidColorBrush>
+
+                    <SolidColorBrush x:Key="Theme_ButtonBackground">#3F3F46</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_ButtonBorder">#666666</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_ButtonHoverBackground">#3B5464</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_ButtonHoverBorder">#36A2DB</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_ButtonPressedBackground">#2D4A5E</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_ButtonPressedBorder">#36A2DB</SolidColorBrush>
                     <SolidColorBrush x:Key="Theme_TabBackground">#3F3F46</SolidColorBrush>
                     <SolidColorBrush x:Key="Theme_TabHoverBackground">#3B5464</SolidColorBrush>
                     <SolidColorBrush x:Key="Theme_TabSelectedBackground">#303030</SolidColorBrush>
@@ -72,6 +91,8 @@
                     <SolidColorBrush x:Key="TextControlBackground">#303030</SolidColorBrush>
                     <SolidColorBrush x:Key="TextControlBackgroundPointerOver">#303030</SolidColorBrush>
                     <SolidColorBrush x:Key="TextControlBackgroundFocused">#303030</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_TextSelection">#264F78</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_EditorSelection">#264F78</SolidColorBrush>
 
                     <!-- match WPF dark theme: SlateBlue selection, no hover background -->
                     <SolidColorBrush x:Key="TreeViewItemBackgroundPointerOver">Transparent</SolidColorBrush>
@@ -588,11 +609,12 @@
         </TreeDataTemplate>
 
         <DataTemplate DataType="{x:Type common:WelcomeScreen}">
-            <Grid Name="welcomeScreen">
-                <TextBlock Text="{Binding Version}"
+            <DockPanel Name="welcomeScreen">
+                <TextBlock DockPanel.Dock="Top"
+                           Text="{Binding Version}"
                            Foreground="Gray"
                            FontSize="16"
-                           Margin="20"
+                           Margin="20,10"
                            HorizontalAlignment="Right"
                            VerticalAlignment="Top" />
                 <Grid HorizontalAlignment="Center"
@@ -741,7 +763,7 @@
                         </StackPanel>
                     </Grid>
                 </Grid>
-            </Grid>
+            </DockPanel>
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type s:BuildParametersScreen}">

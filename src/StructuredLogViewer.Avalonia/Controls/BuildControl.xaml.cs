@@ -60,8 +60,6 @@ namespace StructuredLogViewer.Avalonia.Controls
             }
         }
 
-        private ScrollViewer scrollViewer = null;
-
         private SourceFileResolver sourceFileResolver;
         private ArchiveFileResolver archiveFile => sourceFileResolver.ArchiveFile;
         private PreprocessedFileManager preprocessedFileManager;
@@ -708,18 +706,26 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
         private void RegisterTreeViewHandlers(TreeView treeView)
         {
             // select the node under the cursor on right-click, so the context menu
-            // acts on the node being clicked rather than the previously selected one
+            // acts on the node being clicked rather than the previously selected one.
+            // Setting TreeViewItem.IsSelected alone only changes the visual state -
+            // TreeView.SelectedItem (what the menu handlers read) must be set explicitly.
             treeView.AddHandler(PointerPressedEvent, (o, e) =>
             {
                 if (e.GetCurrentPoint(treeView).Properties.IsRightButtonPressed)
                 {
+                    // right-click doesn't move focus, so mark this tree active for the
+                    // shared context menu commands as well
+                    ActiveTreeView = treeView;
+
                     var item = (e.Source as Visual)?.FindAncestorOfType<TreeViewItem>(includeSelf: true);
-                    if (item != null)
+                    if (item?.DataContext != null)
                     {
-                        item.IsSelected = true;
+                        treeView.SelectedItem = item.DataContext;
                     }
                 }
             }, RoutingStrategies.Tunnel);
+
+            treeView.AddHandler(Control.RequestBringIntoViewEvent, TreeViewItem_RequestBringIntoView);
 
             treeView.DoubleTapped += (o, e) =>
             {
@@ -1203,13 +1209,8 @@ Recent ("));
 
         private void SharedTreeContextMenu_Opened(object sender, RoutedEventArgs e)
         {
-            var node = ActiveTreeView.SelectedItem as BaseNode;
-            if (node == null)
-            {
-                return;
-            }
-
-            bool isFavorite = IsFavorite(node);
+            var node = ActiveTreeView?.SelectedItem as BaseNode;
+            bool isFavorite = node != null && IsFavorite(node);
             favoriteSharedItem.IsVisible = !isFavorite;
             unfavoriteSharedItem.IsVisible = isFavorite;
         }
@@ -2916,25 +2917,27 @@ Recent ("));
 
         private void TreeViewItem_RequestBringIntoView(object sender, RequestBringIntoViewEventArgs e)
         {
-            if (scrollViewer == null)
+            if (sender is not TreeView tree || e.TargetObject is not Control item)
             {
                 return;
             }
 
-            var treeViewItem = (TreeViewItem)sender;
-            var treeView = (TreeView)typeof(TreeViewItem).GetProperty("ParentTreeView", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(treeViewItem);
+            var viewer = tree.FindDescendantOfType<ScrollViewer>();
+            if (viewer == null)
+            {
+                return;
+            }
 
-            //if (PresentationSource.FromDependencyObject(treeViewItem) == null)
-            //{
-            //    // the item might have disconnected by the time we run this
-            //    return;
-            //}
+            // the row header is the interesting part; the whole item includes children
+            double itemHeight = item is TreeViewItem
+                ? (item as TreeViewItem).FindDescendantOfType<Border>()?.Bounds.Height ?? item.Bounds.Height
+                : item.Bounds.Height;
 
-            Point? topLeftInTreeViewCoordinates = treeViewItem.TranslatePoint(new Point(), treeView);
-            var treeViewItemTop = topLeftInTreeViewCoordinates?.Y ?? 0;
-            if (treeViewItemTop < 0
-                || treeViewItemTop + treeViewItem.Bounds.Height > scrollViewer.Viewport.Height
-                || treeViewItem.Bounds.Height > scrollViewer.Viewport.Height)
+            Point? topLeftInViewerCoordinates = item.TranslatePoint(new Point(), viewer);
+            var itemTop = topLeftInViewerCoordinates?.Y ?? 0;
+            if (itemTop < 0
+                || itemTop + itemHeight > viewer.Viewport.Height
+                || itemHeight > viewer.Viewport.Height)
             {
                 // if the item is not visible or too "tall", don't do anything; let them scroll it into view
                 return;

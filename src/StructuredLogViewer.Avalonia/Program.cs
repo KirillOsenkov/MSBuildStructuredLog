@@ -8,6 +8,7 @@ namespace StructuredLogViewer.Avalonia
     {
         public static AppBuilder BuildAvaloniaApp() => AppBuilder.Configure<App>().UsePlatformDetect();
 
+        [STAThread]
         public static int Main(string[] args)
         {
             AppDomain.MonitoringIsEnabled = true;

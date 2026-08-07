@@ -19,11 +19,96 @@
         <Setter Property="Background" Value="{DynamicResource Theme_ScrollBarBackground}"/>
     </Style>
 
+    <!-- WPF-style scroll viewer: scrollbars reserve layout space next to the
+         viewport instead of overlaying the content (Fluent draws them on top) -->
+    <Style Selector="ScrollViewer">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Grid ColumnDefinitions="*,Auto" RowDefinitions="*,Auto">
+                    <ScrollContentPresenter Name="PART_ContentPresenter"
+                                            Grid.Row="0"
+                                            Grid.Column="0"
+                                            Background="{TemplateBinding Background}"
+                                            Padding="{TemplateBinding Padding}"
+                                            HorizontalSnapPointsAlignment="{TemplateBinding HorizontalSnapPointsAlignment}"
+                                            VerticalSnapPointsAlignment="{TemplateBinding VerticalSnapPointsAlignment}"
+                                            HorizontalSnapPointsType="{TemplateBinding HorizontalSnapPointsType}"
+                                            VerticalSnapPointsType="{TemplateBinding VerticalSnapPointsType}">
+                        <ScrollContentPresenter.GestureRecognizers>
+                            <ScrollGestureRecognizer CanHorizontallyScroll="{Binding CanHorizontallyScroll, ElementName=PART_ContentPresenter}"
+                                                     CanVerticallyScroll="{Binding CanVerticallyScroll, ElementName=PART_ContentPresenter}"
+                                                     IsScrollInertiaEnabled="{Binding (ScrollViewer.IsScrollInertiaEnabled), ElementName=PART_ContentPresenter}" />
+                        </ScrollContentPresenter.GestureRecognizers>
+                    </ScrollContentPresenter>
+                    <ScrollBar Name="PART_HorizontalScrollBar"
+                               Orientation="Horizontal"
+                               Grid.Row="1"
+                               Grid.Column="0" />
+                    <ScrollBar Name="PART_VerticalScrollBar"
+                               Orientation="Vertical"
+                               Grid.Row="0"
+                               Grid.Column="1" />
+                    <Panel Grid.Row="1"
+                           Grid.Column="1"
+                           Background="{DynamicResource Theme_ScrollBarBackground}" />
+                </Grid>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+
+    <!-- compact WPF-style checkbox (Fluent hardcodes a 20px box in its template) -->
+    <Style Selector="CheckBox">
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <StackPanel Orientation="Horizontal" Background="Transparent">
+                    <Border Name="checkBorder"
+                            Width="14"
+                            Height="14"
+                            BorderThickness="1"
+                            BorderBrush="#FF707070"
+                            Background="{DynamicResource Theme_WhiteBackground}"
+                            VerticalAlignment="Center">
+                        <Path Name="checkMark"
+                              Width="9"
+                              Height="9"
+                              Stretch="Uniform"
+                              Data="M 0,4 L 3,8 L 9,0"
+                              Stroke="{DynamicResource Theme_InfoBarForeground}"
+                              StrokeThickness="2"
+                              IsVisible="False" />
+                    </Border>
+                    <ContentPresenter Content="{TemplateBinding Content}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}"
+                                      Margin="5,0,0,0"
+                                      VerticalAlignment="Center" />
+                </StackPanel>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="CheckBox:checked /template/ Path#checkMark">
+        <Setter Property="IsVisible" Value="True" />
+    </Style>
+    <Style Selector="CheckBox:pointerover /template/ Border#checkBorder">
+        <Setter Property="BorderBrush" Value="#FF3399FF" />
+    </Style>
+
     <!-- square corners and compact padding on text boxes, matching WPF chrome -->
     <Style Selector="TextBox">
         <Setter Property="CornerRadius" Value="0"/>
         <Setter Property="MinHeight" Value="0"/>
         <Setter Property="Padding" Value="4,2"/>
+        <Setter Property="SelectionBrush" Value="{DynamicResource Theme_TextSelection}"/>
+    </Style>
+
+    <!-- Fluent swaps in a thick accent border on hover/focus; keep the control's own border -->
+    <Style Selector="TextBox:pointerover /template/ Border#PART_BorderElement">
+        <Setter Property="BorderBrush" Value="{Binding $parent[TextBox].BorderBrush}"/>
+        <Setter Property="BorderThickness" Value="{Binding $parent[TextBox].BorderThickness}"/>
+    </Style>
+    <Style Selector="TextBox:focus /template/ Border#PART_BorderElement">
+        <Setter Property="BorderBrush" Value="{Binding $parent[TextBox].BorderBrush}"/>
+        <Setter Property="BorderThickness" Value="{Binding $parent[TextBox].BorderThickness}"/>
     </Style>
 
     <!-- WPF's main tree is opaque window-white, not the window chrome color -->
@@ -239,6 +324,34 @@
         <Setter Property="MinHeight" Value="0" />
         <!-- Fluent pins top-level menu items to a fixed height; let them hug the text -->
         <Setter Property="Height" Value="NaN" />
+    </Style>
+
+    <!-- compact list items everywhere (Fluent uses 40px touch targets) -->
+    <Style Selector="ListBoxItem">
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Padding" Value="4,2" />
+    </Style>
+
+    <!-- compact expander header (welcome screen recent lists) -->
+    <Style Selector="Expander /template/ ToggleButton">
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Padding" Value="8,4" />
+    </Style>
+
+    <!-- classic WPF button chrome -->
+    <Style Selector="Button">
+        <Setter Property="Background" Value="{DynamicResource Theme_ButtonBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Theme_ButtonBorder}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="0" />
+    </Style>
+    <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Theme_ButtonHoverBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Theme_ButtonHoverBorder}" />
+    </Style>
+    <Style Selector="Button:pressed /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource Theme_ButtonPressedBackground}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Theme_ButtonPressedBorder}" />
     </Style>
 
     <!-- compact breadcrumb items with no hover/selection chrome, like WPF -->

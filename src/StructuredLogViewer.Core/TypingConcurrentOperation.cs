@@ -35,6 +35,9 @@ namespace StructuredLogViewer
         {
             Interlocked.Exchange(ref currentCancellationTokenSource, null)?.Cancel();
             timer?.Change(Timeout.Infinite, Timeout.Infinite);
+
+            // forget the last query so retyping the same text after clearing searches again
+            searchText = null;
         }
 
         public void TextChanged(string searchText, int maxResults)

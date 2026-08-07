@@ -4,7 +4,7 @@
              xmlns:a="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
              x:Class="StructuredLogViewer.Avalonia.Controls.TextViewerControl">
   <Grid RowDefinitions="Auto,*">
-    <DockPanel Background="{DynamicResource Theme_WhiteBackground}" Name="filePathToolbar">
+    <DockPanel Background="{DynamicResource Theme_ControlBackground}" Name="filePathToolbar">
       <Button Name="save" 
               DockPanel.Dock="Left"
               Content="Save" 
@@ -48,6 +48,7 @@
                Background="Transparent"
                BorderThickness="0"
                IsReadOnly="True"
+               ClipToBounds="True"
                ToolTip.Tip="{Binding #filePathText.Text}" />
     </DockPanel>
 

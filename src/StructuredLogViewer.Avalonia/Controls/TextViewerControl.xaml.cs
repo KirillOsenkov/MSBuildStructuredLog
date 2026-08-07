@@ -75,6 +75,13 @@ namespace StructuredLogViewer.Avalonia.Controls
             textView.Options.EnableHyperlinks = false;
             textEditor.IsReadOnly = true;
 
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                // Avalonia computes taller line metrics for Consolas than WPF's AvalonEdit;
+                // tighten the spacing to match the WPF viewer
+                textView.Options.LineHeightFactor = 0.87;
+            }
+
             if (SettingsService.UseDarkTheme)
             {
                 textEditor.Background = new SolidColorBrush(Color.Parse("#303030"));
@@ -95,6 +102,7 @@ namespace StructuredLogViewer.Avalonia.Controls
             {
                 textView.CurrentLineBackground = new SolidColorBrush(Color.FromRgb(224, 224, 224));
                 textView.CurrentLineBorder = new Pen(Brushes.Transparent, 0);
+                textArea.SelectionBrush = new SolidColorBrush(Color.Parse("#4CA0E3"));
             }
         }
 

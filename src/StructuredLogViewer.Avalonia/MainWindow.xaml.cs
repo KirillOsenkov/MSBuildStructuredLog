@@ -1132,7 +1132,7 @@ Use project(.) or project(.csproj) to search all projects (slow)." };
 
         private void SearchSyntaxLink_Click(object sender, RoutedEventArgs e)
         {
-            OpenInBrowser("https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/Search-Syntax");
+            OpenInBrowser("https://msbuildlog.com/syntax/");
         }
 
         private void RedactSecrets_Click(object sender, RoutedEventArgs e)
