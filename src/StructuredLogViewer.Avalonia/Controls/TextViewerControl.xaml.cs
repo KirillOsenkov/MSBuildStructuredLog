@@ -40,10 +40,10 @@ namespace StructuredLogViewer.Avalonia.Controls
         private MenuItem gotoPropertyMenu;
 
         public string FilePath { get; private set; }
+        public FoldingManager FoldingManager { get; private set; }
         public string Text { get; private set; }
         public Action Preprocess { get; private set; }
         public bool IsXml { get; private set; }
-        public FoldingManager FoldingManager { get; private set; }
         public TextEditor TextEditor => textEditor;
         public EditorExtension EditorExtension { get; set; }
 

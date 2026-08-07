@@ -58,9 +58,6 @@ namespace StructuredLogViewer.Avalonia
         private TextBlock exceptionText;
         private Button closeExceptionButton;
 
-        private object inProgressOperationLock = new object();
-        public Task InProgressTask = Task.CompletedTask;
-
         public MainWindow()
         {
             AppDomain.CurrentDomain.FirstChanceException += CurrentDomain_FirstChanceException;
@@ -180,154 +177,10 @@ namespace StructuredLogViewer.Avalonia
             return false;
         }
 
-        private string currentExceptionText;
-        public string ExceptionText
+        private void UpdateZoomLevel(double zoom)
         {
-            get => currentExceptionText;
-            set
-            {
-                if (currentExceptionText == value)
-                {
-                    return;
-                }
-
-                currentExceptionText = value;
-                Dispatcher.UIThread.Post(UpdateExceptionVisibility);
-            }
-        }
-
-        private void UpdateExceptionVisibility()
-        {
-            if (!string.IsNullOrEmpty(currentExceptionText))
-            {
-                exceptionText.Text = currentExceptionText;
-                exceptionPanel.IsVisible = true;
-            }
-            else
-            {
-                exceptionPanel.IsVisible = false;
-            }
-        }
-
-        private void OpenExceptionLog()
-        {
-            try
-            {
-                Process.Start(new ProcessStartInfo(ErrorReporting.LogFilePath) { UseShellExecute = true });
-            }
-            catch
-            {
-            }
-        }
-
-        public static void ShowMessageBox(string message)
-        {
-            Dispatcher.UIThread.Post(() =>
-            {
-                var owner = (Application.Current.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
-
-                var text = new TextBox
-                {
-                    Text = message,
-                    IsReadOnly = true,
-                    TextWrapping = TextWrapping.Wrap,
-                    AcceptsReturn = true,
-                    BorderThickness = new Thickness(0),
-                    Background = Brushes.Transparent
-                };
-                var okButton = new Button
-                {
-                    Content = "OK",
-                    MinWidth = 75,
-                    Margin = new Thickness(0, 12, 0, 0),
-                    HorizontalAlignment = HorizontalAlignment.Right,
-                    HorizontalContentAlignment = HorizontalAlignment.Center,
-                    IsDefault = true
-                };
-                var panel = new DockPanel { Margin = new Thickness(12) };
-                DockPanel.SetDock(okButton, global::Avalonia.Controls.Dock.Bottom);
-                panel.Children.Add(okButton);
-                panel.Children.Add(new ScrollViewer { Content = text });
-
-                var window = new Window
-                {
-                    Title = DefaultTitle,
-                    Content = panel,
-                    SizeToContent = SizeToContent.WidthAndHeight,
-                    MaxWidth = 800,
-                    MaxHeight = 600,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                    ShowInTaskbar = false
-                };
-                okButton.Click += (s, e) => window.Close();
-
-                if (owner != null)
-                {
-                    window.ShowDialog(owner);
-                }
-                else
-                {
-                    window.Show();
-                }
-            });
-        }
-
-        private void RestoreWindowPosition()
-        {
-            try
-            {
-                var saved = SettingsService.AvaloniaWindowPosition;
-                if (string.IsNullOrEmpty(saved))
-                {
-                    return;
-                }
-
-                var parts = saved.Split(',');
-                if (parts.Length != 5)
-                {
-                    return;
-                }
-
-                var x = int.Parse(parts[0]);
-                var y = int.Parse(parts[1]);
-                var width = double.Parse(parts[2]);
-                var height = double.Parse(parts[3]);
-                var maximized = parts[4] == "1";
-
-                if (width < 200 || height < 200)
-                {
-                    return;
-                }
-
-                WindowStartupLocation = WindowStartupLocation.Manual;
-                Position = new PixelPoint(x, y);
-                if (maximized)
-                {
-                    WindowState = WindowState.Maximized;
-                }
-                else
-                {
-                    WindowState = WindowState.Normal;
-                    Width = width;
-                    Height = height;
-                }
-            }
-            catch
-            {
-                // fall back to the defaults from XAML (centered, maximized)
-            }
-        }
-
-        private void SaveWindowPosition()
-        {
-            try
-            {
-                var maximized = WindowState == WindowState.Maximized;
-                SettingsService.AvaloniaWindowPosition = $"{Position.X},{Position.Y},{(int)Width},{(int)Height},{(maximized ? 1 : 0)}";
-            }
-            catch
-            {
-            }
+            scale = zoom;
+            layoutTransform.LayoutTransform = new ScaleTransform(zoom, zoom);
         }
 
         private void MainWindow_Drop(object sender, DragEventArgs e)
@@ -361,37 +214,6 @@ namespace StructuredLogViewer.Avalonia
             }
         }
 
-        private void UpdateZoomLevel(double zoom)
-        {
-            scale = zoom;
-            layoutTransform.LayoutTransform = new ScaleTransform(zoom, zoom);
-        }
-
-        private async Task<string> GetSingleFileFromClipboard()
-        {
-            try
-            {
-                var files = await Clipboard.TryGetFilesAsync();
-                if (files is { Length: 1 } &&
-                    files[0].Path is { IsAbsoluteUri: true, Scheme: "file" } uri)
-                {
-                    return uri.LocalPath;
-                }
-            }
-            catch
-            {
-            }
-
-            try
-            {
-                return await Clipboard.TryGetTextAsync();
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
         private async Task<bool> TryOpenFromClipboard()
         {
             var text = await GetSingleFileFromClipboard();
@@ -418,6 +240,31 @@ namespace StructuredLogViewer.Avalonia
             }
 
             return false;
+        }
+
+        private async Task<string> GetSingleFileFromClipboard()
+        {
+            try
+            {
+                var files = await Clipboard.TryGetFilesAsync();
+                if (files is { Length: 1 } &&
+                    files[0].Path is { IsAbsoluteUri: true, Scheme: "file" } uri)
+                {
+                    return uri.LocalPath;
+                }
+            }
+            catch
+            {
+            }
+
+            try
+            {
+                return await Clipboard.TryGetTextAsync();
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         private void DisplayWelcomeScreen(string message = "")
@@ -823,6 +670,24 @@ Use project(.) or project(.csproj) to search all projects (slow)." };
             build.AddChild(nuget);
         }
 
+        private async Task QueueAnalyzeBuild(Build build)
+        {
+            await Task.Run(() =>
+            {
+                try
+                {
+                    BuildAnalyzer.AnalyzeBuild(build);
+                    build.SearchExtensions.Add(new SecretsSearch(build));
+                    build.SearchExtensions.Add(new NuGetSearch(build));
+                }
+                catch (Exception ex)
+                {
+                    DialogService.ShowMessageBox(
+                    "Error while analyzing build. Sorry about that. Please Ctrl+C to copy this text and file an issue on https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/new \r\n" + ex.ToString());
+                }
+            });
+        }
+
         private static Build GetErrorBuild(string filePath, string message)
         {
             var build = new Build() { Succeeded = false };
@@ -879,24 +744,6 @@ Use project(.) or project(.csproj) to search all projects (slow)." };
             {
                 CurrentBuildControl.InitialSearchText = searchText;
             }
-        }
-
-        private async Task QueueAnalyzeBuild(Build build)
-        {
-            await Task.Run(() =>
-            {
-                try
-                {
-                    BuildAnalyzer.AnalyzeBuild(build);
-                    build.SearchExtensions.Add(new SecretsSearch(build));
-                    build.SearchExtensions.Add(new NuGetSearch(build));
-                }
-                catch (Exception ex)
-                {
-                    DialogService.ShowMessageBox(
-                    "Error while analyzing build. Sorry about that. Please Ctrl+C to copy this text and file an issue on https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/new \r\n" + ex.ToString());
-                }
-            });
         }
 
         private async void Open_Click(object sender, RoutedEventArgs e)
@@ -1062,11 +909,6 @@ Use project(.) or project(.csproj) to search all projects (slow)." };
             }
         }
 
-        private void RedactSecrets_Click(object sender, RoutedEventArgs e)
-        {
-            _ = RedactSecrets();
-        }
-
         private async Task<string> GetSaveAsDestination()
         {
             string currentFilePath = currentBuild.LogFilePath;
@@ -1140,6 +982,9 @@ Use project(.) or project(.csproj) to search all projects (slow)." };
                 }
             }
         }
+
+        private object inProgressOperationLock = new object();
+        public Task InProgressTask = Task.CompletedTask;
 
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
@@ -1290,6 +1135,11 @@ Use project(.) or project(.csproj) to search all projects (slow)." };
             OpenInBrowser("https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/Search-Syntax");
         }
 
+        private void RedactSecrets_Click(object sender, RoutedEventArgs e)
+        {
+            _ = RedactSecrets();
+        }
+
         private void HelpLink_Click(object sender, RoutedEventArgs e)
         {
             OpenInBrowser("https://github.com/KirillOsenkov/MSBuildStructuredLog");
@@ -1318,6 +1168,156 @@ Use project(.) or project(.csproj) to search all projects (slow)." };
         private void StartPage_Click(object sender, RoutedEventArgs e)
         {
             DisplayWelcomeScreen();
+        }
+
+        private string currentExceptionText;
+        public string ExceptionText
+        {
+            get => currentExceptionText;
+            set
+            {
+                if (currentExceptionText == value)
+                {
+                    return;
+                }
+
+                currentExceptionText = value;
+                Dispatcher.UIThread.Post(UpdateExceptionVisibility);
+            }
+        }
+
+        private void UpdateExceptionVisibility()
+        {
+            if (!string.IsNullOrEmpty(currentExceptionText))
+            {
+                exceptionText.Text = currentExceptionText;
+                exceptionPanel.IsVisible = true;
+            }
+            else
+            {
+                exceptionPanel.IsVisible = false;
+            }
+        }
+
+        private void OpenExceptionLog()
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo(ErrorReporting.LogFilePath) { UseShellExecute = true });
+            }
+            catch
+            {
+            }
+        }
+
+        public static void ShowMessageBox(string message)
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                var owner = (Application.Current.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
+
+                var text = new TextBox
+                {
+                    Text = message,
+                    IsReadOnly = true,
+                    TextWrapping = TextWrapping.Wrap,
+                    AcceptsReturn = true,
+                    BorderThickness = new Thickness(0),
+                    Background = Brushes.Transparent
+                };
+                var okButton = new Button
+                {
+                    Content = "OK",
+                    MinWidth = 75,
+                    Margin = new Thickness(0, 12, 0, 0),
+                    HorizontalAlignment = HorizontalAlignment.Right,
+                    HorizontalContentAlignment = HorizontalAlignment.Center,
+                    IsDefault = true
+                };
+                var panel = new DockPanel { Margin = new Thickness(12) };
+                DockPanel.SetDock(okButton, global::Avalonia.Controls.Dock.Bottom);
+                panel.Children.Add(okButton);
+                panel.Children.Add(new ScrollViewer { Content = text });
+
+                var window = new Window
+                {
+                    Title = DefaultTitle,
+                    Content = panel,
+                    SizeToContent = SizeToContent.WidthAndHeight,
+                    MaxWidth = 800,
+                    MaxHeight = 600,
+                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    ShowInTaskbar = false
+                };
+                okButton.Click += (s, e) => window.Close();
+
+                if (owner != null)
+                {
+                    window.ShowDialog(owner);
+                }
+                else
+                {
+                    window.Show();
+                }
+            });
+        }
+
+        private void RestoreWindowPosition()
+        {
+            try
+            {
+                var saved = SettingsService.AvaloniaWindowPosition;
+                if (string.IsNullOrEmpty(saved))
+                {
+                    return;
+                }
+
+                var parts = saved.Split(',');
+                if (parts.Length != 5)
+                {
+                    return;
+                }
+
+                var x = int.Parse(parts[0]);
+                var y = int.Parse(parts[1]);
+                var width = double.Parse(parts[2]);
+                var height = double.Parse(parts[3]);
+                var maximized = parts[4] == "1";
+
+                if (width < 200 || height < 200)
+                {
+                    return;
+                }
+
+                WindowStartupLocation = WindowStartupLocation.Manual;
+                Position = new PixelPoint(x, y);
+                if (maximized)
+                {
+                    WindowState = WindowState.Maximized;
+                }
+                else
+                {
+                    WindowState = WindowState.Normal;
+                    Width = width;
+                    Height = height;
+                }
+            }
+            catch
+            {
+                // fall back to the defaults from XAML (centered, maximized)
+            }
+        }
+
+        private void SaveWindowPosition()
+        {
+            try
+            {
+                var maximized = WindowState == WindowState.Maximized;
+                SettingsService.AvaloniaWindowPosition = $"{Position.X},{Position.Y},{(int)Width},{(int)Height},{(maximized ? 1 : 0)}";
+            }
+            catch
+            {
+            }
         }
     }
 }

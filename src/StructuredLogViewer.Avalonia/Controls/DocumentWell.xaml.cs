@@ -146,6 +146,17 @@ namespace StructuredLogViewer.Avalonia.Controls
             tabControl.SelectedItem = tab;
         }
 
+        private void CloseAllButThis(SourceFileTab sourceFileTab)
+        {
+            foreach (var tab in Tabs.ToArray())
+            {
+                if (tab != sourceFileTab)
+                {
+                    Tabs.Remove(tab);
+                }
+            }
+        }
+
         private void closeButton_Click(object sender, RoutedEventArgs e)
         {
             Hide();
@@ -182,17 +193,6 @@ namespace StructuredLogViewer.Avalonia.Controls
                 }
 
                 current = current.GetVisualParent();
-            }
-        }
-
-        private void CloseAllButThis(SourceFileTab sourceFileTab)
-        {
-            foreach (var tab in Tabs.ToArray())
-            {
-                if (tab != sourceFileTab)
-                {
-                    Tabs.Remove(tab);
-                }
             }
         }
     }

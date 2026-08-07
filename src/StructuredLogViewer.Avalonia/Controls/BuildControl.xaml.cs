@@ -66,6 +66,7 @@ namespace StructuredLogViewer.Avalonia.Controls
         private ArchiveFileResolver archiveFile => sourceFileResolver.ArchiveFile;
         private PreprocessedFileManager preprocessedFileManager;
         private NavigationHelper navigationHelper;
+        private MenuItem searchMenuGroup;
 
         private MenuItem copyItem;
         private MenuItem copySubtreeItem;
@@ -87,18 +88,17 @@ namespace StructuredLogViewer.Avalonia.Controls
         private MenuItem copyValueItem;
         private MenuItem viewSourceItem;
         private MenuItem viewFullTextItem;
-        private MenuItem searchNuGetItem;
-        private MenuItem searchMenuGroup;
         private MenuItem openFileItem;
         private MenuItem copyFilePathItem;
         private MenuItem showFileInExplorerItem;
         private MenuItem preprocessItem;
+        private MenuItem searchNuGetItem;
+        private MenuItem hideItem;
         private MenuItem showTimeItem;
         private MenuItem favoriteItem;
         private MenuItem unfavoriteItem;
         private MenuItem favoriteSharedItem;
         private MenuItem unfavoriteSharedItem;
-        private MenuItem hideItem;
         private ContextMenu sharedTreeContextMenu;
         private ContextMenu filesTreeContextMenu;
         private TreeView treeView;
@@ -961,25 +961,6 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             return new InlineUIContainer(linkText);
         }
 
-        public void AddTextWithHyperlinks(string text, InlineCollection result, SearchAndResultsControl searchControl)
-        {
-            const string openParen = "[[";
-            const string closeParen = "]]";
-            var chunks = TextUtilities.SplitIntoParenthesizedSpans(text, openParen, closeParen);
-            foreach (var chunk in chunks)
-            {
-                if (chunk.StartsWith(openParen) && chunk.EndsWith(closeParen))
-                {
-                    var link = chunk.Substring(openParen.Length, chunk.Length - openParen.Length - closeParen.Length);
-                    result.Add(MakeLink(link, searchControl, before: null, after: null));
-                }
-                else
-                {
-                    result.Add(new Run(chunk));
-                }
-            }
-        }
-
         private void UpdateWatermark()
         {
             string watermarkText0 = @"Type in the search box to search. Press Ctrl+F to focus the search box. Results (up to 1000) will display here.
@@ -1100,6 +1081,25 @@ Recent ("));
             }
 
             propertiesAndItemsControl.WatermarkContent = watermark;
+        }
+
+        public void AddTextWithHyperlinks(string text, InlineCollection result, SearchAndResultsControl searchControl)
+        {
+            const string openParen = "[[";
+            const string closeParen = "]]";
+            var chunks = TextUtilities.SplitIntoParenthesizedSpans(text, openParen, closeParen);
+            foreach (var chunk in chunks)
+            {
+                if (chunk.StartsWith(openParen) && chunk.EndsWith(closeParen))
+                {
+                    var link = chunk.Substring(openParen.Length, chunk.Length - openParen.Length - closeParen.Length);
+                    result.Add(MakeLink(link, searchControl, before: null, after: null));
+                }
+                else
+                {
+                    result.Add(new Run(chunk));
+                }
+            }
         }
 
         private void SearchNuGet(IProjectOrEvaluation node)
@@ -1310,6 +1310,8 @@ Recent ("));
             return root.Children;
         }
 
+        private string filePathSeparator;
+
         private void PopulateFilesTab()
         {
             var root = new Folder();
@@ -1344,8 +1346,6 @@ Recent ("));
             filesTree.ResultsList.GotFocus += (s, a) => ActiveTreeView = filesTree.ResultsList;
             filesTree.ResultsList.ContextMenu = filesTreeContextMenu;
         }
-
-        private string filePathSeparator;
 
         private SourceFile AddSourceFile(Folder folder, string filePath)
         {
@@ -1599,170 +1599,6 @@ Recent ("));
             }
         }
 
-        public bool IsFindVisible
-        {
-            get => findControl.IsVisible;
-            set
-            {
-                findControl.IsVisible = value;
-                if (value)
-                {
-                    findTextBox.Focus();
-                    UpdateFindContent();
-                }
-                else
-                {
-                    ActiveTreeView?.Focus();
-                }
-            }
-        }
-
-        public void FilterChildren()
-        {
-            IsFindVisible = !IsFindVisible;
-        }
-
-        private TreeNode TryGetTreeNodeForFind()
-        {
-            BaseNode node = treeView.SelectedItem as BaseNode;
-            if (node is Property or Metadata)
-            {
-                node = node.Parent;
-            }
-            else if (node is Item item && !item.HasChildren)
-            {
-                node = node.Parent;
-            }
-
-            var treeNode = node as TreeNode;
-            if (treeNode != null && treeNode.HasChildren)
-            {
-                return treeNode;
-            }
-
-            return null;
-        }
-
-        private void UpdateFindContent()
-        {
-            if (!IsFindVisible)
-            {
-                return;
-            }
-
-            var treeNode = TryGetTreeNodeForFind();
-            if (treeNode != null)
-            {
-                findLabel.Text = $"Filter children of: {TextUtilities.ShortenValue(GetText(treeNode), trimPrompt: "", maxChars: 100)}";
-                if (nodeFilters.TryGetValue(treeNode, out var filter))
-                {
-                    findTextBox.Text = filter;
-                }
-                else
-                {
-                    findTextBox.Text = "";
-                }
-            }
-            else
-            {
-                IsFindVisible = false;
-            }
-        }
-
-        private void FindTextBox_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.Handled)
-            {
-                return;
-            }
-
-            if (e.KeyModifiers == KeyModifiers.None)
-            {
-                if (e.Key == Key.Escape)
-                {
-                    if (!string.IsNullOrEmpty(findTextBox.Text))
-                    {
-                        findTextBox.Text = "";
-                    }
-                    else
-                    {
-                        IsFindVisible = false;
-                    }
-
-                    e.Handled = true;
-                }
-
-                if (e.Key == Key.Return)
-                {
-                    IsFindVisible = false;
-                    e.Handled = true;
-                }
-            }
-            else if (e.KeyModifiers == KeyModifiers.Control)
-            {
-                if (e.Key == Key.F)
-                {
-                    IsFindVisible = false;
-                    FocusSearch();
-                    e.Handled = true;
-                }
-            }
-        }
-
-        private void FindTextBox_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            var searchText = findTextBox.Text?.Trim() ?? "";
-
-            var node = TryGetTreeNodeForFind();
-            if (node == null)
-            {
-                return;
-            }
-
-            ApplyFilter(node, searchText);
-        }
-
-        private readonly Dictionary<TreeNode, string> nodeFilters = new Dictionary<TreeNode, string>();
-
-        private void ApplyFilter(TreeNode node, string text)
-        {
-            if (nodeFilters.TryGetValue(node, out var existing))
-            {
-                if (existing == text)
-                {
-                    return;
-                }
-            }
-            else if (string.IsNullOrEmpty(text))
-            {
-                return;
-            }
-
-            if (string.IsNullOrEmpty(text))
-            {
-                nodeFilters.Remove(node);
-            }
-            else
-            {
-                nodeFilters[node] = text;
-            }
-
-            foreach (var child in node.Children)
-            {
-                bool visible = string.IsNullOrEmpty(text);
-                if (!visible)
-                {
-                    var nodeText = GetText(child);
-                    visible = nodeText != null && nodeText.IndexOf(text, StringComparison.OrdinalIgnoreCase) >= 0;
-                }
-
-                if (child is IExpandable expandable)
-                {
-                    expandable.IsVisible = visible;
-                }
-            }
-        }
-
         private void ResultsList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var proxy = (sender as TreeView)?.SelectedItem as ProxyNode;
@@ -1773,23 +1609,6 @@ Recent ("));
                 {
                     SelectItem(item);
                 }
-            }
-        }
-
-        private void SearchTextBox_KeyUp(object sender, KeyEventArgs e)
-        {
-            if (e.Key == Key.Escape && e.KeyModifiers == KeyModifiers.None)
-            {
-                if (string.IsNullOrEmpty(searchLogControl.SearchText))
-                {
-                    ActiveTreeView?.Focus();
-                }
-                else
-                {
-                    searchLogControl.SearchText = "";
-                }
-
-                e.Handled = true;
             }
         }
 
@@ -1974,6 +1793,182 @@ Recent ("));
             {
                 SelectItemByKey((char)('A' + args.Key - Key.A));
                 args.Handled = true;
+            }
+        }
+
+        public bool IsFindVisible
+        {
+            get => findControl.IsVisible;
+            set
+            {
+                findControl.IsVisible = value;
+                if (value)
+                {
+                    findTextBox.Focus();
+                    UpdateFindContent();
+                }
+                else
+                {
+                    ActiveTreeView?.Focus();
+                }
+            }
+        }
+
+        private TreeNode TryGetTreeNodeForFind()
+        {
+            BaseNode node = treeView.SelectedItem as BaseNode;
+            if (node is Property or Metadata)
+            {
+                node = node.Parent;
+            }
+            else if (node is Item item && !item.HasChildren)
+            {
+                node = node.Parent;
+            }
+
+            var treeNode = node as TreeNode;
+            if (treeNode != null && treeNode.HasChildren)
+            {
+                return treeNode;
+            }
+
+            return null;
+        }
+
+        private void UpdateFindContent()
+        {
+            if (!IsFindVisible)
+            {
+                return;
+            }
+
+            var treeNode = TryGetTreeNodeForFind();
+            if (treeNode != null)
+            {
+                findLabel.Text = $"Filter children of: {TextUtilities.ShortenValue(GetText(treeNode), trimPrompt: "", maxChars: 100)}";
+                if (nodeFilters.TryGetValue(treeNode, out var filter))
+                {
+                    findTextBox.Text = filter;
+                }
+                else
+                {
+                    findTextBox.Text = "";
+                }
+            }
+            else
+            {
+                IsFindVisible = false;
+            }
+        }
+
+        private void SearchTextBox_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape && e.KeyModifiers == KeyModifiers.None)
+            {
+                if (string.IsNullOrEmpty(searchLogControl.SearchText))
+                {
+                    ActiveTreeView?.Focus();
+                }
+                else
+                {
+                    searchLogControl.SearchText = "";
+                }
+
+                e.Handled = true;
+            }
+        }
+
+        private void FindTextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Handled)
+            {
+                return;
+            }
+
+            if (e.KeyModifiers == KeyModifiers.None)
+            {
+                if (e.Key == Key.Escape)
+                {
+                    if (!string.IsNullOrEmpty(findTextBox.Text))
+                    {
+                        findTextBox.Text = "";
+                    }
+                    else
+                    {
+                        IsFindVisible = false;
+                    }
+
+                    e.Handled = true;
+                }
+
+                if (e.Key == Key.Return)
+                {
+                    IsFindVisible = false;
+                    e.Handled = true;
+                }
+            }
+            else if (e.KeyModifiers == KeyModifiers.Control)
+            {
+                if (e.Key == Key.F)
+                {
+                    IsFindVisible = false;
+                    FocusSearch();
+                    e.Handled = true;
+                }
+            }
+        }
+
+        private void FindTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            var searchText = findTextBox.Text?.Trim() ?? "";
+
+            var node = TryGetTreeNodeForFind();
+            if (node == null)
+            {
+                return;
+            }
+
+            ApplyFilter(node, searchText);
+        }
+
+        private readonly Dictionary<TreeNode, string> nodeFilters = new Dictionary<TreeNode, string>();
+
+        private void ApplyFilter(TreeNode node, string text)
+        {
+            if (nodeFilters.TryGetValue(node, out var existing))
+            {
+                if (existing == text)
+                {
+                    return;
+                }
+            }
+            else if (string.IsNullOrEmpty(text))
+            {
+                return;
+            }
+
+            if (string.IsNullOrEmpty(text))
+            {
+                nodeFilters.Remove(node);
+            }
+            else
+            {
+                nodeFilters[node] = text;
+            }
+
+            foreach (var child in node.Children)
+            {
+                bool visible = string.IsNullOrEmpty(text);
+                if (!visible)
+                {
+                    var nodeText = GetText(child);
+                    visible = nodeText != null && nodeText.IndexOf(text, StringComparison.OrdinalIgnoreCase) >= 0;
+                }
+
+                if (child is IExpandable expandable)
+                {
+                    expandable.IsVisible = visible;
+                }
             }
         }
 
@@ -2405,6 +2400,11 @@ Recent ("));
             }
         }
 
+        public void FilterChildren()
+        {
+            IsFindVisible = !IsFindVisible;
+        }
+
         private void CopyAll(TreeView tree = null)
         {
             tree = tree ?? ActiveTreeView;
@@ -2531,6 +2531,11 @@ Recent ("));
                 || (node is TextNode tn && tn.IsTextShortened);
         }
 
+        private bool CanOpenFile(BaseNode node)
+        {
+            return node is Import i && sourceFileResolver.HasFile(i.ImportedProjectFilePath);
+        }
+
         private bool ViewFullText(BaseNode treeNode)
         {
             if (treeNode == null)
@@ -2549,11 +2554,6 @@ Recent ("));
                 default:
                     return false;
             }
-        }
-
-        private bool CanOpenFile(BaseNode node)
-        {
-            return node is Import i && sourceFileResolver.HasFile(i.ImportedProjectFilePath);
         }
 
         private bool Invoke(BaseNode treeNode)
