@@ -1,40 +1,44 @@
-﻿<Window xmlns="https://github.com/avaloniaui"
+<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="StructuredLogViewer.Avalonia.MainWindow"
         WindowState="Maximized"
         WindowStartupLocation="CenterScreen"
+        DragDrop.AllowDrop="True"
         Classes="mainWindow"
         Icon="StructuredLogger.ico">
 
+    <LayoutTransformControl Name="layoutTransform">
     <DockPanel>
-        <Menu Name="mainMenu"
-              DockPanel.Dock="Top">
+        <Grid DockPanel.Dock="Top">
+        <Menu Name="mainMenu">
             <MenuItem Header="_File">
                 <MenuItem Name="startPage"
                           Header="Start Page" />
                 <Separator />
                 <MenuItem Name="Build"
                           Header="_Build Solution/Project..."
-                          HotKey="F6"
                           InputGesture="F6"/>
                 <MenuItem Name="Rebuild"
                           Header="Rebuild Solution/Project"
-                          HotKey="Shift+F6"
                           InputGesture="Shift+F6"/>
                 <Separator />
                 <MenuItem Name="Open"
                           Header="_Open Log..."
-                          HotKey="Ctrl+O"
                           InputGesture="Ctrl+O"/>
                 <MenuItem Name="ReloadMenu"
                           Header="_Reload"
-                          HotKey="F5"
                           InputGesture="F5"/>
                 <MenuItem Name="SaveAsMenu"
                           Header="_Save Log As..."
-                          HotKey="Ctrl+S"
                           InputGesture="Ctrl+S"
                           />
+                <MenuItem Name="RedactSecretsMenu"
+                          Header="_Redact Secrets"
+                          InputGesture="Ctrl+R"
+                          />
+                <Separator />
+                <MenuItem Name="StatsMenu"
+                          Header="_Statistics..." />
                 <Separator />
                 <MenuItem Name="RecentProjectsMenu"
                           Header="Recent Projects"
@@ -55,14 +59,42 @@
                           InputGesture="Alt+F4"/>
             </MenuItem>
             <MenuItem Header="_Help">
+                <MenuItem Name="SearchSyntaxLink"
+                          Header="Search Syntax" />
                 <MenuItem Name="HelpLink"
                           Header="https://github.com/KirillOsenkov/MSBuildStructuredLog" />
+                <MenuItem Name="HelpLink2"
+                          Header="https://msbuildlog.com" />
+                <Separator />
+                <MenuItem Name="AboutMenu"
+                          Header="About" />
             </MenuItem>
         </Menu>
+        <StackPanel Name="exceptionPanel"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    IsVisible="False"
+                    Background="Yellow">
+            <TextBlock Name="exceptionText"
+                       Padding="8,2,8,2"
+                       VerticalAlignment="Center"
+                       Foreground="Black"
+                       ToolTip.Tip="Click to show the exception log">Exception:</TextBlock>
+            <Button Name="closeExceptionButton"
+                    BorderThickness="0"
+                    VerticalAlignment="Center"
+                    Foreground="Black"
+                    Background="Transparent"
+                    MinWidth="16"
+                    MinHeight="16">⨯</Button>
+        </StackPanel>
+        </Grid>
         <Grid>
             <ContentPresenter Name="mainContent"
                               Classes="mainContent"
                               Margin="7" />
         </Grid>
     </DockPanel>
+    </LayoutTransformControl>
 </Window>

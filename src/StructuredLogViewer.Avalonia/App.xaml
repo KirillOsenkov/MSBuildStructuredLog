@@ -17,6 +17,24 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="/Resources.xaml" />
             </ResourceDictionary.MergedDictionaries>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="Theme_Background">#EEEEF2</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_WhiteBackground">White</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_ToolWindowBackground">WhiteSmoke</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_InfoBarBackground">#FFFFE1</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_InfoBarForeground">Black</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_GrayText">Gray</SolidColorBrush>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="Theme_Background">#454545</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_WhiteBackground">#303030</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_ToolWindowBackground">#303030</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_InfoBarBackground">#202040</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_InfoBarForeground">#E0E0E0</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_GrayText">LightGray</SolidColorBrush>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
         </ResourceDictionary>
     </Application.Resources>
     
@@ -93,6 +111,19 @@
                 </Image>
                 <TextBlock Classes="nodeText"
                            Text="{Binding Name}" />
+                <s:NodeHyperlinkControl Classes="nodeText"
+                                        Margin="6,0,0,0"
+                                        Text="{Binding TargetsDisplayText}"
+                                        Foreground="{StaticResource TargetStroke}"
+                                        ToolTip.Tip="Initial targets"
+                                        IsVisible="{Binding TargetsDisplayText, Converter={StaticResource StringEmptinessToVisibilityConverter}, ConverterParameter=Invert}" />
+                <s:NodeHyperlinkControl Classes="nodeText"
+                                        Margin="6,0,0,0"
+                                        Text="{Binding EvaluationText}"
+                                        HyperlinkKind="Evaluation"
+                                        Opacity="0.5"
+                                        ToolTip.Tip="Navigate to the evaluation for this project"
+                                        IsVisible="{Binding EvaluationText, Converter={StaticResource StringEmptinessToVisibilityConverter}, ConverterParameter=Invert}" />
             </StackPanel>
         </TreeDataTemplate>
 
@@ -126,6 +157,11 @@
                            Foreground="{Binding IsSelected, Converter={StaticResource LabelColorConverter}, ConverterParameter={StaticResource TargetStroke}}" />
                 <TextBlock Classes="nodeText"
                            Text="{Binding Name}" />
+                <s:NodeHyperlinkControl Name="hyperlink"
+                                        Classes="nodeText"
+                                        Text="{Binding ParentTargetText}"
+                                        Foreground="{StaticResource TargetStroke}"
+                                        ToolTip.Tip="{Binding ParentTargetTooltip}" />
             </StackPanel>
         </TreeDataTemplate>
 
@@ -137,6 +173,9 @@
                            Fill="{StaticResource TargetBrush}" />
                 <TextBlock Classes="nodeText"
                            Text="{Binding Name}" />
+                <s:NodeHyperlinkControl Classes="nodeText"
+                                        Text=" → Show"
+                                        Foreground="LightBlue" />
             </StackPanel>
         </DataTemplate>
 
@@ -489,7 +528,7 @@
                 <Grid HorizontalAlignment="Center"
                       VerticalAlignment="Center">
                     <Rectangle Fill="Black" />
-                    <Grid Background="White"
+                    <Grid Background="{DynamicResource Theme_WhiteBackground}"
                           RowDefinitions="Auto,Auto,Auto,Auto,Auto">
                         <TextBlock Name="customMessage"
                                    Grid.Row="0"
@@ -497,10 +536,8 @@
                                    Foreground="Red"
                                    Margin="10"
                                    TextWrapping="Wrap"
+                                   IsVisible="{Binding Message, Converter={StaticResource StringEmptinessToVisibilityConverter}, ConverterParameter=Invert}"
                                    Text="{Binding Message}" />
-                        <!--
-                                   IsVisible="{Binding Message, Converter={StaticResource StringEmptinessToVisibilityConverter}}"
-                        -->
                         <Grid Name="openLogOrProjectCompartment"
                               Grid.Row="1"
                               ColumnDefinitions="Auto,Auto">
@@ -622,8 +659,15 @@
                                       ToolTip.Tip="Linearize/flatten all targets under the project instead of parenting targets under their dependency target"/>-->
                             <CheckBox Content="Mark search results with a dot in the main tree"
                                       Margin="10,0,10,10"
-                                      IsChecked="{Binding MarkResultsInTree}" 
+                                      IsChecked="{Binding MarkResultsInTree}"
                                       ToolTip.Tip="Mark tree nodes that appear in search results with a dot"/>
+                            <CheckBox Content="Show project configuration and platform"
+                                      Margin="10,0,10,10"
+                                      IsChecked="{Binding ShowConfigurationAndPlatform}"
+                                      ToolTip.Tip="Show the configuration and platform (such as Debug|AnyCPU) next to project names" />
+                            <CheckBox Content="Dark theme"
+                                      Margin="10,0,10,10"
+                                      IsChecked="{Binding UseDarkTheme}" />
                         </StackPanel>
                     </Grid>
                 </Grid>
@@ -724,14 +768,19 @@
                            HorizontalAlignment="Center"
                            TextWrapping="Wrap" />
                 <ProgressBar Grid.Row="1"
-                             Value="100"
+                             IsIndeterminate="{Binding IsIndeterminate}"
+                             Value="{Binding Value}"
+                             Minimum="0"
+                             Maximum="1"
                              HorizontalAlignment="Center"
                              Width="200"
                              Height="23"
                              Margin="10" />
-                <!--TODO:
-                IsIndeterminate="True"
-                -->
+                <TextBlock Name="buffer"
+                           Grid.Row="2"
+                           Text="{Binding BufferText}"
+                           HorizontalAlignment="Center"
+                           TextWrapping="Wrap" />
                 <StackPanel Grid.Row="2"
                             Margin="40"
                             IsVisible="{Binding ShowCommandLine}">

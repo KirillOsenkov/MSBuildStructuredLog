@@ -4,7 +4,7 @@
              xmlns:a="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
              x:Class="StructuredLogViewer.Avalonia.Controls.TextViewerControl">
   <Grid RowDefinitions="Auto,*">
-    <DockPanel Background="White" Name="filePathToolbar">
+    <DockPanel Background="{DynamicResource Theme_WhiteBackground}" Name="filePathToolbar">
       <Button Name="save" 
               DockPanel.Dock="Left"
               Content="Save" 
@@ -61,6 +61,12 @@
         <ContextMenu>
           <MenuItem Header="Copy"
                     Name="copyMenu" />
+          <MenuItem Header="Go to including project"
+                    Name="gotoProjectMenu"
+                    IsVisible="False" />
+          <MenuItem Header="Go to property"
+                    Name="gotoPropertyMenu"
+                    IsVisible="False" />
         </ContextMenu>
       </a:TextEditor.ContextMenu>
     </a:TextEditor>

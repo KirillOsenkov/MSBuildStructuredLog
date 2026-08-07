@@ -398,6 +398,16 @@ namespace StructuredLogViewer
             set => Set(ref windowPosition, value);
         }
 
+        // separate from WindowPosition so the WPF and Avalonia viewers don't
+        // overwrite each other's saved position (the formats are incompatible)
+        private static string? avaloniaWindowPosition;
+        public static string? AvaloniaWindowPosition
+        {
+            get => Get(ref avaloniaWindowPosition);
+
+            set => Set(ref avaloniaWindowPosition, value);
+        }
+
         private static string? ignoreEmbeddedFiles;
         public static string? IgnoreEmbeddedFiles
         {
@@ -422,6 +432,7 @@ namespace StructuredLogViewer
         const string VSCodeHintDismissedSetting = "VSCodeHintDismissed=";
         const string PreferredVSCodeVariantSetting = "PreferredVSCodeVariant=";
         const string WindowPositionSetting = "WindowPosition=";
+        const string AvaloniaWindowPositionSetting = "AvaloniaWindowPosition=";
         const string IgnoreEmbeddedFilesSetting = "IgnoreEmbeddedFiles=";
 
         private static void SaveSettings()
@@ -435,6 +446,7 @@ namespace StructuredLogViewer
             sb.AppendLine(VSCodeHintDismissedSetting + vsCodeHintDismissed.ToString());
             sb.AppendLine(PreferredVSCodeVariantSetting + preferredVSCodeVariant);
             sb.AppendLine(WindowPositionSetting + windowPosition);
+            sb.AppendLine(AvaloniaWindowPositionSetting + avaloniaWindowPosition);
             sb.AppendLine(IgnoreEmbeddedFilesSetting + IgnoreEmbeddedFiles);
 
             using (SingleGlobalInstance.Acquire(Path.GetFileName(settingsFilePath)))
@@ -465,6 +477,7 @@ namespace StructuredLogViewer
                     ProcessLine(VSCodeHintDismissedSetting, line, ref vsCodeHintDismissed);
                     ProcessString(PreferredVSCodeVariantSetting, line, ref preferredVSCodeVariant);
                     ProcessString(WindowPositionSetting, line, ref windowPosition);
+                    ProcessString(AvaloniaWindowPositionSetting, line, ref avaloniaWindowPosition);
                     ProcessString(IgnoreEmbeddedFilesSetting, line, ref ignoreEmbeddedFiles);
 
                     void ProcessString(string setting, string text, ref string? variable)

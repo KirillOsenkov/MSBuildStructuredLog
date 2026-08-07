@@ -26,7 +26,7 @@
     <Grid>
       <TreeView Name="resultsList"
                 BorderThickness="0"
-                Background="#F5F5F5" />
+                Background="{DynamicResource Theme_ToolWindowBackground}" />
       <ScrollViewer Name="watermarkScrollViewer"
         HorizontalScrollBarVisibility="Disabled"
         VerticalScrollBarVisibility="Auto">
@@ -38,7 +38,7 @@
           <ContentPresenter.Styles>
             <Style Selector="TextBlock">
               <Setter Property="TextWrapping" Value="Wrap" />
-              <Setter Property="Foreground" Value="Gray" />
+              <Setter Property="Foreground" Value="{DynamicResource Theme_GrayText}" />
             </Style>
           </ContentPresenter.Styles>
         </ContentPresenter>

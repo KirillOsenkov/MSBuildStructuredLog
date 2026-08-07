@@ -30,7 +30,17 @@ namespace StructuredLogViewer.Avalonia.Controls
 
         protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
         {
+            base.OnDetachedFromVisualTree(e);
             typingConcurrentOperation.ReleaseTimer();
+        }
+
+        public void Dispose()
+        {
+            typingConcurrentOperation.ReleaseTimer();
+            ExecuteSearch = null;
+            clearSearchButton.Click -= clearSearchButton_Click;
+            searchTextBox.PropertyChanged -= searchTextBox_TextChanged;
+            resultsList.ItemsSource = null;
         }
 
         private void InitializeComponent()
@@ -69,6 +79,11 @@ namespace StructuredLogViewer.Avalonia.Controls
             set => typingConcurrentOperation.ExecuteSearch = value;
         }
 
+        public void RetriggerSearch()
+        {
+            typingConcurrentOperation.TriggerSearch(SearchText, Search.DefaultMaxResults);
+        }
+
         public void TriggerSearch(string text, int maxResults)
         {
             typingConcurrentOperation.TriggerSearch(text, maxResults);
@@ -78,7 +93,7 @@ namespace StructuredLogViewer.Avalonia.Controls
         {
             if (e.Property != TextBox.TextProperty) return;
 
-            var searchText = searchTextBox.Text;
+            var searchText = searchTextBox.Text?.Trim();
             TextChanged?.Invoke(searchText);
 
             if (string.IsNullOrWhiteSpace(searchText) || searchText.Length < 3)

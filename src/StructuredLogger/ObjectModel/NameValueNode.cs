@@ -13,7 +13,12 @@
 
         public override string ToString() => Name + " = " + Value;
         public override string GetFullText() => ToString();
-        public bool IsVisible { get => true; set { } }
+        public bool IsVisible
+        {
+            get => !HasFlag(NodeFlags.Hidden);
+            set => SetFlag(NodeFlags.Hidden, !value);
+        }
+
         public bool IsExpanded { get => true; set { } }
     }
 }

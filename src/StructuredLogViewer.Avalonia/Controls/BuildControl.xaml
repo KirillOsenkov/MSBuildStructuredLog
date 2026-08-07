@@ -26,7 +26,7 @@
                     Padding="4,2,4,2"
                     MinHeight="27">
                   <DockPanel>
-                    <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Text="Project: " />
+                    <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center" Text="Project: " Name="projectContextLabel" />
                     <ContentControl Focusable="false" DockPanel.Dock="Top" VerticalAlignment="Center" Name="propertiesAndItemsContext" />
                   </DockPanel>
                 </Border>
@@ -56,12 +56,31 @@
                           SelectedIndex="0"
                           MinWidth="10">
                 <TabItem Name="mainTreeTab" Header="Log">
-                  <TreeView Name="treeView"
-                            BorderBrush="Transparent"
-                            BorderThickness="0"
-                            Classes="searchable"
-                            AutoScrollToSelectedItem="True"
-                            ItemsSource="{Binding Children}"/>
+                  <Grid>
+                    <TreeView Name="treeView"
+                              BorderBrush="Transparent"
+                              BorderThickness="0"
+                              Classes="searchable"
+                              AutoScrollToSelectedItem="True"
+                              ItemsSource="{Binding Children}"/>
+                    <Grid Name="findControl"
+                          HorizontalAlignment="Right"
+                          VerticalAlignment="Top"
+                          IsVisible="False"
+                          Background="{DynamicResource Theme_WhiteBackground}"
+                          Margin="0,0,20,0">
+                      <StackPanel Orientation="Horizontal">
+                        <TextBlock Name="findLabel" VerticalAlignment="Center" Margin="4,0" />
+                        <TextBox Name="findTextBox"
+                                 MinHeight="23"
+                                 MinWidth="200"
+                                 BorderThickness="2"
+                                 Padding="2"
+                                 VerticalContentAlignment="Center"
+                                 ToolTip.Tip="Enter: close, Esc: clear or close, Ctrl+F: focus main search box" />
+                      </StackPanel>
+                    </Grid>
+                  </Grid>
                 </TabItem>
 
                   <!--<TabItem Name="timelineTab"
@@ -82,7 +101,7 @@
     <local:SplitterPanel.SecondChild>
       <Border BorderBrush="Gray"
               BorderThickness="1">
-        <ScrollViewer Background="LightYellow">
+        <ScrollViewer Background="{DynamicResource Theme_InfoBarBackground}">
           <ListBox Name="breadCrumb"
                    BorderThickness="0"
                    BorderBrush="Transparent">
@@ -106,8 +125,8 @@
                   <Setter Property="Template">
                     <ControlTemplate>
                       <Polygon Points="0,0 3,3 0,6"
-                               Stroke="Black"
-                               Fill="Black"
+                               Stroke="{DynamicResource Theme_InfoBarForeground}"
+                               Fill="{DynamicResource Theme_InfoBarForeground}"
                                VerticalAlignment="Center" />
                     </ControlTemplate>
                   </Setter>
