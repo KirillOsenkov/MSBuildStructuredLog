@@ -25,6 +25,65 @@
         <Setter Property="MinHeight" Value="0"/>
     </Style>
 
+    <!-- WPF's main tree is opaque window-white, not the window chrome color -->
+    <Style Selector="TreeView.searchable">
+        <Setter Property="Background" Value="{DynamicResource Theme_WhiteBackground}"/>
+    </Style>
+
+    <!-- Avalonia's Segoe UI line metrics are taller than WPF's; pin tree text to
+         WPF's line height so rows come out identical -->
+    <Style Selector="TreeViewItem TextBlock">
+        <Setter Property="LineHeight" Value="16"/>
+    </Style>
+    <Style Selector="ListBox#breadCrumb TextBlock">
+        <Setter Property="LineHeight" Value="16"/>
+    </Style>
+
+    <!-- classic TabControl: bordered content area, tab strip outside the frame.
+         Default template is for TabStripPlacement=Bottom (all BuildControl tab strips);
+         the document well uses Classes="topTabs" for the top-strip variant. -->
+    <Style Selector="TabControl">
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Grid RowDefinitions="*,Auto">
+                    <Border Grid.Row="0"
+                            Background="{DynamicResource Theme_WhiteBackground}"
+                            BorderBrush="{DynamicResource Theme_ControlBorder}"
+                            BorderThickness="1">
+                        <ContentPresenter Name="PART_SelectedContentHost"
+                                          Margin="{TemplateBinding Padding}"
+                                          Content="{TemplateBinding SelectedContent}"
+                                          ContentTemplate="{TemplateBinding SelectedContentTemplate}" />
+                    </Border>
+                    <ItemsPresenter Grid.Row="1"
+                                    Name="PART_ItemsPresenter"
+                                    ItemsPanel="{TemplateBinding ItemsPanel}" />
+                </Grid>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="TabControl.topTabs">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Grid RowDefinitions="Auto,*">
+                    <ItemsPresenter Grid.Row="0"
+                                    Name="PART_ItemsPresenter"
+                                    ItemsPanel="{TemplateBinding ItemsPanel}" />
+                    <Border Grid.Row="1"
+                            Background="{DynamicResource Theme_WhiteBackground}"
+                            BorderBrush="{DynamicResource Theme_ControlBorder}"
+                            BorderThickness="1">
+                        <ContentPresenter Name="PART_SelectedContentHost"
+                                          Margin="{TemplateBinding Padding}"
+                                          Content="{TemplateBinding SelectedContent}"
+                                          ContentTemplate="{TemplateBinding SelectedContentTemplate}" />
+                    </Border>
+                </Grid>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+
     <!-- WPF-style expander triangle: hollow right-pointing triangle when collapsed,
          dark filled triangle when expanded, light blue on hover -->
     <Style Selector="TreeViewItem /template/ ToggleButton#PART_ExpandCollapseChevron">
@@ -99,7 +158,8 @@
         <Setter Property="Margin" Value="0,0,-1,0" />
         <Setter Property="Background" Value="{DynamicResource Theme_TabBackground}" />
         <Setter Property="BorderBrush" Value="{DynamicResource Theme_ControlBorder}" />
-        <Setter Property="BorderThickness" Value="1" />
+        <!-- bottom-placed tabs: the edge facing the content pane stays open, like WPF -->
+        <Setter Property="BorderThickness" Value="1,0,1,1" />
         <Setter Property="Template">
             <ControlTemplate>
                 <Border Background="{TemplateBinding Background}"
@@ -117,12 +177,24 @@
     </Style>
     <Style Selector="TabItem:selected">
         <Setter Property="Background" Value="{DynamicResource Theme_TabSelectedBackground}" />
+        <!-- Fluent turns the selected header accent-colored; WPF keeps it plain -->
+        <Setter Property="Foreground" Value="{DynamicResource Theme_InfoBarForeground}" />
+        <!-- overlap the content border so the selected tab merges with the pane -->
+        <Setter Property="Margin" Value="0,-1,-1,0" />
+        <Setter Property="ZIndex" Value="1" />
     </Style>
     <Style Selector="TabItem:pointerover">
         <Setter Property="Background" Value="{DynamicResource Theme_TabHoverBackground}" />
     </Style>
     <Style Selector="TabItem:selected:pointerover">
         <Setter Property="Background" Value="{DynamicResource Theme_TabSelectedBackground}" />
+    </Style>
+
+    <Style Selector="TabControl.topTabs TabItem">
+        <Setter Property="BorderThickness" Value="1,1,1,0" />
+    </Style>
+    <Style Selector="TabControl.topTabs TabItem:selected">
+        <Setter Property="Margin" Value="0,0,-1,-1" />
     </Style>
 
     <Style Selector="MenuItem">
@@ -133,6 +205,9 @@
     </Style>
 
     <!-- compact breadcrumb items with no hover/selection chrome, like WPF -->
+    <Style Selector="ListBox#breadCrumb">
+        <Setter Property="Padding" Value="0" />
+    </Style>
     <Style Selector="ListBox#breadCrumb ListBoxItem">
         <Setter Property="Padding" Value="2,0" />
         <Setter Property="MinHeight" Value="0" />
@@ -157,6 +232,7 @@
     <Style Selector="TreeViewItem">
         <Setter Property="Padding" Value="0" />
         <Setter Property="MinHeight" Value="0" />
+        <Setter Property="BorderThickness" Value="0" />
         <Setter Property="FontSize" Value="12" />
     </Style>
     

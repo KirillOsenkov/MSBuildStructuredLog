@@ -7,7 +7,7 @@
         <local:DocumentWell />
     </Design.DataContext>
   <Grid>
-    <TabControl Name="tabControl" ItemsSource="{Binding #documentWell.Tabs}">
+    <TabControl Name="tabControl" Classes="topTabs" ItemsSource="{Binding #documentWell.Tabs}">
       <TabControl.ItemTemplate>
         <DataTemplate DataType="{x:Type local:SourceFileTab}">
             <StackPanel Orientation="Horizontal" ToolTip.Tip="{Binding FilePath}">
