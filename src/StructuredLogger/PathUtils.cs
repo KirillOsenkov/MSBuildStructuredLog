@@ -49,6 +49,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static bool HasInvalidVolumeSeparator(string path)
         {
+            // Unix has no drive-letter volume syntax, and VolumeSeparatorChar is '/'
+            // there, so the checks below would flag every rooted path as invalid.
+            if (Path.VolumeSeparatorChar != ':')
+            {
+                return false;
+            }
+
             // Toss out paths with colons that aren't a valid drive specifier.
             // Cannot start with a colon and can only be of the form "C:" or "\\?\C:".
             // (Note that we used to explicitly check "http:" and "file:"- these are caught by this check now.)

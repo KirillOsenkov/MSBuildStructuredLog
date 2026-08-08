@@ -10,7 +10,7 @@
 
     <Style Selector="Window.mainWindow">
         <Setter Property="Background" Value="{DynamicResource Theme_Background}"/>
-        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontSize" Value="13"/>
     </Style>
 
     <!-- classic always-visible scrollbars like WPF -->
@@ -68,11 +68,25 @@
         <Setter Property="BorderBrush" Value="#FF3399FF" />
     </Style>
 
-    <!-- square corners and compact padding on text boxes, matching WPF chrome -->
+    <!-- macOS: Avalonia's default resolves to Helvetica, whose small ascent (9.24px
+         @12px vs Segoe UI's 12.95) parks text visibly above WPF's baseline and reads
+         denser; Tahoma ships with macOS and nearly matches Segoe UI metrics -->
+    <Style Selector="Window">
+        <Setter Property="FontFamily">
+            <OnPlatform x:TypeArguments="FontFamily" Default="{x:Static FontFamily.Default}">
+                <On Options="macOS" Content=".AppleSystemUIFont"/>
+            </OnPlatform>
+        </Setter>
+    </Style>
+
+    <!-- square corners and compact padding on text boxes, matching WPF chrome;
+         center text vertically — WPF boxes auto-size around the text, Avalonia's
+         stretch and pin it to the top -->
     <Style Selector="TextBox">
         <Setter Property="CornerRadius" Value="0"/>
         <Setter Property="MinHeight" Value="0"/>
         <Setter Property="Padding" Value="4,2"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="SelectionBrush" Value="{DynamicResource Theme_TextSelection}"/>
     </Style>
 
@@ -97,9 +111,13 @@
     </Style>
 
     <!-- Avalonia's Segoe UI line metrics are taller than WPF's; pin tree text to
-         WPF's line height so rows come out identical -->
-    <Style Selector="TreeViewItem TextBlock">
+         WPF's line height so rows come out identical. Center vertically: node rows
+         are horizontal StackPanels where the 16px icon plus margins sets a ~20px
+         row height, and a stretched TextBlock draws its line at the top -->
+    <!-- :is() so NodeHyperlinkControl (derives from TextBlock) is covered too -->
+    <Style Selector="TreeViewItem :is(TextBlock)">
         <Setter Property="LineHeight" Value="16"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
     <Style Selector="ListBox#breadCrumb TextBlock">
         <Setter Property="LineHeight" Value="16"/>
@@ -218,7 +236,7 @@
     <!-- Fluent control themes set FontSize=14 explicitly; match WPF's 12 -->
     <!-- classic WPF-style tabs: bordered boxes, selected tab lighter -->
     <Style Selector="TabItem">
-        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontSize" Value="13" />
         <Setter Property="MinHeight" Value="0" />
         <Setter Property="Padding" Value="12,3" />
         <Setter Property="Margin" Value="0,0,-1,0" />
@@ -241,6 +259,11 @@
                 </Border>
             </ControlTemplate>
         </Setter>
+    </Style>
+    <!-- center header text (TabItem only hosts the header; tab content lives in
+         the TabControl's presenter, so scoping to all TextBlocks here is safe) -->
+    <Style Selector="TabItem TextBlock">
+        <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
     <Style Selector="TabItem:selected">
         <Setter Property="Background" Value="{DynamicResource Theme_TabSelectedBackground}" />
@@ -280,7 +303,7 @@
     </Style>
 
     <Style Selector="MenuItem">
-        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontSize" Value="13" />
     </Style>
     <Style Selector="Menu">
         <Setter Property="Padding" Value="0" />
@@ -342,17 +365,17 @@
         </Setter>
     </Style>
     <Style Selector="ContextMenu">
-        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontSize" Value="13" />
     </Style>
     <Style Selector="ToolTip">
-        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontSize" Value="13" />
     </Style>
 
     <Style Selector="TreeViewItem">
         <Setter Property="Padding" Value="0" />
         <Setter Property="MinHeight" Value="0" />
         <Setter Property="BorderThickness" Value="0" />
-        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontSize" Value="13" />
         <!-- no keyboard-focus rectangle around the focused row; selection color is enough (like WPF) -->
         <Setter Property="FocusAdorner" Value="{x:Null}" />
     </Style>

@@ -21,7 +21,7 @@
             <s:NoImportReasonBackgroundConverter x:Key="NoImportReasonBackgroundConverter" />
 
             <!-- Fluent defaults to 14; WPF uses 12 - controls read this resource directly -->
-            <x:Double x:Key="ControlContentThemeFontSize">12</x:Double>
+            <x:Double x:Key="ControlContentThemeFontSize">13</x:Double>
 
             <!-- target framework chip, same values as WPF Generic.xaml -->
             <SolidColorBrush x:Key="TargetFrameworkBackground">#E5F0E5</SolidColorBrush>
