@@ -22,7 +22,7 @@
 
             <!-- Fluent defaults to 14; WPF uses 12 - controls read this resource directly.
                  macOS runs SF Pro at 13 (see the font-family comment in Styles.xaml); UiFontSize
-                 is the same knob for our own styles -->
+                 is the same knob for our own styles. Use 12 on macOS if switching to Selawik. -->
             <OnPlatform x:Key="ControlContentThemeFontSize" x:TypeArguments="x:Double" Default="12">
                 <On Options="macOS" Content="13"/>
             </OnPlatform>

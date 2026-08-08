@@ -70,8 +70,11 @@
 
     <!-- macOS: Avalonia's default resolves to Helvetica, whose small ascent (9.24px
          @12px vs Segoe UI's 12.95) parks text visibly above WPF's baseline and reads
-         denser. Use the system font (SF Pro) at 13 instead (sizes come from the
-         UiFontSize resource in App.xaml); Windows/Linux keep the platform default at 12 -->
+         denser. Daily driver: the system font (SF Pro) at 13; sizes come from the
+         UiFontSize resources in App.xaml. Windows/Linux keep the platform default at 12.
+         To switch macOS to Selawik (embedded Segoe UI metric clone, looks best at 12),
+         change Content below to "avares://StructuredLogViewer.Avalonia/Fonts#Selawik"
+         and set the macOS sizes in App.xaml to 12. -->
     <Style Selector="Window">
         <Setter Property="FontFamily">
             <OnPlatform x:TypeArguments="FontFamily" Default="{x:Static FontFamily.Default}">
