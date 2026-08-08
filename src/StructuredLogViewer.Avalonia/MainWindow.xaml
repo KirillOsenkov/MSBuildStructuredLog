@@ -7,7 +7,7 @@
         WindowStartupLocation="CenterScreen"
         DragDrop.AllowDrop="True"
         Classes="mainWindow"
-        FontSize="13"
+        FontSize="{DynamicResource UiFontSize}"
         TextOptions.TextRenderingMode="SubpixelAntialias"
         Icon="StructuredLogger.ico">
 

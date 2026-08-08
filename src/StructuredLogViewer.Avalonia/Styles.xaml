@@ -10,7 +10,7 @@
 
     <Style Selector="Window.mainWindow">
         <Setter Property="Background" Value="{DynamicResource Theme_Background}"/>
-        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontSize" Value="{DynamicResource UiFontSize}"/>
     </Style>
 
     <!-- classic always-visible scrollbars like WPF -->
@@ -70,7 +70,8 @@
 
     <!-- macOS: Avalonia's default resolves to Helvetica, whose small ascent (9.24px
          @12px vs Segoe UI's 12.95) parks text visibly above WPF's baseline and reads
-         denser; Tahoma ships with macOS and nearly matches Segoe UI metrics -->
+         denser. Use the system font (SF Pro) at 13 instead (sizes come from the
+         UiFontSize resource in App.xaml); Windows/Linux keep the platform default at 12 -->
     <Style Selector="Window">
         <Setter Property="FontFamily">
             <OnPlatform x:TypeArguments="FontFamily" Default="{x:Static FontFamily.Default}">
@@ -236,7 +237,7 @@
     <!-- Fluent control themes set FontSize=14 explicitly; match WPF's 12 -->
     <!-- classic WPF-style tabs: bordered boxes, selected tab lighter -->
     <Style Selector="TabItem">
-        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontSize" Value="{DynamicResource UiFontSize}" />
         <Setter Property="MinHeight" Value="0" />
         <Setter Property="Padding" Value="12,3" />
         <Setter Property="Margin" Value="0,0,-1,0" />
@@ -303,7 +304,7 @@
     </Style>
 
     <Style Selector="MenuItem">
-        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontSize" Value="{DynamicResource UiFontSize}" />
     </Style>
     <Style Selector="Menu">
         <Setter Property="Padding" Value="0" />
@@ -365,17 +366,17 @@
         </Setter>
     </Style>
     <Style Selector="ContextMenu">
-        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontSize" Value="{DynamicResource UiFontSize}" />
     </Style>
     <Style Selector="ToolTip">
-        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontSize" Value="{DynamicResource UiFontSize}" />
     </Style>
 
     <Style Selector="TreeViewItem">
         <Setter Property="Padding" Value="0" />
         <Setter Property="MinHeight" Value="0" />
         <Setter Property="BorderThickness" Value="0" />
-        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontSize" Value="{DynamicResource UiFontSize}" />
         <!-- no keyboard-focus rectangle around the focused row; selection color is enough (like WPF) -->
         <Setter Property="FocusAdorner" Value="{x:Null}" />
     </Style>

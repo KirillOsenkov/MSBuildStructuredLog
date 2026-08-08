@@ -20,8 +20,15 @@
             <s:FileCopyKindToIconConverter x:Key="FileCopyIconConverter" />
             <s:NoImportReasonBackgroundConverter x:Key="NoImportReasonBackgroundConverter" />
 
-            <!-- Fluent defaults to 14; WPF uses 12 - controls read this resource directly -->
-            <x:Double x:Key="ControlContentThemeFontSize">13</x:Double>
+            <!-- Fluent defaults to 14; WPF uses 12 - controls read this resource directly.
+                 macOS runs SF Pro at 13 (see the font-family comment in Styles.xaml); UiFontSize
+                 is the same knob for our own styles -->
+            <OnPlatform x:Key="ControlContentThemeFontSize" x:TypeArguments="x:Double" Default="12">
+                <On Options="macOS" Content="13"/>
+            </OnPlatform>
+            <OnPlatform x:Key="UiFontSize" x:TypeArguments="x:Double" Default="12">
+                <On Options="macOS" Content="13"/>
+            </OnPlatform>
 
             <!-- target framework chip, same values as WPF Generic.xaml -->
             <SolidColorBrush x:Key="TargetFrameworkBackground">#E5F0E5</SolidColorBrush>
