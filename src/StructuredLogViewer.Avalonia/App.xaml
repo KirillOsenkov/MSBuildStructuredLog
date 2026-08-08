@@ -57,7 +57,7 @@
                     <SolidColorBrush x:Key="TextControlBackgroundPointerOver">White</SolidColorBrush>
                     <SolidColorBrush x:Key="TextControlBackgroundFocused">White</SolidColorBrush>
                     <SolidColorBrush x:Key="Theme_TextSelection">#99C9EF</SolidColorBrush>
-                    <SolidColorBrush x:Key="Theme_EditorSelection">#4CA0E3</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_EditorSelection">#87CEFA</SolidColorBrush>
 
                     <!-- node adornments (same values as WPF ThemeManager light theme) -->
                     <SolidColorBrush x:Key="NuGet">#004880</SolidColorBrush>
