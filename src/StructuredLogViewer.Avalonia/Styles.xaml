@@ -19,41 +19,16 @@
         <Setter Property="Background" Value="{DynamicResource Theme_ScrollBarBackground}"/>
     </Style>
 
-    <!-- WPF-style scroll viewer: scrollbars reserve layout space next to the
-         viewport instead of overlaying the content (Fluent draws them on top) -->
+    <!-- ScrollViewer.AllowAutoHide (distinct from ScrollBar.AllowAutoHide above) controls
+         whether the Fluent template overlays the scrollbars on top of the viewport; without
+         this the content's bottom row hides behind the horizontal scrollbar. TreeView needs
+         the attached property because its template forwards it to the inner ScrollViewer
+         with a TemplateBinding, which outranks a style on the ScrollViewer itself. -->
     <Style Selector="ScrollViewer">
-        <Setter Property="Template">
-            <ControlTemplate>
-                <Grid ColumnDefinitions="*,Auto" RowDefinitions="*,Auto">
-                    <ScrollContentPresenter Name="PART_ContentPresenter"
-                                            Grid.Row="0"
-                                            Grid.Column="0"
-                                            Background="{TemplateBinding Background}"
-                                            Padding="{TemplateBinding Padding}"
-                                            HorizontalSnapPointsAlignment="{TemplateBinding HorizontalSnapPointsAlignment}"
-                                            VerticalSnapPointsAlignment="{TemplateBinding VerticalSnapPointsAlignment}"
-                                            HorizontalSnapPointsType="{TemplateBinding HorizontalSnapPointsType}"
-                                            VerticalSnapPointsType="{TemplateBinding VerticalSnapPointsType}">
-                        <ScrollContentPresenter.GestureRecognizers>
-                            <ScrollGestureRecognizer CanHorizontallyScroll="{Binding CanHorizontallyScroll, ElementName=PART_ContentPresenter}"
-                                                     CanVerticallyScroll="{Binding CanVerticallyScroll, ElementName=PART_ContentPresenter}"
-                                                     IsScrollInertiaEnabled="{Binding (ScrollViewer.IsScrollInertiaEnabled), ElementName=PART_ContentPresenter}" />
-                        </ScrollContentPresenter.GestureRecognizers>
-                    </ScrollContentPresenter>
-                    <ScrollBar Name="PART_HorizontalScrollBar"
-                               Orientation="Horizontal"
-                               Grid.Row="1"
-                               Grid.Column="0" />
-                    <ScrollBar Name="PART_VerticalScrollBar"
-                               Orientation="Vertical"
-                               Grid.Row="0"
-                               Grid.Column="1" />
-                    <Panel Grid.Row="1"
-                           Grid.Column="1"
-                           Background="{DynamicResource Theme_ScrollBarBackground}" />
-                </Grid>
-            </ControlTemplate>
-        </Setter>
+        <Setter Property="AllowAutoHide" Value="False"/>
+    </Style>
+    <Style Selector="TreeView">
+        <Setter Property="ScrollViewer.AllowAutoHide" Value="False"/>
     </Style>
 
     <!-- compact WPF-style checkbox (Fluent hardcodes a 20px box in its template) -->

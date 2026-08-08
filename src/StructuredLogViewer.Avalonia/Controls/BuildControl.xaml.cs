@@ -1868,7 +1868,7 @@ Recent ("));
         public void SelectItem(BaseNode item)
         {
             var parentChain = item.GetParentChainExcludingThis();
-            
+
             foreach (var node in parentChain)
             {
                 if (node is TreeNode treeNode)
@@ -1876,6 +1876,16 @@ Recent ("));
             }
 
             SelectTree();
+
+            // The item's TreeViewItem must exist and be arranged before SelectedItem is
+            // set. If it's created later (ancestors were just expanded for the first time),
+            // TreeView.ContainerForItemPreparedOverride sees the container's style-bound
+            // IsSelected=false and removes the item from SelectedItems, silently dropping
+            // the selection. And if it exists but is stale (ancestors were re-expanded),
+            // BringIntoView scrolls using pre-expansion geometry, landing the row behind
+            // the horizontal scrollbar.
+            treeView.UpdateLayout();
+
             treeView.SelectedItem = item;
         }
 
@@ -3035,6 +3045,11 @@ Recent ("));
                 return;
             }
 
+            // requires ScrollViewer.AllowAutoHide=False (set in Styles.xaml): with auto-hide,
+            // the Fluent template overlays the scrollbars on the viewport, so Viewport.Height
+            // includes the horizontal scrollbar and rows aligned to it end up hidden behind it
+            double viewportHeight = viewer.Viewport.Height;
+
             // the row header is the interesting part; the whole item includes children
             double itemHeight = item is TreeViewItem
                 ? (item as TreeViewItem).FindDescendantOfType<Border>()?.Bounds.Height ?? item.Bounds.Height
@@ -3058,11 +3073,11 @@ Recent ("));
                 // scrolled off the top: align the row with the top of the viewport
                 newY += itemTop;
             }
-            else if (itemTop + itemHeight > viewer.Viewport.Height)
+            else if (itemTop + itemHeight > viewportHeight)
             {
                 // below the viewport: align with the bottom edge, but for rows taller
                 // than the viewport fall back to aligning the top
-                newY += Math.Min(itemTop, itemTop + itemHeight - viewer.Viewport.Height);
+                newY += Math.Min(itemTop, itemTop + itemHeight - viewportHeight);
             }
 
             if (newY != viewer.Offset.Y)
