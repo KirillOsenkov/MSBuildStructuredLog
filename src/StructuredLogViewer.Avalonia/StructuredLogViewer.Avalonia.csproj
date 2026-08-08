@@ -4,6 +4,11 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
     <ApplicationIcon>StructuredLogger.ico</ApplicationIcon>
+    <Company>Microsoft</Company>
+    <Product>MSBuild Structured Log Viewer</Product>
+    <AssemblyTitle>MSBuild Structured Log Viewer</AssemblyTitle>
+    <!-- server GC measurably helps loading multi-GB binlogs (same as the WPF viewer) -->
+    <ServerGarbageCollection>true</ServerGarbageCollection>
   </PropertyGroup>
 
   <PropertyGroup>

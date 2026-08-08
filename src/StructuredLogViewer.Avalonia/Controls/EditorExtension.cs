@@ -3,7 +3,10 @@ using System.Linq;
 using System.Text;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives.PopupPositioning;
+using AvaloniaEdit;
 using AvaloniaEdit.Document;
+using AvaloniaEdit.Rendering;
 using Microsoft.Build.Logging.StructuredLogger;
 
 namespace StructuredLogViewer.Avalonia.Controls
@@ -66,6 +69,13 @@ namespace StructuredLogViewer.Avalonia.Controls
             var textView = textArea.TextView;
             textView.PointerHover += (sender, e) =>
             {
+                // don't pop the tooltip while a button is held (e.g. during a drag-selection pause)
+                var properties = e.GetCurrentPoint(textEditor).Properties;
+                if (properties.IsLeftButtonPressed || properties.IsRightButtonPressed)
+                {
+                    return;
+                }
+
                 var mousePos = e.GetPosition(textEditor);
                 TryUpdateToolTipText(textViewerControl, mousePos);
             };
@@ -118,9 +128,23 @@ namespace StructuredLogViewer.Avalonia.Controls
                 return;
             }
 
-            var textView = textViewerControl.TextEditor.TextArea.TextView;
+            var textEditor = textViewerControl.TextEditor;
+            var textView = textEditor.TextArea.TextView;
+
+            // anchor the tooltip at the bottom of the hovered word's line, like the
+            // WPF viewer, instead of letting it pop at the pointer
+            var startLocation = textEditor.Document.GetLocation(start);
+            var point = textView.GetVisualPosition(
+                new TextViewPosition(startLocation), VisualYPosition.LineBottom) - textView.ScrollOffset;
+
             ToolTip.SetTip(textView, contentText);
-            ToolTip.SetPlacement(textView, PlacementMode.Pointer);
+            ToolTip.SetPlacement(textView, PlacementMode.Custom);
+            ToolTip.SetCustomPopupPlacementCallback(textView, placement =>
+            {
+                placement.AnchorRectangle = new Rect(point, new Size(1, 1));
+                placement.Anchor = PopupAnchor.TopLeft;
+                placement.Gravity = PopupGravity.BottomRight;
+            });
             ToolTip.SetIsOpen(textView, true);
         }
 

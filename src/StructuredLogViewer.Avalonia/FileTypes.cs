@@ -17,7 +17,8 @@ public class FileTypes
     public static FilePickerFileType MsBuildProj { get; } =
         new("MsBuild project file")
         {
-            Patterns = new[] { "*.csproj", "*.fsproj", "*.vbproj", "*.shproj", "*.wapproj", "*.vcxproj", "*.vcproj", "*.msbuildproj" },
+            // match any *proj extension like the WPF viewer (csproj, vbproj, esproj, sqlproj, ...)
+            Patterns = new[] { "*.proj", "*.*proj" },
             MimeTypes = new[] { "application/xml", "text/xml" },
             AppleUniformTypeIdentifiers = new[] { "public.xml" }
         };
@@ -25,7 +26,8 @@ public class FileTypes
     public static FilePickerFileType Sln { get; } =
         new("Solution File")
         {
-            Patterns = new[] { "*.sln", "*.slnf", "*.slnx"},
+            // no *.slnf - OpenFile doesn't support building solution filters
+            Patterns = new[] { "*.sln", "*.slnx"},
             MimeTypes = new[] { "text/plain" },
             AppleUniformTypeIdentifiers = new[] { "public.text" }
         };

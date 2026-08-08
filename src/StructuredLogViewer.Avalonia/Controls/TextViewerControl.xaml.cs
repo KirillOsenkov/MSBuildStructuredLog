@@ -17,6 +17,8 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Xml;
 using AvaloniaEdit.Highlighting.Xshd;
+using AvaloniaEdit.Search;
+using Avalonia.Styling;
 using System.Text;
 using Avalonia.Input.Platform;
 using Avalonia.VisualTree;
@@ -51,6 +53,8 @@ namespace StructuredLogViewer.Avalonia.Controls
         {
             InitializeComponent();
 
+            SearchPanel.Install(textEditor);
+
             FoldingManager = FoldingManager.Install(textEditor.TextArea);
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -84,26 +88,48 @@ namespace StructuredLogViewer.Avalonia.Controls
 
             if (SettingsService.UseDarkTheme)
             {
-                textEditor.Background = new SolidColorBrush(Color.Parse("#303030"));
-                textEditor.Foreground = new SolidColorBrush(Color.Parse("#E0E0E0"));
+                var background = GetThemeBrush("Theme_WhiteBackground", ThemeVariant.Dark, "#303030");
+                var foreground = GetThemeBrush("Theme_ControlText", ThemeVariant.Dark, "#E0E0E0");
+                textEditor.Background = background;
+                textEditor.Foreground = foreground;
                 textView.CurrentLineBackground = new SolidColorBrush(Color.Parse("#505050"));
-                textArea.SelectionBrush = new SolidColorBrush(Color.Parse("#264F78"));
+                textArea.SelectionBrush = GetThemeBrush("Theme_EditorSelection", ThemeVariant.Dark, "#264F78");
                 textArea.SelectionForeground = new SolidColorBrush(Color.Parse("#C8C8C8"));
                 var foldingMargin = textArea.LeftMargins.OfType<FoldingMargin>().FirstOrDefault();
                 if (foldingMargin != null)
                 {
-                    foldingMargin.FoldingMarkerBackgroundBrush = new SolidColorBrush(Color.Parse("#303030"));
-                    foldingMargin.FoldingMarkerBrush = new SolidColorBrush(Color.Parse("#E0E0E0"));
-                    foldingMargin.SelectedFoldingMarkerBackgroundBrush = new SolidColorBrush(Color.Parse("#303030"));
-                    foldingMargin.SelectedFoldingMarkerBrush = new SolidColorBrush(Color.Parse("#E0E0E0"));
+                    foldingMargin.FoldingMarkerBackgroundBrush = background;
+                    foldingMargin.FoldingMarkerBrush = foreground;
+                    foldingMargin.SelectedFoldingMarkerBackgroundBrush = background;
+                    foldingMargin.SelectedFoldingMarkerBrush = foreground;
                 }
             }
             else
             {
                 textView.CurrentLineBackground = new SolidColorBrush(Color.FromRgb(224, 224, 224));
                 textView.CurrentLineBorder = new Pen(Brushes.Transparent, 0);
-                textArea.SelectionBrush = new SolidColorBrush(Color.Parse("#87CEFA"));
+                textArea.SelectionBrush = GetThemeBrush("Theme_EditorSelection", ThemeVariant.Light, "#87CEFA");
             }
+        }
+
+        // the theme can only change on the welcome screen, when no text viewers exist,
+        // so resolving the brush once at construction is sufficient (same as WPF)
+        private static IBrush GetThemeBrush(string key, ThemeVariant variant, string fallback)
+        {
+            return global::Avalonia.Application.Current.TryGetResource(key, variant, out var value) && value is IBrush brush
+                ? brush
+                : new SolidColorBrush(Color.Parse(fallback));
+        }
+
+        protected override void OnKeyUp(KeyEventArgs e)
+        {
+            // Mark Ctrl+F handled to not steal focus from the search panel
+            if (e.Key == Key.F && e.KeyModifiers.HasFlag(KeyModifiers.Control))
+            {
+                e.Handled = true;
+            }
+
+            base.OnKeyUp(e);
         }
 
         private void InitializeComponent()
@@ -243,6 +269,7 @@ namespace StructuredLogViewer.Avalonia.Controls
                 foldingStrategy.UpdateFoldings(FoldingManager, textEditor.Document);
 
                 gotoProjectMenu.IsVisible = true;
+                gotoPropertyMenu.IsVisible = true;
             }
             else if (!looksLikeXml && IsXml)
             {

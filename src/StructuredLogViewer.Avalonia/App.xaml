@@ -39,6 +39,8 @@
                     <SolidColorBrush x:Key="Theme_GrayText">Gray</SolidColorBrush>
                     <SolidColorBrush x:Key="Theme_ControlBackground">#F0F0F0</SolidColorBrush>
                     <SolidColorBrush x:Key="Theme_ControlBorder">#ACACAC</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_Hyperlink">RoyalBlue</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_ControlText">Black</SolidColorBrush>
 
                     <!-- classic WPF button colors (see WPF ThemeManager.UpdateTheme) -->
                     <SolidColorBrush x:Key="Theme_ButtonBackground">#F0F0F0</SolidColorBrush>
@@ -84,6 +86,8 @@
                     <SolidColorBrush x:Key="Theme_GrayText">LightGray</SolidColorBrush>
                     <SolidColorBrush x:Key="Theme_ControlBackground">#454545</SolidColorBrush>
                     <SolidColorBrush x:Key="Theme_ControlBorder">#555555</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_Hyperlink">DeepSkyBlue</SolidColorBrush>
+                    <SolidColorBrush x:Key="Theme_ControlText">#E0E0E0</SolidColorBrush>
 
                     <SolidColorBrush x:Key="Theme_ButtonBackground">#3F3F46</SolidColorBrush>
                     <SolidColorBrush x:Key="Theme_ButtonBorder">#666666</SolidColorBrush>
@@ -883,7 +887,11 @@
                         </Grid>
                         <StackPanel Grid.Row="4">
                             <!-- WPF has an "Enable tree virtualization" checkbox here;
-                                 Avalonia's TreeView has no virtualization to toggle -->
+                                 Avalonia's TreeView has no virtualization to toggle:
+                                 VirtualizingStackPanel would only virtualize the root level
+                                 and breaks AutoScrollToSelectedItem (needed for scroll-to-
+                                 search-result), see AvaloniaUI/Avalonia#10985. Real
+                                 virtualization requires migrating to TreeDataGrid. -->
                             <!--<CheckBox Content="Display all targets directly under the project (flattened in temporal order)"
                                       Margin="10,0,10,10"
                                       IsChecked="{Binding ParentAllTargetsUnderProject}"

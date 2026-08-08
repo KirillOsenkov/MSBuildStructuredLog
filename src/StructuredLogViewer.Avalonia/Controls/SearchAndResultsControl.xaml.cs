@@ -24,8 +24,8 @@ namespace StructuredLogViewer.Avalonia.Controls
         public SearchAndResultsControl()
         {
             InitializeComponent();
-            typingConcurrentOperation.DisplayResults += (r, moreAvailable, cancellationToken) => Dispatcher.UIThread.InvokeAsync(() => DisplaySearchResults(r, moreAvailable, cancellationToken));
-            typingConcurrentOperation.SearchComplete += (text, arg, elapsed) => Dispatcher.UIThread.InvokeAsync(() => TypingConcurrentOperation_SearchComplete(text, arg, elapsed));
+            typingConcurrentOperation.DisplayResults += DisplaySearchResults;
+            typingConcurrentOperation.SearchComplete += TypingConcurrentOperation_SearchComplete;
         }
 
         protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
@@ -36,6 +36,8 @@ namespace StructuredLogViewer.Avalonia.Controls
 
         public void Dispose()
         {
+            typingConcurrentOperation.DisplayResults -= DisplaySearchResults;
+            typingConcurrentOperation.SearchComplete -= TypingConcurrentOperation_SearchComplete;
             typingConcurrentOperation.ReleaseTimer();
             ExecuteSearch = null;
             clearSearchButton.Click -= clearSearchButton_Click;

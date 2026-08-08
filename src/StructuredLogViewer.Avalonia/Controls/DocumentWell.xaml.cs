@@ -63,6 +63,7 @@ namespace StructuredLogViewer.Avalonia.Controls
 
             closeButton.Click += closeButton_Click;
             tabControl.PointerPressed += TabControlOnPointerPressed;
+            tabControl.AddHandler(ContextRequestedEvent, TabControlOnContextRequested, RoutingStrategies.Tunnel);
         }
 
         public void Dispose()
@@ -167,33 +168,37 @@ namespace StructuredLogViewer.Avalonia.Controls
             if (e.Handled)
                 return;
 
-            var properties = e.GetCurrentPoint(tabControl).Properties;
-            bool middle = properties.IsMiddleButtonPressed;
-            bool right = properties.IsRightButtonPressed;
-            if (!middle && !right)
+            if (!e.GetCurrentPoint(tabControl).Properties.IsMiddleButtonPressed)
                 return;
 
-            var current = e.Source as Visual;
+            if (FindTab(e.Source) is { } sourceFileTab)
+            {
+                sourceFileTab.Close.Execute(null);
+            }
+        }
+
+        private void TabControlOnContextRequested(object sender, ContextRequestedEventArgs e)
+        {
+            // resolve the tab under the cursor right before the context menu opens,
+            // so the menu always acts on the tab it was invoked on (or on none)
+            contextMenuTab = FindTab(e.Source);
+        }
+
+        private static SourceFileTab FindTab(object source)
+        {
+            var current = source as Visual;
 
             while (current != null)
             {
                 if (current is TabItem { DataContext: SourceFileTab sourceFileTab })
                 {
-                    if (middle)
-                    {
-                        sourceFileTab.Close.Execute(null);
-                    }
-                    else
-                    {
-                        // remember the tab under the cursor so the context menu can act on it
-                        contextMenuTab = sourceFileTab;
-                    }
-
-                    break;
+                    return sourceFileTab;
                 }
 
                 current = current.GetVisualParent();
             }
+
+            return null;
         }
     }
 }

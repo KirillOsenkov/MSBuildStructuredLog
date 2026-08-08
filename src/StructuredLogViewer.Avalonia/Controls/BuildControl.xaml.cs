@@ -160,6 +160,7 @@ namespace StructuredLogViewer.Avalonia.Controls
                     index.MaxResults = maxResults;
                     index.MarkResultsInTree = SettingsService.MarkResultsInTree;
                     var indexResults = index.FindNodes(searchText, cancellationToken);
+                    PrecalculationDuration = index.PrecalculationDuration;
                     return indexResults;
                 }
 
@@ -171,6 +172,7 @@ namespace StructuredLogViewer.Avalonia.Controls
                     //, Build.StringTable // disable validation in production
                     );
                 var results = search.FindNodes(searchText, cancellationToken);
+                PrecalculationDuration = search.PrecalculationDuration;
                 return results;
             };
             searchLogControl.ResultsTreeBuilder = BuildResultTree;
@@ -272,7 +274,16 @@ namespace StructuredLogViewer.Avalonia.Controls
             copyValueItem = new MenuItem() { Header = "Copy value" };
             viewSourceItem = new MenuItem() { Header = "View source" };
             viewFullTextItem = new MenuItem() { Header = "View full text" };
-            searchNuGetItem = new MenuItem() { Header = "Search project.assets.json" };
+            var nugetImage = new global::Avalonia.Controls.Shapes.Path
+            {
+                Width = 16,
+                Height = 16,
+                StrokeThickness = 1
+            };
+            nugetImage.Bind(global::Avalonia.Controls.Shapes.Path.DataProperty, nugetImage.GetResourceObservable("NuGetGeometry"));
+            nugetImage.Bind(global::Avalonia.Controls.Shapes.Path.StrokeProperty, nugetImage.GetResourceObservable("NuGet"));
+            nugetImage.Bind(global::Avalonia.Controls.Shapes.Path.FillProperty, nugetImage.GetResourceObservable("NuGet"));
+            searchNuGetItem = new MenuItem() { Header = "Search project.assets.json", Icon = nugetImage };
             showFileInExplorerItem = new MenuItem() { Header = "Show in Explorer" };
             preprocessItem = new MenuItem() { Header = "Preprocess" };
             hideItem = new MenuItem() { Header = "Hide" };
@@ -381,7 +392,10 @@ namespace StructuredLogViewer.Avalonia.Controls
             treeView.ContextMenu = contextMenu;
             treeView.Styles.Add(GetTreeViewItemStyle());
             RegisterTreeViewHandlers(treeView);
-            treeView.KeyDown += TreeView_KeyDown;
+
+            // type-ahead selection on KeyUp like WPF, so holding a key doesn't
+            // repeat-select and KeyDown handlers (navigation, Ctrl+F) run first
+            treeView.KeyUp += TreeView_KeyUp;
             treeView.PropertyChanged += TreeView_SelectedItemChanged;
             treeView.GotFocus += TreeView_GotFocus;
 
@@ -667,6 +681,13 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
         {
             documentWell.Dispose();
 
+            UnregisterTreeViewHandlers(treeView);
+            UnregisterTreeViewHandlers(searchLogControl.ResultsList);
+            UnregisterTreeViewHandlers(propertiesAndItemsControl.ResultsList);
+            UnregisterTreeViewHandlers(findInFilesControl.ResultsList);
+            UnregisterTreeViewHandlers(filesTree.ResultsList);
+            UnregisterTreeViewHandlers(favoritesTree.ResultsList);
+
             searchLogControl.ResultsList.SelectionChanged -= ResultsList_SelectionChanged;
             searchLogControl.ResultsList.GotFocus -= TreeView_GotFocus;
             searchLogControl.searchTextBox.KeyUp -= SearchTextBox_KeyUp;
@@ -697,7 +718,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             favoritesTree.Dispose();
 
             filesTree.ResultsList.GotFocus -= TreeView_GotFocus;
-            filesTree.ContextMenu = null;
+            filesTree.ResultsList.ContextMenu = null;
             filesTree.DisplayItems(null);
             filesTree.Dispose();
 
@@ -708,7 +729,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             findTextBox.TextChanged -= FindTextBox_TextChanged;
 
             treeView.PropertyChanged -= TreeView_SelectedItemChanged;
-            treeView.KeyDown -= TreeView_KeyDown;
+            treeView.KeyUp -= TreeView_KeyUp;
             treeView.GotFocus -= TreeView_GotFocus;
             treeView.ItemsSource = null;
             treeView.ContextMenu = null;
@@ -785,95 +806,113 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
         private void RegisterTreeViewHandlers(TreeView treeView)
         {
-            // select the node under the cursor on right-click, so the context menu
-            // acts on the node being clicked rather than the previously selected one.
-            // Setting TreeViewItem.IsSelected alone only changes the visual state -
-            // TreeView.SelectedItem (what the menu handlers read) must be set explicitly.
-            treeView.AddHandler(PointerPressedEvent, (o, e) =>
-            {
-                if (e.GetCurrentPoint(treeView).Properties.IsRightButtonPressed)
-                {
-                    // right-click doesn't move focus, so mark this tree active for the
-                    // shared context menu commands as well
-                    ActiveTreeView = treeView;
+            treeView.AddHandler(PointerPressedEvent, SharedTreeView_PointerPressed, RoutingStrategies.Tunnel);
+            treeView.DoubleTapped += SharedTreeView_DoubleTapped;
+            treeView.KeyDown += SharedTreeView_KeyDown;
+        }
 
-                    var item = (e.Source as Visual)?.FindAncestorOfType<TreeViewItem>(includeSelf: true);
-                    if (item?.DataContext != null)
+        private void UnregisterTreeViewHandlers(TreeView treeView)
+        {
+            treeView.RemoveHandler(PointerPressedEvent, SharedTreeView_PointerPressed);
+            treeView.DoubleTapped -= SharedTreeView_DoubleTapped;
+            treeView.KeyDown -= SharedTreeView_KeyDown;
+        }
+
+        // select the node under the cursor on right-click, so the context menu
+        // acts on the node being clicked rather than the previously selected one.
+        // Setting TreeViewItem.IsSelected alone only changes the visual state -
+        // TreeView.SelectedItem (what the menu handlers read) must be set explicitly.
+        private void SharedTreeView_PointerPressed(object sender, PointerPressedEventArgs e)
+        {
+            var treeView = (TreeView)sender;
+            if (e.GetCurrentPoint(treeView).Properties.IsRightButtonPressed)
+            {
+                // right-click doesn't move focus, so mark this tree active for the
+                // shared context menu commands as well
+                ActiveTreeView = treeView;
+
+                var item = (e.Source as Visual)?.FindAncestorOfType<TreeViewItem>(includeSelf: true);
+                if (item?.DataContext != null)
+                {
+                    treeView.SelectedItem = item.DataContext;
+                }
+            }
+        }
+
+        // invoke the node that was actually double-clicked, guarded by IsSelected so
+        // that double-clicking an expander chevron doesn't invoke an unrelated node
+        // (mirrors the WPF OnItemDoubleClick guard)
+        private void SharedTreeView_DoubleTapped(object sender, TappedEventArgs e)
+        {
+            var item = (e.Source as Visual)?.FindAncestorOfType<TreeViewItem>(includeSelf: true);
+            if (item is { IsSelected: true, DataContext: BaseNode node })
+            {
+                e.Handled = Invoke(node) || ViewFullText(node);
+            }
+        }
+
+        private void SharedTreeView_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Handled)
+            {
+                return;
+            }
+
+            var treeView = (TreeView)sender;
+
+            if (e.KeyModifiers == KeyModifiers.None)
+            {
+                if (e.Key == Key.Delete)
+                {
+                    Delete();
+                    e.Handled = true;
+                }
+
+                if (e.Key == Key.Space || e.Key == Key.Return)
+                {
+                    if (treeView.SelectedItem is BaseNode node)
                     {
-                        treeView.SelectedItem = item.DataContext;
+                        e.Handled = Invoke(node) || ViewFullText(node);
                     }
                 }
-            }, RoutingStrategies.Tunnel);
 
-            treeView.DoubleTapped += (o, e) =>
-            {
-                if (treeView.SelectedItem is BaseNode node)
+                if (e.Key == Key.Escape)
                 {
-                    e.Handled = Invoke(node) || ViewFullText(node);
-                }
-            };
-
-            treeView.KeyDown += (o, e) =>
-            {
-                if (e.Handled)
-                {
-                    return;
-                }
-
-                if (e.KeyModifiers == KeyModifiers.None)
-                {
-                    if (e.Key == Key.Delete)
+                    if (IsFindVisible)
                     {
-                        Delete();
+                        IsFindVisible = false;
                         e.Handled = true;
                     }
-
-                    if (e.Key == Key.Space || e.Key == Key.Return)
+                    else if (documentWell.IsVisible)
                     {
-                        if (treeView.SelectedItem is BaseNode node)
-                        {
-                            e.Handled = Invoke(node) || ViewFullText(node);
-                        }
-                    }
-
-                    if (e.Key == Key.Escape)
-                    {
-                        if (IsFindVisible)
-                        {
-                            IsFindVisible = false;
-                            e.Handled = true;
-                        }
-                        else if (documentWell.IsVisible)
-                        {
-                            documentWell.Hide();
-                            e.Handled = true;
-                        }
-                    }
-                }
-
-                if (e.KeyModifiers == KeyModifiers.Control)
-                {
-                    if (e.Key == Key.C)
-                    {
-                        Copy();
+                        documentWell.Hide();
                         e.Handled = true;
                     }
+                }
+            }
 
-                    if (e.Key == Key.F)
+            if (e.KeyModifiers == KeyModifiers.Control)
+            {
+                if (e.Key == Key.C)
+                {
+                    Copy();
+                    e.Handled = true;
+                }
+
+                if (e.Key == Key.F)
+                {
+                    if (IsFindVisible)
                     {
-                        if (IsFindVisible)
-                        {
-                            IsFindVisible = false;
-                            e.Handled = true;
-                        }
-                        else if (TryGetTreeNodeForFind() != null)
-                        {
-                            IsFindVisible = true;
-                            e.Handled = true;
-                        }
+                        IsFindVisible = false;
+                        e.Handled = true;
+                    }
+                    else if (TryGetTreeNodeForFind() != null)
+                    {
+                        IsFindVisible = true;
+                        e.Handled = true;
                     }
                 }
-            };
+            }
         }
 
         private void InitializeComponent()
@@ -1016,10 +1055,10 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             var linkText = new TextBlock
             {
                 Text = query.Trim(),
-                Foreground = Brushes.RoyalBlue,
                 TextDecorations = TextDecorations.Underline,
                 Cursor = new Cursor(StandardCursorType.Hand)
             };
+            linkText.Bind(TextBlock.ForegroundProperty, linkText.GetResourceObservable("Theme_Hyperlink"));
             linkText.PointerPressed += (s, e) =>
             {
                 searchControl.SearchText = query;
@@ -1054,10 +1093,10 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             var linkText = new TextBlock
             {
                 Text = text,
-                Foreground = Brushes.RoyalBlue,
                 TextDecorations = TextDecorations.Underline,
                 Cursor = new Cursor(StandardCursorType.Hand)
             };
+            linkText.Bind(TextBlock.ForegroundProperty, linkText.GetResourceObservable("Theme_Hyperlink"));
             linkText.PointerPressed += (s, e) =>
             {
                 action();
@@ -1673,6 +1712,7 @@ Recent ("));
         /// </summary>
         private bool isProcessingBreadcrumbClick = false;
         internal static TimeSpan Elapsed;
+        internal static TimeSpan PrecalculationDuration;
 
         private void BreadCrumb_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -1889,27 +1929,15 @@ Recent ("));
             treeView.SelectedItem = item;
         }
 
-        private void TreeView_KeyDown(object sender, KeyEventArgs args)
+        private void TreeView_KeyUp(object sender, KeyEventArgs args)
         {
             if (args.Handled)
             {
                 return;
             }
 
-            if (args.Key == Key.F && args.KeyModifiers.HasFlag(KeyModifiers.Control))
-            {
-                if (IsFindVisible)
-                {
-                    IsFindVisible = false;
-                    args.Handled = true;
-                }
-                else if (TryGetTreeNodeForFind() != null)
-                {
-                    IsFindVisible = true;
-                    args.Handled = true;
-                }
-            }
-            else if (args.Key >= Key.A && args.Key <= Key.Z && args.KeyModifiers == KeyModifiers.None)
+            // Ctrl+F is handled on KeyDown in SharedTreeView_KeyDown
+            if (args.Key >= Key.A && args.Key <= Key.Z && args.KeyModifiers == KeyModifiers.None)
             {
                 SelectItemByKey((char)('A' + args.Key - Key.A));
                 args.Handled = true;
@@ -2053,6 +2081,10 @@ Recent ("));
 
         private readonly Dictionary<TreeNode, string> nodeFilters = new Dictionary<TreeNode, string>();
 
+        // Unlike WPF (which filters through a CollectionViewSource view), this writes the
+        // filter into IExpandable.IsVisible - the same flag used by the Hide command - so
+        // clearing a filter also unhides nodes hidden via Hide. That interplay is known
+        // and acceptable; don't "fix" it by reintroducing a separate view-level filter.
         private void ApplyFilter(TreeNode node, string text)
         {
             if (nodeFilters.TryGetValue(node, out var existing))

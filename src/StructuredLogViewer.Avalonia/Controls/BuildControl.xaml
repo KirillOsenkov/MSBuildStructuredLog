@@ -67,7 +67,7 @@
                           HorizontalAlignment="Right"
                           VerticalAlignment="Top"
                           IsVisible="False"
-                          Background="{DynamicResource Theme_WhiteBackground}"
+                          Background="{DynamicResource Theme_Background}"
                           Margin="0,0,20,0">
                       <StackPanel Orientation="Horizontal">
                         <TextBlock Name="findLabel" VerticalAlignment="Center" Margin="4,0" />
