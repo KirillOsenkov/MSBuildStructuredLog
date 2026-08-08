@@ -3134,7 +3134,12 @@ Recent ("));
             var recordStats = BinlogStats.Calculate(this.LogFilePath);
             var records = recordStats.CategorizedRecords;
 
-            statsRoot = DisplayRecordStats(records, Build);
+            // Build the entire Statistics subtree detached, then attach it in one shot at the
+            // end: children added to an already-attached node's plain (non-observable) list are
+            // invisible to the TreeView, and swapping the collection after such out-of-band
+            // appends crashes Avalonia's container generator (the WPF-era order; see issue #487).
+            var scratch = new Folder();
+            statsRoot = DisplayRecordStats(records, scratch);
 
             var treeStats = Build.Statistics;
             DisplayTreeStats(statsRoot, treeStats, recordStats);
@@ -3144,9 +3149,9 @@ Recent ("));
             statsRoot.AddChild(new Property { Name = "UncompressedStreamSize", Value = recordStats.UncompressedStreamSize.ToString("N0") });
             statsRoot.AddChild(new Property { Name = "RecordCount", Value = recordStats.RecordCount.ToString("N0") });
 
-            // This is needed as a workaround for a weird WPF bug; replacing the Children collection
-            // acts as a Reset. See https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/487
+            // Swap while the list and the UI are still in sync, then raise a single Add
             Build.MakeChildrenObservable();
+            Build.AddChild(statsRoot);
         }
 
         private void DisplayTreeStats(Folder statsRoot, BuildStatistics treeStats, BinlogStats recordStats)
