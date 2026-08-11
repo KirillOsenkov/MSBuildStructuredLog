@@ -101,14 +101,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private bool sawCulture;
 
         private void OnMessageRead(BuildMessageEventArgs args)
+            => ProcessCultureMessage(args.SenderName, args.Message);
+
+        private bool ProcessCultureMessage(string senderName, string message)
         {
             if (sawCulture)
             {
-                return;
+                return false;
             }
 
-            if (args.SenderName == "BinaryLogger" &&
-                args.Message is string message &&
+            if (senderName == "BinaryLogger" &&
+                message is string &&
                 message.StartsWith("CurrentUICulture", StringComparison.Ordinal))
             {
                 sawCulture = true;
@@ -118,7 +121,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     Strings.Initialize(culture);
                 }
+
+                return true;
             }
+
+            return false;
         }
 
         private string GetTargetStartedMessage(string projectFile, string targetFile, string parentTarget, string targetName)

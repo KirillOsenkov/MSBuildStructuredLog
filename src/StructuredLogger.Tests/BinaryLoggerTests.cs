@@ -158,6 +158,150 @@ namespace Microsoft.Build.UnitTests
             AssertFilesAreBinaryEqualAfterUnpack(binLog, replayedBinlog);
         }
 
+        [Fact]
+        public void Replay_EventFilter_ProducesAValidCompactBinlog()
+        {
+            var metadataSeen = new List<BinaryLogEventMetadata>();
+            var reader = new BinLogReader
+            {
+                EventFilter = metadata =>
+                {
+                    metadataSeen.Add(metadata);
+                    return metadata.BuildEventContext == null ||
+                           metadata.BuildEventContext.ProjectContextId == 101 ||
+                           metadata.OriginalBuildEventContext?.ProjectContextId == 101;
+                }
+            };
+
+            string outputPath = GetTestFile("filtered-replay.binlog");
+            File.Delete(outputPath);
+
+            var outputLogger = new BinaryLogger
+            {
+                Parameters = $"LogFile={outputPath};OmitInitialInfo",
+                CollectProjectImports = BinaryLogger.ProjectImportsCollectionMode.None,
+            };
+
+            outputLogger.Initialize(reader);
+            using (var input = CreateFilteredReplayStream())
+            {
+                reader.Replay(input);
+            }
+            outputLogger.Shutdown();
+
+            metadataSeen.Should().Contain(metadata =>
+                metadata.RecordKind == BinaryLogRecordKind.Warning &&
+                metadata.BuildEventContext != null &&
+                metadata.BuildEventContext.ProjectContextId == 202);
+            metadataSeen.Should().Contain(metadata =>
+                metadata.RecordKind == BinaryLogRecordKind.TargetSkipped &&
+                metadata.OriginalBuildEventContext != null &&
+                metadata.OriginalBuildEventContext.ProjectContextId == 101);
+
+            var replayedEvents = new List<BuildEventArgs>();
+            var outputReader = new BinLogReader();
+            outputReader.AnyEventRaised += (_, args) => replayedEvents.Add(args);
+            outputReader.Replay(outputPath);
+
+            replayedEvents.Should().Contain(e =>
+                e.GetType() == typeof(BuildMessageEventArgs) &&
+                e.Message == "selected message");
+            replayedEvents.Should().NotContain(e => e is BuildWarningEventArgs);
+            replayedEvents.Should().ContainSingle(e => e is TargetSkippedEventArgs);
+
+            var replayedStrings = new List<string>();
+            var recordReader = new BinLogReader();
+            recordReader.OnStringRead += (text, _) => replayedStrings.Add(text);
+            using (var file = File.OpenRead(outputPath))
+            using (var gzip = new System.IO.Compression.GZipStream(
+                file,
+                System.IO.Compression.CompressionMode.Decompress))
+            using (var buffered = new BufferedStream(gzip, 32768))
+            {
+                recordReader.ReadRecordsFromDecompressedStream(buffered, includeAuxiliaryRecords: true)
+                    .ToList();
+            }
+
+            replayedStrings.Should().NotContain("excluded warning");
+            replayedStrings.Should().NotContain("WARN");
+        }
+
+        [Fact]
+        public void Replay_EventFilter_PreservesTruncationRecoveryWhenRejectingEvents()
+        {
+            using var stream = CreateBinlogStream(withEndOfFileMarker: false);
+
+            var reader = new BinLogReader
+            {
+                EventFilter = _ => false,
+            };
+
+            Action replay = () => reader.Replay(stream);
+
+            replay.Should().NotThrow();
+            reader.HasEncounteredTruncation.Should().BeTrue();
+        }
+
+        [Fact]
+        public void Read_EventFilter_PreservesTruncationRecoveryInsideRejectedEvent()
+        {
+            byte[] full = WriteEventRecords(count: 6, withEndOfFileMarker: false);
+            byte[] truncated = full.Take(full.Length / 2).ToArray();
+
+            var memoryStream = new MemoryStream(truncated);
+            var binaryReader = new BinaryReader(memoryStream);
+            using var reader = new Logging.StructuredLogger.BuildEventArgsReader(
+                binaryReader,
+                BinaryLogger.FileFormatVersion);
+
+            Action read = () =>
+            {
+                while (reader.Read(_ => false) != null)
+                {
+                }
+            };
+
+            read.Should().NotThrow();
+            reader.ReachedEndOfStreamPrematurely.Should().BeTrue();
+        }
+
+        [Fact]
+        public void Replay_EventFilter_RetainsRequiredCulturePreamble()
+        {
+            using var stream = CreateCulturePreambleStream();
+            var replayedEvents = new List<BuildEventArgs>();
+            var reader = new BinLogReader
+            {
+                EventFilter = _ => false,
+            };
+            reader.AnyEventRaised += (_, args) => replayedEvents.Add(args);
+
+            reader.Replay(stream);
+
+            var cultureMessages = replayedEvents
+                .OfType<BuildMessageEventArgs>()
+                .Where(message =>
+                    message.SenderName == "BinaryLogger" &&
+                    message.Message.StartsWith("CurrentUICulture", StringComparison.Ordinal))
+                .ToList();
+            cultureMessages.Should().ContainSingle();
+        }
+
+        [Fact]
+        public void Replay_EventFilter_PropagatesFilterExceptions()
+        {
+            using var stream = CreateFilteredReplayStream();
+            var expected = new InvalidOperationException("filter failed");
+            var reader = new BinLogReader
+            {
+                EventFilter = _ => throw expected,
+            };
+
+            Action replay = () => reader.Replay(stream);
+
+            replay.Should().Throw<InvalidOperationException>().Which.Should().BeSameAs(expected);
+        }
+
         private static void AssertFilesAreBinaryEqualAfterUnpack(string firstPath, string secondPath)
         {
             using var br1 = Logging.StructuredLogger.BinaryLogReplayEventSource.OpenReader(firstPath);
@@ -640,6 +784,100 @@ namespace Microsoft.Build.UnitTests
 
             var compressed = new MemoryStream();
             using (var gzip = new System.IO.Compression.GZipStream(compressed, System.IO.Compression.CompressionLevel.Optimal, leaveOpen: true))
+            {
+                decompressed.CopyTo(gzip);
+            }
+
+            compressed.Position = 0;
+            return compressed;
+        }
+
+        private static Stream CreateFilteredReplayStream()
+        {
+            var selectedContext = new BuildEventContext(1, 1, 1, 1, 101, 11, 111);
+            var excludedContext = new BuildEventContext(1, 1, 2, 2, 202, 22, 222);
+            var skippedContext = new BuildEventContext(1, 1, 3, 3, 303, 33, 333);
+
+            var selectedMessage = new BuildMessageEventArgs(
+                "selected message", "Help", "Sender", MessageImportance.Normal)
+            {
+                BuildEventContext = selectedContext,
+            };
+
+            var excludedWarning = new BuildWarningEventArgs(
+                "Subcategory", "WARN", "File.cs", 1, 2, 3, 4,
+                "excluded warning", "Help", "Sender")
+            {
+                BuildEventContext = excludedContext,
+            };
+
+            var targetSkipped = new TargetSkippedEventArgs("target skipped")
+            {
+                BuildEventContext = skippedContext,
+                OriginalBuildEventContext = selectedContext,
+                TargetName = "SkippedTarget",
+                TargetFile = "Targets.targets",
+                ProjectFile = "Project.csproj",
+                BuildReason = TargetBuiltReason.DependsOn,
+                SkipReason = TargetSkipReason.PreviouslyBuiltSuccessfully,
+                OriginallySucceeded = true,
+            };
+
+            var decompressed = new MemoryStream();
+            var binaryWriter = new BinaryWriter(decompressed);
+            binaryWriter.Write(BinaryLogger.FileFormatVersion);
+            binaryWriter.Write(BinaryLogger.FileFormatVersion);
+
+            var writer = new BuildEventArgsWriter(binaryWriter);
+            writer.Write(new BuildStartedEventArgs("Build started", helpKeyword: null));
+            writer.Write(selectedMessage);
+            writer.Write(excludedWarning);
+            writer.Write(targetSkipped);
+            writer.Write(new BuildFinishedEventArgs("Build finished", helpKeyword: null, succeeded: true));
+            binaryWriter.Flush();
+            decompressed.WriteByte((byte)BinaryLogRecordKind.EndOfFile);
+            decompressed.Position = 0;
+
+            var compressed = new MemoryStream();
+            using (var gzip = new System.IO.Compression.GZipStream(
+                compressed,
+                System.IO.Compression.CompressionLevel.Optimal,
+                leaveOpen: true))
+            {
+                decompressed.CopyTo(gzip);
+            }
+
+            compressed.Position = 0;
+            return compressed;
+        }
+
+        private static Stream CreateCulturePreambleStream()
+        {
+            var decompressed = new MemoryStream();
+            var binaryWriter = new BinaryWriter(decompressed);
+            binaryWriter.Write(BinaryLogger.FileFormatVersion);
+            binaryWriter.Write(BinaryLogger.FileFormatVersion);
+
+            var writer = new BuildEventArgsWriter(binaryWriter);
+            writer.Write(new BuildMessageEventArgs(
+                "CurrentUICulture=en-US",
+                helpKeyword: null,
+                senderName: "BinaryLogger",
+                importance: MessageImportance.Low));
+            writer.Write(new BuildMessageEventArgs(
+                "filtered message",
+                helpKeyword: null,
+                senderName: "Sender",
+                importance: MessageImportance.Normal));
+            binaryWriter.Flush();
+            decompressed.WriteByte((byte)BinaryLogRecordKind.EndOfFile);
+            decompressed.Position = 0;
+
+            var compressed = new MemoryStream();
+            using (var gzip = new System.IO.Compression.GZipStream(
+                compressed,
+                System.IO.Compression.CompressionLevel.Optimal,
+                leaveOpen: true))
             {
                 decompressed.CopyTo(gzip);
             }

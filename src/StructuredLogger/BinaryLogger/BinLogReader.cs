@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -26,6 +27,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public event Action<IDictionary<string, string>, long> OnNameValueListRead;
         public event Action<int> OnFileFormatVersionRead;
         public event Action<IEnumerable<string>> OnStringDictionaryComplete;
+
+        /// <summary>
+        /// Gets or sets a filter that decides which build events are deserialized and dispatched.
+        /// </summary>
+        /// <remarks>
+        /// For length-framed binlogs, rejected events skip their type-specific payload without
+        /// deserializing it. Auxiliary records are always read so retained events can resolve their
+        /// string and name/value-list references. Reader preamble events required to interpret
+        /// subsequent events, such as the current UI culture marker, are retained regardless of the
+        /// filter. The filter is responsible for retaining a structurally consistent event set.
+        /// </remarks>
+        public BinaryLogEventFilter EventFilter { get; set; }
 
         /// <summary>
         /// Raised when there was an exception reading a record from the file.
@@ -96,7 +109,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     try
                     {
-                        instance = reader.Read();
+                        instance = reader.Read(EventFilter);
+                    }
+                    catch (BinaryLogEventFilterException ex)
+                    {
+                        ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
+                        throw;
                     }
                     catch (Exception ex)
                     {
@@ -151,7 +169,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     try
                     {
-                        instance = reader.Read();
+                        instance = reader.Read(EventFilter);
+                    }
+                    catch (BinaryLogEventFilterException ex)
+                    {
+                        ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
+                        throw;
                     }
                     catch (Exception ex)
                     {

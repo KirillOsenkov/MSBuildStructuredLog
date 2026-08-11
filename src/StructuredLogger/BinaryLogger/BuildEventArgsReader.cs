@@ -31,6 +31,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private long _recordNumber = 0;
         private bool _skipUnknownEvents;
         private bool _skipUnknownEventParts;
+        private byte[] _skipBuffer;
 
         /// <summary>
         /// A list of string records we've encountered so far. If it's a small string, it will be the string directly.
@@ -240,7 +241,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// The next <see cref="BuildEventArgs"/>.
         /// If there are no more records, returns <see langword="null"/>.
         /// </returns>
-        public BuildEventArgs? Read()
+        public BuildEventArgs? Read() => Read(eventFilter: null);
+
+        internal BuildEventArgs? Read(BinaryLogEventFilter? eventFilter)
         {
             CheckErrorsSubscribed();
             BuildEventArgs? result = null;
@@ -275,9 +278,60 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
 
                 bool hasError = false;
+                bool filteredOut = false;
                 try
                 {
-                    result = ReadBuildEventArgs(recordKind);
+                    bool filterAfterDeserialization =
+                        eventFilter != null &&
+                        (_fileFormatVersion < BinaryLogger.ForwardCompatibilityMinimalVersion ||
+                         recordKind == BinaryLogRecordKind.TargetSkipped);
+
+                    if (eventFilter != null && !filterAfterDeserialization)
+                    {
+                        var commonFields = ReadBuildEventArgsFields();
+                        var metadata = new BinaryLogEventMetadata(
+                            recordKind,
+                            commonFields.BuildEventContext);
+                        bool isRequiredPreamble =
+                            recordKind == BinaryLogRecordKind.Message &&
+                            ProcessCultureMessage(commonFields.SenderName, commonFields.Message);
+
+                        if (!isRequiredPreamble && !ApplyEventFilter(eventFilter, metadata))
+                        {
+                            SkipBytes(_readStream.BytesCountAllowedToReadRemaining);
+                            filteredOut = true;
+                        }
+                        else
+                        {
+                            _commonFieldsPrefetched = true;
+                        }
+                    }
+
+                    if (!filteredOut)
+                    {
+                        try
+                        {
+                            result = ReadBuildEventArgs(recordKind);
+                        }
+                        finally
+                        {
+                            _commonFieldsPrefetched = false;
+                        }
+
+                        if (result != null && filterAfterDeserialization)
+                        {
+                            var metadata = new BinaryLogEventMetadata(
+                                recordKind,
+                                result.BuildEventContext,
+                                (result as TargetSkippedEventArgs)?.OriginalBuildEventContext);
+
+                            if (!ApplyEventFilter(eventFilter!, metadata))
+                            {
+                                result = null;
+                                filteredOut = true;
+                            }
+                        }
+                    }
                 }
                 catch (Exception e) when (
                     // We throw this on mismatches in metadata (name-value list, strings index).
@@ -307,7 +361,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     return null;
                 }
 
-                if (result == null && !hasError)
+                if (result == null && !hasError && !filteredOut)
                 {
                     int localSerializedEventLength = serializedEventLength;
                     BinaryLogRecordKind localRecordKind = recordKind;
@@ -346,6 +400,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     throw new InvalidDataException(msgFactory(), innerException);
                 }
+            }
+        }
+
+        private static bool ApplyEventFilter(
+            BinaryLogEventFilter eventFilter,
+            BinaryLogEventMetadata metadata)
+        {
+            try
+            {
+                return eventFilter(metadata);
+            }
+            catch (Exception ex)
+            {
+                throw new BinaryLogEventFilterException(ex);
             }
         }
 
@@ -391,7 +459,17 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void SkipBytes(int count)
         {
-            _binaryReader.BaseStream.Seek(count, SeekOrigin.Current);
+            var buffer = _skipBuffer ??= new byte[8192];
+            while (count > 0)
+            {
+                int read = _binaryReader.Read(buffer, 0, Math.Min(count, buffer.Length));
+                if (read == 0)
+                {
+                    throw new EndOfStreamException();
+                }
+
+                count -= read;
+            }
         }
 
         private BinaryLogRecordKind PreprocessRecordsTillNextEvent(Func<BinaryLogRecordKind, bool> isPreprocessRecord)
@@ -1611,9 +1689,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         private readonly BuildEventArgsFields fields = new BuildEventArgsFields();
+        private bool _commonFieldsPrefetched;
 
         private BuildEventArgsFields ReadBuildEventArgsFields(bool readImportance = false)
         {
+            if (_commonFieldsPrefetched)
+            {
+                _commonFieldsPrefetched = false;
+                return fields;
+            }
+
             BuildEventArgsFieldFlags flags = (BuildEventArgsFieldFlags)ReadInt32();
             var result = fields;
             result.Flags = flags;
