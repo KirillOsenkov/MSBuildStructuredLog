@@ -103,44 +103,49 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 var streamLength = stream.Length;
 
-                while (true)
+                try
                 {
-                    BuildEventArgs instance = null;
+                    while (true)
+                    {
+                        BuildEventArgs instance = null;
 
-                    try
-                    {
-                        instance = reader.Read(EventFilter);
-                    }
-                    catch (BinaryLogEventFilterException ex)
-                    {
-                        ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
-                        throw;
-                    }
-                    catch (Exception ex)
-                    {
-                        OnException?.Invoke(ex);
-                    }
+                        try
+                        {
+                            instance = reader.Read(EventFilter);
+                        }
+                        catch (BinaryLogEventFilterException ex)
+                        {
+                            ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
+                            throw;
+                        }
+                        catch (Exception ex)
+                        {
+                            OnException?.Invoke(ex);
+                        }
 
-                    recordsRead++;
-                    if (instance == null)
-                    {
-                        queue.CompleteAdding();
-                        break;
-                    }
+                        recordsRead++;
+                        if (instance == null)
+                        {
+                            break;
+                        }
 
-                    queue.Add(instance);
+                        queue.Add(instance);
 
-                    // only check the stopwatch every 1000 records, otherwise Stopwatch is showing up in profiles
-                    if (progress != null && (recordsRead % 1000) == 0 && stopwatch.ElapsedMilliseconds > 200)
-                    {
-                        stopwatch.Restart();
-                        var streamPosition = stream.Position;
-                        double ratio = (double)streamPosition / streamLength;
-                        progress.Report(new ProgressUpdate { Ratio = ratio, BufferLength = queue.Count });
+                        // only check the stopwatch every 1000 records, otherwise Stopwatch is showing up in profiles
+                        if (progress != null && (recordsRead % 1000) == 0 && stopwatch.ElapsedMilliseconds > 200)
+                        {
+                            stopwatch.Restart();
+                            var streamPosition = stream.Position;
+                            double ratio = (double)streamPosition / streamLength;
+                            progress.Report(new ProgressUpdate { Ratio = ratio, BufferLength = queue.Count });
+                        }
                     }
                 }
-
-                queue.Completion.Wait();
+                finally
+                {
+                    queue.CompleteAdding();
+                    queue.Completion.Wait();
+                }
 
                 if (reader.FileFormatVersion >= 10)
                 {

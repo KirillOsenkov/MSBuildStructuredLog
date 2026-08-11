@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using FluentAssertions;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Logging;
@@ -269,6 +270,18 @@ namespace Microsoft.Build.UnitTests
         public void Replay_EventFilter_RetainsRequiredCulturePreamble()
         {
             using var stream = CreateCulturePreambleStream();
+            AssertCulturePreambleRetained(stream);
+        }
+
+        [Fact]
+        public void Replay_EventFilter_RetainsRequiredCulturePreambleForLegacyFormat()
+        {
+            using var stream = CreateCulturePreambleStream(fileFormatVersion: 14);
+            AssertCulturePreambleRetained(stream);
+        }
+
+        private static void AssertCulturePreambleRetained(Stream stream)
+        {
             var replayedEvents = new List<BuildEventArgs>();
             var reader = new BinLogReader
             {
@@ -288,18 +301,33 @@ namespace Microsoft.Build.UnitTests
         }
 
         [Fact]
-        public void Replay_EventFilter_PropagatesFilterExceptions()
+        public void Replay_EventFilter_PropagatesFilterExceptionsWithoutLeakingWorkers()
         {
-            using var stream = CreateFilteredReplayStream();
             var expected = new InvalidOperationException("filter failed");
-            var reader = new BinLogReader
+            ThreadPool.GetAvailableThreads(out int availableWorkersBefore, out _);
+
+            for (int i = 0; i < 8; i++)
             {
-                EventFilter = _ => throw expected,
-            };
+                using var stream = CreateFilteredReplayStream();
+                var reader = new BinLogReader
+                {
+                    EventFilter = _ => throw expected,
+                };
 
-            Action replay = () => reader.Replay(stream);
+                Action replay = () => reader.Replay(stream);
 
-            replay.Should().Throw<InvalidOperationException>().Which.Should().BeSameAs(expected);
+                replay.Should().Throw<InvalidOperationException>().Which.Should().BeSameAs(expected);
+            }
+
+            bool workersReleased = SpinWait.SpinUntil(
+                () =>
+                {
+                    ThreadPool.GetAvailableThreads(out int availableWorkersAfter, out _);
+                    return availableWorkersAfter >= availableWorkersBefore;
+                },
+                TimeSpan.FromSeconds(5));
+
+            workersReleased.Should().BeTrue("filter failures must not leave replay workers blocked");
         }
 
         private static void AssertFilesAreBinaryEqualAfterUnpack(string firstPath, string secondPath)
@@ -851,14 +879,12 @@ namespace Microsoft.Build.UnitTests
             return compressed;
         }
 
-        private static Stream CreateCulturePreambleStream()
+        private static Stream CreateCulturePreambleStream(
+            int fileFormatVersion = BinaryLogger.FileFormatVersion)
         {
-            var decompressed = new MemoryStream();
-            var binaryWriter = new BinaryWriter(decompressed);
-            binaryWriter.Write(BinaryLogger.FileFormatVersion);
-            binaryWriter.Write(BinaryLogger.FileFormatVersion);
-
-            var writer = new BuildEventArgsWriter(binaryWriter);
+            var framedRecords = new MemoryStream();
+            var framedWriter = new BinaryWriter(framedRecords);
+            var writer = new BuildEventArgsWriter(framedWriter);
             writer.Write(new BuildMessageEventArgs(
                 "CurrentUICulture=en-US",
                 helpKeyword: null,
@@ -869,8 +895,24 @@ namespace Microsoft.Build.UnitTests
                 helpKeyword: null,
                 senderName: "Sender",
                 importance: MessageImportance.Normal));
+            framedWriter.Flush();
+            framedRecords.WriteByte((byte)BinaryLogRecordKind.EndOfFile);
+            framedRecords.Position = 0;
+
+            var decompressed = new MemoryStream();
+            var binaryWriter = new BinaryWriter(decompressed);
+            binaryWriter.Write(fileFormatVersion);
+            if (fileFormatVersion >= BinaryLogger.ForwardCompatibilityMinimalVersion)
+            {
+                binaryWriter.Write(fileFormatVersion);
+                framedRecords.CopyTo(decompressed);
+            }
+            else
+            {
+                CopyRecordsWithoutLengths(framedRecords, binaryWriter);
+            }
+
             binaryWriter.Flush();
-            decompressed.WriteByte((byte)BinaryLogRecordKind.EndOfFile);
             decompressed.Position = 0;
 
             var compressed = new MemoryStream();
@@ -884,6 +926,44 @@ namespace Microsoft.Build.UnitTests
 
             compressed.Position = 0;
             return compressed;
+        }
+
+        private static void CopyRecordsWithoutLengths(
+            Stream framedRecords,
+            BinaryWriter legacyWriter)
+        {
+            using var framedReader = new BinaryReader(framedRecords);
+
+            while (true)
+            {
+                int recordKindValue = Serialization.Read7BitEncodedInt(framedReader);
+                var recordKind = (BinaryLogRecordKind)recordKindValue;
+                Serialization.Write7BitEncodedInt(legacyWriter, recordKindValue);
+
+                if (recordKind == BinaryLogRecordKind.EndOfFile)
+                {
+                    return;
+                }
+
+                if (recordKind == BinaryLogRecordKind.String)
+                {
+                    legacyWriter.Write(framedReader.ReadString());
+                    continue;
+                }
+
+                recordKind.Should().Be(
+                    BinaryLogRecordKind.Message,
+                    "the legacy culture test stream contains only strings and messages");
+
+                int recordLength = Serialization.Read7BitEncodedInt(framedReader);
+                byte[] record = framedReader.ReadBytes(recordLength);
+                if (record.Length != recordLength)
+                {
+                    throw new EndOfStreamException();
+                }
+
+                legacyWriter.Write(record);
+            }
         }
 
         private static BuildEventArgs CreateEvent(int i) => (i % 3) switch

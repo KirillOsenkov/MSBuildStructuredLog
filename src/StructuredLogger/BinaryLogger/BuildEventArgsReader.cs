@@ -309,6 +309,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     if (!filteredOut)
                     {
+                        bool sawCultureBeforeDeserialization = sawCulture;
                         try
                         {
                             result = ReadBuildEventArgs(recordKind);
@@ -324,8 +325,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                                 recordKind,
                                 result.BuildEventContext,
                                 (result as TargetSkippedEventArgs)?.OriginalBuildEventContext);
+                            bool isRequiredPreamble =
+                                !sawCultureBeforeDeserialization && sawCulture;
 
-                            if (!ApplyEventFilter(eventFilter!, metadata))
+                            if (!isRequiredPreamble && !ApplyEventFilter(eventFilter!, metadata))
                             {
                                 result = null;
                                 filteredOut = true;
