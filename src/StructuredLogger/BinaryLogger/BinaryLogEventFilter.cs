@@ -49,7 +49,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
     /// </remarks>
     public delegate bool BinaryLogEventFilter(BinaryLogEventMetadata metadata);
 
-    internal sealed class BinaryLogEventFilterException : Exception
+    /// <summary>
+    /// Wraps an exception thrown by a <see cref="BinaryLogEventFilter"/> callback.
+    /// </summary>
+    /// <remarks>
+    /// The wrapper distinguishes caller bugs in the filter from errors encountered while reading the
+    /// log, so filter failures abort the replay instead of being reported as recoverable read errors.
+    /// The exception thrown by the filter is available as <see cref="Exception.InnerException"/>.
+    /// </remarks>
+    public sealed class BinaryLogEventFilterException : Exception
     {
         public BinaryLogEventFilterException(Exception innerException)
             : base("The binary log event filter threw an exception.", innerException)

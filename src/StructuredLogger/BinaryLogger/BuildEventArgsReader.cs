@@ -281,12 +281,25 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 bool filteredOut = false;
                 try
                 {
-                    bool filterAfterDeserialization =
-                        eventFilter != null &&
-                        (_fileFormatVersion < BinaryLogger.ForwardCompatibilityMinimalVersion ||
-                         recordKind == BinaryLogRecordKind.TargetSkipped);
+                    // Events that cannot be judged from the common fields alone (legacy binlogs that
+                    // are not length-framed, and TargetSkipped whose original context lives in the
+                    // type-specific payload) have to be deserialized before the filter can run.
+                    BinaryLogEventFilter? filterBeforeDeserialization = null;
+                    BinaryLogEventFilter? filterAfterDeserialization = null;
+                    if (eventFilter != null)
+                    {
+                        if (_fileFormatVersion < BinaryLogger.ForwardCompatibilityMinimalVersion ||
+                            recordKind == BinaryLogRecordKind.TargetSkipped)
+                        {
+                            filterAfterDeserialization = eventFilter;
+                        }
+                        else
+                        {
+                            filterBeforeDeserialization = eventFilter;
+                        }
+                    }
 
-                    if (eventFilter != null && !filterAfterDeserialization)
+                    if (filterBeforeDeserialization != null)
                     {
                         var commonFields = ReadBuildEventArgsFields();
                         var metadata = new BinaryLogEventMetadata(
@@ -296,7 +309,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             recordKind == BinaryLogRecordKind.Message &&
                             ProcessCultureMessage(commonFields.SenderName, commonFields.Message);
 
-                        if (!isRequiredPreamble && !ApplyEventFilter(eventFilter, metadata))
+                        if (!isRequiredPreamble && !ApplyEventFilter(filterBeforeDeserialization, metadata))
                         {
                             SkipBytes(_readStream.BytesCountAllowedToReadRemaining);
                             filteredOut = true;
@@ -319,7 +332,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             _commonFieldsPrefetched = false;
                         }
 
-                        if (result != null && filterAfterDeserialization)
+                        if (result != null && filterAfterDeserialization != null)
                         {
                             var metadata = new BinaryLogEventMetadata(
                                 recordKind,
@@ -328,7 +341,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             bool isRequiredPreamble =
                                 !sawCultureBeforeDeserialization && sawCulture;
 
-                            if (!isRequiredPreamble && !ApplyEventFilter(eventFilter!, metadata))
+                            if (!isRequiredPreamble && !ApplyEventFilter(filterAfterDeserialization, metadata))
                             {
                                 result = null;
                                 filteredOut = true;
@@ -462,16 +475,19 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void SkipBytes(int count)
         {
-            var buffer = _skipBuffer ??= new byte[8192];
-            while (count > 0)
+            if (count <= 0)
             {
-                int read = _binaryReader.Read(buffer, 0, Math.Min(count, buffer.Length));
-                if (read == 0)
-                {
-                    throw new EndOfStreamException();
-                }
+                return;
+            }
 
-                count -= read;
+            // Note: Stream.Seek() on the underlying TransparentReadStream funnels into
+            // StreamExtensions.SkipBytes(throwOnEndOfStream: true), which reports a truncated stream
+            // as InvalidDataException. Read() cannot tell that apart from a corrupt record, so a
+            // truncated log would surface as a hard read error instead of being recovered. Detect the
+            // short read here and report it as EndOfStreamException instead.
+            if (_readStream.SkipBytes(count, throwOnEndOfStream: false, _skipBuffer ??= new byte[8192]) != count)
+            {
+                throw new EndOfStreamException();
             }
         }
 

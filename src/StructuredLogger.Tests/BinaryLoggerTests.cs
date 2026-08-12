@@ -316,7 +316,8 @@ namespace Microsoft.Build.UnitTests
 
                 Action replay = () => reader.Replay(stream);
 
-                replay.Should().Throw<InvalidOperationException>().Which.Should().BeSameAs(expected);
+                replay.Should().Throw<BinaryLogEventFilterException>()
+                    .Which.InnerException.Should().BeSameAs(expected);
             }
 
             bool workersReleased = SpinWait.SpinUntil(

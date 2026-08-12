@@ -6,7 +6,6 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Runtime.ExceptionServices;
 using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Logging.StructuredLogger
@@ -113,9 +112,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         {
                             instance = reader.Read(EventFilter);
                         }
-                        catch (BinaryLogEventFilterException ex)
+                        catch (BinaryLogEventFilterException)
                         {
-                            ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
+                            // A failing filter callback is a caller bug, not a problem with the log:
+                            // abort the replay instead of reporting it via OnException and continuing.
                             throw;
                         }
                         catch (Exception ex)
@@ -176,9 +176,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     {
                         instance = reader.Read(EventFilter);
                     }
-                    catch (BinaryLogEventFilterException ex)
+                    catch (BinaryLogEventFilterException)
                     {
-                        ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
+                        // A failing filter callback is a caller bug, not a problem with the log:
+                        // abort the replay instead of reporting it via OnException and continuing.
                         throw;
                     }
                     catch (Exception ex)
