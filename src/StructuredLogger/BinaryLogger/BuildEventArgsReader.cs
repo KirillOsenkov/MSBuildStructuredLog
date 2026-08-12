@@ -31,6 +31,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private long _recordNumber = 0;
         private bool _skipUnknownEvents;
         private bool _skipUnknownEventParts;
+        private byte[] _skipBuffer;
 
         /// <summary>
         /// A list of string records we've encountered so far. If it's a small string, it will be the string directly.
@@ -240,7 +241,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// The next <see cref="BuildEventArgs"/>.
         /// If there are no more records, returns <see langword="null"/>.
         /// </returns>
-        public BuildEventArgs? Read()
+        public BuildEventArgs? Read() => Read(eventFilter: null);
+
+        internal BuildEventArgs? Read(BinaryLogEventFilter? eventFilter)
         {
             CheckErrorsSubscribed();
             BuildEventArgs? result = null;
@@ -275,9 +278,76 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 }
 
                 bool hasError = false;
+                bool filteredOut = false;
                 try
                 {
-                    result = ReadBuildEventArgs(recordKind);
+                    // Events that cannot be judged from the common fields alone (legacy binlogs that
+                    // are not length-framed, and TargetSkipped whose original context lives in the
+                    // type-specific payload) have to be deserialized before the filter can run.
+                    BinaryLogEventFilter? filterBeforeDeserialization = null;
+                    BinaryLogEventFilter? filterAfterDeserialization = null;
+                    if (eventFilter != null)
+                    {
+                        if (_fileFormatVersion < BinaryLogger.ForwardCompatibilityMinimalVersion ||
+                            recordKind == BinaryLogRecordKind.TargetSkipped)
+                        {
+                            filterAfterDeserialization = eventFilter;
+                        }
+                        else
+                        {
+                            filterBeforeDeserialization = eventFilter;
+                        }
+                    }
+
+                    if (filterBeforeDeserialization != null)
+                    {
+                        var commonFields = ReadBuildEventArgsFields();
+                        var metadata = new BinaryLogEventMetadata(
+                            recordKind,
+                            commonFields.BuildEventContext);
+                        bool isRequiredPreamble =
+                            recordKind == BinaryLogRecordKind.Message &&
+                            ProcessCultureMessage(commonFields.SenderName, commonFields.Message);
+
+                        if (!isRequiredPreamble && !ApplyEventFilter(filterBeforeDeserialization, metadata))
+                        {
+                            SkipBytes(_readStream.BytesCountAllowedToReadRemaining);
+                            filteredOut = true;
+                        }
+                        else
+                        {
+                            _commonFieldsPrefetched = true;
+                        }
+                    }
+
+                    if (!filteredOut)
+                    {
+                        bool sawCultureBeforeDeserialization = sawCulture;
+                        try
+                        {
+                            result = ReadBuildEventArgs(recordKind);
+                        }
+                        finally
+                        {
+                            _commonFieldsPrefetched = false;
+                        }
+
+                        if (result != null && filterAfterDeserialization != null)
+                        {
+                            var metadata = new BinaryLogEventMetadata(
+                                recordKind,
+                                result.BuildEventContext,
+                                (result as TargetSkippedEventArgs)?.OriginalBuildEventContext);
+                            bool isRequiredPreamble =
+                                !sawCultureBeforeDeserialization && sawCulture;
+
+                            if (!isRequiredPreamble && !ApplyEventFilter(filterAfterDeserialization, metadata))
+                            {
+                                result = null;
+                                filteredOut = true;
+                            }
+                        }
+                    }
                 }
                 catch (Exception e) when (
                     // We throw this on mismatches in metadata (name-value list, strings index).
@@ -307,7 +377,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     return null;
                 }
 
-                if (result == null && !hasError)
+                if (result == null && !hasError && !filteredOut)
                 {
                     int localSerializedEventLength = serializedEventLength;
                     BinaryLogRecordKind localRecordKind = recordKind;
@@ -346,6 +416,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     throw new InvalidDataException(msgFactory(), innerException);
                 }
+            }
+        }
+
+        private static bool ApplyEventFilter(
+            BinaryLogEventFilter eventFilter,
+            BinaryLogEventMetadata metadata)
+        {
+            try
+            {
+                return eventFilter(metadata);
+            }
+            catch (Exception ex)
+            {
+                throw new BinaryLogEventFilterException(ex);
             }
         }
 
@@ -391,7 +475,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private void SkipBytes(int count)
         {
-            _binaryReader.BaseStream.Seek(count, SeekOrigin.Current);
+            if (count <= 0)
+            {
+                return;
+            }
+
+            // Note: Stream.Seek() on the underlying TransparentReadStream funnels into
+            // StreamExtensions.SkipBytes(throwOnEndOfStream: true), which reports a truncated stream
+            // as InvalidDataException. Read() cannot tell that apart from a corrupt record, so a
+            // truncated log would surface as a hard read error instead of being recovered. Detect the
+            // short read here and report it as EndOfStreamException instead.
+            if (_readStream.SkipBytes(count, throwOnEndOfStream: false, _skipBuffer ??= new byte[8192]) != count)
+            {
+                throw new EndOfStreamException();
+            }
         }
 
         private BinaryLogRecordKind PreprocessRecordsTillNextEvent(Func<BinaryLogRecordKind, bool> isPreprocessRecord)
@@ -1611,9 +1708,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         private readonly BuildEventArgsFields fields = new BuildEventArgsFields();
+        private bool _commonFieldsPrefetched;
 
         private BuildEventArgsFields ReadBuildEventArgsFields(bool readImportance = false)
         {
+            if (_commonFieldsPrefetched)
+            {
+                _commonFieldsPrefetched = false;
+                return fields;
+            }
+
             BuildEventArgsFieldFlags flags = (BuildEventArgsFieldFlags)ReadInt32();
             var result = fields;
             result.Flags = flags;

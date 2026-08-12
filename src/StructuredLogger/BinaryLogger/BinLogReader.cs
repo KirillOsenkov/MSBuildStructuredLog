@@ -28,6 +28,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
         public event Action<IEnumerable<string>> OnStringDictionaryComplete;
 
         /// <summary>
+        /// Gets or sets a filter that decides which build events are deserialized and dispatched.
+        /// </summary>
+        /// <remarks>
+        /// For length-framed binlogs, rejected events skip their type-specific payload without
+        /// deserializing it. Auxiliary records are always read so retained events can resolve their
+        /// string and name/value-list references. Reader preamble events required to interpret
+        /// subsequent events, such as the current UI culture marker, are retained regardless of the
+        /// filter. The filter is responsible for retaining a structurally consistent event set.
+        /// </remarks>
+        public BinaryLogEventFilter EventFilter { get; set; }
+
+        /// <summary>
         /// Raised when there was an exception reading a record from the file.
         /// </summary>
         public event Action<Exception> OnException;
@@ -90,39 +102,50 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                 var streamLength = stream.Length;
 
-                while (true)
+                try
                 {
-                    BuildEventArgs instance = null;
-
-                    try
+                    while (true)
                     {
-                        instance = reader.Read();
-                    }
-                    catch (Exception ex)
-                    {
-                        OnException?.Invoke(ex);
-                    }
+                        BuildEventArgs instance = null;
 
-                    recordsRead++;
-                    if (instance == null)
-                    {
-                        queue.CompleteAdding();
-                        break;
-                    }
+                        try
+                        {
+                            instance = reader.Read(EventFilter);
+                        }
+                        catch (BinaryLogEventFilterException)
+                        {
+                            // A failing filter callback is a caller bug, not a problem with the log:
+                            // abort the replay instead of reporting it via OnException and continuing.
+                            throw;
+                        }
+                        catch (Exception ex)
+                        {
+                            OnException?.Invoke(ex);
+                        }
 
-                    queue.Add(instance);
+                        recordsRead++;
+                        if (instance == null)
+                        {
+                            break;
+                        }
 
-                    // only check the stopwatch every 1000 records, otherwise Stopwatch is showing up in profiles
-                    if (progress != null && (recordsRead % 1000) == 0 && stopwatch.ElapsedMilliseconds > 200)
-                    {
-                        stopwatch.Restart();
-                        var streamPosition = stream.Position;
-                        double ratio = (double)streamPosition / streamLength;
-                        progress.Report(new ProgressUpdate { Ratio = ratio, BufferLength = queue.Count });
+                        queue.Add(instance);
+
+                        // only check the stopwatch every 1000 records, otherwise Stopwatch is showing up in profiles
+                        if (progress != null && (recordsRead % 1000) == 0 && stopwatch.ElapsedMilliseconds > 200)
+                        {
+                            stopwatch.Restart();
+                            var streamPosition = stream.Position;
+                            double ratio = (double)streamPosition / streamLength;
+                            progress.Report(new ProgressUpdate { Ratio = ratio, BufferLength = queue.Count });
+                        }
                     }
                 }
-
-                queue.Completion.Wait();
+                finally
+                {
+                    queue.CompleteAdding();
+                    queue.Completion.Wait();
+                }
 
                 if (reader.FileFormatVersion >= 10)
                 {
@@ -151,7 +174,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     try
                     {
-                        instance = reader.Read();
+                        instance = reader.Read(EventFilter);
+                    }
+                    catch (BinaryLogEventFilterException)
+                    {
+                        // A failing filter callback is a caller bug, not a problem with the log:
+                        // abort the replay instead of reporting it via OnException and continuing.
+                        throw;
                     }
                     catch (Exception ex)
                     {
