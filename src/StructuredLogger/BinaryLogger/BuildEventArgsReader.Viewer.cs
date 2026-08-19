@@ -101,7 +101,18 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private bool sawCulture;
 
         private void OnMessageRead(BuildMessageEventArgs args)
-            => ProcessCultureMessage(args.SenderName, args.Message);
+        {
+            // Check sawCulture before reading args.Message. BuildMessageEventArgs.Message is
+            // lazily formatted, so touching it runs string.Format over the event's arguments and
+            // allocates a string. The culture marker is emitted at the very start of the log, so
+            // for virtually every message record that work is immediately thrown away.
+            if (sawCulture)
+            {
+                return;
+            }
+
+            ProcessCultureMessage(args.SenderName, args.Message);
+        }
 
         private bool ProcessCultureMessage(string senderName, string message)
         {
