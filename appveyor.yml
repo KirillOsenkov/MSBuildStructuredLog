@@ -27,6 +27,8 @@ for:
       - dotnet --info
     build_script:
       - dotnet msbuild /p:Configuration=Release /clp:v=m MSBuildStructuredLog.sln /logger:"C:\Program Files\AppVeyor\BuildAgent\dotnetcore\Appveyor.MSBuildLogger.dll"
+      - dotnet publish src\StructuredLogger.AotTests\StructuredLogger.AotTests.csproj --configuration Release --runtime win-x64 --output artifacts\StructuredLogger.AotTests
+      - artifacts\StructuredLogger.AotTests\StructuredLogger.AotTests.exe
       - dotnet --info
       - checkbinarycompat bin\StructuredLogViewer\Release\net472
     after_build:
