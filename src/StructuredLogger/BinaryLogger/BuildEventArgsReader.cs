@@ -2180,7 +2180,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private Guid ReadGuid()
         {
-            return new Guid(_binaryReader.ReadBytes(Marshal.SizeOf(typeof(Guid))));
+            return new Guid(_binaryReader.ReadBytes(Marshal.SizeOf<Guid>()));
         }
 
         private DateTime ReadDateTime()

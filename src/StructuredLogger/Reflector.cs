@@ -2,8 +2,10 @@
 using System.Linq.Expressions;
 using System.Reflection;
 using Microsoft.Build.Framework;
-#if NET8_0_OR_GREATER && Issue834IsFixed
+#if NET8_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
+#endif
+#if NET8_0_OR_GREATER && Issue834IsFixed
 using System.Runtime.CompilerServices;
 #endif
 
@@ -152,20 +154,32 @@ namespace Microsoft.Build.Logging.StructuredLogger
             columnNumberSetter(args, columnNumber);
         }
 
-        private static Func<T, R> GetFieldAccessor<T, R>(string fieldName)
+        private static Func<T, R> GetFieldAccessor<
+#if NET8_0_OR_GREATER
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicFields)]
+#endif
+            T, R>(string fieldName)
         {
             ParameterExpression param = Expression.Parameter(typeof(T), "instance");
-            MemberExpression member = Expression.Field(param, fieldName);
+            FieldInfo field = typeof(T).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)
+                ?? throw new MissingFieldException(typeof(T).FullName, fieldName);
+            MemberExpression member = Expression.Field(param, field);
             LambdaExpression lambda = Expression.Lambda(typeof(Func<T, R>), member, param);
             Func<T, R> compiled = (Func<T, R>)lambda.Compile();
             return compiled;
         }
 
-        private static Action<T, R> GetFieldSetter<T, R>(string fieldName)
+        private static Action<T, R> GetFieldSetter<
+#if NET8_0_OR_GREATER
+            [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.NonPublicFields)]
+#endif
+            T, R>(string fieldName)
         {
             ParameterExpression instance = Expression.Parameter(typeof(T), "instance");
             ParameterExpression value = Expression.Parameter(typeof(R), "value");
-            MemberExpression member = Expression.Field(instance, fieldName);
+            FieldInfo field = typeof(T).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)
+                ?? throw new MissingFieldException(typeof(T).FullName, fieldName);
+            MemberExpression member = Expression.Field(instance, field);
             BinaryExpression assign = Expression.Assign(member, value);
             LambdaExpression lambda = Expression.Lambda<Action<T, R>>(assign, instance, value);
             Action<T, R> compiled = (Action<T, R>)lambda.Compile();
@@ -174,6 +188,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
 #endif
 
         private static MethodInfo enumerateItemsPerType;
+#if NET8_0_OR_GREATER
+        [DynamicDependency("EnumerateItemsPerType", "Microsoft.Build.Collections.ItemDictionary`1", "Microsoft.Build")]
+        [UnconditionalSuppressMessage(
+            "Trimming",
+            "IL2070",
+            Justification = "The reflected ItemDictionary method is preserved by the DynamicDependency attribute.")]
+#endif
         public static MethodInfo GetEnumerateItemsPerTypeMethod(Type itemDictionary)
         {
             if (enumerateItemsPerType == null)
