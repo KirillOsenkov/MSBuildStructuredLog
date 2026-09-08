@@ -26,9 +26,9 @@ for:
       - dotnet tool update -g checkbinarycompat
       - dotnet --info
     build_script:
-      - dotnet msbuild /p:Configuration=Release /clp:v=m MSBuildStructuredLog.sln /logger:"C:\Program Files\AppVeyor\BuildAgent\dotnetcore\Appveyor.MSBuildLogger.dll"
+      - dotnet msbuild /p:Configuration=Release /bl:aot-test.binlog /clp:v=m MSBuildStructuredLog.sln /logger:"C:\Program Files\AppVeyor\BuildAgent\dotnetcore\Appveyor.MSBuildLogger.dll"
       - dotnet publish src\StructuredLogger.AotTests\StructuredLogger.AotTests.csproj --configuration Release --runtime win-x64 --output artifacts\StructuredLogger.AotTests
-      - artifacts\StructuredLogger.AotTests\StructuredLogger.AotTests.exe
+      - artifacts\StructuredLogger.AotTests\StructuredLogger.AotTests.exe aot-test.binlog
       - dotnet --info
       - checkbinarycompat bin\StructuredLogViewer\Release\net472
     after_build:
@@ -41,6 +41,8 @@ for:
     artifacts:
       - path: msbuild.binlog
         name: MSBuild Log
+      - path: aot-test.binlog
+        name: AOT Test Build Log
       - path: 'bin\StructuredLogViewer\Release\net472\msbuild-structured-log-viewer*.nupkg'
         name: Chocolatey Package
       - path: 'bin\StructuredLogViewer\Release\net472\Releases\MSBuildStructuredLogSetup.exe'
