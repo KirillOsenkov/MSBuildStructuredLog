@@ -199,7 +199,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         {
             if (enumerateItemsPerType == null)
             {
-                enumerateItemsPerType = itemDictionary.GetMethod("EnumerateItemsPerType", BindingFlags.Instance | BindingFlags.NonPublic);
+                enumerateItemsPerType = itemDictionary.GetMethod("EnumerateItemsPerType", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             }
 
             return enumerateItemsPerType;
