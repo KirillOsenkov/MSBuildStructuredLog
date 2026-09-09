@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Linq.Expressions;
 using System.Reflection;
 using Microsoft.Build.Framework;
@@ -190,19 +191,50 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private static MethodInfo enumerateItemsPerType;
 #if NET8_0_OR_GREATER
         [DynamicDependency("EnumerateItemsPerType", "Microsoft.Build.Collections.ItemDictionary`1", "Microsoft.Build")]
-        [UnconditionalSuppressMessage(
-            "Trimming",
-            "IL2070",
-            Justification = "The reflected ItemDictionary method is preserved by the DynamicDependency attribute.")]
 #endif
         public static MethodInfo GetEnumerateItemsPerTypeMethod(Type itemDictionary)
         {
             if (enumerateItemsPerType == null)
             {
-                enumerateItemsPerType = itemDictionary.GetMethod("EnumerateItemsPerType", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                enumerateItemsPerType = FindEnumerateItemsPerTypeMethod(itemDictionary);
             }
 
             return enumerateItemsPerType;
+        }
+
+#if NET8_0_OR_GREATER
+        [UnconditionalSuppressMessage(
+            "Trimming",
+            "IL2070",
+            Justification = "The reflected ItemDictionary method is preserved by the DynamicDependency attribute.")]
+#endif
+        internal static MethodInfo FindEnumerateItemsPerTypeMethod(Type itemDictionary)
+        {
+            foreach (var method in itemDictionary.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                var parameters = method.GetParameters();
+                if (method.Name == "EnumerateItemsPerType" &&
+                    method.ReturnType == typeof(void) &&
+                    parameters.Length == 1 &&
+                    IsItemTypeCallback(parameters[0].ParameterType))
+                {
+                    return method;
+                }
+            }
+
+            return null;
+        }
+
+        private static bool IsItemTypeCallback(Type callbackType)
+        {
+            if (!callbackType.IsGenericType || callbackType.GetGenericTypeDefinition() != typeof(Action<,>))
+            {
+                return false;
+            }
+
+            var callbackArguments = callbackType.GetGenericArguments();
+            return callbackArguments[0] == typeof(string) &&
+                typeof(IEnumerable).IsAssignableFrom(callbackArguments[1]);
         }
     }
 }
