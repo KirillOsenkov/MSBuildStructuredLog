@@ -85,7 +85,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
             {
                 strings = s;
             };
+#if NET5_0_OR_GREATER
+            int[] errorByType = new int[Enum.GetValues<ReaderErrorType>().Length];
+#else
             int[] errorByType = new int[Enum.GetValues(typeof(ReaderErrorType)).Length];
+#endif
             eventSource.RecoverableReadError += eArg =>
             {
                 if (readerSettings.UnknownDataBehavior == UnknownDataBehavior.ThrowException)
