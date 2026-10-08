@@ -78,7 +78,9 @@ for:
         secure: QWdxOY0xIK4XR50AYb77TKCmMd2k00iEBfrYYxzhwM+pDyvSjQXO6Oqg1epfe0KRpZNc+a9cGwCJ8qMyCEQxsA==
     init:
       - curl -sSL https://dot.net/v1/dotnet-install.sh | /bin/bash -s -- --channel 8.0
-      - HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install create-dmg
+      # No auto-update: it migrates the preinstalled powershell cask to a formula whose
+      # dependencies (openssl, cmake, ...) build from source on macOS 14 and time out the job.
+      - HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install create-dmg
     build_script:
       - dotnet tool install Cake.Tool --create-manifest-if-needed
       - dotnet tool run dotnet-cake ./build-macos.cake --settings_skippackageversioncheck=true
