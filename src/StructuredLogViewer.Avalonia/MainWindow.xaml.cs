@@ -875,20 +875,21 @@ Use project(.) or project(.csproj) to search all projects (slow)." };
             progress.ProgressText = "Performing the log redaction ...";
             SetContent(progress);
 
+            // The dialog options are backed by CheckBox.IsChecked, which can only be read on the UI thread.
+            BinlogRedactorOptions redactorOptions = new BinlogRedactorOptions(logFilePath)
+            {
+                OutputFileName = redactInputControl.DestinationFile,
+                ProcessEmbeddedFiles = redactInputControl.RedactEmbeddedFiles,
+                AutodetectUsername = redactInputControl.RedactUsername,
+                AutodetectCommonPatterns = redactInputControl.RedactCommonCredentials,
+                IdentifyReplacemenets = redactInputControl.DistinguishSecretsReplacements,
+                TokensToRedact = stringsToRedact.ToArray(),
+            };
+
             string error = await Task.Run(() =>
             {
                 try
                 {
-                    BinlogRedactorOptions redactorOptions = new BinlogRedactorOptions(logFilePath)
-                    {
-                        OutputFileName = redactInputControl.DestinationFile,
-                        ProcessEmbeddedFiles = redactInputControl.RedactEmbeddedFiles,
-                        AutodetectUsername = redactInputControl.RedactUsername,
-                        AutodetectCommonPatterns = redactInputControl.RedactCommonCredentials,
-                        IdentifyReplacemenets = redactInputControl.DistinguishSecretsReplacements,
-                        TokensToRedact = stringsToRedact.ToArray(),
-                    };
-
                     BinlogRedactor.RedactSecrets(
                         redactorOptions,
                         progress.Progress);
