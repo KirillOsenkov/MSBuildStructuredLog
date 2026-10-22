@@ -1642,11 +1642,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 fields.ColumnNumber,
                 fields.HelpKeyword,
                 fields.SenderName ?? string.Empty,
-                fields.Timestamp)
-            {
-                ProjectFile = fields.ProjectFile
-            };
+                fields.Timestamp);
             SetCommonFields(e, fields);
+            e.ProjectFile = fields.ProjectFile;
 
             return e;
         }
