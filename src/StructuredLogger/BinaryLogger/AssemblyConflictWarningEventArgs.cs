@@ -9,49 +9,37 @@ namespace Microsoft.Build.Framework
     /// type's lazy/localized Message formatting; Message is a simple eager summary.
     /// </summary>
     [Serializable]
-    public class AssemblyConflictWarningEventArgs : BuildWarningEventArgs
+    public class AssemblyConflictWarningEventArgs(
+        string simpleAssemblyName,
+        AssemblyConflictLossReason lossReason,
+        AssemblyConflictReferenceDetails victor,
+        AssemblyConflictReferenceDetails victim,
+        string code,
+        string file,
+        int lineNumber,
+        int columnNumber,
+        string helpKeyword,
+        string senderName,
+        DateTime eventTimestamp)
+        : BuildWarningEventArgs(
+            subcategory: null,
+            code: code,
+            file: file,
+            lineNumber: lineNumber,
+            columnNumber: columnNumber,
+            endLineNumber: 0,
+            endColumnNumber: 0,
+            message: $"Found conflicts between different versions of \"{simpleAssemblyName}\" that could not be resolved.",
+            helpKeyword: helpKeyword,
+            senderName: senderName,
+            eventTimestamp: eventTimestamp)
     {
-        public AssemblyConflictWarningEventArgs()
-        {
-        }
+        public string SimpleAssemblyName { get; } = simpleAssemblyName;
 
-        public AssemblyConflictWarningEventArgs(
-            string simpleAssemblyName,
-            AssemblyConflictLossReason lossReason,
-            AssemblyConflictReferenceDetails victor,
-            AssemblyConflictReferenceDetails victim,
-            string code,
-            string file,
-            int lineNumber,
-            int columnNumber,
-            string helpKeyword,
-            string senderName,
-            DateTime eventTimestamp)
-            : base(
-                subcategory: null,
-                code: code,
-                file: file,
-                lineNumber: lineNumber,
-                columnNumber: columnNumber,
-                endLineNumber: 0,
-                endColumnNumber: 0,
-                message: $"Found conflicts between different versions of \"{simpleAssemblyName}\" that could not be resolved.",
-                helpKeyword: helpKeyword,
-                senderName: senderName,
-                eventTimestamp: eventTimestamp)
-        {
-            SimpleAssemblyName = simpleAssemblyName;
-            LossReason = lossReason;
-            Victor = victor;
-            Victim = victim;
-        }
+        public AssemblyConflictLossReason LossReason { get; } = lossReason;
 
-        public string SimpleAssemblyName { get; }
+        public AssemblyConflictReferenceDetails Victor { get; } = victor;
 
-        public AssemblyConflictLossReason LossReason { get; }
-
-        public AssemblyConflictReferenceDetails Victor { get; }
-
-        public AssemblyConflictReferenceDetails Victim { get; }
+        public AssemblyConflictReferenceDetails Victim { get; } = victim;
     }
 }

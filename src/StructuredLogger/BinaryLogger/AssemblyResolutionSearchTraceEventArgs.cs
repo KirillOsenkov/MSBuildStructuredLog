@@ -31,33 +31,28 @@ namespace Microsoft.Build.Framework
     /// Mirrors dotnet/msbuild's Microsoft.Build.Framework.AssemblyResolutionSearchAttempt.
     /// </summary>
     [Serializable]
-    public sealed class AssemblyResolutionSearchAttempt
+    public sealed class AssemblyResolutionSearchAttempt(
+        string fileNameAttempted,
+        string searchPath,
+        string parentAssembly,
+        string assemblyName,
+        AssemblyResolutionSearchResult result,
+        string processorArchitecture,
+        bool isAssemblyFoldersExSearch)
     {
-        public AssemblyResolutionSearchAttempt(
-            string fileNameAttempted,
-            string searchPath,
-            string parentAssembly,
-            string assemblyName,
-            AssemblyResolutionSearchResult result,
-            string processorArchitecture,
-            bool isAssemblyFoldersExSearch)
-        {
-            FileNameAttempted = fileNameAttempted;
-            SearchPath = searchPath;
-            ParentAssembly = parentAssembly;
-            AssemblyName = assemblyName;
-            Result = result;
-            ProcessorArchitecture = processorArchitecture;
-            IsAssemblyFoldersExSearch = isAssemblyFoldersExSearch;
-        }
+        public string FileNameAttempted { get; } = fileNameAttempted;
 
-        public string FileNameAttempted { get; }
-        public string SearchPath { get; }
-        public string ParentAssembly { get; }
-        public string AssemblyName { get; }
-        public AssemblyResolutionSearchResult Result { get; }
-        public string ProcessorArchitecture { get; }
-        public bool IsAssemblyFoldersExSearch { get; }
+        public string SearchPath { get; } = searchPath;
+
+        public string ParentAssembly { get; } = parentAssembly;
+
+        public string AssemblyName { get; } = assemblyName;
+
+        public AssemblyResolutionSearchResult Result { get; } = result;
+
+        public string ProcessorArchitecture { get; } = processorArchitecture;
+
+        public bool IsAssemblyFoldersExSearch { get; } = isAssemblyFoldersExSearch;
     }
 
     /// <summary>

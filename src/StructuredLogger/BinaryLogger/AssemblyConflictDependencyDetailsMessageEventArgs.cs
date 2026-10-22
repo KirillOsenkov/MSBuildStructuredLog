@@ -9,31 +9,21 @@ namespace Microsoft.Build.Framework
     /// type's lazy/localized Message formatting; Message is a simple eager summary.
     /// </summary>
     [Serializable]
-    public class AssemblyConflictDependencyDetailsMessageEventArgs : BuildMessageEventArgs
+    public class AssemblyConflictDependencyDetailsMessageEventArgs(
+        AssemblyConflictReferenceDetails victor,
+        AssemblyConflictReferenceDetails victim,
+        string senderName,
+        MessageImportance importance,
+        DateTime eventTimestamp)
+        : BuildMessageEventArgs(
+            $"Conflict dependency details for \"{victor?.FusionName}\" vs \"{victim?.FusionName}\".",
+            null,
+            senderName,
+            importance,
+            eventTimestamp)
     {
-        public AssemblyConflictDependencyDetailsMessageEventArgs()
-        {
-        }
+        public AssemblyConflictReferenceDetails Victor { get; } = victor;
 
-        public AssemblyConflictDependencyDetailsMessageEventArgs(
-            AssemblyConflictReferenceDetails victor,
-            AssemblyConflictReferenceDetails victim,
-            string senderName,
-            MessageImportance importance,
-            DateTime eventTimestamp)
-            : base(
-                $"Conflict dependency details for \"{victor?.FusionName}\" vs \"{victim?.FusionName}\".",
-                null,
-                senderName,
-                importance,
-                eventTimestamp)
-        {
-            Victor = victor;
-            Victim = victim;
-        }
-
-        public AssemblyConflictReferenceDetails Victor { get; }
-
-        public AssemblyConflictReferenceDetails Victim { get; }
+        public AssemblyConflictReferenceDetails Victim { get; } = victim;
     }
 }

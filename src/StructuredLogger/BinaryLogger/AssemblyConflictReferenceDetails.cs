@@ -22,9 +22,9 @@ namespace Microsoft.Build.Framework
     [Serializable]
     public sealed class AssemblyConflictDependee(string dependeeFullPath, IReadOnlyList<string> sourceItemSpecs)
     {
-        public string DependeeFullPath { get; private set; } = dependeeFullPath;
+        public string DependeeFullPath { get; } = dependeeFullPath;
 
-        public IReadOnlyList<string> SourceItemSpecs { get; private set; } = sourceItemSpecs;
+        public IReadOnlyList<string> SourceItemSpecs { get; } = sourceItemSpecs;
     }
 
     /// <summary>
@@ -41,18 +41,18 @@ namespace Microsoft.Build.Framework
         IReadOnlyList<string> primarySourceItemSpecs,
         IReadOnlyList<AssemblyConflictDependee> dependees)
     {
-        public string FusionName { get; private set; } = fusionName;
+        public string FusionName { get; } = fusionName;
 
-        public string FullPath { get; private set; } = fullPath;
+        public string FullPath { get; } = fullPath;
 
-        public bool IsPrimary { get; private set; } = isPrimary;
+        public bool IsPrimary { get; } = isPrimary;
 
-        public bool IsResolved { get; private set; } = isResolved;
+        public bool IsResolved { get; } = isResolved;
 
-        public string UnresolvedPrimaryItemSpec { get; private set; } = unresolvedPrimaryItemSpec;
+        public string UnresolvedPrimaryItemSpec { get; } = unresolvedPrimaryItemSpec;
 
-        public IReadOnlyList<string> PrimarySourceItemSpecs { get; private set; } = primarySourceItemSpecs;
+        public IReadOnlyList<string> PrimarySourceItemSpecs { get; } = primarySourceItemSpecs;
 
-        public IReadOnlyList<AssemblyConflictDependee> Dependees { get; private set; } = dependees;
+        public IReadOnlyList<AssemblyConflictDependee> Dependees { get; } = dependees;
     }
 }

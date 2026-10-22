@@ -1522,8 +1522,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private BuildEventArgs ReadAssemblyResolutionSearchTraceEventArgs()
         {
             var fields = ReadBuildEventArgsFields(readImportance: true);
-            string requestedAssemblyName = ReadOptionalString() ?? string.Empty;
-            string targetProcessorArchitecture = ReadOptionalString();
+            var requestedAssemblyName = ReadOptionalString() ?? string.Empty;
+            var targetProcessorArchitecture = ReadOptionalString();
 
             int count = ReadInt32();
             var attempts = new AssemblyResolutionSearchAttempt[count];
@@ -1560,7 +1560,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         // Shared by ReadAssemblyConflictDependencyDetailsMessageEventArgs and ReadAssemblyConflictWarningEventArgs below.
         private AssemblyConflictDependee ReadAssemblyConflictDependee()
         {
-            string dependeeFullPath = ReadOptionalString();
+            var dependeeFullPath = ReadOptionalString();
             int count = ReadInt32();
             var sourceItemSpecs = new string[count];
             for (int i = 0; i < count; i++)
@@ -1573,11 +1573,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private AssemblyConflictReferenceDetails ReadAssemblyConflictReferenceDetails()
         {
-            string fusionName = ReadOptionalString();
-            string fullPath = ReadOptionalString();
-            bool isPrimary = ReadBoolean();
-            bool isResolved = ReadBoolean();
-            string unresolvedPrimaryItemSpec = ReadOptionalString();
+            var fusionName = ReadOptionalString();
+            var fullPath = ReadOptionalString();
+            var isPrimary = ReadBoolean();
+            var isResolved = ReadBoolean();
+            var unresolvedPrimaryItemSpec = ReadOptionalString();
 
             int primarySourceItemSpecCount = ReadInt32();
             var primarySourceItemSpecs = new string[primarySourceItemSpecCount];
@@ -1606,8 +1606,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private BuildEventArgs ReadAssemblyConflictDependencyDetailsMessageEventArgs()
         {
             var fields = ReadBuildEventArgsFields(readImportance: true);
-            AssemblyConflictReferenceDetails victor = ReadAssemblyConflictReferenceDetails();
-            AssemblyConflictReferenceDetails victim = ReadAssemblyConflictReferenceDetails();
+            var victor = ReadAssemblyConflictReferenceDetails();
+            var victim = ReadAssemblyConflictReferenceDetails();
 
             var e = new AssemblyConflictDependencyDetailsMessageEventArgs(
                 victor,
@@ -1626,10 +1626,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var fields = ReadBuildEventArgsFields();
             ReadDiagnosticFields(fields);
 
-            string simpleAssemblyName = ReadOptionalString() ?? string.Empty;
+            var simpleAssemblyName = ReadOptionalString() ?? string.Empty;
             var lossReason = (AssemblyConflictLossReason)ReadInt32();
-            AssemblyConflictReferenceDetails victor = ReadAssemblyConflictReferenceDetails();
-            AssemblyConflictReferenceDetails victim = ReadAssemblyConflictReferenceDetails();
+            var victor = ReadAssemblyConflictReferenceDetails();
+            var victim = ReadAssemblyConflictReferenceDetails();
 
             var e = new AssemblyConflictWarningEventArgs(
                 simpleAssemblyName,
