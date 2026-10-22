@@ -39,5 +39,8 @@
         BuildCanceled,
         LoggersRegistered,
         MSBuildServerLifecycle,
+        AssemblyResolutionSearchTrace,
+        AssemblyConflictDependencyDetails,
+        AssemblyConflictWarning,
     }
 }

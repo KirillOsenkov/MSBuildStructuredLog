@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Microsoft.Build.Framework;
 
 namespace Microsoft.Build.Logging.StructuredLogger
 {
@@ -7,6 +8,25 @@ namespace Microsoft.Build.Logging.StructuredLogger
     {
         [ThreadStatic]
         private static List<Span> lineSpans;
+
+        /// <summary>
+        /// Adds the dependency chain of a structured RAR conflict reference (binlog format v28) as a
+        /// labeled Folder with one Item child per dependee - the structured-data counterpart of
+        /// <see cref="ParseThereWasAConflict"/>, which does the same from legacy free text.
+        /// </summary>
+        public static void AddConflictReferenceDetails(TreeNode parent, string label, AssemblyConflictReferenceDetails details, StringCache stringTable)
+        {
+            if (details == null)
+            {
+                return;
+            }
+
+            var node = parent.GetOrCreateNodeWithName<Folder>(stringTable.Intern($"{label}: {details.FusionName}"));
+            foreach (var dependee in details.Dependees)
+            {
+                node.AddChild(new Item { Text = stringTable.Intern(dependee.DependeeFullPath) });
+            }
+        }
 
         /// <summary>
         /// Parses a log output string to a list of Items (e.g. ItemGroup with metadata or property string).
