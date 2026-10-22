@@ -659,15 +659,15 @@ namespace Microsoft.Build.UnitTests
             WriteOptionalString(binaryWriter, "MSIL");
             binaryWriter.Write(false); // IsAssemblyFoldersExSearch
 
-            // Attempt 2: fusion name mismatch.
-            binaryWriter.Write((byte)0);
+            // Attempt 2: fusion name mismatch, same search path/parent/AssemblyFoldersEx as attempt 1 -
+            // exercises the reader's "unchanged, inherit from previous attempt" fallback.
+            binaryWriter.Write((byte)(AssemblyResolutionSearchAttemptContext.SearchPathUnchanged
+                | AssemblyResolutionSearchAttemptContext.ParentAssemblyUnchanged
+                | AssemblyResolutionSearchAttemptContext.AssemblyFoldersExUnchanged));
             WriteOptionalString(binaryWriter, @"C:\other\MyAssembly.dll");
-            WriteOptionalString(binaryWriter, @"C:\other");
-            WriteOptionalString(binaryWriter, null);
             WriteOptionalString(binaryWriter, "MyAssembly, Version=2.0.0.0");
             Serialization.Write7BitEncodedInt(binaryWriter, (int)AssemblyResolutionSearchResult.FusionNamesDidNotMatch);
             WriteOptionalString(binaryWriter, "MSIL");
-            binaryWriter.Write(false);
 
             memoryStream.Position = 0;
             var binaryReader = new BinaryReader(memoryStream);
@@ -684,6 +684,9 @@ namespace Microsoft.Build.UnitTests
             searchTrace.SearchAttempts[0].Result.Should().Be(AssemblyResolutionSearchResult.FileNotFound);
             searchTrace.SearchAttempts[1].AssemblyName.Should().Be("MyAssembly, Version=2.0.0.0");
             searchTrace.SearchAttempts[1].Result.Should().Be(AssemblyResolutionSearchResult.FusionNamesDidNotMatch);
+            searchTrace.SearchAttempts[1].SearchPath.Should().Be(@"C:\libs", "unchanged from attempt 1, not re-written on the wire");
+            searchTrace.SearchAttempts[1].ParentAssembly.Should().BeNull("unchanged from attempt 1, not re-written on the wire");
+            searchTrace.SearchAttempts[1].IsAssemblyFoldersExSearch.Should().BeFalse("unchanged from attempt 1, not re-written on the wire");
         }
 
         private static void WriteConflictReferenceDetails(BinaryWriter writer, string fusionName, string fullPath, bool isPrimary, bool isResolved, params (string DependeeFullPath, string[] SourceItemSpecs)[] dependees)
