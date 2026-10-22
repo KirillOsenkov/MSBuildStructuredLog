@@ -92,10 +92,10 @@ namespace Microsoft.Build.Framework
             SearchAttempts = searchAttempts;
         }
 
-        public string RequestedAssemblyName { get; set; }
+        public string RequestedAssemblyName { get; }
 
-        public string TargetProcessorArchitecture { get; set; }
+        public string TargetProcessorArchitecture { get; }
 
-        public IReadOnlyList<AssemblyResolutionSearchAttempt> SearchAttempts { get; set; }
+        public IReadOnlyList<AssemblyResolutionSearchAttempt> SearchAttempts { get; }
     }
 }

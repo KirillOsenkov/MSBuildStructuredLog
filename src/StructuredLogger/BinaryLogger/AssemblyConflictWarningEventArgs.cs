@@ -46,12 +46,12 @@ namespace Microsoft.Build.Framework
             Victim = victim;
         }
 
-        public string SimpleAssemblyName { get; set; }
+        public string SimpleAssemblyName { get; }
 
-        public AssemblyConflictLossReason LossReason { get; set; }
+        public AssemblyConflictLossReason LossReason { get; }
 
-        public AssemblyConflictReferenceDetails Victor { get; set; }
+        public AssemblyConflictReferenceDetails Victor { get; }
 
-        public AssemblyConflictReferenceDetails Victim { get; set; }
+        public AssemblyConflictReferenceDetails Victim { get; }
     }
 }

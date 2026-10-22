@@ -32,8 +32,8 @@ namespace Microsoft.Build.Framework
             Victim = victim;
         }
 
-        public AssemblyConflictReferenceDetails Victor { get; set; }
+        public AssemblyConflictReferenceDetails Victor { get; }
 
-        public AssemblyConflictReferenceDetails Victim { get; set; }
+        public AssemblyConflictReferenceDetails Victim { get; }
     }
 }
