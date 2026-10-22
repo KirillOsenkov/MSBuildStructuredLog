@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 
 namespace StructuredLogViewer.Avalonia
@@ -27,7 +28,22 @@ namespace StructuredLogViewer.Avalonia
         public override void OnFrameworkInitializationCompleted()
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-                desktop.MainWindow = new MainWindow();
+            {
+                var mainWindow = new MainWindow();
+                desktop.MainWindow = mainWindow;
+
+                if (this.TryGetFeature<IActivatableLifetime>() is { } activatableLifetime)
+                {
+                    activatableLifetime.Activated += (sender, e) =>
+                    {
+                        if (e is FileActivatedEventArgs { Files.Count: > 0 } files &&
+                            files.Files[0].TryGetLocalPath() is { } path)
+                        {
+                            mainWindow.OpenActivatedFile(path);
+                        }
+                    };
+                }
+            }
 
             base.OnFrameworkInitializationCompleted();
         }
