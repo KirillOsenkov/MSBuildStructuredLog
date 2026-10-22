@@ -721,9 +721,9 @@ namespace Microsoft.Build.UnitTests
             Serialization.Write7BitEncodedInt(binaryWriter, (int)MessageImportance.Low);
 
             WriteConflictReferenceDetails(binaryWriter, "MyAssembly, Version=2.0.0.0", @"C:\refs\v2\MyAssembly.dll", isPrimary: true, isResolved: true,
-                ("C:\\proj\\A.csproj", new[] { "MyAssembly" }));
+                (@"C:\proj\A.csproj", new[] { "MyAssembly" }));
             WriteConflictReferenceDetails(binaryWriter, "MyAssembly, Version=1.0.0.0", @"C:\refs\v1\MyAssembly.dll", isPrimary: false, isResolved: true,
-                ("C:\\proj\\B.csproj", new[] { "SomeLib" }));
+                (@"C:\proj\B.csproj", new[] { "SomeLib" }));
 
             memoryStream.Position = 0;
             var binaryReader = new BinaryReader(memoryStream);
@@ -735,7 +735,7 @@ namespace Microsoft.Build.UnitTests
             var details = result.Should().BeOfType<AssemblyConflictDependencyDetailsMessageEventArgs>().Subject;
             details.Victor.FusionName.Should().Be("MyAssembly, Version=2.0.0.0");
             details.Victor.IsPrimary.Should().BeTrue();
-            details.Victor.Dependees.Should().ContainSingle().Which.DependeeFullPath.Should().Be("C:\\proj\\A.csproj");
+            details.Victor.Dependees.Should().ContainSingle().Which.DependeeFullPath.Should().Be(@"C:\proj\A.csproj");
             details.Victim.FusionName.Should().Be("MyAssembly, Version=1.0.0.0");
             details.Victim.Dependees.Should().ContainSingle().Which.SourceItemSpecs.Should().ContainSingle("SomeLib");
         }
@@ -764,9 +764,9 @@ namespace Microsoft.Build.UnitTests
             binaryWriter.WriteOptionalString("MyAssembly");
             Serialization.Write7BitEncodedInt(binaryWriter, (int)AssemblyConflictLossReason.HadLowerVersion);
             WriteConflictReferenceDetails(binaryWriter, "MyAssembly, Version=2.0.0.0", @"C:\refs\v2\MyAssembly.dll", isPrimary: true, isResolved: true,
-                ("C:\\proj\\A.csproj", new[] { "MyAssembly" }));
+                (@"C:\proj\A.csproj", new[] { "MyAssembly" }));
             WriteConflictReferenceDetails(binaryWriter, "MyAssembly, Version=1.0.0.0", @"C:\refs\v1\MyAssembly.dll", isPrimary: false, isResolved: true,
-                ("C:\\proj\\B.csproj", new[] { "SomeLib" }));
+                (@"C:\proj\B.csproj", new[] { "SomeLib" }));
 
             memoryStream.Position = 0;
             var binaryReader = new BinaryReader(memoryStream);

@@ -6,7 +6,8 @@ namespace Microsoft.Build.Framework
     /// Low-importance structured conflict detail (binlog format v28). Mirrors dotnet/msbuild's
     /// Microsoft.Build.Framework.AssemblyConflictDependencyDetailsMessageEventArgs, trimmed to the
     /// fields this reader needs - see dotnet/msbuild#14601. This fork does not implement the real
-    /// type's lazy/localized Message formatting; Message is a simple eager summary.
+    /// type's localized Message formatting; Message is a simple eager summary, computed lazily on
+    /// first access like <see cref="AssemblyLoadBuildEventArgs"/>'s does.
     /// </summary>
     [Serializable]
     public class AssemblyConflictDependencyDetailsMessageEventArgs(
@@ -15,15 +16,19 @@ namespace Microsoft.Build.Framework
         string senderName,
         MessageImportance importance,
         DateTime eventTimestamp)
-        : BuildMessageEventArgs(
-            $"Conflict dependency details for \"{victor?.FusionName}\" vs \"{victim?.FusionName}\".",
-            null,
-            senderName,
-            importance,
-            eventTimestamp)
+        : BuildMessageEventArgs(null, null, senderName, importance, eventTimestamp)
     {
         public AssemblyConflictReferenceDetails Victor { get; } = victor;
 
         public AssemblyConflictReferenceDetails Victim { get; } = victim;
+
+        public override string Message
+        {
+            get
+            {
+                RawMessage ??= $"""Conflict dependency details for "{Victor?.FusionName}" vs "{Victim?.FusionName}".""";
+                return RawMessage;
+            }
+        }
     }
 }

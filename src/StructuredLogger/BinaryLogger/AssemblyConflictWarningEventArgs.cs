@@ -6,7 +6,8 @@ namespace Microsoft.Build.Framework
     /// Structured replacement for the legacy free-text MSB3277 "conflict" warning (binlog format v28).
     /// Mirrors dotnet/msbuild's Microsoft.Build.Framework.AssemblyConflictWarningEventArgs, trimmed to
     /// the fields this reader needs - see dotnet/msbuild#14601. This fork does not implement the real
-    /// type's lazy/localized Message formatting; Message is a simple eager summary.
+    /// type's localized Message formatting; Message is a simple eager summary, computed lazily on
+    /// first access like <see cref="AssemblyLoadBuildEventArgs"/>'s does.
     /// </summary>
     [Serializable]
     public class AssemblyConflictWarningEventArgs(
@@ -29,7 +30,7 @@ namespace Microsoft.Build.Framework
             columnNumber: columnNumber,
             endLineNumber: 0,
             endColumnNumber: 0,
-            message: $"Found conflicts between different versions of \"{simpleAssemblyName}\" that could not be resolved.",
+            message: null,
             helpKeyword: helpKeyword,
             senderName: senderName,
             eventTimestamp: eventTimestamp)
@@ -41,5 +42,14 @@ namespace Microsoft.Build.Framework
         public AssemblyConflictReferenceDetails Victor { get; } = victor;
 
         public AssemblyConflictReferenceDetails Victim { get; } = victim;
+
+        public override string Message
+        {
+            get
+            {
+                RawMessage ??= $"""Found conflicts between different versions of "{SimpleAssemblyName}" that could not be resolved.""";
+                return RawMessage;
+            }
+        }
     }
 }
