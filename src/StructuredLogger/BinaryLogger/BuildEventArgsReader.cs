@@ -1518,6 +1518,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return e;
         }
 
+        // Wire format defined by dotnet/msbuild's own BuildEventArgsWriter/Reader - see dotnet/msbuild#14599.
         private BuildEventArgs ReadAssemblyResolutionSearchTraceEventArgs()
         {
             var fields = ReadBuildEventArgsFields(readImportance: true);
@@ -1555,6 +1556,8 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return e;
         }
 
+        // Wire format defined by dotnet/msbuild's own BuildEventArgsWriter/Reader - see dotnet/msbuild#14601.
+        // Shared by ReadAssemblyConflictDependencyDetailsMessageEventArgs and ReadAssemblyConflictWarningEventArgs below.
         private AssemblyConflictDependee ReadAssemblyConflictDependee()
         {
             string dependeeFullPath = ReadOptionalString();
