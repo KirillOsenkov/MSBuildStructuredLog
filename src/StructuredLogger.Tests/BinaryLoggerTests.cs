@@ -613,6 +613,183 @@ namespace Microsoft.Build.UnitTests
         }
 
         // ---------------------------------------------------------------------------------------
+        // Binlog format v28: structured RAR diagnostic events (dotnet/msbuild#14599, #14601).
+        //
+        // No production Write(...) overload exists for these three record kinds - this fork adds
+        // read-only support (see KirillOsenkov/MSBuildStructuredLog#968), matching the precedent set
+        // for MSBuildServerLifecycle (binlog format v27). So there's no BuildEventArgsWriter path to
+        // round-trip through; bytes are hand-written here instead.
+        //
+        // To keep that hand-written framing simple, these tests construct the reader with a
+        // pre-v10 fileFormatVersion (9): below BinaryLogger.ForwardCompatibilityMinimalVersion (18),
+        // so records aren't length-prefixed, and below the string-deduplication cutover (10), so
+        // ReadOptionalString()/ReadDeduplicatedString() read plain length-prefixed strings instead of
+        // string-table indices. Only the encoding of individual fields changes with this choice - the
+        // new record kinds and their field layout are version-independent.
+        // ---------------------------------------------------------------------------------------
+
+        private static void WriteOptionalString(BinaryWriter writer, string value)
+        {
+            writer.Write(value != null);
+            if (value != null)
+            {
+                writer.Write(value);
+            }
+        }
+
+        [Fact]
+        public void AssemblyResolutionSearchTrace_Deserializes()
+        {
+            var memoryStream = new MemoryStream();
+            var binaryWriter = new BinaryWriter(memoryStream);
+
+            Serialization.Write7BitEncodedInt(binaryWriter, (int)BinaryLogRecordKind.AssemblyResolutionSearchTrace);
+
+            // ReadBuildEventArgsFields(readImportance: true): no flags set, but fileFormatVersion(9) < 13
+            // means Importance is read unconditionally regardless of flags.
+            Serialization.Write7BitEncodedInt(binaryWriter, 0 /* BuildEventArgsFieldFlags.None */);
+            Serialization.Write7BitEncodedInt(binaryWriter, (int)MessageImportance.Normal);
+
+            WriteOptionalString(binaryWriter, "MyAssembly, Version=1.0.0.0");
+            WriteOptionalString(binaryWriter, "MSIL");
+
+            Serialization.Write7BitEncodedInt(binaryWriter, 2); // SearchAttempts.Count
+
+            // Attempt 1: considered and rejected (file not found).
+            binaryWriter.Write((byte)0); // AssemblyResolutionSearchAttemptContext.None
+            WriteOptionalString(binaryWriter, @"C:\libs\MyAssembly.dll");
+            WriteOptionalString(binaryWriter, @"C:\libs");
+            WriteOptionalString(binaryWriter, null); // ParentAssembly
+            WriteOptionalString(binaryWriter, null); // AssemblyName
+            Serialization.Write7BitEncodedInt(binaryWriter, (int)AssemblyResolutionSearchResult.FileNotFound);
+            WriteOptionalString(binaryWriter, "MSIL");
+            binaryWriter.Write(false); // IsAssemblyFoldersExSearch
+
+            // Attempt 2: fusion name mismatch.
+            binaryWriter.Write((byte)0);
+            WriteOptionalString(binaryWriter, @"C:\other\MyAssembly.dll");
+            WriteOptionalString(binaryWriter, @"C:\other");
+            WriteOptionalString(binaryWriter, null);
+            WriteOptionalString(binaryWriter, "MyAssembly, Version=2.0.0.0");
+            Serialization.Write7BitEncodedInt(binaryWriter, (int)AssemblyResolutionSearchResult.FusionNamesDidNotMatch);
+            WriteOptionalString(binaryWriter, "MSIL");
+            binaryWriter.Write(false);
+
+            memoryStream.Position = 0;
+            var binaryReader = new BinaryReader(memoryStream);
+            using var reader = new Logging.StructuredLogger.BuildEventArgsReader(binaryReader, fileFormatVersion: 9);
+
+            var result = reader.Read();
+
+            reader.LastRecordKind.Should().Be(BinaryLogRecordKind.AssemblyResolutionSearchTrace);
+            var searchTrace = result.Should().BeOfType<AssemblyResolutionSearchTraceEventArgs>().Subject;
+            searchTrace.RequestedAssemblyName.Should().Be("MyAssembly, Version=1.0.0.0");
+            searchTrace.TargetProcessorArchitecture.Should().Be("MSIL");
+            searchTrace.SearchAttempts.Should().HaveCount(2);
+            searchTrace.SearchAttempts[0].FileNameAttempted.Should().Be(@"C:\libs\MyAssembly.dll");
+            searchTrace.SearchAttempts[0].Result.Should().Be(AssemblyResolutionSearchResult.FileNotFound);
+            searchTrace.SearchAttempts[1].AssemblyName.Should().Be("MyAssembly, Version=2.0.0.0");
+            searchTrace.SearchAttempts[1].Result.Should().Be(AssemblyResolutionSearchResult.FusionNamesDidNotMatch);
+        }
+
+        private static void WriteConflictReferenceDetails(BinaryWriter writer, string fusionName, string fullPath, bool isPrimary, bool isResolved, params (string DependeeFullPath, string[] SourceItemSpecs)[] dependees)
+        {
+            WriteOptionalString(writer, fusionName);
+            WriteOptionalString(writer, fullPath);
+            writer.Write(isPrimary);
+            writer.Write(isResolved);
+            WriteOptionalString(writer, null); // UnresolvedPrimaryItemSpec
+
+            Serialization.Write7BitEncodedInt(writer, 0); // PrimarySourceItemSpecs.Count
+
+            Serialization.Write7BitEncodedInt(writer, dependees.Length);
+            foreach (var (dependeeFullPath, sourceItemSpecs) in dependees)
+            {
+                WriteOptionalString(writer, dependeeFullPath);
+                Serialization.Write7BitEncodedInt(writer, sourceItemSpecs.Length);
+                foreach (var itemSpec in sourceItemSpecs)
+                {
+                    WriteOptionalString(writer, itemSpec);
+                }
+            }
+        }
+
+        [Fact]
+        public void AssemblyConflictDependencyDetails_Deserializes()
+        {
+            var memoryStream = new MemoryStream();
+            var binaryWriter = new BinaryWriter(memoryStream);
+
+            Serialization.Write7BitEncodedInt(binaryWriter, (int)BinaryLogRecordKind.AssemblyConflictDependencyDetails);
+
+            Serialization.Write7BitEncodedInt(binaryWriter, 0 /* BuildEventArgsFieldFlags.None */);
+            Serialization.Write7BitEncodedInt(binaryWriter, (int)MessageImportance.Low);
+
+            WriteConflictReferenceDetails(binaryWriter, "MyAssembly, Version=2.0.0.0", @"C:\refs\v2\MyAssembly.dll", isPrimary: true, isResolved: true,
+                ("C:\\proj\\A.csproj", new[] { "MyAssembly" }));
+            WriteConflictReferenceDetails(binaryWriter, "MyAssembly, Version=1.0.0.0", @"C:\refs\v1\MyAssembly.dll", isPrimary: false, isResolved: true,
+                ("C:\\proj\\B.csproj", new[] { "SomeLib" }));
+
+            memoryStream.Position = 0;
+            var binaryReader = new BinaryReader(memoryStream);
+            using var reader = new Logging.StructuredLogger.BuildEventArgsReader(binaryReader, fileFormatVersion: 9);
+
+            var result = reader.Read();
+
+            reader.LastRecordKind.Should().Be(BinaryLogRecordKind.AssemblyConflictDependencyDetails);
+            var details = result.Should().BeOfType<AssemblyConflictDependencyDetailsMessageEventArgs>().Subject;
+            details.Victor.FusionName.Should().Be("MyAssembly, Version=2.0.0.0");
+            details.Victor.IsPrimary.Should().BeTrue();
+            details.Victor.Dependees.Should().ContainSingle().Which.DependeeFullPath.Should().Be("C:\\proj\\A.csproj");
+            details.Victim.FusionName.Should().Be("MyAssembly, Version=1.0.0.0");
+            details.Victim.Dependees.Should().ContainSingle().Which.SourceItemSpecs.Should().ContainSingle("SomeLib");
+        }
+
+        [Fact]
+        public void AssemblyConflictWarning_Deserializes()
+        {
+            var memoryStream = new MemoryStream();
+            var binaryWriter = new BinaryWriter(memoryStream);
+
+            Serialization.Write7BitEncodedInt(binaryWriter, (int)BinaryLogRecordKind.AssemblyConflictWarning);
+
+            // ReadBuildEventArgsFields() always reads the flags header first, readImportance only
+            // affects whether Importance is read afterwards (it isn't here, since it's false).
+            // ReadDiagnosticFields(fields) below is unconditional regardless of flags or version.
+            Serialization.Write7BitEncodedInt(binaryWriter, 0 /* BuildEventArgsFieldFlags.None */);
+            WriteOptionalString(binaryWriter, null); // Subcategory
+            WriteOptionalString(binaryWriter, "MSB3277");
+            WriteOptionalString(binaryWriter, null); // File
+            WriteOptionalString(binaryWriter, @"C:\proj\A.csproj");
+            Serialization.Write7BitEncodedInt(binaryWriter, 0); // LineNumber
+            Serialization.Write7BitEncodedInt(binaryWriter, 0); // ColumnNumber
+            Serialization.Write7BitEncodedInt(binaryWriter, 0); // EndLineNumber
+            Serialization.Write7BitEncodedInt(binaryWriter, 0); // EndColumnNumber
+
+            WriteOptionalString(binaryWriter, "MyAssembly");
+            Serialization.Write7BitEncodedInt(binaryWriter, (int)AssemblyConflictLossReason.HadLowerVersion);
+            WriteConflictReferenceDetails(binaryWriter, "MyAssembly, Version=2.0.0.0", @"C:\refs\v2\MyAssembly.dll", isPrimary: true, isResolved: true,
+                ("C:\\proj\\A.csproj", new[] { "MyAssembly" }));
+            WriteConflictReferenceDetails(binaryWriter, "MyAssembly, Version=1.0.0.0", @"C:\refs\v1\MyAssembly.dll", isPrimary: false, isResolved: true,
+                ("C:\\proj\\B.csproj", new[] { "SomeLib" }));
+
+            memoryStream.Position = 0;
+            var binaryReader = new BinaryReader(memoryStream);
+            using var reader = new Logging.StructuredLogger.BuildEventArgsReader(binaryReader, fileFormatVersion: 9);
+
+            var result = reader.Read();
+
+            reader.LastRecordKind.Should().Be(BinaryLogRecordKind.AssemblyConflictWarning);
+            var warning = result.Should().BeOfType<AssemblyConflictWarningEventArgs>().Subject;
+            warning.Code.Should().Be("MSB3277");
+            warning.ProjectFile.Should().Be(@"C:\proj\A.csproj");
+            warning.SimpleAssemblyName.Should().Be("MyAssembly");
+            warning.LossReason.Should().Be(AssemblyConflictLossReason.HadLowerVersion);
+            warning.Victor.FusionName.Should().Be("MyAssembly, Version=2.0.0.0");
+            warning.Victim.FusionName.Should().Be("MyAssembly, Version=1.0.0.0");
+        }
+
+        // ---------------------------------------------------------------------------------------
         // Truncated / interrupted binlog recovery.
         //
         // A build that is hard-killed (test-run timeout killer, taskkill /F, CI job cancel, OOM,

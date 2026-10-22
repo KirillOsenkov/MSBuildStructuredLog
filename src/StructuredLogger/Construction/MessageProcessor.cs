@@ -52,6 +52,41 @@ namespace Microsoft.Build.Logging.StructuredLogger
             folder.AddChild(node);
         }
 
+        /// <summary>
+        /// Builds a Parameter node (one Item child per search attempt) for a structured RAR search
+        /// trace event (binlog format v28). Replaces the per-candidate plain-text messages this event
+        /// aggregates; unlike those, it doesn't distinguish primary/dependency/unified references.
+        /// </summary>
+        private Parameter CreateAssemblyResolutionSearchTraceNode(AssemblyResolutionSearchTraceEventArgs args)
+        {
+            var parameter = new Parameter
+            {
+                Name = Intern(args.RequestedAssemblyName)
+            };
+
+            foreach (var attempt in args.SearchAttempts)
+            {
+                string text = attempt.SearchPath != null
+                    ? $"{attempt.FileNameAttempted} ({attempt.Result}) in \"{attempt.SearchPath}\""
+                    : $"{attempt.FileNameAttempted} ({attempt.Result})";
+                parameter.AddChild(new Item { Text = Intern(text) });
+            }
+
+            return parameter;
+        }
+
+        /// <summary>
+        /// Builds a Message node with the conflicting references' dependency chains as children, for a
+        /// structured RAR conflict-dependency-details event (binlog format v28).
+        /// </summary>
+        private Message CreateAssemblyConflictDependencyDetailsNode(AssemblyConflictDependencyDetailsMessageEventArgs args)
+        {
+            var message = new Message { Text = Intern(args.Message) };
+            ItemGroupParser.AddConflictReferenceDetails(message, "Victor", args.Victor, stringTable);
+            ItemGroupParser.AddConflictReferenceDetails(message, "Victim", args.Victim, stringTable);
+            return message;
+        }
+
         public void Process(BuildMessageEventArgs args)
         {
             if (args == null)
@@ -502,6 +537,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     if (args is AssemblyLoadBuildEventArgs)
                     {
                         nodeToAdd = new Message() { Text = Intern(message), IsLowRelevance = lowRelevance };
+                    }
+                    else if (args is AssemblyResolutionSearchTraceEventArgs searchTrace)
+                    {
+                        nodeToAdd = CreateAssemblyResolutionSearchTraceNode(searchTrace);
+                    }
+                    else if (args is AssemblyConflictDependencyDetailsMessageEventArgs conflictDetails)
+                    {
+                        nodeToAdd = CreateAssemblyConflictDependencyDetailsNode(conflictDetails);
                     }
                     else if (task is ResolveAssemblyReferenceTask rar)
                     {
