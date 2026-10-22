@@ -8,6 +8,7 @@ using FluentAssertions;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Logging;
 using Microsoft.Build.Logging.StructuredLogger;
+using Microsoft.Build.Shared;
 using StructuredLogger.Tests;
 using Xunit;
 using Xunit.Abstractions;
@@ -622,15 +623,6 @@ namespace Microsoft.Build.UnitTests
         // framing plain (pre-length-prefixing, pre-string-deduplication).
         // ---------------------------------------------------------------------------------------
 
-        private static void WriteOptionalString(BinaryWriter writer, string value)
-        {
-            writer.Write(value != null);
-            if (value != null)
-            {
-                writer.Write(value);
-            }
-        }
-
         [Fact]
         public void AssemblyResolutionSearchTrace_Deserializes()
         {
@@ -644,19 +636,19 @@ namespace Microsoft.Build.UnitTests
             Serialization.Write7BitEncodedInt(binaryWriter, 0 /* BuildEventArgsFieldFlags.None */);
             Serialization.Write7BitEncodedInt(binaryWriter, (int)MessageImportance.Normal);
 
-            WriteOptionalString(binaryWriter, "MyAssembly, Version=1.0.0.0");
-            WriteOptionalString(binaryWriter, "MSIL");
+            binaryWriter.WriteOptionalString("MyAssembly, Version=1.0.0.0");
+            binaryWriter.WriteOptionalString("MSIL");
 
             Serialization.Write7BitEncodedInt(binaryWriter, 2); // SearchAttempts.Count
 
             // Attempt 1: considered and rejected (file not found).
             binaryWriter.Write((byte)0); // AssemblyResolutionSearchAttemptContext.None
-            WriteOptionalString(binaryWriter, @"C:\libs\MyAssembly.dll");
-            WriteOptionalString(binaryWriter, @"C:\libs");
-            WriteOptionalString(binaryWriter, null); // ParentAssembly
-            WriteOptionalString(binaryWriter, null); // AssemblyName
+            binaryWriter.WriteOptionalString(@"C:\libs\MyAssembly.dll");
+            binaryWriter.WriteOptionalString(@"C:\libs");
+            binaryWriter.WriteOptionalString(null); // ParentAssembly
+            binaryWriter.WriteOptionalString(null); // AssemblyName
             Serialization.Write7BitEncodedInt(binaryWriter, (int)AssemblyResolutionSearchResult.FileNotFound);
-            WriteOptionalString(binaryWriter, "MSIL");
+            binaryWriter.WriteOptionalString("MSIL");
             binaryWriter.Write(false); // IsAssemblyFoldersExSearch
 
             // Attempt 2: fusion name mismatch, same search path/parent/AssemblyFoldersEx as attempt 1 -
@@ -664,10 +656,10 @@ namespace Microsoft.Build.UnitTests
             binaryWriter.Write((byte)(AssemblyResolutionSearchAttemptContext.SearchPathUnchanged
                 | AssemblyResolutionSearchAttemptContext.ParentAssemblyUnchanged
                 | AssemblyResolutionSearchAttemptContext.AssemblyFoldersExUnchanged));
-            WriteOptionalString(binaryWriter, @"C:\other\MyAssembly.dll");
-            WriteOptionalString(binaryWriter, "MyAssembly, Version=2.0.0.0");
+            binaryWriter.WriteOptionalString(@"C:\other\MyAssembly.dll");
+            binaryWriter.WriteOptionalString("MyAssembly, Version=2.0.0.0");
             Serialization.Write7BitEncodedInt(binaryWriter, (int)AssemblyResolutionSearchResult.FusionNamesDidNotMatch);
-            WriteOptionalString(binaryWriter, "MSIL");
+            binaryWriter.WriteOptionalString("MSIL");
 
             memoryStream.Position = 0;
             var binaryReader = new BinaryReader(memoryStream);
@@ -679,34 +671,40 @@ namespace Microsoft.Build.UnitTests
             var searchTrace = result.Should().BeOfType<AssemblyResolutionSearchTraceEventArgs>().Subject;
             searchTrace.RequestedAssemblyName.Should().Be("MyAssembly, Version=1.0.0.0");
             searchTrace.TargetProcessorArchitecture.Should().Be("MSIL");
-            searchTrace.SearchAttempts.Should().HaveCount(2);
-            searchTrace.SearchAttempts[0].FileNameAttempted.Should().Be(@"C:\libs\MyAssembly.dll");
-            searchTrace.SearchAttempts[0].Result.Should().Be(AssemblyResolutionSearchResult.FileNotFound);
-            searchTrace.SearchAttempts[1].AssemblyName.Should().Be("MyAssembly, Version=2.0.0.0");
-            searchTrace.SearchAttempts[1].Result.Should().Be(AssemblyResolutionSearchResult.FusionNamesDidNotMatch);
-            searchTrace.SearchAttempts[1].SearchPath.Should().Be(@"C:\libs", "unchanged from attempt 1, not re-written on the wire");
-            searchTrace.SearchAttempts[1].ParentAssembly.Should().BeNull("unchanged from attempt 1, not re-written on the wire");
-            searchTrace.SearchAttempts[1].IsAssemblyFoldersExSearch.Should().BeFalse("unchanged from attempt 1, not re-written on the wire");
+            searchTrace.SearchAttempts.Should().SatisfyRespectively(
+                attempt1 =>
+                {
+                    attempt1.FileNameAttempted.Should().Be(@"C:\libs\MyAssembly.dll");
+                    attempt1.Result.Should().Be(AssemblyResolutionSearchResult.FileNotFound);
+                },
+                attempt2 =>
+                {
+                    attempt2.AssemblyName.Should().Be("MyAssembly, Version=2.0.0.0");
+                    attempt2.Result.Should().Be(AssemblyResolutionSearchResult.FusionNamesDidNotMatch);
+                    attempt2.SearchPath.Should().Be(@"C:\libs", "unchanged from attempt 1, not re-written on the wire");
+                    attempt2.ParentAssembly.Should().BeNull("unchanged from attempt 1, not re-written on the wire");
+                    attempt2.IsAssemblyFoldersExSearch.Should().BeFalse("unchanged from attempt 1, not re-written on the wire");
+                });
         }
 
         private static void WriteConflictReferenceDetails(BinaryWriter writer, string fusionName, string fullPath, bool isPrimary, bool isResolved, params (string DependeeFullPath, string[] SourceItemSpecs)[] dependees)
         {
-            WriteOptionalString(writer, fusionName);
-            WriteOptionalString(writer, fullPath);
+            writer.WriteOptionalString(fusionName);
+            writer.WriteOptionalString(fullPath);
             writer.Write(isPrimary);
             writer.Write(isResolved);
-            WriteOptionalString(writer, null); // UnresolvedPrimaryItemSpec
+            writer.WriteOptionalString(null); // UnresolvedPrimaryItemSpec
 
             Serialization.Write7BitEncodedInt(writer, 0); // PrimarySourceItemSpecs.Count
 
             Serialization.Write7BitEncodedInt(writer, dependees.Length);
             foreach (var (dependeeFullPath, sourceItemSpecs) in dependees)
             {
-                WriteOptionalString(writer, dependeeFullPath);
+                writer.WriteOptionalString(dependeeFullPath);
                 Serialization.Write7BitEncodedInt(writer, sourceItemSpecs.Length);
                 foreach (var itemSpec in sourceItemSpecs)
                 {
-                    WriteOptionalString(writer, itemSpec);
+                    writer.WriteOptionalString(itemSpec);
                 }
             }
         }
@@ -754,16 +752,16 @@ namespace Microsoft.Build.UnitTests
             // affects whether Importance is read afterwards (it isn't here, since it's false).
             // ReadDiagnosticFields(fields) below is unconditional regardless of flags or version.
             Serialization.Write7BitEncodedInt(binaryWriter, 0 /* BuildEventArgsFieldFlags.None */);
-            WriteOptionalString(binaryWriter, null); // Subcategory
-            WriteOptionalString(binaryWriter, "MSB3277");
-            WriteOptionalString(binaryWriter, null); // File
-            WriteOptionalString(binaryWriter, @"C:\proj\A.csproj");
+            binaryWriter.WriteOptionalString(null); // Subcategory
+            binaryWriter.WriteOptionalString("MSB3277");
+            binaryWriter.WriteOptionalString(null); // File
+            binaryWriter.WriteOptionalString(@"C:\proj\A.csproj");
             Serialization.Write7BitEncodedInt(binaryWriter, 0); // LineNumber
             Serialization.Write7BitEncodedInt(binaryWriter, 0); // ColumnNumber
             Serialization.Write7BitEncodedInt(binaryWriter, 0); // EndLineNumber
             Serialization.Write7BitEncodedInt(binaryWriter, 0); // EndColumnNumber
 
-            WriteOptionalString(binaryWriter, "MyAssembly");
+            binaryWriter.WriteOptionalString("MyAssembly");
             Serialization.Write7BitEncodedInt(binaryWriter, (int)AssemblyConflictLossReason.HadLowerVersion);
             WriteConflictReferenceDetails(binaryWriter, "MyAssembly, Version=2.0.0.0", @"C:\refs\v2\MyAssembly.dll", isPrimary: true, isResolved: true,
                 ("C:\\proj\\A.csproj", new[] { "MyAssembly" }));
