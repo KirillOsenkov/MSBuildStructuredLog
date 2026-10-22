@@ -1568,7 +1568,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 sourceItemSpecs[i] = ReadOptionalString() ?? string.Empty;
             }
 
-            return new AssemblyConflictDependee(dependeeFullPath ?? string.Empty, sourceItemSpecs);
+            return new(dependeeFullPath ?? string.Empty, sourceItemSpecs);
         }
 
         private AssemblyConflictReferenceDetails ReadAssemblyConflictReferenceDetails()
@@ -1593,7 +1593,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 dependees[i] = ReadAssemblyConflictDependee();
             }
 
-            return new AssemblyConflictReferenceDetails(
+            return new(
                 fusionName ?? string.Empty,
                 fullPath,
                 isPrimary,
