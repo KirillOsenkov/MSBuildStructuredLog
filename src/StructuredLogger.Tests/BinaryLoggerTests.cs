@@ -615,17 +615,11 @@ namespace Microsoft.Build.UnitTests
         // ---------------------------------------------------------------------------------------
         // Binlog format v28: structured RAR diagnostic events (dotnet/msbuild#14599, #14601).
         //
-        // No production Write(...) overload exists for these three record kinds - this fork adds
-        // read-only support (see KirillOsenkov/MSBuildStructuredLog#968), matching the precedent set
-        // for MSBuildServerLifecycle (binlog format v27). So there's no BuildEventArgsWriter path to
-        // round-trip through; bytes are hand-written here instead.
-        //
-        // To keep that hand-written framing simple, these tests construct the reader with a
-        // pre-v10 fileFormatVersion (9): below BinaryLogger.ForwardCompatibilityMinimalVersion (18),
-        // so records aren't length-prefixed, and below the string-deduplication cutover (10), so
-        // ReadOptionalString()/ReadDeduplicatedString() read plain length-prefixed strings instead of
-        // string-table indices. Only the encoding of individual fields changes with this choice - the
-        // new record kinds and their field layout are version-independent.
+        // No production Write(...) overload exists for these three record kinds - this fork only
+        // added a reader (see KirillOsenkov/MSBuildStructuredLog#968), matching the precedent set
+        // for MSBuildServerLifecycle (binlog format v27). So there's no writer to round-trip
+        // through; bytes are hand-written below instead, using fileFormatVersion 9 to keep the
+        // framing plain (pre-length-prefixing, pre-string-deduplication).
         // ---------------------------------------------------------------------------------------
 
         private static void WriteOptionalString(BinaryWriter writer, string value)
