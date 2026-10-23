@@ -32,6 +32,7 @@ namespace StructuredLogViewer.Avalonia
         private BuildControl currentBuild;
         private string lastSearchText;
         private double scale = 1.0;
+        private bool hasFileActivation;
 
         public const string DefaultTitle = "MSBuild Structured Log Viewer";
 
@@ -238,7 +239,7 @@ namespace StructuredLogViewer.Avalonia
             recentFiles.UnionWith(SettingsService.GetRecentLogFiles());
             recentFiles.UnionWith(SettingsService.GetRecentProjects());
 
-            if (!recentFiles.Contains(text) && OpenFile(text))
+            if (!hasFileActivation && !recentFiles.Contains(text) && OpenFile(text))
             {
                 return true;
             }
@@ -304,13 +305,18 @@ namespace StructuredLogViewer.Avalonia
         {
             try
             {
+                if (hasFileActivation)
+                {
+                    return;
+                }
+
                 var args = Environment.GetCommandLineArgs();
                 if (args.Length > 1 && HandleArguments(args))
                 {
                     return;
                 }
 
-                if (await TryOpenFromClipboard())
+                if (await TryOpenFromClipboard() || hasFileActivation)
                 {
                     return;
                 }
@@ -341,7 +347,20 @@ namespace StructuredLogViewer.Avalonia
                 return false;
             }
 
-            var filePath = args[1];
+            OpenFileOrShowError(argument);
+            return true;
+        }
+
+        public void OpenActivatedFile(string filePath)
+        {
+            // Finder can deliver a file before Opened or while the clipboard is being read.
+            hasFileActivation = true;
+            OpenFileOrShowError(filePath);
+            Activate();
+        }
+
+        private void OpenFileOrShowError(string filePath)
+        {
             if (filePath.IndexOfAny(Path.GetInvalidPathChars()) == -1)
             {
                 try
@@ -356,16 +375,15 @@ namespace StructuredLogViewer.Avalonia
             if (!File.Exists(filePath))
             {
                 DisplayWelcomeScreen($"File {filePath} not found.");
-                return true;
+                return;
             }
 
             if (OpenFile(filePath))
             {
-                return true;
+                return;
             }
 
             DisplayWelcomeScreen($"File extension not supported: {filePath}");
-            return true;
         }
 
         public bool OpenFile(string filePath)
