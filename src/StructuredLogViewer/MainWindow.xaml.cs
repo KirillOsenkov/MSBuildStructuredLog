@@ -283,6 +283,14 @@ namespace StructuredLogViewer
             }
             catch (Exception ex)
             {
+                bool isNetworkError = IsNetworkError(ex);
+                if (isNetworkError)
+                {
+                    // The update check never completed, so Help | About would otherwise
+                    // keep the "Locally built version" placeholder.
+                    VersionMessage = $"Version {ThisAssembly.AssemblyInformationalVersion}{Environment.NewLine}Unable to check for updates (no internet connection?)";
+                }
+
                 var welcomeScreen = mainContent.Content as WelcomeScreen;
                 if (welcomeScreen != null)
                 {
@@ -292,7 +300,7 @@ namespace StructuredLogViewer
                         text = "Update.exe not found; app will not update.";
                     }
 
-                    if (ex is HttpRequestException)
+                    if (isNetworkError)
                     {
                         text = "Unable to update the app (no internet connection?)";
                     }
@@ -300,6 +308,19 @@ namespace StructuredLogViewer
                     welcomeScreen.Message = text;
                 }
             }
+        }
+
+        private static bool IsNetworkError(Exception ex)
+        {
+            for (var e = ex; e != null; e = e.InnerException)
+            {
+                if (e is HttpRequestException || e is System.Net.WebException || e is System.Net.Sockets.SocketException)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private async System.Threading.Tasks.Task UpdateApplicationAsync()
