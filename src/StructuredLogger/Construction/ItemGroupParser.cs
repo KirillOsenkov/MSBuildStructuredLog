@@ -11,8 +11,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         /// <summary>
         /// Adds the dependency chain of a structured RAR conflict reference (binlog format v28) as a
-        /// labeled Folder with one Item child per dependee - the structured-data counterpart of
-        /// <see cref="ParseThereWasAConflict"/>, which does the same from legacy free text.
+        /// labeled Folder - the structured-data counterpart of <see cref="ParseThereWasAConflict"/>,
+        /// which does the same from legacy free text. Mirrors dotnet/msbuild's
+        /// AssemblyConflictMessageFormatter.AppendReferenceDetails: besides FusionName and each
+        /// dependee's full path, also surfaces the reference's own FullPath (with its
+        /// PrimarySourceItemSpecs nested under it when resolved, or UnresolvedPrimaryItemSpec when
+        /// not), and each dependee's own SourceItemSpecs.
         /// </summary>
         public static void AddConflictReferenceDetails(TreeNode parent, string label, AssemblyConflictReferenceDetails details, StringCache stringTable)
         {
@@ -22,9 +26,40 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
 
             var node = parent.GetOrCreateNodeWithName<Folder>(stringTable.Intern($"{label}: {details.FusionName}"));
+
+            if (!string.IsNullOrEmpty(details.FullPath))
+            {
+                var fullPathItem = new Item { Text = stringTable.Intern(details.FullPath) };
+                node.AddChild(fullPathItem);
+
+                if (details.IsPrimary && details.IsResolved)
+                {
+                    AddSourceItemSpecs(fullPathItem, details.PrimarySourceItemSpecs, stringTable);
+                }
+            }
+
+            if (details.IsPrimary && !details.IsResolved && !string.IsNullOrEmpty(details.UnresolvedPrimaryItemSpec))
+            {
+                node.AddChild(new Property
+                {
+                    Name = "UnresolvedPrimaryItemSpec",
+                    Value = stringTable.Intern(details.UnresolvedPrimaryItemSpec)
+                });
+            }
+
             foreach (var dependee in details.Dependees)
             {
-                node.AddChild(new Item { Text = stringTable.Intern(dependee.DependeeFullPath) });
+                var dependeeItem = new Item { Text = stringTable.Intern(dependee.DependeeFullPath) };
+                node.AddChild(dependeeItem);
+                AddSourceItemSpecs(dependeeItem, dependee.SourceItemSpecs, stringTable);
+            }
+        }
+
+        private static void AddSourceItemSpecs(Item parent, IReadOnlyList<string> sourceItemSpecs, StringCache stringTable)
+        {
+            foreach (var itemSpec in sourceItemSpecs)
+            {
+                parent.AddChild(new Item { Text = stringTable.Intern(itemSpec) });
             }
         }
 

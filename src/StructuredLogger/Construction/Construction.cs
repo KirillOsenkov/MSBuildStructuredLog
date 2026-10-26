@@ -733,6 +733,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         // Strings.IsFoundConflicts and parsing the details with ItemGroupParser.ParseThereWasAConflict.
                         // This event already carries the same data structured, so build the same kind
                         // of child tree directly from Victor/Victim instead of matching rendered text.
+                        warning.AddChild(new Property
+                        {
+                            Name = "LossReason",
+                            Value = Intern(conflictWarning.LossReason.ToString())
+                        });
                         ItemGroupParser.AddConflictReferenceDetails(warning, "Victor", conflictWarning.Victor, stringTable);
                         ItemGroupParser.AddConflictReferenceDetails(warning, "Victim", conflictWarning.Victim, stringTable);
                     }
