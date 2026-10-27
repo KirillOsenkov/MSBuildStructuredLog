@@ -122,6 +122,9 @@ namespace StructuredLogViewer
 
         public int NameTermIndex { get; set; } = -1;
         public int ValueTermIndex { get; set; } = -1;
+        public bool NameStartsWith { get; set; }
+        public bool NameEndsWith { get; set; }
+        private bool NameFilterHasEmptyValue { get; set; }
         public bool? Skipped { get; set; }
         public int Height { get; set; } = -1;
 
@@ -318,6 +321,33 @@ namespace StructuredLogViewer
             {
                 var word = Terms[termIndex].Word;
 
+                if (word.StartsWith("name^=", StringComparison.OrdinalIgnoreCase) || word.StartsWith("name$=", StringComparison.OrdinalIgnoreCase))
+                {
+                    bool startsWith = word[4] == '^';
+                    word = word.Substring(6);
+                    Terms.RemoveAt(termIndex);
+                    if (word.Length == 0)
+                    {
+                        NameFilterHasEmptyValue = true;
+                        continue;
+                    }
+
+                    var term = Term.Get(word);
+                    if (term != default)
+                    {
+                        Terms.Insert(termIndex, term);
+                        NameTermIndex = termIndex;
+                        NameStartsWith = startsWith;
+                        NameEndsWith = !startsWith;
+                    }
+                    else
+                    {
+                        NameFilterHasEmptyValue = true;
+                    }
+
+                    continue;
+                }
+
                 if (word.StartsWith("name=", StringComparison.OrdinalIgnoreCase) && word.Length > 5)
                 {
                     word = word.Substring(5, word.Length - 5);
@@ -403,6 +433,10 @@ namespace StructuredLogViewer
             query = query.Replace("end >", "end>");
             query = query.Replace("end> ", "end>");
             query = query.Replace("name =", "name=");
+            query = query.Replace("name^ =", "name^=");
+            query = query.Replace("name$ =", "name$=");
+            query = query.Replace("name^= ", "name^=");
+            query = query.Replace("name$= ", "name$=");
             query = query.Replace("value =", "value=");
             query = query.Replace("skipped =", "skipped=");
 
@@ -628,6 +662,11 @@ namespace StructuredLogViewer
         {
             SearchResult result = null;
 
+            if (NameFilterHasEmptyValue)
+            {
+                return null;
+            }
+
             if (NodeIndex > -1)
             {
                 if (node is TimedNode timedNode && timedNode.Index == NodeIndex)
@@ -678,19 +717,17 @@ namespace StructuredLogViewer
                 {
                     string field = searchFields.array[fieldIndex];
 
-                    if (MatchesInStrings != null)
+                    if (node is NameValueNode && (termIndex == NameTermIndex || termIndex == ValueTermIndex))
                     {
-                        if (!term.IsMatch(field, MatchesInStrings[termIndex]))
+                        if ((termIndex == NameTermIndex && fieldIndex != 1) || (termIndex == ValueTermIndex && fieldIndex != 2))
                         {
                             continue;
                         }
                     }
-                    else
+
+                    if (!IsTermMatch(term, field, termIndex))
                     {
-                        if (!term.IsMatch(field))
-                        {
-                            continue;
-                        }
+                        continue;
                     }
 
                     if (result == null)
@@ -792,6 +829,23 @@ namespace StructuredLogViewer
             }
 
             return result;
+        }
+
+        private bool IsTermMatch(Term term, string field, int termIndex)
+        {
+            if (termIndex == NameTermIndex && NameStartsWith)
+            {
+                return field.StartsWith(term.Word, StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (termIndex == NameTermIndex && NameEndsWith)
+            {
+                return field.EndsWith(term.Word, StringComparison.OrdinalIgnoreCase);
+            }
+
+            return MatchesInStrings != null
+                ? term.IsMatch(field, MatchesInStrings[termIndex])
+                : term.IsMatch(field);
         }
 
         public SearchResult IsMatch(string field)

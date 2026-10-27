@@ -58,8 +58,13 @@ For NameValue-style nodes (Property, Metadata, Item):
 
   name=Configuration              name contains 'Configuration' (substring)
   name="Configuration"            name equals 'Configuration' exactly
+  name^=Q                          name starts with 'Q' (case-insensitive)
+  name$=Q                          name ends with 'Q' (case-insensitive)
   value=Debug                     value contains 'Debug'
   name=Foo value=Bar              both filters apply
+
+Prefix and suffix filters also apply to properties, items and metadata. They
+match the complete name field; an empty prefix or suffix matches nothing.
 
 Other field filters:
   skipped=true                    only skipped targets
