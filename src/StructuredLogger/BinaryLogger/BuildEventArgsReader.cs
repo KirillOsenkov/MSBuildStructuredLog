@@ -10,6 +10,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using DotUtils.StreamUtils;
 using Microsoft.Build.BackEnd;
 using Microsoft.Build.Framework;
@@ -24,6 +25,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
     /// </summary>
     internal partial class BuildEventArgsReader : IBuildEventArgsReaderNotifications, IDisposable
     {
+        private static readonly Regex CscInfoMessageRegex = new Regex(
+            @"^(?<file>.+)\((?<line>\d+),(?<column>\d+)\): info (?<code>CS\d{4}): (?<message>.*)$",
+            RegexOptions.CultureInvariant | RegexOptions.Compiled);
+
         private readonly BinaryReader _binaryReader;
         // This is used to verify that events deserialization is not overreading expected size.
         private readonly TransparentReadStream _readStream;
@@ -1264,7 +1269,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     ProjectFile = fields.ProjectFile,
                 };
 
-                e = buildMessageEventArgs;
+                e = TryParseCscInfoMessage(buildMessageEventArgs, out var warning)
+                    ? warning
+                    : buildMessageEventArgs;
 
                 OnMessageRead(buildMessageEventArgs);
             }
@@ -1295,6 +1302,43 @@ namespace Microsoft.Build.Logging.StructuredLogger
             e.BuildEventContext = fields.BuildEventContext;
 
             return e;
+        }
+
+        private static bool TryParseCscInfoMessage(BuildMessageEventArgs message, out BuildWarningEventArgs warning)
+        {
+            warning = null;
+
+            if (!string.Equals(message.SenderName, "Csc", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            var match = CscInfoMessageRegex.Match(message.Message ?? string.Empty);
+            if (!match.Success ||
+                !int.TryParse(match.Groups["line"].Value, out int lineNumber) ||
+                !int.TryParse(match.Groups["column"].Value, out int columnNumber))
+            {
+                return false;
+            }
+
+            warning = new BuildWarningEventArgs(
+                message.Subcategory,
+                match.Groups["code"].Value,
+                match.Groups["file"].Value,
+                lineNumber,
+                columnNumber,
+                0,
+                0,
+                match.Groups["message"].Value,
+                message.HelpKeyword,
+                message.SenderName,
+                message.Timestamp)
+            {
+                ProjectFile = message.ProjectFile,
+                BuildEventContext = message.BuildEventContext,
+            };
+
+            return true;
         }
 
         private BuildEventArgs ReadTaskCommandLineEventArgs()

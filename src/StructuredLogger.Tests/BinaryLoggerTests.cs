@@ -228,6 +228,67 @@ namespace Microsoft.Build.UnitTests
         }
 
         [Fact]
+        public void Replay_ParsesCscInfoDiagnosticsAsWarnings()
+        {
+            const string file = @"C:\src\Example.cs";
+            const string projectFile = @"C:\src\Example.csproj";
+            const string diagnosticText = "Compiling requires binding the lambda expression at least 100 times.";
+            var context = new BuildEventContext(1, 1, 1, 1, 101, 11, 111);
+
+            var decompressed = new MemoryStream();
+            var binaryWriter = new BinaryWriter(decompressed);
+            binaryWriter.Write(BinaryLogger.FileFormatVersion);
+            binaryWriter.Write(BinaryLogger.FileFormatVersion);
+
+            var eventWriter = new BuildEventArgsWriter(binaryWriter);
+            eventWriter.Write(new BuildMessageEventArgs(
+                $"{file}(12,34): info CS9236: {diagnosticText}",
+                helpKeyword: null,
+                senderName: "Csc",
+                importance: MessageImportance.Normal)
+            {
+                BuildEventContext = context,
+                ProjectFile = projectFile,
+            });
+            eventWriter.Write(new BuildMessageEventArgs(
+                "Microsoft (R) Visual C# Compiler version 4.12.0",
+                helpKeyword: null,
+                senderName: "Csc",
+                importance: MessageImportance.Normal));
+            binaryWriter.Flush();
+            decompressed.WriteByte((byte)BinaryLogRecordKind.EndOfFile);
+            decompressed.Position = 0;
+
+            var compressed = new MemoryStream();
+            using (var gzip = new System.IO.Compression.GZipStream(
+                compressed,
+                System.IO.Compression.CompressionLevel.Optimal,
+                leaveOpen: true))
+            {
+                decompressed.CopyTo(gzip);
+            }
+            compressed.Position = 0;
+
+            var events = new List<BuildEventArgs>();
+            var reader = new BinLogReader();
+            reader.AnyEventRaised += (_, args) => events.Add(args);
+            reader.Replay(compressed);
+
+            events.Should().ContainSingle(e => e is BuildWarningEventArgs);
+            var warning = events.OfType<BuildWarningEventArgs>().Single();
+            warning.Code.Should().Be("CS9236");
+            warning.File.Should().Be(file);
+            warning.LineNumber.Should().Be(12);
+            warning.ColumnNumber.Should().Be(34);
+            warning.Message.Should().Be(diagnosticText);
+            warning.ProjectFile.Should().Be(projectFile);
+            warning.BuildEventContext.Should().Be(context);
+
+            events.OfType<BuildMessageEventArgs>().Should().ContainSingle(message =>
+                message.Message.StartsWith("Microsoft (R) Visual C# Compiler", StringComparison.Ordinal));
+        }
+
+        [Fact]
         public void Replay_EventFilter_PreservesTruncationRecoveryWhenRejectingEvents()
         {
             using var stream = CreateBinlogStream(withEndOfFileMarker: false);
