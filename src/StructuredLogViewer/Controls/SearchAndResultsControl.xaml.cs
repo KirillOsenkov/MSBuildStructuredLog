@@ -59,8 +59,10 @@ namespace StructuredLogViewer.Controls
 
         public void RetriggerSearch()
         {
-            typingConcurrentOperation.TriggerSearch(SearchText, Search.DefaultMaxResults);
+            typingConcurrentOperation.TriggerSearch(SearchText, MaxResults);
         }
+
+        public int MaxResults { get; set; } = Search.DefaultMaxResults;
 
         public void TriggerSearch(string text, int maxResults)
         {
@@ -87,7 +89,7 @@ namespace StructuredLogViewer.Controls
                 return;
             }
 
-            typingConcurrentOperation.TextChanged(searchText, Search.DefaultMaxResults);
+            typingConcurrentOperation.TextChanged(searchText, MaxResults);
         }
 
         private void DisplaySearchResults(object results, bool moreAvailable = false, CancellationToken cancellationToken = default)

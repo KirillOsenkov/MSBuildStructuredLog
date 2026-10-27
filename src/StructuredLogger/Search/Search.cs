@@ -11,6 +11,11 @@ namespace StructuredLogViewer
     {
         public const int DefaultMaxResults = 300;
 
+        public static int GetMaxResults(int requestedMaxResults, bool alwaysShowAllResults)
+        {
+            return alwaysShowAllResults ? int.MaxValue : requestedMaxResults;
+        }
+
         private readonly IEnumerable<TreeNode> roots;
         private readonly IEnumerable<string> strings;
         private readonly int maxResults;

@@ -349,6 +349,15 @@ namespace StructuredLogViewer
             set => Set(ref markResultsInTree, value);
         }
 
+        private static bool alwaysShowAllSearchResults = false;
+
+        public static bool AlwaysShowAllSearchResults
+        {
+            get => Get(ref alwaysShowAllSearchResults);
+
+            set => Set(ref alwaysShowAllSearchResults, value);
+        }
+
         public static bool ShowConfigurationAndPlatform
         {
             get => Get(ref ProjectOrEvaluationHelper.ShowConfigurationAndPlatform);
@@ -427,6 +436,7 @@ namespace StructuredLogViewer
 
         const string Virtualization = "Virtualization=";
         const string MarkResultsInTreeSetting = "MarkResultsInTree=";
+        const string AlwaysShowAllSearchResultsSetting = "AlwaysShowAllSearchResults=";
         const string ShowConfigurationAndPlatformSetting = "ShowConfigurationAndPlatform=";
         const string UseDarkThemeSetting = "UseDarkTheme=";
         const string VSCodeHintDismissedSetting = "VSCodeHintDismissed=";
@@ -441,6 +451,7 @@ namespace StructuredLogViewer
             sb.AppendLine(Virtualization + enableTreeViewVirtualization.ToString());
             //sb.AppendLine(ParentAllTargetsUnderProjectSetting + parentAllTargetsUnderProject.ToString());
             sb.AppendLine(MarkResultsInTreeSetting + markResultsInTree.ToString());
+            sb.AppendLine(AlwaysShowAllSearchResultsSetting + alwaysShowAllSearchResults.ToString());
             sb.AppendLine(ShowConfigurationAndPlatformSetting + ShowConfigurationAndPlatform.ToString());
             sb.AppendLine(UseDarkThemeSetting + useDarkTheme.ToString());
             sb.AppendLine(VSCodeHintDismissedSetting + vsCodeHintDismissed.ToString());
@@ -472,6 +483,7 @@ namespace StructuredLogViewer
                     ProcessLine(Virtualization, line, ref enableTreeViewVirtualization);
                     //ProcessLine(ParentAllTargetsUnderProjectSetting, line, ref parentAllTargetsUnderProject);
                     ProcessLine(MarkResultsInTreeSetting, line, ref markResultsInTree);
+                    ProcessLine(AlwaysShowAllSearchResultsSetting, line, ref alwaysShowAllSearchResults);
                     ProcessLine(ShowConfigurationAndPlatformSetting, line, ref ProjectOrEvaluationHelper.ShowConfigurationAndPlatform);
                     ProcessLine(UseDarkThemeSetting, line, ref useDarkTheme);
                     ProcessLine(VSCodeHintDismissedSetting, line, ref vsCodeHintDismissed);

@@ -907,6 +907,10 @@
                                       Margin="10,0,10,10"
                                       IsChecked="{Binding MarkResultsInTree}"
                                       ToolTip.Tip="Mark tree nodes that appear in search results with a dot"/>
+                            <CheckBox Content="Always show all search results (may be slow)"
+                                      Margin="10,0,10,10"
+                                      IsChecked="{Binding AlwaysShowAllSearchResults}"
+                                      ToolTip.Tip="Disable the default 300 result limit for Log tab searches"/>
                             <CheckBox Content="Show project configuration and platform"
                                       Margin="10,0,10,10"
                                       IsChecked="{Binding ShowConfigurationAndPlatform}"

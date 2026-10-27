@@ -153,6 +153,10 @@ namespace StructuredLogViewer.Avalonia.Controls
 
             UpdateWatermark();
 
+            searchLogControl.MaxResults = Search.GetMaxResults(
+                Search.DefaultMaxResults,
+                SettingsService.AlwaysShowAllSearchResults);
+
             searchLogControl.ExecuteSearch = (searchText, maxResults, cancellationToken) =>
             {
                 if (Build.SearchIndex is { } index)
@@ -1108,7 +1112,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
         private void UpdateWatermark()
         {
-            string watermarkText0 = @"Type in the search box to search. Press Ctrl+F to focus the search box. Results (up to 1000) will display here.
+            string watermarkText0 = @"Type in the search box to search. Press Ctrl+F to focus the search box. Searches show up to 300 results by default. Enable 'Always show all search results' in Settings to remove the limit.
 ";
 
             string watermarkText1 = @"

@@ -127,6 +127,16 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
+        public bool AlwaysShowAllSearchResults
+        {
+            get => SettingsService.AlwaysShowAllSearchResults;
+            set
+            {
+                SettingsService.AlwaysShowAllSearchResults = value;
+                RaisePropertyChanged();
+            }
+        }
+
         public bool ShowConfigurationAndPlatform
         {
             get => SettingsService.ShowConfigurationAndPlatform;
