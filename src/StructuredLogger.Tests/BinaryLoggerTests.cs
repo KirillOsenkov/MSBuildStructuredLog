@@ -728,6 +728,33 @@ namespace Microsoft.Build.UnitTests
         }
 
         [Fact]
+        public void Replay_LinuxBinlogWithoutCultureMarker_InitializesDefaultResourcesForPropertyReassignment()
+        {
+            // The attached Linux repro was produced by MSBuild 17.11, which predates the
+            // CurrentUICulture preamble. It contains property reassignment records whose
+            // replay message must be formatted from the default en-US resource strings.
+            using var stream = typeof(BinaryLoggerTests).Assembly.GetManifestResourceStream(
+                "StructuredLogger.Tests.Issue936-LinuxPropertyReassignment.binlog");
+            stream.Should().NotBeNull();
+            Strings.Initialize("de-DE");
+            var reader = new BinLogReader();
+            var events = new List<BuildEventArgs>();
+            var exceptions = new List<Exception>();
+            reader.AnyEventRaised += (_, args) => events.Add(args);
+            reader.OnException += exceptions.Add;
+
+            reader.Replay(stream);
+
+            exceptions.Should().BeEmpty();
+            Strings.Culture.Should().Be("en-US");
+            events.Should().NotBeEmpty();
+            var reassignments = events.OfType<PropertyReassignmentEventArgs>().ToList();
+            reassignments.Should().NotBeEmpty();
+            var reassignment = reassignments.First();
+            reassignment.Message.Should().Contain("Property reassignment:");
+        }
+
+        [Fact]
         public void ReadBuild_InterruptedLog_SurfacesRecoveredPartialError()
         {
             // The user-facing behavior: a truncated binlog opens as a build carrying exactly one

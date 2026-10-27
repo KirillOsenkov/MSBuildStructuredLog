@@ -27,6 +27,9 @@
     <ProjectReference Include="..\StructuredLogViewer.Core\StructuredLogViewer.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Issue936-LinuxPropertyReassignment.binlog" />
+  </ItemGroup>
+  <ItemGroup>
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>

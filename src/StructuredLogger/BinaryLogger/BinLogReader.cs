@@ -83,6 +83,12 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public void Replay(Stream stream, Progress progress)
         {
+            // Some event types (for example property reassignment) need resource strings to
+            // synthesize their Message. Older binlogs may not contain a culture preamble, so
+            // establish the default culture before reading any events. A culture marker in the
+            // binlog can still override it when encountered.
+            Strings.Initialize();
+
             var gzipStream = new GZipStream(stream, CompressionMode.Decompress, leaveOpen: true);
             var bufferedStream = new BufferedStream(gzipStream, 32768);
             var binaryReader = new BinaryReader(bufferedStream);
