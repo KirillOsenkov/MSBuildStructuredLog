@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Threading;
 using System.Windows;
@@ -35,6 +36,8 @@ namespace StructuredLogViewer
         public const string DefaultTitle = "MSBuild Structured Log Viewer";
 
         public string VersionMessage { get; set; } = "Locally built version";
+
+        private volatile bool isCheckingForUpdates;
 
         public MainWindow()
         {
@@ -96,6 +99,15 @@ namespace StructuredLogViewer
         private bool ShouldIgnore(Exception exception)
         {
             var toString = exception.ToString();
+
+            // Squirrel can raise these first-chance exceptions while a version check
+            // is failing or its HTTP resources are being disposed. They are handled
+            // by UpdateApplicationAsync and should not be reported as app errors.
+            if (isCheckingForUpdates &&
+                (exception is HttpRequestException || exception is SocketException || exception is ObjectDisposedException))
+            {
+                return true;
+            }
 
             if (exception is NullReferenceException)
             {
@@ -286,7 +298,7 @@ namespace StructuredLogViewer
                 var welcomeScreen = mainContent.Content as WelcomeScreen;
                 if (welcomeScreen != null)
                 {
-                    var text = ex.ToString();
+                    var text = ex.Message;
                     if (text.Contains("Update.exe not found"))
                     {
                         text = "Update.exe not found; app will not update.";
@@ -310,35 +322,72 @@ namespace StructuredLogViewer
                 return;
             }
 
+            await UpdateApplicationAsync(CheckForUpdatesAsync);
+        }
+
+        internal async System.Threading.Tasks.Task UpdateApplicationAsync(
+            Func<System.Threading.Tasks.Task<Tuple<string, string>>> checkForUpdates)
+        {
+            var installedVersion = Assembly.GetExecutingAssembly()
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+                ?? Assembly.GetExecutingAssembly().GetName().Version?.ToString()
+                ?? "unknown";
+            VersionMessage = $"Installed version: {installedVersion}{Environment.NewLine}Latest version: checking...";
+
+            try
+            {
+                isCheckingForUpdates = true;
+                var checkResult = await checkForUpdates();
+                installedVersion = checkResult.Item1;
+                VersionMessage = $"Installed version: {installedVersion}{Environment.NewLine}{checkResult.Item2}";
+
+                var welcomeScreen = mainContent.Content as WelcomeScreen;
+                if (welcomeScreen != null)
+                {
+                    welcomeScreen.Version = checkResult.Item2;
+                }
+            }
+            catch
+            {
+                const string checkFailed = "Latest version check failed. Check your internet connection and try again later.";
+                VersionMessage = $"Installed version: {installedVersion}{Environment.NewLine}{checkFailed}";
+                var welcomeScreen = mainContent.Content as WelcomeScreen;
+                if (welcomeScreen != null)
+                {
+                    welcomeScreen.Version = checkFailed;
+                }
+            }
+            finally
+            {
+                isCheckingForUpdates = false;
+            }
+        }
+
+        private async System.Threading.Tasks.Task<Tuple<string, string>> CheckForUpdatesAsync()
+        {
             using (var updateManager = await UpdateManager.GitHubUpdateManager("https://github.com/KirillOsenkov/MSBuildStructuredLog"))
             {
-                var result = await updateManager.UpdateApp();
                 var currentVersion = updateManager.CurrentlyInstalledVersion();
+                var result = await updateManager.UpdateApp();
                 string message;
                 if (result == null || result.Version == currentVersion)
                 {
-                    message = "You have the latest version: " + currentVersion.ToString();
+                    message = "Latest version check: You have the latest version.";
                     FileAssociations.EnsureAssociationsSet();
                 }
                 else if (result.Version > currentVersion)
                 {
                     var versionText = result.Version.ToString();
-                    message = "After restarting the app you will be on version " + versionText;
+                    message = "Latest version check: After restarting the app you will be on version " + versionText;
                     BinaryLogger.IsNewerVersionAvailable = true;
                     FileAssociations.EnsureAssociationsSet(versionText);
                 }
                 else
                 {
-                    message = $"You're running a version ({currentVersion.ToString()}) which is newer than the latest stable ({result.Version}).";
+                    message = $"Latest version check: installed version is newer than the latest stable ({result.Version}).";
                 }
 
-                var welcomeScreen = mainContent.Content as WelcomeScreen;
-                if (welcomeScreen != null)
-                {
-                    welcomeScreen.Version = message;
-                }
-
-                VersionMessage = message;
+                return Tuple.Create(currentVersion.ToString(), message);
             }
         }
 
