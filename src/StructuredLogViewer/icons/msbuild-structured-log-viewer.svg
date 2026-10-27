@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 32 32" role="img" aria-labelledby="title">
+  <title id="title">MSBuild Structured Log Viewer</title>
+  <rect x="1" y="1" width="11" height="11" rx="1" fill="#b889ff"/>
+  <rect x="14" y="8" width="9" height="9" rx="1" fill="#28a9f5"/>
+  <rect x="24" y="8" width="7" height="9" rx="1" fill="#a7e533"/>
+  <rect x="14" y="19" width="9" height="9" rx="1" fill="#28a9f5"/>
+  <rect x="24" y="19" width="7" height="9" rx="1" fill="#a7e533"/>
+</svg>
