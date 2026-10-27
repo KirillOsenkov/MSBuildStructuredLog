@@ -14,6 +14,7 @@
     <AssemblyTitle>MSBuild Structured Log Viewer</AssemblyTitle>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ServerGarbageCollection>true</ServerGarbageCollection>
+    <DefineConstants Condition="'$(Configuration)' == 'Diagnostic' and '$(TargetFramework)' == 'net10.0-windows'">$(DefineConstants);LOCAL_DIAGNOSTICS</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup Condition="$(TargetFramework) == 'net472'">

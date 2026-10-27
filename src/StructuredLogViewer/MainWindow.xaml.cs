@@ -26,6 +26,7 @@ namespace StructuredLogViewer
         private string logFilePath;
         private string projectFilePath;
         private BuildControl currentBuild;
+        internal BuildControl DiagnosticBuild => currentBuild;
         private string lastSearchText;
         private double scale = 1.0;
 
@@ -586,7 +587,17 @@ namespace StructuredLogViewer
             }
         }
 
+        internal async System.Threading.Tasks.Task OpenLogFileForDiagnostics(string filePath)
+        {
+            await OpenLogFileAsync(filePath);
+        }
+
         private async void OpenLogFile(string filePath)
+        {
+            await OpenLogFileAsync(filePath);
+        }
+
+        private async System.Threading.Tasks.Task OpenLogFileAsync(string filePath)
         {
             if (!File.Exists(filePath))
             {

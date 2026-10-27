@@ -43,6 +43,8 @@ namespace StructuredLogViewer.Controls
     {
         public Build Build { get; set; }
         public TreeViewItem SelectedTreeViewItem { get; private set; }
+        public string DiagnosticSelectedNode => (treeView.SelectedItem as BaseNode)?.ToString();
+        public object DiagnosticSelectedItem => treeView.SelectedItem;
         public string LogFilePath => Build?.LogFilePath;
 
         private readonly List<string> attachedBinlogs = new List<string>();
