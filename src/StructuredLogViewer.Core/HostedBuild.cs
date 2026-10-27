@@ -34,7 +34,7 @@ namespace StructuredLogViewer
 
             var postfixArguments = GetPostfixArguments();
 
-            // the command line we pass to Process.Start doesn't need exec file 
+            // the command line we pass to Process.Start doesn't need exec file
             var commandLine = $"{projectFilePath.QuoteIfNeeded()} {customArguments} {postfixArguments}";
 
             commandLine = isLibraryMsBuild == true ? $"{msBuildFile} {commandLine}" : commandLine;
@@ -49,6 +49,18 @@ namespace StructuredLogViewer
                 {
                     var processStartInfo = new ProcessStartInfo(fileExe, commandLine);
                     processStartInfo.WorkingDirectory = Path.GetDirectoryName(projectFilePath);
+
+                    // MSBuild SDK tasks use DOTNET_HOST_PATH to start child task hosts. When
+                    // launching MSBuild.dll from the macOS GUI viewer, the SDK does not
+                    // provide it in this process environment. The current process module
+                    // path identifies the host executable for the framework-dependent viewer.
+                    if (isLibraryMsBuild == true)
+                    {
+                        DotnetHostEnvironment.ConfigureForMSBuild(
+                            processStartInfo,
+                            DotnetHostEnvironment.GetProcessPath(),
+                            DotnetHostEnvironment.IsMacOS());
+                    }
                     var process = Process.Start(processStartInfo);
                     process.WaitForExit();
 
