@@ -335,7 +335,30 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// </summary>
         /// <remarks>Useful for debugging and analyzing binary logs</remarks>
         public IEnumerable<Record> ReadRecords(Stream binaryLogStream)
-            => ReadRecordsFromDecompressedStream(GetDecompressedStream(binaryLogStream));
+            => ReadRecordsFromBinaryLogStream(binaryLogStream);
+
+        private IEnumerable<Record> ReadRecordsFromBinaryLogStream(Stream binaryLogStream)
+        {
+            // The returned records enumerable is lazy and can be enumerated more than once.
+            // Create a fresh decompression pipeline for each pass and leave the caller-owned
+            // compressed stream open. File paths and byte arrays provide seekable streams, so
+            // rewind them before each pass.
+            return EnumerateRecords();
+
+            IEnumerable<Record> EnumerateRecords()
+            {
+                if (binaryLogStream.CanSeek)
+                {
+                    binaryLogStream.Position = 0;
+                }
+
+                using var decompressedStream = GetDecompressedStream(binaryLogStream);
+                foreach (var record in ReadRecordsFromDecompressedStream(decompressedStream))
+                {
+                    yield return record;
+                }
+            }
+        }
 
         private static Stream GetDecompressedStream(Stream binaryLogStream)
         {

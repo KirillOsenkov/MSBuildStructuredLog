@@ -228,6 +228,28 @@ namespace Microsoft.Build.UnitTests
         }
 
         [Fact]
+        public void ReadRecords_CanBeEnumeratedMoreThanOnce()
+        {
+            using var stream = CreateBinlogStream(withEndOfFileMarker: true);
+            var bytes = ((MemoryStream)stream).ToArray();
+            var records = BinaryLog.ReadRecords(bytes);
+
+            var firstEnumeration = records.ToList();
+            var secondEnumeration = records.ToList();
+
+            secondEnumeration.Should().BeEquivalentTo(firstEnumeration,
+                "each enumeration should read the same records from the start of the binlog");
+            stream.CanRead.Should().BeTrue("reading records must leave the caller-owned stream open");
+
+            string path = GetTestFile("read-records-repeat.binlog");
+            File.WriteAllBytes(path, bytes);
+            var fileRecords = BinaryLog.ReadRecords(path);
+
+            fileRecords.ToList().Should().BeEquivalentTo(fileRecords.ToList(),
+                "the file-path overload should also be repeatable");
+        }
+
+        [Fact]
         public void Replay_EventFilter_PreservesTruncationRecoveryWhenRejectingEvents()
         {
             using var stream = CreateBinlogStream(withEndOfFileMarker: false);
