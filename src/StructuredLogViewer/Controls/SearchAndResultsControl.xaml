@@ -43,7 +43,8 @@
                 local:ScrollViewerHelper.ShiftWheelScrollsHorizontally="True" />
       <ScrollViewer x:Name="watermarkScrollViewer"
           HorizontalScrollBarVisibility="Disabled" 
-          VerticalScrollBarVisibility="Auto">
+          VerticalScrollBarVisibility="Auto"
+          Focusable="False">
         <ContentPresenter x:Name="watermark"
                    Margin="40"
                    HorizontalAlignment="Center"
