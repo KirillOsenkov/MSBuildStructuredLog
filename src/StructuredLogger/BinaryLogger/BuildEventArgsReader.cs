@@ -469,6 +469,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 BinaryLogRecordKind.BuildCanceled => ReadBuildCanceledEventArgs(),
                 BinaryLogRecordKind.LoggersRegistered => ReadLoggersRegisteredEventArgs(),
                 BinaryLogRecordKind.MSBuildServerLifecycle => ReadMSBuildServerLifecycleEventArgs(),
+                BinaryLogRecordKind.AssemblyResolutionSearchTrace => ReadAssemblyResolutionSearchTraceEventArgs(),
+                BinaryLogRecordKind.AssemblyConflictDependencyDetails => ReadAssemblyConflictDependencyDetailsMessageEventArgs(),
+                BinaryLogRecordKind.AssemblyConflictWarning => ReadAssemblyConflictWarningEventArgs(),
                 _ => null,
                 
             };
@@ -1509,6 +1512,137 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 fields.Message,
                 fields.Importance,
                 shortLived);
+            SetCommonFields(e, fields);
+            e.ProjectFile = fields.ProjectFile;
+
+            return e;
+        }
+
+        // Wire format defined by dotnet/msbuild's own BuildEventArgsWriter/Reader - see dotnet/msbuild#14599.
+        private BuildEventArgs ReadAssemblyResolutionSearchTraceEventArgs()
+        {
+            var fields = ReadBuildEventArgsFields(readImportance: true);
+            var requestedAssemblyName = ReadOptionalString() ?? string.Empty;
+            var targetProcessorArchitecture = ReadOptionalString();
+
+            int count = ReadInt32();
+            var attempts = new AssemblyResolutionSearchAttempt[count];
+            AssemblyResolutionSearchAttempt previous = null;
+            for (int i = 0; i < count; i++)
+            {
+                var unchangedContext = (AssemblyResolutionSearchAttemptContext)_binaryReader.ReadByte();
+                var attempt = new AssemblyResolutionSearchAttempt(
+                    ReadOptionalString(),
+                    (unchangedContext & AssemblyResolutionSearchAttemptContext.SearchPathUnchanged) != 0 ? previous?.SearchPath : ReadOptionalString(),
+                    (unchangedContext & AssemblyResolutionSearchAttemptContext.ParentAssemblyUnchanged) != 0 ? previous?.ParentAssembly : ReadOptionalString(),
+                    ReadOptionalString(),
+                    (AssemblyResolutionSearchResult)ReadInt32(),
+                    ReadOptionalString(),
+                    (unchangedContext & AssemblyResolutionSearchAttemptContext.AssemblyFoldersExUnchanged) != 0 ? (previous?.IsAssemblyFoldersExSearch ?? false) : ReadBoolean());
+                attempts[i] = attempt;
+                previous = attempt;
+            }
+
+            var e = new AssemblyResolutionSearchTraceEventArgs(
+                requestedAssemblyName,
+                targetProcessorArchitecture,
+                attempts,
+                fields.SenderName ?? string.Empty,
+                fields.Importance,
+                fields.Timestamp);
+            SetCommonFields(e, fields);
+            e.ProjectFile = fields.ProjectFile;
+
+            return e;
+        }
+
+        // Wire format defined by dotnet/msbuild's own BuildEventArgsWriter/Reader - see dotnet/msbuild#14601.
+        // Shared by ReadAssemblyConflictDependencyDetailsMessageEventArgs and ReadAssemblyConflictWarningEventArgs below.
+        private AssemblyConflictDependee ReadAssemblyConflictDependee()
+        {
+            var dependeeFullPath = ReadOptionalString();
+            int count = ReadInt32();
+            var sourceItemSpecs = new string[count];
+            for (int i = 0; i < count; i++)
+            {
+                sourceItemSpecs[i] = ReadOptionalString() ?? string.Empty;
+            }
+
+            return new(dependeeFullPath ?? string.Empty, sourceItemSpecs);
+        }
+
+        private AssemblyConflictReferenceDetails ReadAssemblyConflictReferenceDetails()
+        {
+            var fusionName = ReadOptionalString();
+            var fullPath = ReadOptionalString();
+            var isPrimary = ReadBoolean();
+            var isResolved = ReadBoolean();
+            var unresolvedPrimaryItemSpec = ReadOptionalString();
+
+            int primarySourceItemSpecCount = ReadInt32();
+            var primarySourceItemSpecs = new string[primarySourceItemSpecCount];
+            for (int i = 0; i < primarySourceItemSpecCount; i++)
+            {
+                primarySourceItemSpecs[i] = ReadOptionalString() ?? string.Empty;
+            }
+
+            int dependeeCount = ReadInt32();
+            var dependees = new AssemblyConflictDependee[dependeeCount];
+            for (int i = 0; i < dependeeCount; i++)
+            {
+                dependees[i] = ReadAssemblyConflictDependee();
+            }
+
+            return new(
+                fusionName ?? string.Empty,
+                fullPath,
+                isPrimary,
+                isResolved,
+                unresolvedPrimaryItemSpec,
+                primarySourceItemSpecs,
+                dependees);
+        }
+
+        private BuildEventArgs ReadAssemblyConflictDependencyDetailsMessageEventArgs()
+        {
+            var fields = ReadBuildEventArgsFields(readImportance: true);
+            var victor = ReadAssemblyConflictReferenceDetails();
+            var victim = ReadAssemblyConflictReferenceDetails();
+
+            var e = new AssemblyConflictDependencyDetailsMessageEventArgs(
+                victor,
+                victim,
+                fields.SenderName ?? string.Empty,
+                fields.Importance,
+                fields.Timestamp);
+            SetCommonFields(e, fields);
+            e.ProjectFile = fields.ProjectFile;
+
+            return e;
+        }
+
+        private BuildEventArgs ReadAssemblyConflictWarningEventArgs()
+        {
+            var fields = ReadBuildEventArgsFields();
+            ReadDiagnosticFields(fields);
+
+            var simpleAssemblyName = ReadOptionalString() ?? string.Empty;
+            var lossReason = (AssemblyConflictLossReason)ReadInt32();
+            var victor = ReadAssemblyConflictReferenceDetails();
+            var victim = ReadAssemblyConflictReferenceDetails();
+
+            var e = new AssemblyConflictWarningEventArgs(
+                simpleAssemblyName,
+                lossReason,
+                victor,
+                victim,
+                fields.Code ?? string.Empty,
+                fields.File,
+                fields.LineNumber,
+                fields.ColumnNumber,
+                fields.HelpKeyword,
+                fields.SenderName ?? string.Empty,
+                fields.Timestamp);
             SetCommonFields(e, fields);
             e.ProjectFile = fields.ProjectFile;
 

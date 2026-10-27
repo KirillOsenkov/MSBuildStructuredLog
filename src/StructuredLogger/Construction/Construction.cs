@@ -726,7 +726,22 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     string text = args.Message;
 
-                    if (parent is ResolveAssemblyReferenceTask rar)
+                    if (args is AssemblyConflictWarningEventArgs conflictWarning)
+                    {
+                        // Structured replacement for the legacy free-text MSB3277 conflict warning
+                        // (binlog format v28). The `else if` below handles that legacy text by matching
+                        // Strings.IsFoundConflicts and parsing the details with ItemGroupParser.ParseThereWasAConflict.
+                        // This event already carries the same data structured, so build the same kind
+                        // of child tree directly from Victor/Victim instead of matching rendered text.
+                        warning.AddChild(new Property
+                        {
+                            Name = "LossReason",
+                            Value = Intern(conflictWarning.LossReason.ToString())
+                        });
+                        ItemGroupParser.AddConflictReferenceDetails(warning, "Victor", conflictWarning.Victor, stringTable);
+                        ItemGroupParser.AddConflictReferenceDetails(warning, "Victim", conflictWarning.Victim, stringTable);
+                    }
+                    else if (parent is ResolveAssemblyReferenceTask rar)
                     {
                         var match = Strings.IsFoundConflicts(text);
                         if (match.Success)

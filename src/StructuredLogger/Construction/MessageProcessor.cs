@@ -52,6 +52,52 @@ namespace Microsoft.Build.Logging.StructuredLogger
             folder.AddChild(node);
         }
 
+        /// <summary>
+        /// Adds one Item child per search attempt from a structured RAR search trace event (binlog
+        /// format v28) onto the reference's Parameter node. Replaces the per-candidate plain-text
+        /// messages this event aggregates; unlike those, it doesn't distinguish primary/dependency/
+        /// unified references.
+        /// </summary>
+        private void AddAssemblyResolutionSearchTraceItems(Parameter parameter, AssemblyResolutionSearchTraceEventArgs args)
+        {
+            foreach (var attempt in args.SearchAttempts)
+            {
+                string text = attempt.SearchPath != null
+                    ? $"{attempt.FileNameAttempted} ({attempt.Result}) in \"{attempt.SearchPath}\""
+                    : $"{attempt.FileNameAttempted} ({attempt.Result})";
+                parameter.AddChild(new Item { Text = Intern(text) });
+            }
+        }
+
+        /// <summary>
+        /// Fallback for <see cref="AddAssemblyResolutionSearchTraceItems"/> when the task has no
+        /// Results folder yet (the "Primary reference"/"Dependency" header for this reference, which
+        /// MSBuild always logs first, should normally have created it).
+        /// </summary>
+        private Parameter CreateAssemblyResolutionSearchTraceNode(AssemblyResolutionSearchTraceEventArgs args)
+        {
+            var parameter = new Parameter
+            {
+                Name = Intern(args.RequestedAssemblyName)
+            };
+
+            AddAssemblyResolutionSearchTraceItems(parameter, args);
+
+            return parameter;
+        }
+
+        /// <summary>
+        /// Fallback for the Victor/Victim dependency-chain details of a structured RAR conflict-
+        /// dependency-details event (binlog format v28), for when the task has no Results folder yet.
+        /// </summary>
+        private Message CreateAssemblyConflictDependencyDetailsNode(AssemblyConflictDependencyDetailsMessageEventArgs args)
+        {
+            var message = new Message { Text = Intern(args.Message) };
+            ItemGroupParser.AddConflictReferenceDetails(message, "Victor", args.Victor, stringTable);
+            ItemGroupParser.AddConflictReferenceDetails(message, "Victim", args.Victim, stringTable);
+            return message;
+        }
+
         public void Process(BuildMessageEventArgs args)
         {
             if (args == null)
@@ -502,6 +548,29 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     if (args is AssemblyLoadBuildEventArgs)
                     {
                         nodeToAdd = new Message() { Text = Intern(message), IsLowRelevance = lowRelevance };
+                    }
+                    else if (args is AssemblyResolutionSearchTraceEventArgs searchTrace)
+                    {
+                        var referenceParameter = (task as ResolveAssemblyReferenceTask)?.Results?.FindLastChild<Parameter>();
+                        if (referenceParameter != null)
+                        {
+                            AddAssemblyResolutionSearchTraceItems(referenceParameter, searchTrace);
+                            return;
+                        }
+
+                        nodeToAdd = CreateAssemblyResolutionSearchTraceNode(searchTrace);
+                    }
+                    else if (args is AssemblyConflictDependencyDetailsMessageEventArgs conflictDetails)
+                    {
+                        var referenceParameter = (task as ResolveAssemblyReferenceTask)?.Results?.FindLastChild<Parameter>();
+                        if (referenceParameter != null)
+                        {
+                            ItemGroupParser.AddConflictReferenceDetails(referenceParameter, "Victor", conflictDetails.Victor, stringTable);
+                            ItemGroupParser.AddConflictReferenceDetails(referenceParameter, "Victim", conflictDetails.Victim, stringTable);
+                            return;
+                        }
+
+                        nodeToAdd = CreateAssemblyConflictDependencyDetailsNode(conflictDetails);
                     }
                     else if (task is ResolveAssemblyReferenceTask rar)
                     {
