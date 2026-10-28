@@ -729,17 +729,23 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     if (args is AssemblyConflictWarningEventArgs conflictWarning)
                     {
                         // Structured replacement for the legacy free-text MSB3277 conflict warning
-                        // (binlog format v28). The `else if` below handles that legacy text by matching
+                        // (binlog format 28). The `else if` below handles that legacy text by matching
                         // Strings.IsFoundConflicts and parsing the details with ItemGroupParser.ParseThereWasAConflict.
-                        // This event already carries the same data structured, so build the same kind
-                        // of child tree directly from Victor/Victim instead of matching rendered text.
-                        warning.AddChild(new Property
-                        {
-                            Name = "LossReason",
-                            Value = Intern(conflictWarning.LossReason.ToString())
-                        });
-                        ItemGroupParser.AddConflictReferenceDetails(warning, "Victor", conflictWarning.Victor, stringTable);
-                        ItemGroupParser.AddConflictReferenceDetails(warning, "Victim", conflictWarning.Victim, stringTable);
+                        // This event carries the same data structured, so build the same tree from it:
+                        // the warning text is the first line of the legacy message, and the children
+                        // are the conflict header, the loss reason and both dependency chains.
+                        var victor = conflictWarning.Victor;
+                        var victim = conflictWarning.Victim;
+                        ItemGroupParser.AddConflictHeader(
+                            warning,
+                            victor?.FusionName,
+                            victim?.FusionName,
+                            conflictWarning.LossReason,
+                            victim?.IsPrimary ?? false,
+                            stringTable);
+                        ItemGroupParser.AddConflictReferenceDetails(warning, victor, isVictor: true, stringTable);
+                        ItemGroupParser.AddConflictReferenceDetails(warning, victim, isVictor: false, stringTable);
+                        text = string.Format(Strings.FoundConflictsHeader, conflictWarning.SimpleAssemblyName);
                     }
                     else if (parent is ResolveAssemblyReferenceTask rar)
                     {

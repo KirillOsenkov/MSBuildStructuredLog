@@ -1,4 +1,5 @@
-﻿using Microsoft.Build.Logging.StructuredLogger;
+﻿using Microsoft.Build.Framework;
+using Microsoft.Build.Logging.StructuredLogger;
 using Xunit;
 
 namespace StructuredLogger.Tests
@@ -103,6 +104,82 @@ References which depend on ""System.IO.Compression, Version=4.1.1.0, Culture=neu
                 C:\A\\B\D.dll
                 C:\A\\C.dll
 ", text);
+        }
+
+        /// <summary>
+        /// The structured conflict events of binlog format 28 must produce the same tree that
+        /// <see cref="ParseThereWasAConflict"/> builds from the legacy message text.
+        /// </summary>
+        [Fact]
+        public void AddStructuredConflictDetails()
+        {
+            var victor = new AssemblyConflictReferenceDetails(
+                "Shared, Version=2.0.0.0",
+                @"C:\v2\Shared.dll",
+                isPrimary: false,
+                isResolved: true,
+                unresolvedPrimaryItemSpec: null,
+                primarySourceItemSpecs: new string[0],
+                dependees: new[] { new AssemblyConflictDependee(@"C:\libs\ClassLibB.dll", new[] { @"C:\libs\ClassLibB.dll" }) });
+            var victim = new AssemblyConflictReferenceDetails(
+                "Shared, Version=1.0.0.0",
+                @"C:\v1\Shared.dll",
+                isPrimary: true,
+                isResolved: true,
+                unresolvedPrimaryItemSpec: null,
+                primarySourceItemSpecs: new[] { "Shared, Version=1.0.0.0" },
+                dependees: new[] { new AssemblyConflictDependee(@"C:\libs\ClassLibA.dll", new[] { @"C:\libs\ClassLibA.dll" }) });
+
+            var stringCache = new StringCache();
+            var parameter = new Parameter { Name = "Conflict" };
+            ItemGroupParser.AddConflictHeader(parameter, victor.FusionName, victim.FusionName, AssemblyConflictLossReason.HadLowerVersion, victim.IsPrimary, stringCache);
+            ItemGroupParser.AddConflictReferenceDetails(parameter, victor, isVictor: true, stringCache);
+            ItemGroupParser.AddConflictReferenceDetails(parameter, victim, isVictor: false, stringCache);
+
+            var text = StringWriter.GetString(parameter).NormalizeLineBreaks();
+            var expected = @"Conflict
+    There was a conflict between ""Shared, Version=2.0.0.0"" and ""Shared, Version=1.0.0.0"".
+    ""Shared, Version=2.0.0.0"" was chosen because it had a higher version.
+    References which depend on ""Shared, Version=2.0.0.0"" [C:\v2\Shared.dll].
+        C:\libs\ClassLibB.dll
+            Project file item includes which caused reference ""C:\libs\ClassLibB.dll"".
+                C:\libs\ClassLibB.dll
+    References which depend on or have been unified to ""Shared, Version=1.0.0.0"" [C:\v1\Shared.dll].
+        C:\v1\Shared.dll
+            Project file item includes which caused reference ""C:\v1\Shared.dll"".
+                Shared, Version=1.0.0.0
+        C:\libs\ClassLibA.dll
+            Project file item includes which caused reference ""C:\libs\ClassLibA.dll"".
+                C:\libs\ClassLibA.dll
+".NormalizeLineBreaks();
+            Assert.Equal(expected, text);
+        }
+
+        [Fact]
+        public void AddStructuredConflictDetailsUnresolvedPrimary()
+        {
+            var victim = new AssemblyConflictReferenceDetails(
+                "System.IO.Compression.FileSystem",
+                fullPath: null,
+                isPrimary: true,
+                isResolved: false,
+                unresolvedPrimaryItemSpec: "System.IO.Compression.FileSystem",
+                primarySourceItemSpecs: new string[0],
+                dependees: new AssemblyConflictDependee[0]);
+
+            var stringCache = new StringCache();
+            var parameter = new Parameter { Name = "Conflict" };
+            ItemGroupParser.AddConflictHeader(parameter, "System.IO.Compression.FileSystem, Version=4.0.0.0", victim.FusionName, AssemblyConflictLossReason.WasNotPrimary, victim.IsPrimary, stringCache);
+            ItemGroupParser.AddConflictReferenceDetails(parameter, victim, isVictor: false, stringCache);
+
+            var text = StringWriter.GetString(parameter).NormalizeLineBreaks();
+            var expected = @"Conflict
+    There was a conflict between ""System.IO.Compression.FileSystem, Version=4.0.0.0"" and ""System.IO.Compression.FileSystem"".
+    ""System.IO.Compression.FileSystem, Version=4.0.0.0"" was chosen because it was primary and ""System.IO.Compression.FileSystem"" was not.
+    References which depend on or have been unified to ""System.IO.Compression.FileSystem"" [].
+        Unresolved primary reference with an item include of ""System.IO.Compression.FileSystem"".
+".NormalizeLineBreaks();
+            Assert.Equal(expected, text);
         }
 
         [Fact]

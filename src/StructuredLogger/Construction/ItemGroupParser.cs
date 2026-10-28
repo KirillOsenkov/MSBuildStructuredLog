@@ -10,57 +10,92 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private static List<Span> lineSpans;
 
         /// <summary>
-        /// Adds the dependency chain of a structured RAR conflict reference (binlog format v28) as a
-        /// labeled Folder - the structured-data counterpart of <see cref="ParseThereWasAConflict"/>,
-        /// which does the same from legacy free text. Mirrors dotnet/msbuild's
-        /// AssemblyConflictMessageFormatter.AppendReferenceDetails: besides FusionName and each
-        /// dependee's full path, also surfaces the reference's own FullPath (with its
-        /// PrimarySourceItemSpecs nested under it when resolved, or UnresolvedPrimaryItemSpec when
-        /// not), and each dependee's own SourceItemSpecs.
+        /// Adds the two header lines of a structured RAR conflict (binlog format 28): the
+        /// "There was a conflict between ..." line and the line that says why the victim lost.
+        /// Same text as MSBuild's AssemblyConflictMessageFormatter.FormatHeaderOnly, so the tree
+        /// matches what <see cref="ParseThereWasAConflict"/> builds from the legacy message.
         /// </summary>
-        public static void AddConflictReferenceDetails(TreeNode parent, string label, AssemblyConflictReferenceDetails details, StringCache stringTable)
+        public static void AddConflictHeader(
+            TreeNode parent,
+            string victorFusionName,
+            string victimFusionName,
+            AssemblyConflictLossReason lossReason,
+            bool victimIsPrimary,
+            StringCache stringTable)
+        {
+            AddItem(parent, string.Format(Strings.ConflictFound, victorFusionName, victimFusionName), stringTable);
+
+            string reason = lossReason switch
+            {
+                AssemblyConflictLossReason.HadLowerVersion
+                    => string.Format(Strings.ConflictHigherVersionChosen, victorFusionName),
+                AssemblyConflictLossReason.WasNotPrimary
+                    => string.Format(Strings.ConflictPrimaryChosen, victorFusionName, victimFusionName),
+                AssemblyConflictLossReason.InsolubleConflict when !victimIsPrimary
+                    => string.Format(Strings.ConflictUnsolvable, victorFusionName, victimFusionName),
+                _ => null,
+            };
+
+            if (reason != null)
+            {
+                AddItem(parent, reason, stringTable);
+            }
+        }
+
+        /// <summary>
+        /// Adds the "References which depend on ..." subtree for one side of a structured RAR
+        /// conflict (binlog format 28). Same text and nesting as MSBuild's
+        /// AssemblyConflictMessageFormatter.AppendReferenceDetails, so the tree matches what
+        /// <see cref="ParseThereWasAConflict"/> builds from the legacy message:
+        /// the header, then each referencing file, then the project items that caused it.
+        /// </summary>
+        /// <param name="isVictor">
+        /// true for the reference that won the conflict ("References which depend on"),
+        /// false for the one that lost ("References which depend on or have been unified to").
+        /// </param>
+        public static void AddConflictReferenceDetails(TreeNode parent, AssemblyConflictReferenceDetails details, bool isVictor, StringCache stringTable)
         {
             if (details == null)
             {
                 return;
             }
 
-            var node = parent.GetOrCreateNodeWithName<Folder>(stringTable.Intern($"{label}: {details.FusionName}"));
+            string headerFormat = isVictor ? Strings.ConflictReferenceDependsOn : Strings.ConflictUnifiedReferenceDependsOn;
+            var header = AddItem(parent, string.Format(headerFormat, details.FusionName, details.FullPath), stringTable);
 
-            if (!string.IsNullOrEmpty(details.FullPath))
+            if (details.IsPrimary && !details.IsResolved)
             {
-                var fullPathItem = new Item { Text = stringTable.Intern(details.FullPath) };
-                node.AddChild(fullPathItem);
-
-                if (details.IsPrimary && details.IsResolved)
-                {
-                    AddSourceItemSpecs(fullPathItem, details.PrimarySourceItemSpecs, stringTable);
-                }
+                AddItem(header, string.Format(Strings.ConflictUnresolvedPrimaryItemSpec, details.UnresolvedPrimaryItemSpec), stringTable);
             }
-
-            if (details.IsPrimary && !details.IsResolved && !string.IsNullOrEmpty(details.UnresolvedPrimaryItemSpec))
+            else if (details.IsPrimary && details.IsResolved)
             {
-                node.AddChild(new Property
-                {
-                    Name = "UnresolvedPrimaryItemSpec",
-                    Value = stringTable.Intern(details.UnresolvedPrimaryItemSpec)
-                });
+                AddReferencingFile(header, details.FullPath, details.PrimarySourceItemSpecs, stringTable);
             }
 
             foreach (var dependee in details.Dependees)
             {
-                var dependeeItem = new Item { Text = stringTable.Intern(dependee.DependeeFullPath) };
-                node.AddChild(dependeeItem);
-                AddSourceItemSpecs(dependeeItem, dependee.SourceItemSpecs, stringTable);
+                AddReferencingFile(header, dependee.DependeeFullPath, dependee.SourceItemSpecs, stringTable);
             }
         }
 
-        private static void AddSourceItemSpecs(Item parent, IReadOnlyList<string> sourceItemSpecs, StringCache stringTable)
+        private static void AddReferencingFile(TreeNode parent, string fullPath, IReadOnlyList<string> sourceItemSpecs, StringCache stringTable)
         {
-            foreach (var itemSpec in sourceItemSpecs)
+            var file = AddItem(parent, fullPath, stringTable);
+            var includes = AddItem(file, string.Format(Strings.ConflictPrimarySourceItemsForReference, fullPath), stringTable);
+            if (sourceItemSpecs != null)
             {
-                parent.AddChild(new Item { Text = stringTable.Intern(itemSpec) });
+                foreach (var itemSpec in sourceItemSpecs)
+                {
+                    AddItem(includes, itemSpec, stringTable);
+                }
             }
+        }
+
+        private static Item AddItem(TreeNode parent, string text, StringCache stringTable)
+        {
+            var item = new Item { Text = stringTable.Intern(text) };
+            parent.AddChild(item);
+            return item;
         }
 
         /// <summary>

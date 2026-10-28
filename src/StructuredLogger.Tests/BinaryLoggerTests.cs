@@ -616,11 +616,11 @@ namespace Microsoft.Build.UnitTests
         // ---------------------------------------------------------------------------------------
         // Binlog format v28: structured RAR diagnostic events (dotnet/msbuild#14599, #14601).
         //
-        // No production Write(...) overload exists for these three record kinds - this fork only
-        // added a reader (see KirillOsenkov/MSBuildStructuredLog#968), matching the precedent set
-        // for MSBuildServerLifecycle (binlog format v27). So there's no writer to round-trip
-        // through; bytes are hand-written below instead, using fileFormatVersion 9 to keep the
-        // framing plain (pre-length-prefixing, pre-string-deduplication).
+        // The three *_Deserializes tests below feed hand-written bytes to the reader, using
+        // fileFormatVersion 9 to keep the framing plain (pre-length-prefixing, pre-string-
+        // deduplication). They pin the field order independently of our own writer. The
+        // *_RoundTrips tests after them go through BuildEventArgsWriter at the current format
+        // version, so string deduplication and record length prefixes are covered too.
         // ---------------------------------------------------------------------------------------
 
         [Fact]
@@ -782,6 +782,164 @@ namespace Microsoft.Build.UnitTests
             warning.LossReason.Should().Be(AssemblyConflictLossReason.HadLowerVersion);
             warning.Victor.FusionName.Should().Be("MyAssembly, Version=2.0.0.0");
             warning.Victim.FusionName.Should().Be("MyAssembly, Version=1.0.0.0");
+        }
+
+        // Takes object on purpose: Microsoft.Build.Framework is resolved through MSBuildLocator at run
+        // time and is not in the test output folder, and xUnit's discovery reflects over every method
+        // signature in this class, so a Framework type in a signature makes it skip the whole assembly.
+        private static T RoundTrip<T>(object args) where T : class
+        {
+            var memoryStream = new MemoryStream();
+            var binaryWriter = new BinaryWriter(memoryStream);
+            var writer = new BuildEventArgsWriter(binaryWriter);
+            writer.Write((BuildEventArgs)args);
+
+            long length = memoryStream.Length;
+            memoryStream.Position = 0;
+            var binaryReader = new BinaryReader(memoryStream);
+            using var reader = new Logging.StructuredLogger.BuildEventArgsReader(binaryReader, BinaryLogger.FileFormatVersion);
+
+            var result = reader.Read().Should().BeOfType<T>().Subject;
+            memoryStream.Position.Should().Be(length, "the reader must consume the whole record");
+            return result;
+        }
+
+        private static AssemblyConflictReferenceDetails CreateConflictReferenceDetails(string version, bool isPrimary, bool isResolved) =>
+            new(
+                $"MyAssembly, Version={version}, Culture=neutral, PublicKeyToken=0123456789abcdef",
+                isResolved ? $@"C:\refs\v{version}\MyAssembly.dll" : null,
+                isPrimary,
+                isResolved,
+                isResolved ? null : "MyAssembly",
+                isPrimary && isResolved ? new[] { "MyAssembly", "MyAssembly.Alias" } : Array.Empty<string>(),
+                new[]
+                {
+                    new AssemblyConflictDependee(@"C:\proj\A.dll", new[] { "A" }),
+                    new AssemblyConflictDependee(@"C:\proj\B.dll", new[] { "B", "B.Other" }),
+                });
+
+        [Fact]
+        public void AssemblyResolutionSearchTrace_RoundTrips()
+        {
+            var attempts = new[]
+            {
+                new AssemblyResolutionSearchAttempt(@"C:\libs\MyAssembly.dll", @"C:\libs", null, null, AssemblyResolutionSearchResult.FileNotFound, null, false),
+                new AssemblyResolutionSearchAttempt(@"C:\libs\MyAssembly.exe", @"C:\libs", null, null, AssemblyResolutionSearchResult.NotAFileNameOnDisk, null, false),
+                new AssemblyResolutionSearchAttempt(@"C:\other\MyAssembly.dll", @"C:\other", "Parent, Version=1.0.0.0", "MyAssembly, Version=2.0.0.0", AssemblyResolutionSearchResult.FusionNamesDidNotMatch, null, false),
+                new AssemblyResolutionSearchAttempt(@"C:\arch\MyAssembly.dll", @"C:\arch", "Parent, Version=1.0.0.0", null, AssemblyResolutionSearchResult.ProcessorArchitectureDoesNotMatch, "X86", false),
+                new AssemblyResolutionSearchAttempt(@"C:\afx\MyAssembly.dll", "{AssemblyFoldersEx}", null, null, AssemblyResolutionSearchResult.FileNotFound, null, true),
+            };
+
+            var original = new AssemblyResolutionSearchTraceEventArgs(
+                "MyAssembly, Version=1.0.0.0",
+                "MSIL",
+                attempts,
+                "ResolveAssemblyReference",
+                MessageImportance.Normal,
+                new DateTime(2026, 10, 27, 12, 0, 0, DateTimeKind.Utc))
+            {
+                BuildEventContext = new BuildEventContext(1, 2, 3, 4, 5, 6, 7),
+                ProjectFile = @"C:\proj\A.csproj",
+            };
+
+            var result = RoundTrip<AssemblyResolutionSearchTraceEventArgs>(original);
+
+            result.RequestedAssemblyName.Should().Be(original.RequestedAssemblyName);
+            result.TargetProcessorArchitecture.Should().Be(original.TargetProcessorArchitecture);
+            result.SearchAttempts.Should().BeEquivalentTo(original.SearchAttempts, options => options.WithStrictOrdering());
+            result.Importance.Should().Be(original.Importance);
+            result.Timestamp.Should().Be(original.Timestamp);
+            result.BuildEventContext.Should().Be(original.BuildEventContext);
+            result.ProjectFile.Should().Be(original.ProjectFile);
+            result.SenderName.Should().Be(original.SenderName);
+        }
+
+        [Fact]
+        public void AssemblyConflictDependencyDetails_RoundTrips()
+        {
+            var original = new AssemblyConflictDependencyDetailsMessageEventArgs(
+                CreateConflictReferenceDetails("2.0.0.0", isPrimary: true, isResolved: true),
+                CreateConflictReferenceDetails("1.0.0.0", isPrimary: false, isResolved: true),
+                "ResolveAssemblyReference",
+                MessageImportance.Low,
+                new DateTime(2026, 10, 27, 12, 0, 0, DateTimeKind.Utc))
+            {
+                BuildEventContext = new BuildEventContext(1, 2, 3, 4, 5, 6, 7),
+                ProjectFile = @"C:\proj\A.csproj",
+            };
+
+            var result = RoundTrip<AssemblyConflictDependencyDetailsMessageEventArgs>(original);
+
+            result.Victor.Should().BeEquivalentTo(original.Victor, options => options.WithStrictOrdering());
+            result.Victim.Should().BeEquivalentTo(original.Victim, options => options.WithStrictOrdering());
+            result.Importance.Should().Be(original.Importance);
+            result.Timestamp.Should().Be(original.Timestamp);
+            result.BuildEventContext.Should().Be(original.BuildEventContext);
+            result.ProjectFile.Should().Be(original.ProjectFile);
+        }
+
+        [Fact]
+        public void AssemblyConflictWarning_RoundTrips()
+        {
+            var original = new AssemblyConflictWarningEventArgs(
+                "MyAssembly",
+                AssemblyConflictLossReason.HadLowerVersion,
+                CreateConflictReferenceDetails("2.0.0.0", isPrimary: false, isResolved: true),
+                CreateConflictReferenceDetails("1.0.0.0", isPrimary: true, isResolved: false),
+                "MSB3277",
+                @"C:\proj\A.csproj",
+                12,
+                34,
+                "MSBuild.ResolveAssemblyReference.FoundConflicts",
+                "ResolveAssemblyReference",
+                new DateTime(2026, 10, 27, 12, 0, 0, DateTimeKind.Utc))
+            {
+                BuildEventContext = new BuildEventContext(1, 2, 3, 4, 5, 6, 7),
+                ProjectFile = @"C:\proj\A.csproj",
+            };
+
+            var result = RoundTrip<AssemblyConflictWarningEventArgs>(original);
+
+            result.SimpleAssemblyName.Should().Be(original.SimpleAssemblyName);
+            result.LossReason.Should().Be(original.LossReason);
+            result.Victor.Should().BeEquivalentTo(original.Victor, options => options.WithStrictOrdering());
+            result.Victim.Should().BeEquivalentTo(original.Victim, options => options.WithStrictOrdering());
+            result.Code.Should().Be(original.Code);
+            result.File.Should().Be(original.File);
+            result.LineNumber.Should().Be(original.LineNumber);
+            result.ColumnNumber.Should().Be(original.ColumnNumber);
+            result.HelpKeyword.Should().Be(original.HelpKeyword);
+            result.Timestamp.Should().Be(original.Timestamp);
+            result.BuildEventContext.Should().Be(original.BuildEventContext);
+            result.ProjectFile.Should().Be(original.ProjectFile);
+            result.Message.Should().Be(original.Message);
+        }
+
+        [Fact]
+        public void MSBuildServerLifecycle_RoundTrips()
+        {
+            var original = new MSBuildServerLifecycleEventArgs(
+                MSBuildServerLifecycleKind.NotUsed,
+                4242,
+                "The server was not used because the build was not started by dotnet CLI.",
+                "NotDotnetCli",
+                "MSBuild server not used.",
+                MessageImportance.Low,
+                shortLived: true)
+            {
+                BuildEventContext = new BuildEventContext(1, 2, 3, 4, 5, 6, 7),
+            };
+
+            var result = RoundTrip<MSBuildServerLifecycleEventArgs>(original);
+
+            result.Kind.Should().Be(original.Kind);
+            result.ProcessId.Should().Be(original.ProcessId);
+            result.Reason.Should().Be(original.Reason);
+            result.ReasonCode.Should().Be(original.ReasonCode);
+            result.ShortLived.Should().Be(original.ShortLived);
+            result.Message.Should().Be(original.Message);
+            result.Importance.Should().Be(original.Importance);
+            result.BuildEventContext.Should().Be(original.BuildEventContext);
         }
 
         // ---------------------------------------------------------------------------------------

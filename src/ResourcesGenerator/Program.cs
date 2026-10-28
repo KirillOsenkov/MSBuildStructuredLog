@@ -24,6 +24,8 @@ namespace ResourcesGenerator
 
             var candidates = new[]
             {
+                // A local build of dotnet/msbuild (bootstrap layout). This tool is x64 so that
+                // Assembly.LoadFrom can load the 64-bit MSBuild.exe in the amd64 folder.
                 @"C:\msbuild\artifacts\bin\bootstrap\net472\MSBuild\Current\Bin\amd64",
                 instance?.MSBuildPath,
                 Path.Combine(

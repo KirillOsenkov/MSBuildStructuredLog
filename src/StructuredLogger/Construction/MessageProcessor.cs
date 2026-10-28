@@ -53,19 +53,54 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         /// <summary>
-        /// Adds one Item child per search attempt from a structured RAR search trace event (binlog
-        /// format v28) onto the reference's Parameter node. Replaces the per-candidate plain-text
-        /// messages this event aggregates; unlike those, it doesn't distinguish primary/dependency/
-        /// unified references.
+        /// Adds the search attempts of a structured RAR search trace event (binlog format 28) under
+        /// the reference's Parameter node, in the shape the legacy per-line messages produced:
+        /// one "For SearchPath ..." item per search path, with the "Considered ..." lines beneath it.
+        /// Text and grouping follow MSBuild's AssemblyResolutionSearchTraceEventArgs.FormatMessage.
         /// </summary>
-        private void AddAssemblyResolutionSearchTraceItems(Parameter parameter, AssemblyResolutionSearchTraceEventArgs args)
+        private void AddAssemblyResolutionSearchTraceItems(TreeNode parameter, AssemblyResolutionSearchTraceEventArgs args)
         {
+            Item searchPathItem = null;
+            string lastSearchPath = null;
+
             foreach (var attempt in args.SearchAttempts)
             {
-                string text = attempt.SearchPath != null
-                    ? $"{attempt.FileNameAttempted} ({attempt.Result}) in \"{attempt.SearchPath}\""
-                    : $"{attempt.FileNameAttempted} ({attempt.Result})";
-                parameter.AddChild(new Item { Text = Intern(text) });
+                if (searchPathItem == null || !string.Equals(lastSearchPath, attempt.SearchPath, StringComparison.Ordinal))
+                {
+                    lastSearchPath = attempt.SearchPath;
+                    string searchPathText = attempt.ParentAssembly == null
+                        ? string.Format(Strings.SearchTraceSearchPath, attempt.SearchPath)
+                        : string.Format(Strings.SearchTraceSearchPathAddedByParentAssembly, attempt.SearchPath, attempt.ParentAssembly);
+                    searchPathItem = new Item { Text = Intern(searchPathText) };
+                    parameter.AddChild(searchPathItem);
+
+                    if (attempt.IsAssemblyFoldersExSearch)
+                    {
+                        searchPathItem.AddChild(new Item { Text = Intern(Strings.SearchTraceSearchedAssemblyFoldersEx) });
+                    }
+                }
+
+                string text = attempt.Result switch
+                {
+                    AssemblyResolutionSearchResult.FileNotFound when !attempt.IsAssemblyFoldersExSearch
+                        => string.Format(Strings.SearchTraceFileNotFound, attempt.FileNameAttempted),
+                    AssemblyResolutionSearchResult.FusionNamesDidNotMatch
+                        => string.Format(Strings.SearchTraceFusionNamesDidNotMatch, attempt.FileNameAttempted, attempt.AssemblyName, args.RequestedAssemblyName),
+                    AssemblyResolutionSearchResult.TargetHadNoFusionName
+                        => string.Format(Strings.SearchTraceTargetHadNoFusionName, attempt.FileNameAttempted),
+                    AssemblyResolutionSearchResult.NotInGac
+                        => string.Format(Strings.SearchTraceNotInGac, attempt.FileNameAttempted),
+                    AssemblyResolutionSearchResult.NotAFileNameOnDisk when !attempt.IsAssemblyFoldersExSearch
+                        => string.Format(Strings.SearchTraceNotAFileNameOnDisk, attempt.FileNameAttempted),
+                    AssemblyResolutionSearchResult.ProcessorArchitectureDoesNotMatch
+                        => string.Format(Strings.SearchTraceProcessorArchitectureDoesNotMatch, attempt.FileNameAttempted, attempt.ProcessorArchitecture, args.TargetProcessorArchitecture),
+                    _ => null,
+                };
+
+                if (text != null)
+                {
+                    searchPathItem.AddChild(new Item { Text = Intern(text) });
+                }
             }
         }
 
@@ -87,14 +122,27 @@ namespace Microsoft.Build.Logging.StructuredLogger
         }
 
         /// <summary>
-        /// Fallback for the Victor/Victim dependency-chain details of a structured RAR conflict-
-        /// dependency-details event (binlog format v28), for when the task has no Results folder yet.
+        /// Adds the dependency details of a structured RAR conflict (binlog format 28) under the
+        /// node that holds the "There was a conflict between ..." header.
+        /// </summary>
+        private void AddAssemblyConflictDependencyDetails(TreeNode parent, AssemblyConflictDependencyDetailsMessageEventArgs args)
+        {
+            ItemGroupParser.AddConflictReferenceDetails(parent, args.Victor, isVictor: true, stringTable);
+            ItemGroupParser.AddConflictReferenceDetails(parent, args.Victim, isVictor: false, stringTable);
+        }
+
+        /// <summary>
+        /// Fallback for <see cref="AddAssemblyConflictDependencyDetails"/> when the task has no
+        /// Results folder yet (MSBuild logs the "There was a conflict between ..." header as a plain
+        /// message right before this event, which should normally have created it).
         /// </summary>
         private Message CreateAssemblyConflictDependencyDetailsNode(AssemblyConflictDependencyDetailsMessageEventArgs args)
         {
-            var message = new Message { Text = Intern(args.Message) };
-            ItemGroupParser.AddConflictReferenceDetails(message, "Victor", args.Victor, stringTable);
-            ItemGroupParser.AddConflictReferenceDetails(message, "Victim", args.Victim, stringTable);
+            var message = new Message
+            {
+                Text = Intern(string.Format(Strings.ConflictFound, args.Victor?.FusionName, args.Victim?.FusionName))
+            };
+            AddAssemblyConflictDependencyDetails(message, args);
             return message;
         }
 
@@ -565,8 +613,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         var referenceParameter = (task as ResolveAssemblyReferenceTask)?.Results?.FindLastChild<Parameter>();
                         if (referenceParameter != null)
                         {
-                            ItemGroupParser.AddConflictReferenceDetails(referenceParameter, "Victor", conflictDetails.Victor, stringTable);
-                            ItemGroupParser.AddConflictReferenceDetails(referenceParameter, "Victim", conflictDetails.Victim, stringTable);
+                            AddAssemblyConflictDependencyDetails(referenceParameter, conflictDetails);
                             return;
                         }
 

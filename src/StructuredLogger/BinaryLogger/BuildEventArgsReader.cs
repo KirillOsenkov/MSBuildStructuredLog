@@ -2013,7 +2013,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
             else
             {
-                result.Importance = default;
+                // Writers leave the Importance flag out for Low (the most common value), so a
+                // missing flag means Low, not default(MessageImportance), which is High.
+                result.Importance = MessageImportance.Low;
             }
 
             return result;

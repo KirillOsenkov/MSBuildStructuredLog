@@ -53,6 +53,32 @@ namespace Microsoft.Build.Framework
         public string ProcessorArchitecture { get; } = processorArchitecture;
 
         public bool IsAssemblyFoldersExSearch { get; } = isAssemblyFoldersExSearch;
+
+        /// <summary>
+        /// Which fields equal the previous attempt's and are therefore left out on the wire.
+        /// Same rules as dotnet/msbuild's AssemblyResolutionSearchAttempt.GetUnchangedContext;
+        /// BuildEventArgsReader applies the inverse when it reads the record.
+        /// </summary>
+        internal AssemblyResolutionSearchAttemptContext GetUnchangedContext(AssemblyResolutionSearchAttempt previous)
+        {
+            var unchangedContext = AssemblyResolutionSearchAttemptContext.None;
+            if (string.Equals(SearchPath, previous?.SearchPath, StringComparison.Ordinal))
+            {
+                unchangedContext |= AssemblyResolutionSearchAttemptContext.SearchPathUnchanged;
+            }
+
+            if (string.Equals(ParentAssembly, previous?.ParentAssembly, StringComparison.Ordinal))
+            {
+                unchangedContext |= AssemblyResolutionSearchAttemptContext.ParentAssemblyUnchanged;
+            }
+
+            if (IsAssemblyFoldersExSearch == (previous?.IsAssemblyFoldersExSearch ?? false))
+            {
+                unchangedContext |= AssemblyResolutionSearchAttemptContext.AssemblyFoldersExUnchanged;
+            }
+
+            return unchangedContext;
+        }
     }
 
     /// <summary>

@@ -17,6 +17,7 @@ namespace ResourcesGenerator
         {
             "MSBuild.exe",
             "Microsoft.Build.dll",
+            "Microsoft.Build.Framework.dll",
             "Microsoft.Build.Tasks.Core.dll",
             "Microsoft.Build.Utilities.Core.dll",
             "Roslyn\\Microsoft.CodeAnalysis.dll"
@@ -33,14 +34,32 @@ namespace ResourcesGenerator
             "GetSDKReferenceFiles.ConflictReferenceSameSDK",
             "GetSDKReferenceFiles.ConflictRedistDifferentSDK",
             "GetSDKReferenceFiles.ConflictReferenceDifferentSDK",
-            "ResolveAssemblyReference.SearchPath",
             "ResolveAssemblyReference.UnifiedPrimaryReference",
             "ResolveAssemblyReference.PrimaryReference",
             "ResolveAssemblyReference.Dependency",
             "ResolveAssemblyReference.UnifiedDependency",
             "ResolveAssemblyReference.AssemblyFoldersExSearchLocations",
-            "ResolveAssemblyReference.ConflictFound",
-            "ResolveAssemblyReference.FoundConflicts",
+            // RAR search-trace and conflict strings live in Microsoft.Build.Framework (SR.resx) since binlog
+            // format 28 (dotnet/msbuild#14599, #14601); the Tasks copies with the ResolveAssemblyReference.
+            // prefix were removed at the same time.
+            "AssemblyResolutionSearchTrace_SearchPath",
+            "AssemblyResolutionSearchTrace_SearchPathAddedByParentAssembly",
+            "AssemblyResolutionSearchTrace_SearchedAssemblyFoldersEx",
+            "AssemblyResolutionSearchTrace_ConsideredAndRejectedBecauseNoFile",
+            "AssemblyResolutionSearchTrace_ConsideredAndRejectedBecauseFusionNamesDidntMatch",
+            "AssemblyResolutionSearchTrace_ConsideredAndRejectedBecauseTargetDidntHaveFusionName",
+            "AssemblyResolutionSearchTrace_ConsideredAndRejectedBecauseNotInGac",
+            "AssemblyResolutionSearchTrace_ConsideredAndRejectedBecauseNotAFileNameOnDisk",
+            "AssemblyResolutionSearchTrace_TargetedProcessorArchitectureDoesNotMatch",
+            "AssemblyConflict_ConflictFound",
+            "AssemblyConflict_ConflictHigherVersionChosen",
+            "AssemblyConflict_ConflictPrimaryChosen",
+            "AssemblyConflict_ConflictUnsolvable",
+            "AssemblyConflict_FoundConflicts",
+            "AssemblyConflict_ReferenceDependsOn",
+            "AssemblyConflict_UnifiedReferenceDependsOn",
+            "AssemblyConflict_UnResolvedPrimaryItemSpec",
+            "AssemblyConflict_PrimarySourceItemsForReference",
             "General.GlobalProperties",
             "General.AdditionalProperties",
             "General.OverridingProperties",
@@ -161,7 +180,17 @@ namespace ResourcesGenerator
             }
 
             path = Path.Combine(path, "Strings.json");
-            var text = JsonConvert.SerializeObject(collection, Formatting.Indented);
+
+            // Sort the keys within each culture so regenerating the file produces a readable diff.
+            var sorted = new ResourcesDictionary();
+            foreach (var culture in collection)
+            {
+                sorted[culture.Key] = culture.Value
+                    .OrderBy(pair => pair.Key, System.StringComparer.Ordinal)
+                    .ToDictionary(pair => pair.Key, pair => pair.Value);
+            }
+
+            var text = JsonConvert.SerializeObject(sorted, Formatting.Indented);
             File.WriteAllText(path, text);
         }
     }

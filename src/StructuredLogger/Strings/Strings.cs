@@ -42,7 +42,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             OutputPropertyMessagePrefix = GetString("OutputPropertyLogMessage").Replace("{0}={1}", "");
             BuildingWithToolsVersionPrefix = CreateRegex(GetString("ToolsVersionInEffectForBuild"), 1);
             PropertyGroupMessagePrefix = GetString("PropertyGroupLogMessage").Replace("{0}={1}", "");
-            ForSearchPathPrefix = CreateRegex(GetString("ResolveAssemblyReference.SearchPath"), 1);
+            ForSearchPathPrefix = CreateRegex(GetString("AssemblyResolutionSearchTrace_SearchPath"), 1);
             UnifiedPrimaryReferencePrefix = CreateRegex(GetString("ResolveAssemblyReference.UnifiedPrimaryReference"), 1);
             PrimaryReferencePrefix = CreateRegex(GetString("ResolveAssemblyReference.PrimaryReference"), 1);
             DependencyPrefix = CreateRegex(GetString("ResolveAssemblyReference.Dependency"), 1);
@@ -201,22 +201,44 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             ConflictReferenceDifferentSDK = CreateRegex(GetString("GetSDKReferenceFiles.ConflictRedistDifferentSDK"), 4);
 
-            ConflictFoundRegex = new Regex(Escape(GetString("ResolveAssemblyReference.ConflictFound"))
+            // The RAR search-trace and conflict strings moved from Microsoft.Build.Tasks.Core to
+            // Microsoft.Build.Framework (SR.resx) with binlog format 28; the text is unchanged.
+            ConflictFound = GetString("AssemblyConflict_ConflictFound");
+            ConflictFoundRegex = new Regex(Escape(ConflictFound)
                 .Replace(@"\{0}", ".*?")
                 .Replace(@"\{1}", ".*?")
                 + ".*", RegexOptions.Compiled);
 
-            var foundConflictsRaw = GetString("ResolveAssemblyReference.FoundConflicts");
+            var foundConflictsRaw = GetString("AssemblyConflict_FoundConflicts");
             if (foundConflictsRaw.StartsWith("MSB3277: "))
             {
                 foundConflictsRaw = foundConflictsRaw.Substring("MSB3277: ".Length);
             }
 
             var foundConflictsNormalized = foundConflictsRaw.NormalizeLineBreaks();
+            FoundConflictsHeader = foundConflictsNormalized.GetFirstLine();
             var foundConflictsEscaped = Escape(foundConflictsNormalized);
             FoundConflictsRegex = new Regex(foundConflictsEscaped
                 .Replace(@"\{0}", @"(?<Assembly>[^\""]*)")
                 .Replace(@"\{1}", @"(?<Details>.*)"), RegexOptions.Compiled | RegexOptions.Singleline);
+
+            ConflictHigherVersionChosen = GetString("AssemblyConflict_ConflictHigherVersionChosen");
+            ConflictPrimaryChosen = GetString("AssemblyConflict_ConflictPrimaryChosen");
+            ConflictUnsolvable = GetString("AssemblyConflict_ConflictUnsolvable");
+            ConflictReferenceDependsOn = GetString("AssemblyConflict_ReferenceDependsOn");
+            ConflictUnifiedReferenceDependsOn = GetString("AssemblyConflict_UnifiedReferenceDependsOn");
+            ConflictUnresolvedPrimaryItemSpec = GetString("AssemblyConflict_UnResolvedPrimaryItemSpec");
+            ConflictPrimarySourceItemsForReference = GetString("AssemblyConflict_PrimarySourceItemsForReference");
+
+            SearchTraceSearchPath = GetString("AssemblyResolutionSearchTrace_SearchPath");
+            SearchTraceSearchPathAddedByParentAssembly = GetString("AssemblyResolutionSearchTrace_SearchPathAddedByParentAssembly");
+            SearchTraceSearchedAssemblyFoldersEx = GetString("AssemblyResolutionSearchTrace_SearchedAssemblyFoldersEx");
+            SearchTraceFileNotFound = GetString("AssemblyResolutionSearchTrace_ConsideredAndRejectedBecauseNoFile");
+            SearchTraceFusionNamesDidNotMatch = GetString("AssemblyResolutionSearchTrace_ConsideredAndRejectedBecauseFusionNamesDidntMatch");
+            SearchTraceTargetHadNoFusionName = GetString("AssemblyResolutionSearchTrace_ConsideredAndRejectedBecauseTargetDidntHaveFusionName");
+            SearchTraceNotInGac = GetString("AssemblyResolutionSearchTrace_ConsideredAndRejectedBecauseNotInGac");
+            SearchTraceNotAFileNameOnDisk = GetString("AssemblyResolutionSearchTrace_ConsideredAndRejectedBecauseNotAFileNameOnDisk");
+            SearchTraceProcessorArchitectureDoesNotMatch = GetString("AssemblyResolutionSearchTrace_TargetedProcessorArchitectureDoesNotMatch");
 
             TaskParameterMessagePrefix = GetString("TaskParameterPrefix");
             OutputItemsMessagePrefix = GetString("OutputItemParameterMessagePrefix");
@@ -464,6 +486,65 @@ namespace Microsoft.Build.Logging.StructuredLogger
         /// "MSB3277: Found conflicts between different versions of \"{0}\" that could not be resolved.\r\n{1}"
         /// </summary>
         public static Regex FoundConflictsRegex { get; set; }
+
+        // Format strings used to render the structured RAR events of binlog format 28
+        // (AssemblyResolutionSearchTrace, AssemblyConflictDependencyDetails, AssemblyConflictWarning)
+        // with the same text MSBuild logged as plain messages before. Placeholders are documented
+        // on each property.
+
+        /// <summary>"There was a conflict between \"{0}\" and \"{1}\"." (victor, victim)</summary>
+        public static string ConflictFound { get; set; }
+
+        /// <summary>"Found conflicts between different versions of \"{0}\" that could not be resolved." (simple assembly name)</summary>
+        public static string FoundConflictsHeader { get; set; }
+
+        /// <summary>"\"{0}\" was chosen because it had a higher version." (victor)</summary>
+        public static string ConflictHigherVersionChosen { get; set; }
+
+        /// <summary>"\"{0}\" was chosen because it was primary and \"{1}\" was not." (victor, victim)</summary>
+        public static string ConflictPrimaryChosen { get; set; }
+
+        /// <summary>"MSB3243: No way to resolve conflict between \"{0}\" and \"{1}\". Choosing \"{0}\" arbitrarily." (victor, victim)</summary>
+        public static string ConflictUnsolvable { get; set; }
+
+        /// <summary>"References which depend on \"{0}\" [{1}]." (fusion name, full path)</summary>
+        public static string ConflictReferenceDependsOn { get; set; }
+
+        /// <summary>"References which depend on or have been unified to \"{0}\" [{1}]." (fusion name, full path)</summary>
+        public static string ConflictUnifiedReferenceDependsOn { get; set; }
+
+        /// <summary>"Unresolved primary reference with an item include of \"{0}\"." (item spec)</summary>
+        public static string ConflictUnresolvedPrimaryItemSpec { get; set; }
+
+        /// <summary>"Project file item includes which caused reference \"{0}\"." (full path)</summary>
+        public static string ConflictPrimarySourceItemsForReference { get; set; }
+
+        /// <summary>"For SearchPath \"{0}\"." (search path)</summary>
+        public static string SearchTraceSearchPath { get; set; }
+
+        /// <summary>"For SearchPath \"{0}\" (added by referencing assembly \"{1}\")." (search path, parent assembly)</summary>
+        public static string SearchTraceSearchPathAddedByParentAssembly { get; set; }
+
+        /// <summary>"Considered AssemblyFoldersEx locations."</summary>
+        public static string SearchTraceSearchedAssemblyFoldersEx { get; set; }
+
+        /// <summary>"Considered \"{0}\", but it didn't exist." (file name attempted)</summary>
+        public static string SearchTraceFileNotFound { get; set; }
+
+        /// <summary>"Considered \"{0}\", but its name \"{1}\" didn't match the expected name \"{2}\"." (file name attempted, assembly name, requested assembly name)</summary>
+        public static string SearchTraceFusionNamesDidNotMatch { get; set; }
+
+        /// <summary>"Considered \"{0}\", which existed but did not appear to be a valid .NET assembly." (file name attempted)</summary>
+        public static string SearchTraceTargetHadNoFusionName { get; set; }
+
+        /// <summary>"Considered \"{0}\", which was not found in the GAC." (file name attempted)</summary>
+        public static string SearchTraceNotInGac { get; set; }
+
+        /// <summary>"Considered treating \"{0}\" as a file name, but it didn't exist." (file name attempted)</summary>
+        public static string SearchTraceNotAFileNameOnDisk { get; set; }
+
+        /// <summary>"Considered \"{0}\", which existed but had a processor architecture \"{1}\" which does not match the targeted processor architecture \"{2}\"." (file name attempted, processor architecture, target processor architecture)</summary>
+        public static string SearchTraceProcessorArchitectureDoesNotMatch { get; set; }
         public static Regex ConflictReferenceDifferentSDK { get; set; }
         public static Regex AdditionalPropertiesPrefix { get; set; }
         public static Regex OverridingGlobalPropertiesPrefix { get; set; }
