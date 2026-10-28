@@ -156,7 +156,7 @@ namespace StructuredLogViewer.Controls
         /// <param name="parentEvaluator">The method used to determine the parent of an element.</param>
         /// <param name="ancestorSelector">The method used to select an ancestor of interest.</param>
         /// <typeparam name="TElementType">The base type of intermediate elements in the ancestor tree.</typeparam>
-        /// <returns>The first ancestor in the parent chain of obj accepted by the the ancestor selector function.</returns>
+        /// <returns>The first ancestor in the parent chain of obj accepted by the ancestor selector function.</returns>
         public static object FindAncestor<TElementType>(this TElementType obj, Func<TElementType, TElementType> parentEvaluator, Func<TElementType, bool> ancestorSelector) where TElementType : DependencyObject
         {
             TElementType parent = parentEvaluator(obj);

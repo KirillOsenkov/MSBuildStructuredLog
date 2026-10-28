@@ -700,7 +700,7 @@ namespace StructuredLogViewer.Controls
         /// used for optimizations *only*.
         /// </summary>
         /// <returns>
-        /// bool - the result of the AreClose comparision.
+        /// bool - the result of the AreClose comparison.
         /// </returns>
         /// <param name="value1"> The first double to compare. </param>
         /// <param name="value2"> The second double to compare. </param>
