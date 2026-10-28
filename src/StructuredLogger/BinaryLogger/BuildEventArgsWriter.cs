@@ -187,6 +187,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     BuildStarted
                     BuildFinished
                     BuildCanceled
+                    LoggersRegistered
                     ProjectEvaluationStarted
                     ProjectEvaluationFinished
                 BuildError
@@ -218,6 +219,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 case BuildStartedEventArgs buildStarted: return Write(buildStarted);
                 case BuildFinishedEventArgs buildFinished: return Write(buildFinished);
                 case BuildCanceledEventArgs buildCanceled: return Write(buildCanceled);
+                case LoggersRegisteredEventArgs loggersRegistered: return Write(loggersRegistered);
                 case BuildSubmissionStartedEventArgs buildSubmissionStarted: return Write(buildSubmissionStarted);
                 case ProjectEvaluationStartedEventArgs projectEvaluationStarted: return Write(projectEvaluationStarted);
                 case ProjectEvaluationFinishedEventArgs projectEvaluationFinished: return Write(projectEvaluationFinished);
@@ -532,8 +534,32 @@ namespace Microsoft.Build.Logging.StructuredLogger
             }
         }
 
-        // The field order of the four Write methods below matches dotnet/msbuild's BuildEventArgsWriter
-        // and BuildEventArgsReader.Read* for the same record kinds (binlog formats 27 and 28).
+        // The field order of the five Write methods below matches dotnet/msbuild's BuildEventArgsWriter
+        // and BuildEventArgsReader.Read* for the same record kinds (binlog formats 26, 27 and 28).
+
+        private BinaryLogRecordKind Write(LoggersRegisteredEventArgs e)
+        {
+            WriteBuildEventArgsFields(e);
+            Write(e.Loggers.Count);
+            foreach (var logger in e.Loggers)
+            {
+                WriteDeduplicatedString(logger.LoggerName);
+                WriteDeduplicatedString(logger.Parameters);
+                Write(logger.Verbosity.HasValue);
+                if (logger.Verbosity.HasValue)
+                {
+                    Write((int)logger.Verbosity.Value);
+                }
+
+                Write(logger.OutputFilePaths.Count);
+                foreach (var path in logger.OutputFilePaths)
+                {
+                    WriteDeduplicatedString(path);
+                }
+            }
+
+            return BinaryLogRecordKind.LoggersRegistered;
+        }
 
         private BinaryLogRecordKind Write(MSBuildServerLifecycleEventArgs e)
         {

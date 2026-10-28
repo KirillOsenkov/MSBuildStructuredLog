@@ -620,6 +620,25 @@ namespace Microsoft.Build.Logging.StructuredLogger
                             AddItems(itemsNode, projectEvaluationFinished.Items);
                         }
                     }
+                    else if (e is LoggersRegisteredEventArgs loggersRegistered)
+                    {
+                        // Show the registered loggers as a message, as the viewer did before this event
+                        // had its own type. The message is MSBuild's fallback text, e.g.
+                        // "BinaryLogger wrote to: C:\path\build.binlog".
+                        if (!string.IsNullOrEmpty(loggersRegistered.Message))
+                        {
+                            var message = new BuildMessageEventArgs(
+                                Intern(loggersRegistered.Message),
+                                Intern(loggersRegistered.HelpKeyword),
+                                Intern(loggersRegistered.SenderName),
+                                MessageImportance.Low,
+                                loggersRegistered.Timestamp)
+                            {
+                                BuildEventContext = loggersRegistered.BuildEventContext
+                            };
+                            messageProcessor.Process(message);
+                        }
+                    }
                     else if (e is BuildCanceledEventArgs buildCanceledEventArgs)
                     {
                         // If the build was canceled we want to show a message in the build log view.

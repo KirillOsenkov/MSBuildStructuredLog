@@ -942,6 +942,34 @@ namespace Microsoft.Build.UnitTests
             result.BuildEventContext.Should().Be(original.BuildEventContext);
         }
 
+        [Fact]
+        public void LoggersRegistered_RoundTrips()
+        {
+            var loggers = new[]
+            {
+                new RegisteredLoggerInfo("BinaryLogger", new[] { @"C:\logs\build.binlog" }, LoggerVerbosity.Diagnostic, @"LogFile=C:\logs\build.binlog"),
+                new RegisteredLoggerInfo("ConsoleLogger", Array.Empty<string>(), null, null),
+                new RegisteredLoggerInfo("FileLogger", new[] { @"C:\logs\a.log", @"C:\logs\b.log" }, LoggerVerbosity.Minimal, null),
+            };
+
+            var original = new LoggersRegisteredEventArgs(
+                loggers,
+                @"BinaryLogger wrote to: C:\logs\build.binlog; FileLogger wrote to: C:\logs\a.log, C:\logs\b.log",
+                helpKeyword: null,
+                senderName: null,
+                new DateTime(2026, 10, 27, 12, 0, 0, DateTimeKind.Utc))
+            {
+                BuildEventContext = BuildEventContext.Invalid,
+            };
+
+            var result = RoundTrip<LoggersRegisteredEventArgs>(original);
+
+            result.Loggers.Should().BeEquivalentTo(original.Loggers, options => options.WithStrictOrdering());
+            result.Message.Should().Be(original.Message);
+            result.Timestamp.Should().Be(original.Timestamp);
+            result.BuildEventContext.Should().Be(original.BuildEventContext);
+        }
+
         // ---------------------------------------------------------------------------------------
         // Truncated / interrupted binlog recovery.
         //

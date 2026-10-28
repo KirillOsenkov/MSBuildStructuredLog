@@ -103,8 +103,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var item = node as Item;
             if (item != null)
             {
-                item.Name = GetString(element, AttributeNames.Name);
-                item.Text = GetString(element, AttributeNames.Text);
+                // Item.Text is an alias of Item.Name, so assigning both would clear the name
+                // when the Text attribute is absent. Older XML logs stored the item as Text.
+                item.Name = GetString(element, AttributeNames.Name) ?? GetString(element, AttributeNames.Text);
                 return;
             }
 

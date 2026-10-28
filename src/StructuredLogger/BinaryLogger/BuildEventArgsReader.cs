@@ -1651,36 +1651,40 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         private BuildEventArgs ReadLoggersRegisteredEventArgs()
         {
-            // Registered-loggers event (binary-log format v26+). This fork does not have a strongly-typed node
-            // for it; read (and discard) the logger list — including each logger's output file paths — so the
-            // record is fully consumed, and surface the "Enabled loggers: ..." text as an ordinary message
-            // instead of skipping it.
+            // Registered-loggers event (binary-log format 26). Field order matches dotnet/msbuild's
+            // BuildEventArgsReader.ReadLoggersRegisteredEventArgs; Construction shows the message text.
             var fields = ReadBuildEventArgsFields();
 
             int count = ReadInt32();
+            var loggers = new RegisteredLoggerInfo[count];
             for (int i = 0; i < count; i++)
             {
-                ReadDeduplicatedString(); // LoggerName
-                ReadDeduplicatedString(); // Parameters
-                if (ReadBoolean())        // has verbosity
+                string loggerName = ReadDeduplicatedString();
+                string parameters = ReadDeduplicatedString();
+
+                LoggerVerbosity? verbosity = null;
+                if (ReadBoolean())
                 {
-                    ReadInt32();          // Verbosity
+                    verbosity = (LoggerVerbosity)ReadInt32();
                 }
 
                 int pathCount = ReadInt32();
+                var outputFilePaths = new string[pathCount];
                 for (int j = 0; j < pathCount; j++)
                 {
-                    ReadDeduplicatedString(); // output file path
+                    outputFilePaths[j] = ReadDeduplicatedString();
                 }
+
+                loggers[i] = new RegisteredLoggerInfo(loggerName, outputFilePaths, verbosity, parameters);
             }
 
-            var e = new BuildMessageEventArgs(
+            var e = new LoggersRegisteredEventArgs(
+                loggers,
                 fields.Message,
                 fields.HelpKeyword,
                 fields.SenderName,
-                fields.Importance);
+                fields.Timestamp);
             SetCommonFields(e, fields);
-            e.ProjectFile = fields.ProjectFile;
 
             return e;
         }
@@ -1700,12 +1704,14 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (_fileFormatVersion >= 25)
                 {
                     var reassignmentMessage = GetPropertyReassignmentMessage(propertyName, newValue, previousValue, $"{fields.File} ({fields.LineNumber},{fields.ColumnNumber})");
+                    // Keep Location as it was read so that BuildEventArgsWriter writes the same string back.
+                    // Passing the formatted message here made re-written logs carry the whole message in
+                    // the location slot, which MSBuild then appended after "at" when playing them back.
                     var reassignmentEvent = new PropertyReassignmentEventArgs(
                         propertyName,
                         previousValue,
                         newValue,
-                        // the message contains the location
-                        reassignmentMessage,
+                        location,
                         reassignmentMessage);
                     if (fields.File != null)
                     {

@@ -32,6 +32,17 @@
   <ItemGroup>
     <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
   </ItemGroup>
+  <!-- The tests build projects with the MSBuild that MSBuildLocator registers (Visual Studio), and
+       Microsoft.Build must load its own Microsoft.NET.StringTools from there: the 17.5 copy that the
+       StructuredLogger project reference drags in lacks members the newer Microsoft.Build calls, and
+       both carry assembly version 1.0.0.0, so a binding redirect cannot tell them apart. The copy comes
+       through the project reference's dependency walk, so it has to be taken out after RAR runs.
+       A copy left in bin by an earlier build is not removed by this; delete it by hand once. -->
+  <Target Name="RemoveMSBuildRuntimeCopiesFromTestOutput" AfterTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="'%(Filename)' == 'Microsoft.NET.StringTools'" />
+    </ItemGroup>
+  </Target>
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
     <SignAssembly>True</SignAssembly>
     <AssemblyOriginatorKeyFile>..\StructuredLogger\key.snk</AssemblyOriginatorKeyFile>
