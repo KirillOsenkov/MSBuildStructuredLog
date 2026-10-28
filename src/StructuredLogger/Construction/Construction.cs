@@ -743,7 +743,9 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
                     var warning = new Warning();
 
-                    string text = args.Message;
+                    // The structured conflict warning's Message is a lazily formatted summary that
+                    // is not shown; read args.Message only for the other warning kinds.
+                    string text;
 
                     if (args is AssemblyConflictWarningEventArgs conflictWarning)
                     {
@@ -766,15 +768,20 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         ItemGroupParser.AddConflictReferenceDetails(warning, victim, isVictor: false, stringTable);
                         text = string.Format(Strings.FoundConflictsHeader, conflictWarning.SimpleAssemblyName);
                     }
-                    else if (parent is ResolveAssemblyReferenceTask rar)
+                    else
                     {
-                        var match = Strings.IsFoundConflicts(text);
-                        if (match.Success)
+                        text = args.Message;
+
+                        if (parent is ResolveAssemblyReferenceTask rar)
                         {
-                            string details = match.Groups[2].Value;
-                            // https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/443
-                            ItemGroupParser.ParseThereWasAConflict(warning, details, stringTable);
-                            text = text.GetFirstLine();
+                            var match = Strings.IsFoundConflicts(text);
+                            if (match.Success)
+                            {
+                                string details = match.Groups[2].Value;
+                                // https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/443
+                                ItemGroupParser.ParseThereWasAConflict(warning, details, stringTable);
+                                text = text.GetFirstLine();
+                            }
                         }
                     }
 

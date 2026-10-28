@@ -146,6 +146,45 @@ namespace Microsoft.Build.Logging.StructuredLogger
             return message;
         }
 
+        /// <summary>
+        /// Attaches a structured RAR event (binlog format 28) to the reference Parameter that the
+        /// plain-text "Primary reference"/"Dependency"/"There was a conflict" header created in the
+        /// task's Results folder. Falls back to a node of its own under the task, or under the build
+        /// when the event has no task context.
+        /// </summary>
+        private void ProcessStructuredRarEvent(BuildMessageEventArgs args)
+        {
+            var buildEventContext = args.BuildEventContext;
+            Task task = buildEventContext != null && buildEventContext.TaskId > 0 ? GetTask(args) : null;
+            var referenceParameter = (task as ResolveAssemblyReferenceTask)?.Results?.FindLastChild<Parameter>();
+
+            BaseNode nodeToAdd;
+            if (args is AssemblyResolutionSearchTraceEventArgs searchTrace)
+            {
+                if (referenceParameter != null)
+                {
+                    AddAssemblyResolutionSearchTraceItems(referenceParameter, searchTrace);
+                    return;
+                }
+
+                nodeToAdd = CreateAssemblyResolutionSearchTraceNode(searchTrace);
+            }
+            else
+            {
+                var conflictDetails = (AssemblyConflictDependencyDetailsMessageEventArgs)args;
+                if (referenceParameter != null)
+                {
+                    AddAssemblyConflictDependencyDetails(referenceParameter, conflictDetails);
+                    return;
+                }
+
+                nodeToAdd = CreateAssemblyConflictDependencyDetailsNode(conflictDetails);
+            }
+
+            TreeNode parent = task ?? (TreeNode)construction.Build;
+            parent.AddChild(nodeToAdd);
+        }
+
         public void Process(BuildMessageEventArgs args)
         {
             if (args == null)
@@ -163,6 +202,15 @@ namespace Microsoft.Build.Logging.StructuredLogger
             if (args is MSBuildServerLifecycleEventArgs serverLifecycle)
             {
                 ProcessMSBuildServerLifecycle(serverLifecycle);
+                return;
+            }
+
+            // Structured RAR events (binlog format 28) are rendered from their fields. Handle them
+            // before the args.Message read below: their Message is a lazily formatted summary that
+            // nothing here uses, and there is one such event per RAR reference.
+            if (args is AssemblyResolutionSearchTraceEventArgs || args is AssemblyConflictDependencyDetailsMessageEventArgs)
+            {
+                ProcessStructuredRarEvent(args);
                 return;
             }
 
@@ -596,28 +644,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     if (args is AssemblyLoadBuildEventArgs)
                     {
                         nodeToAdd = new Message() { Text = Intern(message), IsLowRelevance = lowRelevance };
-                    }
-                    else if (args is AssemblyResolutionSearchTraceEventArgs searchTrace)
-                    {
-                        var referenceParameter = (task as ResolveAssemblyReferenceTask)?.Results?.FindLastChild<Parameter>();
-                        if (referenceParameter != null)
-                        {
-                            AddAssemblyResolutionSearchTraceItems(referenceParameter, searchTrace);
-                            return;
-                        }
-
-                        nodeToAdd = CreateAssemblyResolutionSearchTraceNode(searchTrace);
-                    }
-                    else if (args is AssemblyConflictDependencyDetailsMessageEventArgs conflictDetails)
-                    {
-                        var referenceParameter = (task as ResolveAssemblyReferenceTask)?.Results?.FindLastChild<Parameter>();
-                        if (referenceParameter != null)
-                        {
-                            AddAssemblyConflictDependencyDetails(referenceParameter, conflictDetails);
-                            return;
-                        }
-
-                        nodeToAdd = CreateAssemblyConflictDependencyDetailsNode(conflictDetails);
                     }
                     else if (task is ResolveAssemblyReferenceTask rar)
                     {

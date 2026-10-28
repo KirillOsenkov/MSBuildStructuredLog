@@ -1561,14 +1561,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
         private AssemblyConflictDependee ReadAssemblyConflictDependee()
         {
             var dependeeFullPath = ReadOptionalString();
-            int count = ReadInt32();
-            var sourceItemSpecs = new string[count];
-            for (int i = 0; i < count; i++)
-            {
-                sourceItemSpecs[i] = ReadOptionalString() ?? string.Empty;
-            }
-
-            return new(dependeeFullPath ?? string.Empty, sourceItemSpecs);
+            return new(dependeeFullPath ?? string.Empty, ReadStringArray());
         }
 
         private AssemblyConflictReferenceDetails ReadAssemblyConflictReferenceDetails()
@@ -1579,15 +1572,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
             var isResolved = ReadBoolean();
             var unresolvedPrimaryItemSpec = ReadOptionalString();
 
-            int primarySourceItemSpecCount = ReadInt32();
-            var primarySourceItemSpecs = new string[primarySourceItemSpecCount];
-            for (int i = 0; i < primarySourceItemSpecCount; i++)
-            {
-                primarySourceItemSpecs[i] = ReadOptionalString() ?? string.Empty;
-            }
+            var primarySourceItemSpecs = ReadStringArray();
 
             int dependeeCount = ReadInt32();
-            var dependees = new AssemblyConflictDependee[dependeeCount];
+            var dependees = dependeeCount == 0 ? Array.Empty<AssemblyConflictDependee>() : new AssemblyConflictDependee[dependeeCount];
             for (int i = 0; i < dependeeCount; i++)
             {
                 dependees[i] = ReadAssemblyConflictDependee();
@@ -1601,6 +1589,27 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 unresolvedPrimaryItemSpec,
                 primarySourceItemSpecs,
                 dependees);
+        }
+
+        /// <summary>
+        /// Reads a 7-bit encoded count followed by that many deduplicated strings (null read as empty).
+        /// Returns the shared empty array for a zero count; these lists are often empty.
+        /// </summary>
+        private string[] ReadStringArray()
+        {
+            int count = ReadInt32();
+            if (count == 0)
+            {
+                return Array.Empty<string>();
+            }
+
+            var result = new string[count];
+            for (int i = 0; i < count; i++)
+            {
+                result[i] = ReadOptionalString() ?? string.Empty;
+            }
+
+            return result;
         }
 
         private BuildEventArgs ReadAssemblyConflictDependencyDetailsMessageEventArgs()
@@ -1668,14 +1677,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
                     verbosity = (LoggerVerbosity)ReadInt32();
                 }
 
-                int pathCount = ReadInt32();
-                var outputFilePaths = new string[pathCount];
-                for (int j = 0; j < pathCount; j++)
-                {
-                    outputFilePaths[j] = ReadDeduplicatedString();
-                }
-
-                loggers[i] = new RegisteredLoggerInfo(loggerName, outputFilePaths, verbosity, parameters);
+                loggers[i] = new RegisteredLoggerInfo(loggerName, ReadStringArray(), verbosity, parameters);
             }
 
             var e = new LoggersRegisteredEventArgs(
