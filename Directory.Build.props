@@ -14,8 +14,8 @@
   </PropertyGroup>
 
   <PropertyGroup Label="Common Properties">
-    <BinlogToolVersion>1.0.34</BinlogToolVersion>
-    <BinlogMcpVersion>0.1.5</BinlogMcpVersion>
+    <BinlogToolVersion>1.0.35</BinlogToolVersion>
+    <BinlogMcpVersion>0.1.6</BinlogMcpVersion>
     <SignAssembly Condition="'$(SignAssembly)' == ''">false</SignAssembly>
     <DefineConstants Condition="'$(SignAssembly)' == 'true'">$(DefineConstants);SIGN;</DefineConstants>
     <DelaySign>false</DelaySign>
