@@ -40,9 +40,6 @@
     <PackageVersion Include="Nullable" Version="1.3.1" />
     <PackageVersion Include="squirrel.windows" Version="1.4.4" />
     <PackageVersion Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
-    <!-- These three must stay at least as new as the copies shipped by the Visual Studio that MSBuildLocator
-         registers for StructuredLogger.Tests (the test App.config redirects to these exact assembly versions);
-         VS 18.8's Microsoft.Build needs System.Collections.Immutable 9.0 or later. -->
     <PackageVersion Include="System.Collections.Immutable" Version="10.0.0" />
     <PackageVersion Include="System.CommandLine" Version="2.0.10" />
     <PackageVersion Include="System.Formats.Asn1" Version="8.0.1" />
