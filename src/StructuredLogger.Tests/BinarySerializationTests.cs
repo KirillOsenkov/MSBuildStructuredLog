@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using Microsoft.Build.Logging.StructuredLogger;
 using Xunit;
@@ -17,6 +18,26 @@ namespace StructuredLogger.Tests
         public BinarySerializationTests(ITestOutputHelper output)
         {
             this.output = output;
+        }
+
+        [Fact]
+        public void EveryConcreteObjectModelTypeCanBeCreated()
+        {
+            var objectModelTypes = typeof(BaseNode).Assembly
+                .GetTypes()
+                .Where(type => typeof(BaseNode).IsAssignableFrom(type))
+                .Where(type =>
+                    !type.IsAbstract &&
+                    type.GetConstructor(
+                        BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+                        binder: null,
+                        Type.EmptyTypes,
+                        modifiers: null) != null);
+
+            foreach (var type in objectModelTypes)
+            {
+                Assert.IsType(type, Serialization.CreateNode(type.Name));
+            }
         }
 
         internal void TimeRead()
