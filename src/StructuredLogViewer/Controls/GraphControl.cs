@@ -652,23 +652,29 @@ public class GraphControl
 
         var edges = new HashSet<(FrameworkElement start, FrameworkElement end)>();
 
-        Digraph.FindAllPaths(from, to, path =>
-        {
-            for (int i = 0; i < path.Count; i++)
-            {
-                var control = GetControl(path[i]);
-                if (control != null)
-                {
-                    highlighted.Add(control);
+        // Every vertex reachable from 'from' that can also reach 'to' lies on some path
+        // between them, and so does every edge between two such vertices. This is linear;
+        // enumerating the paths themselves is exponential on graphs with many diamonds.
+        var onPath = Digraph.FindVerticesOnPaths(from, to);
 
-                    var target = i < path.Count - 1 ? path[i + 1] : to;
-                    if (GetControl(target) is { } targetControl)
-                    {
-                        edges.Add((control, targetControl));
-                    }
+        foreach (var vertex in onPath)
+        {
+            var control = GetControl(vertex);
+            if (control == null)
+            {
+                continue;
+            }
+
+            highlighted.Add(control);
+
+            foreach (var outgoing in vertex.Outgoing)
+            {
+                if (onPath.Contains(outgoing) && GetControl(outgoing) is { } targetControl)
+                {
+                    edges.Add((control, targetControl));
                 }
             }
-        });
+        }
 
         highlighted.Remove(fromControl);
         highlighted.Remove(toControl);

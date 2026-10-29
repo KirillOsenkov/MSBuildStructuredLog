@@ -91,7 +91,10 @@ namespace StructuredLogViewer
         {
             var offset = GetOffsetFromMousePosition(mousePosition);
 
-            if (offset >= 0 && lastQuickInfoStart != -1 && lastQuickInfoEnd != -1)
+            // Only skip the recomputation while the tooltip for that word is still showing;
+            // it can be closed without going through CloseToolTip (e.g. by a mouse click),
+            // and then the cached range must not block reopening it.
+            if (offset >= 0 && lastQuickInfoStart != -1 && lastQuickInfoEnd != -1 && toolTip?.IsOpen == true)
             {
                 if (offset >= lastQuickInfoStart && offset <= lastQuickInfoEnd)
                 {

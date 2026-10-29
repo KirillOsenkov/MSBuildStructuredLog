@@ -94,7 +94,14 @@ namespace StructuredLogViewer.Avalonia.Controls
         {
             var offset = GetOffsetFromMousePosition(mousePosition);
 
-            if (offset >= 0 && lastQuickInfoStart != -1 && lastQuickInfoEnd != -1)
+            // Only skip the recomputation while the tooltip for that word is still showing;
+            // it can be closed without going through CloseToolTip (e.g. by a pointer press),
+            // and then the cached range must not block reopening it.
+            if (offset >= 0 &&
+                lastQuickInfoStart != -1 &&
+                lastQuickInfoEnd != -1 &&
+                textViewerControl?.TextEditor?.TextArea?.TextView is { } openTextView &&
+                ToolTip.GetIsOpen(openTextView))
             {
                 if (offset >= lastQuickInfoStart && offset <= lastQuickInfoEnd)
                 {

@@ -285,6 +285,12 @@ public class Digraph
         return result;
     }
 
+    /// <summary>
+    /// Enumerates every simple path from <paramref name="start"/> to <paramref name="end"/>.
+    /// The number of paths is exponential in graphs with many diamonds, so this is only
+    /// suitable for small graphs. To find the vertices that lie on any such path use
+    /// <see cref="FindVerticesOnPaths"/>, which is linear.
+    /// </summary>
     public void FindAllPaths(Vertex start, Vertex end, Action<IReadOnlyList<Vertex>> callback)
     {
         if (start.Height <= end.Height)
@@ -296,6 +302,78 @@ public class Digraph
         var spine = new Stack<Vertex>();
 
         FindPaths(start, end, visited, spine, callback);
+    }
+
+    /// <summary>
+    /// Returns every vertex that lies on at least one path from <paramref name="start"/>
+    /// to <paramref name="end"/>, including both endpoints: the vertices reachable from
+    /// start that can also reach end. Two linear traversals, no path enumeration.
+    /// </summary>
+    public HashSet<Vertex> FindVerticesOnPaths(Vertex start, Vertex end)
+    {
+        var result = new HashSet<Vertex>();
+
+        if (start == end)
+        {
+            result.Add(start);
+            return result;
+        }
+
+        // Height strictly decreases along an edge, so a vertex at or below end's height
+        // (other than end itself) cannot reach end, and a vertex at or above start's
+        // height cannot be reached from start.
+        if (start.Height <= end.Height)
+        {
+            return result;
+        }
+
+        var reachableFromStart = new HashSet<Vertex>();
+        var stack = new Stack<Vertex>();
+        stack.Push(start);
+
+        while (stack.Count > 0)
+        {
+            var current = stack.Pop();
+            if (!reachableFromStart.Add(current))
+            {
+                continue;
+            }
+
+            foreach (var child in current.Outgoing)
+            {
+                if (child == end || child.Height > end.Height)
+                {
+                    stack.Push(child);
+                }
+            }
+        }
+
+        if (!reachableFromStart.Contains(end))
+        {
+            return result;
+        }
+
+        // Walk backwards from end, staying inside the vertices reachable from start.
+        stack.Push(end);
+
+        while (stack.Count > 0)
+        {
+            var current = stack.Pop();
+            if (!reachableFromStart.Contains(current) || !result.Add(current))
+            {
+                continue;
+            }
+
+            foreach (var parent in current.Incoming)
+            {
+                if (parent == start || parent.Height < start.Height)
+                {
+                    stack.Push(parent);
+                }
+            }
+        }
+
+        return result;
     }
 
     private static void FindPaths(
