@@ -112,7 +112,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
             if (previousWasCarriageReturn)
             {
-                spans.Add(new Span(currentPosition, 0));
+                spans.Add(new Span(text.Length, 0));
             }
         }
 

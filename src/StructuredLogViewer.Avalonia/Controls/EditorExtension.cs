@@ -82,8 +82,8 @@ namespace StructuredLogViewer.Avalonia.Controls
             textView.PointerHoverStopped += (sender, e) => CloseToolTip();
         }
 
-        private int lastQuickInfoStart;
-        private int lastQuickInfoEnd;
+        private int lastQuickInfoStart = -1;
+        private int lastQuickInfoEnd = -1;
 
         public void RaiseGoToProperty(string property)
         {
@@ -111,8 +111,6 @@ namespace StructuredLogViewer.Avalonia.Controls
                 out string title)
                 || string.IsNullOrEmpty(type) || string.IsNullOrEmpty(title))
             {
-                lastQuickInfoStart = -1;
-                lastQuickInfoEnd = -1;
                 CloseToolTip();
                 return;
             }
@@ -150,6 +148,8 @@ namespace StructuredLogViewer.Avalonia.Controls
 
         private void CloseToolTip()
         {
+            lastQuickInfoStart = -1;
+            lastQuickInfoEnd = -1;
             var textView = textViewerControl?.TextEditor?.TextArea?.TextView;
             if (textView != null)
             {

@@ -1454,6 +1454,7 @@ namespace Microsoft.Build.Logging.StructuredLogger
             e.GlobalProperties = globalProperties;
             e.EntryProjectsFullPath = entries;
             e.TargetNames = targetNames;
+            e.Flags = flags;
             e.SubmissionId = submissionId;
 
             SetCommonFields(e, fields);

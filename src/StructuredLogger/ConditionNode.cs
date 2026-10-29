@@ -191,7 +191,7 @@ namespace StructuredLogViewer
 
                 if (unevalNext)
                 {
-                    if (!string.IsNullOrEmpty(unevalEnum.Current.Text) && !string.IsNullOrEmpty(unevalEnum.Current.Text))
+                    if (!string.IsNullOrEmpty(unevalEnum.Current.Text) && !string.IsNullOrEmpty(evalEnum.Current.Text))
                     {
                         unevalEnum.Current.Text = $"{unevalEnum.Current.Text} \u2794 {evalEnum.Current.Text}";
                     }

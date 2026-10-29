@@ -173,6 +173,7 @@ namespace StructuredLogViewer
                 zoom = scale;
             }
 
+            scale = zoom;
             scaleTransform.ScaleX = scaleTransform.ScaleY = zoom;
         }
 

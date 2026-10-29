@@ -47,7 +47,6 @@ namespace StructuredLogViewer
             bool includeDuration = false;
             bool includeStart = false;
             bool includeEnd = false;
-            bool nest = !includeDuration && !includeStart && !includeEnd;
 
             foreach (var r in results)
             {
@@ -66,6 +65,8 @@ namespace StructuredLogViewer
                     includeEnd = true;
                 }
             }
+
+            bool nest = !includeDuration && !includeStart && !includeEnd;
 
             if (includeDuration)
             {

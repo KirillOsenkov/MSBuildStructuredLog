@@ -784,6 +784,31 @@ namespace Microsoft.Build.UnitTests
             warning.Victim.FusionName.Should().Be("MyAssembly, Version=1.0.0.0");
         }
 
+        [Theory]
+        [InlineData(0)]
+        [InlineData(8)]
+        [InlineData(65)]
+        [InlineData(255)]
+        public void BuildSubmissionStarted_RoundTripsFlags(int flags)
+        {
+            var original = new global::StructuredLogger.BinaryLogger.BuildSubmissionStartedEventArgs
+            {
+                GlobalProperties = new Dictionary<string, string> { ["Configuration"] = "Debug" },
+                EntryProjectsFullPath = new[] { @"C:\proj\A.csproj" },
+                TargetNames = new[] { "Build" },
+                Flags = (global::StructuredLogger.BinaryLogger.BuildRequestDataFlags)flags,
+                SubmissionId = 42
+            };
+
+            var result = RoundTrip<global::StructuredLogger.BinaryLogger.BuildSubmissionStartedEventArgs>(original);
+
+            Assert.Equal(original.Flags, result.Flags);
+            Assert.Equal(original.SubmissionId, result.SubmissionId);
+            Assert.Equal(original.GlobalProperties, result.GlobalProperties);
+            Assert.Equal(original.EntryProjectsFullPath, result.EntryProjectsFullPath);
+            Assert.Equal(original.TargetNames, result.TargetNames);
+        }
+
         // Takes object on purpose: Microsoft.Build.Framework is resolved through MSBuildLocator at run
         // time and is not in the test output folder, and xUnit's discovery reflects over every method
         // signature in this class, so a Framework type in a signature makes it skip the whole assembly.
