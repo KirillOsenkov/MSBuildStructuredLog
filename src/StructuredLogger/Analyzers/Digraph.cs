@@ -324,6 +324,7 @@ public class Digraph
         }
 
         spine.Pop();
+        visited.Remove(start);
     }
 
     private static bool CanReach(Vertex start, Vertex target, HashSet<Vertex> visited, Stack<Vertex> stack)

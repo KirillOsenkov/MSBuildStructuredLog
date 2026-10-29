@@ -197,7 +197,8 @@ namespace StructuredLogViewer.Avalonia.Controls
 
                 return results;
             };
-            propertiesAndItemsControl.ResultsTreeBuilder = BuildResultTree;
+            propertiesAndItemsControl.ResultsTreeBuilder = (results, moreAvailable) =>
+                BuildResultTree(results, moreAvailable, addDuration: true, searchControl: propertiesAndItemsControl);
 
             UpdatePropertiesAndItemsWatermark();
             propertiesAndItemsControl.WatermarkDisplayed += UpdatePropertiesAndItemsWatermark;
@@ -2732,8 +2733,12 @@ Recent ("));
                 {
                     case AbstractDiagnostic diagnostic:
                         var path = diagnostic.File;
-                        if (!DisplayFile(path, diagnostic.LineNumber) &&
-                            path != null &&
+                        if (DisplayFile(path, diagnostic.LineNumber, diagnostic.ColumnNumber))
+                        {
+                            return true;
+                        }
+
+                        if (path != null &&
                             !Path.IsPathRooted(path) &&
                             diagnostic.ProjectFile != null)
                         {
@@ -2817,7 +2822,8 @@ Recent ("));
                             }
                         }
 
-                        return DisplayFile(hasSourceFile.SourceFilePath, line, evaluation: evaluation);
+                        int column = hasSourceFile is Import sourceImport ? sourceImport.Column : 0;
+                        return DisplayFile(hasSourceFile.SourceFilePath, line, column, evaluation);
                     case SourceFileLine sourceFileLine when sourceFileLine.Parent is SourceFile sourceFile && sourceFile.SourceFilePath != null:
                         return DisplayFile(sourceFile.SourceFilePath, sourceFileLine.LineNumber);
                     case Property property:
@@ -2964,7 +2970,7 @@ Recent ("));
             }
 
             string sourceFilePath = target.SourceFilePath;
-            return DisplayFile(sourceFilePath, line);
+            return DisplayFile(sourceFilePath, line, evaluation: target.Project.GetEvaluation());
         }
 
         private bool DisplayTask(Task task)
@@ -2972,17 +2978,18 @@ Recent ("));
             var sourceFilePath = task.SourceFilePath;
             var parent = task.Parent;
             var name = task.Name;
+            var evaluation = task.GetNearestParent<Project>()?.GetEvaluation();
             if (parent is not Target target)
             {
-                return DisplayFile(sourceFilePath);
+                return DisplayFile(sourceFilePath, evaluation: evaluation);
             }
 
             if (task.LineNumber.HasValue && task.LineNumber.Value > 0)
             {
-                return DisplayFile(sourceFilePath, task.LineNumber.Value);
+                return DisplayFile(sourceFilePath, task.LineNumber.Value, evaluation: evaluation);
             }
 
-            return DisplayTarget(sourceFilePath, target.Name, name);
+            return DisplayTarget(sourceFilePath, target.Name, name, evaluation);
         }
 
         public bool DisplayTarget(string sourceFilePath, string targetName, string taskName = null, ProjectEvaluation evaluation = null)
@@ -3035,6 +3042,11 @@ Recent ("));
 
         public IEnumerable BuildResultTree(object resultsObject, bool moreAvailable = false, bool addDuration = true)
         {
+            return BuildResultTree(resultsObject, moreAvailable, addDuration, searchLogControl);
+        }
+
+        private IEnumerable BuildResultTree(object resultsObject, bool moreAvailable, bool addDuration, SearchAndResultsControl searchControl)
+        {
             var folder = ResultTree.BuildResultTree(
                 resultsObject,
                 Elapsed,
@@ -3055,7 +3067,7 @@ Recent ("));
                 showAllButton.OnClick = () =>
                 {
                     showAllButton.IsEnabled = false;
-                    searchLogControl.TriggerSearch(searchLogControl.SearchText, int.MaxValue);
+                    searchControl.TriggerSearch(searchControl.SearchText, int.MaxValue);
                 };
 
                 folder.AddChildAtBeginning(showAllButton);

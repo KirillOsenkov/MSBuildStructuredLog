@@ -406,13 +406,12 @@ public class GraphControl
     private IEnumerable<Vertex> GetReachableVertices()
     {
         var reachableVertices = new HashSet<Vertex>();
+        var incomingVertices = new HashSet<Vertex>();
 
         foreach (var selected in SelectedAndSpecifiedVertices)
         {
             VisitOutgoing(selected);
 
-            // need to remove otherwise VisitIncoming will bail immediately
-            reachableVertices.Remove(selected);
             VisitIncoming(selected);
         }
 
@@ -431,7 +430,7 @@ public class GraphControl
 
         void VisitIncoming(Vertex vertex)
         {
-            if (!reachableVertices.Add(vertex))
+            if (!incomingVertices.Add(vertex))
             {
                 return;
             }
@@ -442,6 +441,7 @@ public class GraphControl
             }
         }
 
+        reachableVertices.UnionWith(incomingVertices);
         return reachableVertices;
     }
 

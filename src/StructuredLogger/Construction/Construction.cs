@@ -533,7 +533,11 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         Intern(args.Message),
                         Intern(args.HelpKeyword),
                         Intern(args.SenderName),
-                        MessageImportance.Low));
+                        MessageImportance.Low,
+                        args.Timestamp)
+                    {
+                        BuildEventContext = args.BuildEventContext
+                    });
                 }
             }
             catch (Exception ex)

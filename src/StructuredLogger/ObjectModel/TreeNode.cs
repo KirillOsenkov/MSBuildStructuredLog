@@ -509,6 +509,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 {
                     last = treeNode.FindLastInSubtreeIncludingSelf<T>(predicate);
                 }
+                else if (predicate != null && !predicate(current))
+                {
+                    last = default;
+                }
 
                 if (last != null)
                 {
@@ -551,6 +555,10 @@ namespace Microsoft.Build.Logging.StructuredLogger
                 if (treeNode != null)
                 {
                     first = treeNode.FindFirstInSubtreeIncludingSelf(predicate);
+                }
+                else if (predicate != null && !predicate(current))
+                {
+                    first = default;
                 }
 
                 if (first != null)

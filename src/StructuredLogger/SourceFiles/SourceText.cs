@@ -41,7 +41,7 @@ public class SourceText
             if (line.Length >= searchTextLength)
             {
                 int foundOffset = Text.IndexOf(searchText, line.Start, line.Length, StringComparison.OrdinalIgnoreCase);
-                if (foundOffset >= line.Start && foundOffset < line.End - searchTextLength)
+                if (foundOffset >= line.Start && foundOffset <= line.End - searchTextLength)
                 {
                     result.Add(i);
                 }

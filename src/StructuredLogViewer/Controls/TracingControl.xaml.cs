@@ -512,18 +512,13 @@ namespace StructuredLogViewer.Controls
                 });
                 var keys = sortedKeys.Select(Key => Key.Key).ToList();
 
-                // Get the max number of lanes
-                // Note: Max() throws if keys is empty.
-                int keysMax = keys.Any() ? keys.Max() + 1 : 1;
-                var length = Math.Max(keys.Count(), keysMax);
-
-                var blocksCollectionArray = new List<Block>[length];
-                Parallel.ForEach(keys, (key) =>
+                var blocksCollectionArray = new List<Block>[keys.Count];
+                Parallel.For(0, keys.Count, index =>
                 {
-                    blocksCollectionArray[key] = ComputeVisibleBlocks(Timeline.Lanes[key].Blocks);
+                    blocksCollectionArray[index] = ComputeVisibleBlocks(Timeline.Lanes[keys[index]].Blocks);
                 });
 
-                blocksCollection = blocksCollectionArray.Where(p => p != null).ToList();
+                blocksCollection = blocksCollectionArray.ToList();
             }
             this.computeTime = Timestamp - start;
         }
@@ -1322,7 +1317,7 @@ namespace StructuredLogViewer.Controls
             if (touchPoints == 1 && (touchOptions == TouchGesture.None || touchOptions == TouchGesture.Move))
             {
                 touchOptions = TouchGesture.Move;
-                var vector = e.CumulativeManipulation.Translation;
+                var vector = e.DeltaManipulation.Translation;
 
                 scrollViewer.ScrollToHorizontalOffset(scrollViewer.HorizontalOffset - vector.X);
                 scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset - vector.Y);
@@ -1340,10 +1335,12 @@ namespace StructuredLogViewer.Controls
                 {
                     // limit the zoom range.
                     var newZoom = Math.Min(scale * this.zoomSlider.Value, maximumZoom);
-                    newZoom = Math.Max(scale * this.zoomSlider.Value, minimumZoom);
+                    newZoom = Math.Max(newZoom, minimumZoom);
 
-                    if (newZoom < maximumZoom && newZoom > minimumZoom)
+                    if (newZoom != this.zoomSlider.Value)
                     {
+                        scale = newZoom / this.zoomSlider.Value;
+
                         // Zoom
                         this.scaleFactor = newZoom;
                         this.zoomSlider.Value = newZoom;

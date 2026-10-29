@@ -830,13 +830,13 @@ namespace Microsoft.Build.Logging.StructuredLogger
                         messageNode = initialAssignmentMessage;
                         string source = propertyInitialValueSetMatch.Groups["Source"].Value;
                         initialAssignmentMessage.Source = source;
+                        initialAssignmentMessage.NewValue = propertyInitialValueSetMatch.Groups["NewValue"].Value;
                         if (Strings.FileLineAndColumnRegex.Match(source) is { } match &&
                             match.Success &&
                             int.TryParse(match.Groups["Line"].Value, out var lineNumber))
                         {
                             initialAssignmentMessage.FilePath = match.Groups["File"].Value;
                             initialAssignmentMessage.Line = lineNumber;
-                            initialAssignmentMessage.NewValue = propertyInitialValueSetMatch.Groups["NewValue"].Value;
                         }
                     }
                 }

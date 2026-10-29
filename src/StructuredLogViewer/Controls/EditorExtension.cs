@@ -79,8 +79,8 @@ namespace StructuredLogViewer
             };
         }
 
-        private int lastQuickInfoStart;
-        private int lastQuickInfoEnd;
+        private int lastQuickInfoStart = -1;
+        private int lastQuickInfoEnd = -1;
 
         public void RaiseGoToProperty(string property)
         {
@@ -108,8 +108,6 @@ namespace StructuredLogViewer
                 out string title)
                 || string.IsNullOrEmpty(type) || string.IsNullOrEmpty(title))
             {
-                lastQuickInfoStart = -1;
-                lastQuickInfoEnd = -1;
                 CloseToolTip();
                 return;
             }
@@ -153,6 +151,8 @@ namespace StructuredLogViewer
 
         private void CloseToolTip()
         {
+            lastQuickInfoStart = -1;
+            lastQuickInfoEnd = -1;
             if (toolTip != null)
             {
                 toolTip.IsOpen = false;

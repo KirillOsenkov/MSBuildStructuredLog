@@ -321,12 +321,15 @@ namespace StructuredLogViewer
                 if (word.StartsWith("name=", StringComparison.OrdinalIgnoreCase) && word.Length > 5)
                 {
                     word = word.Substring(5, word.Length - 5);
-                    Terms.RemoveAt(termIndex);
                     var term = Term.Get(word);
                     if (term != default)
                     {
-                        Terms.Insert(termIndex, term);
+                        Terms[termIndex] = term;
                         NameTermIndex = termIndex;
+                    }
+                    else
+                    {
+                        RemoveTerm(termIndex);
                     }
 
                     continue;
@@ -335,12 +338,15 @@ namespace StructuredLogViewer
                 if (word.StartsWith("value=", StringComparison.OrdinalIgnoreCase) && word.Length > 6)
                 {
                     word = word.Substring(6, word.Length - 6);
-                    Terms.RemoveAt(termIndex);
                     var term = Term.Get(word);
                     if (term != default)
                     {
-                        Terms.Insert(termIndex, term);
+                        Terms[termIndex] = term;
                         ValueTermIndex = termIndex;
+                    }
+                    else
+                    {
+                        RemoveTerm(termIndex);
                     }
 
                     continue;
@@ -349,7 +355,7 @@ namespace StructuredLogViewer
                 if (word.StartsWith("skipped=", StringComparison.OrdinalIgnoreCase) && word.Length > 8)
                 {
                     word = word.Substring(8, word.Length - 8);
-                    Terms.RemoveAt(termIndex);
+                    RemoveTerm(termIndex);
                     if (string.Equals("true", word, StringComparison.OrdinalIgnoreCase))
                     {
                         Skipped = true;
@@ -365,7 +371,7 @@ namespace StructuredLogViewer
                 if (word.StartsWith("height=", StringComparison.OrdinalIgnoreCase) && word.Length > 7)
                 {
                     word = word.Substring(7, word.Length - 7);
-                    Terms.RemoveAt(termIndex);
+                    RemoveTerm(termIndex);
                     if (string.Equals("max", word, StringComparison.OrdinalIgnoreCase))
                     {
                         Height = int.MaxValue;
@@ -373,6 +379,20 @@ namespace StructuredLogViewer
                     else if (int.TryParse(word, out int height))
                     {
                         Height = height;
+                    }
+                }
+
+                void RemoveTerm(int index)
+                {
+                    Terms.RemoveAt(index);
+                    if (NameTermIndex > index)
+                    {
+                        NameTermIndex--;
+                    }
+
+                    if (ValueTermIndex > index)
+                    {
+                        ValueTermIndex--;
                     }
                 }
             }
