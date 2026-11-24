@@ -99,10 +99,14 @@
     </local:SplitterPanel.FirstChild>
 
     <local:SplitterPanel.SecondChild>
-      <Border BorderBrush="Gray"
-              BorderThickness="1">
+      <Border Name="breadcrumbPanel"
+              BorderBrush="Gray"
+              BorderThickness="1"
+              Background="{DynamicResource Theme_InfoBarBackground}">
         <ScrollViewer Background="{DynamicResource Theme_InfoBarBackground}">
           <ListBox Name="breadCrumb"
+                   Focusable="True"
+                   Background="{DynamicResource Theme_InfoBarBackground}"
                    BorderThickness="0"
                    BorderBrush="Transparent">
             <ListBox.ItemsPanel>
@@ -110,28 +114,29 @@
                 <WrapPanel />
               </ItemsPanelTemplate>
             </ListBox.ItemsPanel>
-              <ListBox.Template>
-                <ControlTemplate TargetType="{x:Type ListBox}">
-                    <Border BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}">
-                        <ItemsPresenter Name="PART_ItemsPresenter"
-                                        ItemsPanel="{TemplateBinding ItemsPanel}"
-                                        Margin="{TemplateBinding Padding}" />
-                    </Border>
-                </ControlTemplate>
-              </ListBox.Template>
-              <ListBox.Styles>
-                <Style Selector="Separator">
-                  <Setter Property="Template">
-                    <ControlTemplate>
-                      <Polygon Points="0,0 3,3 0,6"
-                               Stroke="{DynamicResource Theme_InfoBarForeground}"
-                               Fill="{DynamicResource Theme_InfoBarForeground}"
-                               VerticalAlignment="Center" />
-                    </ControlTemplate>
-                  </Setter>
-                </Style>
-              </ListBox.Styles>
+            <ListBox.Template>
+              <ControlTemplate TargetType="{x:Type ListBox}">
+                <Border BorderBrush="{TemplateBinding BorderBrush}"
+                        Background="{TemplateBinding Background}"
+                        BorderThickness="{TemplateBinding BorderThickness}">
+                  <ItemsPresenter Name="PART_ItemsPresenter"
+                                  ItemsPanel="{TemplateBinding ItemsPanel}"
+                                  Margin="{TemplateBinding Padding}" />
+                </Border>
+              </ControlTemplate>
+            </ListBox.Template>
+            <ListBox.Styles>
+              <Style Selector="Separator">
+                <Setter Property="Template">
+                  <ControlTemplate>
+                    <Polygon Points="0,0 3,3 0,6"
+                             Stroke="{DynamicResource Theme_InfoBarForeground}"
+                             Fill="{DynamicResource Theme_InfoBarForeground}"
+                             VerticalAlignment="Center" />
+                  </ControlTemplate>
+                </Setter>
+              </Style>
+            </ListBox.Styles>
           </ListBox>
         </ScrollViewer>
       </Border>

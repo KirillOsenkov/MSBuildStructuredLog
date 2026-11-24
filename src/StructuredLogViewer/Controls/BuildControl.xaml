@@ -151,10 +151,15 @@
     </local:SplitterPanel.FirstChild>
 
     <local:SplitterPanel.SecondChild>
-      <Border BorderBrush="Gray"
-              BorderThickness="1">
+      <Border x:Name="breadcrumbPanel"
+              BorderBrush="Gray"
+              BorderThickness="1"
+              Background="{DynamicResource Theme_InfoBarBackground}"
+              PreviewKeyDown="Breadcrumb_KeyDown"
+              PreviewMouseDown="Breadcrumb_PreviewMouseDown">
         <ScrollViewer>
           <ListBox x:Name="breadCrumb"
+                   Focusable="True"
                    BorderThickness="0"
                    BorderBrush="Transparent"
                    ScrollViewer.HorizontalScrollBarVisibility="Disabled"

@@ -79,6 +79,7 @@ namespace StructuredLogViewer.Avalonia.Controls
         private MenuItem searchInclusiveWithinThisTimespan;
         private MenuItem searchExclusiveWithinThisTimespan;
         private MenuItem copyChildrenItem;
+        private MenuItem copyNavigationPathItem;
         private MenuItem sortChildrenByNameItem;
         private MenuItem sortChildrenByDurationItem;
         private MenuItem filterChildrenItem;
@@ -112,6 +113,7 @@ namespace StructuredLogViewer.Avalonia.Controls
         private SearchAndResultsControl favoritesTree;
         private TabControl centralTabControl;
         private ListBox breadCrumb;
+        private Border breadcrumbPanel;
         private TabControl leftPaneTabControl;
         private TabItem searchLogTab;
         private DocumentWell documentWell;
@@ -226,7 +228,7 @@ namespace StructuredLogViewer.Avalonia.Controls
             sharedTreeContextMenu.Opened += SharedTreeContextMenu_Opened;
             favoriteSharedItem = new MenuItem { Header = "Add to Favorites" };
             unfavoriteSharedItem = new MenuItem { Header = "Remove from Favorites" };
-            var sharedCopyItem = new MenuItem() { Header = "Copy" };
+            var sharedCopyItem = new MenuItem() { Header = "Copy", InputGesture = new KeyGesture(Key.C, KeyModifiers.Control) };
             var sharedCopyAllItem = new MenuItem() { Header = "Copy All" };
             var sharedCopySubtreeItem = new MenuItem() { Header = "Copy subtree" };
             var sharedCopyVisibleSubtreeItem = new MenuItem() { Header = "Copy visible subtree" };
@@ -245,7 +247,7 @@ namespace StructuredLogViewer.Avalonia.Controls
 
             // Files
             filesTreeContextMenu = new ContextMenu();
-            var filesCopyItem = new MenuItem { Header = "Copy" };
+            var filesCopyItem = new MenuItem { Header = "Copy", InputGesture = new KeyGesture(Key.C, KeyModifiers.Control) };
             var filesCopyAllItem = new MenuItem { Header = "Copy All" };
             var filesCopyPathsItem = new MenuItem { Header = "Copy file paths" };
             var filesCopySubtreeItem = new MenuItem { Header = "Copy subtree" };
@@ -265,15 +267,15 @@ namespace StructuredLogViewer.Avalonia.Controls
             var contextMenu = new ContextMenu();
             contextMenu.Opened += ContextMenu_Opened;
             searchMenuGroup = new MenuItem() { Header = "Search" };
-            copyItem = new MenuItem() { Header = "Copy" };
+            copyItem = new MenuItem() { Header = "Copy", InputGesture = new KeyGesture(Key.C, KeyModifiers.Control) };
             copySubtreeItem = new MenuItem() { Header = "Copy subtree" };
             copyVisibleSubtreeItem = new MenuItem() { Header = "Copy visible subtree" };
             sortChildrenByNameItem = new MenuItem() { Header = "Sort children by name" };
             sortChildrenByDurationItem = new MenuItem() { Header = "Sort children by duration" };
-            filterChildrenItem = new MenuItem() { Header = "Filter children (Ctrl+F)" };
+            filterChildrenItem = new MenuItem() { Header = "Filter children", InputGesture = new KeyGesture(Key.F, KeyModifiers.Control) };
             copyNameItem = new MenuItem() { Header = "Copy name" };
             copyValueItem = new MenuItem() { Header = "Copy value" };
-            viewSourceItem = new MenuItem() { Header = "View source" };
+            viewSourceItem = new MenuItem() { Header = "View source", InputGesture = new KeyGesture(Key.Space) };
             viewFullTextItem = new MenuItem() { Header = "View full text" };
             var nugetImage = new global::Avalonia.Controls.Shapes.Path
             {
@@ -287,8 +289,16 @@ namespace StructuredLogViewer.Avalonia.Controls
             searchNuGetItem = new MenuItem() { Header = "Search project.assets.json", Icon = nugetImage };
             showFileInExplorerItem = new MenuItem() { Header = "Show in Explorer" };
             preprocessItem = new MenuItem() { Header = "Preprocess" };
-            hideItem = new MenuItem() { Header = "Hide" };
+            hideItem = new MenuItem() { Header = "Hide", InputGesture = new KeyGesture(Key.Delete) };
             copyChildrenItem = new MenuItem() { Header = "Copy children" };
+            copyNavigationPathItem = new MenuItem { Header = "Copy navigation path", InputGesture = new KeyGesture(Key.C, KeyModifiers.Control | KeyModifiers.Shift) };
+            copyNavigationPathItem.Click += (s, e) =>
+            {
+                UpdateBreadcrumb(treeView.SelectedItem);
+                CopyBuildPath_Click(s, e);
+            };
+            var pasteNavigationPathItem = new MenuItem { Header = "Paste navigation path", InputGesture = new KeyGesture(Key.V, KeyModifiers.Control | KeyModifiers.Shift) };
+            pasteNavigationPathItem.Click += PasteBuildPath_Click;
             viewSubtreeTextItem = new MenuItem() { Header = "View subtree text" };
             showTimeItem = new MenuItem() { Header = "Show time and duration" };
             openFileItem = new MenuItem() { Header = "Open File" };
@@ -359,12 +369,15 @@ namespace StructuredLogViewer.Avalonia.Controls
             contextMenu.AddItem(copySubtreeItem);
             contextMenu.AddItem(copyVisibleSubtreeItem);
             contextMenu.AddItem(copyFilePathItem);
-            contextMenu.AddItem(copyChildrenItem);
             contextMenu.AddItem(copyNameItem);
             contextMenu.AddItem(copyValueItem);
 
-            contextMenu.AddItem(new Separator());
             contextMenu.AddItem(showFileInExplorerItem);
+
+            contextMenu.AddItem(copyChildrenItem);
+            contextMenu.AddItem(new Separator());
+            contextMenu.AddItem(copyNavigationPathItem);
+            contextMenu.AddItem(pasteNavigationPathItem);
 
             contextMenu.AddItem(separator2);
 
@@ -391,6 +404,18 @@ namespace StructuredLogViewer.Avalonia.Controls
             }
 
             treeView.ContextMenu = contextMenu;
+            var breadcrumbContextMenu = new ContextMenu();
+            var copyBreadcrumbPathItem = new MenuItem { Header = "Copy navigation path", InputGesture = new KeyGesture(Key.C, KeyModifiers.Control | KeyModifiers.Shift) };
+            var pasteBreadcrumbPathItem = new MenuItem { Header = "Paste navigation path", InputGesture = new KeyGesture(Key.V, KeyModifiers.Control | KeyModifiers.Shift) };
+            copyBreadcrumbPathItem.Click += CopyBuildPath_Click;
+            pasteBreadcrumbPathItem.Click += PasteBuildPath_Click;
+            breadcrumbContextMenu.AddItem(copyBreadcrumbPathItem);
+            breadcrumbContextMenu.AddItem(pasteBreadcrumbPathItem);
+            breadcrumbContextMenu.Opened += (s, e) => copyBreadcrumbPathItem.IsEnabled = GetBuildPathNode()?.GetRoot() is Build;
+            breadCrumb.ContextMenu = breadcrumbContextMenu;
+            breadcrumbPanel.ContextMenu = breadcrumbContextMenu;
+            breadcrumbPanel.AddHandler(KeyDownEvent, Breadcrumb_KeyDown, RoutingStrategies.Tunnel);
+            breadcrumbPanel.AddHandler(PointerPressedEvent, Breadcrumb_PointerPressed, RoutingStrategies.Tunnel);
             treeView.Styles.Add(GetTreeViewItemStyle());
             RegisterTreeViewHandlers(treeView);
 
@@ -732,6 +757,10 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             filesTree.Dispose();
 
             breadCrumb.SelectionChanged -= BreadCrumb_SelectionChanged;
+            breadcrumbPanel.RemoveHandler(KeyDownEvent, Breadcrumb_KeyDown);
+            breadcrumbPanel.RemoveHandler(PointerPressedEvent, Breadcrumb_PointerPressed);
+            breadcrumbPanel.ContextMenu = null;
+            breadCrumb.ContextMenu = null;
             breadCrumb.ItemsSource = null;
 
             findTextBox.KeyDown -= FindTextBox_KeyDown;
@@ -869,6 +898,20 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
             var treeView = (TreeView)sender;
 
+            if (e.KeyModifiers == (KeyModifiers.Control | KeyModifiers.Shift) && e.Key == Key.C)
+            {
+                CopyBuildPath_Click(sender, e);
+                e.Handled = true;
+                return;
+            }
+
+            if (e.KeyModifiers == (KeyModifiers.Control | KeyModifiers.Shift) && e.Key == Key.V)
+            {
+                PasteBuildPath_Click(sender, e);
+                e.Handled = true;
+                return;
+            }
+
             if (e.KeyModifiers == KeyModifiers.None)
             {
                 if (e.Key == Key.Delete)
@@ -942,6 +985,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             this.RegisterControl(out favoritesTree, nameof(favoritesTree));
             this.RegisterControl(out centralTabControl, nameof(centralTabControl));
             this.RegisterControl(out breadCrumb, nameof(breadCrumb));
+            this.RegisterControl(out breadcrumbPanel, nameof(breadcrumbPanel));
             this.RegisterControl(out leftPaneTabControl, nameof(leftPaneTabControl));
             this.RegisterControl(out searchLogTab, nameof(searchLogTab));
             this.RegisterControl(out propertiesAndItemsControl, nameof(propertiesAndItemsControl));
@@ -1356,11 +1400,13 @@ Recent ("));
         private void ContextMenu_Opened(object sender, RoutedEventArgs e)
         {
             var node = treeView.SelectedItem as BaseNode;
+            copyNavigationPathItem.IsEnabled = node?.GetRoot() is Build;
             var nameValueVisibility = node is NameValueNode;
             copyNameItem.IsVisible = nameValueVisibility;
             copyValueItem.IsVisible = nameValueVisibility;
             viewSourceItem.IsVisible = CanView(node);
             viewFullTextItem.IsVisible = HasFullText(node);
+            viewFullTextItem.InputGesture = CanView(node) ? null : new KeyGesture(Key.Space);
             searchNuGetItem.IsVisible = node is IProjectOrEvaluation;
             openFileItem.IsVisible = CanOpenFile(node);
             copyFilePathItem.IsVisible = node is Import || (node is IHasSourceFile file && !string.IsNullOrEmpty(file.SourceFilePath));
@@ -1843,7 +1889,7 @@ Recent ("));
             if (node != null)
             {
                 SelectItem(node);
-                treeView.Focus();
+                breadCrumb.Focus();
                 e.Handled = true;
             }
 
@@ -1947,6 +1993,116 @@ Recent ("));
         }
 
         private object currentBreadcrumb;
+
+        public string GetBuildPath() => BreadcrumbPath.Create(GetBuildPathNode());
+
+        private BaseNode GetBuildPathNode()
+        {
+            var node = currentBreadcrumb as BaseNode;
+            if (node is ProxyNode proxy)
+            {
+                node = proxy.Original as BaseNode;
+            }
+
+            return node;
+        }
+
+        private async void CopyBuildPath_Click(object sender, RoutedEventArgs e)
+        {
+            var path = GetBuildPath();
+            if (path == null)
+            {
+                return;
+            }
+
+            try
+            {
+                var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+                if (clipboard != null)
+                {
+                    await clipboard.SetTextAsync(path);
+                }
+            }
+            catch (Exception)
+            {
+                DisplayText("Unable to write to the clipboard. Please try again.", "Copy build path");
+            }
+        }
+
+        private async void PasteBuildPath_Click(object sender, RoutedEventArgs e)
+        {
+            string path;
+            try
+            {
+                var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+                path = clipboard == null ? null : await clipboard.TryGetTextAsync();
+            }
+            catch (Exception)
+            {
+                DisplayText("Unable to read the clipboard. Please try again.", "Paste build path");
+                return;
+            }
+
+            if (NavigateToBuildPath(path) && sender == breadcrumbPanel)
+            {
+                breadCrumb.Focus();
+            }
+        }
+
+        public bool NavigateToBuildPath(string path)
+        {
+            var result = BreadcrumbPath.Resolve(Build, path, out var node);
+            if (result == BreadcrumbPathResult.Found)
+            {
+                if (node == Build)
+                {
+                    SelectTree();
+                    treeView.SelectedItem = null;
+                    UpdateBreadcrumb(Build);
+                }
+                else
+                {
+                    SelectItem(node);
+                }
+                treeView.Focus();
+                return true;
+            }
+
+            var message = result switch
+            {
+                BreadcrumbPathResult.Invalid => "The clipboard does not contain a copied build path. Use Copy navigation path in another log first.",
+                BreadcrumbPathResult.Ambiguous => "The copied build path matches more than one node in this log. Copy a more specific path, or navigate to a parent breadcrumb and select the node manually.",
+                _ => "The copied build path was not found in this log. Try copying a parent breadcrumb to compare the surrounding build steps."
+            };
+            DisplayText(message, "Paste build path");
+            return false;
+        }
+
+        private void Breadcrumb_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (!e.Handled && e.KeyModifiers == (KeyModifiers.Control | KeyModifiers.Shift))
+            {
+                if (e.Key == Key.C)
+                {
+                    CopyBuildPath_Click(sender, e);
+                    e.Handled = true;
+                }
+                else if (e.Key == Key.V)
+                {
+                    PasteBuildPath_Click(sender, e);
+                    e.Handled = true;
+                }
+            }
+        }
+
+        private void Breadcrumb_PointerPressed(object sender, PointerPressedEventArgs e)
+        {
+            breadCrumb.Focus();
+            if (e.GetCurrentPoint(breadCrumb).Properties.IsRightButtonPressed)
+            {
+                e.Handled = true;
+            }
+        }
 
         public void UpdateBreadcrumb(object item)
         {

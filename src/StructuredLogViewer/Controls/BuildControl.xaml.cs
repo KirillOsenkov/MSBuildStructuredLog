@@ -79,6 +79,7 @@ namespace StructuredLogViewer.Controls
         private MenuItem goToTimeLineItem;
         private MenuItem goToTracingItem;
         private MenuItem copyChildrenItem;
+        private MenuItem copyNavigationPathItem;
         private MenuItem sortChildrenByNameItem;
         private MenuItem sortChildrenByDurationItem;
         private MenuItem filterChildrenItem;
@@ -200,7 +201,7 @@ namespace StructuredLogViewer.Controls
             sharedTreeContextMenu.Opened += SharedTreeContextMenu_Opened;
             favoriteSharedItem = new MenuItem { Header = "Add to Favorites" };
             unfavoriteSharedItem = new MenuItem { Header = "Remove from Favorites" };
-            var sharedCopyItem = new MenuItem() { Header = "Copy" };
+            var sharedCopyItem = new MenuItem() { Header = "Copy", InputGestureText = "Ctrl+C" };
             var sharedCopyAllItem = new MenuItem() { Header = "Copy All" };
             var sharedCopySubtreeItem = new MenuItem() { Header = "Copy subtree" };
             var sharedCopyVisibleSubtreeItem = new MenuItem() { Header = "Copy visible subtree" };
@@ -219,7 +220,7 @@ namespace StructuredLogViewer.Controls
 
             // Files
             filesTreeContextMenu = new ContextMenu();
-            var filesCopyItem = new MenuItem { Header = "Copy" };
+            var filesCopyItem = new MenuItem { Header = "Copy", InputGestureText = "Ctrl+C" };
             var filesCopyAllItem = new MenuItem { Header = "Copy All" };
             var filesCopyPathsItem = new MenuItem { Header = "Copy file paths" };
             var filesCopySubtreeItem = new MenuItem { Header = "Copy subtree" };
@@ -241,7 +242,7 @@ namespace StructuredLogViewer.Controls
             searchMenuGroup = new() { Header = "Search" };
             gotoMenuGroup = new() { Header = "Go to" };
 
-            copyItem = new MenuItem() { Header = "Copy" };
+            copyItem = new MenuItem() { Header = "Copy", InputGestureText = "Ctrl+C" };
             copySubtreeItem = new MenuItem() { Header = "Copy subtree" };
             copyVisibleSubtreeItem = new MenuItem() { Header = "Copy visible subtree" };
             viewSubtreeTextItem = new MenuItem() { Header = "View subtree text" };
@@ -257,12 +258,20 @@ namespace StructuredLogViewer.Controls
             goToTimeLineItem = new MenuItem() { Header = "Timeline" };
             goToTracingItem = new MenuItem() { Header = "Tracing" };
             copyChildrenItem = new MenuItem() { Header = "Copy children" };
+            copyNavigationPathItem = new MenuItem { Header = "Copy navigation path", InputGestureText = "Ctrl+Shift+C" };
+            copyNavigationPathItem.Click += (s, e) =>
+            {
+                UpdateBreadcrumb(treeView.SelectedItem);
+                CopyBuildPath_Click(s, e);
+            };
+            var pasteNavigationPathItem = new MenuItem { Header = "Paste navigation path", InputGestureText = "Ctrl+Shift+V" };
+            pasteNavigationPathItem.Click += PasteBuildPath_Click;
             sortChildrenByNameItem = new MenuItem() { Header = "Sort children by name" };
             sortChildrenByDurationItem = new MenuItem() { Header = "Sort children by duration" };
-            filterChildrenItem = new MenuItem() { Header = "Filter children (Ctrl+F)" };
+            filterChildrenItem = new MenuItem() { Header = "Filter children", InputGestureText = "Ctrl+F" };
             copyNameItem = new MenuItem() { Header = "Copy name" };
             copyValueItem = new MenuItem() { Header = "Copy value" };
-            viewSourceItem = new MenuItem() { Header = "View source" };
+            viewSourceItem = new MenuItem() { Header = "View source", InputGestureText = "Space" };
             viewFullTextItem = new MenuItem { Header = "View full text" };
             showTimeItem = new MenuItem() { Header = "Show time and duration" };
             favoriteItem = new MenuItem() { Header = "Add to Favorites" };
@@ -285,7 +294,7 @@ namespace StructuredLogViewer.Controls
                 StrokeThickness = 1
             };
             searchNuGetItem = new MenuItem() { Header = "Search project.assets.json", Icon = nugetImage };
-            hideItem = new MenuItem() { Header = "Hide" };
+            hideItem = new MenuItem() { Header = "Hide", InputGestureText = "Delete" };
             runItem = new MenuItem() { Header = "Run" };
             debugItem = new MenuItem() { Header = "Debug" };
             copyItem.Click += (s, a) => Copy();
@@ -362,12 +371,15 @@ namespace StructuredLogViewer.Controls
             contextMenu.AddItem(copySubtreeItem);
             contextMenu.AddItem(copyVisibleSubtreeItem);
             contextMenu.AddItem(copyFilePathItem);
-            contextMenu.AddItem(copyChildrenItem);
             contextMenu.AddItem(copyNameItem);
             contextMenu.AddItem(copyValueItem);
 
-            contextMenu.AddItem(new Separator());
             contextMenu.AddItem(showFileInExplorerItem);
+
+            contextMenu.AddItem(copyChildrenItem);
+            contextMenu.AddItem(new Separator());
+            contextMenu.AddItem(copyNavigationPathItem);
+            contextMenu.AddItem(pasteNavigationPathItem);
 
             contextMenu.AddItem(separator2);
 
@@ -387,6 +399,16 @@ namespace StructuredLogViewer.Controls
             treeViewItemStyle.Setters.Add(new EventSetter(KeyDownEvent, (KeyEventHandler)OnItemKeyDown));
 
             treeView.ContextMenu = contextMenu;
+            var breadcrumbContextMenu = new ContextMenu();
+            var copyBreadcrumbPathItem = new MenuItem { Header = "Copy navigation path", InputGestureText = "Ctrl+Shift+C" };
+            var pasteBreadcrumbPathItem = new MenuItem { Header = "Paste navigation path", InputGestureText = "Ctrl+Shift+V" };
+            copyBreadcrumbPathItem.Click += CopyBuildPath_Click;
+            pasteBreadcrumbPathItem.Click += PasteBuildPath_Click;
+            breadcrumbContextMenu.AddItem(copyBreadcrumbPathItem);
+            breadcrumbContextMenu.AddItem(pasteBreadcrumbPathItem);
+            breadcrumbContextMenu.Opened += (s, e) => copyBreadcrumbPathItem.IsEnabled = GetBuildPathNode()?.GetRoot() is Build;
+            breadCrumb.ContextMenu = breadcrumbContextMenu;
+            breadcrumbPanel.ContextMenu = breadcrumbContextMenu;
             treeView.ItemContainerStyle = treeViewItemStyle;
             treeView.KeyUp += TreeView_KeyDown;
             treeView.SelectedItemChanged += TreeView_SelectedItemChanged;
@@ -714,6 +736,8 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             propertiesAndItemsControl.WatermarkContent = null;
             propertiesAndItemsContext.Content = null;
             propertiesAndItemsSearch = null;
+            breadCrumb.ContextMenu = null;
+            breadcrumbPanel.ContextMenu = null;
             breadCrumb.ItemsSource = null;
             filesTree.ResultsList.ItemContainerStyle = null;
             filesTree.ContextMenu = null;
@@ -1405,11 +1429,13 @@ Recent (");
         private void ContextMenu_Opened(object sender, RoutedEventArgs e)
         {
             var node = treeView.SelectedItem as BaseNode;
+            copyNavigationPathItem.IsEnabled = node?.GetRoot() is Build;
             var nameValueVisibility = node is NameValueNode ? Visibility.Visible : Visibility.Collapsed;
             copyNameItem.Visibility = nameValueVisibility;
             copyValueItem.Visibility = nameValueVisibility;
             viewSourceItem.Visibility = CanView(node) ? Visibility.Visible : Visibility.Collapsed;
             viewFullTextItem.Visibility = HasFullText(node) ? Visibility.Visible : Visibility.Collapsed;
+            viewFullTextItem.InputGestureText = CanView(node) ? "" : "Space";
             openFileItem.Visibility = CanOpenFile(node) ? Visibility.Visible : Visibility.Collapsed;
             copyFilePathItem.Visibility = node is Import || (node is IHasSourceFile file && !string.IsNullOrEmpty(file.SourceFilePath))
                 ? Visibility.Visible
@@ -1921,7 +1947,6 @@ Recent (");
                 if (this.centralTabControl.SelectedIndex == 0)
                 {
                     SelectItem(node);
-                    treeView.Focus();
                 }
                 else if (this.centralTabControl.SelectedIndex == 2)
                 {
@@ -1931,6 +1956,7 @@ Recent (");
                     }
                 }
 
+                breadCrumb.Focus();
                 e.Handled = true;
             }
 
@@ -2036,6 +2062,112 @@ Recent (");
         }
 
         private object currentBreadcrumb;
+
+        public string GetBuildPath() => BreadcrumbPath.Create(GetBuildPathNode());
+
+        private BaseNode GetBuildPathNode()
+        {
+            var node = currentBreadcrumb as BaseNode;
+            if (node is ProxyNode proxy)
+            {
+                node = proxy.Original as BaseNode;
+            }
+
+            return node;
+        }
+
+        private void CopyBuildPath_Click(object sender, RoutedEventArgs e)
+        {
+            var path = GetBuildPath();
+            if (path != null)
+            {
+                try
+                {
+                    Clipboard.SetText(path);
+                }
+                catch (Exception)
+                {
+                    DisplayText("Unable to write to the clipboard. Please try again.", "Copy build path");
+                }
+            }
+        }
+
+        private void PasteBuildPath_Click(object sender, RoutedEventArgs e)
+        {
+            string path;
+            try
+            {
+                path = Clipboard.GetText();
+            }
+            catch (Exception)
+            {
+                DisplayText("Unable to read the clipboard. Please try again.", "Paste build path");
+                return;
+            }
+
+            if (NavigateToBuildPath(path) && sender == breadcrumbPanel)
+            {
+                breadCrumb.Focus();
+            }
+        }
+
+        public bool NavigateToBuildPath(string path)
+        {
+            var result = BreadcrumbPath.Resolve(Build, path, out var node);
+            if (result == BreadcrumbPathResult.Found)
+            {
+                if (node == Build)
+                {
+                    SelectTree();
+                    if (SelectedTreeViewItem != null)
+                    {
+                        SelectedTreeViewItem.IsSelected = false;
+                    }
+                    UpdateBreadcrumb(Build);
+                }
+                else
+                {
+                    SelectItem(node);
+                }
+                treeView.Focus();
+                return true;
+            }
+
+            var message = result switch
+            {
+                BreadcrumbPathResult.Invalid => "The clipboard does not contain a copied build path. Use Copy navigation path in another log first.",
+                BreadcrumbPathResult.Ambiguous => "The copied build path matches more than one node in this log. Copy a more specific path, or navigate to a parent breadcrumb and select the node manually.",
+                _ => "The copied build path was not found in this log. Try copying a parent breadcrumb to compare the surrounding build steps."
+            };
+            DisplayText(message, "Paste build path");
+            return false;
+        }
+
+        private void Breadcrumb_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (!e.Handled && e.KeyboardDevice.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
+            {
+                if (e.Key == Key.C)
+                {
+                    CopyBuildPath_Click(sender, e);
+                    e.Handled = true;
+                }
+                else if (e.Key == Key.V)
+                {
+                    PasteBuildPath_Click(sender, e);
+                    e.Handled = true;
+                }
+            }
+        }
+
+        private void Breadcrumb_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            breadCrumb.Focus();
+            if (e.ChangedButton == MouseButton.Right)
+            {
+                e.Handled = true;
+            }
+        }
 
         public void UpdateBreadcrumb(object item)
         {
@@ -2888,6 +3020,20 @@ Recent (");
         {
             if (args.Handled)
             {
+                return;
+            }
+
+            if (args.KeyboardDevice.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) && args.Key == Key.C)
+            {
+                CopyBuildPath_Click(sender, args);
+                args.Handled = true;
+                return;
+            }
+
+            if (args.KeyboardDevice.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) && args.Key == Key.V)
+            {
+                PasteBuildPath_Click(sender, args);
+                args.Handled = true;
                 return;
             }
 
