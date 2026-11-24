@@ -39,10 +39,44 @@ namespace StructuredLogViewer.Controls
         private void TypingConcurrentOperation_SearchComplete(string searchText, object arg2, TimeSpan elapsed)
         {
             BuildControl.Elapsed = elapsed;
-            SettingsService.AddRecentSearchText(searchText, discardPrefixes: true, RecentItemsCategory);
+
+            // text copied from another tab is not added to the recent searches of this tab
+            if (searchText != copiedTextInSearchBox)
+            {
+                SettingsService.AddRecentSearchText(searchText, discardPrefixes: true, RecentItemsCategory);
+            }
         }
 
         public string RecentItemsCategory { get; set; }
+
+        // the text most recently copied into the search box by CopySearchText
+        private string lastCopiedText;
+
+        // same as lastCopiedText, until the text in the search box is changed
+        private string copiedTextInSearchBox;
+
+        public bool IsSearchBoxVisible => topPanel.Visibility == Visibility.Visible;
+
+        /// <summary>
+        /// Sets the search text to the text of the search tab that was selected before this one.
+        /// Nothing is copied if the search box is hidden or already has text. The same text is
+        /// copied only once, so a search box that the user cleared is not filled again.
+        /// </summary>
+        public void CopySearchText(string text)
+        {
+            var trimmed = text?.Trim();
+            if (string.IsNullOrEmpty(trimmed) ||
+                trimmed == lastCopiedText ||
+                !IsSearchBoxVisible ||
+                !string.IsNullOrWhiteSpace(SearchText))
+            {
+                return;
+            }
+
+            lastCopiedText = trimmed;
+            copiedTextInSearchBox = trimmed;
+            SearchText = text;
+        }
 
         public TreeView ResultsList => resultsList;
         public Func<object, bool, IEnumerable> ResultsTreeBuilder { get; set; }
@@ -70,6 +104,11 @@ namespace StructuredLogViewer.Controls
         private void searchTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             var searchText = searchTextBox.Text.Trim();
+            if (searchText != copiedTextInSearchBox)
+            {
+                copiedTextInSearchBox = null;
+            }
+
             TextChanged?.Invoke(searchText);
 
             if (string.IsNullOrWhiteSpace(searchText) || searchText.Length < 3)

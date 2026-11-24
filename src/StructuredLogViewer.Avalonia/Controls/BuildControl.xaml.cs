@@ -962,12 +962,20 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
             var previousSearch = GetSearchControl(e.RemovedItems[0]);
             var currentSearch = GetSearchControl(e.AddedItems[0]);
-            if (previousSearch != null && currentSearch != null &&
-                string.IsNullOrWhiteSpace(currentSearch.SearchText) &&
-                !string.IsNullOrWhiteSpace(previousSearch.SearchText))
+            if (previousSearch == null || currentSearch == null || !previousSearch.IsSearchBoxVisible)
             {
-                currentSearch.SearchText = previousSearch.SearchText;
+                return;
             }
+
+            var text = previousSearch.SearchText;
+
+            // text that matches no file is not copied to the Files tab, where it would hide all files
+            if (currentSearch == filesTree && !AnyFileMatches(text.Trim()))
+            {
+                return;
+            }
+
+            currentSearch.CopySearchText(text);
         }
 
         private SearchAndResultsControl GetSearchControl(object tab)
@@ -1020,39 +1028,75 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
                 }
                 else if (item is SourceFile file)
                 {
-                    if (string.IsNullOrEmpty(text) || file.SourceFilePath.IndexOf(text, StringComparison.OrdinalIgnoreCase) > -1)
-                    {
-                        visible = true;
-                        file.IsVisible = true;
-                    }
-                    else
-                    {
-                        file.IsVisible = false;
-                    }
-
                     var subItems = file.Children.OfType<NamedNode>();
                     var fileVisibility = UpdateFileVisibility(subItems, text);
-                    file.IsVisible |= fileVisibility;
-                    visible |= fileVisibility;
+                    file.IsVisible = fileVisibility || MatchesFileFilter(file, text);
+                    visible |= file.IsVisible;
                 }
                 else if (item is Target || item is Task)
                 {
-                    if (string.IsNullOrEmpty(text) ||
-                        item.Name.IndexOf(text, StringComparison.OrdinalIgnoreCase) > -1 ||
-                        (text == "$target" && item is Target) ||
-                        (text == "$task" && item is Task))
-                    {
-                        visible = true;
-                        item.IsVisible = true;
-                    }
-                    else
-                    {
-                        item.IsVisible = false;
-                    }
+                    item.IsVisible = MatchesFileFilter(item, text);
+                    visible |= item.IsVisible;
                 }
             }
 
             return visible;
+        }
+
+        private static bool MatchesFileFilter(NamedNode item, string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return true;
+            }
+
+            if (item is SourceFile file)
+            {
+                return file.SourceFilePath.IndexOf(text, StringComparison.OrdinalIgnoreCase) > -1;
+            }
+
+            return item.Name.IndexOf(text, StringComparison.OrdinalIgnoreCase) > -1 ||
+                (text == "$target" && item is Target) ||
+                (text == "$task" && item is Task);
+        }
+
+        /// <summary>
+        /// Returns true if at least one node is displayed in the Files tab when the text is in its search box.
+        /// </summary>
+        private bool AnyFileMatches(string text)
+        {
+            var list = filesTree.ResultsList.ItemsSource as IEnumerable<object>;
+            return list != null && AnyFileMatches(list.OfType<NamedNode>(), text);
+        }
+
+        private static bool AnyFileMatches(IEnumerable<NamedNode> items, string text)
+        {
+            foreach (var item in items)
+            {
+                if (item is Folder)
+                {
+                    if (AnyFileMatches(item.Children.OfType<NamedNode>(), text))
+                    {
+                        return true;
+                    }
+                }
+                else if (item is SourceFile)
+                {
+                    if (MatchesFileFilter(item, text) || AnyFileMatches(item.Children.OfType<NamedNode>(), text))
+                    {
+                        return true;
+                    }
+                }
+                else if (item is Target || item is Task)
+                {
+                    if (MatchesFileFilter(item, text))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         public void SelectTree()
