@@ -60,6 +60,7 @@ namespace StructuredLogViewer.Controls
         private ArchiveFileResolver archiveFile => sourceFileResolver.ArchiveFile;
         private PreprocessedFileManager preprocessedFileManager;
         private NavigationHelper navigationHelper;
+        internal NavigationHelper Navigation => navigationHelper;
         private PropertyGraph propertyGraph;
 
         private MenuItem searchMenuGroup;
@@ -476,7 +477,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             };
 
             navigationHelper = new NavigationHelper(Build, sourceFileResolver);
-            navigationHelper.OpenFileRequested += filePath => DisplayFile(filePath);
+            navigationHelper.OpenFileRequested += (filePath, lineNumber, column) => DisplayFile(filePath, lineNumber, column);
 
             centralTabControl.SelectionChanged += CentralTabControl_SelectionChanged;
             leftPaneTabControl.SelectionChanged += LeftPaneTabControl_SelectionChanged;
@@ -3238,7 +3239,7 @@ Recent (");
         public bool DisplayText(string text, string caption = null)
         {
             caption = TextUtilities.SanitizeFileName(caption);
-            documentWell.DisplaySource(caption ?? "Text", text, displayPath: false);
+            documentWell.DisplaySource(caption ?? "Text", text, navigationHelper: navigationHelper, displayPath: false);
             return true;
         }
 

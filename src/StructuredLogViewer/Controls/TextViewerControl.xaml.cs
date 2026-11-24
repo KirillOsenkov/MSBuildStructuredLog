@@ -56,6 +56,7 @@ namespace StructuredLogViewer.Controls
 
             if (SettingsService.UseDarkTheme)
             {
+                textView.LinkTextForegroundBrush = Brushes.DeepSkyBlue;
                 textEditor.Background = ThemeManager.BackgroundBrush;
                 textEditor.Foreground = ThemeManager.ControlTextBrush;
                 textView.CurrentLineBackground = (Brush)new BrushConverter().ConvertFromString("#505050");
@@ -123,6 +124,8 @@ namespace StructuredLogViewer.Controls
             {
                 ImportLinkHighlighter.Install(textEditor, sourceFilePath, navigationHelper);
             }
+
+            SourceFileLinkHighlighter.Install(this, navigationHelper);
         }
 
         protected override void OnKeyUp(KeyEventArgs e)

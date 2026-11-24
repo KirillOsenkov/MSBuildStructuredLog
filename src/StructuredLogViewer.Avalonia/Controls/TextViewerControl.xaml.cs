@@ -78,6 +78,8 @@ namespace StructuredLogViewer.Avalonia.Controls
             textView.Options.EnableEmailHyperlinks = false;
             textView.Options.EnableHyperlinks = false;
             textEditor.IsReadOnly = true;
+            textView.LinkTextForegroundBrush = GetThemeBrush(
+                "Theme_Hyperlink", SettingsService.UseDarkTheme ? ThemeVariant.Dark : ThemeVariant.Light, "RoyalBlue");
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -174,7 +176,11 @@ namespace StructuredLogViewer.Avalonia.Controls
             DisplaySource(lineNumber, column);
 
             if (IsXml)
+            {
                 ImportLinkHighlighter.Install(textEditor, sourceFilePath, navigationHelper);
+            }
+
+            SourceFileLinkHighlighter.Install(this, navigationHelper);
         }
 
         private void TextAreaMouseRightButtonDown(object sender, PointerEventArgs e)

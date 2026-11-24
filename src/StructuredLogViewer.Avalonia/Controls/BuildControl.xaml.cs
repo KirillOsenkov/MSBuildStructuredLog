@@ -64,6 +64,7 @@ namespace StructuredLogViewer.Avalonia.Controls
         private ArchiveFileResolver archiveFile => sourceFileResolver.ArchiveFile;
         private PreprocessedFileManager preprocessedFileManager;
         private NavigationHelper navigationHelper;
+        internal NavigationHelper Navigation => navigationHelper;
         private MenuItem searchMenuGroup;
 
         private MenuItem copyItem;
@@ -474,7 +475,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             Build.TextProvider = evaluation => preprocessedFileManager.GetPreprocessedText(evaluation);
 
             navigationHelper = new NavigationHelper(Build, sourceFileResolver);
-            navigationHelper.OpenFileRequested += filePath => DisplayFile(filePath);
+            navigationHelper.OpenFileRequested += (filePath, lineNumber, column) => DisplayFile(filePath, lineNumber, column);
 
             leftPaneTabControl.SelectionChanged += LeftPaneTabControl_SelectionChanged;
         }
@@ -3074,7 +3075,7 @@ Recent ("));
         public bool DisplayText(string text, string caption = null)
         {
             caption = TextUtilities.SanitizeFileName(caption);
-            documentWell.DisplaySource(caption ?? "Text", text, displayPath: false);
+            documentWell.DisplaySource(caption ?? "Text", text, navigationHelper: navigationHelper, displayPath: false);
             return true;
         }
 

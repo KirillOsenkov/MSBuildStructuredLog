@@ -8,7 +8,7 @@ namespace StructuredLogViewer.Avalonia.Controls
         public Build Build { get; }
         public SourceFileResolver SourceFileResolver { get; }
 
-        public event Action<string> OpenFileRequested;
+        public event Action<string, int, int> OpenFileRequested;
 
         public NavigationHelper(Build build, SourceFileResolver sourceFileResolver)
         {
@@ -16,9 +16,9 @@ namespace StructuredLogViewer.Avalonia.Controls
             SourceFileResolver = sourceFileResolver;
         }
 
-        public void OpenFile(string filePath)
+        public void OpenFile(string filePath, int lineNumber = 0, int column = 0)
         {
-            OpenFileRequested?.Invoke(filePath);
+            OpenFileRequested?.Invoke(filePath, lineNumber, column);
         }
     }
 }
