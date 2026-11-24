@@ -24,25 +24,6 @@ namespace Microsoft.Build.Logging.StructuredLogger
             .GetFields(BindingFlags.Public | BindingFlags.Static)
             .Select(f => f.Name).ToArray();
 
-        private static Dictionary<string, Type> objectModelTypes;
-        public static Dictionary<string, Type> ObjectModelTypes
-        {
-            get
-            {
-                if (objectModelTypes == null)
-                {
-                    objectModelTypes = typeof(TreeNode)
-                        .GetTypeInfo()
-                        .Assembly
-                        .GetTypes()
-                        .Where(t => typeof(BaseNode).IsAssignableFrom(t))
-                        .ToDictionary(t => t.Name);
-                }
-
-                return objectModelTypes;
-            }
-        }
-
         public static Build ReadXmlLog(Stream stream) => XmlLogReader.ReadFromXml(stream);
         public static Build ReadBuildLog(Stream stream, byte[] projectImportsArchive = null) => BuildLogReader.Read(stream, projectImportsArchive);
         public static Build ReadBinLog(Stream stream, byte[] projectImportsArchive = null) => BinaryLog.ReadBuild(stream, projectImportsArchive);
@@ -189,14 +170,63 @@ namespace Microsoft.Build.Logging.StructuredLogger
 
         public static BaseNode CreateNode(string name)
         {
-            Type type = null;
-            if (!ObjectModelTypes.TryGetValue(name, out type))
+            switch (name)
             {
-                type = typeof(Folder);
+                case nameof(NameValueNode): return new NameValueNode();
+                case nameof(NamedNode): return new NamedNode();
+                case nameof(TextNode): return new TextNode();
+                case nameof(TimedNode): return new TimedNode();
+                case nameof(AddOrRemoveItem): return new AddOrRemoveItem();
+                case nameof(AddItem): return new AddItem();
+                case nameof(TaskParameterItem): return new TaskParameterItem();
+                case nameof(RemoveItem): return new RemoveItem();
+                case nameof(AbstractDiagnostic): return new AbstractDiagnostic();
+                case nameof(Error): return new Error();
+                case nameof(BuildError): return new BuildError();
+                case nameof(Warning): return new Warning();
+                case nameof(CriticalBuildMessage): return new CriticalBuildMessage();
+                case nameof(Build): return new Build();
+                case nameof(EntryTarget): return new EntryTarget();
+                case nameof(EvaluationProfileEntry): return new EvaluationProfileEntry();
+                case nameof(Folder): return new Folder();
+                case nameof(Import): return new Import();
+                case nameof(Item): return new Item();
+                case nameof(FileCopy): return new FileCopy();
+                case nameof(Message): return new Message();
+                case nameof(TimedMessage): return new TimedMessage();
+                case nameof(MessageWithLocation): return new MessageWithLocation();
+                case nameof(PropertyAssignmentMessage): return new PropertyAssignmentMessage();
+                case nameof(PropertyInitialAssignmentMessage): return new PropertyInitialAssignmentMessage();
+                case nameof(PropertyReassignmentMessage): return new PropertyReassignmentMessage();
+                case nameof(MSBuildServerNode): return new MSBuildServerNode();
+                case nameof(Metadata): return new Metadata();
+                case nameof(NoImport): return new NoImport();
+                case nameof(Note): return new Note();
+                case nameof(Package): return new Package();
+                case nameof(Parameter): return new Parameter();
+                case nameof(Project): return new Project();
+                case nameof(ProjectEvaluation): return new ProjectEvaluation();
+                case nameof(Property): return new Property();
+                case nameof(TaskParameterProperty): return new TaskParameterProperty();
+                case nameof(SearchableItem): return new SearchableItem();
+                case nameof(SourceFile): return new SourceFile();
+                case nameof(SourceFileLine): return new SourceFileLine();
+                case nameof(SourceFileLineWithHighlights): return new SourceFileLineWithHighlights();
+                case nameof(Target): return new Target();
+                case nameof(Task): return new Task();
+                case nameof(PlaceholderTask): return new PlaceholderTask();
+                case nameof(MSBuildTask): return new MSBuildTask();
+                case nameof(CopyTask): return new CopyTask();
+                case nameof(ManagedCompilerTask): return new ManagedCompilerTask();
+                case nameof(CscTask): return new CscTask();
+                case nameof(FscTask): return new FscTask();
+                case nameof(VbcTask): return new VbcTask();
+                case nameof(ResolveAssemblyReferenceTask): return new ResolveAssemblyReferenceTask();
+                case nameof(RobocopyTask): return new RobocopyTask();
+                case nameof(CppAnalyzer.CppTask): return new CppAnalyzer.CppTask();
+                case nameof(ProxyNode): return new ProxyNode();
+                default: return new Folder();
             }
-
-            var node = (BaseNode)Activator.CreateInstance(type);
-            return node;
         }
 
         public static bool GetBoolean(string text)
