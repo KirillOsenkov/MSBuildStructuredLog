@@ -430,6 +430,9 @@ namespace StructuredLogViewer.Avalonia.Controls
 
                 findInFilesControl.ExecuteSearch = FindInFiles;
                 findInFilesControl.ResultsTreeBuilder = BuildFindResults;
+                findInFilesControl.RecentItemsCategory = "FindInFiles";
+                findInFilesControl.WatermarkDisplayed += UpdateFindInFilesWatermark;
+                UpdateFindInFilesWatermark();
 
                 filesTab.IsVisible = true;
                 findInFilesTab.IsVisible = true;
@@ -472,6 +475,8 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
             navigationHelper = new NavigationHelper(Build, sourceFileResolver);
             navigationHelper.OpenFileRequested += filePath => DisplayFile(filePath);
+
+            leftPaneTabControl.SelectionChanged += LeftPaneTabControl_SelectionChanged;
         }
 
         /// <summary>
@@ -680,6 +685,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
 
         public void Dispose()
         {
+            leftPaneTabControl.SelectionChanged -= LeftPaneTabControl_SelectionChanged;
             documentWell.Dispose();
 
             UnregisterTreeViewHandlers(treeView);
@@ -712,6 +718,8 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             findInFilesControl.ResultsList.GotFocus -= TreeView_GotFocus;
             findInFilesControl.ExecuteSearch = null;
             findInFilesControl.ResultsTreeBuilder = null;
+            findInFilesControl.WatermarkDisplayed -= UpdateFindInFilesWatermark;
+            findInFilesControl.WatermarkContent = null;
             findInFilesControl.Dispose();
 
             favoritesTree.ResultsList.SelectionChanged -= ResultsList_SelectionChanged;
@@ -942,6 +950,45 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             documentWell = tabs.SecondChild as DocumentWell;
             searchLogControl = searchLogTab.Content as SearchAndResultsControl;
             findInFilesControl = findInFilesTab.Content as SearchAndResultsControl;
+        }
+
+        private void LeftPaneTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.Source != leftPaneTabControl ||
+                e.RemovedItems.Count != 1 || e.AddedItems.Count != 1)
+            {
+                return;
+            }
+
+            var previousSearch = GetSearchControl(e.RemovedItems[0]);
+            var currentSearch = GetSearchControl(e.AddedItems[0]);
+            if (previousSearch != null && currentSearch != null &&
+                string.IsNullOrWhiteSpace(currentSearch.SearchText) &&
+                !string.IsNullOrWhiteSpace(previousSearch.SearchText))
+            {
+                currentSearch.SearchText = previousSearch.SearchText;
+            }
+        }
+
+        private SearchAndResultsControl GetSearchControl(object tab)
+        {
+            if (tab == searchLogTab)
+            {
+                return searchLogControl;
+            }
+            if (tab == propertiesAndItemsTab)
+            {
+                return propertiesAndItemsControl;
+            }
+            if (tab == filesTab)
+            {
+                return filesTree;
+            }
+            if (tab == findInFilesTab)
+            {
+                return findInFilesControl;
+            }
+            return null;
         }
 
         private void FilesTree_SearchTextChanged(string text)
@@ -1360,6 +1407,31 @@ Recent ("));
             bool isFavorite = node != null && IsFavorite(node);
             favoriteSharedItem.IsVisible = !isFavorite;
             unfavoriteSharedItem.IsVisible = isFavorite;
+        }
+
+        private void UpdateFindInFilesWatermark()
+        {
+            var watermark = new TextBlock { TextWrapping = TextWrapping.Wrap };
+            watermark.Inlines.Add(new Run("Type in the search box to search the full text of embedded files.\n\n"));
+
+            var recentSearches = SettingsService.GetRecentSearchStrings("FindInFiles");
+            if (recentSearches.Any())
+            {
+                watermark.Inlines.Add(new Run("Recent ("));
+                watermark.Inlines.Add(MakeActionLink("clear", () =>
+                {
+                    SettingsService.RemoveAllRecentSearchText("FindInFiles");
+                    UpdateFindInFilesWatermark();
+                }));
+                watermark.Inlines.Add(new Run("):\n"));
+
+                foreach (var recentSearch in recentSearches)
+                {
+                    watermark.Inlines.Add(MakeLink(recentSearch, findInFilesControl));
+                }
+            }
+
+            findInFilesControl.WatermarkContent = watermark;
         }
 
         private object FindInFiles(string searchText, int maxResults, CancellationToken cancellationToken)

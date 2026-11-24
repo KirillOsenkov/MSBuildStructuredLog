@@ -416,6 +416,9 @@ namespace StructuredLogViewer.Controls
             {
                 findInFilesControl.ExecuteSearch = FindInFiles;
                 findInFilesControl.ResultsTreeBuilder = BuildFindResults;
+                findInFilesControl.RecentItemsCategory = "FindInFiles";
+                findInFilesControl.WatermarkDisplayed += UpdateFindInFilesWatermark;
+                UpdateFindInFilesWatermark();
 
                 findInFilesControl.GotFocus += (s, a) => ActiveTreeView = findInFilesControl.ResultsList;
                 findInFilesControl.ResultsList.ItemContainerStyle = treeViewItemStyle;
@@ -480,6 +483,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             navigationHelper.OpenFileRequested += filePath => DisplayFile(filePath);
 
             centralTabControl.SelectionChanged += CentralTabControl_SelectionChanged;
+            leftPaneTabControl.SelectionChanged += LeftPaneTabControl_SelectionChanged;
         }
 
         /// <summary>
@@ -720,6 +724,8 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             filesTree.DisplayItems(null);
             favoritesTree.ResultsList.ItemContainerStyle = null;
             findInFilesControl.ResultsList.ItemContainerStyle = null;
+            findInFilesControl.WatermarkDisplayed -= UpdateFindInFilesWatermark;
+            findInFilesControl.WatermarkContent = null;
             treeView.RemoveHandler(TreeViewItem.SelectedEvent, (RoutedEventHandler)TreeViewItem_Selected);
             treeView.SelectedItemChanged -= TreeView_SelectedItemChanged;
             treeView.KeyUp -= TreeView_KeyDown;
@@ -728,6 +734,7 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             treeView.ItemContainerStyle = null;
             treeView.ContextMenu = null;
             centralTabControl.SelectionChanged -= CentralTabControl_SelectionChanged;
+            leftPaneTabControl.SelectionChanged -= LeftPaneTabControl_SelectionChanged;
 
             findTextBox.KeyDown -= FindTextBox_KeyDown;
             searchLogControl.searchTextBox.KeyUp -= SearchTextBox_KeyUp;
@@ -790,6 +797,45 @@ Right-clicking a project node may show the 'Preprocess' option if the version of
             sourceFileResolver = null;
             BaseNode.ClearSelectedNode();
             this.Build = null;
+        }
+
+        private void LeftPaneTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.Source != leftPaneTabControl ||
+                e.RemovedItems.Count != 1 || e.AddedItems.Count != 1)
+            {
+                return;
+            }
+
+            var previousSearch = GetSearchControl(e.RemovedItems[0]);
+            var currentSearch = GetSearchControl(e.AddedItems[0]);
+            if (previousSearch != null && currentSearch != null &&
+                string.IsNullOrWhiteSpace(currentSearch.SearchText) &&
+                !string.IsNullOrWhiteSpace(previousSearch.SearchText))
+            {
+                currentSearch.SearchText = previousSearch.SearchText;
+            }
+        }
+
+        private SearchAndResultsControl GetSearchControl(object tab)
+        {
+            if (tab == searchLogTab)
+            {
+                return searchLogControl;
+            }
+            if (tab == propertiesAndItemsTab)
+            {
+                return propertiesAndItemsControl;
+            }
+            if (tab == filesTab)
+            {
+                return filesTree;
+            }
+            if (tab == findInFilesTab)
+            {
+                return findInFilesControl;
+            }
+            return null;
         }
 
         private void CentralTabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -1429,6 +1475,35 @@ Recent (");
             bool isFavorite = node != null && IsFavorite(node);
             favoriteSharedItem.Visibility = !isFavorite ? Visibility.Visible : Visibility.Collapsed;
             unfavoriteSharedItem.Visibility = isFavorite ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private void UpdateFindInFilesWatermark()
+        {
+            var watermark = new TextBlock
+            {
+                Text = "Type in the search box to search the full text of embedded files.\n\n"
+            };
+
+            var recentSearches = SettingsService.GetRecentSearchStrings("FindInFiles");
+            if (recentSearches.Any())
+            {
+                watermark.Inlines.Add("Recent (");
+                var clearRecentHyperlink = new Hyperlink(new Run("clear"));
+                clearRecentHyperlink.Click += (s, e) =>
+                {
+                    SettingsService.RemoveAllRecentSearchText("FindInFiles");
+                    UpdateFindInFilesWatermark();
+                };
+                watermark.Inlines.Add(clearRecentHyperlink);
+                watermark.Inlines.Add("):\n");
+
+                foreach (var recentSearch in recentSearches)
+                {
+                    watermark.Inlines.Add(MakeLink(recentSearch, findInFilesControl));
+                }
+            }
+
+            findInFilesControl.WatermarkContent = watermark;
         }
 
         private object FindInFiles(string searchText, int maxResults, CancellationToken cancellationToken)
