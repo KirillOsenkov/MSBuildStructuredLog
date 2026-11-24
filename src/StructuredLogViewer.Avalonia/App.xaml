@@ -544,9 +544,9 @@
                            Text="{Binding TimestampText}"
                            Opacity="0.3"
                            Margin="0,0,8,0" />
-                <TextBlock Name="messageText"
+                <s:MessageTextBlock Name="messageText"
                            Classes="nodeText"
-                           Text="{Binding ShortenedText}"
+                           MessageText="{Binding Text}"
                            Opacity="{Binding IsLowRelevance, Converter={StaticResource RelevanceConverter}}" />
             </StackPanel>
         </TreeDataTemplate>
@@ -558,9 +558,9 @@
                            Classes="nodeIcon"
                            Stroke="{StaticResource MessageStroke}"
                            Fill="{StaticResource MessageBrush}" />
-                <TextBlock Name="messageText"
+                <s:MessageTextBlock Name="messageText"
                            Classes="nodeText"
-                           Text="{Binding ShortenedText}"
+                           MessageText="{Binding Text}"
                            Opacity="{Binding IsLowRelevance, Converter={StaticResource RelevanceConverter}}" />
             </StackPanel>
         </TreeDataTemplate>
