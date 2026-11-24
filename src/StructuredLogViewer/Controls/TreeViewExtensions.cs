@@ -40,6 +40,7 @@ namespace StructuredLogViewer.Controls
 
             treeViewItemStyle.Setters.Add(new EventSetter(FrameworkElement.ContextMenuOpeningEvent, (ContextMenuEventHandler)OnContextMenuOpening));
             treeViewItemStyle.Setters.Add(new EventSetter(FrameworkElement.ContextMenuClosingEvent, (ContextMenuEventHandler)OnContextMenuClosing));
+            treeViewItemStyle.Setters.Add(new EventSetter(UIElement.PreviewMouseLeftButtonDownEvent, (MouseButtonEventHandler)OnPreviewMouseLeftButtonDown));
             treeViewItemStyle.Setters.Add(new EventSetter(UIElement.PreviewMouseRightButtonDownEvent, (MouseButtonEventHandler)OnPreviewMouseRightButtonDown));
             treeViewItemStyle.Setters.Add(new EventSetter(FrameworkElement.RequestBringIntoViewEvent, (RequestBringIntoViewEventHandler)OnRequestBringIntoView));
 
@@ -73,6 +74,12 @@ namespace StructuredLogViewer.Controls
 
         private static void OnRequestBringIntoView(object sender, RequestBringIntoViewEventArgs e)
         {
+            if (suppressBringIntoView)
+            {
+                e.Handled = true;
+                return;
+            }
+
             var treeViewItem = GetTreeViewItem(sender);
             if (treeViewItem == null || PresentationSource.FromDependencyObject(treeViewItem) == null)
             {
@@ -156,6 +163,58 @@ namespace StructuredLogViewer.Controls
             }
         }
 
+        /// <summary>
+        /// Workaround for https://github.com/KirillOsenkov/PublicBugs/issues/33
+        /// and https://github.com/KirillOsenkov/MSBuildStructuredLog/issues/584.
+        /// When the TreeView doesn't have keyboard focus, a click on any item sets focus
+        /// to the previously selected item, and that item is scrolled into view:
+        /// https://github.com/dotnet/wpf/blob/5599cc923d6a464ea0afc7864e722a7b57ab4281/src/Microsoft.DotNet.Wpf/src/PresentationFramework/System/Windows/Controls/TreeView.cs#L364-L382
+        /// This handler runs before that code.
+        /// </summary>
+        private static void OnPreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            var treeViewItem = GetTreeViewItem(e.OriginalSource);
+            if (treeViewItem == null)
+            {
+                return;
+            }
+
+            if (!IsExpander(e.OriginalSource))
+            {
+                // The click selects this item anyway. Selecting it now updates
+                // TreeView._selectedContainer, so focus is set to this item and not to the old one.
+                treeViewItem.IsSelected = true;
+                return;
+            }
+
+            // A click on the expander doesn't change the selection, so the selected item
+            // is still the one to focus. Focus it here with scrolling turned off.
+            var treeView = treeViewItem.GetTreeView();
+            if (treeView != null &&
+                !treeView.IsKeyboardFocusWithin &&
+                treeView.GetSelectedTreeViewItem() is TreeViewItem selectedItem)
+            {
+                suppressBringIntoView = true;
+                try
+                {
+                    selectedItem.Focus();
+                }
+                finally
+                {
+                    suppressBringIntoView = false;
+                }
+            }
+        }
+
+        private static bool suppressBringIntoView;
+
+        private static bool IsExpander(object originalSource)
+        {
+            return originalSource is FrameworkElement frameworkElement &&
+                (frameworkElement is Path || frameworkElement is Border) &&
+                frameworkElement.TemplatedParent is ToggleButton;
+        }
+
         private static void OnPreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
             var treeViewItem = GetTreeViewItem(e.OriginalSource);
@@ -232,9 +291,7 @@ namespace StructuredLogViewer.Controls
                 return;
             }
 
-            if (args.OriginalSource is FrameworkElement frameworkElement &&
-                (frameworkElement is Path || frameworkElement is Border) &&
-                frameworkElement.TemplatedParent is ToggleButton)
+            if (IsExpander(args.OriginalSource))
             {
                 // let's not count the double-click on the expander as the double-click on the TreeViewItem
                 return;
