@@ -73,6 +73,7 @@ or you can build the solution or open an existing log file through the viewer ap
  * Preprocess project files (with all imports inlined), right-click on a project -> Preprocess
  * If a log has embedded files, you can view the list of files, full-text search in all files, and use the Space key (or double-click) on most nodes to view the source code.
  * When you switch between the Search Log, Properties and items, Files and Find in Files tabs, the search text of the previous tab is copied to the selected tab if its search box is empty. Text that matches no file is not copied to the Files tab. Search Log, Properties and items, and Find in Files each have a separate list of recent searches.
+ * Use Copy navigation path/Paste navigation path in the tree and breadcrumb context menus, or Ctrl+Shift+C/Ctrl+Shift+V, to navigate to the corresponding node in another log. Click anywhere in the breadcrumb area to focus these shortcuts. Standard Ctrl+C still copies tree-node text. Paths ignore build filenames, timings, IDs, and property values. Project paths and node ancestry must match; missing or ambiguous matches are reported instead of guessed.
  * Displays [double-writes](https://github.com/KirillOsenkov/MSBuildStructuredLog/wiki/Double%20write%20detection) (when files from different sources are written to the same destination during a build, thus causing non-determinism)
  * Displays target dependencies for each target
  * Narrow down the search results using the under() or project() clauses to only display results under a certain parent or project.
